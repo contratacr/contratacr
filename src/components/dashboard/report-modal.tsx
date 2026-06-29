@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { SuccessIcon } from "@/components/ui/success-icon";
 
 /**
  * Shared, on-brand REPORT modal (sprint 445) — same clean treatment as the cancel /
@@ -54,11 +55,9 @@ export function ReportModal({
         className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] max-h-[90vh] overflow-y-auto"
       >
         {submitted ? (
-          <div className="py-2">
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#0089bb]" />
-              <h2 className="text-base font-bold leading-snug text-[#111827]">{successLabel}</h2>
-            </div>
+          <div className="flex flex-col items-center px-4 py-8 text-center">
+            <SuccessIcon size={52} />
+            <p className="mt-4 max-w-xs text-sm font-medium leading-relaxed text-[#374151]">{successLabel}</p>
             <Button size="sm" className="mt-5 w-full rounded-lg" onClick={onClose}>
               {backLabel}
             </Button>
