@@ -285,8 +285,14 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
                   {wp.lat != null && wp.lng != null ? ` · ${t("pinnedTag")}` : ""}
                 </p>
               </div>
-              <button type="button" onClick={() => removeWorkplace(wp.id)} className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0" aria-label={t("removePlace")}>
-                <X className="h-4 w-4" />
+              <button
+                type="button"
+                onClick={() => removeWorkplace(wp.id)}
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-white px-2.5 text-xs font-semibold text-[#b91c1c] shadow-sm ring-1 ring-[#fecaca] transition-colors hover:bg-red-50 hover:ring-red-200"
+                aria-label={t("removePlace")}
+              >
+                <X className="h-3.5 w-3.5" />
+                <span>{t("removePlace")}</span>
               </button>
             </div>
           ))}
