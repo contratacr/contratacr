@@ -368,7 +368,7 @@ export function BookingRequests() {
             )}
 
             {booking.status === "awaiting_confirmation" && (
-              <p className="rounded-lg border border-[#bfdbfe] bg-[#f0f9ff] px-2.5 py-2 text-xs font-medium text-[#075985]">
+              <p className="rounded-lg border border-[#e5e7eb] bg-[#fbfdff] px-2.5 py-2 text-xs font-medium text-[#4b5563]">
                 {t("awaitingConfirmNote", { days: AUTO_CONFIRM_DAYS })}
               </p>
             )}
