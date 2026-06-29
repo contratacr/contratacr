@@ -355,7 +355,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 // EXACT same box as the Select triggers: h-10 w-full rounded-xl border, px-4
                 // left, and pr-9 ALWAYS so the right glyph sits exactly where the dropdowns'
                 // chevron does — so this field is indistinguishable in size + layout.
-                className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+                className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
               />
               {/* Right-side glyph: a Search icon at rest (matches the Select chevron spot/
                   size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field — a
@@ -598,7 +598,7 @@ export function MobileServiceSearch() {
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"
-        className="h-10 min-w-0 w-full rounded-full border border-[#e5e7eb] bg-white pl-4 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
+        className="h-10 min-w-0 w-full rounded-full border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
       />
       {q && (
         <button onClick={() => { setQ(""); setOpen(false); if (debounceRef.current) clearTimeout(debounceRef.current); pushQuery(""); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>

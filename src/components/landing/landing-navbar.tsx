@@ -389,7 +389,7 @@ function CategoryAutocomplete({
           onKeyDown={onKeyDown}
           placeholder={placeholder}
           aria-label={t("searchServiceAria")}
-          className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
+          className="flex-1 min-w-0 bg-transparent text-base sm:text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
         />
       </form>
 
@@ -516,7 +516,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           onKeyDown={onKeyDown}
           placeholder={t("searchServicePlaceholder")}
           aria-label={t("searchServiceAria")}
-          className="ml-2 min-w-0 flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
+          className="ml-2 min-w-0 flex-1 bg-transparent text-base sm:text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
         />
         {q && (
           <button type="button" onClick={() => { setQ(""); inputRef.current?.focus(); }} className="ml-2 text-gray-400 hover:text-gray-600" aria-label={ts("cancel")}>
@@ -1342,7 +1342,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                         onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
                         placeholder={compactPlaceholder || (isSmallScreen ? t("servicePlaceholderShort") : t("servicePlaceholder"))}
-                        className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                        className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                         role="combobox"
                         aria-expanded={searchFocused && searchQuery.trim().length > 0}
                         aria-autocomplete="list"
