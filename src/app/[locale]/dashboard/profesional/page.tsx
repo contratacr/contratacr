@@ -80,7 +80,6 @@ const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
 const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion"]);
 const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
-const COMPLETION_TABS = new Set<Tab>(["profile", "services", "verificacion"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
@@ -242,7 +241,11 @@ export default function DashboardPage() {
     // Reset to the top of the new section INSTANTLY via the window. A smooth scrollIntoView
     // fought the fixed mobile bottom bar (its backdrop-blur made "Más" flicker / feel covered
     // during the animated scroll); an instant window scroll never interferes with it.
-    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
+    requestAnimationFrame(() => {
+      const mobile = window.matchMedia("(max-width: 1023px)").matches;
+      if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      else window.scrollTo({ top: 0, behavior: "auto" });
+    });
   }
 
   // The mode switch now lives in the panel header (sprint 518). Switching flips the global
@@ -306,7 +309,6 @@ export default function DashboardPage() {
   const showProfileCompletion =
     mode === "offer" &&
     !!pro &&
-    COMPLETION_TABS.has(activeTab) &&
     (computeCompletion(pro).percent < 100 || pro.verification_status !== "verified");
 
   function navButton(tab: Tab) {
