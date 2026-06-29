@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
-import { ProfileCompletion } from "@/components/dashboard/pro/profile-completion";
+import { ProfileCompletion, computeCompletion } from "@/components/dashboard/pro/profile-completion";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
@@ -80,6 +80,7 @@ const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
 const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion"]);
 const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
+const COMPLETION_TABS = new Set<Tab>(["profile", "services", "verificacion"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
@@ -302,6 +303,11 @@ export default function DashboardPage() {
   const primaryTabs = MOBILE_PRIMARY[mode].filter((tab) => barTabs.includes(tab));
   const moreTabs = barTabs.filter((tab) => !primaryTabs.includes(tab));
   const activeInMore = moreTabs.includes(activeTab);
+  const showProfileCompletion =
+    mode === "offer" &&
+    !!pro &&
+    COMPLETION_TABS.has(activeTab) &&
+    (computeCompletion(pro).percent < 100 || pro.verification_status !== "verified");
 
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
@@ -438,7 +444,7 @@ export default function DashboardPage() {
           ) : (
             <>
               {/* Profile-completion — offer mode only, hides itself once complete. */}
-              {mode === "offer" && pro && (
+              {showProfileCompletion && (
                 <ProfileCompletion pro={pro} onGo={(tab, field) => { setTab(tab as Tab); if (field) setProfileFocus({ field, key: Date.now() }); }} />
               )}
 
