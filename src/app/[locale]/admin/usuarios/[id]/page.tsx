@@ -16,7 +16,7 @@ export default async function AdminUserDetailPage({
   const { from } = await searchParams;
   const fromVerification = from === "verificacion";
   return (
-    <AdminShell adminName={admin.fullName} active={fromVerification ? "verificacion" : "usuarios"}>
+    <AdminShell adminName={admin.fullName} active="usuarios">
       <AdminUserProfile
         userId={id}
         backHref={fromVerification ? "/admin/verificacion" : "/admin/usuarios"}
