@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, Menu, X, Repeat2, Plus,
+  ArrowRight, Sparkles, Menu, X, Repeat2, Plus, AlertCircle,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -113,6 +113,7 @@ export default function DashboardPage() {
   const [supportUnread, setSupportUnread] = useState(0);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
+  const [proLoadError, setProLoadError] = useState(false);
   // Mobile "Más" bottom-sheet (the overflow of the bottom nav bar).
   const [moreOpen, setMoreOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -158,13 +159,36 @@ export default function DashboardPage() {
   const fetchPro = useCallback(async () => {
     if (!user) return;
     const supabase = createClient();
-    const { data } = await supabase
+    setProLoadError(false);
+    const { data, error } = await supabase
       .from("professionals")
       .select("*, profiles(full_name, email, avatar_url), provincia_id, canton_id, address, service_type, category_id, services")
       .eq("profile_id", user.id)
       .maybeSingle();
-    setPro(data);
-    if (!data) setNoProTries((n) => n + 1);
+    let resolved = data;
+    let resolvedError = error;
+
+    if (error) {
+      console.error("[dashboard] professional full load failed:", error);
+      const fallback = await supabase
+        .from("professionals")
+        .select("*")
+        .eq("profile_id", user.id)
+        .maybeSingle();
+      resolved = fallback.data;
+      resolvedError = fallback.error;
+    }
+
+    setPro(resolved);
+    if (resolved) {
+      setNoProTries(0);
+    }
+    if (resolvedError) {
+      console.error("[dashboard] professional fallback load failed:", resolvedError);
+      setProLoadError(true);
+    } else if (!resolved) {
+      setNoProTries((n) => n + 1);
+    }
     setLoading(false);
   }, [user]);
 
@@ -224,14 +248,14 @@ export default function DashboardPage() {
   // few times, then send them to finish the professional profile. A genuine seeker
   // (cannot offer) is never bounced; a missing pro row is normal for them.
   useEffect(() => {
-    if (authLoading || loading || pro || !user) return;
+    if (authLoading || loading || pro || !user || proLoadError) return;
     if (!canOffer(user)) return;
     if (noProTries < 4) {
       const id = setTimeout(() => fetchPro(), 700);
       return () => clearTimeout(id);
     }
     router.replace("/registro/profesional");
-  }, [authLoading, loading, pro, user, router, noProTries, fetchPro]);
+  }, [authLoading, loading, pro, user, router, noProTries, fetchPro, proLoadError]);
 
   function setTab(tab: Tab) {
     setMoreOpen(false);
@@ -426,7 +450,26 @@ export default function DashboardPage() {
           </div>
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
-          {offerLoading ? (
+          {proLoadError ? (
+            <Card>
+              <CardContent className="px-6 py-12 flex flex-col items-center text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
+                  <AlertCircle className="h-7 w-7" />
+                </div>
+                <h2 className="text-xl font-bold text-[#111827] mb-2">
+                  {locale === "en" ? "We couldn't load your panel" : "No pudimos cargar tu panel"}
+                </h2>
+                <p className="text-sm text-[#6b7280] max-w-md mb-6 leading-relaxed">
+                  {locale === "en"
+                    ? "Try again. If it continues, contact support so we can review your professional profile."
+                    : "Intenta de nuevo. Si continúa, contacta soporte para revisar tu perfil profesional."}
+                </p>
+                <Button onClick={fetchPro}>
+                  {locale === "en" ? "Try again" : "Intentar de nuevo"}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : offerLoading ? (
             <div className="flex items-center justify-center py-20">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
             </div>
