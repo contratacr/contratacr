@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
@@ -23,6 +23,15 @@ type Notification = {
   data?: { link?: string } | null;
 };
 
+function uniqueNotifications(items: Notification[]): Notification[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
+
 // ONE consistent notification icon everywhere — the Bell, matching the panel-nav
 // "Notificaciones" item + the navbar bell (sprint 500). Replaces the per-type icons:
 // the kind of notification is already clear from its title/text, and a single shared
@@ -41,8 +50,9 @@ export function NotificationsList() {
   const [busy, setBusy] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  useEffect(() => {
+  const loadNotifications = useCallback((showLoading = false) => {
     if (!user) return;
+    if (showLoading) setBusy(true);
     const supabase = createClient();
     supabase
       .from("notifications")
@@ -50,8 +60,27 @@ export function NotificationsList() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(100)
-      .then(({ data }) => { setItems(data ?? []); setBusy(false); });
+      .then(({ data }) => {
+        setItems(uniqueNotifications(data ?? []));
+        setBusy(false);
+      });
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadNotifications(true);
+  }, [user, loadNotifications]);
+
+  useEffect(() => {
+    if (!user) return;
+    function onChanged() { loadNotifications(false); }
+    window.addEventListener("notificationsChanged", onChanged);
+    const id = window.setInterval(onChanged, 10000);
+    return () => {
+      window.removeEventListener("notificationsChanged", onChanged);
+      window.clearInterval(id);
+    };
+  }, [user, loadNotifications]);
 
   // Only the active mode's notifications are shown / acted on here.
   const visible = items.filter((n) => notificationInMode(n.type, mode));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +26,21 @@ export function NotificationLiveToast() {
   const t = useTranslations("notifications");
   const { mode } = useMode(canOffer(user));
   const [toast, setToast] = useState<Notification | null>(null);
+  const lastSeenIdRef = useRef<string | null>(null);
+  const initializedRef = useRef(false);
+
+  const maybeShow = useCallback((next: Notification, showInitial = true) => {
+    if (!notificationInMode(next.type, mode)) return;
+    if (lastSeenIdRef.current === next.id) return;
+    lastSeenIdRef.current = next.id;
+    if (!initializedRef.current && !showInitial) {
+      initializedRef.current = true;
+      return;
+    }
+    initializedRef.current = true;
+    setToast(next);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+  }, [mode]);
 
   useEffect(() => {
     if (!user) return;
@@ -36,16 +51,36 @@ export function NotificationLiveToast() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
-          const next = payload.new as Notification;
-          if (!notificationInMode(next.type, mode)) return;
-          setToast(next);
-          window.dispatchEvent(new CustomEvent("notificationsChanged"));
+          maybeShow(payload.new as Notification, true);
         },
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [user, mode]);
+  }, [user, maybeShow]);
+
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    async function loadLatest() {
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const latest = data?.[0] as Notification | undefined;
+      if (latest) {
+        if (notificationInMode(latest.type, mode)) maybeShow(latest, false);
+        else initializedRef.current = true;
+      } else {
+        initializedRef.current = true;
+      }
+    }
+    void loadLatest();
+    const id = window.setInterval(loadLatest, 10000);
+    return () => window.clearInterval(id);
+  }, [user, maybeShow]);
 
   useEffect(() => {
     if (!toast) return;

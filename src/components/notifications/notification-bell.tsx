@@ -20,6 +20,15 @@ type Notification = {
   data?: { link?: string } | null;
 };
 
+function uniqueNotifications(items: Notification[]): Notification[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
+
 export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "offer" }) {
   const { user } = useAuth();
   const t = useTranslations("notifications");
@@ -54,7 +63,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20)
-      .then(({ data }) => setNotifications(data ?? []));
+      .then(({ data }) => setNotifications(uniqueNotifications(data ?? [])));
   }, [user]);
 
   useEffect(() => {
@@ -74,7 +83,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
+          setNotifications((prev) => uniqueNotifications([payload.new as Notification, ...prev]));
           window.dispatchEvent(new CustomEvent("notificationsChanged"));
         }
       )
@@ -93,6 +102,14 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     // and never re-subscribed with stale handlers.
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchNotifications, instanceId]);
+
+  // Fallback for projects where Supabase Realtime is not enabled for the
+  // notifications table. Keeps the bell current without requiring a page reload.
+  useEffect(() => {
+    if (!user) return;
+    const id = window.setInterval(fetchNotifications, 10000);
+    return () => window.clearInterval(id);
+  }, [user, fetchNotifications]);
 
   // Same-tab sync: other notification surfaces (the in-panel list) broadcast this
   // event after marking read / deleting; re-pull so the bell badge matches.
