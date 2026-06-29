@@ -254,13 +254,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   async function submitReportPro(reason: string) {
-    if (!reportProFor) return;
+    if (!reportProFor) return false;
     const res = await fetch("/api/report-professional", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bookingId: reportProFor, reason }),
     });
-    alert(res.ok ? t("reportThanks") : t("reportError"));
+    return res.ok;
   }
 
   async function refreshProjects() {
@@ -979,6 +979,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           detailsPlaceholder={t("reportDetails")}
           backLabel={t("cancelBack")}
           submitLabel={t("reportSubmit")}
+          successLabel={t("reportThanks")}
+          errorLabel={t("reportError")}
           onClose={() => setReportProFor(null)}
           onSubmit={submitReportPro}
         />

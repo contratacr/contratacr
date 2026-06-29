@@ -160,14 +160,13 @@ export function BookingRequests() {
   }
 
   async function submitReport(reason: string) {
-    if (!reportFor) return;
+    if (!reportFor) return false;
     const res = await fetch("/api/report-client", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bookingId: reportFor.id, clientId: reportFor.client_id ?? null, reason }),
     });
-    if (res.ok) alert(t("reportThanks"));
-    else alert(t("reportError"));
+    return res.ok;
   }
 
   if (loading) {
@@ -466,6 +465,8 @@ export function BookingRequests() {
           detailsPlaceholder={t("reportDetails")}
           backLabel={t("back")}
           submitLabel={t("reportSubmit")}
+          successLabel={t("reportThanks")}
+          errorLabel={t("reportError")}
           onClose={() => setReportFor(null)}
           onSubmit={submitReport}
         />
