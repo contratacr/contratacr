@@ -3,6 +3,7 @@
 import { type ReactNode } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { canOffer } from "@/lib/auth/capabilities";
 
 // Session- + location-aware "Soporte" entry point, consistent app-wide:
 //  • logged OUT, or anywhere OUTSIDE the dashboard → the PUBLIC /soporte page/form
@@ -15,7 +16,7 @@ export function SupportLink({ className, children, onNavigate }: { className?: s
   const { user } = useAuth();
   const pathname = usePathname();
   const inDashboard = pathname === "/dashboard" || pathname.includes("/dashboard/");
-  const isPro = user?.user_metadata?.role === "professional";
+  const isPro = canOffer(user);
 
   const href = user && inDashboard
     ? (isPro ? "/dashboard/profesional?tab=soporte" : "/dashboard/cliente?tab=soporte")

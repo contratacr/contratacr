@@ -74,11 +74,15 @@ export default function OnboardingPage() {
     setSelecting(role);
     const supabase = createClient();
 
-    // Persist the role in auth metadata first (drives middleware). Then upsert
-    // the profile best-effort. A hard navigation avoids the SPA/middleware race
-    // that previously left the client choice "stuck" without loading.
+    // Choosing "Ofrezco" is only an intent until the professional profile is
+    // created. Do not mark the account as a provider here; otherwise the dashboard
+    // can treat a half-created account as professional and bounce between pages.
+    const nextMetadata =
+      role === "professional"
+        ? { role: "client", intended_role: "professional", onboarding_completed: false }
+        : { role, onboarding_completed: true };
     try {
-      await supabase.auth.updateUser({ data: { role, onboarding_completed: true } });
+      await supabase.auth.updateUser({ data: nextMetadata });
     } catch (err) {
       console.error("[onboarding] updateUser failed:", err);
     }
@@ -96,8 +100,8 @@ export default function OnboardingPage() {
             (user.user_metadata?.avatar_url as string) ??
             (user.user_metadata?.picture as string) ??
             null,
-          role,
-          onboarding_completed: true,
+          role: role === "professional" ? "client" : role,
+          onboarding_completed: role !== "professional",
         },
         { onConflict: "id" }
       );

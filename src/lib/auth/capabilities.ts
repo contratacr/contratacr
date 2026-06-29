@@ -14,5 +14,5 @@ type WithMeta = { user_metadata?: Record<string, unknown> | null } | null | unde
 export function canOffer(user: WithMeta): boolean {
   const m = user?.user_metadata;
   if (!m) return false;
-  return m.is_provider === true || m.role === "professional";
+  return m.is_provider === true;
 }
