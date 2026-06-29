@@ -325,7 +325,7 @@ function CategoryAutocomplete({
   // Shared category-suggestion strings — keeps the navbar's "no results / ¿No ves tu
   // categoría?" wording IDENTICAL to the crear-proyecto / agregar-profesión picker.
   const ts = useTranslations("categorySearch");
-  const tp = useTranslations("servicesPage");
+  const tp = useTranslations("categoriesPage");
   const locale = useLocale();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -451,7 +451,7 @@ function CategoryAutocomplete({
 function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const t = useTranslations("header");
   const ts = useTranslations("categorySearch");
-  const tp = useTranslations("servicesPage");
+  const tp = useTranslations("categoriesPage");
   const locale = useLocale();
   const router = useRouter();
   const [q, setQ] = useState("");
