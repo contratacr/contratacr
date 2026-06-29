@@ -32,6 +32,9 @@ export function computeCompletion(pro: ProRecord): {
   verified: boolean;
 } {
   const profiles = (pro.profiles ?? {}) as { avatar_url?: string | null };
+  const hasProfilePhoto =
+    !!profiles.avatar_url ||
+    (typeof pro.avatar_url === "string" && pro.avatar_url.trim().length > 0);
 
   // Location is "done" as soon as ANY location signal exists — independent of how
   // service_type is stored, so it never sticks for a pro who clearly set a zone.
@@ -46,7 +49,7 @@ export function computeCompletion(pro: ProRecord): {
   const hasServiceInfo = hasLen(pro.services);
 
   const items: CompletionItem[] = [
-    { key: "photo", done: !!profiles.avatar_url, tab: "profile" },
+    { key: "photo", done: hasProfilePhoto, tab: "profile" },
     // Any non-empty description counts as done (no minimum length).
     { key: "bio", done: typeof pro.bio === "string" && pro.bio.trim().length > 0, tab: "profile" },
     { key: hasSelectedServices ? "serviceInfo" : "services", done: hasServiceInfo, tab: "services" },

@@ -310,6 +310,9 @@ export default function DashboardPage() {
     user.email?.split("@")[0] ||
     "";
   const headerAvatar = profile?.avatar_url || pro?.profiles?.avatar_url || null;
+  const proForCompletion = pro && headerAvatar && !pro.profiles?.avatar_url
+    ? { ...pro, profiles: { ...(pro.profiles ?? {}), avatar_url: headerAvatar } }
+    : pro;
   // Client (use mode) identity: verified via cédula (saved at solicitud/booking or before).
   // Drives the "Verificado" badge below the name — the SAME badge the pro side uses.
   const clientVerified =
@@ -333,8 +336,8 @@ export default function DashboardPage() {
   const activeInMore = moreTabs.includes(activeTab);
   const showProfileCompletion =
     mode === "offer" &&
-    !!pro &&
-    (computeCompletion(pro).percent < 100 || pro.verification_status !== "verified");
+    !!proForCompletion &&
+    (computeCompletion(proForCompletion).percent < 100 || proForCompletion.verification_status !== "verified");
 
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
@@ -492,7 +495,7 @@ export default function DashboardPage() {
               {/* Profile-completion — offer mode only, hides itself once complete. */}
               {showProfileCompletion && (
                 <ProfileCompletion
-                  pro={pro}
+                  pro={proForCompletion}
                   onGo={(tab, field) => {
                     setTab(tab as Tab);
                     if (field && tab === "services") setServiceFocus({ field, key: Date.now() });
