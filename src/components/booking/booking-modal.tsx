@@ -206,6 +206,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [waLink, setWaLink] = useState("");
+  const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
   // OAuth users with no cédula on file must complete their profile before booking.
   const [needsProfile, setNeedsProfile] = useState(false);
   const [profileCedula, setProfileCedula] = useState("");
@@ -497,6 +498,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setSelectedTime("");
     setDescription("");
     setWaLink("");
+    setCreatedBookingId(null);
     onClose();
     // Refresh server data so the slot we just booked stops showing as available on /buscar
     // (and the profile schedule). Only when a booking was actually made this session.
@@ -506,8 +508,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // "Ver mi solicitud" → the client's Mis solicitudes, where the just-created request sits
   // at the top (newest first). Closes the modal (which also refreshes /buscar).
   function goToMyRequest() {
+    const params = new URLSearchParams({ tab: "sent_bookings" });
+    if (createdBookingId) params.set("booking", createdBookingId);
     resetAndClose();
-    router.push("/dashboard/profesional?tab=sent_bookings");
+    router.push(`/dashboard/profesional?${params.toString()}`);
   }
 
   async function handleSubmit(overrideCedula?: string, overridePhone?: string, overrideName?: string) {
@@ -555,6 +559,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         setSubmitError(j?.error || (locale === "en" ? "Couldn't send the request. Try again." : "No se pudo enviar la solicitud. Intenta de nuevo."));
         return;
       }
+
+      const result = await res.json().catch(() => ({}));
+      if (typeof result?.id === "string") setCreatedBookingId(result.id);
 
       const firstName = professional.fullName.split(" ")[0];
       const senderName = submitName.trim() || "un cliente";

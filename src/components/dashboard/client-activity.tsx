@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
@@ -129,6 +130,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const { user } = useAuth();
   const t = useTranslations("clientActivity");
   const locale = useLocale();
+  const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
 
   // The service a booking is for (the specific category requested, else the pro's primary).
@@ -192,6 +194,16 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }, [user, section]);
 
   useEffect(() => { queueMicrotask(() => fetchSection()); }, [fetchSection]);
+
+  useEffect(() => {
+    if (section !== "bookings") return;
+    const bookingId = searchParams.get("booking");
+    if (!bookingId || bookings.length === 0) return;
+    const booking = bookings.find((b) => b.id === bookingId);
+    if (!booking) return;
+    setBookingFilter(solicitudBucket(booking.status, booking.scheduled_date));
+    setExpandedBooking(bookingId);
+  }, [bookings, searchParams, section]);
 
   useEffect(() => {
     if (section !== "projects") return;
