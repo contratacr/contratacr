@@ -42,8 +42,9 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
   const listRef = useRef<HTMLDivElement>(null);
 
   const selected = options.find((o) => o.value === value);
-  // 288px ≈ max-h-72 — the hook clamps it down to the space above the viewport/keyboard.
-  const pos = useAnchoredPosition(triggerRef, open, 288);
+  // 320px shows short lists (e.g. Todas + 7 provincias) without a scrollbar, while
+  // longer lists (cantones, DOB years) still scroll inside the popover.
+  const pos = useAnchoredPosition(triggerRef, open, 320);
 
   // Close on outside click / Escape. The list is portaled (outside rootRef), so it must be
   // checked too — otherwise a click on an option would register as "outside" and close
@@ -80,8 +81,13 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
     const el = listRef.current;
     if (!open || !pos || !el) return;
     const onWheel = (e: WheelEvent) => { e.stopPropagation(); };
+    const onTouchMove = (e: TouchEvent) => { e.stopPropagation(); };
     el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
+    el.addEventListener("touchmove", onTouchMove, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchmove", onTouchMove);
+    };
   }, [open, pos]);
 
   return (
@@ -143,6 +149,8 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
             zIndex: 9999,
             // See (1) above — without this the list is unclickable inside a modal Radix Dialog.
             pointerEvents: "auto",
+            WebkitOverflowScrolling: "touch",
+            touchAction: "pan-y",
           }}
           className="overflow-y-auto overscroll-contain rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-xl"
         >
