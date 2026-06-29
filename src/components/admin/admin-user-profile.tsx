@@ -259,32 +259,32 @@ export function AdminUserProfile({
                   </p>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2 lg:justify-end">
+              <div className="w-full space-y-2 lg:w-64">
                 <button
                   type="button"
                   onClick={() => updateIdentity("verify")}
                   disabled={identityBusy != null || isIdentityVerified}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#008ac0] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#16a34a] text-sm font-bold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {identityBusy === "verify" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                  {identityBusy === "verify" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                   Marcar verificado
                 </button>
                 <button
                   type="button"
                   onClick={() => updateIdentity("revert_pending")}
                   disabled={identityBusy != null || isIdentityPending}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#d1d5db] bg-white px-3 py-2 text-xs font-semibold text-[#374151] transition hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#e5e7eb] bg-white text-sm font-medium text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {identityBusy === "revert_pending" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                  {identityBusy === "revert_pending" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                   Pendiente
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirmRevoke(true)}
                   disabled={identityBusy != null}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#dc2626] text-sm font-bold text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <XCircle className="h-3.5 w-3.5" />
+                  <XCircle className="h-4 w-4" />
                   Quitar verificación
                 </button>
               </div>
