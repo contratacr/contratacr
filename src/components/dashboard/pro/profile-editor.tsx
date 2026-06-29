@@ -366,7 +366,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         coverage_provincias: [],
         coverage_country: false,
         insurance_networks: insurers,
-        call_phone: callPhone.trim() || null,
+        call_phone: allowPhoneCall ? callPhone.trim() || whatsapp.trim() || null : null,
         allow_phone_call: allowPhoneCall,
         contact_email: showContactEmail ? contactEmail.trim() || null : null,
       };
@@ -696,7 +696,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           <p className="text-sm font-medium text-[#111827]">{t("allowCallLabel")}</p>
           <button
             type="button"
-            onClick={() => { setAllowPhoneCall((v) => !v); touch(); }}
+            onClick={() => {
+              setAllowPhoneCall((v) => {
+                const nv = !v;
+                if (nv && !callPhone.trim() && whatsapp.trim()) setCallPhone(whatsapp);
+                return nv;
+              });
+              touch();
+            }}
             className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", allowPhoneCall ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
             aria-label={t("allowCallLabel")}
           >
@@ -711,7 +718,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               value={callPhone}
               onChange={(digits) => { setCallPhone(digits); touch(); }}
             />
-            <p className="text-xs text-[#9ca3af] mt-1">{t("callHelp")}</p>
           </div>
         )}
 

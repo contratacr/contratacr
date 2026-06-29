@@ -1692,7 +1692,6 @@
     "whatsapp": "Número de WhatsApp",
     "whatsappHelp": "También se usa para las llamadas, salvo que agregues un número aparte abajo.",
     "callNumber": "Número para llamadas",
-    "callHelp": "Si lo dejas vacío, usamos tu número de WhatsApp también para las llamadas.",
     "contactEmail": "Correo de contacto",
     "emailPlaceholder": "tucorreo@ejemplo.com",
     "emailInvalid": "Ingresa un correo válido.",
