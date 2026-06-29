@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle, Paperclip, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { SelectMenu } from "@/components/ui/select-menu";
 
 // The support ticket form — SINGLE SOURCE OF TRUTH for the fields, validation and
 // submit. Rendered on the public /soporte page (the in-dashboard Soporte section uses
@@ -41,6 +42,11 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function updateTopic(topic: string) {
+    update("topic", topic);
+    update("subject", topic ? t(topic) : "");
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -142,18 +148,15 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
         <label className="text-sm font-medium text-[#374151] block mb-1.5">
           {t("subjectLabel")} <span className="text-red-500">*</span>
         </label>
-        <select className={inputClass + " cursor-pointer"} value={form.topic}
-          onChange={(e) => {
-            const topic = e.target.value;
-            update("topic", topic);
-            update("subject", topic ? t(topic) : "");
-          }} required>
-          <option value="" disabled hidden>{t("subjectPlaceholder")}</option>
-          {SUBJECT_IDS.map((i) => {
+        <SelectMenu
+          value={form.topic}
+          onChange={updateTopic}
+          placeholder={t("subjectPlaceholder")}
+          options={SUBJECT_IDS.map((i) => {
             const key = `subject${i}`;
-            return <option key={i} value={key}>{t(key)}</option>;
+            return { value: key, label: t(key) };
           })}
-        </select>
+        />
       </div>
 
       <div>
