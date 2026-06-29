@@ -48,7 +48,7 @@ export async function GET(req: Request) {
 
     const { data: tickets } = await db
       .from("support_tickets")
-      .select("id, subject, status, topic, created_at, last_reply_at, last_reply_role")
+      .select("*")
       .eq("user_id", profileId)
       .order("created_at", { ascending: false });
 

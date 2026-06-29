@@ -17,6 +17,7 @@ type Ticket = {
   topic?: string | null;
   message: string;
   status: string;
+  case_number?: number | null;
   created_at: string;
   last_reply_at?: string | null;
   last_reply_role?: string | null;
@@ -142,7 +143,7 @@ export function AdminSupport() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
-                    Caso {supportTicketRef(ticket.id)}
+                    Caso {supportTicketRef(ticket.id, ticket.created_at, ticket.case_number)}
                   </span>
                   <p className="font-semibold text-[#111827]">{ticket.subject}</p>
                 </div>
@@ -249,7 +250,7 @@ export function AdminSupport() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
-                      Caso {supportTicketRef(t.id)}
+                      Caso {supportTicketRef(t.id, t.created_at, t.case_number)}
                     </span>
                     <p className="text-sm font-semibold text-[#111827]">{t.subject}</p>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[t.status] ?? "bg-gray-100 text-gray-600"}`}>{STATUS_LABEL[t.status] ?? t.status}</span>

@@ -23,7 +23,7 @@ type Professional = {
   category_id: string | null; professions: string[] | null; business_name: string | null;
   whatsapp: string | null; call_phone: string | null; allow_phone_call: boolean | null; created_at: string;
 };
-type Ticket = { id: string; subject: string; status: string; topic?: string | null; created_at: string; last_reply_role?: string | null };
+type Ticket = { id: string; subject: string; status: string; topic?: string | null; case_number?: number | null; created_at: string; last_reply_role?: string | null };
 type Project = { id: string; title: string; status: string; category_id: string | null; created_at: string };
 type Booking = { id: string; service_description: string; status: string; preferred_date: string | null; created_at: string };
 type LogRow = { id: string; action?: string; decision?: string; status?: string; note?: string; reason?: string; admin_name?: string; created_at: string };
@@ -192,7 +192,7 @@ export function AdminUserProfile({ userId }: { userId: string }) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="shrink-0 rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
-                      Caso {supportTicketRef(t.id)}
+                      Caso {supportTicketRef(t.id, t.created_at, t.case_number)}
                     </span>
                     <p className="min-w-0 truncate text-sm font-medium text-[#111827]">{t.subject}</p>
                   </div>
