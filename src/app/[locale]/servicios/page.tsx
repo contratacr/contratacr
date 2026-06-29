@@ -252,7 +252,7 @@ export default function ServiciosPage() {
                 </div>
               </section>
             ) : query.trim() && resultCount > 0 ? (
-              <section className="grid min-h-[460px] scroll-mt-32 lg:grid-cols-[300px_minmax(0,1fr)]">
+              <section className="grid scroll-mt-32 lg:min-h-[460px] lg:grid-cols-[300px_minmax(0,1fr)]">
                 <aside className="min-w-0 overflow-hidden border-b border-[#edf2f7] bg-[#fbfdff] p-3 lg:border-b-0 lg:border-r">
                   <div className="px-1 pb-2">
                     <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{tp("resultsTitle")}</p>
