@@ -100,35 +100,40 @@ export function TimeSelect({ value, onChange, min, step = 30, label, error, id, 
 
       {open && (
         <div
-          ref={listRef}
-          role="listbox"
-          className="absolute top-full left-0 z-50 mt-1 max-h-60 w-full min-w-[8.75rem] overflow-y-auto rounded-lg border border-[#dfe7f0] bg-white p-1 shadow-[0_18px_44px_-24px_rgba(15,23,42,0.55)]"
+          className="absolute top-full left-0 z-50 mt-1 w-full min-w-[8.75rem] overflow-hidden rounded-lg border border-[#dfe7f0] bg-white shadow-[0_18px_44px_-24px_rgba(15,23,42,0.55)]"
         >
-          {options.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-[#9ca3af]">No hay horas disponibles</p>
-          ) : (
-            options.map((m) => {
-              const v = hhmm(m);
-              const selected = v === value;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  role="option"
-                  aria-selected={selected}
-                  data-selected={selected}
-                  onClick={() => { onChange(v); setOpen(false); }}
-                  className={cn(
-                    "flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[13px] transition-colors",
-                    selected ? "bg-[#EBF5FB] text-[#0089bb] font-semibold" : "text-[#374151] hover:bg-[#f8fafc]"
-                  )}
-                >
-                  {to12h(v)}
-                  {selected && <Check className="h-3.5 w-3.5" />}
-                </button>
-              );
-            })
-          )}
+          <div
+            ref={listRef}
+            role="listbox"
+            className="max-h-60 overflow-y-auto overscroll-contain p-1"
+            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+          >
+            {options.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-[#9ca3af]">No hay horas disponibles</p>
+            ) : (
+              options.map((m) => {
+                const v = hhmm(m);
+                const selected = v === value;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    data-selected={selected}
+                    onClick={() => { onChange(v); setOpen(false); }}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[13px] transition-colors",
+                      selected ? "bg-[#EBF5FB] text-[#0089bb] font-semibold" : "text-[#374151] hover:bg-[#f8fafc]"
+                    )}
+                  >
+                    {to12h(v)}
+                    {selected && <Check className="h-3.5 w-3.5" />}
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
       {error && <p className="text-xs text-red-500">{error}</p>}
