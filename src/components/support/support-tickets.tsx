@@ -250,7 +250,9 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                       {t("caseRef", { ref: supportTicketRef(ticket.id, ticket.created_at, ticket.case_number) })}
                     </span>
                     <h3 className="text-[15px] font-bold leading-snug text-[#162543] sm:text-base">{ticketSubject(ticket)}</h3>
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
+                    {ticket.status !== filter && (
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
+                    )}
                   </div>
                   <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{statusHelp(ticket.status)}</p>
                 </div>

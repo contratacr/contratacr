@@ -1209,7 +1209,7 @@
       "pending": "Pendiente",
       "confirmed": "Confirmada",
       "in_progress": "En progreso",
-      "awaiting_confirmation": "Esperando confirmación",
+      "awaiting_confirmation": "Por confirmar",
       "completed": "Finalizada",
       "cancelled": "Cancelada",
       "rescheduled": "Reprogramada"
@@ -1388,7 +1388,7 @@
     },
     "projStatus": {
       "in_progress": "Asignado · En curso",
-      "awaiting_confirmation": "Trabajo realizado · esperando confirmación",
+      "awaiting_confirmation": "Trabajo realizado · por confirmar",
       "completed": "Finalizado",
       "cancelled": "Cancelado por el cliente",
       "accepted": "Aceptada"
@@ -1764,7 +1764,7 @@
       "pending": "Pendiente",
       "confirmed": "Confirmada",
       "in_progress": "En progreso",
-      "awaiting_confirmation": "Confirma la finalización",
+      "awaiting_confirmation": "Confirmar",
       "completed": "Finalizada",
       "cancelled": "Cancelada",
       "rescheduled": "Reprogramada"
@@ -1794,7 +1794,7 @@
     "bEmptySub": "Busca un servicio y haz tu primera solicitud.",
     "searchPros": "Buscar servicios",
     "noBookingsView": "No hay solicitudes en esta vista.",
-    "confirmCompletion": "Confirmar finalización",
+    "confirmCompletion": "Confirmar",
     "leaveReview": "Dejar reseña",
     "editReview": "Ver/Editar reseña",
     "cancel": "Cancelar",
