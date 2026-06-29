@@ -59,6 +59,14 @@
       "Cuido adulto",
       "DJ fiesta"
     ],
+    "searchExamplesDesktop": [
+      "Necesito limpiar mi casa",
+      "Arreglar una fuga de agua",
+      "Pintar mi sala",
+      "Reparar mi computadora",
+      "Cuidar a un adulto mayor",
+      "DJ para una fiesta"
+    ],
     "location": "Ubicación",
     "searchAll": "Buscar “{q}” en todos los servicios",
     "search": "Buscar",

@@ -59,6 +59,14 @@
       "Senior care",
       "Party DJ"
     ],
+    "searchExamplesDesktop": [
+      "I need my house cleaned",
+      "Fix a water leak",
+      "Paint my living room",
+      "Repair my laptop",
+      "Care for an older adult",
+      "DJ for a party"
+    ],
     "location": "Location",
     "searchAll": "Search “{q}” across all services",
     "search": "Search",

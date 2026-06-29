@@ -892,7 +892,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const compactSvcRef = useRef<HTMLDivElement>(null);
   const compactLocRef = useRef<HTMLDivElement>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(true);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawerTouchX = useRef<number | null>(null);
@@ -902,9 +902,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const pathname = usePathname();
   const { user, avatarUrl, avatarReady } = useAuth();
   const compactSearchExamples = useMemo(() => {
-    const raw = t.raw("searchExamples");
+    const raw = t.raw(isSmallScreen ? "searchExamples" : "searchExamplesDesktop");
     return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
-  }, [t]);
+  }, [isSmallScreen, t]);
   const compactPlaceholder = useTypedPlaceholder(compactSearchExamples, compact && !searchFocused && !searchQuery.trim());
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
