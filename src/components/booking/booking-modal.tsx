@@ -506,11 +506,19 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   }
 
   // "Ver mi solicitud" → the client's Mis solicitudes, where the just-created request sits
-  // at the top (newest first). Closes the modal (which also refreshes /buscar).
+  // at the top (newest first). Do not use resetAndClose here: that path refreshes the
+  // current profile/search page, which can race the navigation and leave the user there.
   function goToMyRequest() {
     const params = new URLSearchParams({ tab: "sent_bookings" });
     if (createdBookingId) params.set("booking", createdBookingId);
-    resetAndClose();
+    bookedRef.current = false;
+    setStep("calendar");
+    setSelectedDate("");
+    setSelectedTime("");
+    setDescription("");
+    setWaLink("");
+    setCreatedBookingId(null);
+    onClose();
     router.push(`/dashboard/profesional?${params.toString()}`);
   }
 
