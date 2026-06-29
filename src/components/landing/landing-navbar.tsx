@@ -325,6 +325,7 @@ function CategoryAutocomplete({
   // Shared category-suggestion strings — keeps the navbar's "no results / ¿No ves tu
   // categoría?" wording IDENTICAL to the crear-proyecto / agregar-profesión picker.
   const ts = useTranslations("categorySearch");
+  const tp = useTranslations("servicesPage");
   const locale = useLocale();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -401,18 +402,22 @@ function CategoryAutocomplete({
                   inline suggest flow used in crear-proyecto / agregar-profesión (submits to
                   admin). The "Ver todos los profesionales" link was removed (sprint 305). */}
               <div className="px-4 pt-3 pb-2 text-center">
-                <p className="text-sm font-medium text-[#374151]">{ts("noResults")}</p>
-                <p className="mt-0.5 text-xs text-gray-400">{ts("noResultsHint")}</p>
+                <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{tp("suggestDescription")}</p>
               </div>
-              <CategorySuggestionBox
-                notListedLabel={ts("notListed")}
-                placeholder={ts("suggestNamePlaceholder")}
-                sendLabel={ts("send")}
-                sendingLabel={ts("sending")}
-                cancelLabel={ts("cancel")}
-                thanksLabel={ts("suggestThanks")}
-                onActiveChange={setSuggestActive}
-              />
+              <div className="flex justify-center px-4 pb-3">
+                <CategorySuggestionBox
+                  prominent
+                  defaultName={q}
+                  notListedLabel={tp("suggestCta")}
+                  placeholder={tp("suggestPlaceholder")}
+                  sendLabel={tp("suggestSend")}
+                  sendingLabel={tp("suggestSending")}
+                  cancelLabel={ts("cancel")}
+                  thanksLabel={tp("suggestThanks")}
+                  onActiveChange={setSuggestActive}
+                />
+              </div>
             </>
           ) : (
             suggestions.map((s, i) => (
@@ -446,6 +451,7 @@ function CategoryAutocomplete({
 function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const t = useTranslations("header");
   const ts = useTranslations("categorySearch");
+  const tp = useTranslations("servicesPage");
   const locale = useLocale();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -594,17 +600,19 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
         ) : (
           // No match → consistent wording + the shared suggest flow, all INSIDE this same
           // container. The "Ver todos los profesionales" link was removed (sprint 305).
-          <div className="py-1 text-center">
-            <p className="text-sm font-medium text-[#374151]">{ts("noResults")}</p>
-            <p className="mt-0.5 text-xs text-gray-400">{ts("noResultsHint")}</p>
-            <div className="mx-auto mt-2 max-w-sm">
+          <div className="py-2 text-center">
+            <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
+            <p className="mx-auto mt-0.5 max-w-sm text-xs leading-relaxed text-[#6b7280]">{tp("suggestDescription")}</p>
+            <div className="mx-auto mt-3 flex justify-center">
               <CategorySuggestionBox
-                notListedLabel={ts("notListed")}
-                placeholder={ts("suggestNamePlaceholder")}
-                sendLabel={ts("send")}
-                sendingLabel={ts("sending")}
+                prominent
+                defaultName={q}
+                notListedLabel={tp("suggestCta")}
+                placeholder={tp("suggestPlaceholder")}
+                sendLabel={tp("suggestSend")}
+                sendingLabel={tp("suggestSending")}
                 cancelLabel={ts("cancel")}
-                thanksLabel={ts("suggestThanks")}
+                thanksLabel={tp("suggestThanks")}
               />
             </div>
           </div>
