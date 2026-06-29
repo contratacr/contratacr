@@ -179,8 +179,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [reportProFor, setReportProFor] = useState<string | null>(null);
   const targetRetryRef = useRef(0);
   const targetBookingRef = useRef<string | null>(null);
+  const targetBookingHandledRef = useRef(false);
   const targetProjectRetryRef = useRef(0);
   const targetProjectRef = useRef<string | null>(null);
+  const targetProjectHandledRef = useRef(false);
 
   const fetchSection = useCallback(async (showLoading = true) => {
     if (!user) return;
@@ -214,7 +216,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (targetBookingRef.current !== bookingId) {
       targetBookingRef.current = bookingId;
       targetRetryRef.current = 0;
+      targetBookingHandledRef.current = false;
     }
+    if (targetBookingHandledRef.current) return;
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking) {
       if (targetRetryRef.current >= 8) return;
@@ -223,6 +227,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       return () => window.clearTimeout(id);
     }
     targetRetryRef.current = 0;
+    targetBookingHandledRef.current = true;
     setBookingFilter(solicitudBucket(booking.status, booking.scheduled_date));
     setExpandedBooking(bookingId);
     window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
@@ -235,7 +240,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (targetProjectRef.current !== projectId) {
       targetProjectRef.current = projectId;
       targetProjectRetryRef.current = 0;
+      targetProjectHandledRef.current = false;
     }
+    if (targetProjectHandledRef.current) return;
     const project = projects.find((p) => p.id === projectId);
     if (!project) {
       if (targetProjectRetryRef.current >= 8) return;
@@ -244,6 +251,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       return () => window.clearTimeout(id);
     }
     targetProjectRetryRef.current = 0;
+    targetProjectHandledRef.current = true;
     setProjectFilter(proyectoBucket(project.status));
     setExpandedProject(projectId);
     window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);

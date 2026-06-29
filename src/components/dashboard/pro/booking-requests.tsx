@@ -120,6 +120,7 @@ export function BookingRequests() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const targetRetryRef = useRef(0);
   const targetBookingRef = useRef<string | null>(null);
+  const targetBookingHandledRef = useRef(false);
   // "Reportar cliente" clean modal (replaces the old window.prompt), one at a time.
   const [reportFor, setReportFor] = useState<Booking | null>(null);
 
@@ -162,7 +163,9 @@ export function BookingRequests() {
     if (targetBookingRef.current !== bookingId) {
       targetBookingRef.current = bookingId;
       targetRetryRef.current = 0;
+      targetBookingHandledRef.current = false;
     }
+    if (targetBookingHandledRef.current) return;
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking) {
       if (targetRetryRef.current >= 8) return;
@@ -171,6 +174,7 @@ export function BookingRequests() {
       return () => window.clearTimeout(id);
     }
     targetRetryRef.current = 0;
+    targetBookingHandledRef.current = true;
     setFilter(solicitudBucket(booking.status, booking.scheduled_date));
     setExpandedId(bookingId);
     window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);

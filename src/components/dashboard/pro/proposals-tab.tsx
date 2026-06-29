@@ -129,6 +129,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const mineSnapshotRef = useRef("");
   const targetProjectRetryRef = useRef(0);
   const targetProjectRef = useRef<string | null>(null);
+  const targetProjectHandledRef = useRef(false);
   // Oportunidades browse: which profession is filtered and the locally-dismissed
   // ("No me interesa") opportunities.
   const [profFilter, setProfFilter] = useState<string>("");
@@ -214,11 +215,14 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (targetProjectRef.current !== projectId) {
       targetProjectRef.current = projectId;
       targetProjectRetryRef.current = 0;
+      targetProjectHandledRef.current = false;
     }
+    if (targetProjectHandledRef.current) return;
 
     const mine = myProposals.find((p) => p.project_id === projectId);
     if (mine) {
       targetProjectRetryRef.current = 0;
+      targetProjectHandledRef.current = true;
       setView("mine");
       setProjectFilter(proposalBucket(mine.status, mine.projects?.status));
       setExpandedMine(mine.id);
@@ -229,6 +233,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const open = openProjects.find((p) => p.id === projectId);
     if (open) {
       targetProjectRetryRef.current = 0;
+      targetProjectHandledRef.current = true;
       setView("browse");
       setProjectFilter("activas");
       setExpandedProject(projectId);
