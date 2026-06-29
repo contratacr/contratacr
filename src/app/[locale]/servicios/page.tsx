@@ -225,11 +225,6 @@ export default function ServiciosPage() {
                   </button>
                 )}
               </form>
-              {query.trim() && resultCount > 0 && (
-                <p className="px-1 pt-2 text-xs font-semibold text-[#6b7280]">
-                  {tp("searchSummary", { count: resultCount, query: query.trim() })}
-                </p>
-              )}
             </div>
 
             {query.trim() && resultCount === 0 ? (
@@ -253,13 +248,7 @@ export default function ServiciosPage() {
               </section>
             ) : query.trim() && resultCount > 0 ? (
               <section className="grid scroll-mt-32 lg:min-h-[460px] lg:grid-cols-[300px_minmax(0,1fr)]">
-                <aside className="min-w-0 overflow-hidden border-b border-[#edf2f7] bg-[#fbfdff] p-3 lg:border-b-0 lg:border-r">
-                  <div className="px-1 pb-2">
-                    <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{tp("resultsTitle")}</p>
-                    <h2 className="mt-1 text-lg font-extrabold text-[#162543]">
-                      {tp("searchSummary", { count: resultCount, query: query.trim() })}
-                    </h2>
-                  </div>
+                <aside className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-[#f8fafc] p-2 lg:border-b-0 lg:border-r">
                   <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
                     {visibleGroups.map((group) => {
                       const Icon = group.Icon;
@@ -269,44 +258,44 @@ export default function ServiciosPage() {
                           key={group.key}
                           type="button"
                           onClick={() => setActiveGroupKey(group.key)}
-                          className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-2xl border px-3 py-2 text-left transition-colors lg:w-full ${
-                            active ? "border-[#c6edf9] bg-[#EBF5FB] text-[#0077a3]" : "border-transparent bg-white text-[#374151] hover:bg-[#f4f8fb]"
+                          className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors lg:w-full ${
+                            active ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"
                           }`}
                         >
-                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-[#009FD9] text-white" : "bg-[#f1f7fb] text-[#009FD9]"}`}>
-                            <Icon className="h-[18px] w-[18px]" />
+                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? "bg-[#EAF7FD] text-[#0089bb]" : "bg-white text-[#8a94a6] group-hover:text-[#0089bb]"}`}>
+                            <Icon className="h-4 w-4" />
                           </span>
                           <span className="min-w-[130px] flex-1 lg:min-w-0">
-                            <span className="block text-sm font-extrabold leading-tight [overflow-wrap:anywhere]">{group.label}</span>
-                            <span className="mt-0.5 block text-xs font-semibold text-[#8a94a6]">
+                            <span className="block text-sm font-bold leading-tight [overflow-wrap:anywhere]">{group.label}</span>
+                            <span className="mt-0.5 block text-[11px] font-medium text-[#9ca3af]">
                               {tp("optionsCount", { count: group.visibleIds.length })}
                             </span>
                           </span>
+                          <ChevronRight className={`h-4 w-4 shrink-0 ${active ? "text-[#009FD9]" : "text-[#cbd5e1]"}`} />
                         </button>
                       );
                     })}
                   </div>
                 </aside>
 
-                <div className="min-w-0">
-                  <div className="flex items-end justify-between gap-3 border-b border-[#eef2f6] px-4 py-4 sm:px-6">
+                <div className="min-w-0 p-4">
+                  <div className="mb-3 flex items-end justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{tp("resultsTitle")}</p>
-                      <h2 className="mt-0.5 text-xl font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                      <h2 className="truncate text-lg font-extrabold leading-tight text-[#162543]">
                         {activeSearchGroup?.label}
                       </h2>
-                      <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
+                      <p className="mt-0.5 text-[11px] font-medium text-[#9ca3af]">
                         {tp("optionsCount", { count: activeSearchIds.length })}
                       </p>
                     </div>
                   </div>
 
-                  <div className={`grid grid-cols-1 ${activeSearchIds.length === 1 ? "sm:max-w-[320px]" : "sm:grid-cols-2 xl:grid-cols-3"}`}>
+                  <div className={`grid gap-1.5 ${activeSearchIds.length === 1 ? "max-w-[260px] grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
                     {activeSearchIds.map((id) => (
                       <Link
                         key={id}
                         href={`/buscar?categoria=${id}`}
-                        className="group flex min-h-[58px] items-center justify-between gap-3 border-b border-[#f1f5f9] px-4 py-3 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb] sm:border-r sm:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0"
+                        className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
                       >
                         <span className="min-w-0 [overflow-wrap:anywhere]">
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -318,7 +307,7 @@ export default function ServiciosPage() {
                       </Link>
                     ))}
                   </div>
-                  <div className={`${activeSearchIds.length === 1 ? "" : "border-t border-[#eef2f6]"} bg-[#fbfdff] px-4 py-3 sm:px-6`}>
+                  <div className="mt-4 bg-[#fbfdff] px-1 py-3">
                     <div className="flex flex-col gap-2 bg-white px-1 py-2 sm:flex-row sm:items-center sm:gap-4">
                       <div className="min-w-0">
                         <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
@@ -341,7 +330,7 @@ export default function ServiciosPage() {
               </section>
             ) : (
                 <section className="grid min-h-[560px] scroll-mt-32 lg:grid-cols-[300px_minmax(0,1fr)]">
-                  <aside className="min-w-0 overflow-hidden border-b border-[#edf2f7] bg-[#fbfdff] p-3 lg:border-b-0 lg:border-r">
+                  <aside className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-[#f8fafc] p-2 lg:border-b-0 lg:border-r">
                     <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
                       {groups.map((group) => {
                         const Icon = group.Icon;
@@ -351,45 +340,45 @@ export default function ServiciosPage() {
                             key={group.key}
                             type="button"
                             onClick={() => setActiveGroupKey(group.key)}
-                            className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-2xl border px-3 py-2 text-left transition-colors lg:w-full ${
-                              active ? "border-[#c6edf9] bg-[#EBF5FB] text-[#0077a3]" : "border-transparent bg-white text-[#374151] hover:bg-[#f4f8fb]"
+                            className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors lg:w-full ${
+                              active ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"
                             }`}
                           >
-                            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-[#009FD9] text-white" : "bg-[#f1f7fb] text-[#009FD9]"}`}>
-                              <Icon className="h-[18px] w-[18px]" />
+                            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? "bg-[#EAF7FD] text-[#0089bb]" : "bg-white text-[#8a94a6] group-hover:text-[#0089bb]"}`}>
+                              <Icon className="h-4 w-4" />
                             </span>
                             <span className="min-w-[130px] flex-1 lg:min-w-0">
-                              <span className="block text-sm font-extrabold leading-tight [overflow-wrap:anywhere]">{group.label}</span>
-                              <span className="mt-0.5 block text-xs font-semibold text-[#8a94a6]">
+                              <span className="block text-sm font-bold leading-tight [overflow-wrap:anywhere]">{group.label}</span>
+                              <span className="mt-0.5 block text-[11px] font-medium text-[#9ca3af]">
                                 {tp("optionsCount", { count: group.ids.length })}
                               </span>
                             </span>
+                            <ChevronRight className={`h-4 w-4 shrink-0 ${active ? "text-[#009FD9]" : "text-[#cbd5e1]"}`} />
                           </button>
                         );
                       })}
                     </div>
                   </aside>
 
-                  <div className="min-w-0">
-                    <div className="flex items-end justify-between gap-3 border-b border-[#eef2f6] px-4 py-4 sm:px-6">
+                  <div className="min-w-0 p-4">
+                    <div className="mb-3 flex items-end justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{tp("resultsTitle")}</p>
-                        <h2 className="mt-0.5 text-xl font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                        <h2 className="truncate text-lg font-extrabold leading-tight text-[#162543]">
                           {activeGroup.label}
                         </h2>
-                        <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
+                        <p className="mt-0.5 text-[11px] font-medium text-[#9ca3af]">
                           {tp("optionsCount", { count: activeGroup.ids.length })}
                         </p>
                       </div>
                     </div>
 
                     {activeGroupHasServices ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                         {activeGroup.ids.map((id) => (
                           <Link
                             key={id}
                             href={`/buscar?categoria=${id}`}
-                            className="group flex min-h-[58px] items-center justify-between gap-3 border-t border-[#f1f5f9] px-4 py-3 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb] sm:border-r sm:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0"
+                            className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
                           >
                             <span className="min-w-0 [overflow-wrap:anywhere]">
                               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -402,7 +391,7 @@ export default function ServiciosPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="border-t border-[#f1f5f9] px-6 py-12 text-sm font-medium text-[#8a94a6]">
+                      <div className="px-2 py-10 text-sm font-medium text-[#8a94a6]">
                         {locale === "en" ? "This section does not have published services yet." : "Esta sección todavía no tiene servicios publicados."}
                       </div>
                     )}
