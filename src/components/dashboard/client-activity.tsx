@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag } from "lucide-react";
@@ -177,33 +177,45 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [deleting, setDeleting] = useState(false);
   // "Reportar profesional" clean modal (replaces the old window.prompt), keyed by booking id.
   const [reportProFor, setReportProFor] = useState<string | null>(null);
+  const targetRetryRef = useRef(0);
+  const targetBookingRef = useRef<string | null>(null);
 
-  const fetchSection = useCallback(async () => {
+  const fetchSection = useCallback(async (showLoading = true) => {
     if (!user) return;
-    setLoading(true);
+    if (showLoading) setLoading(true);
     if (section === "bookings") {
-      const res = await fetch("/api/bookings?role=client");
+      const res = await fetch("/api/bookings?role=client", { cache: "no-store" });
       const { bookings } = await res.json();
       setBookings(bookings ?? []);
     } else if (section === "projects") {
-      const res = await fetch("/api/projects?role=client");
+      const res = await fetch("/api/projects?role=client", { cache: "no-store" });
       const { projects } = await res.json();
       setProjects(projects ?? []);
     }
-    setLoading(false);
+    if (showLoading) setLoading(false);
   }, [user, section]);
 
-  useEffect(() => { queueMicrotask(() => fetchSection()); }, [fetchSection]);
+  useEffect(() => { queueMicrotask(() => fetchSection(true)); }, [fetchSection]);
 
   useEffect(() => {
     if (section !== "bookings") return;
     const bookingId = searchParams.get("booking");
-    if (!bookingId || bookings.length === 0) return;
+    if (!bookingId) return;
+    if (targetBookingRef.current !== bookingId) {
+      targetBookingRef.current = bookingId;
+      targetRetryRef.current = 0;
+    }
     const booking = bookings.find((b) => b.id === bookingId);
-    if (!booking) return;
+    if (!booking) {
+      if (targetRetryRef.current >= 8) return;
+      targetRetryRef.current += 1;
+      const id = window.setTimeout(() => void fetchSection(false), 900);
+      return () => window.clearTimeout(id);
+    }
+    targetRetryRef.current = 0;
     setBookingFilter(solicitudBucket(booking.status, booking.scheduled_date));
     setExpandedBooking(bookingId);
-  }, [bookings, searchParams, section]);
+  }, [bookings, fetchSection, searchParams, section]);
 
   useEffect(() => {
     if (section !== "projects") return;
