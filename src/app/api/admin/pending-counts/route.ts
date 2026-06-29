@@ -8,9 +8,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // by AdminShell. Admin-only.
 //
 // Sections covered:
-//  • verificacion  — professionals awaiting review: verification_status pending OR
-//                    under_appeal (the manual-review "no tengo identificación" /
-//                    "no es mi info" cases land in pending too).
+//  • verificacion  — account identity awaiting review: professionals pending/appeal
+//                    plus client-only profiles with client_identity_status=pending.
 //  • reportes      — open moderation reports.
 //  • suscripciones — manual SINPE/transfer payments awaiting approval.
 //  • categorias    — user-suggested categories awaiting review ("¿No ves tu categoría?").
@@ -22,16 +21,21 @@ export async function GET() {
 
   const db = createAdminClient();
 
-  const [verificacion, reportes, categorias, supportOpen, supportAwaiting] = await Promise.all([
+  const [verificacionPros, pendingClientProfiles, proProfiles, reportes, categorias, supportOpen, supportAwaiting] = await Promise.all([
     db.from("professionals").select("id", { count: "exact", head: true }).in("verification_status", ["pending", "under_appeal"]),
+    db.from("profiles").select("id").eq("client_identity_status", "pending"),
+    db.from("professionals").select("profile_id"),
     db.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
     db.from("category_suggestions").select("id", { count: "exact", head: true }).eq("status", "pending"),
     db.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
     db.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "in_progress").eq("last_reply_role", "user"),
   ]);
 
+  const proProfileIds = new Set((proProfiles.data ?? []).map((row) => row.profile_id).filter(Boolean));
+  const clientOnlyPending = (pendingClientProfiles.data ?? []).filter((row) => !proProfileIds.has(row.id)).length;
+
   return NextResponse.json({
-    verificacion: verificacion.count ?? 0,
+    verificacion: (verificacionPros.count ?? 0) + clientOnlyPending,
     reportes: reportes.count ?? 0,
     suscripciones: 0,
     categorias: categorias.count ?? 0,

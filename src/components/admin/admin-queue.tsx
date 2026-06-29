@@ -16,7 +16,9 @@ import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 
 type Row = {
   id: string;
-  slug: string;
+  slug: string | null;
+  detail_href?: string;
+  role_label?: string;
   verification_status: VerificationStatus;
   category_id: string | null;
   professions: string[] | null;
@@ -78,7 +80,7 @@ export function AdminQueue() {
   return (
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
-        <h1 className="text-xl font-bold text-[#111827]">Verificación de proveedores</h1>
+        <h1 className="text-xl font-bold text-[#111827]">Verificación de identidad</h1>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
           <input
@@ -98,13 +100,13 @@ export function AdminQueue() {
             <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-16 text-center text-sm text-[#6b7280]">No hay proveedores en esta vista.</div>
+          <div className="py-16 text-center text-sm text-[#6b7280]">No hay cuentas en esta vista.</div>
         ) : (
           <ul className="divide-y divide-[#f3f4f6]">
             {filtered.map((r) => (
               <li key={r.id}>
                 <Link
-                  href={`/admin/proveedores/${r.id}`}
+                  href={r.detail_href ?? `/admin/proveedores/${r.id}`}
                   className="flex items-center gap-4 px-4 py-3 hover:bg-[#f9fafb] transition-colors"
                 >
                   <div className="h-10 w-10 rounded-full bg-[#EBF5FB] text-[#009FD9] font-semibold flex items-center justify-center overflow-hidden shrink-0">
@@ -121,7 +123,8 @@ export function AdminQueue() {
                     </p>
                     <p className="text-xs text-[#6b7280] truncate">
                       {r.profiles?.cedula ? `${formatId(r.profiles.cedula)} · ` : ""}
-                      {r.category_id ? getCategoryLabel(r.category_id) : "Sin categoría"}
+                      {r.role_label ?? "Cuenta"}
+                      {r.category_id ? ` · ${getCategoryLabel(r.category_id)}` : ""}
                     </p>
                   </div>
                   <span
