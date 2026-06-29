@@ -1163,6 +1163,8 @@
       "bioBenefit": "Cuéntales a los clientes quién eres y por qué elegirte.",
       "services": "Agrega los servicios que ofreces",
       "servicesBenefit": "Los clientes buscan por servicio: sin servicios casi no apareces.",
+      "serviceInfo": "Completa la información de tus servicios",
+      "serviceInfoBenefit": "Agrega precio y descripción para que los clientes entiendan qué ofreces.",
       "location": "Indica tu ubicación o cobertura",
       "locationBenefit": "Así te encuentran los clientes de tu zona.",
       "whatsapp": "Confirma tu número de WhatsApp",

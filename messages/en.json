@@ -1164,6 +1164,8 @@
       "bioBenefit": "Tell clients who you are and why to choose you.",
       "services": "Add the services you offer",
       "servicesBenefit": "Clients search by service: without services you barely show up.",
+      "serviceInfo": "Complete your service details",
+      "serviceInfoBenefit": "Add price and description so clients understand what you offer.",
       "location": "Set your location or coverage",
       "locationBenefit": "So clients in your area can find you.",
       "whatsapp": "Confirm your WhatsApp number",

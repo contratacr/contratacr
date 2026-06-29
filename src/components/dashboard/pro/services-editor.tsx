@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Plus, Trash2, Pencil, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,8 @@ interface ServicesEditorProps {
   initialProfessions?: string[];
   initialServices?: ProService[];
   onSaved?: () => void;
+  focusField?: string | null;
+  focusKey?: number;
 }
 
 function genId() {
@@ -63,6 +65,8 @@ export function ServicesEditor({
   initialProfessions = [],
   initialServices = [],
   onSaved,
+  focusField,
+  focusKey,
 }: ServicesEditorProps) {
   const locale = useLocale();
   const t = useTranslations("servicesEditor");
@@ -192,6 +196,13 @@ export function ServicesEditor({
     if (professions.includes(prof)) setPendingNewCategory(null);
     setEditCategory(prof);
   }
+
+  useEffect(() => {
+    if (focusField !== "serviceInfo" || !focusKey) return;
+    const target = professions.find((prof) => !serviceInfo(prof)) ?? professions[0];
+    if (target) openEditInfo(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusField, focusKey]);
 
   function cancelForm() {
     setEditCategory("");

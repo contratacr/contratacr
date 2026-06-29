@@ -112,6 +112,7 @@ export default function DashboardPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
+  const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   // Mobile "Más" bottom-sheet (the overflow of the bottom nav bar).
   const [moreOpen, setMoreOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -447,7 +448,14 @@ export default function DashboardPage() {
             <>
               {/* Profile-completion — offer mode only, hides itself once complete. */}
               {showProfileCompletion && (
-                <ProfileCompletion pro={pro} onGo={(tab, field) => { setTab(tab as Tab); if (field) setProfileFocus({ field, key: Date.now() }); }} />
+                <ProfileCompletion
+                  pro={pro}
+                  onGo={(tab, field) => {
+                    setTab(tab as Tab);
+                    if (field && tab === "services") setServiceFocus({ field, key: Date.now() });
+                    else if (field) setProfileFocus({ field, key: Date.now() });
+                  }}
+                />
               )}
 
               <div className="flex flex-col lg:flex-row gap-6">
@@ -530,6 +538,8 @@ export default function DashboardPage() {
                             initialProfessions={pro.professions ?? []}
                             initialServices={pro.services ?? []}
                             onSaved={handleSaved}
+                            focusField={serviceFocus?.field ?? null}
+                            focusKey={serviceFocus?.key}
                           />
                         )}
                         {activeTab === "photos" && pro && (

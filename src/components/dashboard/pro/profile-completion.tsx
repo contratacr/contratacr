@@ -42,12 +42,14 @@ export function computeCompletion(pro: ProRecord): {
     !!pro.coverage_country ||
     !!pro.provincia_id ||
     !!pro.canton_id;
+  const hasSelectedServices = hasLen(pro.professions) || !!pro.category_id;
+  const hasServiceInfo = hasLen(pro.services);
 
   const items: CompletionItem[] = [
     { key: "photo", done: !!profiles.avatar_url, tab: "profile" },
     // Any non-empty description counts as done (no minimum length).
     { key: "bio", done: typeof pro.bio === "string" && pro.bio.trim().length > 0, tab: "profile" },
-    { key: "services", done: hasLen(pro.services), tab: "services" },
+    { key: hasSelectedServices ? "serviceInfo" : "services", done: hasServiceInfo, tab: "services" },
     { key: "location", done: hasLocation, tab: "profile" },
     { key: "whatsapp", done: typeof pro.whatsapp === "string" && pro.whatsapp.trim().length > 0, tab: "profile" },
   ];
