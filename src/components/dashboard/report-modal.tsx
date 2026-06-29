@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { ShieldCheck, AlertCircle } from "lucide-react";
 
 /**
  * Shared, on-brand REPORT modal (sprint 445) — same clean treatment as the cancel /
@@ -55,8 +55,8 @@ export function ReportModal({
       >
         {submitted ? (
           <div className="py-2 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-              <CheckCircle2 className="h-6 w-6" />
+            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#EBF5FB] text-[#0089bb]">
+              <ShieldCheck className="h-5 w-5" />
             </div>
             <h2 className="text-base font-bold text-[#111827]">{successLabel}</h2>
             <Button size="sm" className="mt-5 w-full rounded-lg" onClick={onClose}>
