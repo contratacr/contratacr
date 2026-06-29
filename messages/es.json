@@ -52,12 +52,12 @@
     "servicePlaceholder": "Busca un servicio",
     "servicePlaceholderShort": "Busca un servicio",
     "searchExamples": [
-      "Necesito limpiar mi casa",
-      "Arreglar una fuga",
-      "Pintar mi sala",
-      "Reparar mi computadora",
-      "Cuidar a un adulto mayor",
-      "DJ para una fiesta"
+      "Limpieza",
+      "Plomería",
+      "Pintura",
+      "Computadora",
+      "Cuido adulto",
+      "DJ fiesta"
     ],
     "location": "Ubicación",
     "searchAll": "Buscar “{q}” en todos los servicios",
