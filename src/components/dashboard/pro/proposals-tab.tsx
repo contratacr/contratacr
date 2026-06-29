@@ -143,8 +143,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     // Fetch open projects + this pro's existing proposals so we can flag the
     // projects they already proposed to (no duplicate proposals allowed).
     const [projRes, mineRes] = await Promise.all([
-      fetch(url),
-      fetch("/api/proposals?mine=true"),
+      fetch(url, { cache: "no-store" }),
+      fetch("/api/proposals?mine=true", { cache: "no-store" }),
     ]);
     const { projects } = await projRes.json();
     const { proposals } = await mineRes.json().catch(() => ({ proposals: [] }));
@@ -158,7 +158,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
   async function fetchMyProposals(silent = false) {
     if (!silent) setLoading(true);
-    const res = await fetch("/api/proposals?mine=true");
+    const res = await fetch("/api/proposals?mine=true", { cache: "no-store" });
     const { proposals } = await res.json();
     const nextProposals = proposals ?? [];
     const snapshot = JSON.stringify(nextProposals.map((p: MyProposal) => `${p.id}:${p.status}:${p.projects?.status ?? ""}`));
@@ -182,7 +182,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         if (view === "browse") void fetchOpenProjects(true);
         else void fetchMyProposals(true);
       }
-    }, 30000);
+    }, 3000);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, loading]);

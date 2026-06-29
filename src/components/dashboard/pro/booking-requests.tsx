@@ -133,7 +133,7 @@ export function BookingRequests() {
 
   const loadBookings = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
-    const res = await fetch("/api/bookings?role=professional");
+    const res = await fetch("/api/bookings?role=professional", { cache: "no-store" });
     const { bookings: rows } = await res.json();
     const next = rows ?? [];
     const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
@@ -148,7 +148,7 @@ export function BookingRequests() {
     if (loading) return;
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") void loadBookings(true);
-    }, 30000);
+    }, 3000);
     return () => window.clearInterval(id);
   }, [loadBookings, loading]);
 
