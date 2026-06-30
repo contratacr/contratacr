@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FormLoadingState } from "@/components/ui/loading-state";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
 import { ProfileCompletion, computeCompletion } from "@/components/dashboard/pro/profile-completion";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
@@ -311,8 +312,9 @@ export default function DashboardPage() {
 
   if (authLoading || loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      <div className="min-h-screen bg-[#fafafa]">
+        <Navbar />
+        <FormLoadingState minHeight="min-h-[60vh]" />
       </div>
     );
   }
@@ -487,9 +489,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           ) : offerLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-            </div>
+            <FormLoadingState minHeight="min-h-[360px]" />
           ) : /* Offer mode, not yet a provider → activation gate. */
           showOfferGate ? (
             <Card>

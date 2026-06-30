@@ -23,6 +23,7 @@ import { LeaveReviewModal } from "@/components/professionals/leave-review-modal"
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { RescheduleModal } from "@/components/booking/reschedule-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
+import { CardListSkeleton } from "@/components/ui/loading-state";
 import type { BookingStatus } from "@/types";
 
 /**
@@ -541,11 +542,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
+    return <CardListSkeleton rows={section === "projects" ? 3 : 2} />;
   }
 
   const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));

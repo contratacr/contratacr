@@ -16,6 +16,7 @@ import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedun
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
+import { CardListSkeleton } from "@/components/ui/loading-state";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import type { BookingStatus } from "@/types";
 
@@ -256,11 +257,7 @@ export function BookingRequests() {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
+    return <CardListSkeleton rows={3} />;
   }
 
   if (bookings.length === 0) {

@@ -15,6 +15,7 @@ import { computeAge } from "@/lib/age";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
+import { CardListSkeleton } from "@/components/ui/loading-state";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -554,11 +555,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
+    return <CardListSkeleton rows={3} />;
   }
 
   return (

@@ -10,6 +10,7 @@ import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
 import { SelectMenu } from "@/components/ui/select-menu";
+import { FormLoadingState } from "@/components/ui/loading-state";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 
 // How far ahead the weekly template + exceptions are MATERIALIZED into concrete
@@ -640,7 +641,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" /></div>
+        <FormLoadingState minHeight="min-h-[300px]" />
       ) : !isPublic ? (
         <div className="rounded-2xl border border-[#ccecf8] bg-[#f5fbfe] p-4 text-sm shadow-[0_14px_36px_-30px_rgba(0,159,217,0.65)] sm:p-5">
           <div className="flex items-start gap-3">

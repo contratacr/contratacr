@@ -9,6 +9,7 @@ import { CedulaInput } from "@/components/ui/cedula-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { DateOfBirthPicker } from "@/components/ui/date-of-birth-picker";
+import { FormLoadingState } from "@/components/ui/loading-state";
 import { Loader2, ShieldAlert, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { isHealthCategory } from "@/lib/data/categories";
@@ -309,12 +310,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         {/* Form: scrolling body + pinned footer */}
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           {!profileReady ? (
-            <div className="flex min-h-[360px] flex-1 items-center justify-center px-5 py-10 sm:px-6">
-              <div className="flex flex-col items-center gap-3 text-center">
-                <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" />
-                <p className="text-sm font-medium text-[#6b7280]">{t("loadingProfile")}</p>
-              </div>
-            </div>
+            <FormLoadingState label={t("loadingProfile")} />
           ) : (
           <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5 sm:px-6">
             {/* Category */}
