@@ -73,7 +73,7 @@ const COLUMNS = [
 export function LandingFooter() {
   const t = useTranslations("footer");
   const { user } = useAuth();
-  const panelHref = canOffer(user) ? "/dashboard/profesional" : "/dashboard/cliente";
+  const panelHref = canOffer(user) ? "/dashboard/profesional" : "/dashboard/profesional?mode=use";
   return (
     <footer className="bg-[#111827] text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">

@@ -191,7 +191,7 @@ export default function RegisterClientPage() {
             <p className="text-[#6b7280] mb-8">
               {t("successBody")}
             </p>
-            <Button size="lg" className="w-full" onClick={() => router.push("/dashboard/cliente")}>
+            <Button size="lg" className="w-full" onClick={() => router.push("/dashboard/profesional?mode=use")}>
               {t("goToPanel")}
             </Button>
             <Button variant="outline" size="lg" className="w-full mt-3" onClick={() => router.push("/buscar")}>

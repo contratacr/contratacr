@@ -122,7 +122,7 @@ export async function notifyBookingStatusChange(
         type: status === "confirmed" ? "booking_confirmed" : "booking_cancelled",
         title,
         message,
-        data: { link: "/es/dashboard/cliente?tab=bookings", booking_id: bookingId },
+        data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: bookingId },
       });
     }
 

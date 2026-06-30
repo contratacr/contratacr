@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FormLoadingState } from "@/components/ui/loading-state";
+import { CardListSkeleton, FormLoadingState } from "@/components/ui/loading-state";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
 import { ProfileCompletion, computeCompletion } from "@/components/dashboard/pro/profile-completion";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
@@ -105,6 +105,8 @@ export default function DashboardPage() {
   const tc = useTranslations("clientActivity");
   const locale = useLocale();
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
+  const requestedMode = searchParams.get("mode");
+  const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(null);
@@ -132,7 +134,7 @@ export default function DashboardPage() {
   // A non-provider has no offer world → always "use".
   const { mode: globalMode, setMode } = useMode(isProvider);
   const urlForcedMode: Mode | null =
-    OFFER_ONLY.has(visibleTab) ? "offer" : USE_ONLY.has(visibleTab) ? "use" : null;
+    OFFER_ONLY.has(visibleTab) ? "offer" : USE_ONLY.has(visibleTab) ? "use" : urlModeParam;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
 
   useEffect(() => {
@@ -586,7 +588,7 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </CardHeader>
-                      <CardContent className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">
+                      <CardContent key={visibleTab} className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">
                         {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
                         {visibleTab === "profile" && mode === "offer" && pro && (
                           <ProfileEditor
@@ -633,14 +635,16 @@ export default function DashboardPage() {
                           />
                         )}
                         {visibleTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
-                        {visibleTab === "bookings" && <BookingRequests />}
+                        {visibleTab === "bookings" && <BookingRequests key="bookings" />}
                         {visibleTab === "proposals" && pro && (
                           <ProposalsTab
+                            key={`proposals-${pro.id}`}
                             categoryId={pro.category_id}
                             professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
                             services={pro.services ?? []}
                           />
                         )}
+                        {visibleTab === "proposals" && !pro && <CardListSkeleton rows={3} />}
                         {visibleTab === "verificacion" && pro && (
                           <VerificationPanel
                             professionalId={pro.id}
@@ -652,9 +656,9 @@ export default function DashboardPage() {
                         )}
 
                         {/* "Usar servicios" — the seek capability. */}
-                        {visibleTab === "sent_bookings" && <ClientActivity section="bookings" />}
-                        {visibleTab === "sent_projects" && <ClientActivity section="projects" />}
-                        {visibleTab === "saved" && <ClientActivity section="saved" />}
+                        {visibleTab === "sent_bookings" && <ClientActivity key="sent-bookings" section="bookings" />}
+                        {visibleTab === "sent_projects" && <ClientActivity key="sent-projects" section="projects" />}
+                        {visibleTab === "saved" && <ClientActivity key="saved" section="saved" />}
 
                         {visibleTab === "notifications" && <NotificationsList />}
                         {visibleTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}

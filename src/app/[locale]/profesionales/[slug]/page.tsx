@@ -138,7 +138,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       .then(({ data: { user } }) => {
         if (!user) { setPanelHref(null); return; }
         const role = (user.user_metadata?.role as string | undefined) ?? "client";
-        setPanelHref(role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente");
+        setPanelHref(role === "professional" ? "/dashboard/profesional" : "/dashboard/profesional?mode=use");
       })
       .catch(() => setPanelHref(null));
   }, []);

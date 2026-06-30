@@ -17,8 +17,8 @@ import { canOffer } from "@/lib/auth/capabilities";
 export default function SoportePage() {
   const t = useTranslations("soporte");
   const { user } = useAuth();
-  const panelHref = user && canOffer(user) ? "/dashboard/profesional?tab=soporte" : "/dashboard/cliente?tab=soporte";
-  const panelHomeHref = user && canOffer(user) ? "/dashboard/profesional" : "/dashboard/cliente";
+  const panelHref = "/dashboard/profesional?tab=soporte";
+  const panelHomeHref = canOffer(user) ? "/dashboard/profesional" : "/dashboard/profesional?mode=use";
 
   const [success, setSuccess] = useState(false);
   const [successEmail, setSuccessEmail] = useState("");

@@ -391,7 +391,7 @@ export async function PATCH(req: NextRequest) {
       type: "project_work_done",
       title: "Confirma la finalización del trabajo",
       message: `El profesional marcó "${project.title}" como realizado. Confirma para finalizarlo. Si no respondes en ${AUTO_CONFIRM_DAYS} días se confirma automáticamente.`,
-      data: { link: "/es/dashboard/cliente?tab=projects", project_id: id },
+      data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: id },
     });
     return NextResponse.json({ success: true });
   }

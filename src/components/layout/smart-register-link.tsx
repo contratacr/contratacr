@@ -17,7 +17,7 @@ export function SmartRegisterLink({
   let href = "/registro/profesional";
   if (user) {
     const role = (user.user_metadata?.role as string | undefined) ?? "client";
-    href = role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente";
+    href = role === "professional" ? "/dashboard/profesional" : "/dashboard/profesional?mode=use";
   }
 
   return (

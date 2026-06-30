@@ -57,7 +57,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     } else {
       // Redirect based on role from the newly created session.
       const role = data.user?.user_metadata?.role as string | undefined;
-      router.push(role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente");
+      router.push(role === "professional" ? "/dashboard/profesional" : "/dashboard/profesional?mode=use");
     }
   }
 

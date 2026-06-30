@@ -36,6 +36,6 @@ export default async function PublicarProyectoPage() {
   redirect(
     role === "professional"
       ? `/${locale}/dashboard/profesional?tab=sent_projects`
-      : `/${locale}/dashboard/cliente?tab=projects`
+      : `/${locale}/dashboard/profesional?tab=sent_projects`
   );
 }

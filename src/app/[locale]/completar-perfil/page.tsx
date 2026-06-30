@@ -21,7 +21,7 @@ export default function CompleteProfilePage() {
   const t = useTranslations("completeProfile");
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/dashboard/cliente";
+  const next = params.get("next") || "/dashboard/profesional?mode=use";
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
