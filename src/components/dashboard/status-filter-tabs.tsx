@@ -182,10 +182,10 @@ export function solicitudStatusRedundant(status: string, scheduledDate?: string 
   return SOLICITUD_PRIMARY[solicitudBucket(status, scheduledDate)]?.includes(status) ?? false;
 }
 const PROYECTO_PRIMARY: Record<string, string[]> = {
-  // Inside "Activas", `open` (receiving propuestas) is the DEFAULT/expected state, so its
-  // "Abierto" badge is redundant → hidden (sprint 437). The meaningful sub-states (Asignado /
-  // in_progress, Esperando confirmación / awaiting) are NOT primary → they keep their badge.
-  activas: ["open"],
+  // Inside "Activas", `open` (receiving proposals) and `in_progress` (already assigned)
+  // are the normal active states, so their badges repeat the tab/details. Awaiting
+  // confirmation still shows because it needs the client's attention.
+  activas: ["open", "in_progress"],
   finalizadas: ["completed"],
   canceladas: ["cancelled"],
 };
