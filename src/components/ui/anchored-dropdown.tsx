@@ -46,7 +46,19 @@ export function useAnchoredPosition(
     const top = openAbove
       ? Math.max(sy + viewTop + PAD, r.top + sy - GAP - maxH)
       : r.bottom + sy + GAP;
-    setPos({ left, top, width, maxH });
+    setPos((prev) => {
+      const next = { left, top, width, maxH };
+      if (
+        prev &&
+        Math.abs(prev.left - next.left) < 0.5 &&
+        Math.abs(prev.top - next.top) < 0.5 &&
+        Math.abs(prev.width - next.width) < 0.5 &&
+        Math.abs(prev.maxH - next.maxH) < 0.5
+      ) {
+        return prev;
+      }
+      return next;
+    });
   }, [anchorRef, maxHeight]);
 
   useEffect(() => {

@@ -40,6 +40,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const didScrollSelectedRef = useRef(false);
 
   const selected = options.find((o) => o.value === value);
   // 320px shows short lists (e.g. Todas + 7 provincias) without a scrollbar, while
@@ -62,12 +63,20 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
   }, [open]);
 
-  // Scroll the selected option into view once the portal has mounted (keyed on `pos`).
+  // Scroll the selected option into view once per open. The portaled list also triggers
+  // captured scroll repositioning; if this runs on every position update, long lists like
+  // cantones keep snapping back to the selected item and feel impossible to scroll.
   useEffect(() => {
     if (!open || !pos) return;
+    if (didScrollSelectedRef.current) return;
+    didScrollSelectedRef.current = true;
     const el = listRef.current?.querySelector<HTMLElement>("[data-selected='true']");
-    el?.scrollIntoView({ block: "center" });
+    window.requestAnimationFrame(() => el?.scrollIntoView({ block: "center" }));
   }, [open, pos]);
+
+  useEffect(() => {
+    if (!open) didScrollSelectedRef.current = false;
+  }, [open]);
 
   // Mouse-wheel scroll INSIDE the list. The list is portaled to <body>, OUTSIDE a Radix
   // MODAL Dialog's `react-remove-scroll`, which attaches a non-passive `wheel` listener on
