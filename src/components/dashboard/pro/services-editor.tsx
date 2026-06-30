@@ -425,9 +425,9 @@ export function ServicesEditor({
               />
             </div>
           </div>
-          <div className="px-3 py-2 sm:px-4">
+          <div className={cn("px-3 sm:px-4", pickerList.length === 0 && pickerQuery.trim() ? "pt-0 pb-2" : "py-2")}>
             {pickerList.length === 0 && pickerQuery.trim() ? (
-              <div className="h-1" />
+              null
             ) : pickerQuery.trim() ? (
               <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                 {pickerList.map((cat) => (
@@ -456,7 +456,7 @@ export function ServicesEditor({
             )}
 
             {/* "¿No ves tu servicio?" — type → submit → admin reviews → becomes selectable. */}
-            <div className="mt-4 text-center">
+            <div className={cn("text-center", pickerList.length === 0 && pickerQuery.trim() ? "mt-1" : "mt-4")}>
               <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
               <p className="mx-auto mt-1 max-w-[280px] text-xs leading-5 text-[#6b7280]">
                 {tp("suggestDescription")}
