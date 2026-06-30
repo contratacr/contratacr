@@ -1412,7 +1412,6 @@
     "cancel": "Cancelar",
     "cancelConfirm": "¿Cancelar esta propuesta?",
     "markCompleted": "Marcar como completado",
-    "completeShort": "Finalizar",
     "clientCancelled": "El cliente canceló esta solicitud.",
     "whatsapp": "WhatsApp",
     "waMessage": "Hola {name}, soy quien envió la propuesta que aceptaste en ContrataCR para \"{title}\".",

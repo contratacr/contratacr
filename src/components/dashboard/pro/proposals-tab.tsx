@@ -745,13 +745,9 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2.5">
                             <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{p.projects?.title ?? t("projectFallback")}</span>
-                            {(canMarkCompleted || !proposalStatusRedundant(p.status, ps)) && (
-                              canMarkCompleted ? (
-                                <Badge variant="default" className="shrink-0 text-[11px] font-semibold">{t("completeShort")}</Badge>
-                              ) : p.status === "accepted" ? (
+                            {p.status !== "pending" && !canMarkCompleted && !proposalStatusRedundant(p.status, ps) && (
+                              p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
-                              ) : p.status === "pending" ? (
-                                <PendingProposalBadge label={t("status.pending")} />
                               ) : (
                                 <Badge variant={STATUS_VARIANT[p.status]} className="shrink-0 text-[11px] font-semibold">{t(`status.${p.status}`)}</Badge>
                               )
