@@ -210,7 +210,10 @@ export function BookingRequests() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, action: "archive" }),
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      alert(t("archiveError"));
+      return;
+    }
     setBookings((prev) => prev.filter((b) => b.id !== id));
     if (expandedId === id) setExpandedId(null);
   }
@@ -467,7 +470,7 @@ export function BookingRequests() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="flex-1 rounded-lg px-4 text-[#6b7280] sm:flex-none"
+                      className="flex-1 rounded-lg px-4 text-[#6b7280] hover:bg-[#f9fafb] sm:flex-none"
                       onClick={() => archiveBooking(booking.id)}
                     >
                       {t("archive")}
