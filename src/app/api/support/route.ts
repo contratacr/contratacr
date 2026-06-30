@@ -17,6 +17,23 @@ async function claimGuestTickets(db: SupabaseClient<any>, user: User) {
   await db.from("support_tickets").update({ user_id: user.id }).is("user_id", null).ilike("email", user.email);
 }
 
+async function getCanonicalProfileContact(db: SupabaseClient<any>, user: User) {
+  const { data: profile } = await db
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", user.id)
+    .maybeSingle();
+  return {
+    name: (profile?.full_name as string | null) || (user.user_metadata?.full_name as string) || null,
+    email: (profile?.email as string | null) || user.email || "",
+  };
+}
+
+async function syncUserTicketEmail(db: SupabaseClient<any>, user: User, email: string) {
+  if (!email) return;
+  await db.from("support_tickets").update({ email }).eq("user_id", user.id).neq("email", email);
+}
+
 // GET /api/support — the logged-in user's tickets.
 // GET /api/support?id=… — one of THEIR tickets + its message thread.
 export async function GET(req: Request) {
@@ -26,6 +43,11 @@ export async function GET(req: Request) {
 
   const db = createAdminClient();
   await claimGuestTickets(db, user);
+  const contact = await getCanonicalProfileContact(db, user);
+  if (contact.email && contact.email !== user.email) {
+    await db.from("support_tickets").update({ user_id: user.id }).is("user_id", null).ilike("email", contact.email);
+  }
+  await syncUserTicketEmail(db, user, contact.email);
   const id = new URL(req.url).searchParams.get("id");
 
   if (id) {
@@ -65,7 +87,11 @@ export async function POST(req: Request) {
   if (!ticket) return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 });
 
   const now = new Date().toISOString();
-  const senderName = (user.user_metadata?.full_name as string) || ticket.name || null;
+  const contact = await getCanonicalProfileContact(db, user);
+  const senderName = contact.name || ticket.name || null;
+  if (contact.email && ticket.email !== contact.email) {
+    await db.from("support_tickets").update({ email: contact.email }).eq("id", ticketId);
+  }
   const safeBody = limitTrimmedText(body, LONG_TEXT_MAX_LENGTH);
 
   // CONFIRM — the user agrees the ticket is resolved (finalizes it).
@@ -81,7 +107,7 @@ export async function POST(req: Request) {
     await db.from("support_ticket_messages").insert({
       ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: safeBody || "El usuario solicitó reabrir el ticket: el problema continúa.",
     });
-    await notifySupportInbox({ subject: ticket.subject, fromName: senderName, fromEmail: ticket.email ?? user.email ?? "", body: "Solicitud de reapertura: el problema continúa.", isReply: true });
+    await notifySupportInbox({ subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: "Solicitud de reapertura: el problema continúa.", isReply: true });
     return NextResponse.json({ ok: true });
   }
 
@@ -97,7 +123,7 @@ export async function POST(req: Request) {
   await db.from("support_tickets").update({ status: nextStatus, user_confirmed: false, last_reply_at: now, last_reply_role: "user" }).eq("id", ticketId);
 
   await notifySupportInbox({
-    subject: ticket.subject, fromName: senderName, fromEmail: ticket.email ?? user.email ?? "", body: safeBody, isReply: true,
+    subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: safeBody, isReply: true,
   });
 
   return NextResponse.json({ ok: true });

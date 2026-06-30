@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle, Paperclip, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
@@ -39,6 +40,26 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
         }));
       });
     }
+  }, [user, authLoading]);
+
+  useEffect(() => {
+    if (!user || authLoading) return;
+    let alive = true;
+    const supabase = createClient();
+    supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!alive || !data) return;
+        setForm((f) => ({
+          ...f,
+          name: limitText(data.full_name || f.name, NAME_MAX_LENGTH),
+          email: data.email || f.email,
+        }));
+      });
+    return () => { alive = false; };
   }, [user, authLoading]);
 
   function update(field: keyof typeof form, value: string) {

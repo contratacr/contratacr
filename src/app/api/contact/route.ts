@@ -129,11 +129,36 @@ async function saveTicket(name: string, email: string, subject: string, message:
 }
 
 /* ─── Route handler ─── */
+async function resolveRequester(input: { name: string; email: string }) {
+  try {
+    const supa = await createClient();
+    const { data } = await supa.auth.getUser();
+    const user = data.user;
+    if (!user) return input;
+
+    const admin = createAdminClient();
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    return {
+      name: limitTrimmedText(profile?.full_name || (user.user_metadata?.full_name as string) || input.name, NAME_MAX_LENGTH),
+      email: limitTrimmedText(profile?.email || user.email || input.email, SHORT_TEXT_MAX_LENGTH),
+    };
+  } catch {
+    return input;
+  }
+}
+
 export async function POST(req: NextRequest) {
   const rl = enforceRateLimit(req, "contact", 5, 60_000);
   if (rl) return rl;
   try {
-    const { name, email, subject, message, topic, fileAttachments } = await parseRequest(req);
+    const parsed = await parseRequest(req);
+    const { subject, message, topic, fileAttachments } = parsed;
+    const { name, email } = await resolveRequester({ name: parsed.name, email: parsed.email });
 
     if (!email || !subject || !message) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
