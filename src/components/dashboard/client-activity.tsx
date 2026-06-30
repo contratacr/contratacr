@@ -232,20 +232,25 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
   const fetchSection = useCallback(async (showLoading = true) => {
     if (!user) return;
-    if (section === "bookings") {
-      if (!bookingCacheKey) return;
-      const cached = getDashboardCache<Booking[]>(bookingCacheKey);
-      if (showLoading && !cached) setLoading(true);
-      const rows = await loadDashboardCache(bookingCacheKey, fetchClientBookingRows, { force: !showLoading || !!cached });
-      setBookings(rows);
-    } else if (section === "projects") {
-      if (!projectCacheKey) return;
-      const cached = getDashboardCache<Project[]>(projectCacheKey);
-      if (showLoading && !cached) setLoading(true);
-      const rows = await loadDashboardCache(projectCacheKey, fetchClientProjectRows, { force: !showLoading || !!cached });
-      setProjects(rows);
+    try {
+      if (section === "bookings") {
+        if (!bookingCacheKey) return;
+        const cached = getDashboardCache<Booking[]>(bookingCacheKey);
+        if (showLoading && !cached) setLoading(true);
+        const rows = await loadDashboardCache(bookingCacheKey, fetchClientBookingRows, { force: !showLoading || !!cached });
+        setBookings(rows);
+      } else if (section === "projects") {
+        if (!projectCacheKey) return;
+        const cached = getDashboardCache<Project[]>(projectCacheKey);
+        if (showLoading && !cached) setLoading(true);
+        const rows = await loadDashboardCache(projectCacheKey, fetchClientProjectRows, { force: !showLoading || !!cached });
+        setProjects(rows);
+      }
+    } catch (error) {
+      console.error("[client-activity] load failed:", error);
+    } finally {
+      if (showLoading) setLoading(false);
     }
-    if (showLoading) setLoading(false);
   }, [bookingCacheKey, projectCacheKey, section, setBookings, setProjects, user]);
 
   const reloadLoadedProjectProposals = useCallback(async () => {

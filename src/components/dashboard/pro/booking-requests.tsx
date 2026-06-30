@@ -165,13 +165,18 @@ export function BookingRequests() {
 
   const loadBookings = useCallback(async (silent = false) => {
     if (!cacheKey) return;
-    const cached = getDashboardCache<Booking[]>(cacheKey);
-    if (!silent && !cached) setLoading(true);
-    const next = await loadDashboardCache(cacheKey, fetchProfessionalBookingRows, { force: silent || !!cached });
-    const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
-    bookingsSnapshotRef.current = snapshot;
-    setBookings(next);
-    if (!silent) setLoading(false);
+    try {
+      const cached = getDashboardCache<Booking[]>(cacheKey);
+      if (!silent && !cached) setLoading(true);
+      const next = await loadDashboardCache(cacheKey, fetchProfessionalBookingRows, { force: silent || !!cached });
+      const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
+      bookingsSnapshotRef.current = snapshot;
+      setBookings(next);
+    } catch (error) {
+      console.error("[booking-requests] load failed:", error);
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, [cacheKey, setBookings]);
 
   const refreshSoon = useCallback(() => {

@@ -191,30 +191,40 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
   async function fetchOpenProjects(silent = false) {
     if (!openCacheKey || !mineCacheKey) return;
-    const cachedOpen = getDashboardCache<OpenProject[]>(openCacheKey);
-    const cachedMine = getDashboardCache<MyProposal[]>(mineCacheKey);
-    if (!silent && !cachedOpen) setLoading(true);
-    const [nextProjects, nextProposals] = await Promise.all([
-      loadDashboardCache(openCacheKey, () => fetchOpenProjectRows(categoryId), { force: silent || !!cachedOpen }),
-      loadDashboardCache(mineCacheKey, fetchMyProposalRows, { force: silent || !!cachedMine }),
-    ]);
-    const snapshot = JSON.stringify(nextProjects.map((p: OpenProject) => `${p.id}:${p.created_at}`));
-    openSnapshotRef.current = snapshot;
-    setOpenProjects(nextProjects);
-    setMyProposals(nextProposals);
-    setSubmitted(new Set<string>(nextProposals.map((p) => p.project_id)));
-    if (!silent) setLoading(false);
+    try {
+      const cachedOpen = getDashboardCache<OpenProject[]>(openCacheKey);
+      const cachedMine = getDashboardCache<MyProposal[]>(mineCacheKey);
+      if (!silent && !cachedOpen) setLoading(true);
+      const [nextProjects, nextProposals] = await Promise.all([
+        loadDashboardCache(openCacheKey, () => fetchOpenProjectRows(categoryId), { force: silent || !!cachedOpen }),
+        loadDashboardCache(mineCacheKey, fetchMyProposalRows, { force: silent || !!cachedMine }),
+      ]);
+      const snapshot = JSON.stringify(nextProjects.map((p: OpenProject) => `${p.id}:${p.created_at}`));
+      openSnapshotRef.current = snapshot;
+      setOpenProjects(nextProjects);
+      setMyProposals(nextProposals);
+      setSubmitted(new Set<string>(nextProposals.map((p) => p.project_id)));
+    } catch (error) {
+      console.error("[proposals-tab] opportunities load failed:", error);
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }
 
   async function fetchMyProposals(silent = false) {
     if (!mineCacheKey) return;
-    const cached = getDashboardCache<MyProposal[]>(mineCacheKey);
-    if (!silent && !cached) setLoading(true);
-    const nextProposals = await loadDashboardCache(mineCacheKey, fetchMyProposalRows, { force: silent || !!cached });
-    const snapshot = JSON.stringify(nextProposals.map((p: MyProposal) => `${p.id}:${p.status}:${p.projects?.status ?? ""}`));
-    mineSnapshotRef.current = snapshot;
-    setMyProposals(nextProposals);
-    if (!silent) setLoading(false);
+    try {
+      const cached = getDashboardCache<MyProposal[]>(mineCacheKey);
+      if (!silent && !cached) setLoading(true);
+      const nextProposals = await loadDashboardCache(mineCacheKey, fetchMyProposalRows, { force: silent || !!cached });
+      const snapshot = JSON.stringify(nextProposals.map((p: MyProposal) => `${p.id}:${p.status}:${p.projects?.status ?? ""}`));
+      mineSnapshotRef.current = snapshot;
+      setMyProposals(nextProposals);
+    } catch (error) {
+      console.error("[proposals-tab] my proposals load failed:", error);
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }
 
   const refreshSoon = useCallback(() => {
