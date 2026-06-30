@@ -70,6 +70,7 @@ export function ServicesEditor({
 }: ServicesEditorProps) {
   const locale = useLocale();
   const t = useTranslations("servicesEditor");
+  const tp = useTranslations("servicesPage");
   const seedProfessions =
     initialProfessions.length > 0
       ? initialProfessions
@@ -458,15 +459,23 @@ export function ServicesEditor({
             )}
 
             {/* "¿No ves tu servicio?" — type → submit → admin reviews → becomes selectable. */}
-            <CategorySuggestionBox
-              className="mt-1"
-              notListedLabel={t("notListed")}
-              placeholder={t("suggestNamePlaceholder")}
-              sendLabel={t("suggestSend")}
-              sendingLabel={t("suggestSending")}
-              cancelLabel={t("cancel")}
-              thanksLabel={t("suggestThanks")}
-            />
+            <div className="mt-3 border-t border-[#edf2f7] pt-4 text-center">
+              <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
+              <p className="mx-auto mt-1 max-w-[280px] text-xs leading-5 text-[#6b7280]">
+                {tp("suggestDescription")}
+              </p>
+              <CategorySuggestionBox
+                className="mt-3"
+                prominent
+                notListedLabel={tp("suggestCta")}
+                placeholder={t("suggestNamePlaceholder")}
+                sendLabel={t("suggestSend")}
+                sendingLabel={t("suggestSending")}
+                cancelLabel={t("cancel")}
+                thanksLabel={t("suggestThanks")}
+                defaultName={pickerQuery}
+              />
+            </div>
           </div>
         </Modal>
       )}
