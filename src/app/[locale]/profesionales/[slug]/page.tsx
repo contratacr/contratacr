@@ -18,7 +18,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, proDisplayName, cn } from "@/lib/utils";
 import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
-import { formatPricingTier, formatServicePrice, primaryPricingLabel } from "@/lib/pricing";
+import { formatServicePrice, primaryPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
@@ -551,8 +551,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                               // services-only). No icon overlay on the photo; the action is a single
                               // "Solicitar servicio" that enters the existing request flow.
                               const rep = items.find((s) => s.description) ?? items.find((s) => s.price) ?? items[0];
-                              const priced = items.find((s) => s.price && (s as { priceType?: string }).priceType !== "a_convenir");
-                              const priceLabel = priced?.price ?? t("priceConsult");
+                              const yearsItem = items.find((s) => typeof (s as { years?: number }).years === "number" && ((s as { years?: number }).years ?? 0) > 0);
+                              const serviceYears = (yearsItem as { years?: number } | undefined)?.years;
+                              const priced = items.find((s) => s.priceAmount || s.price || (s as { priceType?: string }).priceType === "a_convenir");
+                              const priceLabel = priced
+                                ? formatServicePrice(priced.priceAmount, priced.priceType, locale)
+                                  ?? (priced.price ? priced.price.replaceAll("/hora", locale === "en" ? " /hour" : " /hora").replaceAll("Precio a consultar", t("priceConsult")).replaceAll("Consultar precio", t("priceConsult")) : t("priceConsult"))
+                                : t("priceConsult");
                               return (
                                 <div key={cat} className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
                                   <div className="flex flex-1 flex-col">
@@ -562,7 +567,18 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                     ) : (
                                       <p className="mt-2 text-[13px] text-[#9ca3af]">{t("askForDetails")}</p>
                                     )}
-                                    <p className="mt-3 text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere]">{priceLabel}</p>
+                                    <div className="mt-3 space-y-1.5 text-[14px]">
+                                      {serviceYears ? (
+                                        <p className="flex items-center gap-2 text-[#374151]">
+                                          <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                                          <span className="font-semibold">{t("yearsValue", { years: serviceYears })}</span>
+                                        </p>
+                                      ) : null}
+                                      <p className="flex items-center gap-2 text-[#111827]">
+                                        <Banknote className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                                        <span className="font-bold [overflow-wrap:anywhere]">{priceLabel}</span>
+                                      </p>
+                                    </div>
                                     <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4">
                                       <span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
                                         {t("serviceRequest")}
@@ -700,9 +716,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   {activeTab === "sobre" && (() => {
                     // Facts in display order — each = brand-tint icon + uppercase label + value
                     // + an optional caption, laid out in a hairline-divided grid (owner mockup).
-                    const rate = professional.hourlyRate
-                      ? `₡${professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}${t("perHour")}`
-                      : null;
                     type Fact = { key: string; icon: ReactNode; label: string; value: ReactNode; caption?: ReactNode };
                     const facts: Fact[] = [];
                     const uniqueWorkplaces = Array.from(
@@ -737,9 +750,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       ? professional.professions
                       : (professional.categoryId ? [professional.categoryId] : []);
                     const offersVideoConsult = !!professional.videoconsulta && anyVideoConsultCategory(profileCategoryIds);
-                    if (expYears > 0) facts.push({
-                      key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),
-                    });
                     if (professional.languages && professional.languages.length > 0) facts.push({
                       key: "lang", icon: <Languages className="h-5 w-5" />, label: t("languages"),
                       value: professional.languages.map((l) => languageLabel(l, locale)).join(" · "),
@@ -748,31 +758,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       key: "ins", icon: <Shield className="h-5 w-5" />, label: t("insurers"),
                       value: professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · "),
                     });
-                    if (professional.services && professional.services.length > 0) {
-                      facts.push({
-                        key: "price", icon: <Banknote className="h-5 w-5" />, label: t("prices"),
-                        value: (
-                          <div className="space-y-3">
-                            {professional.services.map((service) => (
-                      <div key={service.id}>
-                        <span className="block text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af] [overflow-wrap:anywhere]">{service.name}</span>
-                        <span className="mt-0.5 block text-[15px] font-semibold leading-snug text-[#374151] [overflow-wrap:anywhere]">
-                          {formatServicePrice(service.priceAmount, service.priceType, locale)
-                            ?? (service.price ? service.price.replaceAll("/hora", locale === "en" ? " /hour" : " /hora").replaceAll("Precio a consultar", t("priceConsult")).replaceAll("Consultar precio", t("priceConsult")) : t("priceConsult"))}
-                        </span>
-                      </div>
-                            ))}
-                          </div>
-                        ),
-                      });
-                    } else if (professional.pricing && professional.pricing.length > 0) {
-                      facts.push({
-                        key: "price", icon: <Banknote className="h-5 w-5" />, label: t("prices"),
-                        value: <div className="space-y-2">{professional.pricing.map((tier) => <div key={tier.id} className="font-semibold text-[#162543]">{formatPricingTier(tier, locale)}</div>)}</div>,
-                      });
-                    } else if (rate) {
-                      facts.push({ key: "rate", icon: <Banknote className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
-                    }
                     if (workplaceAreaLines.length > 0 || offersVideoConsult) facts.push({
                       key: "loc", icon: <MapPin className="h-5 w-5" />,
                       label: workplaceAreaLines.length > 1 || offersVideoConsult ? t("whereServes") : t("location"),
