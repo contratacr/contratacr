@@ -1500,6 +1500,7 @@
     "nameField": "Name",
     "namePlaceholderShort": "e.g. Leak repair",
     "descBrief": "Description",
+    "descriptionLimit": "{count}/{max} characters",
     "descPlaceholderShort": "What does this service include?",
     "priceRef": "Reference price",
     "aConsultarLabel": "Ask price (do not show amount)",

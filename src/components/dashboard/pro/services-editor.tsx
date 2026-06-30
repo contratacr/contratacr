@@ -58,6 +58,9 @@ interface ServiceFormState {
 }
 
 const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "" };
+const SERVICE_DESCRIPTION_MAX_LENGTH = 600;
+const SERVICE_YEARS_MAX_LENGTH = 2;
+const SERVICE_YEARS_MAX = 99;
 
 export function ServicesEditor({
   professionalId,
@@ -227,7 +230,10 @@ export function ServicesEditor({
       ? undefined
       : form.priceAmount.trim() ? Number(form.priceAmount.replace(/\D/g, "")) : undefined;
     const priceDisplay = formatServicePrice(amount, priceType) ?? undefined;
-    const years = form.years.trim() ? Number(form.years.replace(/\D/g, "")) : undefined;
+    const description = form.description.trim().slice(0, SERVICE_DESCRIPTION_MAX_LENGTH);
+    const yearsRaw = form.years.replace(/\D/g, "").slice(0, SERVICE_YEARS_MAX_LENGTH);
+    const yearsValue = yearsRaw ? Math.min(Number(yearsRaw), SERVICE_YEARS_MAX) : undefined;
+    const years = yearsValue && yearsValue > 0 ? yearsValue : undefined;
 
     // Consolidate this service's category to exactly ONE info object — preserving the
     // existing id (caso de éxito linkage), display name and active state.
@@ -235,7 +241,7 @@ export function ServicesEditor({
     const info: ProService = {
       id: rep?.id ?? genId(),
       name: rep?.name?.trim() || getCategoryLabel(editCategory, locale),
-      description: form.description.trim() || undefined,
+      description: description || undefined,
       priceAmount: amount,
       priceType,
       price: priceDisplay,
@@ -506,9 +512,13 @@ export function ServicesEditor({
                 className="min-h-[150px] w-full resize-y rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                 placeholder={t("offerDescPlaceholder")}
                 value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                maxLength={SERVICE_DESCRIPTION_MAX_LENGTH}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value.slice(0, SERVICE_DESCRIPTION_MAX_LENGTH) }))}
                 autoFocus
               />
+              <p className="mt-1.5 text-right text-xs text-[#6b7280]">
+                {t("descriptionLimit", { count: form.description.length, max: SERVICE_DESCRIPTION_MAX_LENGTH })}
+              </p>
             </div>
 
             <div>
@@ -552,7 +562,8 @@ export function ServicesEditor({
                 inputMode="numeric"
                 placeholder={t("yearsPlaceholder")}
                 value={form.years}
-                onChange={(e) => setForm((f) => ({ ...f, years: e.target.value.replace(/\D/g, "") }))}
+                maxLength={SERVICE_YEARS_MAX_LENGTH}
+                onChange={(e) => setForm((f) => ({ ...f, years: e.target.value.replace(/\D/g, "").slice(0, SERVICE_YEARS_MAX_LENGTH) }))}
               />
             </div>
           </div>

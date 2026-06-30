@@ -1499,6 +1499,7 @@
     "nameField": "Nombre",
     "namePlaceholderShort": "Ej. Reparación de fugas",
     "descBrief": "Descripción",
+    "descriptionLimit": "{count}/{max} caracteres",
     "descPlaceholderShort": "¿Qué incluye este servicio?",
     "priceRef": "Precio de referencia",
     "aConsultarLabel": "Consultar precio (no mostrar monto)",
