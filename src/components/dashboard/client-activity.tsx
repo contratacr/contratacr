@@ -794,6 +794,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     : project.status === "completed" ? t("projCompleted")
                       : project.status === "cancelled" ? t("projCancelled")
                         : t("projOpen");
+                const showStatusBadge = !proyectoStatusRedundant(project.status) && !(projectFilter === "finalizadas" && project.status === "completed");
 
                 return (
                   <Card id={`project-${project.id}`} key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
@@ -813,7 +814,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-2">
                             <h3 className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</h3>
-                            {!proyectoStatusRedundant(project.status) ? (
+                            {showStatusBadge ? (
                               <Badge className="shrink-0 text-[11px] font-semibold" variant={statusVariant}>{statusLabel}</Badge>
                             ) : null}
                           </div>
