@@ -210,7 +210,7 @@ export async function POST(req: NextRequest) {
       } catch { /* best-effort — never fail the booking over the DOB cache */ }
     }
 
-    // Notify the professional (in-app + email + optional WhatsApp). Best-effort.
+    // Notify the professional (in-app + optional WhatsApp). Best-effort.
     await notifyNewBooking({
       professionalId,
       bookingId: data.id,
