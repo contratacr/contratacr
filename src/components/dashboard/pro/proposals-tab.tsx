@@ -114,6 +114,7 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
   const openCacheKey = openProjectsCacheKey(userId, categoryId);
   const mineCacheKey = myProposalsCacheKey(userId);
   const cachedOpenProjects = openCacheKey ? getDashboardCache<OpenProject[]>(openCacheKey) : null;
+  const cachedGenericOpenProjects = getDashboardCache<OpenProject[]>(openProjectsCacheKey(userId));
   const cachedMyProposals = mineCacheKey ? getDashboardCache<MyProposal[]>(mineCacheKey) : null;
 
   // Filter "Oportunidades" by profession — the user's ACTUAL professions only (no "all"
@@ -145,9 +146,9 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
     return t(`projStatus.${k}`);
   };
   const [view, setView] = useState<"browse" | "mine">("browse");
-  const [openProjects, setOpenProjectsState] = useState<OpenProject[]>(() => cachedOpenProjects ?? []);
+  const [openProjects, setOpenProjectsState] = useState<OpenProject[]>(() => cachedOpenProjects ?? cachedGenericOpenProjects ?? []);
   const [myProposals, setMyProposalsState] = useState<MyProposal[]>(() => cachedMyProposals ?? []);
-  const [loading, setLoading] = useState(() => !cachedOpenProjects);
+  const [loading, setLoading] = useState(() => !cachedOpenProjects && !cachedGenericOpenProjects);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [expandedMine, setExpandedMine] = useState<string | null>(null);
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
@@ -243,7 +244,7 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
 
   useEffect(() => {
     const hasCache = view === "browse"
-      ? !!(openCacheKey && getDashboardCache<OpenProject[]>(openCacheKey))
+      ? !!((openCacheKey && getDashboardCache<OpenProject[]>(openCacheKey)) || getDashboardCache<OpenProject[]>(openProjectsCacheKey(userId)))
       : !!(mineCacheKey && getDashboardCache<MyProposal[]>(mineCacheKey));
     queueMicrotask(() => {
       if (view === "browse") fetchOpenProjects(hasCache);

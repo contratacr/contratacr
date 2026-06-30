@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { notificationHref, notificationInMode } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
+import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
 
 type Notification = {
   id: string;
@@ -20,6 +21,8 @@ type Notification = {
   created_at: string;
   data?: { link?: string } | null;
 };
+
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 function uniqueNotifications(items: Notification[]): Notification[] {
   const seen = new Set<string>();
@@ -150,7 +153,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
-  function openNotification(n: Notification) {
+  async function openNotification(n: Notification) {
     setOpen(false);
     if (!n.read) {
       const supabase = createClient();
@@ -160,6 +163,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     }
     const role = user?.user_metadata?.role as string | undefined;
     const href = notificationHref(n, role, locale);
+    if (user) await Promise.race([prefetchDashboardDataForNotification(user.id, n.type), wait(320)]);
     router.prefetch(href);
     router.push(href);
   }

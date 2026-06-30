@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { notificationHref, notificationInMode } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
+import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
 
 type Notification = {
   id: string;
@@ -22,6 +23,8 @@ type Notification = {
 
 type NotificationScope = "all" | "use" | "offer";
 type ToastState = { latest: Notification; count: number };
+
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationScope }) {
   const { user } = useAuth();
@@ -141,7 +144,8 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
 
   useEffect(() => {
     if (toastTargetHref) router.prefetch(toastTargetHref);
-  }, [router, toastTargetHref]);
+    if (user && toast) prefetchDashboardDataForNotification(user.id, toast.latest.type);
+  }, [router, toast, toastTargetHref, user]);
 
   if (!toast) return null;
 
@@ -161,6 +165,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     if (!toast) return;
     setToast(null);
     try {
+      if (user) await Promise.race([prefetchDashboardDataForNotification(user.id, latest.type), wait(320)]);
       if (!grouped) await createClient().from("notifications").update({ read: true }).eq("id", latest.id);
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     } catch {}
