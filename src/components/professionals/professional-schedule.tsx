@@ -74,11 +74,18 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
 export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
+  const [liveData, setLiveData] = useState<{
+    professionalId: string;
+    availabilityPublic: boolean;
+    slots: ScheduleSlot[];
+  } | null>(null);
+  const liveSlots = liveData?.professionalId === professional.id ? liveData.slots : allSlots;
+  const liveAvailabilityPublic = liveData?.professionalId === professional.id ? liveData.availabilityPublic : availabilityPublic;
   // Schedules are per-LOCATION, not per-profession: a pro at a location is reachable
   // at those hours regardless of which service was searched. So we show ALL of the
   // pro's slots (no profession filter). `activeCategory` is still used purely as the
   // booking context (which service the request is about), not to hide hours.
-  const slots = allSlots.filter((s) => !s.locationId?.startsWith("cov_"));
+  const slots = liveSlots.filter((s) => !s.locationId?.startsWith("cov_"));
   const { user } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
@@ -93,7 +100,48 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // What the professional accepts. Booking needs public availability AND a
   // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
   // appointments-only.
-  const canBook = availabilityPublic && contactPreference !== "solo_whatsapp";
+  const canBook = liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
+
+  useEffect(() => {
+    let active = true;
+    let debounce: number | null = null;
+
+    async function refreshPublicAvailability() {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const res = await fetch(`/api/public-availability?professionalId=${professional.id}`, { cache: "no-store" });
+        if (!res.ok || !active) return;
+        const json = await res.json();
+        if (!active) return;
+        setLiveData({
+          professionalId: professional.id,
+          availabilityPublic: typeof json.availabilityPublic === "boolean" ? json.availabilityPublic : availabilityPublic,
+          slots: Array.isArray(json.slots) ? (json.slots as ScheduleSlot[]) : allSlots,
+        });
+      } catch {
+        // Keep the server-rendered schedule if the refresh fails.
+      }
+    }
+
+    function refreshSoon() {
+      if (debounce) window.clearTimeout(debounce);
+      debounce = window.setTimeout(refreshPublicAvailability, 450);
+    }
+
+    refreshSoon();
+    const interval = window.setInterval(refreshPublicAvailability, 10000);
+    window.addEventListener("focus", refreshSoon);
+    window.addEventListener("notificationsChanged", refreshSoon);
+    window.addEventListener("ccr:availability-changed", refreshSoon);
+    return () => {
+      active = false;
+      if (debounce) window.clearTimeout(debounce);
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshSoon);
+      window.removeEventListener("notificationsChanged", refreshSoon);
+      window.removeEventListener("ccr:availability-changed", refreshSoon);
+    };
+  }, [allSlots, availabilityPublic, professional.id]);
 
   // Distinct fixed/base locations present in the published slots. Chips let the
   // client choose WHICH physical place a slot is for before booking.
@@ -188,7 +236,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(measure); ro.observe(el); }
     if (typeof window !== "undefined") window.addEventListener("resize", measure);
     return () => { ro?.disconnect(); if (typeof window !== "undefined") window.removeEventListener("resize", measure); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locTabs.length, effectiveId]);
   const showLocNav = locOverflow;
   const scrollLocs = (dir: number) => locScrollRef.current?.scrollBy({ left: dir * 140, behavior: "smooth" });
@@ -279,7 +326,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       const label = dayColumnLabel(d, i, locale);
       return { key, label, soon: i <= 1, items, dayIndex: i };
     });
-  }, [filteredSlots, t, locale]);
+  }, [filteredSlots, locale]);
 
   // Does the pro publish ANY upcoming bookable time at ANY of their locations? This
   // lets us tell "this pro has no public schedule at all" apart from "this LOCATION has

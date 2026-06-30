@@ -359,6 +359,60 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     });
   }, [open, professional.id, initialDate, initialTime]);
 
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+
+    async function refreshPublicAvailability() {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const res = await fetch(`/api/public-availability?professionalId=${professional.id}`, { cache: "no-store" });
+        if (!res.ok || !active) return;
+        const json = await res.json();
+        if (!active) return;
+
+        if (typeof json.availabilityPublic === "boolean") setAvailabilityPrivate(!json.availabilityPublic);
+
+        const publishedSlots = Array.isArray(json.allSlots) ? json.allSlots : json.slots;
+        if (Array.isArray(publishedSlots)) {
+          const map: Record<string, string[]> = {};
+          for (const slot of publishedSlots as Array<{ date: string; time: string }>) {
+            (map[slot.date] ??= []).push(slot.time);
+          }
+          for (const key of Object.keys(map)) map[key].sort();
+          setDateSlots(map);
+        }
+
+        const taken = Array.isArray(json.taken) ? (json.taken as string[]) : [];
+        setTakenSlots(new Set(taken));
+        if (selectedDate && selectedTime) {
+          const selectedKey = `${selectedDate} ${selectedTime}`;
+          const slotStillOpen = (json.slots as Array<{ date: string; time: string }> | undefined)
+            ?.some((slot) => slot.date === selectedDate && slot.time === selectedTime);
+          if (taken.includes(selectedKey) || slotStillOpen === false) {
+            setSelectedTime("");
+            setSubmitError(locale === "en"
+              ? "That time was just booked. Choose another available time."
+              : "Ese horario acaba de ser reservado. Elige otra hora disponible.");
+          }
+        }
+      } catch {
+        // The submit endpoint still enforces the atomic guard if this refresh misses.
+      }
+    }
+
+    const interval = window.setInterval(refreshPublicAvailability, 8000);
+    window.addEventListener("focus", refreshPublicAvailability);
+    window.addEventListener("ccr:availability-changed", refreshPublicAvailability);
+    void refreshPublicAvailability();
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshPublicAvailability);
+      window.removeEventListener("ccr:availability-changed", refreshPublicAvailability);
+    };
+  }, [open, professional.id, selectedDate, selectedTime, locale]);
+
   // "Para otra persona" only exists for HEALTH services — if the (effective) category is
   // not health, force it back to "para mí" so a multi-profession pro who switches to a
   // non-health service never carries a stale beneficiary selection.
@@ -593,6 +647,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       setWaLink(getWhatsAppLink(professional.whatsapp, message));
       bookedRef.current = true;
       setStep("success");
+      window.dispatchEvent(new Event("ccr:availability-changed"));
     } finally {
       setSubmitting(false);
     }
@@ -820,7 +875,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2.5 flex items-start gap-2">
           <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#6b7280]" />
           <div className="text-xs text-[#6b7280] leading-snug break-words">
-            <p>{locale === "en" ? <>You'll send your request <strong>without verified identity</strong>. The professional will see it and decide whether to contact you.</> : <>Enviarás tu solicitud <strong>sin identidad verificada</strong>. El profesional lo verá y decide si te contacta.</>}</p>
+            <p>{locale === "en" ? <>You&apos;ll send your request <strong>without verified identity</strong>. The professional will see it and decide whether to contact you.</> : <>Enviarás tu solicitud <strong>sin identidad verificada</strong>. El profesional lo verá y decide si te contacta.</>}</p>
             <button type="button" onClick={() => toggleNoCedula(false)} className="mt-1 font-semibold text-[#009FD9] hover:underline">{locale === "en" ? "I have an ID" : "Tengo identificación"}</button>
           </div>
         </div>

@@ -1,8 +1,6 @@
-// Maps a notification to the page it should open when clicked, and tells you
-// which ROLE context it belongs to so the UI can tag it ("Como profesional" /
-// "Como cliente"). One account receives BOTH professional and client
-// notifications in a single stream; the context tag + role-aware routing keep
-// them unambiguous.
+// Maps each notification to the role context and dashboard target it belongs to.
+// One account can receive client, professional, support, and account notifications
+// in the same stream, so routing and per-panel filtering must stay explicit.
 export type NotificationLinkInput = {
   type: string;
   data?: { link?: string; booking_id?: string | null; project_id?: string | null } | null;
@@ -10,26 +8,28 @@ export type NotificationLinkInput = {
 
 export type NotificationContext = "professional" | "client" | "support" | null;
 
-// Notification types raised while the user is acting as a PROFESSIONAL.
 const PRO_TYPES = new Set([
-  "booking_received",   // a client requested your service
-  "booking_cancelled_by_client", // a client cancelled a booking you received
-  "proposal_accepted",  // a client accepted your proposal
-  "project_proposal_accepted", // a client accepted your project proposal
-  "new_project",        // a new project you can bid on
-  "project_cancelled",  // a client cancelled a project assigned to you
-  "project_deleted",    // a client deleted a project assigned to you
-  "booking_rescheduled", // the CLIENT moved their appointment to a new slot (sprint 433)
+  "booking_received",
+  "booking_cancelled_by_client",
+  "booking_completed_by_client",
+  "booking_rescheduled",
+  "proposal_accepted",
+  "project_proposal_accepted",
+  "new_project",
+  "project_cancelled",
+  "project_deleted",
+  "project_completed",
 ]);
 
-// Notification types raised about the user's own activity AS A CLIENT.
 const CLIENT_TYPES = new Set([
   "booking_confirmed",
   "booking_cancelled",
   "booking_completed",
+  "booking_update",
   "review_request",
-  "proposal_received",  // a professional sent a proposal to your project
-  "proposal_withdrawn", // a professional withdrew a proposal from your project
+  "proposal_received",
+  "proposal_withdrawn",
+  "project_work_done",
 ]);
 
 export function notificationContext(type: string): NotificationContext {
@@ -39,12 +39,6 @@ export function notificationContext(type: string): NotificationContext {
   return null;
 }
 
-/**
- * Whether a notification is VISIBLE in the given mode (Airbnb full-switch model).
- * Professional-context notifications show only in "offer"; client-context only in
- * "use"; support + unknown (account-level) are visible in BOTH so they're never
- * hidden by the active mode.
- */
 export function notificationInMode(type: string, mode: "use" | "offer"): boolean {
   const ctx = notificationContext(type);
   if (ctx === "professional") return mode === "offer";
@@ -52,7 +46,6 @@ export function notificationInMode(type: string, mode: "use" | "offer"): boolean
   return true;
 }
 
-/** Short tag shown on each notification so the role context is always obvious. */
 export function notificationContextLabel(type: string): string | null {
   const ctx = notificationContext(type);
   if (ctx === "professional") return "Como profesional";
@@ -61,8 +54,6 @@ export function notificationContextLabel(type: string): string | null {
   return null;
 }
 
-// Everyone uses the ONE unified panel; the "Usar servicios" sections live under
-// their own tabs there. Remap any legacy client-panel deep link into it.
 function remapClientLink(link: string): string {
   return link
     .replace("/dashboard/cliente?tab=bookings", "/dashboard/profesional?tab=sent_bookings")
@@ -82,42 +73,59 @@ function withTargetParams(link: string, data?: NotificationLinkInput["data"]): s
   return qs ? `${path}?${qs}` : path;
 }
 
-// `role` is accepted for signature compatibility but no longer needed: there is a
-// single panel and each tab implies its own mode.
-export function notificationHref(n: NotificationLinkInput, _role?: string): string {
-  // An explicit link stored at creation time wins — but only if it's a well-formed
-  // internal path. Anything stale/garbage falls through to the type-based routing
-  // below (always a live dashboard tab), so a click never dead-ends.
+function withLocale(link: string, locale: string): string {
+  const safeLocale = locale === "en" ? "en" : "es";
+  if (link.startsWith("/es/") || link.startsWith("/en/")) {
+    return link.replace(/^\/(es|en)\//, `/${safeLocale}/`);
+  }
+  if (link.startsWith("/")) return `/${safeLocale}${link}`;
+  return link;
+}
+
+export function notificationHref(n: NotificationLinkInput, _role?: string, locale = "es"): string {
   if (n.data?.link && n.data.link.startsWith("/")) {
-    return withTargetParams(remapClientLink(n.data.link), n.data);
+    return withLocale(withTargetParams(remapClientLink(n.data.link), n.data), locale);
   }
 
+  let href: string;
   switch (n.type) {
-    // Offer-capability context (offer-only tabs → the panel opens in offer mode)
     case "booking_received":
     case "booking_cancelled_by_client":
-      return "/es/dashboard/profesional?tab=bookings";
+    case "booking_completed_by_client":
+    case "booking_rescheduled":
+      href = "/dashboard/profesional?tab=bookings";
+      break;
+
     case "proposal_accepted":
     case "project_proposal_accepted":
     case "new_project":
     case "project_cancelled":
     case "project_deleted":
-      return "/es/dashboard/profesional?tab=proposals";
+    case "project_completed":
+      href = "/dashboard/profesional?tab=proposals";
+      break;
 
-    // Seek-capability context (use-only tabs → the panel opens in use mode)
-    case "booking_rescheduled":
-      // The client reschedules → the PRO is notified; open Solicitudes recibidas.
-      return "/es/dashboard/profesional?tab=bookings";
     case "booking_confirmed":
     case "booking_cancelled":
     case "booking_completed":
+    case "booking_update":
     case "review_request":
-      return "/es/dashboard/profesional?tab=sent_bookings";
+      href = "/dashboard/profesional?tab=sent_bookings";
+      break;
+
     case "proposal_received":
     case "proposal_withdrawn":
-      return "/es/dashboard/profesional?tab=sent_projects";
+    case "project_work_done":
+      href = "/dashboard/profesional?tab=sent_projects";
+      break;
+
+    case "support_reply":
+      href = "/dashboard/profesional?tab=soporte";
+      break;
 
     default:
-      return "/es/dashboard/profesional?tab=notifications";
+      href = "/dashboard/profesional?tab=notifications";
   }
+
+  return withLocale(withTargetParams(href, n.data), locale);
 }

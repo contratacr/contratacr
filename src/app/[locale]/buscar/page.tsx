@@ -12,6 +12,7 @@ import { primaryPricingLabel } from "@/lib/pricing";
 import { PROVINCES, nearestProvinceId } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import type { ScheduleSlot } from "@/components/professionals/professional-schedule";
 
@@ -79,11 +80,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   let orderedResults = allResults;
   if (params.sortBy === "availability") {
     try {
-      const supabase = await createClient();
+      const supabase = createAdminClient();
       const todayISO = new Date().toISOString().slice(0, 10);
       const ids = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
       const earliest: Record<string, string> = {};
       if (ids.length > 0) {
+        const taken = new Set<string>();
+        const { data: takenRows } = await supabase
+          .from("bookings")
+          .select("professional_id, scheduled_date, scheduled_time")
+          .in("professional_id", ids)
+          .in("status", ["pending", "confirmed", "in_progress", "awaiting_confirmation"])
+          .not("scheduled_date", "is", null)
+          .not("scheduled_time", "is", null);
+        for (const b of takenRows ?? []) {
+          taken.add(`${b.professional_id}:${b.scheduled_date}:${String(b.scheduled_time).slice(0, 5)}`);
+        }
         const { data } = await supabase
           .from("availability_slots")
           .select("professional_id, slot_date, slot_time")
@@ -94,7 +106,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           .limit(3000);
         for (const r of data ?? []) {
           const pid = r.professional_id as string;
-          const key = `${r.slot_date}T${String(r.slot_time).slice(0, 5)}`;
+          const time = String(r.slot_time).slice(0, 5);
+          if (taken.has(`${pid}:${r.slot_date}:${time}`)) continue;
+          const key = `${r.slot_date}T${time}`;
           if (!earliest[pid] || key < earliest[pid]) earliest[pid] = key;
         }
       }
@@ -122,8 +136,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const publicIds = results.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
   if (publicIds.length > 0) {
     try {
-      const supabase = await createClient();
+      const supabase = createAdminClient();
       const todayISO = new Date().toISOString().slice(0, 10);
+      const taken = new Set<string>();
+      const { data: takenRows } = await supabase
+        .from("bookings")
+        .select("professional_id, scheduled_date, scheduled_time")
+        .in("professional_id", publicIds)
+        .in("status", ["pending", "confirmed", "in_progress", "awaiting_confirmation"])
+        .not("scheduled_date", "is", null)
+        .not("scheduled_time", "is", null);
+      for (const b of takenRows ?? []) {
+        taken.add(`${b.professional_id}:${b.scheduled_date}:${String(b.scheduled_time).slice(0, 5)}`);
+      }
       let slotRows: Record<string, unknown>[] | null = null;
       ({ data: slotRows } = await supabase
         .from("availability_slots")
@@ -145,9 +170,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           .limit(400));
       }
       for (const r of slotRows ?? []) {
+        const time = String(r.slot_time).slice(0, 5);
+        if (taken.has(`${r.professional_id}:${r.slot_date}:${time}`)) continue;
         (slotsByPro[r.professional_id as string] ??= []).push({
           date: r.slot_date as string,
-          time: String(r.slot_time).slice(0, 5),
+          time,
           locationId: (r as { location_id?: string }).location_id ?? null,
           categoryId: (r as { category_id?: string }).category_id ?? null,
         });

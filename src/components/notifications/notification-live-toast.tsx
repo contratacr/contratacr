@@ -5,8 +5,6 @@ import { X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useMode } from "@/hooks/use-mode";
-import { canOffer } from "@/lib/auth/capabilities";
 import { notificationHref, notificationInMode } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
@@ -21,11 +19,12 @@ type Notification = {
   data?: { link?: string } | null;
 };
 
-export function NotificationLiveToast() {
+type NotificationScope = "all" | "use" | "offer";
+
+export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationScope }) {
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
-  const { mode } = useMode(canOffer(user));
   const [toast, setToast] = useState<Notification | null>(null);
   const lastSeenIdRef = useRef<string | null>(null);
   const initializedRef = useRef(false);
@@ -33,7 +32,7 @@ export function NotificationLiveToast() {
   const pendingToastTimerRef = useRef<number | null>(null);
 
   const maybeShow = useCallback((next: Notification, showInitial = true) => {
-    if (!notificationInMode(next.type, mode)) return;
+    if (scope !== "all" && !notificationInMode(next.type, scope)) return;
     if (lastSeenIdRef.current === next.id) return;
     lastSeenIdRef.current = next.id;
     if (!initializedRef.current && !showInitial) {
@@ -52,11 +51,11 @@ export function NotificationLiveToast() {
     }
     setToast(next);
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
-  }, [mode]);
+  }, [scope]);
 
   useEffect(() => {
     cooldownUntilRef.current = Date.now() + 900;
-  }, [mode]);
+  }, [scope]);
 
   useEffect(() => {
     if (!user) return;
@@ -87,7 +86,7 @@ export function NotificationLiveToast() {
         .limit(1);
       const latest = data?.[0] as Notification | undefined;
       if (latest) {
-        if (notificationInMode(latest.type, mode)) maybeShow(latest, false);
+        if (scope === "all" || notificationInMode(latest.type, scope)) maybeShow(latest, false);
         else initializedRef.current = true;
       } else {
         initializedRef.current = true;
@@ -96,7 +95,7 @@ export function NotificationLiveToast() {
     void loadLatest();
     const id = window.setInterval(loadLatest, 3000);
     return () => window.clearInterval(id);
-  }, [user, maybeShow]);
+  }, [user, maybeShow, scope]);
 
   useEffect(() => {
     if (!toast) return;
@@ -122,7 +121,7 @@ export function NotificationLiveToast() {
       await createClient().from("notifications").update({ read: true }).eq("id", toast.id);
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     } catch {}
-    window.location.assign(notificationHref(toast));
+    window.location.assign(notificationHref(toast, undefined, locale));
   }
 
   return (

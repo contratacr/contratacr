@@ -2276,6 +2276,7 @@
       "booking_received": "Nueva solicitud",
       "booking_confirmed": "Solicitud confirmada",
       "booking_completed": "Servicio completado",
+      "booking_completed_by_client": "Finalización confirmada",
       "booking_cancelled": "Solicitud cancelada",
       "booking_cancelled_by_client": "Solicitud cancelada por el cliente",
       "review_request": "Deja tu reseña",

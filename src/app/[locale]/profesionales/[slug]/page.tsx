@@ -117,19 +117,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       setIsAuthenticated(!!user);
       setViewerId(user?.id ?? null);
 
-      // Upcoming availability slots → the contact card's 3-day schedule strip (mirrors
-      // the /buscar card). Retry without the optional location/category columns on an
-      // unmigrated DB so the page never breaks.
-      const today = new Date().toISOString().slice(0, 10);
-      const sel = "slot_date, slot_time, location_id, category_id";
-      let rows = await supabase.from("availability_slots").select(sel).eq("professional_id", pro.id).gte("slot_date", today).order("slot_date").order("slot_time");
-      if (rows.error && /location_id|category_id|column/i.test(rows.error.message)) {
-        rows = (await supabase.from("availability_slots").select("slot_date, slot_time").eq("professional_id", pro.id).gte("slot_date", today).order("slot_date").order("slot_time")) as typeof rows;
-      }
-      setProfileSlots((rows.data ?? []).map((r) => {
-        const row = r as { slot_date: string; slot_time: string; location_id?: string | null; category_id?: string | null };
-        return { date: row.slot_date, time: String(row.slot_time).slice(0, 5), locationId: row.location_id ?? null, categoryId: row.category_id ?? null };
-      }));
+      // Upcoming slots for the contact card, already excluding active bookings.
+      const availability = await fetch(`/api/public-availability?professionalId=${pro.id}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+      setProfileSlots(Array.isArray(availability?.slots) ? availability.slots : []);
     }
     load();
   }, [params]);

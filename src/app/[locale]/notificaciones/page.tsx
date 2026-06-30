@@ -65,7 +65,7 @@ export default function NotificationsPage() {
       const supabase = createClient();
       supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
     }
-    window.location.assign(notificationHref(n));
+    window.location.assign(notificationHref(n, undefined, locale));
   }
 
   async function dismiss(e: React.MouseEvent, id: string) {

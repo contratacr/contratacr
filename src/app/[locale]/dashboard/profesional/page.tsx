@@ -28,7 +28,6 @@ import { ClientActivity } from "@/components/dashboard/client-activity";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
-import { NotificationLiveToast } from "@/components/notifications/notification-live-toast";
 import { AccountSecuritySection } from "@/components/account/account-security";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { SupportTickets } from "@/components/support/support-tickets";
@@ -438,7 +437,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
-      <NotificationLiveToast />
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 lg:pb-8">
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline

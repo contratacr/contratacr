@@ -117,7 +117,7 @@ export function NotificationsList() {
       supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     }
-    window.location.assign(notificationHref(n, role));
+    window.location.assign(notificationHref(n, role, locale));
   }
 
   async function dismiss(e: React.MouseEvent, id: string) {

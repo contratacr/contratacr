@@ -2,6 +2,7 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   "booking_received",
   "booking_confirmed",
   "booking_completed",
+  "booking_completed_by_client",
   "booking_cancelled",
   "booking_cancelled_by_client",
   "booking_rescheduled",

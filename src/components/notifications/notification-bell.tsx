@@ -157,7 +157,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     }
     const role = user?.user_metadata?.role as string | undefined;
-    window.location.assign(notificationHref(n, role));
+    window.location.assign(notificationHref(n, role, locale));
   }
 
   async function dismiss(e: React.MouseEvent, id: string) {

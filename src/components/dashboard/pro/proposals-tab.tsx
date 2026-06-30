@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Banknote, FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
@@ -110,7 +110,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const text = `${p.title ?? ""} ${p.description ?? ""}`.toLowerCase();
     return serviceTerms.some((term) => text.includes(term));
   }
-  const dateLocale = locale === "en" ? "en-US" : "es-CR";
   // Project lifecycle label (mirrors solicitudes) shown for an ACCEPTED proposal.
   const projStatusLabel = (status?: string): string => {
     const k = ["in_progress", "awaiting_confirmation", "completed", "cancelled"].includes(status ?? "") ? status! : "accepted";
@@ -128,6 +127,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const [projectFilter, setProjectFilter] = useState("activas");
   const openSnapshotRef = useRef("");
   const mineSnapshotRef = useRef("");
+  const refreshTimerRef = useRef<number | null>(null);
+  const lastSilentRefreshRef = useRef(0);
   const targetProjectRetryRef = useRef(0);
   const targetProjectRef = useRef<string | null>(null);
   const targetProjectHandledRef = useRef(false);
@@ -174,6 +175,21 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (!silent) setLoading(false);
   }
 
+  const refreshSoon = useCallback(() => {
+    if (document.visibilityState !== "visible") return;
+    if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+    const elapsed = Date.now() - lastSilentRefreshRef.current;
+    const delay = elapsed < 900 ? 900 - elapsed : 350;
+    refreshTimerRef.current = window.setTimeout(() => {
+      lastSilentRefreshRef.current = Date.now();
+      if (view === "browse") void fetchOpenProjects(true);
+      else void fetchMyProposals(true);
+    }, delay);
+    // fetchOpenProjects/fetchMyProposals are intentionally not dependencies; their
+    // inputs are read from the current render through `view` and refreshed again by polling.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
   useEffect(() => {
     queueMicrotask(() => {
       if (view === "browse") fetchOpenProjects();
@@ -189,10 +205,23 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         if (view === "browse") void fetchOpenProjects(true);
         else void fetchMyProposals(true);
       }
-    }, 3000);
+    }, 5000);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    window.addEventListener("notificationsChanged", refreshSoon);
+    window.addEventListener("focus", refreshSoon);
+    document.addEventListener("visibilitychange", refreshSoon);
+    return () => {
+      window.removeEventListener("notificationsChanged", refreshSoon);
+      window.removeEventListener("focus", refreshSoon);
+      document.removeEventListener("visibilitychange", refreshSoon);
+      if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+    };
+  }, [loading, refreshSoon]);
 
   // SILENTLY revalidate when the pro returns to the tab/window — so a project the client
   // cancelled/deleted updates in the background, WITHOUT a jarring reload. The `silent` flag
@@ -224,22 +253,26 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (mine) {
       targetProjectRetryRef.current = 0;
       targetProjectHandledRef.current = true;
-      setView("mine");
-      setProjectFilter(proposalBucket(mine.status, mine.projects?.status));
-      setExpandedMine(mine.id);
-      window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
-      return;
+      const id = window.setTimeout(() => {
+        setView("mine");
+        setProjectFilter(proposalBucket(mine.status, mine.projects?.status));
+        setExpandedMine(mine.id);
+        window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+      }, 0);
+      return () => window.clearTimeout(id);
     }
 
     const open = openProjects.find((p) => p.id === projectId);
     if (open) {
       targetProjectRetryRef.current = 0;
       targetProjectHandledRef.current = true;
-      setView("browse");
-      setProjectFilter("activas");
-      setExpandedProject(projectId);
-      window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
-      return;
+      const id = window.setTimeout(() => {
+        setView("browse");
+        setProjectFilter("activas");
+        setExpandedProject(projectId);
+        window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+      }, 0);
+      return () => window.clearTimeout(id);
     }
 
     if (targetProjectRetryRef.current >= 8) return;

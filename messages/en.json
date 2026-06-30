@@ -2278,6 +2278,7 @@
       "booking_received": "New request",
       "booking_confirmed": "Request confirmed",
       "booking_completed": "Service completed",
+      "booking_completed_by_client": "Completion confirmed",
       "booking_cancelled": "Request cancelled",
       "booking_cancelled_by_client": "Request cancelled by client",
       "review_request": "Leave your review",

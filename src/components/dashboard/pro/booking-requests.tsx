@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarCheck, CalendarClock, CalendarDays, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
+import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
@@ -117,6 +117,8 @@ export function BookingRequests() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("activas");
   const bookingsSnapshotRef = useRef("");
+  const refreshTimerRef = useRef<number | null>(null);
+  const lastSilentRefreshRef = useRef(0);
   // Accordion: at most one card expanded at a time (essentials collapsed by default).
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const targetRetryRef = useRef(0);
@@ -148,15 +150,39 @@ export function BookingRequests() {
     if (!silent) setLoading(false);
   }, []);
 
-  useEffect(() => { void loadBookings(); }, [loadBookings]);
+  const refreshSoon = useCallback(() => {
+    if (document.visibilityState !== "visible") return;
+    if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+    const elapsed = Date.now() - lastSilentRefreshRef.current;
+    const delay = elapsed < 900 ? 900 - elapsed : 350;
+    refreshTimerRef.current = window.setTimeout(() => {
+      lastSilentRefreshRef.current = Date.now();
+      void loadBookings(true);
+    }, delay);
+  }, [loadBookings]);
+
+  useEffect(() => { queueMicrotask(() => void loadBookings()); }, [loadBookings]);
 
   useEffect(() => {
     if (loading) return;
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") void loadBookings(true);
-    }, 3000);
+    }, 5000);
     return () => window.clearInterval(id);
   }, [loadBookings, loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    window.addEventListener("notificationsChanged", refreshSoon);
+    window.addEventListener("focus", refreshSoon);
+    document.addEventListener("visibilitychange", refreshSoon);
+    return () => {
+      window.removeEventListener("notificationsChanged", refreshSoon);
+      window.removeEventListener("focus", refreshSoon);
+      document.removeEventListener("visibilitychange", refreshSoon);
+      if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+    };
+  }, [loading, refreshSoon]);
 
   useEffect(() => {
     const bookingId = searchParams.get("booking");
@@ -176,9 +202,12 @@ export function BookingRequests() {
     }
     targetRetryRef.current = 0;
     targetBookingHandledRef.current = true;
-    setFilter(solicitudBucket(booking.status, booking.scheduled_date));
-    setExpandedId(bookingId);
-    window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+    const id = window.setTimeout(() => {
+      setFilter(solicitudBucket(booking.status, booking.scheduled_date));
+      setExpandedId(bookingId);
+      window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [bookings, loadBookings, searchParams]);
 
   async function updateStatus(id: string, status: BookingStatus) {

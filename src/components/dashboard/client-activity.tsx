@@ -185,6 +185,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const targetProjectRetryRef = useRef(0);
   const targetProjectRef = useRef<string | null>(null);
   const targetProjectHandledRef = useRef(false);
+  const refreshTimerRef = useRef<number | null>(null);
+  const lastSilentRefreshRef = useRef(0);
 
   const fetchSection = useCallback(async (showLoading = true) => {
     if (!user) return;
@@ -201,15 +203,39 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (showLoading) setLoading(false);
   }, [user, section]);
 
+  const refreshSoon = useCallback(() => {
+    if (section === "saved" || document.visibilityState !== "visible") return;
+    if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+    const elapsed = Date.now() - lastSilentRefreshRef.current;
+    const delay = elapsed < 900 ? 900 - elapsed : 350;
+    refreshTimerRef.current = window.setTimeout(() => {
+      lastSilentRefreshRef.current = Date.now();
+      void fetchSection(false);
+    }, delay);
+  }, [fetchSection, section]);
+
   useEffect(() => { queueMicrotask(() => fetchSection(true)); }, [fetchSection]);
 
   useEffect(() => {
     if (!user || section === "saved" || loading) return;
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") void fetchSection(false);
-    }, 3000);
+    }, 5000);
     return () => window.clearInterval(id);
   }, [fetchSection, loading, section, user]);
+
+  useEffect(() => {
+    if (!user || section === "saved" || loading) return;
+    window.addEventListener("notificationsChanged", refreshSoon);
+    window.addEventListener("focus", refreshSoon);
+    document.addEventListener("visibilitychange", refreshSoon);
+    return () => {
+      window.removeEventListener("notificationsChanged", refreshSoon);
+      window.removeEventListener("focus", refreshSoon);
+      document.removeEventListener("visibilitychange", refreshSoon);
+      if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+    };
+  }, [loading, refreshSoon, section, user]);
 
   useEffect(() => {
     if (section !== "bookings") return;
@@ -230,9 +256,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     }
     targetRetryRef.current = 0;
     targetBookingHandledRef.current = true;
-    setBookingFilter(solicitudBucket(booking.status, booking.scheduled_date));
-    setExpandedBooking(bookingId);
-    window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+    const id = window.setTimeout(() => {
+      setBookingFilter(solicitudBucket(booking.status, booking.scheduled_date));
+      setExpandedBooking(bookingId);
+      window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [bookings, fetchSection, searchParams, section]);
 
   useEffect(() => {
@@ -254,9 +283,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     }
     targetProjectRetryRef.current = 0;
     targetProjectHandledRef.current = true;
-    setProjectFilter(proyectoBucket(project.status));
-    setExpandedProject(projectId);
-    window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+    const id = window.setTimeout(() => {
+      setProjectFilter(proyectoBucket(project.status));
+      setExpandedProject(projectId);
+      window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [fetchSection, projects, searchParams, section]);
 
   useEffect(() => {

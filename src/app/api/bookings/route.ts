@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
         .eq("professional_id", professionalId)
         .eq("scheduled_date", scheduledDate)
         .eq("scheduled_time", scheduledTime)
-        .in("status", ["pending", "confirmed", "in_progress"])
+        .in("status", ["pending", "confirmed", "in_progress", "awaiting_confirmation"])
         .limit(1);
       if (clash && clash.length > 0) {
         return NextResponse.json(
@@ -249,7 +249,7 @@ export async function GET(req: NextRequest) {
       .from("bookings")
       .select("scheduled_date, scheduled_time")
       .eq("professional_id", takenForPro)
-      .in("status", ["pending", "confirmed", "in_progress"])
+      .in("status", ["pending", "confirmed", "in_progress", "awaiting_confirmation"])
       .not("scheduled_date", "is", null)
       .not("scheduled_time", "is", null);
     return NextResponse.json({
@@ -408,13 +408,25 @@ export async function PATCH(req: NextRequest) {
       in_progress: { title: "Tu solicitud está en progreso", message: "El profesional marcó tu solicitud en progreso." },
     };
     if (isOwnerPro && otherUserId && labelMap[status]) {
-      await admin.from("notifications").insert({ user_id: otherUserId, type: "booking_update", title: labelMap[status].title, message: labelMap[status].message });
+      await admin.from("notifications").insert({
+        user_id: otherUserId,
+        type: "booking_update",
+        title: labelMap[status].title,
+        message: labelMap[status].message,
+        data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: id },
+      });
     }
     // Client confirmed completion → notify the professional.
     if (isOwnerClient && status === "completed") {
       const { data: pr } = await admin.from("professionals").select("profile_id").eq("id", bookingRow.professional_id).maybeSingle();
       if (pr?.profile_id) {
-        await admin.from("notifications").insert({ user_id: pr.profile_id, type: "booking_update", title: "El cliente confirmó la finalización", message: "La solicitud quedó finalizada." });
+        await admin.from("notifications").insert({
+          user_id: pr.profile_id,
+          type: "booking_completed_by_client",
+          title: "El cliente confirmó la finalización",
+          message: "La solicitud quedó finalizada.",
+          data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id },
+        });
       }
     }
     // Client cancelled their own booking → notify the professional (their slot freed),
