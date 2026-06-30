@@ -117,8 +117,10 @@ export default function DashboardPage() {
   const [proLoadError, setProLoadError] = useState(false);
   // Mobile "Más" bottom-sheet (the overflow of the bottom nav bar).
   const [moreOpen, setMoreOpen] = useState(false);
+  const [pendingTab, setPendingTab] = useState<Tab | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [noProTries, setNoProTries] = useState(0);
+  const visibleTab = pendingTab ?? activeTab;
 
   // The account CAN offer if it has a professional profile (authoritative once
   // loaded) — fall back to the metadata capability for an instant first paint.
@@ -130,8 +132,14 @@ export default function DashboardPage() {
   // A non-provider has no offer world → always "use".
   const { mode: globalMode, setMode } = useMode(isProvider);
   const urlForcedMode: Mode | null =
-    OFFER_ONLY.has(activeTab) ? "offer" : USE_ONLY.has(activeTab) ? "use" : null;
+    OFFER_ONLY.has(visibleTab) ? "offer" : USE_ONLY.has(visibleTab) ? "use" : null;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
+
+  useEffect(() => {
+    if (!pendingTab || pendingTab !== activeTab) return;
+    const id = requestAnimationFrame(() => setPendingTab(null));
+    return () => cancelAnimationFrame(id);
+  }, [pendingTab, activeTab]);
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
   useEffect(() => {
@@ -274,7 +282,10 @@ export default function DashboardPage() {
 
   function setTab(tab: Tab) {
     setMoreOpen(false);
-    if (tab === activeTab) return;
+    if (tab === visibleTab) return;
+    setPendingTab(tab);
+    if (OFFER_ONLY.has(tab)) setMode("offer");
+    if (USE_ONLY.has(tab)) setMode("use");
     // Mode is persisted globally now, so the tab alone is enough — a mode-specific tab
     // also re-asserts its mode via the effect above, keeping the navbar switch in sync.
     router.push(`/dashboard/profesional?tab=${tab}`, { scroll: false });
@@ -349,7 +360,7 @@ export default function DashboardPage() {
   const barTabs = [...modeTabs, ...SHARED_TABS];
   const primaryTabs = MOBILE_PRIMARY[mode].filter((tab) => barTabs.includes(tab));
   const moreTabs = barTabs.filter((tab) => !primaryTabs.includes(tab));
-  const activeInMore = moreTabs.includes(activeTab);
+  const activeInMore = moreTabs.includes(visibleTab);
   const showProfileCompletion =
     mode === "offer" &&
     !!proForCompletion &&
@@ -363,7 +374,7 @@ export default function DashboardPage() {
         onClick={() => setTab(tab)}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
-          activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
+          visibleTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
         )}
       >
         <span className="relative">
@@ -545,8 +556,8 @@ export default function DashboardPage() {
                       <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
-                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
-                            {activeTab === "profile" && mode === "offer" && pro?.slug && (
+                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{visibleTab === "services" ? t("servicesHeading") : t(`tabs.${visibleTab}`)}</h2>
+                            {visibleTab === "profile" && mode === "offer" && pro?.slug && (
                               <a
                                 href={`/${locale}/profesionales/${pro.slug}?preview=1`}
                                 aria-label={t("viewPublicProfile")}
@@ -559,10 +570,10 @@ export default function DashboardPage() {
                           </div>
                           <HeaderSaveStatus />
                         </div>
-                        {TABS_WITH_SUBTITLE.has(activeTab) && (
+                        {TABS_WITH_SUBTITLE.has(visibleTab) && (
                           <div className="mt-0.5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                            <p className="text-sm text-[#6b7280]">{t(`subtitles.${activeTab}`)}</p>
-                            {activeTab === "sent_projects" && (
+                            <p className="text-sm text-[#6b7280]">{t(`subtitles.${visibleTab}`)}</p>
+                            {visibleTab === "sent_projects" && (
                               <Button
                                 size="sm"
                                 className="hidden rounded-full px-4 lg:inline-flex"
@@ -577,7 +588,7 @@ export default function DashboardPage() {
                       </CardHeader>
                       <CardContent className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">
                         {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
-                        {activeTab === "profile" && mode === "offer" && pro && (
+                        {visibleTab === "profile" && mode === "offer" && pro && (
                           <ProfileEditor
                             professionalId={pro.id}
                             profileId={user.id}
@@ -587,11 +598,11 @@ export default function DashboardPage() {
                             focusKey={profileFocus?.key}
                           />
                         )}
-                        {activeTab === "profile" && mode === "use" && (
+                        {visibleTab === "profile" && mode === "use" && (
                           <BasicProfileSection />
                         )}
 
-                        {activeTab === "services" && pro && (
+                        {visibleTab === "services" && pro && (
                           <ServicesEditor
                             professionalId={pro.id}
                             primaryCategory={pro.category_id}
@@ -602,7 +613,7 @@ export default function DashboardPage() {
                             focusKey={serviceFocus?.key}
                           />
                         )}
-                        {activeTab === "photos" && pro && (
+                        {visibleTab === "photos" && pro && (
                           <PhotoGallery
                             professionalId={pro.id}
                             initialUrls={pro.portfolio_urls ?? []}
@@ -612,7 +623,7 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
-                        {activeTab === "availability" && pro && (
+                        {visibleTab === "availability" && pro && (
                           <AvailabilityEditor
                             professionalId={pro.id}
                             initialPublic={pro.availability_public ?? true}
@@ -621,16 +632,16 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
-                        {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
-                        {activeTab === "bookings" && <BookingRequests />}
-                        {activeTab === "proposals" && pro && (
+                        {visibleTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
+                        {visibleTab === "bookings" && <BookingRequests />}
+                        {visibleTab === "proposals" && pro && (
                           <ProposalsTab
                             categoryId={pro.category_id}
                             professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
                             services={pro.services ?? []}
                           />
                         )}
-                        {activeTab === "verificacion" && pro && (
+                        {visibleTab === "verificacion" && pro && (
                           <VerificationPanel
                             professionalId={pro.id}
                             status={pro.verification_status ?? "pending"}
@@ -641,13 +652,13 @@ export default function DashboardPage() {
                         )}
 
                         {/* "Usar servicios" — the seek capability. */}
-                        {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
-                        {activeTab === "sent_projects" && <ClientActivity section="projects" />}
-                        {activeTab === "saved" && <ClientActivity section="saved" />}
+                        {visibleTab === "sent_bookings" && <ClientActivity section="bookings" />}
+                        {visibleTab === "sent_projects" && <ClientActivity section="projects" />}
+                        {visibleTab === "saved" && <ClientActivity section="saved" />}
 
-                        {activeTab === "notifications" && <NotificationsList />}
-                        {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
-                        {activeTab === "cuenta" && (
+                        {visibleTab === "notifications" && <NotificationsList />}
+                        {visibleTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
+                        {visibleTab === "cuenta" && (
                           <div className="space-y-6">
                             <AccountSecuritySection showHeading={false} />
                             <CloseAccountSection />
@@ -677,7 +688,7 @@ export default function DashboardPage() {
       >
         {isProvider && modeBottomNavButton()}
         {primaryTabs.map((tab) => {
-          const active = activeTab === tab && !moreOpen;
+          const active = visibleTab === tab && !moreOpen;
           return (
             <button
               key={tab}
@@ -733,7 +744,7 @@ export default function DashboardPage() {
             <div className="p-2 pt-0">
               {moreTabs.map((tab) => {
                 const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
-                const active = activeTab === tab;
+                const active = visibleTab === tab;
                 return (
                   <button
                     key={tab}
