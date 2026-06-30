@@ -2081,7 +2081,7 @@
     "subtitle": "Enter your email and we'll send you a link to reset your password.",
     "error": "Something went wrong. Check the email and try again.",
     "sentTitle": "Check your email",
-    "sentBody": "If there's an account for that email, we'll send a link to reset your password. Check your inbox.",
+    "sentBody": "If an account exists, we sent a link to reset your password.",
     "emailLabel": "Email",
     "emailPlaceholder": "you@email.com",
     "sending": "Sending…",

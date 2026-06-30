@@ -2079,7 +2079,7 @@
     "subtitle": "Ingresa tu correo y te enviamos un enlace para restablecer tu contraseña.",
     "error": "Ocurrió un error. Verifica el correo e intenta de nuevo.",
     "sentTitle": "Revisa tu correo",
-    "sentBody": "Si hay una cuenta asociada a ese correo, te enviaremos un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada.",
+    "sentBody": "Si existe una cuenta asociada, enviamos un enlace para restablecer tu contraseña.",
     "emailLabel": "Correo electrónico",
     "emailPlaceholder": "tu@email.com",
     "sending": "Enviando…",

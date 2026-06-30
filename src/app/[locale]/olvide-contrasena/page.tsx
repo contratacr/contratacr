@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowRight, AlertCircle, MailCheck, RefreshCw } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -84,28 +84,37 @@ export default function OlvideContrasenaPage() {
           )}
 
           {success ? (
-            <div className="flex items-start gap-3 p-4 bg-[#EBF5FB] border border-[#bfdbfe] rounded-xl text-sm text-[#0089bb]">
-              <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-[#009FD9]" />
-              <div className="min-w-0">
-                <p className="font-semibold text-[#1a2744]">{t("sentTitle")}</p>
-                <p className="mt-0.5 text-[#374151]">{t("sentBody")}</p>
-                <SpamNotice className="mt-1.5" />
-                <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[#6b7280]">
-                  {resendState.resent && <span className="font-medium text-[#0089bb]">{tc("resent")}</span>}
-                  <span>{tc("resendPrompt")}</span>
-                  <button
-                    type="button"
-                    onClick={() => resendState.resend(async () => {
-                      await sendReset(sentEmail);
-                    })}
-                    disabled={resendState.cooldown > 0 || resendState.resending}
-                    className="font-semibold text-[#009FD9] hover:underline disabled:text-[#9ca3af] disabled:no-underline disabled:cursor-not-allowed"
-                  >
-                    {resendState.cooldown > 0 ? tc("resendIn", { seconds: resendState.cooldown }) : resendState.resending ? tc("resending") : tc("resend")}
-                  </button>
-                </div>
+            <section className="rounded-2xl border border-[#e5edf4] bg-white p-5 text-center shadow-[0_18px_45px_rgba(26,39,68,0.08)] sm:p-6">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f6fc] text-[#009FD9]">
+                <MailCheck className="h-6 w-6" />
               </div>
-            </div>
+              <h2 className="mt-4 text-xl font-bold text-[#111827]">{t("sentTitle")}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#4b5563]">{t("sentBody")}</p>
+              {sentEmail && (
+                <p className="mx-auto mt-3 max-w-full truncate rounded-full bg-[#f4f7fa] px-3 py-2 text-sm font-semibold text-[#1a2744]">
+                  {sentEmail}
+                </p>
+              )}
+              <SpamNotice className="mx-auto mt-3 max-w-[280px] leading-5 text-[#6b7280]" />
+
+              <div className="mt-5 border-t border-[#edf2f7] pt-4">
+                {resendState.resent && (
+                  <p className="mb-2 text-xs font-semibold text-[#0089bb]">{tc("resent")}</p>
+                )}
+                <p className="text-sm font-medium text-[#374151]">{tc("resendPrompt")}</p>
+                <button
+                  type="button"
+                  onClick={() => resendState.resend(async () => {
+                    await sendReset(sentEmail);
+                  })}
+                  disabled={resendState.cooldown > 0 || resendState.resending}
+                  className="mx-auto mt-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#009FD9] transition-colors hover:bg-[#e8f6fc] disabled:text-[#9ca3af] disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                >
+                  {resendState.resending && <RefreshCw className="h-4 w-4 animate-spin" />}
+                  {resendState.cooldown > 0 ? tc("resendIn", { seconds: resendState.cooldown }) : resendState.resending ? tc("resending") : tc("resend")}
+                </button>
+              </div>
+            </section>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
               <Input
