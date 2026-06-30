@@ -199,7 +199,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }, [user, section]);
 
   const reloadLoadedProjectProposals = useCallback(async () => {
-    const ids = Object.keys(projectProposals);
+    const ids = [...new Set([...Object.keys(projectProposals), expandedProject].filter(Boolean))] as string[];
     if (ids.length === 0) return;
     const entries = await Promise.all(ids.map(async (projectId) => {
       const res = await fetch(`/api/proposals?project=${projectId}`, { cache: "no-store" });
@@ -207,7 +207,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       return [projectId, proposals ?? []] as const;
     }));
     setProjectProposals((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
-  }, [projectProposals]);
+  }, [expandedProject, projectProposals]);
 
   const refreshSoon = useCallback(() => {
     if (section === "saved" || document.visibilityState !== "visible") return;
