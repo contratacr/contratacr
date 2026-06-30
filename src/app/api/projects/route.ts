@@ -396,8 +396,8 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ success: true });
 }
 
-// Notify only professionals who actually sent a proposal. If a client cancels a
-// request before any proposal exists, nobody is affected enough to receive a bell.
+// Notify only professionals still affected by the cancellation/deletion. Declined
+// proposals already received their outcome, so notifying them again is just noise.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled" | "deleted") {
   try {
@@ -410,8 +410,9 @@ async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled
 
     const { data: proposals } = await admin
       .from("proposals")
-      .select("professional_id")
-      .eq("project_id", projectId);
+      .select("professional_id, status")
+      .eq("project_id", projectId)
+      .in("status", ["pending", "accepted"]);
     if (!proposals || proposals.length === 0) return;
 
     const professionalIds = new Set<string>();
