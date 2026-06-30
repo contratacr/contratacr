@@ -348,6 +348,16 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       // reappears in Oportunidades (the browse list hides only still-proposed projects,
       // and refetches mine=true on every switch back, so the project is available again).
       setSubmitted((prev) => { const next = new Set(prev); next.delete(withdrawTarget.project_id); return next; });
+      setDismissed((prev) => {
+        if (!prev.has(withdrawTarget.project_id)) return prev;
+        const next = new Set(prev);
+        next.delete(withdrawTarget.project_id);
+        return next;
+      });
+      setProjectFilter("activas");
+      const opportunity = openProjects.find((project) => project.id === withdrawTarget.project_id);
+      if (opportunity?.category_id && professions.includes(opportunity.category_id)) setProfFilter(opportunity.category_id);
+      void fetchOpenProjects(true);
     }
     setWithdrawing(false);
     setWithdrawTarget(null);
