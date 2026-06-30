@@ -452,9 +452,12 @@ export async function DELETE(req: NextRequest) {
   const admin = createAdminClient();
   // Authorize against the row, then delete with the service-role client — the
   // RLS-bound delete could silently affect 0 rows (same class as the bookings bug).
-  const { data: ownRow } = await admin.from("projects").select("client_id").eq("id", id).maybeSingle();
+  const { data: ownRow } = await admin.from("projects").select("client_id, status").eq("id", id).maybeSingle();
   if (!ownRow) return NextResponse.json({ success: true }); // already gone
   if (ownRow.client_id !== session.user.id) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  if (ownRow.status !== "cancelled") {
+    return NextResponse.json({ error: "Solo puedes eliminar solicitudes canceladas." }, { status: 409 });
+  }
 
   // Notify the affected professionals before the row (and its proposals) cascade away.
   await notifyAssignedPro(admin, id, "deleted");

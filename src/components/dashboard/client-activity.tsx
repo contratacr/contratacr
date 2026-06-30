@@ -880,8 +880,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             }
                             if (st === "cancelled") {
                               menu.push({ label: t("archive"), onClick: () => archiveProject(project.id) });
-                            } else if (st !== "open" && st !== "in_progress" && st !== "awaiting_confirmation") {
-                              menu.push({ label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true });
                             }
                             let primary: ReactNode = null;
                             if (st === "awaiting_confirmation") {
