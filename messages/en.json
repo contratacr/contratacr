@@ -1361,9 +1361,7 @@
     "pricePlaceholder": "example: 50000",
     "yourMessage": "Your proposal",
     "allProfessions": "All services",
-    "new": "New",
     "availableTitle": "Available opportunities",
-    "newCount": "{count, plural, one {# new} other {# new}}",
     "liveUpdated": "Updated with recent changes.",
     "postedAgo": "Posted {time}",
     "agoHours": "{count}h ago",
@@ -1395,8 +1393,8 @@
       "declined": "Declined"
     },
     "projStatus": {
-      "in_progress": "Assigned · In progress",
-      "awaiting_confirmation": "Work done · to confirm",
+      "in_progress": "In progress",
+      "awaiting_confirmation": "To confirm",
       "completed": "Completed",
       "cancelled": "Cancelled by the client",
       "accepted": "Accepted"
@@ -1820,8 +1818,8 @@
     "publishProject": "Post a request",
     "publishShort": "Post",
     "noProjectsView": "No requests in this view.",
-    "projAssigned": "In progress · Assigned",
-    "projAwaiting": "Awaiting your confirmation",
+    "projAssigned": "In progress",
+    "projAwaiting": "To confirm",
     "projCompleted": "Completed",
     "projCancelled": "Cancelled",
     "projOpen": "Open",

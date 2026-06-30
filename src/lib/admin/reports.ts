@@ -114,7 +114,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     empty.users.activeClients = new Set(bRows.map((b) => b.client_id).filter(Boolean)).size;
 
     empty.activity.solicitudesTotal = bRows.length;
-    const bStatusLabels: Record<string, string> = { pending: "Pendiente", confirmed: "Confirmada", in_progress: "En progreso", awaiting_confirmation: "Por confirmar", completed: "Completada", cancelled: "Cancelada", rescheduled: "Reprogramada" };
+    const bStatusLabels: Record<string, string> = { pending: "Pendiente", confirmed: "Confirmada", in_progress: "En curso", awaiting_confirmation: "Por confirmar", completed: "Completada", cancelled: "Cancelada", rescheduled: "Reprogramada" };
     empty.activity.solicitudesByStatus = tally(bRows.map((b) => b.status as string), bStatusLabels);
     empty.activity.solicitudesResponded = bRows.filter((b) => ["confirmed", "in_progress", "awaiting_confirmation", "completed"].includes(b.status as string)).length;
 

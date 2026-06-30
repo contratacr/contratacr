@@ -784,7 +784,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 const proposalCount = project.proposals?.length ?? 0;
                 const zone = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                 const statusVariant = project.status === "awaiting_confirmation" ? "default"
-                  : project.status === "in_progress" ? "warning"
+                  : project.status === "in_progress" ? "default"
                   : project.status === "completed" ? "success"
                     : project.status === "cancelled" ? "error"
                       : "default";

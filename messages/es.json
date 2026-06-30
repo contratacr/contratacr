@@ -1019,14 +1019,14 @@
         "status": {
           "pending": "Pendiente",
           "confirmed": "Confirmada",
-          "in_progress": "En progreso",
+          "in_progress": "En curso",
           "cancelled": "Cancelada",
           "completed": "Completada",
           "rescheduled": "Reprogramada"
         },
         "confirm": "Confirmar",
         "markComplete": "Completar",
-        "markInProgress": "En progreso",
+        "markInProgress": "En curso",
         "cancel": "Cancelar"
       },
       "proposals": {
@@ -1070,7 +1070,7 @@
         "status": {
           "pending": "Pendiente",
           "confirmed": "Confirmada",
-          "in_progress": "En progreso",
+          "in_progress": "En curso",
           "completed": "Completada",
           "cancelled": "Cancelada",
           "rescheduled": "Reprogramada"
@@ -1087,7 +1087,7 @@
         "decline": "Rechazar",
         "status": {
           "open": "Abierto",
-          "in_progress": "En progreso",
+          "in_progress": "En curso",
           "completed": "Completado",
           "cancelled": "Cancelado"
         }
@@ -1211,7 +1211,7 @@
     "status": {
       "pending": "Pendiente",
       "confirmed": "Confirmada",
-      "in_progress": "En progreso",
+      "in_progress": "En curso",
       "awaiting_confirmation": "Por confirmar",
       "completed": "Finalizada",
       "cancelled": "Cancelada",
@@ -1246,7 +1246,7 @@
     "confirm": "Confirmar",
     "cancel": "Cancelar",
     "markCompleted": "Marcar completado",
-    "inProgress": "En progreso",
+    "inProgress": "En curso",
     "markWorkDone": "Marcar trabajo realizado",
     "whatsapp": "WhatsApp",
     "contact": "Contactar",
@@ -1360,9 +1360,7 @@
     "pricePlaceholder": "Ejemplo: 50000",
     "yourMessage": "Tu propuesta",
     "allProfessions": "Todos los servicios",
-    "new": "Nueva",
     "availableTitle": "Oportunidades disponibles",
-    "newCount": "{count, plural, one {# nueva} other {# nuevas}}",
     "liveUpdated": "Actualizado con cambios recientes.",
     "postedAgo": "Publicada {time}",
     "agoHours": "hace {count} h",
@@ -1394,8 +1392,8 @@
       "declined": "Rechazada"
     },
     "projStatus": {
-      "in_progress": "Asignado · En curso",
-      "awaiting_confirmation": "Trabajo realizado · por confirmar",
+      "in_progress": "En curso",
+      "awaiting_confirmation": "Por confirmar",
       "completed": "Finalizado",
       "cancelled": "Cancelado por el cliente",
       "accepted": "Aceptada"
@@ -1773,7 +1771,7 @@
     "bStatus": {
       "pending": "Pendiente",
       "confirmed": "Confirmada",
-      "in_progress": "En progreso",
+      "in_progress": "En curso",
       "awaiting_confirmation": "Por confirmar",
       "completed": "Finalizada",
       "cancelled": "Cancelada",
@@ -1818,8 +1816,8 @@
     "publishProject": "Publicar una solicitud",
     "publishShort": "Publicar",
     "noProjectsView": "No hay solicitudes en esta vista.",
-    "projAssigned": "En curso · Asignado",
-    "projAwaiting": "Esperando tu confirmación",
+    "projAssigned": "En curso",
+    "projAwaiting": "Por confirmar",
     "projCompleted": "Finalizado",
     "projCancelled": "Cancelado",
     "projOpen": "Abierto",

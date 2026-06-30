@@ -63,8 +63,9 @@ function projStatusVariant(status?: string): "warning" | "success" | "error" | "
   switch (status) {
     case "completed": return "success";
     case "cancelled": return "error";
+    case "in_progress": return "default";
     case "awaiting_confirmation": return "default";
-    default: return "warning";
+    default: return "success";
   }
 }
 
@@ -387,11 +388,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     setExpandedProject((cur) => (cur === id ? null : cur));
   }
 
-  // CR calendar day (so "Nueva" means posted TODAY in Costa Rica, not a UTC day).
-  const crDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Costa_Rica" });
-  const isToday = (iso: string) => crDay(new Date(iso)) === crDay(new Date());
   // Relative time → "hace 30 minutos" / "hace 2 horas" / "hace 3 días", then the actual
-  // DATE once it's ~1 week old (shared helper, sprint 528). The "Nueva" badge still flags today.
+  // DATE once it's ~1 week old (shared helper, sprint 528).
   function relativeTime(iso: string): string {
     return formatRelativeOrDate(iso, locale);
   }
@@ -563,12 +561,10 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                   .filter((p) => !p.category_id || p.category_id === activeProf)
                   .sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a)));
                 if (list.length === 0) return <p className="text-sm text-[#6b7280] text-center py-12">{t("noneInView")}</p>;
-                const newCount = list.filter((p) => isToday(p.created_at)).length;
                 return (
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between px-1">
                       <p className="text-[13px] font-semibold text-[#162543]">{t("availableTitle")}</p>
-                      {newCount > 0 && <span className="rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb]">{t("newCount", { count: newCount })}</span>}
                     </div>
                     {list.map((project) => {
                       const isExpanded = expandedProject === project.id;
@@ -586,10 +582,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2.5">
                                 <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</span>
-                                <span className="flex shrink-0 items-center gap-1.5">
-                                  {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
-                                  <ExpandToggle open={isExpanded} className="mt-0" />
-                                </span>
+                                <ExpandToggle open={isExpanded} className="mt-0 shrink-0" />
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                                 <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">

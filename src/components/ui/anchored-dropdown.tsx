@@ -38,9 +38,15 @@ export function useAnchoredPosition(
     const width = r.width;
     let left = r.left + sx;
     if (left + width > sx + window.innerWidth - 8) left = Math.max(8 + sx, sx + window.innerWidth - 8 - width);
-    // Always open BELOW; cap the height to the visible space above the keyboard.
-    const maxH = Math.max(120, Math.min(maxHeight, viewBottom - r.bottom - PAD));
-    setPos({ left, top: r.bottom + sy + GAP, width, maxH });
+    const viewTop = vv?.offsetTop ?? 0;
+    const spaceBelow = viewBottom - r.bottom - PAD;
+    const spaceAbove = r.top - viewTop - PAD;
+    const openAbove = spaceBelow < Math.min(220, maxHeight) && spaceAbove > spaceBelow;
+    const maxH = Math.max(120, Math.min(maxHeight, openAbove ? spaceAbove : spaceBelow));
+    const top = openAbove
+      ? Math.max(sy + viewTop + PAD, r.top + sy - GAP - maxH)
+      : r.bottom + sy + GAP;
+    setPos({ left, top, width, maxH });
   }, [anchorRef, maxHeight]);
 
   useEffect(() => {
