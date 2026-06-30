@@ -13,6 +13,7 @@ import {
 import { formatId } from "@/lib/cedula";
 import { getInitials } from "@/lib/utils";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
+import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
 type Row = {
   id: string;
@@ -43,8 +44,8 @@ export function AdminQueue() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
 
-  const load = useCallback(async (s: string) => {
-    setLoading(true);
+  const load = useCallback(async (s: string, silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch(`/api/admin/providers?status=${s}`);
       const data = await res.json();
@@ -53,13 +54,14 @@ export function AdminQueue() {
     } catch {
       setRows([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     queueMicrotask(() => load(status));
   }, [status, load]);
+  useAdminAutoRefresh(() => void load(status, true), [load, status]);
 
   const filtered = rows.filter((r) => {
     if (!q.trim()) return true;

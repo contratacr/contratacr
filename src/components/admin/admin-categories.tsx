@@ -9,6 +9,7 @@ import {
   normalizeText,
   searchCategories,
 } from "@/lib/data/categories";
+import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
 type Suggestion = {
   id: string;
@@ -144,6 +145,41 @@ export function AdminCategories() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, status]);
+
+  const hasLocalEdits =
+    busy !== null ||
+    newServiceName.trim().length > 0 ||
+    newServiceNameEn.trim().length > 0 ||
+    newGroupName.trim().length > 0 ||
+    newGroupNameEn.trim().length > 0 ||
+    Object.keys(catalogDrafts).length > 0 ||
+    Object.keys(groupDrafts).length > 0 ||
+    Object.keys(edits).length > 0 ||
+    Object.keys(englishEdits).length > 0 ||
+    Object.keys(manualEnglishEdits).length > 0 ||
+    Object.keys(suggestionGroups).length > 0 ||
+    Object.keys(flagEdits).length > 0;
+
+  useAdminAutoRefresh(() => {
+    if (hasLocalEdits) return;
+    const run = async () => {
+      if (view === "suggestions") {
+        const [suggestions, catalogData] = await Promise.all([
+          fetch(`/api/admin/categories?status=${status}`).then((r) => r.json()),
+          groups.length ? Promise.resolve(null) : fetch("/api/admin/categories?status=catalog").then((r) => r.json()),
+        ]);
+        setItems(suggestions.categories ?? []);
+        setPendingCount(suggestions.pendingCount ?? 0);
+        if (!groups.length && catalogData) {
+          setCatalog(catalogData.catalog ?? []);
+          setGroups(catalogData.groups ?? []);
+        }
+      } else {
+        await loadCatalog();
+      }
+    };
+    void run();
+  }, [groups.length, hasLocalEdits, status, view]);
 
   const nameOf = (i: Suggestion) => edits[i.id] ?? (i.suggested_name || i.label);
   const englishNameOf = (i: Suggestion) => englishEdits[i.id] ?? i.labelEn ?? autoEnglishCategoryLabel(nameOf(i));

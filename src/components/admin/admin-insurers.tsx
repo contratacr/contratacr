@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Check, X, Shield, Loader2 } from "lucide-react";
+import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
 type Insurer = {
   id: string;
@@ -23,15 +24,16 @@ export function AdminInsurers() {
   const [items, setItems] = useState<Insurer[]>([]);
   const [loading, setLoading] = useState(true);
 
-  function load(s: string) {
-    setLoading(true);
+  const load = useCallback((s: string, silent = false) => {
+    if (!silent) setLoading(true);
     fetch(`/api/admin/insurers?status=${s}`)
       .then((r) => r.json())
       .then(({ insurers }) => setItems(insurers ?? []))
-      .finally(() => setLoading(false));
-  }
+      .finally(() => { if (!silent) setLoading(false); });
+  }, []);
 
-  useEffect(() => { load(status); }, [status]);
+  useEffect(() => { load(status); }, [load, status]);
+  useAdminAutoRefresh(() => load(status, true), [load, status]);
 
   async function decide(id: string, next: "approved" | "rejected") {
     await fetch("/api/admin/insurers", {

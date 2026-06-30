@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
+import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
   | "resumen" | "verificacion" | "usuarios" | "reportes" | "aseguradoras"
@@ -30,16 +31,28 @@ export function AdminShell({
   const [counts, setCounts] = useState<Record<string, number>>({});
   useEffect(() => {
     let alive = true;
-    const fetchCounts = () =>
+    const fetchCounts = () => {
+      if (document.visibilityState !== "visible") return;
       fetch("/api/admin/pending-counts")
         .then((r) => r.json())
-        .then((d) => { if (alive) setCounts(d ?? {}); })
+        .then((d) => {
+          if (!alive) return;
+          setCounts(d ?? {});
+          window.dispatchEvent(new Event(ADMIN_REFRESH_EVENT));
+        })
         .catch(() => {});
+    };
     fetchCounts();
-    const id = setInterval(fetchCounts, 30000);
+    const id = setInterval(fetchCounts, 8000);
     const onFocus = () => fetchCounts();
     window.addEventListener("focus", onFocus);
-    return () => { alive = false; clearInterval(id); window.removeEventListener("focus", onFocus); };
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      alive = false;
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, []);
 
   async function signOut() {

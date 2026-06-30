@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Flag, ExternalLink, Check, RotateCcw, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
 type Report = {
   id: string;
@@ -27,8 +28,8 @@ export function AdminReports() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const load = useCallback(async (s: string) => {
-    setLoading(true);
+  const load = useCallback(async (s: string, silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch(`/api/admin/reports?status=${s}`);
       const data = await res.json();
@@ -36,11 +37,15 @@ export function AdminReports() {
     } catch {
       setReports([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => { load(status); }, [status, load]);
+  useAdminAutoRefresh(() => {
+    if (busyId) return;
+    void load(status, true);
+  }, [busyId, load, status]);
 
   async function setReportStatus(id: string, next: "open" | "resolved") {
     setBusyId(id);

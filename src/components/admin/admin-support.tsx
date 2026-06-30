@@ -8,6 +8,7 @@ import { AdminUserSearch } from "@/components/admin/admin-user-search";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
 type Ticket = {
   id: string;
@@ -69,26 +70,32 @@ export function AdminSupport() {
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
 
-  const load = useCallback((s: string) => {
-    setLoading(true);
+  const load = useCallback((s: string, silent = false) => {
+    if (!silent) setLoading(true);
     fetch(`/api/admin/support?status=${s}`)
       .then((r) => r.json())
       .then(({ tickets, counts }) => { setItems(tickets ?? []); if (counts) setCounts(counts); })
-      .finally(() => setLoading(false));
+      .finally(() => { if (!silent) setLoading(false); });
   }, []);
 
   useEffect(() => {
     if (!openId) queueMicrotask(() => load(status));
   }, [status, openId, load]);
 
-  const openTicket = useCallback((id: string) => {
+  const openTicket = useCallback((id: string, silent = false) => {
     setOpenId(id);
-    setThreadLoading(true);
+    if (!silent) setThreadLoading(true);
     fetch(`/api/admin/support?id=${id}`)
       .then((r) => r.json())
       .then(({ ticket, messages }) => { setTicket(ticket); setMessages(messages ?? []); })
-      .finally(() => setThreadLoading(false));
+      .finally(() => { if (!silent) setThreadLoading(false); });
   }, []);
+
+  useAdminAutoRefresh(() => {
+    if (sending || reply.trim()) return;
+    if (openId) openTicket(openId, true);
+    else load(status, true);
+  }, [load, openId, openTicket, reply, sending, status]);
 
   // Deep-link: open a specific ticket on mount (e.g. ?ticket=<id> from the "Abrir"
   // link on a user's admin profile). Runs once so the admin can still go back to the

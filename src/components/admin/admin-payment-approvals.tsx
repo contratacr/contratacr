@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, Check, X, FileText, ExternalLink, Inbox } from "lucide-react";
+import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
 // Admin queue of SINPE/transfer payments submitted with a comprobante, awaiting
 // review. Approve → activates the pro's paid period automatically (status active +
@@ -21,15 +22,19 @@ export function AdminPaymentApprovals() {
   const [items, setItems] = useState<Pending[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const load = useCallback(() => {
-    setLoading(true);
+  const load = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
     fetch("/api/admin/subscriptions?pending=1")
       .then((r) => r.json())
       .then((d) => setItems(d.pending ?? []))
-      .finally(() => setLoading(false));
+      .finally(() => { if (!silent) setLoading(false); });
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useAdminAutoRefresh(() => {
+    if (busyId) return;
+    load(true);
+  }, [busyId, load]);
 
   async function review(paymentId: string, action: "approve" | "reject") {
     if (action === "reject" && !confirm("¿Rechazar este pago? El profesional no recibe el plan.")) return;

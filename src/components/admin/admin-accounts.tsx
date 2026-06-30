@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { UserX, Loader2 } from "lucide-react";
+import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
 type Account = {
   id: string;
@@ -16,12 +17,16 @@ export function AdminAccounts() {
   const [items, setItems] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
     fetch("/api/admin/accounts")
       .then((r) => r.json())
       .then(({ accounts }) => setItems(accounts ?? []))
-      .finally(() => setLoading(false));
+      .finally(() => { if (!silent) setLoading(false); });
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+  useAdminAutoRefresh(() => load(true), [load]);
 
   return (
     <div>
