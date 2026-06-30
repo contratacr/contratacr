@@ -382,7 +382,7 @@ export default function DashboardPage() {
   }, [moreOpen]);
 
 
-  if (authLoading || loading || !user) {
+  if (authLoading || !user) {
     return <DashboardInitialSkeleton activeTab={activeTab} />;
   }
 
@@ -403,11 +403,9 @@ export default function DashboardPage() {
     !!profile?.cedula &&
     detectIdType(String(profile.cedula)) === "cedula";
 
-  // Offer mode without a pro row: a genuine seeker (cannot offer) sees the
-  // activation gate; an account that CAN offer but whose row is still loading
-  // (replication lag) sees a spinner instead of a misleading gate.
-  const showOfferGate = mode === "offer" && !pro && !canOffer(user);
-  const offerLoading = mode === "offer" && !pro && canOffer(user);
+  // Offer mode without a pro row: a genuine seeker sees the activation gate only
+  // after the professional lookup finished; until then the panel shell stays visible.
+  const showOfferGate = !loading && mode === "offer" && !pro && !canOffer(user);
 
   // Mobile bottom-nav split: the mode's primary tabs in the bar (incl. the shared
   // "notifications" tab, which now has a dedicated slot), the rest under "Más".
@@ -555,8 +553,6 @@ export default function DashboardPage() {
                 </Button>
               </CardContent>
             </Card>
-          ) : offerLoading ? (
-            <FormLoadingState minHeight="min-h-[360px]" />
           ) : /* Offer mode, not yet a provider → activation gate. */
           showOfferGate ? (
             <Card>
@@ -654,6 +650,9 @@ export default function DashboardPage() {
                             focusKey={profileFocus?.key}
                           />
                         )}
+                        {visibleTab === "profile" && mode === "offer" && !pro && (
+                          <FormLoadingState minHeight="min-h-[360px]" />
+                        )}
                         {visibleTab === "profile" && mode === "use" && (
                           <BasicProfileSection />
                         )}
@@ -669,6 +668,7 @@ export default function DashboardPage() {
                             focusKey={serviceFocus?.key}
                           />
                         )}
+                        {visibleTab === "services" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
                         {visibleTab === "photos" && pro && (
                           <PhotoGallery
                             professionalId={pro.id}
@@ -679,6 +679,7 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
+                        {visibleTab === "photos" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
                         {visibleTab === "availability" && pro && (
                           <AvailabilityEditor
                             professionalId={pro.id}
@@ -688,6 +689,7 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
+                        {visibleTab === "availability" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
                         {visibleTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
                         {visibleTab === "bookings" && <BookingRequests key="bookings" userId={user.id} />}
                         {visibleTab === "proposals" && pro && (
@@ -699,7 +701,7 @@ export default function DashboardPage() {
                             services={pro.services ?? []}
                           />
                         )}
-                        {visibleTab === "proposals" && !pro && <CardListSkeleton rows={3} />}
+                        {visibleTab === "proposals" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
                         {visibleTab === "verificacion" && pro && (
                           <VerificationPanel
                             professionalId={pro.id}
@@ -709,6 +711,7 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
+                        {visibleTab === "verificacion" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
 
                         {/* "Usar servicios" — the seek capability. */}
                         {visibleTab === "sent_bookings" && <ClientActivity key="sent-bookings" section="bookings" userId={user.id} />}
