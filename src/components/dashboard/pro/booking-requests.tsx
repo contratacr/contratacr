@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
-import { ageCategoryFromDob, computeAge } from "@/lib/age";
+import { computeAge } from "@/lib/age";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,6 @@ type Booking = {
   beneficiary_cedula?: string | null;
   beneficiary_dob?: string | null;
   beneficiary_phone?: string | null;
-  beneficiary_is_minor?: boolean;
 };
 
 const proBookingsCacheKey = (userId: string) => `dashboard:pro-bookings:${userId}`;
@@ -106,20 +105,6 @@ export function BookingRequests({ userId }: { userId: string }) {
   const cacheKey = proBookingsCacheKey(userId);
   const cachedBookings = cacheKey ? getDashboardCache<Booking[]>(cacheKey) : null;
 
-  // Age bracket badge for a HEALTH patient (self or beneficiary), derived from the
-  // stored DOB. Shown ONLY here in the pro's panel — a minor (guardian/consent) or an
-  // older adult (geriatric care) is useful clinical context; a typical adult (18–64)
-  // shows nothing. `minorFallback` covers legacy bookings stored before a DOB was kept.
-  function ageBadge(dob?: string | null, minorFallback = false) {
-    const cat = dob ? ageCategoryFromDob(dob) : minorFallback ? "minor" : null;
-    if (!cat) return null;
-    return (
-      <Badge variant="default" className="text-[11px] font-semibold">
-        <UserRound className="h-3 w-3" />
-        {t(cat)}
-      </Badge>
-    );
-  }
   function ageLabel(dob?: string | null) {
     const age = dob ? computeAge(dob) : null;
     if (!age) return null;
@@ -346,7 +331,6 @@ export function BookingRequests({ userId }: { userId: string }) {
 
     // An ACTIVE booking (still upcoming/ongoing) gets the manage tools.
     const isActive = (["pending", "confirmed", "in_progress"] as string[]).includes(booking.status);
-    const showClinicalFlags = isActive;
     const expanded = expandedId === booking.id;
     const panelOpen = actionFor?.id === booking.id;
 
@@ -395,9 +379,8 @@ export function BookingRequests({ userId }: { userId: string }) {
                     <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{category}</span></span>
                   </span>
                 )}
-                {(flaggedPill || (!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob))) && (
+                {flaggedPill && (
                   <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                    {!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob)}
                     {flaggedPill}
                   </span>
                 )}
@@ -436,7 +419,6 @@ export function BookingRequests({ userId }: { userId: string }) {
                       <p className="min-w-0 text-[13px] font-semibold text-[#111827] [overflow-wrap:anywhere]">
                         {booking.beneficiary_name || t("otherPerson")}
                       </p>
-                      {showClinicalFlags && ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
                     </div>
                     {beneAge && (
                       <p className="mt-0.5 text-[12px]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> <span className="text-[#374151]">{beneAge}</span></p>
