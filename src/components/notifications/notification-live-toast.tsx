@@ -20,16 +20,36 @@ type Notification = {
 };
 
 type NotificationScope = "all" | "use" | "offer";
+type ToastState = { latest: Notification; count: number };
 
 export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationScope }) {
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
-  const [toast, setToast] = useState<Notification | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const lastSeenIdRef = useRef<string | null>(null);
   const initializedRef = useRef(false);
   const cooldownUntilRef = useRef(0);
   const pendingToastTimerRef = useRef<number | null>(null);
+  const burstTimerRef = useRef<number | null>(null);
+  const burstQueueRef = useRef<Notification[]>([]);
+
+  const flushBurst = useCallback(() => {
+    if (burstTimerRef.current) {
+      window.clearTimeout(burstTimerRef.current);
+      burstTimerRef.current = null;
+    }
+    const queue = burstQueueRef.current;
+    burstQueueRef.current = [];
+    if (queue.length === 0) return;
+    setToast({ latest: queue[queue.length - 1], count: queue.length });
+  }, []);
+
+  const enqueueToast = useCallback((next: Notification) => {
+    burstQueueRef.current = [...burstQueueRef.current, next].slice(-5);
+    if (burstTimerRef.current) window.clearTimeout(burstTimerRef.current);
+    burstTimerRef.current = window.setTimeout(flushBurst, 650);
+  }, [flushBurst]);
 
   const maybeShow = useCallback((next: Notification, showInitial = true) => {
     if (scope !== "all" && !notificationInMode(next.type, scope)) return;
@@ -42,16 +62,17 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     initializedRef.current = true;
     const remainingCooldown = cooldownUntilRef.current - Date.now();
     if (remainingCooldown > 0) {
+      burstQueueRef.current = [...burstQueueRef.current, next].slice(-5);
       if (pendingToastTimerRef.current) window.clearTimeout(pendingToastTimerRef.current);
       pendingToastTimerRef.current = window.setTimeout(() => {
-        setToast(next);
+        flushBurst();
         window.dispatchEvent(new CustomEvent("notificationsChanged"));
-      }, remainingCooldown);
+      }, remainingCooldown + 650);
       return;
     }
-    setToast(next);
+    enqueueToast(next);
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
-  }, [scope]);
+  }, [enqueueToast, flushBurst, scope]);
 
   useEffect(() => {
     cooldownUntilRef.current = Date.now() + 900;
@@ -106,22 +127,31 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   useEffect(() => {
     return () => {
       if (pendingToastTimerRef.current) window.clearTimeout(pendingToastTimerRef.current);
+      if (burstTimerRef.current) window.clearTimeout(burstTimerRef.current);
     };
   }, []);
 
   if (!toast) return null;
 
-  const title = TRANSLATED_NOTIFICATION_TYPES.has(toast.type) ? t(`types.${toast.type}`) : toast.title;
-  const detailLabel = locale === "en" ? "View details" : "Ver detalles";
+  const latest = toast.latest;
+  const grouped = toast.count > 1;
+  const title = grouped
+    ? locale === "en"
+      ? `${toast.count} new notifications`
+      : `${toast.count} notificaciones nuevas`
+    : TRANSLATED_NOTIFICATION_TYPES.has(latest.type) ? t(`types.${latest.type}`) : latest.title;
+  const detailLabel = grouped
+    ? locale === "en" ? "View notifications" : "Ver notificaciones"
+    : locale === "en" ? "View details" : "Ver detalles";
 
   async function openToast() {
     if (!toast) return;
     setToast(null);
     try {
-      await createClient().from("notifications").update({ read: true }).eq("id", toast.id);
+      if (!grouped) await createClient().from("notifications").update({ read: true }).eq("id", latest.id);
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     } catch {}
-    window.location.assign(notificationHref(toast, undefined, locale));
+    window.location.assign(grouped ? `/${locale}/notificaciones` : notificationHref(latest, undefined, locale));
   }
 
   return (
@@ -129,7 +159,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       <div className="rounded-2xl border border-[#d8e8f1] bg-white shadow-[0_18px_45px_-20px_rgba(15,23,42,0.35)]">
         <button type="button" onClick={openToast} className="flex w-full items-center gap-3 px-4 py-3 pr-10 text-left">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EAF7FD] text-[#009FD9]">
-            <NotificationSourceIcon type={toast.type} className="h-4 w-4" />
+            <NotificationSourceIcon type={latest.type} className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-[#162543] line-clamp-1">{title}</span>
