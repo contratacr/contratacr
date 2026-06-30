@@ -997,7 +997,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                           <p className="text-xs font-bold text-[#009FD9]">
                                             {proposal.price ? `\u20a1${proposal.price.toLocaleString("es-CR")}` : t("priceTBD")}
                                           </p>
-                                          {proposal.status === "accepted" && <Badge variant="success">{finalized ? t("finalized") : t("accepted")}</Badge>}
+                                          {proposal.status === "accepted" && !(projectFilter === "finalizadas" && finalized) && (
+                                            <Badge variant="success">{finalized ? t("finalized") : t("accepted")}</Badge>
+                                          )}
                                           {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
                                         </div>
                                       </div>
