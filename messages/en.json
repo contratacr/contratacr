@@ -1406,7 +1406,7 @@
       "accepted": "Accepted"
     },
     "projectFallback": "Request",
-    "yourPriceLabel": "Your offer:",
+    "yourPriceLabel": "Your price:",
     "priceTBD": "Price to be agreed",
     "priceHint": "Leave it blank to agree on the price after seeing the job.",
     "edit": "Edit",
