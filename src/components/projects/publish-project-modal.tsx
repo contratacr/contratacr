@@ -408,8 +408,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 the app opens + reads identically. A first "Todas/Todos" item resets the
                 optional filter (mirrors the old empty-option default). */}
             {selectedIsHealth && (
-              <div className="rounded-xl border border-[#e5e7eb] bg-[#fbfdff] p-3.5">
-                <label className="text-sm font-semibold text-[#374151] block mb-2">
+              <div className="border-t border-[#edf1f5] pt-3">
+                <label className="text-sm font-semibold text-[#374151] block mb-2.5">
                   {t("forWho.question")}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -423,7 +423,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                       onClick={() => setForSomeoneElse(opt.v)}
                       className={`h-10 rounded-xl border px-3 text-sm font-semibold transition-all ${
                         form.forSomeoneElse === opt.v
-                          ? "border-[#009FD9] bg-[#EAF7FD] text-[#0089bb]"
+                          ? "border-[#009FD9] bg-[#f5fbfe] text-[#0089bb] shadow-[0_0_0_1px_rgba(0,159,217,0.08)]"
                           : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#009FD9]/40"
                       }`}
                     >
@@ -432,7 +432,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                   ))}
                 </div>
                 {form.forSomeoneElse && (
-                  <div className="mt-3 flex flex-col gap-3">
+                  <div className="mt-3 flex flex-col gap-3 border-l-2 border-[#d8eef8] pl-3">
                     <div>
                       <label className="text-xs font-medium text-[#374151] block mb-1.5">
                         {t("forWho.nameLabel")} <span className="text-red-500">*</span>

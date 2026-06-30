@@ -1307,7 +1307,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       category the service is for the requester / a place / an object, so the
                       toggle is hidden and we collect requester data only. */}
                   {proIsHealth && (
-                    <div>
+                    <div className="border-t border-[#edf1f5] pt-3">
                       <label className="text-sm font-medium text-[#374151] block mb-1.5">
                         {isCareCategory(effectiveCategory) ? t("forWho.questionCare") : t("forWho.question")} <span className="text-red-500">*</span>
                       </label>
@@ -1321,8 +1321,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             type="button"
                             onClick={() => setForSomeoneElse(opt.v)}
                             className={cn(
-                              "p-2.5 rounded-xl border-2 text-sm font-medium transition-all",
-                              forSomeoneElse === opt.v ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"
+                              "h-10 rounded-xl border px-3 text-sm font-semibold transition-all",
+                              forSomeoneElse === opt.v ? "border-[#009FD9] bg-[#f5fbfe] text-[#0089bb] shadow-[0_0_0_1px_rgba(0,159,217,0.08)]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#009FD9]/40"
                             )}
                           >
                             {opt.label}
@@ -1348,8 +1348,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       badge; we collect nothing else (no cédula, no phone — the requester is
                       the coordination contact). */}
                   {forSomeoneElse && (
-                    <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
-                      <p className="text-sm font-semibold text-[#111827]">
+                    <div className="border-l-2 border-[#d8eef8] pl-3 flex flex-col gap-3">
+                      <p className="text-sm font-semibold text-[#374151]">
                         {isCareCategory(effectiveCategory) ? t("forWho.personTitle") : t("forWho.patientTitle")}
                       </p>
                       <div>
