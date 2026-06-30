@@ -1,18 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCategoryLabel, OTHER_CATEGORY } from "@/lib/data/categories";
+import { getCategoryLabel, isHealthCategory, OTHER_CATEGORY } from "@/lib/data/categories";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { parseMoneyAmount } from "@/lib/money-limits";
+import { isMinorFromDob } from "@/lib/age";
+import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 
 type ClientIdentityStatus = "verified" | "pending" | "unverified";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resolveCategoryIsHealth(admin: any, categoryId: string | null | undefined): Promise<boolean> {
+  if (!categoryId) return false;
+  const { data, error } = await admin
+    .from("categories")
+    .select("es_salud")
+    .eq("id", categoryId)
+    .maybeSingle();
+  if (!error && data && typeof data.es_salud === "boolean") return data.es_salud;
+  return isHealthCategory(categoryId);
+}
 
 /**
  * Resolve category / provincia / cantón display data WITHOUT relying on
@@ -54,6 +68,9 @@ export async function POST(req: NextRequest) {
     const requestedFullName = typeof body.fullName === "string" ? body.fullName.trim() : "";
     const cleanTitle = typeof title === "string" ? title.trim().slice(0, PROJECT_TITLE_MAX_LENGTH) : "";
     const cleanDescription = typeof description === "string" ? description.trim().slice(0, PROJECT_DESCRIPTION_MAX_LENGTH) : "";
+    const requestedForSomeoneElse = !!body.forSomeoneElse;
+    const requestedBeneficiaryName = limitTrimmedText(body.beneficiaryName, NAME_MAX_LENGTH);
+    const requestedBeneficiaryDob = typeof body.beneficiaryDob === "string" ? body.beneficiaryDob : "";
 
     if (!cleanTitle || !cleanDescription) {
       return NextResponse.json({ error: "Titulo y descripcion son requeridos" }, { status: 400 });
@@ -72,6 +89,17 @@ export async function POST(req: NextRequest) {
 
     const uid = session.user.id;
     const admin = createAdminClient();
+    const categoryIsHealth = await resolveCategoryIsHealth(admin, categoryId);
+    const forSomeoneElse = categoryIsHealth && requestedForSomeoneElse;
+    const beneficiaryName = forSomeoneElse ? requestedBeneficiaryName : "";
+    const beneficiaryDob = forSomeoneElse ? requestedBeneficiaryDob : "";
+
+    if (forSomeoneElse && !beneficiaryName) {
+      return NextResponse.json({ error: "Ingresa el nombre de la persona." }, { status: 400 });
+    }
+    if (forSomeoneElse && !beneficiaryDob) {
+      return NextResponse.json({ error: "Ingresa la fecha de nacimiento de la persona." }, { status: 400 });
+    }
 
     if (cedula) {
       const { data: dupe } = await admin
@@ -147,7 +175,7 @@ export async function POST(req: NextRequest) {
       } catch { /* profiles is the source of truth; auth metadata sync is best-effort */ }
     }
 
-    const { data, error } = await supabase.from("projects").insert({
+    const baseProject = {
       client_id: uid,
       category_id: categoryId ?? null,
       title: cleanTitle,
@@ -159,11 +187,30 @@ export async function POST(req: NextRequest) {
       timeline: timeline ?? null,
       client_identity_status: clientIdentityStatus,
       status: "open",
-    }).select("id").single();
+    };
+    const patientFields = categoryIsHealth
+      ? {
+          for_someone_else: forSomeoneElse,
+          beneficiary_name: forSomeoneElse ? beneficiaryName : null,
+          beneficiary_dob: forSomeoneElse ? beneficiaryDob : null,
+          beneficiary_is_minor: forSomeoneElse && beneficiaryDob ? isMinorFromDob(beneficiaryDob) : false,
+        }
+      : {};
+
+    let { data, error } = await supabase.from("projects").insert({ ...baseProject, ...patientFields }).select("id").single();
+    if (error && /for_someone_else|beneficiary_|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+      // Keep project publishing working if production schema has not received the
+      // migration yet. Once migration 083 is applied, the patient fields persist.
+      ({ data, error } = await supabase.from("projects").insert(baseProject).select("id").single());
+    }
 
     if (error) {
       console.error("[POST /api/projects] Supabase error:", error.message, error.details);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    const projectId = data?.id;
+    if (!projectId) {
+      return NextResponse.json({ error: "No se pudo crear la solicitud." }, { status: 500 });
     }
 
     // Notify every professional whose profession matches the project category.
@@ -187,7 +234,7 @@ export async function POST(req: NextRequest) {
             type: "new_project",
             title: "Nueva oportunidad en tu categoria",
             message: `Un cliente publico "${cleanTitle}" en ${label}.`,
-            data: { link: "/es/dashboard/profesional?tab=proposals", project_id: data.id },
+            data: { link: "/es/dashboard/profesional?tab=proposals", project_id: projectId },
           }));
           await admin.from("notifications").insert(rows);
         }
@@ -196,7 +243,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ id: data.id, success: true, clientIdentityStatus });
+    return NextResponse.json({ id: projectId, success: true, clientIdentityStatus });
   } catch (err) {
     console.error("[POST /api/projects] Unexpected error:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });

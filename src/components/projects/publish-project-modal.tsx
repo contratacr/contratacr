@@ -8,11 +8,14 @@ import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
+import { DateOfBirthPicker } from "@/components/ui/date-of-birth-picker";
 import { Loader2, ShieldAlert, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
+import { isHealthCategory } from "@/lib/data/categories";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
+import { isMinorFromDob } from "@/lib/age";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
@@ -45,6 +48,9 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     budgetMax: "",
     timeline: "",
     cedula: "",
+    forSomeoneElse: false,
+    beneficiaryName: "",
+    beneficiaryDob: "",
   });
   const [error, setError] = useState<string | null>(null);
   const [identityNotice, setIdentityNotice] = useState<string | null>(null);
@@ -141,13 +147,32 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
   const selectedProvincia = PROVINCES.find((p) => p.id === form.provinciaId);
   const cantons = selectedProvincia?.cantons ?? [];
+  const selectedIsHealth = isHealthCategory(form.categoryId);
 
   function update(field: keyof typeof form, value: string) {
     const nextValue =
       field === "title" ? value.slice(0, PROJECT_TITLE_MAX_LENGTH) :
       field === "description" ? value.slice(0, PROJECT_DESCRIPTION_MAX_LENGTH) :
+      field === "beneficiaryName" ? limitText(value, NAME_MAX_LENGTH) :
       value;
     setForm((f) => ({ ...f, [field]: nextValue, ...(field === "provinciaId" ? { cantonId: "" } : {}) }));
+  }
+
+  function setForSomeoneElse(value: boolean) {
+    setForm((f) => ({
+      ...f,
+      forSomeoneElse: value,
+      beneficiaryName: value ? f.beneficiaryName : "",
+      beneficiaryDob: value ? f.beneficiaryDob : "",
+    }));
+  }
+
+  function handleCategoryChange(id: string) {
+    setForm((f) => ({
+      ...f,
+      categoryId: id,
+      ...(isHealthCategory(id) ? {} : { forSomeoneElse: false, beneficiaryName: "", beneficiaryDob: "" }),
+    }));
   }
 
   function skipCedula() {
@@ -176,6 +201,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     if (!form.categoryId) { setError(t("errCategory")); return; }
     if (!form.title.trim()) { setError(t("errTitle")); return; }
     if (!form.description.trim()) { setError(t("errDescription")); return; }
+    if (selectedIsHealth && form.forSomeoneElse && !form.beneficiaryName.trim()) { setError(t("errBeneficiaryName")); return; }
+    if (selectedIsHealth && form.forSomeoneElse && !form.beneficiaryDob) { setError(t("errBeneficiaryDob")); return; }
     if (!profileLoaded) return;
     const sendingWithoutCedula = noCedula && !savedCedula;
     const cedulaForSubmit = savedCedula || (sendingWithoutCedula ? "" : form.cedula);
@@ -204,6 +231,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           timeline: form.timeline || null,
           cedula: cedulaForSubmit,
           fullName: limitText(clientName, NAME_MAX_LENGTH),
+          forSomeoneElse: selectedIsHealth && form.forSomeoneElse,
+          beneficiaryName: selectedIsHealth && form.forSomeoneElse ? limitText(form.beneficiaryName, NAME_MAX_LENGTH) : null,
+          beneficiaryDob: selectedIsHealth && form.forSomeoneElse ? form.beneficiaryDob : null,
+          beneficiaryIsMinor: selectedIsHealth && form.forSomeoneElse && form.beneficiaryDob ? isMinorFromDob(form.beneficiaryDob) : false,
         }),
       });
 
@@ -279,7 +310,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               <p className="text-xs text-[#9ca3af] mb-1.5">{t("categoryHelp")}</p>
               <CategorySearch
                 value={form.categoryId}
-                onChange={(id) => update("categoryId", id)}
+                onChange={handleCategoryChange}
                 placeholder={t("categoryPlaceholder")}
               />
             </div>
@@ -365,6 +396,56 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 NOT a native <select> (sprint 311), so every provincia/cantón dropdown in
                 the app opens + reads identically. A first "Todas/Todos" item resets the
                 optional filter (mirrors the old empty-option default). */}
+            {selectedIsHealth && (
+              <div className="rounded-xl border border-[#e5e7eb] bg-[#fbfdff] p-3.5">
+                <label className="text-sm font-semibold text-[#374151] block mb-2">
+                  {t("forWho.question")}
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { v: false, label: t("forWho.me") },
+                    { v: true, label: t("forWho.someoneElse") },
+                  ].map((opt) => (
+                    <button
+                      key={String(opt.v)}
+                      type="button"
+                      onClick={() => setForSomeoneElse(opt.v)}
+                      className={`h-10 rounded-xl border px-3 text-sm font-semibold transition-all ${
+                        form.forSomeoneElse === opt.v
+                          ? "border-[#009FD9] bg-[#EAF7FD] text-[#0089bb]"
+                          : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#009FD9]/40"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {form.forSomeoneElse && (
+                  <div className="mt-3 flex flex-col gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                        {t("forWho.nameLabel")} <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={inputClass}
+                        placeholder={t("forWho.namePlaceholder")}
+                        value={form.beneficiaryName}
+                        maxLength={NAME_MAX_LENGTH}
+                        onChange={(e) => update("beneficiaryName", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                        {t("forWho.dobLabel")} <span className="text-red-500">*</span>
+                      </label>
+                      <DateOfBirthPicker value={form.beneficiaryDob} onChange={(v) => update("beneficiaryDob", v)} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">

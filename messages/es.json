@@ -1373,6 +1373,11 @@
     "budgetLabel": "Presupuesto estimado",
     "timelineLabel": "Fecha deseada",
     "clientInfo": "Información del cliente",
+    "projectForLabel": "La solicitud es para",
+    "otherPerson": "Otra persona",
+    "fieldAge": "Edad:",
+    "yearsOld": "{count, plural, one {# año} other {# años}}",
+    "monthsOld": "{count, plural, one {# mes} other {# meses}}",
     "clientIdentityVerified": "Identidad verificada",
     "clientIdentityPending": "Identidad pendiente de revisión",
     "clientIdentityUnverified": "Identidad no verificada",
@@ -1791,6 +1796,7 @@
     "serviceField": "Servicio",
     "descriptionField": "Descripción",
     "apptForLabel": "La cita es para",
+    "projectForLabel": "La solicitud es para",
     "forOtherPerson": "Para otra persona",
     "otherPerson": "Otra persona",
     "fieldAge": "Edad:",
@@ -2221,6 +2227,8 @@
     "errDescription": "La descripción es requerida.",
     "errCedula": "Ingresa un número de identificación válido.",
     "errPhone": "Ingresa un número de teléfono válido.",
+    "errBeneficiaryName": "Ingresa el nombre de la persona.",
+    "errBeneficiaryDob": "Ingresa la fecha de nacimiento de la persona.",
     "phoneLabel": "Teléfono de contacto",
     "phoneHelp": "Lo usamos para coordinar tu solicitud. Lo guardamos en tu perfil para no volver a pedirlo.",
     "errPublish": "Error al publicar la solicitud. Intenta de nuevo.",
@@ -2258,6 +2266,14 @@
     "close": "Cerrar",
     "publishing": "Publicando...",
     "publish": "Publicar una solicitud",
+    "forWho": {
+      "question": "¿Para quién es?",
+      "me": "Para mí",
+      "someoneElse": "Para otra persona",
+      "nameLabel": "Nombre completo",
+      "namePlaceholder": "Nombre de la persona",
+      "dobLabel": "Fecha de nacimiento"
+    },
     "charLimit": "Has alcanzado el límite de {max} caracteres."
   },
   "notifications": {

@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, formatRelativeOrDate } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { computeAge } from "@/lib/age";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
@@ -47,6 +48,10 @@ type OpenProject = {
   client_identity_status?: "verified" | "pending" | "unverified" | null;
   profiles?: { full_name: string; avatar_url?: string };
   proposals?: { id: string }[];
+  for_someone_else?: boolean;
+  beneficiary_name?: string | null;
+  beneficiary_dob?: string | null;
+  beneficiary_is_minor?: boolean;
 };
 
 const STATUS_VARIANT: Record<ProposalStatus, "default" | "success" | "error"> = {
@@ -438,6 +443,13 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (status === "pending") return t("clientIdentityPending");
     return t("clientIdentityUnverified");
   }
+  function ageLabel(dob?: string | null) {
+    const age = dob ? computeAge(dob) : null;
+    if (!age) return null;
+    if (age.years > 0) return t("yearsOld", { count: age.years });
+    const months = Math.max(1, age.months);
+    return t("monthsOld", { count: months });
+  }
 
   // Expanded opportunity content: only what is NOT already present in the
   // closed summary card. Summary owns title, budget, and service. Expanded owns
@@ -490,6 +502,19 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                 <p className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]">
                   {clientIdentityText(project.client_identity_status)}
                 </p>
+              </div>
+            </div>
+          )}
+
+          {project.for_someone_else && (
+            <div className="flex items-start gap-2.5">
+              <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectForLabel")}</p>
+                <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{project.beneficiary_name || t("otherPerson")}</p>
+                {ageLabel(project.beneficiary_dob) && (
+                  <p className="mt-0.5 text-[12px] text-[#6b7280]">{t("fieldAge")} {ageLabel(project.beneficiary_dob)}</p>
+                )}
               </div>
             </div>
           )}

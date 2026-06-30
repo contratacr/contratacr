@@ -75,6 +75,10 @@ type Project = {
   cantones?: { name: string };
   proposals?: { id: string; status: string }[];
   archived_by_client?: boolean;
+  for_someone_else?: boolean;
+  beneficiary_name?: string | null;
+  beneficiary_dob?: string | null;
+  beneficiary_is_minor?: boolean;
 };
 
 type Proposal = {
@@ -873,6 +877,19 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                   </div>
                                 </div>
                               )}
+                            </div>
+                          )}
+
+                          {project.for_someone_else && (
+                            <div className="flex items-start gap-2.5">
+                              <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectForLabel")}</p>
+                                <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{project.beneficiary_name || t("otherPerson")}</p>
+                                {ageLabel(project.beneficiary_dob) && (
+                                  <p className="mt-0.5 text-[12px] text-[#6b7280]">{t("fieldAge")} {ageLabel(project.beneficiary_dob)}</p>
+                                )}
+                              </div>
                             </div>
                           )}
 

@@ -1374,6 +1374,11 @@
     "budgetLabel": "Estimated budget",
     "timelineLabel": "Desired date",
     "clientInfo": "Client information",
+    "projectForLabel": "The request is for",
+    "otherPerson": "Another person",
+    "fieldAge": "Age:",
+    "yearsOld": "{count, plural, one {# year} other {# years}}",
+    "monthsOld": "{count, plural, one {# month} other {# months}}",
     "clientIdentityVerified": "Identity verified",
     "clientIdentityPending": "Identity pending review",
     "clientIdentityUnverified": "Identity not verified",
@@ -1792,6 +1797,7 @@
     "serviceField": "Service",
     "descriptionField": "Description",
     "apptForLabel": "The appointment is for",
+    "projectForLabel": "The request is for",
     "bookingFor": "For: {name}",
     "forOtherPerson": "For someone else",
     "otherPerson": "Another person",
@@ -2223,6 +2229,8 @@
     "errDescription": "The description is required.",
     "errCedula": "Enter a valid ID number.",
     "errPhone": "Enter a valid phone number.",
+    "errBeneficiaryName": "Enter the person's name.",
+    "errBeneficiaryDob": "Enter the person's date of birth.",
     "phoneLabel": "Contact phone",
     "phoneHelp": "We use it to coordinate your request. We save it to your profile so we don't ask again.",
     "errPublish": "Error publishing the request. Try again.",
@@ -2260,6 +2268,14 @@
     "close": "Close",
     "publishing": "Publishing...",
     "publish": "Post a request",
+    "forWho": {
+      "question": "Who is this for?",
+      "me": "For me",
+      "someoneElse": "For someone else",
+      "nameLabel": "Full name",
+      "namePlaceholder": "Person's name",
+      "dobLabel": "Date of birth"
+    },
     "charLimit": "You've reached the {max}-character limit."
   },
   "notifications": {
