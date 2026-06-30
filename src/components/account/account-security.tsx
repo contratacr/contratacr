@@ -94,7 +94,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("emailChanged") === "1") {
-      setEmailApplied(true);
+      window.setTimeout(() => setEmailApplied(true), 0);
       // Pull the NEW email into the client session immediately so the UI reflects it
       // without a sign-out/in (refresh fires onAuthStateChange → useAuth re-renders).
       createClient().auth.refreshSession().catch(() => {});
@@ -197,7 +197,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     if (!user?.email) return;
     const supabase = createClient();
     await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/reset-password`,
+      redirectTo: `${window.location.origin}/${locale}/reset-password`,
     });
   }
 

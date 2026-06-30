@@ -44,7 +44,7 @@ export default function OlvideContrasenaPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email,
-        redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/reset-password`,
+        redirectTo: `${window.location.origin}/${locale}/reset-password`,
       }),
     });
     const json = await res.json().catch(() => ({}));

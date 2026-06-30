@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
   const next = searchParams.get("next");
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
 
   if (code || tokenHash) {
     const cookieStore = await cookies();
@@ -107,8 +108,8 @@ export async function GET(request: NextRequest) {
       // whole. Only INTERNAL paths (single leading "/", never "//") to avoid an
       // open-redirect. The "projects" alias is NOT a path — it falls through to the
       // role-aware resolution below.
-      if (next && next.startsWith("/") && !next.startsWith("//")) {
-        return NextResponse.redirect(`${origin}${next}`);
+      if (safeNext) {
+        return NextResponse.redirect(`${origin}${safeNext}`);
       }
 
       // ── Onboarding decision ──
@@ -147,6 +148,14 @@ export async function GET(request: NextRequest) {
       // provide their cédula during professional registration.
       return NextResponse.redirect(`${origin}${destPath}`);
     }
+  }
+
+  // Password recovery links from Supabase can arrive with the session in the URL
+  // fragment (#access_token=...), which a server route cannot read. Older emails used
+  // this callback as a bridge with ?next=/es/reset-password; send those requests to
+  // the client page so Supabase JS can finish reading the fragment in the browser.
+  if (safeNext && /^\/(es|en)\/reset-password$/.test(safeNext)) {
+    return NextResponse.redirect(`${origin}${safeNext}`);
   }
 
   return NextResponse.redirect(`${origin}/es?auth=error`);
