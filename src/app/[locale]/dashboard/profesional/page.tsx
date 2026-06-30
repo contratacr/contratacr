@@ -644,10 +644,11 @@ export default function DashboardPage() {
                           />
                         )}
                         {visibleTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
-                        {visibleTab === "bookings" && <BookingRequests key="bookings" />}
+                        {visibleTab === "bookings" && <BookingRequests key="bookings" userId={user.id} />}
                         {visibleTab === "proposals" && pro && (
                           <ProposalsTab
                             key={`proposals-${pro.id}`}
+                            userId={user.id}
                             categoryId={pro.category_id}
                             professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
                             services={pro.services ?? []}
@@ -665,9 +666,9 @@ export default function DashboardPage() {
                         )}
 
                         {/* "Usar servicios" — the seek capability. */}
-                        {visibleTab === "sent_bookings" && <ClientActivity key="sent-bookings" section="bookings" />}
-                        {visibleTab === "sent_projects" && <ClientActivity key="sent-projects" section="projects" />}
-                        {visibleTab === "saved" && <ClientActivity key="saved" section="saved" />}
+                        {visibleTab === "sent_bookings" && <ClientActivity key="sent-bookings" section="bookings" userId={user.id} />}
+                        {visibleTab === "sent_projects" && <ClientActivity key="sent-projects" section="projects" userId={user.id} />}
+                        {visibleTab === "saved" && <ClientActivity key="saved" section="saved" userId={user.id} />}
 
                         {visibleTab === "notifications" && <NotificationsList />}
                         {visibleTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}

@@ -10,7 +10,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
-import { useAuth } from "@/hooks/use-auth";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
 import { getInitials, getWhatsAppLink, cn, formatRelativeOrDate } from "@/lib/utils";
@@ -149,14 +148,13 @@ function formatBookingDate(b: Booking, dateLocale: string) {
   return b.preferred_date_text ?? null;
 }
 
-export function ClientActivity({ section }: { section: ClientActivitySection }) {
-  const { user } = useAuth();
+export function ClientActivity({ section, userId }: { section: ClientActivitySection; userId: string }) {
   const t = useTranslations("clientActivity");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
-  const bookingCacheKey = user ? clientBookingsCacheKey(user.id) : null;
-  const projectCacheKey = user ? clientProjectsCacheKey(user.id) : null;
+  const bookingCacheKey = clientBookingsCacheKey(userId);
+  const projectCacheKey = clientProjectsCacheKey(userId);
   const cachedBookings = bookingCacheKey ? getDashboardCache<Booking[]>(bookingCacheKey) : null;
   const cachedProjects = projectCacheKey ? getDashboardCache<Project[]>(projectCacheKey) : null;
   const hasSectionCache = section === "bookings" ? !!cachedBookings : section === "projects" ? !!cachedProjects : true;
@@ -231,7 +229,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }, [projectCacheKey]);
 
   const fetchSection = useCallback(async (showLoading = true) => {
-    if (!user) return;
     try {
       if (section === "bookings") {
         if (!bookingCacheKey) return;
@@ -251,7 +248,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     } finally {
       if (showLoading) setLoading(false);
     }
-  }, [bookingCacheKey, projectCacheKey, section, setBookings, setProjects, user]);
+  }, [bookingCacheKey, projectCacheKey, section, setBookings, setProjects]);
 
   const reloadLoadedProjectProposals = useCallback(async () => {
     const ids = [...new Set([...Object.keys(projectProposals), expandedProject].filter(Boolean))] as string[];
@@ -286,7 +283,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }, [bookingCacheKey, fetchSection, projectCacheKey, section]);
 
   useEffect(() => {
-    if (!user || section === "saved" || loading) return;
+    if (section === "saved" || loading) return;
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") {
         void fetchSection(false);
@@ -294,10 +291,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       }
     }, 5000);
     return () => window.clearInterval(id);
-  }, [fetchSection, loading, reloadLoadedProjectProposals, section, user]);
+  }, [fetchSection, loading, reloadLoadedProjectProposals, section]);
 
   useEffect(() => {
-    if (!user || section === "saved" || loading) return;
+    if (section === "saved" || loading) return;
     window.addEventListener("notificationsChanged", refreshSoon);
     window.addEventListener("focus", refreshSoon);
     document.addEventListener("visibilitychange", refreshSoon);
@@ -307,7 +304,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       document.removeEventListener("visibilitychange", refreshSoon);
       if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     };
-  }, [loading, refreshSoon, section, user]);
+  }, [loading, refreshSoon, section]);
 
   useEffect(() => {
     if (section !== "bookings") return;
@@ -372,13 +369,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }, [section]);
 
   const loadMyReviews = useCallback(async () => {
-    if (!user) return;
     try {
       const res = await fetch("/api/reviews?mine=1");
       const { reviews } = await res.json();
       setMyReviews(reviews ?? []);
     } catch { /* ignore */ }
-  }, [user]);
+  }, []);
   useEffect(() => { queueMicrotask(() => loadMyReviews()); }, [loadMyReviews]);
 
   function bookingReview(bookingId: string) {

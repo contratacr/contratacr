@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Banknote, FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +98,7 @@ function projStatusVariant(status?: string): "warning" | "success" | "error" | "
 }
 
 interface ProposalsTabProps {
+  userId: string;
   categoryId?: string;
   /** The professions on the pro's profile — the "Oportunidades" list can be filtered by
    *  them (the filter only appears when there's more than one). */
@@ -107,13 +107,12 @@ interface ProposalsTabProps {
   services?: { name?: string }[];
 }
 
-export function ProposalsTab({ categoryId, professions = [], services = [] }: ProposalsTabProps) {
-  const { user } = useAuth();
+export function ProposalsTab({ userId, categoryId, professions = [], services = [] }: ProposalsTabProps) {
   const t = useTranslations("proposalsTab");
   const locale = useLocale();
   const searchParams = useSearchParams();
-  const openCacheKey = user ? openProjectsCacheKey(user.id, categoryId) : null;
-  const mineCacheKey = user ? myProposalsCacheKey(user.id) : null;
+  const openCacheKey = openProjectsCacheKey(userId, categoryId);
+  const mineCacheKey = myProposalsCacheKey(userId);
   const cachedOpenProjects = openCacheKey ? getDashboardCache<OpenProject[]>(openCacheKey) : null;
   const cachedMyProposals = mineCacheKey ? getDashboardCache<MyProposal[]>(mineCacheKey) : null;
 

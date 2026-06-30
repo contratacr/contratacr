@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
@@ -99,13 +98,12 @@ function to12h(time?: string): string | null {
   return `${h12}:${String(Number.isNaN(m) ? 0 : m).padStart(2, "0")} ${ap}`;
 }
 
-export function BookingRequests() {
-  const { user } = useAuth();
+export function BookingRequests({ userId }: { userId: string }) {
   const locale = useLocale();
   const t = useTranslations("bookingRequests");
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
-  const cacheKey = user ? proBookingsCacheKey(user.id) : null;
+  const cacheKey = proBookingsCacheKey(userId);
   const cachedBookings = cacheKey ? getDashboardCache<Booking[]>(cacheKey) : null;
 
   // Age bracket badge for a HEALTH patient (self or beneficiary), derived from the
