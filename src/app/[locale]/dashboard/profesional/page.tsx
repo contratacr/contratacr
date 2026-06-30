@@ -22,10 +22,10 @@ import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { SaveStatusProvider, HeaderSaveStatus } from "@/components/dashboard/save-status-context";
-import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
-import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
+import { BookingRequests, prefetchProfessionalBookings } from "@/components/dashboard/pro/booking-requests";
+import { ProposalsTab, prefetchProposalsTabData } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
-import { ClientActivity } from "@/components/dashboard/client-activity";
+import { ClientActivity, prefetchClientActivity } from "@/components/dashboard/client-activity";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
@@ -207,6 +207,15 @@ export default function DashboardPage() {
     if (!user) return;
     queueMicrotask(() => fetchPro());
   }, [user, activeTab, refreshKey, fetchPro]);
+
+  useEffect(() => {
+    if (!user || authLoading) return;
+    prefetchClientActivity(user.id);
+    if (pro) {
+      prefetchProfessionalBookings(user.id);
+      prefetchProposalsTabData(user.id, pro.category_id ?? undefined);
+    }
+  }, [authLoading, pro, user]);
 
   // Base profile (name/avatar) for the header — works for seekers with no pro row.
   useEffect(() => {

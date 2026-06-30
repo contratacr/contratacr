@@ -24,6 +24,7 @@ import { PublishProjectModal } from "@/components/projects/publish-project-modal
 import { RescheduleModal } from "@/components/booking/reschedule-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import { CardListSkeleton } from "@/components/ui/loading-state";
+import { getDashboardCache, loadDashboardCache, prefetchDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import type { BookingStatus } from "@/types";
 
 /**
@@ -103,6 +104,26 @@ type Proposal = {
 // awaiting confirmation = brand-blue/info, FINISHED = green, cancelled = red.
 // (Previously active states were green "success" — reading as done/closed — and the
 // finished state was muted grey: the open-vs-closed state looked inverted.)
+const clientBookingsCacheKey = (userId: string) => `dashboard:client-bookings:${userId}`;
+const clientProjectsCacheKey = (userId: string) => `dashboard:client-projects:${userId}`;
+
+async function fetchClientBookingRows(): Promise<Booking[]> {
+  const res = await fetch("/api/bookings?role=client", { cache: "no-store" });
+  const { bookings } = await res.json();
+  return bookings ?? [];
+}
+
+async function fetchClientProjectRows(): Promise<Project[]> {
+  const res = await fetch("/api/projects?role=client", { cache: "no-store" });
+  const { projects } = await res.json();
+  return projects ?? [];
+}
+
+export function prefetchClientActivity(userId: string) {
+  prefetchDashboardCache(clientBookingsCacheKey(userId), fetchClientBookingRows);
+  prefetchDashboardCache(clientProjectsCacheKey(userId), fetchClientProjectRows);
+}
+
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "default",
   confirmed: "default",
@@ -134,6 +155,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const locale = useLocale();
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
+  const bookingCacheKey = user ? clientBookingsCacheKey(user.id) : null;
+  const projectCacheKey = user ? clientProjectsCacheKey(user.id) : null;
+  const cachedBookings = bookingCacheKey ? getDashboardCache<Booking[]>(bookingCacheKey) : null;
+  const cachedProjects = projectCacheKey ? getDashboardCache<Project[]>(projectCacheKey) : null;
+  const hasSectionCache = section === "bookings" ? !!cachedBookings : section === "projects" ? !!cachedProjects : true;
 
   // The service a booking is for (the specific category requested, else the pro's primary).
   function bookingServiceLabel(b: Booking): string | null {
@@ -148,9 +174,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     return t("monthsOld", { count: months });
   }
 
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bookings, setBookingsState] = useState<Booking[]>(() => cachedBookings ?? []);
+  const [projects, setProjectsState] = useState<Project[]>(() => cachedProjects ?? []);
+  const [loading, setLoading] = useState(() => !hasSectionCache);
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
   // One unified filter set (sprint 430): Activas · Finalizadas · Canceladas.
@@ -188,20 +214,39 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
 
+  const setBookings = useCallback((updater: Booking[] | ((prev: Booking[]) => Booking[])) => {
+    setBookingsState((prev) => {
+      const next = typeof updater === "function" ? (updater as (current: Booking[]) => Booking[])(prev) : updater;
+      if (bookingCacheKey) setDashboardCache(bookingCacheKey, next);
+      return next;
+    });
+  }, [bookingCacheKey]);
+
+  const setProjects = useCallback((updater: Project[] | ((prev: Project[]) => Project[])) => {
+    setProjectsState((prev) => {
+      const next = typeof updater === "function" ? (updater as (current: Project[]) => Project[])(prev) : updater;
+      if (projectCacheKey) setDashboardCache(projectCacheKey, next);
+      return next;
+    });
+  }, [projectCacheKey]);
+
   const fetchSection = useCallback(async (showLoading = true) => {
     if (!user) return;
-    if (showLoading) setLoading(true);
     if (section === "bookings") {
-      const res = await fetch("/api/bookings?role=client", { cache: "no-store" });
-      const { bookings } = await res.json();
-      setBookings(bookings ?? []);
+      if (!bookingCacheKey) return;
+      const cached = getDashboardCache<Booking[]>(bookingCacheKey);
+      if (showLoading && !cached) setLoading(true);
+      const rows = await loadDashboardCache(bookingCacheKey, fetchClientBookingRows, { force: !showLoading || !!cached });
+      setBookings(rows);
     } else if (section === "projects") {
-      const res = await fetch("/api/projects?role=client", { cache: "no-store" });
-      const { projects } = await res.json();
-      setProjects(projects ?? []);
+      if (!projectCacheKey) return;
+      const cached = getDashboardCache<Project[]>(projectCacheKey);
+      if (showLoading && !cached) setLoading(true);
+      const rows = await loadDashboardCache(projectCacheKey, fetchClientProjectRows, { force: !showLoading || !!cached });
+      setProjects(rows);
     }
     if (showLoading) setLoading(false);
-  }, [user, section]);
+  }, [bookingCacheKey, projectCacheKey, section, setBookings, setProjects, user]);
 
   const reloadLoadedProjectProposals = useCallback(async () => {
     const ids = [...new Set([...Object.keys(projectProposals), expandedProject].filter(Boolean))] as string[];
@@ -226,7 +271,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     }, delay);
   }, [fetchSection, reloadLoadedProjectProposals, section]);
 
-  useEffect(() => { queueMicrotask(() => fetchSection(true)); }, [fetchSection]);
+  useEffect(() => {
+    const hasCache = section === "bookings"
+      ? !!(bookingCacheKey && getDashboardCache<Booking[]>(bookingCacheKey))
+      : section === "projects"
+        ? !!(projectCacheKey && getDashboardCache<Project[]>(projectCacheKey))
+        : true;
+    queueMicrotask(() => fetchSection(!hasCache));
+  }, [bookingCacheKey, fetchSection, projectCacheKey, section]);
 
   useEffect(() => {
     if (!user || section === "saved" || loading) return;

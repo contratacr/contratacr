@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
@@ -18,6 +19,7 @@ import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
 import { CardListSkeleton } from "@/components/ui/loading-state";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
+import { getDashboardCache, loadDashboardCache, prefetchDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import type { BookingStatus } from "@/types";
 
 type Booking = {
@@ -46,6 +48,18 @@ type Booking = {
   beneficiary_phone?: string | null;
   beneficiary_is_minor?: boolean;
 };
+
+const proBookingsCacheKey = (userId: string) => `dashboard:pro-bookings:${userId}`;
+
+async function fetchProfessionalBookingRows(): Promise<Booking[]> {
+  const res = await fetch("/api/bookings?role=professional", { cache: "no-store" });
+  const { bookings } = await res.json();
+  return bookings ?? [];
+}
+
+export function prefetchProfessionalBookings(userId: string) {
+  prefetchDashboardCache(proBookingsCacheKey(userId), fetchProfessionalBookingRows);
+}
 
 // ONE shared status→colour mapping (sprint 440), identical to the client side:
 // active/upcoming + awaiting confirmation = brand-blue (default), finished = green,
@@ -86,10 +100,13 @@ function to12h(time?: string): string | null {
 }
 
 export function BookingRequests() {
+  const { user } = useAuth();
   const locale = useLocale();
   const t = useTranslations("bookingRequests");
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
+  const cacheKey = user ? proBookingsCacheKey(user.id) : null;
+  const cachedBookings = cacheKey ? getDashboardCache<Booking[]>(cacheKey) : null;
 
   // Age bracket badge for a HEALTH patient (self or beneficiary), derived from the
   // stored DOB. Shown ONLY here in the pro's panel — a minor (guardian/consent) or an
@@ -112,8 +129,8 @@ export function BookingRequests() {
     const months = Math.max(1, age.months);
     return t("monthsOld", { count: months });
   }
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bookings, setBookingsState] = useState<Booking[]>(() => cachedBookings ?? []);
+  const [loading, setLoading] = useState(() => !cachedBookings);
   const [filter, setFilter] = useState("activas");
   const bookingsSnapshotRef = useRef("");
   const refreshTimerRef = useRef<number | null>(null);
@@ -138,16 +155,24 @@ export function BookingRequests() {
   }
   function closeAction() { setActionFor(null); }
 
+  const setBookings = useCallback((updater: Booking[] | ((prev: Booking[]) => Booking[])) => {
+    setBookingsState((prev) => {
+      const next = typeof updater === "function" ? (updater as (current: Booking[]) => Booking[])(prev) : updater;
+      if (cacheKey) setDashboardCache(cacheKey, next);
+      return next;
+    });
+  }, [cacheKey]);
+
   const loadBookings = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    const res = await fetch("/api/bookings?role=professional", { cache: "no-store" });
-    const { bookings: rows } = await res.json();
-    const next = rows ?? [];
+    if (!cacheKey) return;
+    const cached = getDashboardCache<Booking[]>(cacheKey);
+    if (!silent && !cached) setLoading(true);
+    const next = await loadDashboardCache(cacheKey, fetchProfessionalBookingRows, { force: silent || !!cached });
     const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
     bookingsSnapshotRef.current = snapshot;
     setBookings(next);
     if (!silent) setLoading(false);
-  }, []);
+  }, [cacheKey, setBookings]);
 
   const refreshSoon = useCallback(() => {
     if (document.visibilityState !== "visible") return;
@@ -160,7 +185,11 @@ export function BookingRequests() {
     }, delay);
   }, [loadBookings]);
 
-  useEffect(() => { queueMicrotask(() => void loadBookings()); }, [loadBookings]);
+  useEffect(() => {
+    if (!cacheKey) return;
+    const hasCache = !!getDashboardCache<Booking[]>(cacheKey);
+    queueMicrotask(() => void loadBookings(hasCache));
+  }, [cacheKey, loadBookings]);
 
   useEffect(() => {
     if (loading) return;
