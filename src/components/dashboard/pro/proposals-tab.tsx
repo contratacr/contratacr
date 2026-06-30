@@ -552,7 +552,7 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
             <div className="flex items-start gap-2.5">
               <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientInfo")}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("verificationLabel")}</p>
                 <p className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]">
                   {clientIdentityText(project.client_identity_status)}
                 </p>
