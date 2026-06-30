@@ -413,7 +413,7 @@ export function ServicesEditor({
           closeLabel={t("cancel")}
           bodyClassName="px-0 py-0"
         >
-          <div className="sticky top-0 z-10 border-b border-[#f3f4f6] bg-white px-5 pb-3 pt-4 sm:px-6">
+          <div className="sticky top-0 z-10 bg-white px-5 pb-3 pt-4 sm:px-6">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
               <input
@@ -456,7 +456,7 @@ export function ServicesEditor({
             )}
 
             {/* "¿No ves tu servicio?" — type → submit → admin reviews → becomes selectable. */}
-            <div className="mt-3 border-t border-[#edf2f7] pt-4 text-center">
+            <div className="mt-4 text-center">
               <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
               <p className="mx-auto mt-1 max-w-[280px] text-xs leading-5 text-[#6b7280]">
                 {tp("suggestDescription")}
