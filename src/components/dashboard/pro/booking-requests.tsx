@@ -470,7 +470,7 @@ export function BookingRequests() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="flex-1 rounded-lg px-4 text-[#6b7280] hover:bg-[#f9fafb] sm:flex-none"
+                      className="flex-1 rounded-lg border-red-100 px-4 text-red-600 hover:bg-red-50 sm:flex-none"
                       onClick={() => archiveBooking(booking.id)}
                     >
                       {t("archive")}

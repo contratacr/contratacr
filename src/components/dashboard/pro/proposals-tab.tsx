@@ -730,7 +730,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               if (ps === "in_progress") actions.push(<Button key="done" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);
                             }
                             if (p.status === "declined" || ps === "cancelled") {
-                              actions.push(<Button key="archive" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4 text-[#6b7280] hover:bg-[#f9fafb]" onClick={() => archiveProposal(p.id)}>{t("archive")}</Button>);
+                              actions.push(<Button key="archive" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg border-red-100 px-4 text-red-600 hover:bg-red-50" onClick={() => archiveProposal(p.id)}>{t("archive")}</Button>);
                             }
                             if (actions.length === 0) return null;
                             return <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">{actions}</div>;
