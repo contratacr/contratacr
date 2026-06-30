@@ -783,22 +783,17 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
                           )}
 
                           {p.message && (
-                            <div className="flex flex-col gap-2.5">
-                              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("myProposal")}</p>
-                              <div className="flex flex-col gap-2.5">
-                                <div className="flex items-start gap-2.5">
-                                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                                  <div className="min-w-0">
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("yourMessage")}</p>
-                                    <ExpandableText text={p.message} lines={2} className="mt-0.5 min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />
-                                  </div>
-                                </div>
+                            <div className="flex items-start gap-2.5">
+                              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("yourMessage")}</p>
+                                <ExpandableText text={p.message} lines={2} className="mt-0.5 min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />
                               </div>
                             </div>
                           )}
                           {/* Client contact — revealed once the proposal is accepted (still active). */}
                           {p.status === "accepted" && ps !== "cancelled" && phone && (
-                            <div className="border-t border-[#eef2f6] pt-3">
+                            <div>
                               <div className="flex items-start gap-2.5">
                                 <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
                                 <div className="min-w-0">
