@@ -567,22 +567,30 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                 <div key={cat} className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
                                   <div className="flex flex-1 flex-col">
                                     <p className="min-h-[44px] text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:min-h-[22px]">{title}</p>
-                                    {description ? (
-                                      <div className="mt-2 min-h-[88px]">
+                                    <div className="mt-2 h-[92px]">
+                                      {description ? (
+                                        <>
                                         <p className="line-clamp-3 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{description}</p>
-                                        {hasFullDescription && (
                                           <button
                                             type="button"
-                                            onClick={() => setServiceDescriptionOpen({ title, description })}
-                                            className="mt-1.5 text-left text-[13px] font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]"
+                                            onClick={() => hasFullDescription && setServiceDescriptionOpen({ title, description })}
+                                            aria-hidden={!hasFullDescription}
+                                            tabIndex={hasFullDescription ? 0 : -1}
+                                            className={cn(
+                                              "mt-1.5 text-left text-[13px] font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]",
+                                              !hasFullDescription && "invisible pointer-events-none"
+                                            )}
                                           >
                                             {t("readFullDescription")}
                                           </button>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <p className="mt-2 min-h-[88px] text-[13px] leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
-                                    )}
+                                        </>
+                                      ) : (
+                                        <>
+                                          <p className="text-[13px] leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
+                                          <span className="invisible mt-1.5 block text-[13px] font-semibold">{t("readFullDescription")}</span>
+                                        </>
+                                      )}
+                                    </div>
                                     <div className="mt-3 min-h-[46px] space-y-1.5 text-[14px]">
                                       {serviceYears ? (
                                         <p className="flex items-center gap-2 text-[#374151]">
