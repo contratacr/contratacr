@@ -2098,6 +2098,7 @@
     "samePassword": "Your new password can't be the same as the old one. Choose a different one.",
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
+    "preparing": "Preparing link…",
     "updating": "Updating…",
     "updatePassword": "Update password",
     "backToLogin": "Back to sign in",

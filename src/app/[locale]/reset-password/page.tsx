@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,6 +50,7 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const t = useTranslations("resetPassword");
   const [submitting, setSubmitting] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
@@ -84,10 +85,62 @@ export default function ResetPasswordPage() {
 
   const watchedPassword = watch("password") ?? "";
 
+  useEffect(() => {
+    let active = true;
+
+    async function prepareRecoverySession() {
+      const supabase = createClient();
+      try {
+        const url = new URL(window.location.href);
+        const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const code = url.searchParams.get("code");
+        const accessToken = hash.get("access_token");
+        const refreshToken = hash.get("refresh_token");
+        const urlError = url.searchParams.get("error") || hash.get("error") || url.searchParams.get("error_code") || hash.get("error_code");
+
+        if (urlError) {
+          if (active) setError(t("error"));
+          return;
+        }
+
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError && active) setError(t("error"));
+        } else if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (sessionError && active) setError(t("error"));
+        } else {
+          const { data } = await supabase.auth.getSession();
+          if (!data.session && active) setError(t("error"));
+        }
+
+        if (code || accessToken || refreshToken || urlError) {
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      } catch {
+        if (active) setError(t("error"));
+      } finally {
+        if (active) setInitializing(false);
+      }
+    }
+
+    void prepareRecoverySession();
+    return () => { active = false; };
+  }, [t]);
+
   async function onSubmit(data: FormData) {
     setSubmitting(true);
     setError(null);
     const supabase = createClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      setSubmitting(false);
+      setError(t("error"));
+      return;
+    }
     const { error: updateError } = await supabase.auth.updateUser({
       password: data.password,
     });
@@ -165,6 +218,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 placeholder="••••••••"
                 error={errors.password?.message}
+                disabled={initializing || submitting}
                 {...register("password")}
               />
               <PasswordChecklist password={watchedPassword} />
@@ -174,10 +228,13 @@ export default function ResetPasswordPage() {
               type="password"
               placeholder="••••••••"
               error={errors.confirmPassword?.message}
+              disabled={initializing || submitting}
               {...register("confirmPassword")}
             />
-            <Button type="submit" size="lg" loading={submitting} className="mt-2">
-              {submitting ? (
+            <Button type="submit" size="lg" loading={submitting || initializing} disabled={initializing} className="mt-2">
+              {initializing ? (
+                t("preparing")
+              ) : submitting ? (
                 t("updating")
               ) : (
                 <>

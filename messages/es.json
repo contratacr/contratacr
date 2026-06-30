@@ -2096,6 +2096,7 @@
     "samePassword": "La nueva contraseña no puede ser igual a la anterior. Elige una diferente.",
     "newPassword": "Nueva contraseña",
     "confirmPassword": "Confirmar contraseña",
+    "preparing": "Preparando enlace…",
     "updating": "Actualizando…",
     "updatePassword": "Actualizar contraseña",
     "backToLogin": "Volver al inicio de sesión",
