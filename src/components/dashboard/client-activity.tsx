@@ -401,7 +401,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       body: JSON.stringify({ id: projectId, status }),
     });
     if (!res.ok) { alert(t("projectUpdateError")); return; }
-    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status, ...(status === "open" ? { proposals: [] } : {}) } : p)));
+    if (status === "open") {
+      setProjectProposals((prev) => {
+        if (!prev[projectId]) return prev;
+        return { ...prev, [projectId]: [] };
+      });
+    }
     refreshProjects();
   }
 

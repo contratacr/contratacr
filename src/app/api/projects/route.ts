@@ -383,11 +383,24 @@ export async function PATCH(req: NextRequest) {
   }
   // Authorize against the row, then persist with the service-role client (an
   // RLS-bound update could silently affect 0 rows, like the bookings bug).
-  const { data: ownRow } = await admin.from("projects").select("client_id").eq("id", id).maybeSingle();
+  const { data: ownRow } = await admin.from("projects").select("client_id, status").eq("id", id).maybeSingle();
   if (!ownRow || ownRow.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  if (status === "open" && ownRow.status !== "cancelled") {
+    return NextResponse.json({ error: "Solo puedes volver a publicar solicitudes canceladas." }, { status: 409 });
+  }
+  if (status === "open") {
+    await admin.from("proposals").delete().eq("project_id", id);
+  }
+  const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
+  if (status === "open") {
+    patch.accepted_professional_id = null;
+    patch.work_done_at = null;
+    patch.completed_at = null;
+    patch.archived_by_client = false;
+  }
   const { error } = await admin
     .from("projects")
-    .update({ status, updated_at: new Date().toISOString() })
+    .update(patch)
     .eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (status === "cancelled") {
