@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
@@ -31,6 +32,7 @@ function uniqueNotifications(items: Notification[]): Notification[] {
 
 export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "offer" }) {
   const { user } = useAuth();
+  const router = useRouter();
   const t = useTranslations("notifications");
   const locale = useLocale();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -157,7 +159,9 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     }
     const role = user?.user_metadata?.role as string | undefined;
-    window.location.assign(notificationHref(n, role, locale));
+    const href = notificationHref(n, role, locale);
+    router.prefetch(href);
+    router.push(href);
   }
 
   async function dismiss(e: React.MouseEvent, id: string) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +25,7 @@ type ToastState = { latest: Notification; count: number };
 
 export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationScope }) {
   const { user } = useAuth();
+  const router = useRouter();
   const t = useTranslations("notifications");
   const locale = useLocale();
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -131,6 +133,16 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     };
   }, []);
 
+  const toastTargetHref = toast
+    ? toast.count > 1
+      ? `/${locale}/notificaciones`
+      : notificationHref(toast.latest, undefined, locale)
+    : null;
+
+  useEffect(() => {
+    if (toastTargetHref) router.prefetch(toastTargetHref);
+  }, [router, toastTargetHref]);
+
   if (!toast) return null;
 
   const latest = toast.latest;
@@ -143,6 +155,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   const detailLabel = grouped
     ? locale === "en" ? "View notifications" : "Ver notificaciones"
     : locale === "en" ? "View details" : "Ver detalles";
+  const targetHref = toastTargetHref ?? `/${locale}/notificaciones`;
 
   async function openToast() {
     if (!toast) return;
@@ -151,7 +164,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       if (!grouped) await createClient().from("notifications").update({ read: true }).eq("id", latest.id);
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     } catch {}
-    window.location.assign(grouped ? `/${locale}/notificaciones` : notificationHref(latest, undefined, locale));
+    router.push(targetHref);
   }
 
   return (
