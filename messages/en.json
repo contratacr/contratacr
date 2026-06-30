@@ -546,6 +546,7 @@
     "askForDetails": "Message me for the details.",
     "serviceContact": "Contact on WhatsApp",
     "serviceRequest": "Request service",
+    "readFullDescription": "View full description",
     "priceConsult": "Ask price",
     "noServices": "No specific services added yet.",
     "consult": "Ask",
@@ -596,7 +597,8 @@
     "reviewsHeading": "Reviews ({count})",
     "reviewOf": "Review of “{title}”",
     "noReviews": "No reviews yet. Only clients who completed a service can leave one.",
-    "whatItMeans": "What does it mean?"
+    "whatItMeans": "What does it mean?",
+    "close": "Close"
   },
   "auth": {
     "login": {

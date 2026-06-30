@@ -545,6 +545,7 @@
     "askForDetails": "Escríbeme para conocer los detalles.",
     "serviceContact": "Contactar por WhatsApp",
     "serviceRequest": "Solicitar servicio",
+    "readFullDescription": "Ver descripción completa",
     "priceConsult": "A convenir",
     "noServices": "Todavía no hay servicios específicos agregados.",
     "consult": "Consultar",
@@ -595,7 +596,8 @@
     "reviewsHeading": "Reseñas ({count})",
     "reviewOf": "Reseña de “{title}”",
     "noReviews": "Aún no hay reseñas. Solo los clientes que completaron un servicio pueden dejar una.",
-    "whatItMeans": "¿Qué significa?"
+    "whatItMeans": "¿Qué significa?",
+    "close": "Cerrar"
   },
   "auth": {
     "login": {

@@ -7,6 +7,7 @@ import {
   Share2, Flag, ChevronDown, Lock, Award, Mail, SearchX, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -99,6 +100,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [bookingCat, setBookingCat] = useState<string | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingReg, setBookingReg] = useState(false);
+  const [serviceDescriptionOpen, setServiceDescriptionOpen] = useState<{ title: string; description: string } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -558,14 +560,28 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                 ? formatServicePrice(priced.priceAmount, priced.priceType, locale)
                                   ?? (priced.price ? priced.price.replaceAll("/hora", locale === "en" ? " /hour" : " /hora").replaceAll("Precio a consultar", t("priceConsult")).replaceAll("Consultar precio", t("priceConsult")) : t("priceConsult"))
                                 : t("priceConsult");
+                              const title = getCategoryLabel(cat, locale);
+                              const description = rep?.description?.trim() ?? "";
+                              const hasFullDescription = description.length > 150;
                               return (
                                 <div key={cat} className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
                                   <div className="flex flex-1 flex-col">
-                                    <p className="min-h-[44px] text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:min-h-[22px]">{getCategoryLabel(cat, locale)}</p>
-                                    {rep?.description ? (
-                                      <p className="mt-2 min-h-[66px] line-clamp-3 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{rep.description}</p>
+                                    <p className="min-h-[44px] text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:min-h-[22px]">{title}</p>
+                                    {description ? (
+                                      <div className="mt-2 min-h-[88px]">
+                                        <p className="line-clamp-3 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{description}</p>
+                                        {hasFullDescription && (
+                                          <button
+                                            type="button"
+                                            onClick={() => setServiceDescriptionOpen({ title, description })}
+                                            className="mt-1.5 text-left text-[13px] font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]"
+                                          >
+                                            {t("readFullDescription")}
+                                          </button>
+                                        )}
+                                      </div>
                                     ) : (
-                                      <p className="mt-2 min-h-[66px] text-[13px] leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
+                                      <p className="mt-2 min-h-[88px] text-[13px] leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
                                     )}
                                     <div className="mt-3 min-h-[46px] space-y-1.5 text-[14px]">
                                       {serviceYears ? (
@@ -817,6 +833,21 @@ export default function ProfilePage({ params }: ProfilePageProps) {
         onClose={() => setBookingOpen(false)}
         initialCategoryId={bookingCat}
       />
+
+      {serviceDescriptionOpen && (
+        <Modal
+          title={serviceDescriptionOpen.title}
+          subtitle={t("description")}
+          open={!!serviceDescriptionOpen}
+          onClose={() => setServiceDescriptionOpen(null)}
+          closeLabel={t("close")}
+          size="md"
+        >
+          <p className="whitespace-pre-line text-[15px] leading-7 text-[#374151] [overflow-wrap:anywhere]">
+            {serviceDescriptionOpen.description}
+          </p>
+        </Modal>
+      )}
 
       {reportOpen && (
         <ReportProfileModal
