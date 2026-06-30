@@ -291,7 +291,7 @@ export async function GET(req: NextRequest) {
       console.error("[GET /api/bookings] professional error:", error.message);
       return NextResponse.json({ error: error.message, bookings: [] }, { status: 500 });
     }
-    return NextResponse.json({ bookings: data ?? [] });
+    return NextResponse.json({ bookings: (data ?? []).filter((b) => !b.archived_by_professional) });
   }
 
   // Client role. Read via the service-role client, scoped to THIS client's id
@@ -312,12 +312,12 @@ export async function GET(req: NextRequest) {
     console.error("[GET /api/bookings] client error:", error.message);
     return NextResponse.json({ error: error.message, bookings: [] }, { status: 500 });
   }
-  return NextResponse.json({ bookings: data ?? [] });
+  return NextResponse.json({ bookings: (data ?? []).filter((b) => !b.archived_by_client) });
 }
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
-  const { id, status, cancelReason, scheduledDate, scheduledTime } = body;
+  const { id, status, cancelReason, scheduledDate, scheduledTime, action } = body;
   // A reschedule carries a new slot (the pro proposes a different time); the booking
   // stays active ("confirmed") at the new time and the client is notified.
   const isReschedule = !!scheduledDate && !!scheduledTime;
@@ -349,6 +349,16 @@ export async function PATCH(req: NextRequest) {
   const isOwnerClient = bookingRow.client_id === session.user.id;
   if (!isOwnerPro && !isOwnerClient) {
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  }
+
+  if (action === "archive") {
+    if (bookingRow.status !== "cancelled" && bookingRow.status !== "rescheduled") {
+      return NextResponse.json({ error: "Solo puedes archivar solicitudes canceladas." }, { status: 409 });
+    }
+    const archivePatch = isOwnerPro ? { archived_by_professional: true } : { archived_by_client: true };
+    const { error: archiveError } = await admin.from("bookings").update(archivePatch).eq("id", id);
+    if (archiveError) return NextResponse.json({ error: archiveError.message }, { status: 500 });
+    return NextResponse.json({ success: true });
   }
 
   const now = new Date().toISOString();

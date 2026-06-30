@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const safe = (data ?? []).map((p: any) => {
+    const safe = (data ?? []).filter((p: any) => !p.archived_by_professional).map((p: any) => {
       const pj = projMap[p.project_id];
       if (pj) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, status, price, message } = body;
+    const { id, status, price, message, action } = body;
     if (!id) return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
 
     const supabase = await createClient();
@@ -146,6 +146,26 @@ export async function PATCH(req: NextRequest) {
     if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     // ── Professional edits their OWN pending proposal (price / message) ──────
+    if (action === "archive") {
+      const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", session.user.id).maybeSingle();
+      if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      const admin = createAdminClient();
+      const { data: prop } = await admin
+        .from("proposals")
+        .select("professional_id, status, projects:project_id(status)")
+        .eq("id", id)
+        .maybeSingle();
+      if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const projectStatus = (prop.projects as any)?.status;
+      if (prop.status !== "declined" && projectStatus !== "cancelled") {
+        return NextResponse.json({ error: "Solo puedes archivar propuestas canceladas." }, { status: 409 });
+      }
+      const { error } = await admin.from("proposals").update({ archived_by_professional: true }).eq("id", id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true });
+    }
+
     if (status === undefined && (price !== undefined || message !== undefined)) {
       const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", session.user.id).maybeSingle();
       if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });

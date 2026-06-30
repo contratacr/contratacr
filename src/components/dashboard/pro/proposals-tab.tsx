@@ -24,6 +24,7 @@ type MyProposal = {
   message: string;
   status: ProposalStatus;
   created_at: string;
+  archived_by_professional?: boolean;
   projects?: {
     title: string;
     status: string;
@@ -372,6 +373,17 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (p.budget_max) return t("upTo", { amount: `₡${p.budget_max.toLocaleString("es-CR")}` });
     return t("budgetTBD");
   }
+
+  async function archiveProposal(id: string) {
+    const res = await fetch("/api/proposals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action: "archive" }),
+    });
+    if (!res.ok) return;
+    setMyProposals((prev) => prev.filter((p) => p.id !== id));
+    if (expandedMine === id) setExpandedMine(null);
+  }
   function hasBudget(p: OpenProject): boolean {
     return Boolean(p.budget_min || p.budget_max);
   }
@@ -713,6 +725,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 );
                               }
                               if (ps === "in_progress") actions.push(<Button key="done" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);
+                            }
+                            if (p.status === "declined" || ps === "cancelled") {
+                              actions.push(<Button key="archive" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4 text-[#6b7280]" onClick={() => archiveProposal(p.id)}>{t("archive")}</Button>);
                             }
                             if (actions.length === 0) return null;
                             return <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">{actions}</div>;

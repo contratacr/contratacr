@@ -48,6 +48,7 @@ type Booking = {
   created_at: string;
   cancel_reason?: string | null;
   cancelled_by?: string | null;
+  archived_by_client?: boolean;
   // The specific service the request is for + who it's for (a dependent/"otra persona").
   category_id?: string | null;
   for_someone_else?: boolean;
@@ -73,6 +74,7 @@ type Project = {
   provincias?: { name: string };
   cantones?: { name: string };
   proposals?: { id: string; status: string }[];
+  archived_by_client?: boolean;
 };
 
 type Proposal = {
@@ -298,6 +300,17 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     setCancelNote("");
   }
 
+  async function archiveBooking(id: string) {
+    const res = await fetch("/api/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action: "archive" }),
+    });
+    if (!res.ok) return;
+    setBookings((prev) => prev.filter((b) => b.id !== id));
+    if (expandedBooking === id) setExpandedBooking(null);
+  }
+
   function openCancelBooking(id: string) {
     setCancelTarget(id);
     setCancelNote("");
@@ -344,6 +357,17 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (!res.ok) { alert(t("projectUpdateError")); return; }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
     refreshProjects();
+  }
+
+  async function archiveProject(projectId: string) {
+    const res = await fetch("/api/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: projectId, action: "archive" }),
+    });
+    if (!res.ok) return;
+    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    if (expandedProject === projectId) setExpandedProject(null);
   }
 
   function openCancelProject(projectId: string) {
@@ -647,6 +671,16 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       </Button>
                                     </>
                                   )}
+                                  {b.status === "cancelled" && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="ml-auto flex-1 rounded-lg px-4 text-[#6b7280] sm:flex-none"
+                                      onClick={() => archiveBooking(b.id)}
+                                    >
+                                      {t("archive")}
+                                    </Button>
+                                  )}
                                   <button
                                     type="button"
                                     aria-label={t("reportTitle")}
@@ -810,7 +844,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             if (st === "open" || st === "in_progress" || st === "awaiting_confirmation") {
                               menu.push({ label: t("cancelProject"), onClick: () => openCancelProject(project.id), destructive: true });
                             }
-                            if (st !== "open" && st !== "in_progress" && st !== "awaiting_confirmation") {
+                            if (st === "cancelled") {
+                              menu.push({ label: t("archive"), onClick: () => archiveProject(project.id) });
+                            } else if (st !== "open" && st !== "in_progress" && st !== "awaiting_confirmation") {
                               menu.push({ label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true });
                             }
                             let primary: ReactNode = null;

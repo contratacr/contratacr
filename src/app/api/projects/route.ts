@@ -221,7 +221,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     const confirmed = await autoConfirmStale(admin, data ?? []);
-    return NextResponse.json({ projects: await enrichProjects(confirmed) });
+    return NextResponse.json({ projects: await enrichProjects(confirmed.filter((project) => !project.archived_by_client)) });
   }
 
   // Professional: browse open projects that match ANY of their professions.
@@ -306,6 +306,15 @@ export async function PATCH(req: NextRequest) {
 
   const uid = session.user.id;
   const admin = createAdminClient();
+
+  if (action === "archive") {
+    const { data: project } = await admin.from("projects").select("client_id, status").eq("id", id).maybeSingle();
+    if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    if (project.status !== "cancelled") return NextResponse.json({ error: "Solo puedes archivar solicitudes canceladas." }, { status: 409 });
+    const { error } = await admin.from("projects").update({ archived_by_client: true }).eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  }
 
   // ── Pro marks "trabajo realizado" → awaiting_confirmation ───────────────
   if (action === "work_done") {

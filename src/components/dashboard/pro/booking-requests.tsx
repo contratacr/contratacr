@@ -31,6 +31,7 @@ type Booking = {
   scheduled_date?: string;
   scheduled_time?: string;
   status: BookingStatus;
+  archived_by_professional?: boolean;
   created_at: string;
   professional_whatsapp?: string;
   profiles?: { full_name?: string; avatar_url?: string; is_flagged?: boolean } | null;
@@ -201,6 +202,17 @@ export function BookingRequests() {
     });
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "cancelled" as BookingStatus } : b)));
     setSubmitting(false); closeAction();
+  }
+
+  async function archiveBooking(id: string) {
+    const res = await fetch("/api/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action: "archive" }),
+    });
+    if (!res.ok) return;
+    setBookings((prev) => prev.filter((b) => b.id !== id));
+    if (expandedId === id) setExpandedId(null);
   }
 
   async function submitReport(reason: string) {
@@ -421,7 +433,7 @@ export function BookingRequests() {
             {!panelOpen && (() => {
               return (
                 <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
-                  {waHref && (
+                  {waHref && isActive && (
                     <Button variant="whatsapp" size="sm" asChild className="min-w-[8rem] flex-1 rounded-lg px-4 sm:flex-none">
                       <a href={waHref} target="_blank" rel="noopener noreferrer">
                         <WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("contact")}
@@ -449,6 +461,17 @@ export function BookingRequests() {
                         {t("cancel")}
                       </Button>
                     </>
+                  )}
+                  {booking.status === "cancelled" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 rounded-lg px-4 text-[#6b7280] sm:flex-none"
+                      onClick={() => archiveBooking(booking.id)}
+                    >
+                      {t("archive")}
+                    </Button>
                   )}
                   <button
                     type="button"
