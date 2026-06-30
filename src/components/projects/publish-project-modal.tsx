@@ -149,6 +149,14 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     setForm((f) => ({ ...f, [field]: nextValue, ...(field === "provinciaId" ? { cantonId: "" } : {}) }));
   }
 
+  function skipCedula() {
+    setNoCedula(true);
+    setOfficialName("");
+    setIdentityLookup("idle");
+    setIdentityNotice(null);
+    setForm((f) => ({ ...f, cedula: "" }));
+  }
+
   // Close on Esc + lock background scroll while open (matches the app's modals).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -168,8 +176,9 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     if (!form.title.trim()) { setError(t("errTitle")); return; }
     if (!form.description.trim()) { setError(t("errDescription")); return; }
     if (!profileLoaded) return;
-    const cedulaForSubmit = savedCedula || form.cedula;
-    if (!savedCedula && !noCedula && !isValidId(cedulaForSubmit)) { setError(t("errCedula")); return; }
+    const sendingWithoutCedula = noCedula && !savedCedula;
+    const cedulaForSubmit = savedCedula || (sendingWithoutCedula ? "" : form.cedula);
+    if (!savedCedula && !sendingWithoutCedula && !isValidId(cedulaForSubmit)) { setError(t("errCedula")); return; }
     if (needsPhone && phone.replace(/\D/g, "").length < 8) { setError(t("errPhone")); return; }
 
     setSubmitting(true);
@@ -192,7 +201,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           budgetMin: form.budgetMin || null,
           budgetMax: form.budgetMax || null,
           timeline: form.timeline || null,
-          cedula: noCedula && !savedCedula ? "" : cedulaForSubmit,
+          cedula: cedulaForSubmit,
           fullName: clientName,
         }),
       });
@@ -211,7 +220,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         setIdentityNotice(t("identityPendingNotice"));
         return;
       }
-      if (identityStatus === "unverified") {
+      if (identityStatus === "unverified" && !sendingWithoutCedula) {
         setPublished(true);
         setIdentityNotice(t("identityUnverifiedNotice"));
         return;
@@ -335,7 +344,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                     </p>
                   </div>
                 )}
-                <button type="button" onClick={() => setNoCedula(true)} className="self-start -mt-1 text-xs font-semibold text-[#009FD9] hover:underline">
+                <button type="button" onClick={skipCedula} className="self-start -mt-1 text-xs font-semibold text-[#009FD9] hover:underline">
                   {t("noCedula")}
                 </button>
               </>
