@@ -60,9 +60,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const [noCedula, setNoCedula] = useState(false);
   const [savedCedula, setSavedCedula] = useState("");
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileLoadedFor, setProfileLoadedFor] = useState<string | null>(null);
   const [published, setPublished] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // Same rule as "Solicitar servicio": projects need a contact phone. If the client
   // already has one on file we don't ask; otherwise we prompt for it here and save it
@@ -74,6 +75,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   useEffect(() => {
     if (!user?.id) {
       setProfileLoaded(true);
+      setProfileLoadedFor(null);
       return;
     }
     const supabase = createClient();
@@ -109,8 +111,12 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       setPhoneOnProfile(onProfile);
       setNeedsPhone(!p);
       setProfileLoaded(true);
+      setProfileLoadedFor(user.id);
     })().catch(() => {
-      if (active) setProfileLoaded(true);
+      if (active) {
+        setProfileLoaded(true);
+        setProfileLoadedFor(user.id);
+      }
     });
     return () => { active = false; };
   }, [user?.id]);
@@ -203,7 +209,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     if (!form.description.trim()) { setError(t("errDescription")); return; }
     if (selectedIsHealth && form.forSomeoneElse && !form.beneficiaryName.trim()) { setError(t("errBeneficiaryName")); return; }
     if (selectedIsHealth && form.forSomeoneElse && !form.beneficiaryDob) { setError(t("errBeneficiaryDob")); return; }
-    if (!profileLoaded) return;
+    if (!profileReady) return;
     const sendingWithoutCedula = noCedula && !savedCedula;
     const cedulaForSubmit = savedCedula || (sendingWithoutCedula ? "" : form.cedula);
     if (!savedCedula && !sendingWithoutCedula && !isValidId(cedulaForSubmit)) { setError(t("errCedula")); return; }
@@ -268,8 +274,9 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
   const inputClass =
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
-  const shouldAskCedula = profileLoaded && !savedCedula && !noCedula;
-  const shouldShowNoCedulaNotice = profileLoaded && !savedCedula && noCedula;
+  const profileReady = !authLoading && profileLoaded && profileLoadedFor === (user?.id ?? null);
+  const shouldAskCedula = profileReady && !savedCedula && !noCedula;
+  const shouldShowNoCedulaNotice = profileReady && !savedCedula && noCedula;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
@@ -301,6 +308,14 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
         {/* Form: scrolling body + pinned footer */}
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          {!profileReady ? (
+            <div className="flex min-h-[360px] flex-1 items-center justify-center px-5 py-10 sm:px-6">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" />
+                <p className="text-sm font-medium text-[#6b7280]">{t("loadingProfile")}</p>
+              </div>
+            </div>
+          ) : (
           <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5 sm:px-6">
             {/* Category */}
             <div>
@@ -521,13 +536,14 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               </p>
             )}
           </div>
+          )}
 
           {/* Footer (pinned) */}
           <div className="flex gap-3 border-t border-[#f3f4f6] px-5 py-4 shrink-0 sm:px-6">
             <Button type="button" variant="outline" size="lg" onClick={onClose}>
               {t("cancel")}
             </Button>
-            <Button type={published ? "button" : "submit"} size="lg" className="flex-1" loading={submitting} disabled={submitting || !profileLoaded} onClick={published ? onClose : undefined}>
+            <Button type={published ? "button" : "submit"} size="lg" className="flex-1" loading={submitting} disabled={submitting || !profileReady} onClick={published ? onClose : undefined}>
               {published ? t("close") : submitting ? t("publishing") : t("publish")}
             </Button>
           </div>

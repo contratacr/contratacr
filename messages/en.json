@@ -2233,6 +2233,7 @@
     "errBeneficiaryDob": "Enter the person's date of birth.",
     "phoneLabel": "Contact phone",
     "phoneHelp": "We use it to coordinate your request. We save it to your profile so we don't ask again.",
+    "loadingProfile": "Loading your details...",
     "errPublish": "Error publishing the request. Try again.",
     "errUnexpected": "Unexpected error. Try again.",
     "successTitle": "Request published!",
