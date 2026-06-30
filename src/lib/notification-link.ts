@@ -29,6 +29,7 @@ const CLIENT_TYPES = new Set([
   "booking_update",
   "review_request",
   "proposal_received",
+  "proposal_updated",
   "proposal_withdrawn",
   "project_work_done",
 ]);
@@ -116,6 +117,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
       break;
 
     case "proposal_received":
+    case "proposal_updated":
     case "proposal_withdrawn":
     case "project_work_done":
       href = "/dashboard/profesional?tab=sent_projects";

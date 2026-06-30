@@ -198,6 +198,17 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (showLoading) setLoading(false);
   }, [user, section]);
 
+  const reloadLoadedProjectProposals = useCallback(async () => {
+    const ids = Object.keys(projectProposals);
+    if (ids.length === 0) return;
+    const entries = await Promise.all(ids.map(async (projectId) => {
+      const res = await fetch(`/api/proposals?project=${projectId}`, { cache: "no-store" });
+      const { proposals } = await res.json().catch(() => ({ proposals: [] }));
+      return [projectId, proposals ?? []] as const;
+    }));
+    setProjectProposals((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+  }, [projectProposals]);
+
   const refreshSoon = useCallback(() => {
     if (section === "saved" || document.visibilityState !== "visible") return;
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
@@ -206,18 +217,22 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
       void fetchSection(false);
+      if (section === "projects") void reloadLoadedProjectProposals();
     }, delay);
-  }, [fetchSection, section]);
+  }, [fetchSection, reloadLoadedProjectProposals, section]);
 
   useEffect(() => { queueMicrotask(() => fetchSection(true)); }, [fetchSection]);
 
   useEffect(() => {
     if (!user || section === "saved" || loading) return;
     const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") void fetchSection(false);
+      if (document.visibilityState === "visible") {
+        void fetchSection(false);
+        if (section === "projects") void reloadLoadedProjectProposals();
+      }
     }, 5000);
     return () => window.clearInterval(id);
-  }, [fetchSection, loading, section, user]);
+  }, [fetchSection, loading, reloadLoadedProjectProposals, section, user]);
 
   useEffect(() => {
     if (!user || section === "saved" || loading) return;
@@ -444,9 +459,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     setDeleteTarget(null);
   }
 
-  async function loadProposals(projectId: string) {
-    if (projectProposals[projectId]) return;
-    const res = await fetch(`/api/proposals?project=${projectId}`);
+  async function loadProposals(projectId: string, force = false) {
+    if (!force && projectProposals[projectId]) return;
+    const res = await fetch(`/api/proposals?project=${projectId}`, { cache: "no-store" });
     const { proposals } = await res.json();
     setProjectProposals((prev) => ({ ...prev, [projectId]: proposals ?? [] }));
   }

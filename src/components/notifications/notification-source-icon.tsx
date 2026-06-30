@@ -31,6 +31,7 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
     case "review_request":
       return <CalendarClock className={className} />;
     case "proposal_received":
+    case "proposal_updated":
     case "proposal_withdrawn":
     case "project_work_done":
       return <ClipboardList className={className} />;

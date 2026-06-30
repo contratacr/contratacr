@@ -9,6 +9,7 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   "booking_update",
   "review_request",
   "proposal_received",
+  "proposal_updated",
   "proposal_withdrawn",
   "proposal_accepted",
   "project_proposal_accepted",

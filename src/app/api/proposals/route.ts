@@ -183,6 +183,26 @@ export async function PATCH(req: NextRequest) {
       const admin = createAdminClient();
       const { error: e } = await admin.from("proposals").update(patch).eq("id", id);
       if (e) return NextResponse.json({ error: e.message }, { status: 500 });
+      try {
+        const { data: updated } = await admin
+          .from("proposals")
+          .select("project_id, projects:project_id(title, client_id)")
+          .eq("id", id)
+          .maybeSingle();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const project = (updated as any)?.projects;
+        if (updated?.project_id && project?.client_id) {
+          await admin.from("notifications").insert({
+            user_id: project.client_id,
+            type: "proposal_updated",
+            title: "Propuesta actualizada",
+            message: `Un profesional actualizó su propuesta para "${project.title ?? "tu solicitud"}".`,
+            data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: updated.project_id },
+          });
+        }
+      } catch (notifyErr) {
+        console.error("[PATCH /api/proposals] notify proposal update failed:", notifyErr);
+      }
       return NextResponse.json({ success: true });
     }
 
