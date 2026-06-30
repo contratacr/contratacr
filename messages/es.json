@@ -1389,7 +1389,7 @@
     "status": {
       "pending": "Pendiente",
       "accepted": "Aceptada",
-      "declined": "Rechazada"
+      "declined": "No seleccionada"
     },
     "projStatus": {
       "in_progress": "En curso",

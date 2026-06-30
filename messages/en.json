@@ -1390,7 +1390,7 @@
     "status": {
       "pending": "Pending",
       "accepted": "Accepted",
-      "declined": "Declined"
+      "declined": "Not selected"
     },
     "projStatus": {
       "in_progress": "In progress",

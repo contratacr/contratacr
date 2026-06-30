@@ -193,7 +193,7 @@ export function proyectoStatusRedundant(status: string): boolean {
   return PROYECTO_PRIMARY[proyectoBucket(status)]?.includes(status) ?? false;
 }
 export function proposalStatusRedundant(proposalStatus: string, projectStatus?: string | null): boolean {
-  if (proposalStatus === "declined") return true; // Canceladas (primary)
+  if (proposalStatus === "declined") return false; // Show "No seleccionada" inside Canceladas.
   if (proposalStatus === "accepted") {
     if (projectStatus === "in_progress") return true; // Activas (primary)
     if (projectStatus === "completed") return true; // Finalizadas (primary)
