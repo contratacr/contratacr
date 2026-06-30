@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { clampMoneyDigits, MAX_MONEY_AMOUNT } from "@/lib/money-limits";
 
 // Numeric-only price field. Accepts digits ONLY — never letters or symbols.
 // Stores/returns a clean digit string (no separators). Use everywhere a price
@@ -23,10 +24,10 @@ export function PriceInput({
   className,
   colonPrefix = true,
   id,
-  maxLength = 12,
+  maxLength = String(MAX_MONEY_AMOUNT).length,
 }: PriceInputProps) {
   function handle(raw: string) {
-    onChange(raw.replace(/\D/g, "").slice(0, maxLength));
+    onChange(clampMoneyDigits(raw).slice(0, maxLength));
   }
 
   return (

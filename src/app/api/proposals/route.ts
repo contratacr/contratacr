@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseMoneyAmount } from "@/lib/money-limits";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from("proposals").insert({
       project_id: projectId,
       professional_id: pro.id,
-      price: price ? parseInt(price, 10) : null,
+      price: parseMoneyAmount(price),
       message,
       status: "pending",
     }).select("id").single();
@@ -173,7 +174,7 @@ export async function PATCH(req: NextRequest) {
       if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
       if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes editar una propuesta pendiente." }, { status: 409 });
       const patch: Record<string, unknown> = {};
-      if (price !== undefined) patch.price = price ? parseInt(String(price), 10) : null;
+      if (price !== undefined) patch.price = parseMoneyAmount(price);
       if (message !== undefined) patch.message = message;
       // Persist with the service-role client: the RLS-bound update can silently
       // affect 0 rows if no UPDATE policy covers the professional (edits were lost).

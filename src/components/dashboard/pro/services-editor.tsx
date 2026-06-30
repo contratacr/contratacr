@@ -14,6 +14,7 @@ import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/ca
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
+import { parseMoneyAmount } from "@/lib/money-limits";
 
 export type ProService = {
   id: string;
@@ -228,7 +229,7 @@ export function ServicesEditor({
     const priceType: PricingType = form.aConsultar ? "a_convenir" : form.priceUnit;
     const amount = form.aConsultar
       ? undefined
-      : form.priceAmount.trim() ? Number(form.priceAmount.replace(/\D/g, "")) : undefined;
+      : parseMoneyAmount(form.priceAmount) ?? undefined;
     const priceDisplay = formatServicePrice(amount, priceType) ?? undefined;
     const description = form.description.trim().slice(0, SERVICE_DESCRIPTION_MAX_LENGTH);
     const yearsRaw = form.years.replace(/\D/g, "").slice(0, SERVICE_YEARS_MAX_LENGTH);

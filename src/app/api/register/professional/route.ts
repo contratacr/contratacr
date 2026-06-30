@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { runIdentityVerification } from "@/lib/verification/run-verification";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
+import { parseMoneyAmount } from "@/lib/money-limits";
 
 export async function POST(req: Request) {
   try {
@@ -198,7 +199,7 @@ export async function POST(req: Request) {
         bio: safeBio,
         whatsapp,
         years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
-        hourly_rate: hourlyRate ? parseInt(hourlyRate, 10) : null,
+        hourly_rate: parseMoneyAmount(hourlyRate),
         service_type: serviceType ?? "mobile",
         address: address ?? null,
         ...(province ? { provincia_id: province } : {}),
@@ -251,7 +252,7 @@ export async function POST(req: Request) {
       bio: safeBio,
       whatsapp,
       years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
-      hourly_rate: hourlyRate ? parseInt(hourlyRate, 10) : null,
+      hourly_rate: parseMoneyAmount(hourlyRate),
       service_type: serviceType ?? "mobile",
       address: address ?? null,
       slug,

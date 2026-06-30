@@ -7,6 +7,7 @@ import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
+import { parseMoneyAmount } from "@/lib/money-limits";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -153,8 +154,8 @@ export async function POST(req: NextRequest) {
       description: cleanDescription,
       provincia_id: provinciaId ?? null,
       canton_id: cantonId ?? null,
-      budget_min: budgetMin ? parseInt(budgetMin, 10) : null,
-      budget_max: budgetMax ? parseInt(budgetMax, 10) : null,
+      budget_min: parseMoneyAmount(budgetMin),
+      budget_max: parseMoneyAmount(budgetMax),
       timeline: timeline ?? null,
       client_identity_status: clientIdentityStatus,
       status: "open",
