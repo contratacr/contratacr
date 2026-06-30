@@ -12,9 +12,9 @@ export function FormLoadingState({ label, minHeight = "min-h-[360px]" }: { label
   );
 }
 
-export function CardListSkeleton({ rows = 3, withFilters = true, label }: { rows?: number; withFilters?: boolean; label?: string }) {
+export function CardListSkeleton({ rows = 3, withFilters = true, label, className }: { rows?: number; withFilters?: boolean; label?: string; className?: string }) {
   return (
-    <div className="flex flex-col gap-3.5">
+    <div className={cn("flex flex-col gap-3.5", className)}>
       {label ? (
         <div className="flex items-center gap-2 text-sm font-medium text-[#6b7280]">
           <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />

@@ -277,7 +277,7 @@ export function BookingRequests({ userId }: { userId: string }) {
   }
 
   if (loading || !hasLoadedOnce) {
-    return <CardListSkeleton rows={3} label={t("loading")} />;
+    return <CardListSkeleton rows={3} className="min-h-[360px]" />;
   }
 
   if (bookings.length === 0) {

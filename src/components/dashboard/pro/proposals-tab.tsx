@@ -619,7 +619,7 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
   const viewLoading = loading || (view === "browse" ? !browseLoadedOnce : !mineLoadedOnce);
 
   if (viewLoading) {
-    return <CardListSkeleton rows={3} label={view === "browse" ? t("loadingBrowse") : t("loadingMine")} />;
+    return <CardListSkeleton rows={3} className="min-h-[360px]" />;
   }
 
   return (

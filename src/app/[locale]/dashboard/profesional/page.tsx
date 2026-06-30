@@ -97,6 +97,56 @@ const MOBILE_PRIMARY: Record<Mode, Tab[]> = {
   use: ["sent_bookings", "sent_projects", "notifications"],
 };
 
+function DashboardInitialSkeleton({ activeTab }: { activeTab: Tab }) {
+  const listTab = ["bookings", "proposals", "sent_bookings", "sent_projects", "saved"].includes(activeTab);
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#fafafa]">
+      <Navbar />
+      <main className="flex-1">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 lg:pb-8">
+          <div className="mb-6 flex animate-pulse items-center gap-4 border-b border-[#e5e7eb] pb-5">
+            <div className="h-16 w-16 shrink-0 rounded-full bg-[#eaf7fd]" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="h-3 w-36 rounded-full bg-[#eef2f6]" />
+              <div className="h-6 w-72 max-w-full rounded-full bg-[#e5edf4]" />
+              <div className="h-5 w-24 rounded-full bg-[#eaf7fd]" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-6 lg:flex-row">
+            <aside className="hidden w-60 shrink-0 lg:block">
+              <Card>
+                <CardContent className="space-y-2 p-2">
+                  {Array.from({ length: 8 }).map((_, index) => (
+                    <div key={index} className="h-11 animate-pulse rounded-xl bg-[#f3f7fa]" />
+                  ))}
+                </CardContent>
+              </Card>
+            </aside>
+            <div className="min-w-0 flex-1">
+              <Card>
+                <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
+                  <div className="animate-pulse space-y-2">
+                    <div className="h-5 w-48 max-w-full rounded-full bg-[#e5edf4]" />
+                    <div className="h-3 w-80 max-w-full rounded-full bg-[#f1f5f9]" />
+                  </div>
+                </CardHeader>
+                <CardContent className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">
+                  {listTab ? (
+                    <CardListSkeleton rows={3} className="min-h-[360px]" />
+                  ) : (
+                    <FormLoadingState minHeight="min-h-[360px]" />
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -333,12 +383,7 @@ export default function DashboardPage() {
 
 
   if (authLoading || loading || !user) {
-    return (
-      <div className="min-h-screen bg-[#fafafa]">
-        <Navbar />
-        <FormLoadingState minHeight="min-h-[60vh]" />
-      </div>
-    );
+    return <DashboardInitialSkeleton activeTab={activeTab} />;
   }
 
   const displayName =
