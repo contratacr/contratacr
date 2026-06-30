@@ -722,6 +722,7 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
                   const ps = p.projects?.status;
                   const phone = p.projects?.profiles?.phone;
                   const clientName = p.projects?.profiles?.full_name;
+                  const canMarkCompleted = p.status === "accepted" && ps === "in_progress";
                   const wa = p.status === "accepted" && ps !== "cancelled" && phone
                     ? getWhatsAppLink(phone, t("waMessage", { name: (clientName ?? "").split(" ")[0], title: p.projects?.title ?? "" }))
                     : null;
@@ -744,8 +745,10 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2.5">
                             <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{p.projects?.title ?? t("projectFallback")}</span>
-                            {!proposalStatusRedundant(p.status, ps) && (
-                              p.status === "accepted" ? (
+                            {(canMarkCompleted || !proposalStatusRedundant(p.status, ps)) && (
+                              canMarkCompleted ? (
+                                <Badge variant="default" className="shrink-0 text-[11px] font-semibold">{t("completeShort")}</Badge>
+                              ) : p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
                               ) : p.status === "pending" ? (
                                 <PendingProposalBadge label={t("status.pending")} />
@@ -840,7 +843,7 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
                                   </Button>
                                 );
                               }
-                              if (ps === "in_progress") actions.push(<Button key="done" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);
+                              if (canMarkCompleted) actions.push(<Button key="done" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);
                             }
                             if (p.status === "declined" || ps === "cancelled") {
                               actions.push(<Button key="archive" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg border-red-100 px-4 text-red-600 hover:bg-red-50" onClick={() => archiveProposal(p.id)}>{t("archive")}</Button>);

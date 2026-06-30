@@ -1413,6 +1413,7 @@
     "cancel": "Cancel",
     "cancelConfirm": "Cancel this proposal?",
     "markCompleted": "Mark as completed",
+    "completeShort": "Finish",
     "clientCancelled": "The client cancelled this request.",
     "whatsapp": "WhatsApp",
     "waMessage": "Hi {name}, I'm the one who sent the proposal you accepted on ContrataCR for \"{title}\".",
