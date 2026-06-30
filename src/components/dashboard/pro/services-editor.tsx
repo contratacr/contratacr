@@ -70,7 +70,7 @@ export function ServicesEditor({
 }: ServicesEditorProps) {
   const locale = useLocale();
   const t = useTranslations("servicesEditor");
-  const tp = useTranslations("servicesPage");
+  const tp = useTranslations("categoriesPage");
   const seedProfessions =
     initialProfessions.length > 0
       ? initialProfessions
@@ -426,11 +426,8 @@ export function ServicesEditor({
             </div>
           </div>
           <div className="px-3 py-2 sm:px-4">
-            {pickerList.length === 0 ? (
-              <div className="px-3 py-4 text-center">
-                <p className="mb-1 text-sm font-medium text-[#374151]">{t("pickerNoResults")}</p>
-                <p className="text-xs text-[#9ca3af]">{t("pickerNoResultsHint")}</p>
-              </div>
+            {pickerList.length === 0 && pickerQuery.trim() ? (
+              <div className="h-1" />
             ) : pickerQuery.trim() ? (
               <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                 {pickerList.map((cat) => (
