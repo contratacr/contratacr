@@ -264,9 +264,16 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       targetProjectHandledRef.current = true;
       const id = window.setTimeout(() => {
         setView("browse");
+        if (open.category_id && professions.includes(open.category_id)) setProfFilter(open.category_id);
+        setDismissed((prev) => {
+          if (!prev.has(projectId)) return prev;
+          const next = new Set(prev);
+          next.delete(projectId);
+          return next;
+        });
         setProjectFilter("activas");
         setExpandedProject(projectId);
-        window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+        window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 160);
       }, 0);
       return () => window.clearTimeout(id);
     }
