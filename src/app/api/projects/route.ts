@@ -396,25 +396,25 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ success: true });
 }
 
-// Notify every affected professional that a project was cancelled/deleted, so it
-// disappears from their active work or sent proposals.
+// Notify only professionals who actually sent a proposal. If a client cancels a
+// request before any proposal exists, nobody is affected enough to receive a bell.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled" | "deleted") {
   try {
     const { data: project } = await admin
       .from("projects")
-      .select("title, accepted_professional_id")
+      .select("title")
       .eq("id", projectId)
       .maybeSingle();
     if (!project) return;
-
-    const professionalIds = new Set<string>();
-    if (project.accepted_professional_id) professionalIds.add(project.accepted_professional_id);
 
     const { data: proposals } = await admin
       .from("proposals")
       .select("professional_id")
       .eq("project_id", projectId);
+    if (!proposals || proposals.length === 0) return;
+
+    const professionalIds = new Set<string>();
     for (const proposal of proposals ?? []) {
       if (proposal.professional_id) professionalIds.add(proposal.professional_id);
     }
