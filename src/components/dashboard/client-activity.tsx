@@ -280,6 +280,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     targetProjectHandledRef.current = true;
     const id = window.setTimeout(() => {
       setProjectFilter(proyectoBucket(project.status));
+      void loadProposals(projectId);
       setExpandedProject(projectId);
       window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
     }, 0);

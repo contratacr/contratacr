@@ -367,8 +367,8 @@ export async function PATCH(req: NextRequest) {
         await admin.from("notifications").insert({
           user_id: pro.profile_id,
           type: "project_completed",
-          title: "Solicitud finalizada",
-          message: `El cliente confirmó la finalización de "${project.title}". ¡Buen trabajo!`,
+          title: "Oportunidad finalizada",
+          message: `El cliente confirmó la finalización de "${project.title}". Buen trabajo.`,
           data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id },
         });
       }
