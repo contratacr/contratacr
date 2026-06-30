@@ -571,6 +571,7 @@
     "description": "Description",
     "experienceLabel": "Experience",
     "yearsValue": "{years, plural, one {# year} other {# years}}",
+    "yearsExperienceValue": "{years, plural, one {# year of experience} other {# years of experience}}",
     "verification": "Verification",
     "location": "Location",
     "whereServes": "Where they serve",

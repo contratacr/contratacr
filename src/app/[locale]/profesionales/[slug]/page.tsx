@@ -571,7 +571,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                       {serviceYears ? (
                                         <p className="flex items-center gap-2 text-[#374151]">
                                           <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                                          <span className="font-semibold">{t("yearsValue", { years: serviceYears })}</span>
+                                          <span className="font-semibold">{t("yearsExperienceValue", { years: serviceYears })}</span>
                                         </p>
                                       ) : null}
                                       <p className="flex items-center gap-2 text-[#111827]">

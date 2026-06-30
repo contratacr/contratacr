@@ -570,6 +570,7 @@
     "description": "Descripción",
     "experienceLabel": "Experiencia",
     "yearsValue": "{years, plural, one {# año} other {# años}}",
+    "yearsExperienceValue": "{years, plural, one {# año de experiencia} other {# años de experiencia}}",
     "verification": "Verificación",
     "location": "Ubicación",
     "whereServes": "Dónde atiende",
