@@ -1846,6 +1846,7 @@
     "notVerifiedBadge": "Not verified",
     "finalized": "Finalized",
     "accepted": "Accepted",
+    "selectedProposal": "Selected proposal",
     "declined": "Declined",
     "changeDecision": "Change decision",
     "whatsapp": "WhatsApp",

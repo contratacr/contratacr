@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag, CheckCircle2 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -1048,7 +1048,13 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
                               const isAccepted = proposal.status === "accepted";
                               const proVerified = proposal.professionals?.verification_status === "verified";
                               return (
-                                <div key={proposal.id} className={cn("rounded-xl border p-3.5", isAccepted ? "border-emerald-200 bg-emerald-50/40" : "border-[#e5e7eb] bg-white")}>
+                                <div key={proposal.id} className={cn("rounded-xl border p-3.5", isAccepted ? "border-[#b8e7cf] bg-[#f2fbf6] shadow-[0_10px_24px_-22px_rgba(22,163,74,0.8)]" : "border-[#e5e7eb] bg-white")}>
+                                  {isAccepted && (
+                                    <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#bbf7d0] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#15803d]">
+                                      <CheckCircle2 className="h-3.5 w-3.5" />
+                                      {finalized ? t("finalized") : t("selectedProposal")}
+                                    </div>
+                                  )}
                                   <div className="flex items-start gap-3">
                                     <Avatar className="h-9 w-9 shrink-0">
                                       <AvatarImage src={proposal.professionals?.profiles?.avatar_url} />
@@ -1082,12 +1088,9 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
                                           )}
                                         </div>
                                         <div className="flex shrink-0 flex-col items-end gap-1">
-                                          <p className="text-xs font-bold text-[#009FD9]">
+                                          <p className={cn("text-xs font-bold", isAccepted ? "text-[#15803d]" : "text-[#009FD9]")}>
                                             {proposal.price ? `\u20a1${proposal.price.toLocaleString("es-CR")}` : t("priceTBD")}
                                           </p>
-                                          {proposal.status === "accepted" && !(projectFilter === "finalizadas" && finalized) && (
-                                            <Badge variant="success">{finalized ? t("finalized") : t("accepted")}</Badge>
-                                          )}
                                           {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
                                         </div>
                                       </div>
