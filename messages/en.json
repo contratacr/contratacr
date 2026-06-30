@@ -1356,7 +1356,7 @@
     "close": "Close",
     "propose": "Propose",
     "alreadyProposed": "You already sent a proposal",
-    "yourPrice": "Your price (₡)",
+    "yourPrice": "Your price",
     "optional": "(optional)",
     "pricePlaceholder": "example: 50000",
     "yourMessage": "Your proposal",
