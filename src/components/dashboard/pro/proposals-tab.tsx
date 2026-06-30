@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { Banknote, FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
+import { Banknote, FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -681,12 +681,6 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
                                   <Banknote className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                   <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldBudget")}</span> <span className={hasBudget(project) ? "font-semibold text-[#111827]" : "text-[#374151]"}>{budgetTextFor(project)}</span></span>
                                 </span>
-                                {project.categories?.name && (
-                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{project.categories.name}</span></span>
-                                  </span>
-                                )}
                               </div>
                             </div>
                           </button>
