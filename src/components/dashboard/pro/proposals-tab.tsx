@@ -705,7 +705,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                   <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
                                   <div className="min-w-0">
                                     <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("yourMessage")}</p>
-                                    <ExpandableText text={p.message} lines={5} className="mt-0.5 min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />
+                                    <ExpandableText text={p.message} lines={2} className="mt-0.5 min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />
                                   </div>
                                 </div>
                               </div>

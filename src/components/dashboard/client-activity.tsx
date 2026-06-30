@@ -1001,7 +1001,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                           {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
                                         </div>
                                       </div>
-                                      <ExpandableText text={proposal.message} lines={3} className="mt-1 text-[13px] leading-relaxed" />
+                                      <ExpandableText text={proposal.message} lines={2} className="mt-1 text-[13px] leading-relaxed" />
                                     </div>
                                   </div>
                                   <div className="mt-3 flex flex-wrap justify-start gap-2 border-t border-[#eef0f2] pt-3 sm:justify-end">
