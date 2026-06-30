@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CardListSkeleton, FormLoadingState } from "@/components/ui/loading-state";
+import { FormLoadingState } from "@/components/ui/loading-state";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
 import { ProfileCompletion, computeCompletion } from "@/components/dashboard/pro/profile-completion";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
@@ -97,9 +97,7 @@ const MOBILE_PRIMARY: Record<Mode, Tab[]> = {
   use: ["sent_bookings", "sent_projects", "notifications"],
 };
 
-function DashboardInitialSkeleton({ activeTab }: { activeTab: Tab }) {
-  const listTab = ["bookings", "proposals", "sent_bookings", "sent_projects", "saved"].includes(activeTab);
-
+function DashboardInitialSkeleton() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
@@ -132,11 +130,7 @@ function DashboardInitialSkeleton({ activeTab }: { activeTab: Tab }) {
                   </div>
                 </CardHeader>
                 <CardContent className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">
-                  {listTab ? (
-                    <CardListSkeleton rows={3} className="min-h-[360px]" />
-                  ) : (
-                    <FormLoadingState minHeight="min-h-[360px]" />
-                  )}
+                  <FormLoadingState minHeight="min-h-[360px]" />
                 </CardContent>
               </Card>
             </div>
@@ -383,7 +377,7 @@ export default function DashboardPage() {
 
 
   if (authLoading || !user) {
-    return <DashboardInitialSkeleton activeTab={activeTab} />;
+    return <DashboardInitialSkeleton />;
   }
 
   const displayName =
@@ -668,7 +662,7 @@ export default function DashboardPage() {
                             focusKey={serviceFocus?.key}
                           />
                         )}
-                        {visibleTab === "services" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
+                        {visibleTab === "services" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
                         {visibleTab === "photos" && pro && (
                           <PhotoGallery
                             professionalId={pro.id}
@@ -679,7 +673,7 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
-                        {visibleTab === "photos" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
+                        {visibleTab === "photos" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
                         {visibleTab === "availability" && pro && (
                           <AvailabilityEditor
                             professionalId={pro.id}
@@ -689,7 +683,7 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
-                        {visibleTab === "availability" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
+                        {visibleTab === "availability" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
                         {visibleTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
                         {visibleTab === "bookings" && <BookingRequests key="bookings" userId={user.id} />}
                         {visibleTab === "proposals" && pro && (
@@ -701,7 +695,7 @@ export default function DashboardPage() {
                             services={pro.services ?? []}
                           />
                         )}
-                        {visibleTab === "proposals" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
+                        {visibleTab === "proposals" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
                         {visibleTab === "verificacion" && pro && (
                           <VerificationPanel
                             professionalId={pro.id}
@@ -711,7 +705,7 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
-                        {visibleTab === "verificacion" && !pro && <CardListSkeleton rows={3} className="min-h-[360px]" />}
+                        {visibleTab === "verificacion" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
 
                         {/* "Usar servicios" — the seek capability. */}
                         {visibleTab === "sent_bookings" && <ClientActivity key="sent-bookings" section="bookings" userId={user.id} />}

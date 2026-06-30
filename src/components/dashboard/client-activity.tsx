@@ -22,7 +22,7 @@ import { LeaveReviewModal } from "@/components/professionals/leave-review-modal"
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { RescheduleModal } from "@/components/booking/reschedule-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
-import { CardListSkeleton } from "@/components/ui/loading-state";
+import { FormLoadingState } from "@/components/ui/loading-state";
 import { getDashboardCache, loadDashboardCache, prefetchDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import type { BookingStatus } from "@/types";
 
@@ -595,7 +595,7 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
   }
 
   if (loading) {
-    return <CardListSkeleton rows={section === "projects" ? 3 : 2} />;
+    return <FormLoadingState minHeight="min-h-[360px]" />;
   }
 
   const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));

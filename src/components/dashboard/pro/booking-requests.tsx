@@ -16,7 +16,7 @@ import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedun
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
-import { CardListSkeleton } from "@/components/ui/loading-state";
+import { FormLoadingState } from "@/components/ui/loading-state";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { getDashboardCache, loadDashboardCache, prefetchDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import type { BookingStatus } from "@/types";
@@ -277,7 +277,7 @@ export function BookingRequests({ userId }: { userId: string }) {
   }
 
   if (loading || !hasLoadedOnce) {
-    return <CardListSkeleton rows={3} className="min-h-[360px]" />;
+    return <FormLoadingState minHeight="min-h-[360px]" />;
   }
 
   if (bookings.length === 0) {

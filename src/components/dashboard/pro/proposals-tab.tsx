@@ -15,7 +15,7 @@ import { computeAge } from "@/lib/age";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
-import { CardListSkeleton } from "@/components/ui/loading-state";
+import { FormLoadingState } from "@/components/ui/loading-state";
 import { getDashboardCache, loadDashboardCache, prefetchDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
@@ -619,7 +619,7 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
   const viewLoading = loading || (view === "browse" ? !browseLoadedOnce : !mineLoadedOnce);
 
   if (viewLoading) {
-    return <CardListSkeleton rows={3} className="min-h-[360px]" />;
+    return <FormLoadingState minHeight="min-h-[360px]" />;
   }
 
   return (
