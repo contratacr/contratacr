@@ -50,7 +50,7 @@ type Booking = {
 // active/upcoming + awaiting confirmation = brand-blue (default), finished = green,
 // cancelled = red, reprogramada = grey.
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
-  pending: "warning",
+  pending: "default",
   confirmed: "default",
   in_progress: "default",
   awaiting_confirmation: "default",
@@ -60,12 +60,7 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
 };
 
 function PendingStatusText({ label }: { label: string }) {
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[#b45309]">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" aria-hidden="true" />
-      {label}
-    </span>
-  );
+  return <Badge variant="default" className="shrink-0 text-[11px] font-semibold">{label}</Badge>;
 }
 
 // "50688888888" / "88888888" → "+506 8888 8888" (readable). Non-standard → as-is.
@@ -102,9 +97,12 @@ export function BookingRequests() {
   function ageBadge(dob?: string | null, minorFallback = false) {
     const cat = dob ? ageCategoryFromDob(dob) : minorFallback ? "minor" : null;
     if (!cat) return null;
-    // Use the shared Badge ("warning" amber) so the clinical age flag (Menor de edad /
-    // Adulto mayor) matches every other status badge instead of a one-off smaller pill.
-    return <Badge variant="warning" className="text-[11px] font-semibold">{t(cat)}</Badge>;
+    return (
+      <Badge variant="default" className="text-[11px] font-semibold">
+        <UserRound className="h-3 w-3" />
+        {t(cat)}
+      </Badge>
+    );
   }
   function ageLabel(dob?: string | null) {
     const age = dob ? computeAge(dob) : null;
@@ -311,17 +309,19 @@ export function BookingRequests() {
     const requestedDate = formatRelativeOrDate(booking.created_at, locale);
 
     const flaggedPill = booking.profiles?.is_flagged ? (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">
-        ⚠ {t("flagged")}
-      </span>
+      <Badge variant="warning" className="text-[11px] font-semibold">
+        <Flag className="h-3 w-3" />
+        {t("flagged")}
+      </Badge>
     ) : null;
 
     // The client has NO cédula on file → identity unverified. Shown clearly so the
     // pro can decide (contact / cancel-with-reason). Auto-confirm is NOT blocked.
     const unverifiedPill = !booking.client_cedula ? (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#6b7280] bg-[#f3f4f6] px-1.5 py-0.5 rounded-md">
+      <Badge variant="muted" className="text-[11px] font-semibold">
+        <IdCard className="h-3 w-3" />
         {t("unverified")}
-      </span>
+      </Badge>
     ) : null;
 
     // An ACTIVE booking (still upcoming/ongoing) gets the manage tools.

@@ -49,19 +49,14 @@ type OpenProject = {
   proposals?: { id: string }[];
 };
 
-const STATUS_VARIANT: Record<ProposalStatus, "warning" | "success" | "error"> = {
-  pending: "warning",
+const STATUS_VARIANT: Record<ProposalStatus, "default" | "success" | "error"> = {
+  pending: "default",
   accepted: "success",
   declined: "error",
 };
 
 function PendingProposalBadge({ label }: { label: string }) {
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#e5e7eb] bg-[#fbfdff] px-2 py-1 text-[11px] font-semibold text-[#4b5563]">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9]" aria-hidden="true" />
-      {label}
-    </span>
-  );
+  return <Badge variant="default" className="shrink-0 text-[11px] font-semibold">{label}</Badge>;
 }
 
 function projStatusVariant(status?: string): "warning" | "success" | "error" | "default" {
