@@ -8,6 +8,9 @@ import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 
+const PROJECT_TITLE_MAX_LENGTH = 80;
+const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
+
 type ClientIdentityStatus = "verified" | "pending" | "unverified";
 
 /**
@@ -48,8 +51,10 @@ export async function POST(req: NextRequest) {
     const { title, description, categoryId, provinciaId, cantonId, budgetMin, budgetMax, timeline } = body;
     const cedula = cleanId(typeof body.cedula === "string" ? body.cedula : "");
     const requestedFullName = typeof body.fullName === "string" ? body.fullName.trim() : "";
+    const cleanTitle = typeof title === "string" ? title.trim().slice(0, PROJECT_TITLE_MAX_LENGTH) : "";
+    const cleanDescription = typeof description === "string" ? description.trim().slice(0, PROJECT_DESCRIPTION_MAX_LENGTH) : "";
 
-    if (!title?.trim() || !description?.trim()) {
+    if (!cleanTitle || !cleanDescription) {
       return NextResponse.json({ error: "Titulo y descripcion son requeridos" }, { status: 400 });
     }
     // Category is required: it routes the project to matching professionals.
@@ -144,8 +149,8 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from("projects").insert({
       client_id: uid,
       category_id: categoryId ?? null,
-      title: title.trim(),
-      description: description.trim(),
+      title: cleanTitle,
+      description: cleanDescription,
       provincia_id: provinciaId ?? null,
       canton_id: cantonId ?? null,
       budget_min: budgetMin ? parseInt(budgetMin, 10) : null,
@@ -180,7 +185,7 @@ export async function POST(req: NextRequest) {
             user_id: profileId,
             type: "new_project",
             title: "Nueva oportunidad en tu categoria",
-            message: `Un cliente publico "${title.trim()}" en ${label}.`,
+            message: `Un cliente publico "${cleanTitle}" en ${label}.`,
             data: { link: "/es/dashboard/profesional?tab=proposals", project_id: data.id },
           }));
           await admin.from("notifications").insert(rows);

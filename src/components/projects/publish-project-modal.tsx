@@ -14,6 +14,9 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 
+const PROJECT_TITLE_MAX_LENGTH = 80;
+const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
+
 // "Publicar proyecto" as a MODAL (was a standalone page). Same fields, validation
 // and submit logic as the old publish-form — only the container changed to a modal:
 // dimmed backdrop, centered white rounded dialog, PINNED header + footer with a
@@ -139,7 +142,11 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const cantons = selectedProvincia?.cantons ?? [];
 
   function update(field: keyof typeof form, value: string) {
-    setForm((f) => ({ ...f, [field]: value, ...(field === "provinciaId" ? { cantonId: "" } : {}) }));
+    const nextValue =
+      field === "title" ? value.slice(0, PROJECT_TITLE_MAX_LENGTH) :
+      field === "description" ? value.slice(0, PROJECT_DESCRIPTION_MAX_LENGTH) :
+      value;
+    setForm((f) => ({ ...f, [field]: nextValue, ...(field === "provinciaId" ? { cantonId: "" } : {}) }));
   }
 
   // Close on Esc + lock background scroll while open (matches the app's modals).
@@ -177,8 +184,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: form.title.trim(),
-          description: form.description.trim(),
+          title: form.title.trim().slice(0, PROJECT_TITLE_MAX_LENGTH),
+          description: form.description.trim().slice(0, PROJECT_DESCRIPTION_MAX_LENGTH),
           categoryId: form.categoryId || null,
           provinciaId: form.provinciaId || null,
           cantonId: form.cantonId || null,
@@ -278,8 +285,12 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 placeholder={t("titlePlaceholder")}
                 value={form.title}
                 onChange={(e) => update("title", e.target.value)}
+                maxLength={PROJECT_TITLE_MAX_LENGTH}
                 required
               />
+              {form.title.length >= PROJECT_TITLE_MAX_LENGTH && (
+                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: PROJECT_TITLE_MAX_LENGTH })}</p>
+              )}
             </div>
 
             {/* Description */}
@@ -292,14 +303,14 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 placeholder={t("descriptionPlaceholder")}
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
-                maxLength={300}
+                maxLength={PROJECT_DESCRIPTION_MAX_LENGTH}
                 required
               />
               {/* Limit message ONLY once the cap is reached — silent otherwise (no counter).
                   300 is the SAME cap as the direct-booking note (sprint 449) — both fields ask
                   the client to "describe briefly what you need", so they share one coherent limit. */}
-              {form.description.length >= 300 && (
-                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 300 })}</p>
+              {form.description.length >= PROJECT_DESCRIPTION_MAX_LENGTH && (
+                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: PROJECT_DESCRIPTION_MAX_LENGTH })}</p>
               )}
             </div>
 

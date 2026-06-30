@@ -80,12 +80,28 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
   useEffect(() => {
     const el = listRef.current;
     if (!open || !pos || !el) return;
-    const onWheel = (e: WheelEvent) => { e.stopPropagation(); };
-    const onTouchMove = (e: TouchEvent) => { e.stopPropagation(); };
+    let lastTouchY = 0;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.scrollTop += e.deltaY;
+    };
+    const onTouchStart = (e: TouchEvent) => {
+      lastTouchY = e.touches[0]?.clientY ?? 0;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const y = e.touches[0]?.clientY ?? lastTouchY;
+      e.preventDefault();
+      e.stopPropagation();
+      el.scrollTop += lastTouchY - y;
+      lastTouchY = y;
+    };
     el.addEventListener("wheel", onWheel, { passive: false });
-    el.addEventListener("touchmove", onTouchMove, { passive: true });
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
     return () => {
       el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
     };
   }, [open, pos]);
