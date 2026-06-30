@@ -561,13 +561,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                               return (
                                 <div key={cat} className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
                                   <div className="flex flex-1 flex-col">
-                                    <p className="text-[16px] font-bold text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(cat, locale)}</p>
+                                    <p className="min-h-[44px] text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:min-h-[22px]">{getCategoryLabel(cat, locale)}</p>
                                     {rep?.description ? (
-                                      <p className="mt-2 line-clamp-4 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{rep.description}</p>
+                                      <p className="mt-2 min-h-[66px] line-clamp-3 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{rep.description}</p>
                                     ) : (
-                                      <p className="mt-2 text-[13px] text-[#9ca3af]">{t("askForDetails")}</p>
+                                      <p className="mt-2 min-h-[66px] text-[13px] leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
                                     )}
-                                    <div className="mt-3 space-y-1.5 text-[14px]">
+                                    <div className="mt-3 min-h-[46px] space-y-1.5 text-[14px]">
                                       {serviceYears ? (
                                         <p className="flex items-center gap-2 text-[#374151]">
                                           <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
