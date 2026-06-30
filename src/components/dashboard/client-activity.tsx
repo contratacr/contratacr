@@ -609,7 +609,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 on cancellation only. */}
                             {(() => {
                               const isActiveB = ["pending", "confirmed", "in_progress"].includes(b.status);
-                              const wa = b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed"
+                              const canContactAfterProCancel = b.status === "cancelled" && b.cancelled_by === "professional";
+                              const wa = b.professionals?.whatsapp && (canContactAfterProCancel || (b.status !== "cancelled" && b.status !== "completed"))
                                 ? getWhatsAppLink(b.professionals.whatsapp, t("waBooking")) : null;
                               let primary: ReactNode = null;
                               if (b.status === "awaiting_confirmation") {
