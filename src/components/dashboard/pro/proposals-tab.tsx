@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CircleDollarSign, FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
+import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -677,8 +677,7 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
                                 <ExpandToggle open={isExpanded} className="mt-0 shrink-0" />
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-                                <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                                  <CircleDollarSign className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <span className="inline-flex w-full max-w-full items-center text-[#374151]">
                                   <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldBudget")}</span> <span className={hasBudget(project) ? "font-semibold text-[#111827]" : "text-[#374151]"}>{budgetTextFor(project)}</span></span>
                                 </span>
                               </div>
@@ -748,8 +747,7 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
                             )}
                           </div>
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                              <CircleDollarSign className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                            <span className="inline-flex w-full max-w-full items-center text-[#374151]">
                               <span className="truncate font-semibold">
                                 <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span> <span className={p.price ? "text-[#111827]" : "text-[#374151]"}>{p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}</span>
                               </span>
