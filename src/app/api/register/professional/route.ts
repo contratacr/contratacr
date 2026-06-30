@@ -4,6 +4,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { runIdentityVerification } from "@/lib/verification/run-verification";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 import { parseMoneyAmount } from "@/lib/money-limits";
+import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 
 export async function POST(req: Request) {
   try {
@@ -41,8 +42,8 @@ export async function POST(req: Request) {
     if (!category || !whatsapp) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
-    const safeBio = typeof bio === "string" ? bio : "";
-    const businessName = bodyBusinessName || null;
+    const safeBio = limitTrimmedText(bio, PROFILE_BIO_MAX_LENGTH);
+    const businessName = limitTrimmedText(bodyBusinessName, NAME_MAX_LENGTH) || null;
     // Workplaces: [{ id, name, address, lat, lng, provinciaId, cantonId, distrito }]
     // — fixed-location pins (single source of truth). Coverage = travel areas.
     const workplaces = Array.isArray(bodyWorkplaces) ? bodyWorkplaces : [];
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
     const coverageProvincias = Array.isArray(bodyCoverageProv) ? bodyCoverageProv : [];
     const coverageCountry = !!bodyCoverageCountry;
     const noCrId = !!bodyNoCrId;
-    const idDocNote = typeof bodyIdDocNote === "string" ? bodyIdDocNote : null;
+    const idDocNote = limitTrimmedText(bodyIdDocNote, LONG_TEXT_MAX_LENGTH) || null;
 
     // Optional columns (migrations 019/021/022/030) — if the DB hasn't been
     // migrated yet, retry the write without them instead of failing registration.
@@ -92,7 +93,7 @@ export async function POST(req: Request) {
       // Case A — authenticated user
       userId = sessionUser.id;
       email = bodyEmail ?? sessionUser.email ?? "";
-      fullName = bodyFullName ?? (sessionUser.user_metadata?.full_name as string) ?? "";
+      fullName = limitTrimmedText(bodyFullName ?? (sessionUser.user_metadata?.full_name as string) ?? "", NAME_MAX_LENGTH);
     } else {
       // Case B — new signup without a session yet; validate via admin API
       const bodyUserId: string | undefined = body.userId;
@@ -112,7 +113,7 @@ export async function POST(req: Request) {
       }
       userId = adminLookup.user.id;
       email = bodyEmail ?? adminLookup.user.email ?? "";
-      fullName = bodyFullName ?? (adminLookup.user.user_metadata?.full_name as string) ?? "";
+      fullName = limitTrimmedText(bodyFullName ?? (adminLookup.user.user_metadata?.full_name as string) ?? "", NAME_MAX_LENGTH);
     }
 
     const rawBodyCedula = typeof bodyCedula === "string" ? bodyCedula.replace(/\D/g, "") : null;

@@ -22,6 +22,7 @@ import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
 import { getCategoryLabel, anyHealthCategory, anyVideoConsultCategory } from "@/lib/data/categories";
 import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
+import { NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -265,8 +266,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // certification can never be added (the button explicitly SAVES this one).
   function saveCert() {
     if (!certDraft) return;
-    const name = certDraft.name.trim();
-    const institution = certDraft.institution.trim();
+    const name = limitText(certDraft.name.trim(), SHORT_TEXT_MAX_LENGTH);
+    const institution = limitText(certDraft.institution.trim(), SHORT_TEXT_MAX_LENGTH);
     const year = certDraft.year.trim();
     if (!name || !institution || year.length !== 4) {
       setCertError(t("certAllRequired"));
@@ -344,7 +345,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       const primary = primaryArea(effectiveWorkplaces, []);
 
       const baseUpdate: Record<string, unknown> = {
-        bio,
+        bio: limitText(bio, PROFILE_BIO_MAX_LENGTH),
         whatsapp,
         professions,
         languages,
@@ -361,7 +362,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // crucially, SEPARATELY from `workplaces` (below) so a missing column here can
       // NEVER drop the saved locations.
       const identityFields = {
-        business_name: businessName.trim() || null,
+        business_name: limitText(businessName.trim(), NAME_MAX_LENGTH) || null,
         coverage_areas: [],
         coverage_provincias: [],
         coverage_country: false,
@@ -457,12 +458,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
       // Persist the personal/display name — but NEVER overwrite a verified
       // official name (it's locked; corrections go through admin review).
-      if (fullName && !nameLocked) {
-        await supabase.from("profiles").update({ full_name: fullName }).eq("id", profileId);
+      const cleanFullName = limitText(fullName.trim(), NAME_MAX_LENGTH);
+      if (cleanFullName && !nameLocked) {
+        await supabase.from("profiles").update({ full_name: cleanFullName }).eq("id", profileId);
         // Mirror into auth metadata so the header/menu (which read
         // user_metadata.full_name) update IMMEDIATELY — updateUser fires
         // onAuthStateChange (USER_UPDATED), which useAuth subscribes to. No reload.
-        await supabase.auth.updateUser({ data: { full_name: fullName } });
+        await supabase.auth.updateUser({ data: { full_name: cleanFullName } });
       }
 
       // Core + locations succeeded → the profile is saved. ALWAYS clear `dirty` here so the
@@ -569,7 +571,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           <Input
             label={<>{t("fullName")} <span className="text-red-500">*</span></>}
             value={fullName}
-            onChange={(e) => { setFullName(e.target.value); touch(); }}
+            maxLength={NAME_MAX_LENGTH}
+            onChange={(e) => { setFullName(limitText(e.target.value, NAME_MAX_LENGTH)); touch(); }}
             onBlur={flush}
             placeholder={t("fullNamePlaceholder")}
           />
@@ -579,7 +582,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         <Input
           label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
           value={businessName}
-          onChange={(e) => { setBusinessName(e.target.value); touch(); }}
+          maxLength={NAME_MAX_LENGTH}
+          onChange={(e) => { setBusinessName(limitText(e.target.value, NAME_MAX_LENGTH)); touch(); }}
           onBlur={flush}
           placeholder={t("businessPlaceholder")}
         />
@@ -591,7 +595,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             placeholder={t("descPlaceholder")}
             value={bio}
-            onChange={(e) => { setBio(e.target.value); touch(); }}
+            maxLength={PROFILE_BIO_MAX_LENGTH}
+            onChange={(e) => { setBio(limitText(e.target.value, PROFILE_BIO_MAX_LENGTH)); touch(); }}
             onBlur={flush}
           />
         </div>
@@ -629,9 +634,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               {/* Add form (all fields required) OR the add-another action */}
               {draftHere ? (
                 <div className="rounded-xl bg-[#f9fafb] p-3 flex flex-col gap-2">
-                  <input type="text" value={certDraft!.name} onChange={(e) => setCertDraft((d) => d && { ...d, name: e.target.value })} placeholder={t("certNamePlaceholder")} className={inputCls} autoFocus />
+                  <input type="text" value={certDraft!.name} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => setCertDraft((d) => d && { ...d, name: limitText(e.target.value, SHORT_TEXT_MAX_LENGTH) })} placeholder={t("certNamePlaceholder")} className={inputCls} autoFocus />
                   <div className="grid grid-cols-1 sm:grid-cols-[1fr,7rem] gap-2">
-                    <input type="text" value={certDraft!.institution} onChange={(e) => setCertDraft((d) => d && { ...d, institution: e.target.value })} placeholder={t("certInstitution")} className={inputCls} />
+                    <input type="text" value={certDraft!.institution} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => setCertDraft((d) => d && { ...d, institution: limitText(e.target.value, SHORT_TEXT_MAX_LENGTH) })} placeholder={t("certInstitution")} className={inputCls} />
                     <input type="text" inputMode="numeric" maxLength={4} value={certDraft!.year} onChange={(e) => setCertDraft((d) => d && { ...d, year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={t("certYear")} className={inputCls} />
                   </div>
                   {certError && <p className="text-xs text-red-600">{certError}</p>}
@@ -783,7 +788,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
                     spellCheck={false}
                     placeholder={t("socialUserPlaceholder")}
                     value={social[key]}
-                    onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value })); touch(); }}
+                    maxLength={50}
+                    onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value.slice(0, 50) })); touch(); }}
                     onBlur={flush}
                     className="flex-1 min-w-0 px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none bg-transparent"
                   />

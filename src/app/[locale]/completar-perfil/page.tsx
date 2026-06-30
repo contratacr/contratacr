@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 // Mandatory profile completion for OAuth (Facebook/Google) users who never
 // provided a cédula. Required before they can book.
@@ -55,7 +56,7 @@ export default function CompleteProfilePage() {
           (user.user_metadata?.full_name as string) ||
           (user.user_metadata?.name as string) ||
           "";
-        setFullName(oauthName);
+        setFullName(limitText(oauthName, NAME_MAX_LENGTH));
         setNameFromOAuth(!!oauthName);
         setPhone(data?.phone ?? "");
         setAvatarUrl(
@@ -99,7 +100,8 @@ export default function CompleteProfilePage() {
 
     const cleanCedula = cedula.replace(/\D/g, "");
     const cleanPhone = phone.replace(/\D/g, "");
-    if (!fullName.trim()) return setError(t("errName"));
+    const cleanName = limitText(fullName.trim(), NAME_MAX_LENGTH);
+    if (!cleanName) return setError(t("errName"));
     if (cleanPhone.length < 8) return setError(t("errPhone"));
     if (cleanCedula.length < 9) return setError(t("errCedula"));
 
@@ -107,7 +109,7 @@ export default function CompleteProfilePage() {
     const supabase = createClient();
     const { error: upErr } = await supabase
       .from("profiles")
-      .update({ full_name: fullName.trim(), phone: cleanPhone, cedula: cleanCedula })
+      .update({ full_name: cleanName, phone: cleanPhone, cedula: cleanCedula })
       .eq("id", user.id);
 
     if (upErr) {
@@ -117,7 +119,7 @@ export default function CompleteProfilePage() {
     }
 
     await supabase.auth.updateUser({
-      data: { full_name: fullName.trim(), profile_completed: true },
+      data: { full_name: cleanName, profile_completed: true },
     });
 
     const dest = next.startsWith("/") ? next.replace(/^\/[a-z]{2}(?=\/)/, "") : `/${next}`;
@@ -196,7 +198,8 @@ export default function CompleteProfilePage() {
                 <input
                   type="text"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  maxLength={NAME_MAX_LENGTH}
+                  onChange={(e) => setFullName(limitText(e.target.value, NAME_MAX_LENGTH))}
                   placeholder={t("namePlaceholder")}
                   className={inputClass}
                 />

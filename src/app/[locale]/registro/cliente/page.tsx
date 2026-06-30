@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
+import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 export default function RegisterClientPage() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function RegisterClientPage() {
     if (user) {
       const name = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || "";
       const photo = (user.user_metadata?.avatar_url as string) || (user.user_metadata?.picture as string) || null;
-      setFullName(name);
+      setFullName(limitText(name, NAME_MAX_LENGTH));
       setEmail(user.email ?? "");
       setOauthPhoto(photo);
     }
@@ -64,7 +65,8 @@ export default function RegisterClientPage() {
     setError(null);
     setPhoneError(null);
 
-    if (!fullName.trim()) { setError(t("errName")); return; }
+    const cleanName = limitText(fullName.trim(), NAME_MAX_LENGTH);
+    if (!cleanName) { setError(t("errName")); return; }
     if (!user && !email.trim()) { setError(t("errEmail")); return; }
     if (!user && password.length < 8) { setError(t("errPasswordLen")); return; }
     if (!user && password !== confirmPassword) { setError(t("errPasswordMismatch")); return; }
@@ -94,7 +96,7 @@ export default function RegisterClientPage() {
           options: {
             // onboarding_completed lets middleware send them straight to their
             // panel after verifying — never back to the role-selection screen.
-            data: { role: "client", full_name: fullName, onboarding_completed: true },
+            data: { role: "client", full_name: cleanName, onboarding_completed: true },
           },
         });
 
@@ -126,7 +128,7 @@ export default function RegisterClientPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          fullName: fullName.trim(),
+          fullName: cleanName,
           phone: phone.trim(),
         }),
       });
@@ -248,7 +250,8 @@ export default function RegisterClientPage() {
                   className={inputClass}
                   placeholder={t("namePlaceholder")}
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  maxLength={NAME_MAX_LENGTH}
+                  onChange={(e) => setFullName(limitText(e.target.value, NAME_MAX_LENGTH))}
                   required
                 />
               </div>

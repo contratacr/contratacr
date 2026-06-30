@@ -15,6 +15,7 @@ import { cleanId, isValidId } from "@/lib/cedula";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { SpamNotice } from "@/components/ui/spam-notice";
+import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -236,7 +237,7 @@ export function ClientRegistrationModal({
 
   // Resolved identity: a national/DIMEX cédula auto-fills `fullName` from the padrón; the
   // "No tengo cédula" path types `manualName`. The cédula is stored ONLY when present + valid.
-  const resolvedName = (noCedula ? manualName : fullName).trim();
+  const resolvedName = limitText((noCedula ? manualName : fullName).trim(), NAME_MAX_LENGTH);
   const cedulaClean = !noCedula ? cleanId(cedula) : "";
   const identityReady = noCedula
     ? manualName.trim().length > 1
@@ -525,14 +526,15 @@ export function ClientRegistrationModal({
                         cedula={cedula}
                         fullName={fullName}
                         onCedulaChange={(c) => { setCedula(c); setError(null); }}
-                        onFullNameChange={setFullName}
+                        onFullNameChange={(name) => setFullName(limitText(name, NAME_MAX_LENGTH))}
                       />
                     ) : (
                       <Input
                         label={`${t("nameLabel")} *`}
                         placeholder={t("namePlaceholder")}
                         value={manualName}
-                        onChange={(e) => setManualName(e.target.value)}
+                        maxLength={NAME_MAX_LENGTH}
+                        onChange={(e) => setManualName(limitText(e.target.value, NAME_MAX_LENGTH))}
                         autoFocus
                       />
                     )}

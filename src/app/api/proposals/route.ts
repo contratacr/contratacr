@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseMoneyAmount } from "@/lib/money-limits";
+import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { projectId, price, message } = body;
 
-    if (!projectId || !message) {
+    const safeMessage = limitTrimmedText(message, LONG_TEXT_MAX_LENGTH);
+    if (!projectId || !safeMessage) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
 
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
       project_id: projectId,
       professional_id: pro.id,
       price: parseMoneyAmount(price),
-      message,
+      message: safeMessage,
       status: "pending",
     }).select("id").single();
 
@@ -175,7 +177,7 @@ export async function PATCH(req: NextRequest) {
       if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes editar una propuesta pendiente." }, { status: 409 });
       const patch: Record<string, unknown> = {};
       if (price !== undefined) patch.price = parseMoneyAmount(price);
-      if (message !== undefined) patch.message = message;
+      if (message !== undefined) patch.message = limitTrimmedText(message, LONG_TEXT_MAX_LENGTH);
       // Persist with the service-role client: the RLS-bound update can silently
       // affect 0 rows if no UPDATE policy covers the professional (edits were lost).
       const admin = createAdminClient();

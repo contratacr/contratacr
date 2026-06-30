@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifySupportInbox } from "@/lib/support-notify";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 
 // Guest→account linking: when a user with a VERIFIED email views/uses support,
 // attach any prior GUEST tickets (user_id null) with the same email to their
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
 
   const now = new Date().toISOString();
   const senderName = (user.user_metadata?.full_name as string) || ticket.name || null;
+  const safeBody = limitTrimmedText(body, LONG_TEXT_MAX_LENGTH);
 
   // CONFIRM — the user agrees the ticket is resolved (finalizes it).
   if (action === "confirm") {
@@ -77,16 +79,16 @@ export async function POST(req: Request) {
   if (action === "reopen") {
     await db.from("support_tickets").update({ status: "in_progress", user_confirmed: false, last_reply_at: now, last_reply_role: "user" }).eq("id", ticketId);
     await db.from("support_ticket_messages").insert({
-      ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: body?.trim() || "El usuario solicitó reabrir el ticket: el problema continúa.",
+      ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: safeBody || "El usuario solicitó reabrir el ticket: el problema continúa.",
     });
     await notifySupportInbox({ subject: ticket.subject, fromName: senderName, fromEmail: ticket.email ?? user.email ?? "", body: "Solicitud de reapertura: el problema continúa.", isReply: true });
     return NextResponse.json({ ok: true });
   }
 
   // Otherwise: a normal reply message.
-  if (!body?.trim()) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
+  if (!safeBody) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
   const { error: msgErr } = await db.from("support_ticket_messages").insert({
-    ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: body.trim(),
+    ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: safeBody,
   });
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
 
@@ -95,7 +97,7 @@ export async function POST(req: Request) {
   await db.from("support_tickets").update({ status: nextStatus, user_confirmed: false, last_reply_at: now, last_reply_role: "user" }).eq("id", ticketId);
 
   await notifySupportInbox({
-    subject: ticket.subject, fromName: senderName, fromEmail: ticket.email ?? user.email ?? "", body: body.trim(), isReply: true,
+    subject: ticket.subject, fromName: senderName, fromEmail: ticket.email ?? user.email ?? "", body: safeBody, isReply: true,
   });
 
   return NextResponse.json({ ok: true });

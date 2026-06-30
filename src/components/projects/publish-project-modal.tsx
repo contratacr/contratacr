@@ -13,6 +13,7 @@ import { PROVINCES } from "@/lib/data/cr-geography";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
+import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -94,7 +95,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       }
       if (!active) return;
       setPhone(p);
-      if (fullName) setClientName(fullName);
+      if (fullName) setClientName(limitText(fullName, NAME_MAX_LENGTH));
       if (cedula) {
         setSavedCedula(cedula);
         setForm((f) => (f.cedula ? f : { ...f, cedula }));
@@ -125,8 +126,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         const data = await res.json().catch(() => ({}));
         if (!active) return;
         if (res.ok && data?.fullName) {
-          setOfficialName(data.fullName);
-          setClientName(data.fullName);
+          setOfficialName(limitText(data.fullName, NAME_MAX_LENGTH));
+          setClientName(limitText(data.fullName, NAME_MAX_LENGTH));
           setIdentityLookup("found");
         } else {
           setIdentityLookup("notfound");
@@ -202,7 +203,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           budgetMax: form.budgetMax || null,
           timeline: form.timeline || null,
           cedula: cedulaForSubmit,
-          fullName: clientName,
+          fullName: limitText(clientName, NAME_MAX_LENGTH),
         }),
       });
 

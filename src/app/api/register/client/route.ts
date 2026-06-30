@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
+import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 
 export async function POST(req: Request) {
   try {
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     if (sessionUser) {
       userId = sessionUser.id;
       email = sessionUser.email ?? "";
-      name = fullName ?? (sessionUser.user_metadata?.full_name as string) ?? "";
+      name = limitTrimmedText(fullName ?? (sessionUser.user_metadata?.full_name as string) ?? "", NAME_MAX_LENGTH);
     } else {
       if (!bodyUserId) {
         return NextResponse.json({ error: "Usuario inválido." }, { status: 401 });
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
       }
       userId = adminLookup.user.id;
       email = adminLookup.user.email ?? "";
-      name = fullName ?? (adminLookup.user.user_metadata?.full_name as string) ?? "";
+      name = limitTrimmedText(fullName ?? (adminLookup.user.user_metadata?.full_name as string) ?? "", NAME_MAX_LENGTH);
     }
 
     const profileRow = {

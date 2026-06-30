@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
+import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 type Ticket = {
   id: string;
@@ -197,7 +198,8 @@ export function AdminSupport() {
             <div className="p-4 border-t border-[#e5e7eb]">
               <textarea
                 value={reply}
-                onChange={(e) => setReply(e.target.value)}
+                onChange={(e) => setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH))}
+                maxLength={LONG_TEXT_MAX_LENGTH}
                 rows={3}
                 placeholder="Escribe tu respuesta… (se envía por correo al usuario)"
                 className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20"

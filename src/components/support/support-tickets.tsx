@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { supportTicketRef } from "@/lib/support-ticket";
+import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 type Ticket = {
   id: string;
@@ -296,7 +297,8 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
             <div className="p-4 border-t border-[#e5e7eb]">
               <textarea
                 value={reply}
-                onChange={(e) => setReply(e.target.value)}
+                onChange={(e) => setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH))}
+                maxLength={LONG_TEXT_MAX_LENGTH}
                 rows={3}
                 placeholder={t("messagePlaceholder")}
                 className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { cleanId, isValidId } from "@/lib/cedula";
+import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 // Identity field: cédula → padrón lookup → confirm the OFFICIAL info (no typing
 // your own name for verification). Found → official name auto-filled + confirmed
@@ -86,7 +87,7 @@ export function IdentityField({
           setOfficialName(official ?? "");
           setDob(d ?? null);
           setManualOverride(false);
-          onFullNameChange(official ?? "");
+          onFullNameChange(limitText(official ?? "", NAME_MAX_LENGTH));
           lastAutoName.current = official ?? "";
           onResult?.({ found: true, isAdult: !!isAdult, dob: d ?? null });
           setStatusBoth("found");
@@ -152,7 +153,8 @@ export function IdentityField({
             placeholder={t("namePlaceholder")}
             hint={t("nameHint")}
             value={fullName}
-            onChange={(e) => onFullNameChange(e.target.value)}
+            maxLength={NAME_MAX_LENGTH}
+            onChange={(e) => onFullNameChange(limitText(e.target.value, NAME_MAX_LENGTH))}
             error={nameError}
           />
         </>

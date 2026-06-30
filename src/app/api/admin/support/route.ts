@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyUserOfReply } from "@/lib/support-notify";
+import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 
 const STATUSES = ["open", "in_progress", "resolved"];
 
@@ -85,7 +86,8 @@ export async function POST(req: Request) {
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
   const { id, body } = await req.json();
-  if (!id || !body?.trim()) {
+  const safeBody = limitTrimmedText(body, LONG_TEXT_MAX_LENGTH);
+  if (!id || !safeBody) {
     return NextResponse.json({ error: "Escribe una respuesta." }, { status: 400 });
   }
   const db = createAdminClient();
@@ -94,7 +96,7 @@ export async function POST(req: Request) {
 
   const now = new Date().toISOString();
   const { error: msgErr } = await db.from("support_ticket_messages").insert({
-    ticket_id: id, sender_role: "admin", sender_id: admin.id, sender_name: admin.fullName, body: body.trim(),
+    ticket_id: id, sender_role: "admin", sender_id: admin.id, sender_name: admin.fullName, body: safeBody,
   });
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
 
@@ -120,7 +122,7 @@ export async function POST(req: Request) {
   if (ticket.email) {
     // `user_id` set → the requester has an account → deep-link to the exact ticket in
     // their panel; null → a guest (no panel) → "create account / sign in" path instead.
-    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: body.trim(), hasAccount: !!ticket.user_id, panel, ticketId: id });
+    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody, hasAccount: !!ticket.user_id, panel, ticketId: id });
   }
   if (ticket.user_id) {
     await db.from("notifications").insert({

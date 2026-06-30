@@ -26,6 +26,7 @@ import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-p
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
+import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 // ─── Category data lives in src/lib/data/categories.ts (single source of truth) ─
 // The CategorySearch component handles display + fuzzy search; this page never
@@ -197,7 +198,8 @@ function NoCrIdFields({
         label={<>{t("manualName")} <span className="text-red-500">*</span></>}
         placeholder={t("manualNameHint")}
         value={fullName}
-        onChange={(e) => onFullName(e.target.value)}
+        maxLength={NAME_MAX_LENGTH}
+        onChange={(e) => onFullName(limitText(e.target.value, NAME_MAX_LENGTH))}
         error={nameError}
       />
       <p className="flex items-start gap-2 text-xs text-[#6b7280]">
@@ -221,7 +223,7 @@ export default function RegisterProfessionalPage() {
   const { step1Schema, step2Schema, step3Schema } = useMemo(() => ({
     step1Schema: z
       .object({
-        fullName: z.string().min(3, t("valNameRequired")),
+        fullName: z.string().min(3, t("valNameRequired")).max(NAME_MAX_LENGTH, t("valNameRequired")),
         cedula: z.string(),
         email: z.string().min(1, t("valEmailRequired")).email(t("valEmailInvalid")),
         password: z
@@ -493,7 +495,7 @@ export default function RegisterProfessionalPage() {
       } else {
         // ── 2b. Email/password path ───────────────────────────────────────────
         if (!step1Data) return;
-        const fullName = step1Data.fullName.trim();
+      const fullName = limitText(step1Data.fullName.trim(), NAME_MAX_LENGTH);
 
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: step1Data.email,
@@ -522,12 +524,12 @@ export default function RegisterProfessionalPage() {
       }
 
       // ── 3. Build names for the profile upsert ─────────────────────────────
-      const fullName = currentUser
+      const fullName = limitText(currentUser
         ? (oauthFullName.trim() ||
           (currentUser.user_metadata?.full_name as string) ||
           (currentUser.user_metadata?.name as string) ||
           (currentUser.email?.split("@")[0] ?? "profesional"))
-        : step1Data!.fullName.trim();
+        : step1Data!.fullName.trim(), NAME_MAX_LENGTH);
 
       const effWorkplaces = workplaces;
       const hasExactWorkplace = effWorkplaces.some((w) => w.lat != null && w.lng != null);
@@ -544,7 +546,7 @@ export default function RegisterProfessionalPage() {
           userId,
           email: userEmail,
           fullName,
-          businessName: businessName.trim() || null,
+          businessName: limitText(businessName.trim(), NAME_MAX_LENGTH) || null,
           cedula: (noCrId || identityMismatch) ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (accountCedula || oauthCedula ? (accountCedula || oauthCedula).replace(/\D/g, "") : null)),
           // Skipping the cédula (noCrId) is a normal unverified registration — NOT a
           // review case. Only "¿No es tu información?" (identityMismatch) routes to
@@ -720,7 +722,7 @@ export default function RegisterProfessionalPage() {
                     cedula={form1.watch("cedula") ?? ""}
                     fullName={form1.watch("fullName") ?? ""}
                     onCedulaChange={(c) => form1.setValue("cedula", c, { shouldValidate: true })}
-                    onFullNameChange={(n) => form1.setValue("fullName", n, { shouldValidate: true })}
+                    onFullNameChange={(n) => form1.setValue("fullName", limitText(n, NAME_MAX_LENGTH), { shouldValidate: true })}
                     onResult={(r) => { if (r.found) setIdentityMismatch(false); }}
                     onMismatch={() => setIdentityMismatch(true)}
                     cedulaError={form1.formState.errors.cedula?.message ?? (!identityMismatch && cedulaCheck.taken ? t("errIdentificationTaken") : undefined)}
@@ -730,7 +732,7 @@ export default function RegisterProfessionalPage() {
               ) : (
                 <NoCrIdFields
                   fullName={form1.watch("fullName") ?? ""}
-                  onFullName={(n) => form1.setValue("fullName", n, { shouldValidate: true })}
+                  onFullName={(n) => form1.setValue("fullName", limitText(n, NAME_MAX_LENGTH), { shouldValidate: true })}
                   nameError={form1.formState.errors.fullName?.message}
                 />
               )}
@@ -801,7 +803,7 @@ export default function RegisterProfessionalPage() {
                   cedula={oauthCedula}
                   fullName={oauthFullName}
                   onCedulaChange={(c) => { setOauthCedula(c); setOauthCedulaError(null); }}
-                  onFullNameChange={(n) => { setOauthFullName(n); setOauthNameError(null); }}
+                  onFullNameChange={(n) => { setOauthFullName(limitText(n, NAME_MAX_LENGTH)); setOauthNameError(null); }}
                   onResult={(r) => { if (r.found) setIdentityMismatch(false); }}
                   onMismatch={() => setIdentityMismatch(true)}
                   cedulaError={oauthCedulaError ?? (!identityMismatch && oauthCedulaCheck.taken ? t("errIdentificationTaken") : undefined)}
@@ -811,7 +813,7 @@ export default function RegisterProfessionalPage() {
               {currentUser && noCrId && (
                 <NoCrIdFields
                   fullName={oauthFullName}
-                  onFullName={(n) => { setOauthFullName(n); setOauthNameError(null); }}
+                  onFullName={(n) => { setOauthFullName(limitText(n, NAME_MAX_LENGTH)); setOauthNameError(null); }}
                   nameError={oauthNameError ?? undefined}
                 />
               )}

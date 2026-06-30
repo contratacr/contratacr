@@ -13,6 +13,7 @@ import { cn, getInitials } from "@/lib/utils";
 import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/phone-input";
 import { SaveStatus } from "@/components/dashboard/save-status";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
+import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 // The SEEKER's "Mi perfil" — basic identity every account has (photo + name +
 // phone), with the same reliable autosave standard as the rest of the app. Used
@@ -93,11 +94,12 @@ export function BasicProfileSection({
     // Never overwrite a verified official name (locked; corrections go through admin).
     const verified = profileData?.client_identity_status === "verified";
     const update: Record<string, string | null> = { phone: isPhoneComplete(currentForm.phone) ? currentForm.phone : null };
-    if (!verified) update.full_name = currentForm.full_name;
+    const cleanName = limitText(currentForm.full_name.trim(), NAME_MAX_LENGTH);
+    if (!verified) update.full_name = cleanName;
     await supabase.from("profiles").update(update).eq("id", user.id);
-    if (!verified && currentForm.full_name) {
-      await supabase.auth.updateUser({ data: { full_name: currentForm.full_name } });
-      setProfileData((prev) => (prev ? { ...prev, full_name: currentForm.full_name } : prev));
+    if (!verified && cleanName) {
+      await supabase.auth.updateUser({ data: { full_name: cleanName } });
+      setProfileData((prev) => (prev ? { ...prev, full_name: cleanName } : prev));
       window.dispatchEvent(new Event("ccr:profile-updated"));
     }
     setProfileSaving(false);
@@ -216,7 +218,8 @@ export function BasicProfileSection({
               className={cn(inputClass, cedulaVerified && "bg-[#f3f4f6] cursor-not-allowed pr-10")}
               value={profileForm.full_name}
               disabled={cedulaVerified}
-              onChange={(e) => { setProfileForm((f) => ({ ...f, full_name: e.target.value })); touchProfile(); }}
+              maxLength={NAME_MAX_LENGTH}
+              onChange={(e) => { setProfileForm((f) => ({ ...f, full_name: limitText(e.target.value, NAME_MAX_LENGTH) })); touchProfile(); }}
               onBlur={flushProfile}
             />
             {cedulaVerified && <Lock className="h-4 w-4 text-[#9ca3af] absolute right-3 top-1/2 -translate-y-1/2" />}

@@ -6,6 +6,7 @@ import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
+import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 
 // Lazy auto-confirm: a booking the pro marked "trabajo realizado" auto-completes
 // after AUTO_CONFIRM_DAYS if the client never confirmed. Best-effort.
@@ -135,11 +136,11 @@ export async function POST(req: NextRequest) {
       professional_id: professionalId,
       client_id: session?.user?.id ?? null,
       client_cedula: cleanClientCedula || null,
-      client_name: clientName,
+      client_name: limitTrimmedText(clientName, NAME_MAX_LENGTH) || "Cliente",
       client_email: clientEmail ?? null,
       client_phone: clientPhone ?? null,
-      service_description: serviceDescription,
-      preferred_date_text: preferredDateText ?? null,
+      service_description: limitTrimmedText(serviceDescription, LONG_TEXT_MAX_LENGTH),
+      preferred_date_text: preferredDateText ? limitTrimmedText(preferredDateText, SHORT_TEXT_MAX_LENGTH) : null,
       scheduled_date: scheduledDate ?? null,
       scheduled_time: scheduledTime ?? null,
       // AUTO-CONFIRM: a solicitud in an available slot is confirmed immediately and
@@ -151,7 +152,7 @@ export async function POST(req: NextRequest) {
     // the columns aren't migrated yet (migration 032).
     const beneficiaryFields = {
       for_someone_else: !!forSomeoneElse,
-      beneficiary_name: beneficiaryName ?? null,
+      beneficiary_name: beneficiaryName ? limitTrimmedText(beneficiaryName, NAME_MAX_LENGTH) : null,
       beneficiary_cedula: beneficiaryCedula ?? null,
       beneficiary_dob: beneficiaryDob ?? null,
       beneficiary_phone: beneficiaryPhone ?? null,
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest) {
       // (service + location) context of the picked slot (migration 038).
       category_id: categoryId ?? null,
       slot_location_id: slotLocationId ?? null,
-      slot_location_label: slotLocationLabel ?? null,
+      slot_location_label: slotLocationLabel ? limitTrimmedText(slotLocationLabel, SHORT_TEXT_MAX_LENGTH) : null,
     };
 
     // Insert via the service-role client: the API has already validated the

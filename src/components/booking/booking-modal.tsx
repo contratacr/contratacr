@@ -31,6 +31,7 @@ import { isTooSoonCR } from "@/lib/time-cr";
 import { createClient } from "@/lib/supabase/client";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
+import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
 type BookingProfessional = ProfessionalCardData & {
@@ -320,7 +321,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
       if (user) {
         setIsLoggedIn(true);
-        setClientName((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || "");
+        setClientName(limitText((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || "", NAME_MAX_LENGTH));
         setClientEmail(user.email ?? "");
 
         // Determine whether this OAuth user still needs to supply a cédula.
@@ -345,7 +346,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               supabase.from("professionals").select("whatsapp").eq("profile_id", user.id).maybeSingle()
                 .then(({ data: pro }) => { if (pro?.whatsapp) setProfilePhone(String(pro.whatsapp)); });
             }
-            if (data?.full_name) setClientName((prev) => prev || String(data.full_name));
+            if (data?.full_name) setClientName((prev) => prev || limitText(String(data.full_name), NAME_MAX_LENGTH));
             // Saved DOB (backend-only) → auto-fills future MEDICAL requests. The padrón
             // has no birth date, so this profile value is the ONLY source for "para mí".
             setSelfDob((data as { date_of_birth?: string } | null)?.date_of_birth ?? null);
@@ -495,7 +496,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         await supabase.auth.updateUser({ data: { full_name: j.fullName } });
         window.dispatchEvent(new Event("ccr:profile-updated"));
       }
-      if (active) setClientName(j.fullName);
+      if (active) setClientName(limitText(j.fullName, NAME_MAX_LENGTH));
     })();
     return () => { active = false; };
   }, [isLoggedIn, profileLoaded, hasStoredCedula, profileCedula, clientName]);
@@ -676,7 +677,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     // account adopts it. "For another person" never changes the account name.
     // Prefer the freshly-validated name; fall back to the debounced state.
     const officialName = (validatedOfficialName ?? selfOfficialName) || null; // null when booking for someone else
-    const finalName = officialName || clientName.trim();
+    const finalName = officialName || limitText(clientName.trim(), NAME_MAX_LENGTH);
     if (user) {
       // Only write the fields we actually collected on this step.
       const updates: Record<string, string> = { phone: cleanPhone };
@@ -700,7 +701,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       await supabase.auth.updateUser({ data: { full_name: finalName, profile_completed: true } });
       window.dispatchEvent(new Event("ccr:profile-updated"));
     }
-    if (officialName) setClientName(officialName);
+    if (officialName) setClientName(limitText(officialName, NAME_MAX_LENGTH));
     setProfileCedula(cleanCedula);
     setProfilePhone(cleanPhone);
     setNeedsProfile(false);
@@ -934,7 +935,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           placeholder={t("contact.namePlaceholder")}
           value={clientName}
-          onChange={(e) => setClientName(e.target.value)}
+          maxLength={NAME_MAX_LENGTH}
+          onChange={(e) => setClientName(limitText(e.target.value, NAME_MAX_LENGTH))}
         />
       </div>
     );
@@ -1355,7 +1357,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <input
                           type="text"
                           value={benName}
-                          onChange={(e) => setBenName(e.target.value)}
+                          maxLength={NAME_MAX_LENGTH}
+                          onChange={(e) => setBenName(limitText(e.target.value, NAME_MAX_LENGTH))}
                           placeholder={t("forWho.namePlaceholder")}
                           className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
                         />
@@ -1507,7 +1510,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                         placeholder={t("contact.namePlaceholder")}
                         value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
+                        maxLength={NAME_MAX_LENGTH}
+                        onChange={(e) => setClientName(limitText(e.target.value, NAME_MAX_LENGTH))}
                       />
                     </div>
                   )}

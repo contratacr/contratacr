@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { AlertCircle, Paperclip, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { SelectMenu } from "@/components/ui/select-menu";
+import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
 // The support ticket form — SINGLE SOURCE OF TRUTH for the fields, validation and
 // submit. Rendered on the public /soporte page (the in-dashboard Soporte section uses
@@ -33,7 +34,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
       queueMicrotask(() => {
         setForm((f) => ({
           ...f,
-          name: (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || f.name,
+          name: limitText((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || f.name, NAME_MAX_LENGTH),
           email: user.email ?? f.email,
         }));
       });
@@ -41,7 +42,12 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
   }, [user, authLoading]);
 
   function update(field: keyof typeof form, value: string) {
-    setForm((f) => ({ ...f, [field]: value }));
+    const limit =
+      field === "name" ? NAME_MAX_LENGTH :
+      field === "email" || field === "subject" || field === "topic" ? SHORT_TEXT_MAX_LENGTH :
+      field === "message" ? LONG_TEXT_MAX_LENGTH :
+      undefined;
+    setForm((f) => ({ ...f, [field]: limit ? limitText(value, limit) : value }));
   }
 
   function updateTopic(topic: string) {
@@ -133,6 +139,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
             {t("nameLabel")} <span className="text-red-500">*</span>
           </label>
           <input type="text" className={inputClass} placeholder={t("namePlaceholder")}
+            maxLength={NAME_MAX_LENGTH}
             value={form.name} onChange={(e) => update("name", e.target.value)} required />
         </div>
         <div>
@@ -140,6 +147,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
             {t("emailLabel")} <span className="text-red-500">*</span>
           </label>
           <input type="email" className={inputClass} placeholder={t("emailPlaceholder")}
+            maxLength={SHORT_TEXT_MAX_LENGTH}
             value={form.email} onChange={(e) => update("email", e.target.value)} required />
         </div>
       </div>
@@ -166,6 +174,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
         <textarea
           className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[130px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           placeholder={t("messagePlaceholder")}
+          maxLength={LONG_TEXT_MAX_LENGTH}
           value={form.message} onChange={(e) => update("message", e.target.value)} required
         />
       </div>

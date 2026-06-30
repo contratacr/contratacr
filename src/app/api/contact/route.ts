@@ -6,6 +6,7 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { validateUpload, IMAGE_KINDS, DOC_KINDS } from "@/lib/upload-validation";
 import { sendBrevoEmail } from "@/lib/email/send";
+import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 
 // ALL of the app's automated email goes through BREVO (the contratacr.com domain is
 // verified there → SPF/DKIM pass → good deliverability), via the shared
@@ -41,7 +42,14 @@ async function parseRequest(req: NextRequest) {
     ({ name = "", email = "", subject = "", message = "", topic = "" } = body);
   }
 
-  return { name, email, subject, message, topic, fileAttachments };
+  return {
+    name: limitTrimmedText(name, NAME_MAX_LENGTH),
+    email: limitTrimmedText(email, SHORT_TEXT_MAX_LENGTH),
+    subject: limitTrimmedText(subject, SHORT_TEXT_MAX_LENGTH),
+    message: limitTrimmedText(message, LONG_TEXT_MAX_LENGTH),
+    topic: limitTrimmedText(topic, SHORT_TEXT_MAX_LENGTH),
+    fileAttachments,
+  };
 }
 
 /* ─── HTML email body ─── */
