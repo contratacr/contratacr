@@ -331,8 +331,8 @@ export function BookingRequests({ userId }: { userId: string }) {
       ? getWhatsAppLink(booking.client_phone, t("waMessage", { name: cliFirst }))
       : null;
     // The BOOKER's identification (always the client who reserved — never the beneficiary,
-    // who only has name + DOB). Shown formatted as a CR ID so the pro can confirm who they
-    // booked. Absent → no cédula on file → the "Sin verificar" pill speaks instead.
+    // who only has name + DOB). Keep it inside the expanded details so the closed card
+    // stays scannable; absent ID reads as "Sin verificar" in the same field.
     const cedulaFmt = booking.client_cedula ? formatId(String(booking.client_cedula)) : null;
     const phoneFmt = formatPhoneCR(booking.client_phone);
     const requestedDate = formatRelativeOrDate(booking.created_at, locale);
@@ -341,15 +341,6 @@ export function BookingRequests({ userId }: { userId: string }) {
       <Badge variant="warning" className="text-[11px] font-semibold">
         <Flag className="h-3 w-3" />
         {t("flagged")}
-      </Badge>
-    ) : null;
-
-    // The client has NO cédula on file → identity unverified. Shown clearly so the
-    // pro can decide (contact / cancel-with-reason). Auto-confirm is NOT blocked.
-    const unverifiedPill = !booking.client_cedula ? (
-      <Badge variant="muted" className="text-[11px] font-semibold">
-        <IdCard className="h-3 w-3" />
-        {t("unverified")}
       </Badge>
     ) : null;
 
@@ -362,7 +353,7 @@ export function BookingRequests({ userId }: { userId: string }) {
     return (
       <Card id={`booking-${booking.id}`} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
-            status + unverified). Tapping reveals the full identity, the "para otra persona"
+            status + relevant flags). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
             The button gets the card's rounded corners (rounded-2xl collapsed / rounded-t when
             expanded) so its hover bg never squares off the corners — sprint 441 (no overflow-hidden,
@@ -404,10 +395,9 @@ export function BookingRequests({ userId }: { userId: string }) {
                     <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{category}</span></span>
                   </span>
                 )}
-                {(unverifiedPill || flaggedPill || (!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob))) && (
+                {(flaggedPill || (!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob))) && (
                   <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
                     {!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob)}
-                    {unverifiedPill}
                     {flaggedPill}
                   </span>
                 )}
@@ -464,15 +454,15 @@ export function BookingRequests({ userId }: { userId: string }) {
                 </div>
               </div>
             )}
-            {cedulaFmt && (
-              <div className="flex items-start gap-2.5">
-                <IdCard className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
-                  <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{cedulaFmt}</p>
-                </div>
+            <div className="flex items-start gap-2.5">
+              <IdCard className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
+                <p className={cn("mt-0.5 text-[13px] font-medium truncate", cedulaFmt ? "text-[#374151]" : "text-[#6b7280]")}>
+                  {cedulaFmt || t("unverified")}
+                </p>
               </div>
-            )}
+            </div>
             {booking.service_description && (
               <div className="flex items-start gap-2.5">
                 <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
