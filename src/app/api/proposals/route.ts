@@ -202,11 +202,29 @@ export async function PATCH(req: NextRequest) {
     if (status === "pending" || status === "declined") {
       try {
         const admin = createAdminClient();
-        const { data: prop } = await admin.from("proposals").select("project_id, professional_id").eq("id", id).maybeSingle();
+        const { data: prop } = await admin
+          .from("proposals")
+          .select("project_id, professional_id, projects:project_id(title)")
+          .eq("id", id)
+          .maybeSingle();
         if (prop?.project_id) {
           const { data: project } = await admin.from("projects").select("accepted_professional_id, status").eq("id", prop.project_id).maybeSingle();
           if (project?.accepted_professional_id === prop.professional_id) {
             await admin.from("projects").update({ status: "open", accepted_professional_id: null }).eq("id", prop.project_id);
+          }
+          if (status === "declined") {
+            const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", prop.professional_id).maybeSingle();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const title = (prop.projects as any)?.title ?? "tu solicitud";
+            if (pro?.profile_id) {
+              await admin.from("notifications").insert({
+                user_id: pro.profile_id,
+                type: "project_proposal_declined",
+                title: "Propuesta no seleccionada",
+                message: `El cliente no seleccionó tu propuesta para "${title}".`,
+                data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
+              });
+            }
           }
         }
       } catch (e) {
@@ -225,6 +243,12 @@ export async function PATCH(req: NextRequest) {
           .eq("id", id)
           .maybeSingle();
         if (prop?.project_id) {
+          const { data: otherPending } = await admin
+            .from("proposals")
+            .select("professional_id")
+            .eq("project_id", prop.project_id)
+            .neq("id", id)
+            .eq("status", "pending");
           await admin
             .from("projects")
             .update({ status: "in_progress", accepted_professional_id: prop.professional_id })
@@ -238,6 +262,21 @@ export async function PATCH(req: NextRequest) {
           const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", prop.professional_id).maybeSingle();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const title = (prop.projects as any)?.title ?? "tu propuesta";
+          const otherProfessionalIds = [...new Set((otherPending ?? []).map((p) => p.professional_id).filter(Boolean))];
+          if (otherProfessionalIds.length > 0) {
+            const { data: otherPros } = await admin
+              .from("professionals")
+              .select("profile_id")
+              .in("id", otherProfessionalIds);
+            const rows = (otherPros ?? []).filter((p) => p.profile_id).map((p) => ({
+              user_id: p.profile_id,
+              type: "project_proposal_declined",
+              title: "Propuesta no seleccionada",
+              message: `El cliente eligió otra propuesta para "${title}".`,
+              data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
+            }));
+            if (rows.length > 0) await admin.from("notifications").insert(rows);
+          }
           if (pro?.profile_id) {
             await admin.from("notifications").insert({
               user_id: pro.profile_id,

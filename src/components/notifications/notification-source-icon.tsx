@@ -19,6 +19,7 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
     case "new_project":
     case "proposal_accepted":
     case "project_proposal_accepted":
+    case "project_proposal_declined":
     case "project_cancelled":
     case "project_deleted":
     case "project_completed":

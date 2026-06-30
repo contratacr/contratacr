@@ -2291,6 +2291,7 @@
       "booking_rescheduled": "Appointment rescheduled",
       "booking_update": "Request update",
       "project_proposal_accepted": "Proposal accepted!",
+      "project_proposal_declined": "Proposal not selected",
       "new_project": "New opportunity",
       "project_work_done": "Confirm job completion",
       "project_completed": "Request completed",

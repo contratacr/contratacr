@@ -12,6 +12,7 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   "proposal_withdrawn",
   "proposal_accepted",
   "project_proposal_accepted",
+  "project_proposal_declined",
   "new_project",
   "project_work_done",
   "project_completed",

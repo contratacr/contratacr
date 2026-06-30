@@ -15,6 +15,7 @@ const PRO_TYPES = new Set([
   "booking_rescheduled",
   "proposal_accepted",
   "project_proposal_accepted",
+  "project_proposal_declined",
   "new_project",
   "project_cancelled",
   "project_deleted",
@@ -98,6 +99,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
 
     case "proposal_accepted":
     case "project_proposal_accepted":
+    case "project_proposal_declined":
     case "new_project":
     case "project_cancelled":
     case "project_deleted":
