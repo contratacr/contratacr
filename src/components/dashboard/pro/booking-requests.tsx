@@ -104,6 +104,7 @@ export function BookingRequests({ userId }: { userId: string }) {
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
   const cacheKey = proBookingsCacheKey(userId);
   const cachedBookings = cacheKey ? getDashboardCache<Booking[]>(cacheKey) : null;
+  const hasCachedBookings = cachedBookings !== null;
 
   function ageLabel(dob?: string | null) {
     const age = dob ? computeAge(dob) : null;
@@ -113,7 +114,8 @@ export function BookingRequests({ userId }: { userId: string }) {
     return t("monthsOld", { count: months });
   }
   const [bookings, setBookingsState] = useState<Booking[]>(() => cachedBookings ?? []);
-  const [loading, setLoading] = useState(() => !cachedBookings);
+  const [loading, setLoading] = useState(() => !hasCachedBookings);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => hasCachedBookings);
   const [filter, setFilter] = useState("activas");
   const bookingsSnapshotRef = useRef("");
   const refreshTimerRef = useRef<number | null>(null);
@@ -158,6 +160,7 @@ export function BookingRequests({ userId }: { userId: string }) {
     } catch (error) {
       console.error("[booking-requests] load failed:", error);
     } finally {
+      if (!silent) setHasLoadedOnce(true);
       if (!silent) setLoading(false);
     }
   }, [cacheKey, setBookings]);
@@ -273,8 +276,8 @@ export function BookingRequests({ userId }: { userId: string }) {
     return res.ok;
   }
 
-  if (loading) {
-    return <CardListSkeleton rows={3} />;
+  if (loading || !hasLoadedOnce) {
+    return <CardListSkeleton rows={3} label={t("loading")} />;
   }
 
   if (bookings.length === 0) {

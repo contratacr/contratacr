@@ -1208,6 +1208,7 @@
     "empty": "No tienes solicitudes todavía",
     "emptySub": "Cuando los clientes te contacten, aparecerán aquí.",
     "noneInView": "No hay solicitudes en esta vista.",
+    "loading": "Cargando solicitudes recibidas...",
     "status": {
       "pending": "Pendiente",
       "confirmed": "Confirmada",
@@ -1349,6 +1350,8 @@
   "proposalsTab": {
     "browse": "Oportunidades",
     "mine": "Mis propuestas",
+    "loadingBrowse": "Cargando oportunidades...",
+    "loadingMine": "Cargando propuestas...",
     "emptyBrowse": "No hay oportunidades disponibles en tu zona",
     "emptyBrowseSub": "Las solicitudes de clientes aparecerán aquí.",
     "proposalsCount": "{count, plural, one {# propuesta} other {# propuestas}}",

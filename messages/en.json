@@ -1209,6 +1209,7 @@
     "empty": "You don't have any requests yet",
     "emptySub": "When clients contact you, they'll appear here.",
     "noneInView": "No requests in this view.",
+    "loading": "Loading received requests...",
     "status": {
       "pending": "Pending",
       "confirmed": "Confirmed",
@@ -1350,6 +1351,8 @@
   "proposalsTab": {
     "browse": "Opportunities",
     "mine": "My proposals",
+    "loadingBrowse": "Loading opportunities...",
+    "loadingMine": "Loading proposals...",
     "emptyBrowse": "No opportunities available in your area",
     "emptyBrowseSub": "Client requests will appear here.",
     "proposalsCount": "{count, plural, one {# proposal} other {# proposals}}",

@@ -116,6 +116,8 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
   const cachedOpenProjects = openCacheKey ? getDashboardCache<OpenProject[]>(openCacheKey) : null;
   const cachedGenericOpenProjects = getDashboardCache<OpenProject[]>(openProjectsCacheKey(userId));
   const cachedMyProposals = mineCacheKey ? getDashboardCache<MyProposal[]>(mineCacheKey) : null;
+  const hasCachedOpenProjects = cachedOpenProjects !== null || cachedGenericOpenProjects !== null;
+  const hasCachedMyProposals = cachedMyProposals !== null;
 
   // Filter "Oportunidades" by profession — the user's ACTUAL professions only (no "all"
   // option); only surfaced when they have 2+ (defaults to the first profession).
@@ -148,7 +150,9 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
   const [view, setView] = useState<"browse" | "mine">("browse");
   const [openProjects, setOpenProjectsState] = useState<OpenProject[]>(() => cachedOpenProjects ?? cachedGenericOpenProjects ?? []);
   const [myProposals, setMyProposalsState] = useState<MyProposal[]>(() => cachedMyProposals ?? []);
-  const [loading, setLoading] = useState(() => !cachedOpenProjects && !cachedGenericOpenProjects);
+  const [loading, setLoading] = useState(() => !hasCachedOpenProjects);
+  const [browseLoadedOnce, setBrowseLoadedOnce] = useState(() => hasCachedOpenProjects);
+  const [mineLoadedOnce, setMineLoadedOnce] = useState(() => hasCachedMyProposals);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [expandedMine, setExpandedMine] = useState<string | null>(null);
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
@@ -204,9 +208,12 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
       setOpenProjects(nextProjects);
       setMyProposals(nextProposals);
       setSubmitted(new Set<string>(nextProposals.map((p) => p.project_id)));
+      setBrowseLoadedOnce(true);
+      setMineLoadedOnce(true);
     } catch (error) {
       console.error("[proposals-tab] opportunities load failed:", error);
     } finally {
+      if (!silent) setBrowseLoadedOnce(true);
       if (!silent) setLoading(false);
     }
   }
@@ -220,9 +227,11 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
       const snapshot = JSON.stringify(nextProposals.map((p: MyProposal) => `${p.id}:${p.status}:${p.projects?.status ?? ""}`));
       mineSnapshotRef.current = snapshot;
       setMyProposals(nextProposals);
+      setMineLoadedOnce(true);
     } catch (error) {
       console.error("[proposals-tab] my proposals load failed:", error);
     } finally {
+      if (!silent) setMineLoadedOnce(true);
       if (!silent) setLoading(false);
     }
   }
@@ -607,8 +616,10 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
     );
   }
 
-  if (loading) {
-    return <CardListSkeleton rows={3} />;
+  const viewLoading = loading || (view === "browse" ? !browseLoadedOnce : !mineLoadedOnce);
+
+  if (viewLoading) {
+    return <CardListSkeleton rows={3} label={view === "browse" ? t("loadingBrowse") : t("loadingMine")} />;
   }
 
   return (

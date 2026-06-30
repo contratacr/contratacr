@@ -12,9 +12,15 @@ export function FormLoadingState({ label, minHeight = "min-h-[360px]" }: { label
   );
 }
 
-export function CardListSkeleton({ rows = 3, withFilters = true }: { rows?: number; withFilters?: boolean }) {
+export function CardListSkeleton({ rows = 3, withFilters = true, label }: { rows?: number; withFilters?: boolean; label?: string }) {
   return (
     <div className="flex flex-col gap-3.5">
+      {label ? (
+        <div className="flex items-center gap-2 text-sm font-medium text-[#6b7280]">
+          <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />
+          <span>{label}</span>
+        </div>
+      ) : null}
       {withFilters ? (
         <div className="flex gap-2 rounded-2xl bg-[#f3f4f6] p-1">
           {[0, 1, 2].map((i) => (
