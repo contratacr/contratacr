@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  Circle, Camera, X, Plus,
+  Circle, Camera, X, Plus, Search, ChevronDown,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,19 +20,20 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { useAuth } from "@/hooks/use-auth";
-import { CategorySearch } from "@/components/ui/category-search";
-import { getCategoryLabel } from "@/lib/data/categories";
+import { Modal } from "@/components/ui/modal";
+import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
+import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
+import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
-// ─── Category data lives in src/lib/data/categories.ts (single source of truth) ─
-// The CategorySearch component handles display + fuzzy search; this page never
-// re-declares the taxonomy. (A large hardcoded duplicate list — ~80 untranslated
-// labels diverging from the real taxonomy, unused and kept alive only by a
-// `_unused` ref — was removed here.)
+// Category data lives in src/lib/data/categories.ts (single source of truth).
+// The service catalog picker shares the same taxonomy and grouped UI used in
+// the professional services panel.
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -169,6 +170,169 @@ function PhotoPicker({
   );
 }
 
+function ServiceCatalogModal({
+  open,
+  title,
+  excludedIds,
+  defaultName,
+  onClose,
+  onSelect,
+}: {
+  open: boolean;
+  title: string;
+  excludedIds: string[];
+  defaultName?: string;
+  onClose: () => void;
+  onSelect: (id: string) => void;
+}) {
+  const locale = useLocale();
+  const t = useTranslations("servicesEditor");
+  const tp = useTranslations("categoriesPage");
+  const customCategories = useCustomCategories();
+  void customCategories;
+  const [query, setQuery] = useState("");
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setQuery("");
+    setActiveGroupId(null);
+  }, [open]);
+
+  const pickerList = useMemo(() => {
+    const excluded = new Set(excludedIds);
+    const base = getAllCategories().filter((c) => !excluded.has(c.id));
+    const q = normalizeText(query.trim());
+    if (!q) return base;
+    return base.filter(
+      (c) => normalizeText(getCategoryLabel(c.id, locale)).includes(q) || c.keywords.some((k) => normalizeText(k).includes(q))
+    );
+  }, [excludedIds, query, locale, customCategories]);
+
+  const pickerGroups = useMemo<CategoryPickerGroup[]>(() => {
+    const groups: CategoryPickerGroup[] = [];
+    for (const cat of pickerList) {
+      const last = groups[groups.length - 1];
+      if (last && last.id === cat.groupId) last.items.push(cat);
+      else groups.push({ id: cat.groupId, items: [cat] });
+    }
+    return groups;
+  }, [pickerList]);
+
+  function select(id: string) {
+    onSelect(id);
+    onClose();
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      closeLabel={t("cancel")}
+      bodyClassName="px-0 py-0"
+    >
+      <div className="sticky top-0 z-10 bg-white px-5 pb-3 pt-4 sm:px-6">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+          <input
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setActiveGroupId(null); }}
+            placeholder={t("pickerSearch")}
+            autoFocus
+            className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#111827] transition-all placeholder:text-[#9ca3af] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+          />
+        </div>
+      </div>
+      <div className={cn("px-3 sm:px-4", pickerList.length === 0 && query.trim() ? "pb-2 pt-0" : "py-2")}>
+        {pickerList.length === 0 && query.trim() ? null : query.trim() ? (
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            {pickerList.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => select(cat.id)}
+                className="group flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[#374151] transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe] hover:text-[#0089bb]"
+              >
+                <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
+                <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <CategoryGroupPicker
+            groups={pickerGroups}
+            activeGroupId={activeGroupId}
+            onActiveGroupChange={setActiveGroupId}
+            onSelect={select}
+            backLabel={t("pickerBack")}
+            countLabel={(count) => t("pickerOptionsCount", { count })}
+            optionAction={<Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
+            optionClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-[#f8fbfe]"
+          />
+        )}
+
+        <div className={cn("text-center", pickerList.length === 0 && query.trim() ? "mt-1" : "mt-4")}>
+          <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
+          <p className="mx-auto mt-1 max-w-[280px] text-xs leading-5 text-[#6b7280]">
+            {tp("suggestDescription")}
+          </p>
+          <CategorySuggestionBox
+            className="mt-3"
+            prominent
+            notListedLabel={tp("suggestCta")}
+            placeholder={t("suggestNamePlaceholder")}
+            sendLabel={t("suggestSend")}
+            sendingLabel={t("suggestSending")}
+            cancelLabel={t("cancel")}
+            thanksLabel={t("suggestThanks")}
+            defaultName={query || defaultName}
+          />
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function ServicePickerTrigger({
+  value,
+  placeholder,
+  onClick,
+  error,
+}: {
+  value?: string;
+  placeholder: string;
+  onClick: () => void;
+  error?: string;
+}) {
+  const locale = useLocale();
+  const selectedLabel = value ? getCategoryLabel(value, locale) : "";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-invalid={!!error}
+      className={cn(
+        "group flex h-11 w-full items-center justify-between gap-3 rounded-xl border bg-white px-3.5 text-left text-sm shadow-sm transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe]",
+        error ? "border-red-400" : "border-[#e5e7eb]"
+      )}
+    >
+      <span className="flex min-w-0 flex-1 items-center gap-2">
+        {selectedLabel ? (
+          <span className="truncate font-medium text-[#111827]">{selectedLabel}</span>
+        ) : (
+          <>
+            <Search className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+            <span className="truncate text-[#9ca3af]">{placeholder}</span>
+          </>
+        )}
+      </span>
+      <ChevronDown className="h-4 w-4 shrink-0 text-[#9ca3af] transition-colors group-hover:text-[#009FD9]" />
+    </button>
+  );
+}
+
 // ─── "Registrarme sin cédula" (skip identity verification) ────────────────────
 // A pro can register WITHOUT a cédula: they simply appear without the "Verificado"
 // badge and can verify later from their panel. This is a low-friction choice, not
@@ -288,6 +452,8 @@ export default function RegisterProfessionalPage() {
   // The extra-profession picker stays hidden behind a clear "+ Agregar otra
   // profesión" action so it never reads as a stray second dropdown.
   const [showExtraProf, setShowExtraProf] = useState(false);
+  const [primaryServicePickerOpen, setPrimaryServicePickerOpen] = useState(false);
+  const [extraServicePickerOpen, setExtraServicePickerOpen] = useState(false);
   // Optional brand/business name is now collected in the panel (not registration);
   // kept empty here so the create payload still sends a (null) value cleanly.
   const businessName = "";
@@ -830,12 +996,27 @@ export default function RegisterProfessionalPage() {
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("professionPrincipal")} <span className="text-red-500">*</span>
                 </label>
-                <CategorySearch
+                <ServicePickerTrigger
                   value={form2.watch("category") ?? ""}
-                  onChange={(v) => form2.setValue("category", v, { shouldValidate: true })}
+                  onClick={() => setPrimaryServicePickerOpen(true)}
                   placeholder={t("searchProfession")}
                   error={form2.formState.errors.category?.message}
                 />
+                <ServiceCatalogModal
+                  open={primaryServicePickerOpen}
+                  title={t("professionPrincipal")}
+                  excludedIds={extraCategories}
+                  onClose={() => setPrimaryServicePickerOpen(false)}
+                  onSelect={(v) => {
+                    form2.setValue("category", v, { shouldValidate: true });
+                    setExtraCategories((prev) => prev.filter((x) => x !== v));
+                  }}
+                />
+                {form2.formState.errors.category?.message && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {form2.formState.errors.category.message}
+                  </p>
+                )}
 
                 {/* Additional professions (optional, multi-profession). The picker
                     is revealed by an explicit "+ Agregar otra profesión" action so
@@ -854,23 +1035,37 @@ export default function RegisterProfessionalPage() {
                     </div>
                   )}
                   {showExtraProf ? (
-                    <CategorySearch
-                      autoFocus
-                      value={extraCatInput}
-                      onChange={(v) => {
-                        const primary = form2.watch("category");
-                        if (v && v !== primary && !extraCategories.includes(v)) {
-                          setExtraCategories((prev) => [...prev, v]);
-                        }
-                        setExtraCatInput("");
-                        setShowExtraProf(false);
-                      }}
-                      placeholder={t("searchAnotherProfession")}
-                    />
+                    <>
+                      <ServicePickerTrigger
+                        value={extraCatInput}
+                        onClick={() => setExtraServicePickerOpen(true)}
+                        placeholder={t("searchAnotherProfession")}
+                      />
+                      <ServiceCatalogModal
+                        open={extraServicePickerOpen}
+                        title={t("addAnotherProfession")}
+                        excludedIds={[form2.watch("category") ?? "", ...extraCategories].filter(Boolean)}
+                        onClose={() => {
+                          setExtraServicePickerOpen(false);
+                          setShowExtraProf(false);
+                        }}
+                        onSelect={(v) => {
+                          const primary = form2.watch("category");
+                          if (v && v !== primary && !extraCategories.includes(v)) {
+                            setExtraCategories((prev) => [...prev, v]);
+                          }
+                          setExtraCatInput("");
+                          setShowExtraProf(false);
+                        }}
+                      />
+                    </>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setShowExtraProf(true)}
+                      onClick={() => {
+                        setShowExtraProf(true);
+                        setExtraServicePickerOpen(true);
+                      }}
                       className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
                     >
                       <Plus className="h-4 w-4" /> {t("addAnotherProfession")}
