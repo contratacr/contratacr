@@ -239,9 +239,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
   async function shareProfile() {
     if (!professional) return;
-    const url = window.location.href;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    const url = `${baseUrl}/${locale}/profesionales/${professional.slug}`;
+    const text = professional.businessName?.trim()
+      ? `${professional.businessName.trim()} en ContrataCR`
+      : `${proDisplayName(professional.fullName)} en ContrataCR`;
     if (navigator.share) {
-      await navigator.share({ title: professional.fullName, url });
+      await navigator.share({ title: text, text, url });
       return;
     }
     await navigator.clipboard?.writeText(url);
