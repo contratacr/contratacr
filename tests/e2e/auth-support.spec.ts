@@ -10,6 +10,7 @@ test.describe("@smoke auth and support", () => {
     await expect(page.getByLabel(/Contras/i).first()).toBeVisible();
     await expect(page.getByRole("button", { name: /Ingresar/i }).last()).toBeVisible();
     await expect(page.getByRole("button", { name: /Continuar con Google/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Continuar con Facebook/i })).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   });
 
