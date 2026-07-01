@@ -1,0 +1,50 @@
+[
+  {
+    "name": "confirm-signup",
+    "file": "confirm-signup.html",
+    "subjectKey": "mailer_subjects_confirmation",
+    "contentKey": "mailer_templates_confirmation_content",
+    "subject": "Tu codigo de confirmacion - ContrataCR",
+    "requiredTokens": ["{{ .Token }}"]
+  },
+  {
+    "name": "invite-user",
+    "file": "invite-user.html",
+    "subjectKey": "mailer_subjects_invite",
+    "contentKey": "mailer_templates_invite_content",
+    "subject": "Te invitaron a ContrataCR",
+    "requiredTokens": ["{{ .ConfirmationURL }}"]
+  },
+  {
+    "name": "magic-link",
+    "file": "magic-link.html",
+    "subjectKey": "mailer_subjects_magic_link",
+    "contentKey": "mailer_templates_magic_link_content",
+    "subject": "Tu enlace de acceso - ContrataCR",
+    "requiredTokens": ["{{ .ConfirmationURL }}"]
+  },
+  {
+    "name": "change-email",
+    "file": "change-email.html",
+    "subjectKey": "mailer_subjects_email_change",
+    "contentKey": "mailer_templates_email_change_content",
+    "subject": "Confirma tu nuevo correo - ContrataCR",
+    "requiredTokens": ["{{ .SiteURL }}", "{{ .TokenHash }}", "{{ .Email }}", "{{ .NewEmail }}"]
+  },
+  {
+    "name": "reset-password",
+    "file": "reset-password.html",
+    "subjectKey": "mailer_subjects_recovery",
+    "contentKey": "mailer_templates_recovery_content",
+    "subject": "Restablece tu contrasena - ContrataCR",
+    "requiredTokens": ["{{ .ConfirmationURL }}"]
+  },
+  {
+    "name": "reauthentication",
+    "file": "reauthentication.html",
+    "subjectKey": "mailer_subjects_reauthentication",
+    "contentKey": "mailer_templates_reauthentication_content",
+    "subject": "Tu codigo de verificacion - ContrataCR",
+    "requiredTokens": ["{{ .Token }}"]
+  }
+]

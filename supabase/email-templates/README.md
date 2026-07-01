@@ -1,6 +1,8 @@
 # ContrataCR — branded Supabase auth email templates
 
-Pega cada archivo HTML en **Supabase Dashboard → Authentication → Email Templates → [template]** y luego presiona **Save**.
+These files are the source of truth for Supabase Auth email templates. Prefer the GitHub Action **Supabase email templates** for test and production syncs.
+
+Manual fallback: paste each HTML file in **Supabase Dashboard → Authentication → Email Templates → [template]** and press **Save**.
 
 | File | Supabase template | Required variable(s) |
 |------|-------------------|----------------------|
@@ -10,6 +12,30 @@ Pega cada archivo HTML en **Supabase Dashboard → Authentication → Email Temp
 | `change-email.html` | **Change Email Address** | `{{ .SiteURL }}`, `{{ .TokenHash }}`, `{{ .Email }}`, `{{ .NewEmail }}` |
 | `reset-password.html` | **Reset Password** | `{{ .ConfirmationURL }}` |
 | `reauthentication.html` | **Reauthentication** | `{{ .Token }}` (código de 6 dígitos) |
+
+## Automated sync
+
+The deploy manifest is `templates.json`. It maps each HTML file to Supabase Management API keys and the subject line.
+
+Validate files and required Supabase tokens without calling the API:
+
+```bash
+node scripts/sync-supabase-email-templates.mjs --validate-only
+```
+
+Dry run:
+
+```bash
+SUPABASE_ACCESS_TOKEN=... SUPABASE_PROJECT_REF=... node scripts/sync-supabase-email-templates.mjs --dry-run
+```
+
+Apply:
+
+```bash
+SUPABASE_ACCESS_TOKEN=... SUPABASE_PROJECT_REF=... node scripts/sync-supabase-email-templates.mjs
+```
+
+Production should be applied through GitHub Actions with environment approval.
 
 ## Notes
 

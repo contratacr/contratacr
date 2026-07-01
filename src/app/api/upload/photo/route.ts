@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { validateUpload, IMAGE_KINDS, MIME_FOR } from "@/lib/upload-validation";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  const rl = enforceRateLimit(req, "upload-photo", 12, 60_000);
+  if (rl) return rl;
+
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
