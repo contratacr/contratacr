@@ -3,6 +3,17 @@
 // stored copies. f_auto (WebP/AVIF) + q_auto are applied for every delivery.
 
 export const MAX_PORTFOLIO_PHOTOS = 5;
+const DEFAULT_CLOUDINARY_CLOUD_NAME = "dxxrjx2go";
+
+export function cloudinaryAssetUrl(publicIdWithExtension: string, transform = "f_auto,q_auto"): string {
+  const cloudName =
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
+    process.env.CLOUDINARY_CLOUD_NAME ||
+    DEFAULT_CLOUDINARY_CLOUD_NAME;
+  const normalizedPublicId = publicIdWithExtension.replace(/^\/+/, "");
+  const normalizedTransform = transform.replace(/^\/+|\/+$/g, "");
+  return `https://res.cloudinary.com/${cloudName}/image/upload/${normalizedTransform}/${normalizedPublicId}`;
+}
 
 /** Insert a transformation string right after `/upload/` in a Cloudinary URL. */
 function withTransform(url: string, transform: string): string {

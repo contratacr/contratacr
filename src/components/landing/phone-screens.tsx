@@ -2,6 +2,7 @@ import { Search, MapPin, ShieldCheck, Star, Send, Headset, CheckCircle2, Calenda
 import { Poppins } from "next/font/google";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { MockAvatar } from "@/components/landing/mock-avatar";
+import { cloudinaryAssetUrl } from "@/lib/cloudinary";
 
 // New brand wordmark font (matches the official ContrataCR logo).
 const poppins = Poppins({ subsets: ["latin"], weight: ["700", "800"], display: "swap" });
@@ -271,7 +272,7 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
           one WITHOUT (the WhatsApp contact path), mirroring the real mixed /buscar list. */}
       <div className="flex-1 space-y-2 overflow-hidden p-3">
         <ProCard
-          rank={1} initials="SG" image="https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto/v1781846892/sgimage_psyvpn_hyyp4c.jpg" company="SG Solutions" person="Luis Sánchez" profession={copy.title} categories={copy.categories}
+          rank={1} initials="SG" image={cloudinaryAssetUrl("sgimage_psyvpn_hyyp4c.jpg", "f_auto,q_auto")} company="SG Solutions" person="Luis Sánchez" profession={copy.title} categories={copy.categories}
           place="San José" address="Escazú, San José" rating="4.9" reviews={copy.reviews(48)}
           price={copy.priceOnRequest} verified={copy.verified} schedule={copy.days}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
