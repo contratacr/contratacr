@@ -35,13 +35,13 @@ npm run test:e2e:ui
 
 ## GitHub Actions
 
-Use **Actions > Regression Tests > Run workflow** and pass the test URL, or set a repository variable:
+Use **Actions > Regression Tests > Run workflow**.
 
-```text
-PLAYWRIGHT_BASE_URL=https://your-test-url.vercel.app
-```
+- For normal validation, use `target=test` from the `test` branch. The workflow defaults to the test Vercel URL.
+- For production, use `target=production` from `main` and set `confirm_production=true`. Production regression is manual only.
+- `base_url` is optional and should only be used when testing a temporary deployment URL.
 
-The workflow is manual on purpose so it does not hit production accidentally.
+If the Vercel test deployment is protected, add `VERCEL_AUTOMATION_BYPASS_SECRET` to the GitHub Environment secrets for `test`. Playwright will send it as the Vercel automation bypass header.
 
 ## Notes
 

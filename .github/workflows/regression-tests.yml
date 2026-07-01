@@ -3,33 +3,65 @@ name: Regression Tests
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: "Environment to test."
+        required: true
+        type: choice
+        default: test
+        options:
+          - test
+          - production
       base_url:
-        description: "Test environment URL. Leave empty to use the PLAYWRIGHT_BASE_URL repository variable."
+        description: "Optional override URL. Leave empty to use the environment default."
         required: false
         type: string
+      confirm_production:
+        description: "Required when target=production."
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   e2e:
-    name: Playwright regression
+    name: Playwright regression (${{ inputs.target }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: ${{ inputs.target }}
     env:
-      PLAYWRIGHT_BASE_URL: ${{ inputs.base_url || vars.PLAYWRIGHT_BASE_URL }}
+      PLAYWRIGHT_BASE_URL: ${{ inputs.base_url }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       CI: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Validate target URL
         run: |
-          if [ -z "$PLAYWRIGHT_BASE_URL" ]; then
-            echo "Set a base_url input or a repository variable named PLAYWRIGHT_BASE_URL."
+          set -euo pipefail
+          if [ "${{ inputs.target }}" = "test" ] && [ "${{ github.ref }}" != "refs/heads/test" ]; then
+            echo "Run test regression from the test branch."
             exit 1
           fi
+          if [ "${{ inputs.target }}" = "production" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "Run production regression from main."
+            exit 1
+          fi
+          if [ "${{ inputs.target }}" = "production" ] && [ "${{ inputs.confirm_production }}" != "true" ]; then
+            echo "Production regression is manual only. Set confirm_production=true."
+            exit 1
+          fi
+          if [ -z "$PLAYWRIGHT_BASE_URL" ]; then
+            if [ "${{ inputs.target }}" = "production" ]; then
+              PLAYWRIGHT_BASE_URL="https://contratacr.com"
+            else
+              PLAYWRIGHT_BASE_URL="https://contratacr-git-test-isanchezm421-6251s-projects.vercel.app"
+            fi
+          fi
+          echo "PLAYWRIGHT_BASE_URL=$PLAYWRIGHT_BASE_URL" >> "$GITHUB_ENV"
           echo "Running regression against $PLAYWRIGHT_BASE_URL"
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
