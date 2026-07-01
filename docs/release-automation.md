@@ -14,7 +14,7 @@ Create two GitHub Environments with these exact names:
 - `test`
 - `production`
 
-For `production`, enable required reviewers so a production database/template change cannot run by accident.
+Database migrations are manual for both environments. Email templates can also be deployed manually from Actions.
 
 Each environment needs these secrets:
 
@@ -34,7 +34,7 @@ Use **Actions -> Supabase migrations**.
 
 ### One-time baseline check
 
-Because this project started with migrations that were often pasted manually in Supabase SQL Editor, each Supabase environment must be baselined once before applying migrations automatically.
+Because this project started with migrations that were often pasted manually in Supabase SQL Editor, each Supabase environment must be baselined once before applying newer migrations from GitHub Actions.
 
 Run `target=test`, `dry_run=true`.
 
@@ -54,16 +54,16 @@ Recommended baseline for an existing environment that was already built manually
 
 ### Normal flow after both environments are baselined
 
-New migrations apply automatically from GitHub:
+New migrations are applied manually from GitHub Actions:
 
 1. Commit a new file in `supabase/migrations/`.
-2. Push it to the `test` branch. GitHub Actions applies it to the `test` Supabase environment.
-3. Run **Regression Tests** against the test URL.
-4. Merge or push the same migration to `main`. GitHub Actions applies it to the `production` Supabase environment.
-
-Production still uses the `production` GitHub Environment. Keep required reviewers enabled there so production database changes wait for approval before running.
-
-Manual runs are still available from **Actions -> Supabase migrations** when you want to preview with `dry_run=true` or recover from a failed run.
+2. Push the code to the `test` branch.
+3. Run **Actions -> Supabase migrations** from the `test` branch with `target=test`, `dry_run=true`.
+4. If the plan only shows the expected new migration(s), run it again with `target=test`, `dry_run=false`.
+5. Run **Regression Tests** against the test URL.
+6. Push or merge the same code to `main`.
+7. Run **Actions -> Supabase migrations** from the `main` branch with `target=production`, `dry_run=true`.
+8. If the production plan matches expectation, run it again with `target=production`, `dry_run=false`.
 
 Production runs are blocked unless the workflow is run from `main`.
 
