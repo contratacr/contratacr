@@ -412,8 +412,10 @@
     "dobLabel": "Nacimiento:",
     "notYourInfo": "¿No es tu información?",
     "searching": "Buscando en el padrón…",
-    "mismatchNotice": "Indicaste que la información del padrón no es tuya. Ingresa tu nombre completo: tu identidad quedará <b>pendiente de revisión</b> y la confirmaremos manualmente.",
-    "notFoundNotice": "No encontramos tu identificación en el padrón (puede ser DIMEX/NITE, extranjero o recién emitida). Ingresa tu nombre completo: tu identidad quedará <b>pendiente de revisión</b> y la confirmaremos manualmente.",
+    "mismatchTitle": "Revisión manual",
+    "mismatchNotice": "Indicaste que la información encontrada no es tuya. Escribe tu nombre completo y dejaremos tu identidad <b>pendiente de revisión</b> para confirmarla manualmente.",
+    "notFoundTitle": "Revisión manual",
+    "notFoundNotice": "Esta identificación no aparece en el padrón. Puede ser DIMEX/NITE, extranjera o reciente. Escribe tu nombre completo y la revisaremos manualmente.",
     "fullName": "Nombre completo",
     "namePlaceholder": "Juan Pérez González",
     "nameHint": "tal como aparece en tu documento"
