@@ -59,13 +59,16 @@ The TSE padron is operational data, not a schema migration. A new Supabase envir
 
 Use **Actions -> Padron refresh**.
 
+The refresh only touches `public.padron`, `public.padron_staging`, and `public.finalize_padron_swap()`. Migration `084_harden_padron_swap.sql` must be applied before running it in an environment: it restricts the swap function to server roles and refuses to promote staging if fewer than 3,000,000 rows were loaded.
+
 Recommended flow for a new test environment:
 
 1. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the `test` GitHub Environment.
 2. Confirm `SUPABASE_DB_URL` is also present in that same `test` Environment.
-3. Run **Padron refresh** with `target=test`.
-4. Confirm the workflow finishes with `Padron is ready`.
-5. Test a national cedula in the app.
+3. Run **Supabase migrations** with `target=test` first.
+4. Run **Padron refresh** with `target=test`.
+5. Confirm the workflow finishes without errors.
+6. Test a national cedula in the app.
 
 Production refresh runs monthly on schedule and can also be run manually with `target=production`. Production runs are blocked unless the workflow is run from `main`.
 
