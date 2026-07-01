@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { Buffer } from "node:buffer";
 import { getProfessionalBySlug } from "@/lib/queries/professionals";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { proDisplayName } from "@/lib/utils";
@@ -44,6 +45,22 @@ function clampText(text: string, max: number) {
   return text.length > max ? `${text.slice(0, max - 1).trim()}...` : text;
 }
 
+async function imageDataUrl(url?: string | null) {
+  if (!url) return null;
+  try {
+    const resolved = url.startsWith("/")
+      ? `${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}${url}`
+      : url;
+    const response = await fetch(resolved);
+    if (!response.ok) return null;
+    const contentType = response.headers.get("content-type") || "image/jpeg";
+    const bytes = Buffer.from(await response.arrayBuffer());
+    return `data:${contentType};base64,${bytes.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
 export default async function Image({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
   const isEn = locale === "en";
@@ -58,6 +75,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
       ? "Service professional"
       : "Profesional de servicios";
   const location = [pro?.cantonName, pro?.provinceName].filter(Boolean).join(", ");
+  const avatarDataUrl = await imageDataUrl(pro?.avatarUrl);
 
   return new ImageResponse(
     (
@@ -68,7 +86,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#f4f7fa",
+          background: "#eef5fa",
           color: "#162543",
           fontFamily: "Inter, Arial, sans-serif",
           padding: 54,
@@ -79,6 +97,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
             width: "100%",
             height: "100%",
             display: "flex",
+            flexDirection: "column",
             borderRadius: 42,
             background: "#ffffff",
             border: "1px solid #dfe7ef",
@@ -88,163 +107,168 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
         >
           <div
             style={{
-              width: 132,
-              height: "100%",
-              background: "#162543",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
+              justifyContent: "space-between",
+              padding: "44px 56px 20px",
             }}
           >
-            <div
-              style={{
-                width: 82,
-                height: 82,
-                borderRadius: 22,
-                background: "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 14px 34px rgba(0, 0, 0, 0.18)",
-              }}
-            >
-              <LogoMark size={58} />
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <LogoMark size={46} />
+              <div style={{ display: "flex", fontSize: 38, fontWeight: 900, letterSpacing: 0 }}>
+                <span style={{ color: "#1a2744" }}>Contrata</span>
+                <span style={{ color: "#009FD9" }}>CR</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", color: "#009FD9", fontSize: 24, fontWeight: 800 }}>
+              contratacr.com
             </div>
           </div>
 
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
               flex: 1,
-              padding: "54px 48px 50px",
+              padding: "14px 56px 52px",
               minWidth: 0,
+              gap: 46,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 38 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <LogoMark size={42} />
-                <div style={{ display: "flex", fontSize: 36, fontWeight: 900, letterSpacing: 0 }}>
-                  <span style={{ color: "#1a2744" }}>Contrata</span>
-                  <span style={{ color: "#009FD9" }}>CR</span>
-                </div>
-              </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                flex: 1,
+                minWidth: 0,
+                justifyContent: "center",
+              }}
+            >
               <div
                 style={{
                   display: "flex",
+                  width: "fit-content",
                   borderRadius: 999,
                   background: "#e8f6fc",
                   color: "#0089bb",
-                  padding: "9px 18px",
-                  fontSize: 20,
-                  fontWeight: 800,
-                  whiteSpace: "nowrap",
+                  padding: "10px 18px",
+                  fontSize: 21,
+                  fontWeight: 850,
+                  marginBottom: 30,
                 }}
               >
                 {isEn ? "Hire services in Costa Rica" : "Contrata servicios en Costa Rica"}
               </div>
-            </div>
 
-            <div
-              style={{
-                display: "flex",
-                fontSize: displayName.length > 34 ? 54 : 62,
-                lineHeight: 1.02,
-                fontWeight: 900,
-                color: "#162543",
-                maxWidth: 690,
-              }}
-            >
-              {clampText(displayName, 52)}
-            </div>
-
-            {personName && (
-              <div style={{ display: "flex", marginTop: 12, fontSize: 27, color: "#607089", fontWeight: 700 }}>
-                {clampText(personName, 42)}
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: displayName.length > 34 ? 54 : 64,
+                  lineHeight: 1.02,
+                  fontWeight: 900,
+                  color: "#162543",
+                  maxWidth: 660,
+                }}
+              >
+                {clampText(displayName, 52)}
               </div>
-            )}
 
-            <div
-              style={{
-                display: "flex",
-                marginTop: 28,
-                fontSize: 30,
-                lineHeight: 1.2,
-                color: "#243654",
-                fontWeight: 850,
-                maxWidth: 730,
-              }}
-            >
-              {clampText(serviceText, 72)}
+              {personName && (
+                <div style={{ display: "flex", marginTop: 12, fontSize: 27, color: "#607089", fontWeight: 700 }}>
+                  {clampText(personName, 42)}
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: "flex",
+                  marginTop: 30,
+                  fontSize: 30,
+                  lineHeight: 1.2,
+                  color: "#243654",
+                  fontWeight: 850,
+                  maxWidth: 690,
+                }}
+              >
+                {clampText(serviceText, 72)}
+              </div>
+
+              {location && (
+                <div style={{ display: "flex", marginTop: 18, fontSize: 25, color: "#607089", fontWeight: 700 }}>
+                  {clampText(location, 52)}
+                </div>
+              )}
             </div>
 
-            {location && (
-              <div style={{ display: "flex", marginTop: 18, fontSize: 25, color: "#607089", fontWeight: 700 }}>
-                {clampText(location, 52)}
-              </div>
-            )}
-          </div>
-
-          <div
-            style={{
-              width: 310,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              paddingRight: 48,
-              gap: 22,
-              flexShrink: 0,
-            }}
-          >
             <div
               style={{
                 display: "flex",
-                width: 190,
-                height: 190,
-                borderRadius: 999,
-                background: "#e8f6fc",
-                border: "8px solid #ffffff",
-                boxShadow: "0 20px 45px rgba(22, 37, 67, 0.16)",
+                width: 300,
+                flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                overflow: "hidden",
+                flexShrink: 0,
               }}
             >
               <div
                 style={{
                   display: "flex",
-                  width: "100%",
-                  height: "100%",
+                  width: 228,
+                  height: 228,
+                  borderRadius: 999,
+                  background: "#e8f6fc",
+                  border: "8px solid #ffffff",
+                  boxShadow: "0 22px 55px rgba(22, 37, 67, 0.18)",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#009FD9",
-                  fontSize: 66,
+                  overflow: "hidden",
+                }}
+              >
+                {avatarDataUrl ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: 999,
+                      backgroundImage: `url(${avatarDataUrl})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      width: "100%",
+                      height: "100%",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#009FD9",
+                      fontSize: 72,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {initials(displayName)}
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  marginTop: 28,
+                  width: 248,
+                  borderRadius: 999,
+                  background: "#009FD9",
+                  color: "#ffffff",
+                  padding: "16px 24px",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 23,
                   fontWeight: 900,
                 }}
               >
-                {initials(displayName)}
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                width: 246,
-                borderRadius: 24,
-                background: "#f4f7fa",
-                border: "1px solid #e5ebf1",
-                padding: "16px 20px",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <div style={{ display: "flex", fontSize: 22, fontWeight: 900, color: "#162543" }}>
                 {isEn ? "View profile" : "Ver perfil"}
-              </div>
-              <div style={{ display: "flex", marginTop: 4, fontSize: 17, fontWeight: 700, color: "#607089" }}>
-                contratacr.com
               </div>
             </div>
           </div>
