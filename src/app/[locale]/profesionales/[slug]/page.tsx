@@ -2,6 +2,7 @@
 
 import { useState, useEffect, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { useParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
   Share2, Flag, Award, Mail, SearchX, FileText,
@@ -35,10 +36,6 @@ import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-actio
 import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 
-interface ProfilePageProps {
-  params: Promise<{ slug: string }>;
-}
-
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -65,10 +62,13 @@ function searchParamFromUrl(key: string): string | null {
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
-export default function ProfilePage({ params }: ProfilePageProps) {
+export default function ProfilePage() {
   const t = useTranslations("profile");
   const tCat = useTranslations("categories");
   const locale = useLocale();
+  const routeParams = useParams();
+  const routeSlugParam = routeParams?.slug;
+  const routeSlug = Array.isArray(routeSlugParam) ? routeSlugParam[0] : routeSlugParam;
   const [professional, setProfessional] = useState<ProfessionalDetail | null>(null);
   const [profileSlots, setProfileSlots] = useState<ScheduleSlot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,9 +103,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
   useEffect(() => {
     async function load() {
-      const { slug } = await params;
-      setSlug(slug);
-      const res = await fetch(`/api/professionals/${slug}`);
+      if (!routeSlug) return;
+      setLoading(true);
+      setProNotFound(false);
+      setSlug(routeSlug);
+      const res = await fetch(`/api/professionals/${routeSlug}`);
       if (!res.ok) { setProNotFound(true); setLoading(false); return; }
       const pro: ProfessionalDetail | null = await res.json();
       if (!pro) { setProNotFound(true); setLoading(false); return; }
@@ -124,7 +126,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       setProfileSlots(Array.isArray(availability?.slots) ? availability.slots : []);
     }
     load();
-  }, [params]);
+  }, [routeSlug]);
 
   // Resolve the viewer's role-aware panel route up front (parallel, non-blocking) so the
   // "Profesional no encontrado" screen can offer "Volver a mi panel" even though load()

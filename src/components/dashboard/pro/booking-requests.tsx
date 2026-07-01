@@ -16,9 +16,7 @@ import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedun
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
-import { FormLoadingState } from "@/components/ui/loading-state";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
-import { getDashboardCache, loadDashboardCache, prefetchDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import type { BookingStatus } from "@/types";
 
 type Booking = {
@@ -46,18 +44,6 @@ type Booking = {
   beneficiary_dob?: string | null;
   beneficiary_phone?: string | null;
 };
-
-const proBookingsCacheKey = (userId: string) => `dashboard:pro-bookings:${userId}`;
-
-async function fetchProfessionalBookingRows(): Promise<Booking[]> {
-  const res = await fetch("/api/bookings?role=professional", { cache: "no-store" });
-  const { bookings } = await res.json();
-  return bookings ?? [];
-}
-
-export function prefetchProfessionalBookings(userId: string) {
-  prefetchDashboardCache(proBookingsCacheKey(userId), fetchProfessionalBookingRows);
-}
 
 // ONE shared status→colour mapping (sprint 440), identical to the client side:
 // active/upcoming + awaiting confirmation = brand-blue (default), finished = green,
@@ -97,14 +83,11 @@ function to12h(time?: string): string | null {
   return `${h12}:${String(Number.isNaN(m) ? 0 : m).padStart(2, "0")} ${ap}`;
 }
 
-export function BookingRequests({ userId }: { userId: string }) {
+export function BookingRequests() {
   const locale = useLocale();
   const t = useTranslations("bookingRequests");
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
-  const cacheKey = proBookingsCacheKey(userId);
-  const cachedBookings = cacheKey ? getDashboardCache<Booking[]>(cacheKey) : null;
-  const hasCachedBookings = cachedBookings !== null;
 
   function ageLabel(dob?: string | null) {
     const age = dob ? computeAge(dob) : null;
@@ -113,9 +96,8 @@ export function BookingRequests({ userId }: { userId: string }) {
     const months = Math.max(1, age.months);
     return t("monthsOld", { count: months });
   }
-  const [bookings, setBookingsState] = useState<Booking[]>(() => cachedBookings ?? []);
-  const [loading, setLoading] = useState(() => !hasCachedBookings);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => hasCachedBookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("activas");
   const bookingsSnapshotRef = useRef("");
   const refreshTimerRef = useRef<number | null>(null);
@@ -140,30 +122,21 @@ export function BookingRequests({ userId }: { userId: string }) {
   }
   function closeAction() { setActionFor(null); }
 
-  const setBookings = useCallback((updater: Booking[] | ((prev: Booking[]) => Booking[])) => {
-    setBookingsState((prev) => {
-      const next = typeof updater === "function" ? (updater as (current: Booking[]) => Booking[])(prev) : updater;
-      if (cacheKey) setDashboardCache(cacheKey, next);
-      return next;
-    });
-  }, [cacheKey]);
-
   const loadBookings = useCallback(async (silent = false) => {
-    if (!cacheKey) return;
     try {
-      const cached = getDashboardCache<Booking[]>(cacheKey);
-      if (!silent && !cached) setLoading(true);
-      const next = await loadDashboardCache(cacheKey, fetchProfessionalBookingRows, { force: silent || !!cached });
+      if (!silent) setLoading(true);
+      const res = await fetch("/api/bookings?role=professional", { cache: "no-store" });
+      const { bookings: rows } = await res.json();
+      const next = rows ?? [];
       const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
       bookingsSnapshotRef.current = snapshot;
       setBookings(next);
     } catch (error) {
       console.error("[booking-requests] load failed:", error);
     } finally {
-      if (!silent) setHasLoadedOnce(true);
       if (!silent) setLoading(false);
     }
-  }, [cacheKey, setBookings]);
+  }, []);
 
   const refreshSoon = useCallback(() => {
     if (document.visibilityState !== "visible") return;
@@ -176,11 +149,7 @@ export function BookingRequests({ userId }: { userId: string }) {
     }, delay);
   }, [loadBookings]);
 
-  useEffect(() => {
-    if (!cacheKey) return;
-    const hasCache = !!getDashboardCache<Booking[]>(cacheKey);
-    queueMicrotask(() => void loadBookings(hasCache));
-  }, [cacheKey, loadBookings]);
+  useEffect(() => { queueMicrotask(() => void loadBookings()); }, [loadBookings]);
 
   useEffect(() => {
     if (loading) return;
@@ -276,8 +245,12 @@ export function BookingRequests({ userId }: { userId: string }) {
     return res.ok;
   }
 
-  if (loading || !hasLoadedOnce) {
-    return <FormLoadingState minHeight="min-h-[360px]" />;
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      </div>
+    );
   }
 
   if (bookings.length === 0) {
