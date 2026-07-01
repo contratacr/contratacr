@@ -314,7 +314,7 @@ function ServicePickerTrigger({
       onClick={onClick}
       aria-invalid={!!error}
       className={cn(
-        "group flex h-11 w-full items-center justify-between gap-3 rounded-xl border bg-white px-3.5 text-left text-sm shadow-sm transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe]",
+        "group flex h-11 w-full items-center justify-between gap-3 rounded-xl border bg-white px-3.5 text-left text-sm transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe]",
         error ? "border-red-400" : "border-[#e5e7eb]"
       )}
     >
