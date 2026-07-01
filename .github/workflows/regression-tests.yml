@@ -16,14 +16,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: test
 
       - name: Validate test target
         run: |
           set -euo pipefail
-          if [ "${{ github.ref }}" != "refs/heads/test" ]; then
-            echo "Run test regression from the test branch."
-            exit 1
-          fi
+          echo "Checked out test branch for regression."
           echo "Running regression against $PLAYWRIGHT_BASE_URL"
 
       - name: Setup Node
