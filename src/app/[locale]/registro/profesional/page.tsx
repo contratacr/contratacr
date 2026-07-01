@@ -994,7 +994,9 @@ export default function RegisterProfessionalPage() {
 
               {/* Profession — searchable combobox (a profesión groups the servicios
                   the pro later adds in their panel). */}
-              <div>
+              <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+                <h3 className="text-sm font-extrabold text-[#162543]">{t("servicesSectionTitle")}</h3>
+                <div className="mt-3">
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("professionPrincipal")} <span className="text-red-500">*</span>
                 </label>
@@ -1074,27 +1076,34 @@ export default function RegisterProfessionalPage() {
                     </button>
                   )}
                 </div>
-              </div>
+                </div>
+              </section>
 
               {/* Work zones — provincia/cantón FIRST (drives /buscar), optional exact
                   pin. "Me desplazo" travel is enabled later in the panel. */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-[#374151]">
-                  {t("workplacesLabel")} <span className="text-red-500">*</span>
-                </label>
-                <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
-              </div>
+              <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+                <h3 className="text-sm font-extrabold text-[#162543]">{t("workplacesSectionTitle")}</h3>
+                <div className="mt-3 flex flex-col gap-2">
+                  <label className="text-sm font-medium text-[#374151]">
+                    {t("workplacesLabel")} <span className="text-red-500">*</span>
+                  </label>
+                  <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
+                </div>
 
-              {locationError && <p className="text-xs text-red-500">{locationError}</p>}
+                {locationError && <p className="mt-2 text-xs text-red-500">{locationError}</p>}
+              </section>
 
               {/* WhatsApp */}
-              <PhoneInput
-                label={t("whatsapp")}
-                required
-                value={whatsappValue}
-                onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
-                error={form2.formState.errors.whatsapp?.message}
-              />
+              <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+                <h3 className="mb-3 text-sm font-extrabold text-[#162543]">{t("contactSectionTitle")}</h3>
+                <PhoneInput
+                  label={t("whatsapp")}
+                  required
+                  value={whatsappValue}
+                  onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
+                  error={form2.formState.errors.whatsapp?.message}
+                />
+              </section>
 
               <div className="flex gap-3 mt-2">
                 {!currentUser && (
