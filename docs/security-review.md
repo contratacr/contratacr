@@ -26,7 +26,7 @@ This is the launch-readiness security checklist for ContrataCR.
   - portfolio likes
   - image uploads
 - Facebook login is hidden to avoid Meta production/review friction before launch.
-- Supabase migrations and email templates are now deployable from GitHub Actions with dry-run first.
+- Supabase migrations, email templates, and padron refreshes are now deployable from GitHub Actions with environment scoping.
 - High/critical dependency audit, build, template validation, and secret smoke checks are automated in GitHub Actions.
 
 ## Launch blockers to resolve before public traffic
@@ -41,6 +41,7 @@ This is the launch-readiness security checklist for ContrataCR.
    - test `/auth/callback`
 5. Confirm Google Maps API restrictions include only production/test/local URLs actually used.
 6. Confirm Cloudinary unsigned uploads are not enabled. Current server upload routes should keep using signed/server credentials.
+7. Confirm the test and production Supabase projects both have the padron loaded, and that only server-side service-role code can call `padron_lookup`.
 
 ## Recommended next hardening
 

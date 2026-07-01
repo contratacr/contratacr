@@ -10,6 +10,8 @@
     "security:smoke": "node scripts/security-smoke.mjs",
     "supabase:templates:validate": "node scripts/sync-supabase-email-templates.mjs --validate-only",
     "audit:high": "npm audit --audit-level=high",
+    "padron:check": "node scripts/check-padron.mjs",
+    "padron:load": "node scripts/load-padron.mjs",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:ui": "playwright test --ui"
