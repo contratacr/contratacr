@@ -32,6 +32,27 @@ function LogoMark({ size }: { size: number }) {
   );
 }
 
+function LogoWordmark({ markSize = 40, fontSize = 34 }: { markSize?: number; fontSize?: number }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <LogoMark size={markSize} />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          fontSize,
+          fontWeight: 800,
+          letterSpacing: 0,
+          lineHeight: 1,
+        }}
+      >
+        <span style={{ color: "#1a2744" }}>Contrata</span>
+        <span style={{ color: "#009FD9" }}>CR</span>
+      </div>
+    </div>
+  );
+}
+
 function initials(name: string) {
   return name
     .split(/\s+/)
@@ -113,16 +134,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               padding: "44px 56px 20px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <LogoMark size={46} />
-              <div style={{ display: "flex", fontSize: 38, fontWeight: 900, letterSpacing: 0 }}>
-                <span style={{ color: "#1a2744" }}>Contrata</span>
-                <span style={{ color: "#009FD9" }}>CR</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", color: "#009FD9", fontSize: 24, fontWeight: 800 }}>
-              contratacr.com
-            </div>
+            <LogoWordmark markSize={40} fontSize={34} />
           </div>
 
           <div
@@ -143,22 +155,6 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
                 justifyContent: "center",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  width: "fit-content",
-                  borderRadius: 999,
-                  background: "#e8f6fc",
-                  color: "#0089bb",
-                  padding: "10px 18px",
-                  fontSize: 21,
-                  fontWeight: 850,
-                  marginBottom: 30,
-                }}
-              >
-                {isEn ? "Hire services in Costa Rica" : "Contrata servicios en Costa Rica"}
-              </div>
-
               <div
                 style={{
                   display: "flex",
@@ -212,27 +208,26 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               <div
                 style={{
                   display: "flex",
-                  width: 228,
-                  height: 228,
+                  width: 212,
+                  height: 212,
                   borderRadius: 999,
-                  background: "#e8f6fc",
-                  border: "8px solid #ffffff",
-                  boxShadow: "0 22px 55px rgba(22, 37, 67, 0.18)",
+                  background: "#EBF5FB",
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
                 }}
               >
                 {avatarDataUrl ? (
-                  <div
+                  <img
+                    src={avatarDataUrl}
+                    width="212"
+                    height="212"
+                    alt={displayName}
                     style={{
-                      display: "flex",
                       width: "100%",
                       height: "100%",
                       borderRadius: 999,
-                      backgroundImage: `url(${avatarDataUrl})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
+                      objectFit: "cover",
                     }}
                   />
                 ) : (
@@ -245,30 +240,12 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
                       justifyContent: "center",
                       color: "#009FD9",
                       fontSize: 72,
-                      fontWeight: 900,
+                      fontWeight: 700,
                     }}
                   >
                     {initials(displayName)}
                   </div>
                 )}
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  marginTop: 28,
-                  width: 248,
-                  borderRadius: 999,
-                  background: "#009FD9",
-                  color: "#ffffff",
-                  padding: "16px 24px",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 23,
-                  fontWeight: 900,
-                }}
-              >
-                {isEn ? "View profile" : "Ver perfil"}
               </div>
             </div>
           </div>
