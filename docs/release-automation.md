@@ -23,6 +23,8 @@ Each environment needs these secrets:
 | `SUPABASE_DB_URL` | Supabase migrations | Percent-encoded Postgres connection string for that environment. |
 | `SUPABASE_ACCESS_TOKEN` | Email templates | Supabase personal access token with access to the project. |
 | `SUPABASE_PROJECT_REF` | Email templates | Project ref, for example `sodegkfjjrdkbohycqyq`. |
+| `SUPABASE_URL` | Padron refresh | Supabase project URL for that environment. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Padron refresh | Server-only service role key. Never expose it in Vercel public variables. |
 
 Do not put these in repository variables. Use environment secrets only.
 
@@ -50,6 +52,33 @@ Recommended flow:
 5. If production dry run matches expectation, run `target=production`, `dry_run=false`.
 
 Production runs are blocked unless the workflow is run from `main`.
+
+## Padron refresh
+
+The TSE padron is operational data, not a schema migration. A new Supabase environment can have all migrations applied and still fail identity lookup if the `padron` table is empty.
+
+Use **Actions -> Padron refresh**.
+
+Recommended flow for a new test environment:
+
+1. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the `test` GitHub Environment.
+2. Run **Padron refresh** with `target=test`.
+3. Confirm the workflow finishes with `Padron is ready`.
+4. Test a national cedula in the app.
+
+Production refresh runs monthly on schedule and can also be run manually with `target=production`. Production runs are blocked unless the workflow is run from `main`.
+
+Local check:
+
+```bash
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run padron:check
+```
+
+Local load, only when needed:
+
+```bash
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run padron:load -- ./padron_completo.txt
+```
 
 ## Supabase Auth email templates
 
