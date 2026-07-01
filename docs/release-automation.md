@@ -32,27 +32,9 @@ Do not put these in repository variables. Use environment secrets only.
 
 Use **Actions -> Supabase migrations**.
 
-### One-time baseline check
+### Safety check
 
-Because this project started with migrations that were often pasted manually in Supabase SQL Editor, each Supabase environment must be baselined once before applying newer migrations from GitHub Actions.
-
-Run `target=test`, `dry_run=true`.
-
-- If it shows only new migrations that really need to run, continue normally.
-- If it shows old migrations that already exist in the database, do **not** apply. Use **Actions -> Supabase baseline migrations** first.
-- The migration workflow blocks automatically if `001_initial_schema.sql` is pending, unless `allow_initial_migrations=true` is explicitly selected for a brand-new empty database.
-
-Repeat the same dry-run check for production before the first real production migration.
-
-Recommended baseline for an existing environment that was already built manually:
-
-1. Run **Supabase baseline migrations** with `dry_run=true`.
-2. Use `baseline_through=084` when the database already has everything through `084_harden_padron_swap.sql`.
-3. If the listed versions look correct, run it again with `dry_run=false`.
-4. Run **Supabase migrations** with `dry_run=true`; it should now show only newer migrations.
-5. If the list is correct, run **Supabase migrations** with `dry_run=false`.
-
-### Normal flow after both environments are baselined
+The workflow refuses to apply `001_initial_schema.sql`. If that ever appears in the migration plan, stop and review the database history before continuing.
 
 New migrations are applied manually from GitHub Actions:
 

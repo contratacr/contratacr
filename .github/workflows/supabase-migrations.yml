@@ -15,11 +15,6 @@ on:
         required: true
         type: boolean
         default: true
-      allow_initial_migrations:
-        description: "Allow applying 001+ migrations to a brand-new empty database."
-        required: true
-        type: boolean
-        default: false
 
 concurrency:
   group: supabase-migrations-${{ inputs.target }}
@@ -36,7 +31,6 @@ jobs:
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       TARGET_ENV: ${{ inputs.target }}
-      ALLOW_INITIAL_MIGRATIONS: ${{ inputs.allow_initial_migrations }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -60,8 +54,8 @@ jobs:
         run: |
           set -euo pipefail
           npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --dry-run | tee migration-plan.log
-          if grep -q "001_initial_schema.sql" migration-plan.log && [ "$ALLOW_INITIAL_MIGRATIONS" != "true" ]; then
-            echo "::error::001_initial_schema.sql is pending. This environment is probably not baselined. Do not apply migrations until migration history is repaired, unless this is a brand-new empty database."
+          if grep -q "001_initial_schema.sql" migration-plan.log; then
+            echo "::error::001_initial_schema.sql is pending. This environment already exists, so refusing to apply old initial migrations."
             exit 1
           fi
 

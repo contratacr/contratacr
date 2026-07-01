@@ -55,7 +55,7 @@ This is the launch-readiness security checklist for ContrataCR.
 
 ## Dependency audit status
 
-The launch baseline should pass:
+The launch check should pass:
 
 ```bash
 npm audit --audit-level=high
