@@ -51,9 +51,6 @@ export function CategoryGroupPicker({
           <ChevronLeft className="h-4 w-4 shrink-0" />
           {backLabel}
         </button>
-        <p className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-[#9ca3af]">
-          {getCategoryGroupLabel(activeGroup.id, locale)}
-        </p>
         <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
           {activeGroup.items.map((item) => (
             <button
