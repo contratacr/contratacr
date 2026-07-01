@@ -417,6 +417,8 @@
     "mismatchNotice": "You indicated the information found is not yours. Enter your full name and we'll keep your identity <b>pending review</b> while we confirm it manually.",
     "notFoundTitle": "Manual review",
     "notFoundNotice": "This ID does not appear in the registry. It may be DIMEX/NITE, foreign or recently issued. Enter your full name and we'll review it manually.",
+    "unavailableTitle": "Registry unavailable",
+    "unavailableNotice": "We couldn't check the registry right now. Please try again in a few minutes.",
     "fullName": "Full name",
     "namePlaceholder": "John Doe Smith",
     "nameHint": "exactly as it appears on your document"

@@ -20,7 +20,7 @@ Each environment needs these secrets:
 
 | Secret | Used by | Notes |
 |---|---|---|
-| `SUPABASE_DB_URL` | Supabase migrations | Percent-encoded Postgres connection string for that environment. |
+| `SUPABASE_DB_URL` | Supabase migrations, padron refresh | Percent-encoded Postgres connection string for that environment. |
 | `SUPABASE_ACCESS_TOKEN` | Email templates | Supabase personal access token with access to the project. |
 | `SUPABASE_PROJECT_REF` | Email templates | Project ref, for example `sodegkfjjrdkbohycqyq`. |
 | `SUPABASE_URL` | Padron refresh | Supabase project URL for that environment. |
@@ -62,9 +62,10 @@ Use **Actions -> Padron refresh**.
 Recommended flow for a new test environment:
 
 1. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the `test` GitHub Environment.
-2. Run **Padron refresh** with `target=test`.
-3. Confirm the workflow finishes with `Padron is ready`.
-4. Test a national cedula in the app.
+2. Confirm `SUPABASE_DB_URL` is also present in that same `test` Environment.
+3. Run **Padron refresh** with `target=test`.
+4. Confirm the workflow finishes with `Padron is ready`.
+5. Test a national cedula in the app.
 
 Production refresh runs monthly on schedule and can also be run manually with `target=production`. Production runs are blocked unless the workflow is run from `main`.
 

@@ -56,6 +56,7 @@ export async function runIdentityVerification(
 
   const verifier = getIdentityVerifier();
   const result = await verifier.lookup(cedula);
+  if (result.unavailable) return "skipped";
 
   const now = new Date().toISOString();
   const fromStatus = pro.verification_status as string;

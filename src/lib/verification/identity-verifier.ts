@@ -45,6 +45,8 @@ export interface IdentityLookupResult {
   isAdult: boolean;
   /** Identifier of the provider that produced this result. */
   provider: string;
+  /** True when the provider could not be queried due to configuration/schema/network errors. */
+  unavailable?: boolean;
 }
 
 export interface IdentityVerifier {
@@ -94,6 +96,12 @@ export function normalizeName(s: string): string {
 
 const STOPWORDS = new Set(["DE", "DEL", "LA", "LAS", "LOS", "Y"]);
 
+type PadronLookupRow = {
+  nombre?: string | null;
+  papellido?: string | null;
+  sapellido?: string | null;
+};
+
 function tokens(s: string): string[] {
   return normalizeName(s).split(" ").filter((t) => t && !STOPWORDS.has(t));
 }
@@ -124,14 +132,30 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
   async lookup(cedula: string): Promise<IdentityLookupResult> {
     const id = cleanId(cedula);
     if (!id) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
-    const admin = createAdminClient();
-    // Read via the SECURITY DEFINER RPC (migration 050): it runs as the table
-    // owner, so it reads the padrón regardless of service-role table grants, and
-    // the padrón stays private (EXECUTE granted to service_role only).
-    const { data, error } = await admin.rpc("padron_lookup", { p_cedula: id });
-    const row = Array.isArray(data) ? data[0] : data;
-    // Not found / error → found:false. NO permissive fallback (integrity guard).
-    if (error || !row) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
+    let data: unknown;
+    try {
+      const admin = createAdminClient();
+      // Read via the SECURITY DEFINER RPC (migration 050): it runs as the table
+      // owner, so it reads the padrón regardless of service-role table grants, and
+      // the padrón stays private (EXECUTE granted to service_role only).
+      const response = await admin.rpc("padron_lookup", { p_cedula: id });
+      data = response.data;
+      if (response.error) {
+        console.error("[identity] padron_lookup failed:", {
+          code: response.error.code,
+          message: response.error.message,
+          details: response.error.details,
+        });
+        return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name, unavailable: true };
+      }
+    } catch (error) {
+      console.error("[identity] padron_lookup unavailable:", error);
+      return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name, unavailable: true };
+    }
+
+    const row = (Array.isArray(data) ? data[0] : data) as PadronLookupRow | null;
+    // Not found -> found:false. Technical failures are returned as unavailable above.
+    if (!row) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
     const official = titleCaseName(
       [row.nombre, row.papellido, row.sapellido].filter(Boolean).join(" ")
     );

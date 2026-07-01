@@ -14,7 +14,7 @@ import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 // (identity will auto-verify); shows name + cédula (+ DOB/age when available) with
 // a "¿No es tu información?" link. Not found → manual name + "pendiente de revisión".
 
-export type IdentityStatus = "idle" | "loading" | "found" | "notfound";
+export type IdentityStatus = "idle" | "loading" | "found" | "notfound" | "unavailable";
 export type IdentityResult = { found: boolean; isAdult: boolean; dob: string | null };
 
 interface Props {
@@ -63,21 +63,32 @@ export function IdentityField({
   // Debounced padrón lookup whenever a valid cédula is present.
   useEffect(() => {
     const clean = cleanId(cedula);
+    const myReq = ++reqId.current;
+    const hadAutoName = !!lastAutoName.current;
     // The cédula changed → if we had auto-filled a name from it, clear that stale name
     // (+ DOB) immediately so a different/longer ID never keeps the prior person's name.
-    if (lastAutoName.current) {
-      onFullNameChange("");
+    if (hadAutoName) {
       lastAutoName.current = "";
-      setOfficialName("");
-      setDob(null);
     }
     if (!clean || !isValidId(clean)) {
-      setStatusBoth("idle");
-      setOfficialName("");
+      queueMicrotask(() => {
+        if (myReq !== reqId.current) return;
+        if (hadAutoName) onFullNameChange("");
+        setOfficialName("");
+        setDob(null);
+        setStatusBoth("idle");
+      });
       return;
     }
-    const myReq = ++reqId.current;
-    setStatusBoth("loading");
+    queueMicrotask(() => {
+      if (myReq !== reqId.current) return;
+      if (hadAutoName) {
+        onFullNameChange("");
+        setOfficialName("");
+        setDob(null);
+      }
+      setStatusBoth("loading");
+    });
     const t = setTimeout(async () => {
       try {
         const res = await fetch(`/api/cedula/${clean}`);
@@ -95,12 +106,12 @@ export function IdentityField({
           setOfficialName("");
           setDob(null);
           onResult?.({ found: false, isAdult: false, dob: null });
-          setStatusBoth("notfound");
+          setStatusBoth(res.status === 503 ? "unavailable" : "notfound");
         }
       } catch {
         if (myReq !== reqId.current) return;
         onResult?.({ found: false, isAdult: false, dob: null });
-        setStatusBoth("notfound");
+        setStatusBoth("unavailable");
       }
     }, 500);
     return () => clearTimeout(t);
@@ -138,6 +149,20 @@ export function IdentityField({
       )}
 
       {/* Not in the padrón → manual name + pending notice */}
+      {status === "unavailable" && (
+        <div role="status" aria-live="polite" className="rounded-2xl border border-[#bae6fd] bg-[#f0f9ff] px-4 py-3 text-sm shadow-sm">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#009FD9] ring-1 ring-[#bae6fd]">
+              <IdCard className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-semibold text-[#0f172a]">{t("unavailableTitle")}</p>
+              <p className="mt-1 leading-5 text-[#475569]">{t("unavailableNotice")}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showManualName && status !== "loading" && (
         <>
           {status === "notfound" && cleanId(cedula) && isValidId(cleanId(cedula)) && (

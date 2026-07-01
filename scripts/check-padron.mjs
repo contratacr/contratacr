@@ -18,22 +18,6 @@ if (!url || !key) {
 const db = createClient(url, key, { auth: { persistSession: false } });
 
 async function main() {
-  const { data: anyRow, error: anyError } = await db
-    .from("padron")
-    .select("cedula")
-    .limit(1)
-    .maybeSingle();
-
-  if (anyError) {
-    console.error(`Padron table check failed: ${anyError.message}`);
-    process.exit(1);
-  }
-
-  if (!anyRow) {
-    console.error("Padron table is reachable but empty.");
-    process.exit(1);
-  }
-
   const { data, error } = await db.rpc("padron_lookup", { p_cedula: sampleCedula });
   const row = Array.isArray(data) ? data[0] : data;
 

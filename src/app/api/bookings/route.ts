@@ -70,6 +70,9 @@ export async function POST(req: NextRequest) {
         const idType = detectIdType(cleanClientCedula);
         if (idType === "cedula") {
           const result = await getIdentityVerifier().lookup(cleanClientCedula);
+          if (result.unavailable) {
+            return NextResponse.json({ error: "No pudimos consultar el padrón en este momento. Intenta de nuevo en unos minutos." }, { status: 503 });
+          }
           identityProvider = result.provider;
           if (result.found) {
             accountIdentityStatus = "verified";
