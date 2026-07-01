@@ -26,7 +26,7 @@ This is the launch-readiness security checklist for ContrataCR.
   - portfolio likes
   - image uploads
 - Facebook login is hidden to avoid Meta production/review friction before launch.
-- Supabase migrations, email templates, and padron refreshes are now deployable from GitHub Actions with environment scoping.
+- Supabase migrations and padron refreshes are deployable from GitHub Actions with environment scoping.
 - High/critical dependency audit, build, template validation, and secret smoke checks are automated in GitHub Actions.
 
 ## Launch blockers to resolve before public traffic
