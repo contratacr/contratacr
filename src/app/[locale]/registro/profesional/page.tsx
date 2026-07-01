@@ -865,16 +865,27 @@ export default function RegisterProfessionalPage() {
 
           {/* ── OAuth identity confirmation ───────────────────────────────── */}
           {currentUser && (
-            <div className="flex items-center gap-3 bg-[#EBF5FB] border border-[#bfdbfe] rounded-xl px-4 py-3 mb-4">
-              {photoPreview && (
-                <img src={photoPreview} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-[#009FD9] font-semibold">
-                  {connectedProviderLabel ? t("oauthConfirmedWithProvider", { provider: connectedProviderLabel }) : t("oauthConfirmed")}
-                </p>
-                <p className="text-sm font-bold text-[#111827] truncate">{currentUser.email}</p>
+            <div className="mb-4 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
+              <div className="flex items-center gap-3 px-4 py-3">
+                {photoPreview && (
+                  <img src={photoPreview} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-[#6b7280]">
+                    {connectedProviderLabel ? t("oauthConfirmedWithProvider", { provider: connectedProviderLabel }) : t("oauthConfirmed")}
+                  </p>
+                  <p className="truncate text-sm font-bold text-[#111827]">{currentUser.email}</p>
+                </div>
               </div>
+              {step === 1 && !noCrId && accountCedula && (
+                <div className="flex items-center gap-3 border-t border-[#eef0f2] px-4 py-3">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-[#009FD9]" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-[#6b7280]">{t("identityAlreadyRegistered")}</p>
+                    <p className="break-words text-sm font-bold text-[#111827]">{t("usesAccountId", { name: oauthFullName || t("yourAccount") })}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -959,15 +970,7 @@ export default function RegisterProfessionalPage() {
               {/* Identity — required for OAuth professionals (no identity step).
                   A converting client who already has a cédula on file skips this
                   entirely (we reuse the stored, already-verified cédula). */}
-              {currentUser && !noCrId && accountCedula ? (
-                <div className="flex items-center gap-3 rounded-xl border border-[#bfdbfe] bg-[#EBF5FB] px-4 py-3">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-[#009FD9]" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[#0089bb]">{t("identityAlreadyRegistered")}</p>
-                    <p className="text-sm text-[#111827] break-words">{t("usesAccountId", { name: oauthFullName || t("yourAccount") })}</p>
-                  </div>
-                </div>
-              ) : currentUser && !noCrId ? (
+              {currentUser && !noCrId && !accountCedula ? (
                 <IdentityField
                   cedula={oauthCedula}
                   fullName={oauthFullName}
