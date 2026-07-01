@@ -310,19 +310,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             {/* Save to favorites — pinned to the TOP-RIGHT of the header card, next to the
                 rating/identity (same favorites system + self-action block as the /buscar
                 cards). A subtle bordered icon so it's discoverable without crowding. */}
-            <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={shareProfile}
-                aria-label={t("shareProfile")}
-                title={t("shareProfile")}
-                className="grid h-9 w-9 place-items-center rounded-full border border-[#e5e7eb] bg-white text-[#6b7280] shadow-sm transition-colors hover:border-[#009FD9] hover:text-[#009FD9]"
-              >
-                <Share2 className="h-[18px] w-[18px]" />
-              </button>
-              <SaveButton pro={savedPro} isOwn={isOwn} className="h-9 w-9 rounded-full border border-[#e5e7eb] bg-white !p-0 shadow-sm hover:border-[#009FD9] hover:text-[#009FD9]" />
-            </div>
-            <div className="flex flex-col gap-4 pr-24 sm:flex-row sm:items-center sm:justify-between">
+            <SaveButton pro={savedPro} isOwn={isOwn} className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full border border-[#e5e7eb] bg-white !p-0 shadow-sm hover:border-[#009FD9] hover:text-[#009FD9]" />
+            <div className="flex flex-col gap-4 pr-10 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4 min-w-0">
                 <Avatar className="h-20 w-20 sm:h-[88px] sm:w-[88px] shrink-0">
                   <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
@@ -466,18 +455,31 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 {/* Own-profile self-action notice (shared across the page's actions). */}
                 <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
 
-                {!isOwn && (
-                  <div className="border-t border-[#f3f4f6] pt-3">
+                <div className="border-t border-[#f3f4f6] pt-3">
+                  <div className="flex items-center justify-center gap-4 text-xs font-medium">
                     <button
                       type="button"
-                      onClick={() => setReportOpen(true)}
-                      className="mx-auto flex items-center gap-1.5 text-xs font-medium text-[#9ca3af] transition-colors hover:text-[#ef4444]"
+                      onClick={shareProfile}
+                      className="flex items-center gap-1.5 text-[#6b7280] transition-colors hover:text-[#009FD9]"
                     >
-                      <Flag className="h-3.5 w-3.5" />
-                      {t("reportProfile")}
+                      <Share2 className="h-3.5 w-3.5" />
+                      {t("shareProfile")}
                     </button>
+                    {!isOwn && (
+                      <>
+                        <span className="h-4 w-px bg-[#e5e7eb]" aria-hidden />
+                        <button
+                          type="button"
+                          onClick={() => setReportOpen(true)}
+                          className="flex items-center gap-1.5 text-[#9ca3af] transition-colors hover:text-[#ef4444]"
+                        >
+                          <Flag className="h-3.5 w-3.5" />
+                          {t("reportProfile")}
+                        </button>
+                      </>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </aside>
 
