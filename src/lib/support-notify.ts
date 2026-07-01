@@ -1,10 +1,11 @@
 // Branded support-ticket email notifications (Brevo). Best-effort: failures are
 // logged and never break the request. Clickable links only — no raw URLs.
 import { sendBrevoEmail } from "@/lib/email/send";
+import { cloudinaryAssetUrl } from "@/lib/cloudinary";
 
 const SUPPORT_TO = "soporte@contratacr.com";
 const SITE = "https://contratacr.com";
-const LOGO = "https://res.cloudinary.com/dxxrjx2go/image/upload/f_png,w_128/contratacr/brand/email-logo.png";
+const LOGO = cloudinaryAssetUrl("contratacr/brand/email-logo.png", "f_png,w_128");
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

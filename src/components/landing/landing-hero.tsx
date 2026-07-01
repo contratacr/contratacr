@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { cloudinaryAssetUrl } from "@/lib/cloudinary";
 import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { loadGoogleMaps } from "@/lib/maps/loader";
@@ -36,7 +37,7 @@ const POPULAR_TAGS: Record<string, string[]> = {
    it's provided; nothing else needs to change. Placeholder = a local service
    professional at work (never a foreign-looking house). */
 const HERO_IMAGE = {
-  src: "https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto,w_1600/contratacr/home/hero-sanjose.jpg",
+  src: cloudinaryAssetUrl("contratacr/home/hero-sanjose.jpg", "f_auto,q_auto,w_1600"),
   alt: "Vista de la ciudad de San José, Costa Rica al atardecer",
 };
 
