@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
-  Share2, Flag, ChevronDown, Lock, Award, Mail, SearchX, FileText,
+  Share2, Flag, Award, Mail, SearchX, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
@@ -88,7 +88,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [activeCategory, setActiveCategory] = useState<string | undefined>(() => searchParamFromUrl("categoria") ?? undefined);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [viewerId, setViewerId] = useState<string | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
   const [slug, setSlug] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
@@ -101,7 +100,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingReg, setBookingReg] = useState(false);
   const [serviceDescriptionOpen, setServiceDescriptionOpen] = useState<{ title: string; description: string } | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -141,24 +139,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
         setPanelHref(role === "professional" ? "/dashboard/profesional" : "/dashboard/profesional?mode=use");
       })
       .catch(() => setPanelHref(null));
-  }, []);
-
-  // Close dropdown on outside click / tap / Escape
-  useEffect(() => {
-    function onClickOutside(e: Event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    function onEsc(e: KeyboardEvent) { if (e.key === "Escape") setDropdownOpen(false); }
-    document.addEventListener("mousedown", onClickOutside);
-    document.addEventListener("touchstart", onClickOutside);
-    document.addEventListener("keydown", onEsc);
-    return () => {
-      document.removeEventListener("mousedown", onClickOutside);
-      document.removeEventListener("touchstart", onClickOutside);
-      document.removeEventListener("keydown", onEsc);
-    };
   }, []);
 
   if (loading) {
@@ -257,6 +237,16 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     else setBookingReg(true);
   }
 
+  async function shareProfile() {
+    if (!professional) return;
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({ title: professional.fullName, url });
+      return;
+    }
+    await navigator.clipboard?.writeText(url);
+  }
+
   // Favorites: the SAME system as the /buscar cards. Keyed on `professional.id`
   // (the professionals row id the card also uses), so saving here reflects on the
   // card and vice-versa. `isVerified` is derived exactly like the card. Self-favorite
@@ -316,8 +306,19 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             {/* Save to favorites — pinned to the TOP-RIGHT of the header card, next to the
                 rating/identity (same favorites system + self-action block as the /buscar
                 cards). A subtle bordered icon so it's discoverable without crowding. */}
-            <SaveButton pro={savedPro} isOwn={isOwn} className="absolute right-3 top-3 z-10 rounded-full border border-[#e5e7eb] bg-white !p-2 shadow-sm hover:border-[#009FD9] hover:text-[#009FD9]" />
-            <div className="flex flex-col gap-4 pr-10 sm:flex-row sm:items-center sm:justify-between">
+            <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={shareProfile}
+                aria-label={t("shareProfile")}
+                title={t("shareProfile")}
+                className="grid h-9 w-9 place-items-center rounded-full border border-[#e5e7eb] bg-white text-[#6b7280] shadow-sm transition-colors hover:border-[#009FD9] hover:text-[#009FD9]"
+              >
+                <Share2 className="h-[18px] w-[18px]" />
+              </button>
+              <SaveButton pro={savedPro} isOwn={isOwn} className="h-9 w-9 rounded-full border border-[#e5e7eb] bg-white !p-0 shadow-sm hover:border-[#009FD9] hover:text-[#009FD9]" />
+            </div>
+            <div className="flex flex-col gap-4 pr-24 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4 min-w-0">
                 <Avatar className="h-20 w-20 sm:h-[88px] sm:w-[88px] shrink-0">
                   <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
@@ -461,41 +462,18 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 {/* Own-profile self-action notice (shared across the page's actions). */}
                 <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
 
-                {/* More options dropdown */}
-                <div ref={dropdownRef} className="border-t border-[#f3f4f6] pt-3 relative">
-                  <button
-                    onClick={() => setDropdownOpen(v => !v)}
-                    className="flex items-center gap-1.5 text-xs text-[#6b7280] hover:text-[#374151] transition-colors mx-auto"
-                  >
-                    {t("moreOptions")} <ChevronDown className={`h-3.5 w-3.5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {dropdownOpen && (
-                    <div className="absolute bottom-full left-0 right-0 bg-white border border-[#e5e7eb] rounded-xl shadow-lg py-1 z-10 mb-1">
-                      <button
-                        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[#374151] hover:bg-[#f3f4f6] transition-colors"
-                        onClick={() => { navigator.share?.({ title: professional.fullName, url: window.location.href }); setDropdownOpen(false); }}
-                      >
-                        <Share2 className="h-4 w-4" />
-                        {t("shareProfile")}
-                      </button>
-                      {/* No self-report: a pro can't report their own profile. */}
-                      {isOwn ? (
-                        <div className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[#9ca3af]">
-                          <Lock className="h-4 w-4" />
-                          {t("thisIsYourProfile")}
-                        </div>
-                      ) : (
-                        <button
-                          className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                          onClick={() => { setDropdownOpen(false); setReportOpen(true); }}
-                        >
-                          <Flag className="h-4 w-4" />
-                          {t("reportProfile")}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {!isOwn && (
+                  <div className="border-t border-[#f3f4f6] pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setReportOpen(true)}
+                      className="mx-auto flex items-center gap-1.5 text-xs font-medium text-[#9ca3af] transition-colors hover:text-[#ef4444]"
+                    >
+                      <Flag className="h-3.5 w-3.5" />
+                      {t("reportProfile")}
+                    </button>
+                  </div>
+                )}
               </div>
             </aside>
 
