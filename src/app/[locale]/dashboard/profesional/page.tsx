@@ -15,17 +15,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FormLoadingState } from "@/components/ui/loading-state";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
 import { ProfileCompletion, computeCompletion } from "@/components/dashboard/pro/profile-completion";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { SaveStatusProvider, HeaderSaveStatus } from "@/components/dashboard/save-status-context";
-import { BookingRequests, prefetchProfessionalBookings } from "@/components/dashboard/pro/booking-requests";
-import { ProposalsTab, prefetchProposalsTabData } from "@/components/dashboard/pro/proposals-tab";
+import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
+import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
-import { ClientActivity, prefetchClientActivity } from "@/components/dashboard/client-activity";
+import { ClientActivity } from "@/components/dashboard/client-activity";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
@@ -97,50 +96,6 @@ const MOBILE_PRIMARY: Record<Mode, Tab[]> = {
   use: ["sent_bookings", "sent_projects", "notifications"],
 };
 
-function DashboardInitialSkeleton() {
-  return (
-    <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      <Navbar />
-      <main className="flex-1">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 lg:pb-8">
-          <div className="mb-6 flex animate-pulse items-center gap-4 border-b border-[#e5e7eb] pb-5">
-            <div className="h-16 w-16 shrink-0 rounded-full bg-[#eaf7fd]" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="h-3 w-36 rounded-full bg-[#eef2f6]" />
-              <div className="h-6 w-72 max-w-full rounded-full bg-[#e5edf4]" />
-              <div className="h-5 w-24 rounded-full bg-[#eaf7fd]" />
-            </div>
-          </div>
-          <div className="flex flex-col gap-6 lg:flex-row">
-            <aside className="hidden w-60 shrink-0 lg:block">
-              <Card>
-                <CardContent className="space-y-2 p-2">
-                  {Array.from({ length: 8 }).map((_, index) => (
-                    <div key={index} className="h-11 animate-pulse rounded-xl bg-[#f3f7fa]" />
-                  ))}
-                </CardContent>
-              </Card>
-            </aside>
-            <div className="min-w-0 flex-1">
-              <Card>
-                <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
-                  <div className="animate-pulse space-y-2">
-                    <div className="h-5 w-48 max-w-full rounded-full bg-[#e5edf4]" />
-                    <div className="h-3 w-80 max-w-full rounded-full bg-[#f1f5f9]" />
-                  </div>
-                </CardHeader>
-                <CardContent className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">
-                  <FormLoadingState minHeight="min-h-[360px]" />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
-
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -163,10 +118,13 @@ export default function DashboardPage() {
   const [proLoadError, setProLoadError] = useState(false);
   // Mobile "Más" bottom-sheet (the overflow of the bottom nav bar).
   const [moreOpen, setMoreOpen] = useState(false);
-  const [pendingTab, setPendingTab] = useState<Tab | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [noProTries, setNoProTries] = useState(0);
-  const visibleTab = pendingTab ?? activeTab;
+  const focusKeyRef = useRef(0);
+  const nextFocusKey = useCallback(() => {
+    focusKeyRef.current += 1;
+    return focusKeyRef.current;
+  }, []);
 
   // The account CAN offer if it has a professional profile (authoritative once
   // loaded) — fall back to the metadata capability for an instant first paint.
@@ -178,14 +136,8 @@ export default function DashboardPage() {
   // A non-provider has no offer world → always "use".
   const { mode: globalMode, setMode } = useMode(isProvider);
   const urlForcedMode: Mode | null =
-    OFFER_ONLY.has(visibleTab) ? "offer" : USE_ONLY.has(visibleTab) ? "use" : urlModeParam;
+    OFFER_ONLY.has(activeTab) ? "offer" : USE_ONLY.has(activeTab) ? "use" : urlModeParam;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
-
-  useEffect(() => {
-    if (!pendingTab || pendingTab !== activeTab) return;
-    const id = requestAnimationFrame(() => setPendingTab(null));
-    return () => cancelAnimationFrame(id);
-  }, [pendingTab, activeTab]);
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
   useEffect(() => {
@@ -203,13 +155,13 @@ export default function DashboardPage() {
     const focus = searchParams.get("focus");
     if (!focus) return;
     queueMicrotask(() => {
-      setProfileFocus({ field: focus, key: Date.now() });
+      setProfileFocus({ field: focus, key: nextFocusKey() });
       const params = new URLSearchParams(searchParams.toString());
       params.delete("focus");
       const qs = params.toString();
       router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
     });
-  }, [searchParams, router]);
+  }, [searchParams, router, nextFocusKey]);
 
   const fetchPro = useCallback(async () => {
     if (!user) return;
@@ -251,15 +203,6 @@ export default function DashboardPage() {
     if (!user) return;
     queueMicrotask(() => fetchPro());
   }, [user, activeTab, refreshKey, fetchPro]);
-
-  useEffect(() => {
-    if (!user || authLoading) return;
-    prefetchClientActivity(user.id);
-    if (pro) {
-      prefetchProfessionalBookings(user.id);
-      prefetchProposalsTabData(user.id, pro.category_id ?? undefined);
-    }
-  }, [authLoading, pro, user]);
 
   // Base profile (name/avatar) for the header — works for seekers with no pro row.
   useEffect(() => {
@@ -337,8 +280,7 @@ export default function DashboardPage() {
 
   function setTab(tab: Tab) {
     setMoreOpen(false);
-    if (tab === visibleTab) return;
-    setPendingTab(tab);
+    if (tab === activeTab) return;
     if (OFFER_ONLY.has(tab)) setMode("offer");
     if (USE_ONLY.has(tab)) setMode("use");
     // Mode is persisted globally now, so the tab alone is enough — a mode-specific tab
@@ -376,8 +318,12 @@ export default function DashboardPage() {
   }, [moreOpen]);
 
 
-  if (authLoading || !user) {
-    return <DashboardInitialSkeleton />;
+  if (authLoading || loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      </div>
+    );
   }
 
   const displayName =
@@ -408,7 +354,7 @@ export default function DashboardPage() {
   const barTabs = [...modeTabs, ...SHARED_TABS];
   const primaryTabs = MOBILE_PRIMARY[mode].filter((tab) => barTabs.includes(tab));
   const moreTabs = barTabs.filter((tab) => !primaryTabs.includes(tab));
-  const activeInMore = moreTabs.includes(visibleTab);
+  const activeInMore = moreTabs.includes(activeTab);
   const showProfileCompletion =
     mode === "offer" &&
     !!proForCompletion &&
@@ -422,7 +368,7 @@ export default function DashboardPage() {
         onClick={() => setTab(tab)}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
-          visibleTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
+          activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
         )}
       >
         <span className="relative">
@@ -569,8 +515,8 @@ export default function DashboardPage() {
                   pro={proForCompletion}
                   onGo={(tab, field) => {
                     setTab(tab as Tab);
-                    if (field && tab === "services") setServiceFocus({ field, key: Date.now() });
-                    else if (field) setProfileFocus({ field, key: Date.now() });
+                    if (field && tab === "services") setServiceFocus({ field, key: nextFocusKey() });
+                    else if (field) setProfileFocus({ field, key: nextFocusKey() });
                   }}
                 />
               )}
@@ -602,8 +548,8 @@ export default function DashboardPage() {
                       <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
-                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{visibleTab === "services" ? t("servicesHeading") : t(`tabs.${visibleTab}`)}</h2>
-                            {visibleTab === "profile" && mode === "offer" && pro?.slug && (
+                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                            {activeTab === "profile" && mode === "offer" && pro?.slug && (
                               <a
                                 href={`/${locale}/profesionales/${pro.slug}?preview=1`}
                                 aria-label={t("viewPublicProfile")}
@@ -616,10 +562,10 @@ export default function DashboardPage() {
                           </div>
                           <HeaderSaveStatus />
                         </div>
-                        {TABS_WITH_SUBTITLE.has(visibleTab) && (
+                        {TABS_WITH_SUBTITLE.has(activeTab) && (
                           <div className="mt-0.5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                            <p className="text-sm text-[#6b7280]">{t(`subtitles.${visibleTab}`)}</p>
-                            {visibleTab === "sent_projects" && (
+                            <p className="text-sm text-[#6b7280]">{t(`subtitles.${activeTab}`)}</p>
+                            {activeTab === "sent_projects" && (
                               <Button
                                 size="sm"
                                 className="hidden rounded-full px-4 lg:inline-flex"
@@ -632,9 +578,9 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </CardHeader>
-                      <CardContent key={visibleTab} className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">
+                      <CardContent className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">
                         {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
-                        {visibleTab === "profile" && mode === "offer" && pro && (
+                        {activeTab === "profile" && mode === "offer" && pro && (
                           <ProfileEditor
                             professionalId={pro.id}
                             profileId={user.id}
@@ -644,14 +590,11 @@ export default function DashboardPage() {
                             focusKey={profileFocus?.key}
                           />
                         )}
-                        {visibleTab === "profile" && mode === "offer" && !pro && (
-                          <FormLoadingState minHeight="min-h-[360px]" />
-                        )}
-                        {visibleTab === "profile" && mode === "use" && (
+                        {activeTab === "profile" && mode === "use" && (
                           <BasicProfileSection />
                         )}
 
-                        {visibleTab === "services" && pro && (
+                        {activeTab === "services" && pro && (
                           <ServicesEditor
                             professionalId={pro.id}
                             primaryCategory={pro.category_id}
@@ -662,8 +605,7 @@ export default function DashboardPage() {
                             focusKey={serviceFocus?.key}
                           />
                         )}
-                        {visibleTab === "services" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
-                        {visibleTab === "photos" && pro && (
+                        {activeTab === "photos" && pro && (
                           <PhotoGallery
                             professionalId={pro.id}
                             initialUrls={pro.portfolio_urls ?? []}
@@ -673,8 +615,7 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
-                        {visibleTab === "photos" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
-                        {visibleTab === "availability" && pro && (
+                        {activeTab === "availability" && pro && (
                           <AvailabilityEditor
                             professionalId={pro.id}
                             initialPublic={pro.availability_public ?? true}
@@ -683,20 +624,17 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
-                        {visibleTab === "availability" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
-                        {visibleTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
-                        {visibleTab === "bookings" && <BookingRequests key="bookings" userId={user.id} />}
-                        {visibleTab === "proposals" && pro && (
+                        {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
+                        {activeTab === "bookings" && <BookingRequests />}
+                        {activeTab === "proposals" && pro && (
                           <ProposalsTab
                             key={`proposals-${pro.id}`}
-                            userId={user.id}
                             categoryId={pro.category_id}
                             professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
                             services={pro.services ?? []}
                           />
                         )}
-                        {visibleTab === "proposals" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
-                        {visibleTab === "verificacion" && pro && (
+                        {activeTab === "verificacion" && pro && (
                           <VerificationPanel
                             professionalId={pro.id}
                             status={pro.verification_status ?? "pending"}
@@ -705,16 +643,16 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                           />
                         )}
-                        {visibleTab === "verificacion" && !pro && <FormLoadingState minHeight="min-h-[360px]" />}
+
 
                         {/* "Usar servicios" — the seek capability. */}
-                        {visibleTab === "sent_bookings" && <ClientActivity key="sent-bookings" section="bookings" userId={user.id} />}
-                        {visibleTab === "sent_projects" && <ClientActivity key="sent-projects" section="projects" userId={user.id} />}
-                        {visibleTab === "saved" && <ClientActivity key="saved" section="saved" userId={user.id} />}
+                        {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
+                        {activeTab === "sent_projects" && <ClientActivity section="projects" />}
+                        {activeTab === "saved" && <ClientActivity section="saved" />}
 
-                        {visibleTab === "notifications" && <NotificationsList />}
-                        {visibleTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
-                        {visibleTab === "cuenta" && (
+                        {activeTab === "notifications" && <NotificationsList />}
+                        {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
+                        {activeTab === "cuenta" && (
                           <div className="space-y-6">
                             <AccountSecuritySection showHeading={false} />
                             <CloseAccountSection />
@@ -744,7 +682,7 @@ export default function DashboardPage() {
       >
         {isProvider && modeBottomNavButton()}
         {primaryTabs.map((tab) => {
-          const active = visibleTab === tab && !moreOpen;
+          const active = activeTab === tab && !moreOpen;
           return (
             <button
               key={tab}
@@ -800,7 +738,7 @@ export default function DashboardPage() {
             <div className="p-2 pt-0">
               {moreTabs.map((tab) => {
                 const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
-                const active = visibleTab === tab;
+                const active = activeTab === tab;
                 return (
                   <button
                     key={tab}

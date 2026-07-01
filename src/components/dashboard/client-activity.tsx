@@ -22,8 +22,7 @@ import { LeaveReviewModal } from "@/components/professionals/leave-review-modal"
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { RescheduleModal } from "@/components/booking/reschedule-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
-import { FormLoadingState } from "@/components/ui/loading-state";
-import { getDashboardCache, loadDashboardCache, prefetchDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
+import { useAuth } from "@/hooks/use-auth";
 import type { BookingStatus } from "@/types";
 
 /**
@@ -103,26 +102,6 @@ type Proposal = {
 // awaiting confirmation = brand-blue/info, FINISHED = green, cancelled = red.
 // (Previously active states were green "success" — reading as done/closed — and the
 // finished state was muted grey: the open-vs-closed state looked inverted.)
-const clientBookingsCacheKey = (userId: string) => `dashboard:client-bookings:${userId}`;
-const clientProjectsCacheKey = (userId: string) => `dashboard:client-projects:${userId}`;
-
-async function fetchClientBookingRows(): Promise<Booking[]> {
-  const res = await fetch("/api/bookings?role=client", { cache: "no-store" });
-  const { bookings } = await res.json();
-  return bookings ?? [];
-}
-
-async function fetchClientProjectRows(): Promise<Project[]> {
-  const res = await fetch("/api/projects?role=client", { cache: "no-store" });
-  const { projects } = await res.json();
-  return projects ?? [];
-}
-
-export function prefetchClientActivity(userId: string) {
-  prefetchDashboardCache(clientBookingsCacheKey(userId), fetchClientBookingRows);
-  prefetchDashboardCache(clientProjectsCacheKey(userId), fetchClientProjectRows);
-}
-
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "default",
   confirmed: "default",
@@ -148,16 +127,12 @@ function formatBookingDate(b: Booking, dateLocale: string) {
   return b.preferred_date_text ?? null;
 }
 
-export function ClientActivity({ section, userId }: { section: ClientActivitySection; userId: string }) {
+export function ClientActivity({ section }: { section: ClientActivitySection }) {
+  const { user } = useAuth();
   const t = useTranslations("clientActivity");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
-  const bookingCacheKey = clientBookingsCacheKey(userId);
-  const projectCacheKey = clientProjectsCacheKey(userId);
-  const cachedBookings = bookingCacheKey ? getDashboardCache<Booking[]>(bookingCacheKey) : null;
-  const cachedProjects = projectCacheKey ? getDashboardCache<Project[]>(projectCacheKey) : null;
-  const hasSectionCache = section === "bookings" ? !!cachedBookings : section === "projects" ? !!cachedProjects : true;
 
   // The service a booking is for (the specific category requested, else the pro's primary).
   function bookingServiceLabel(b: Booking): string | null {
@@ -172,9 +147,9 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
     return t("monthsOld", { count: months });
   }
 
-  const [bookings, setBookingsState] = useState<Booking[]>(() => cachedBookings ?? []);
-  const [projects, setProjectsState] = useState<Project[]>(() => cachedProjects ?? []);
-  const [loading, setLoading] = useState(() => !hasSectionCache);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
   // One unified filter set (sprint 430): Activas · Finalizadas · Canceladas.
@@ -212,43 +187,26 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
 
-  const setBookings = useCallback((updater: Booking[] | ((prev: Booking[]) => Booking[])) => {
-    setBookingsState((prev) => {
-      const next = typeof updater === "function" ? (updater as (current: Booking[]) => Booking[])(prev) : updater;
-      if (bookingCacheKey) setDashboardCache(bookingCacheKey, next);
-      return next;
-    });
-  }, [bookingCacheKey]);
-
-  const setProjects = useCallback((updater: Project[] | ((prev: Project[]) => Project[])) => {
-    setProjectsState((prev) => {
-      const next = typeof updater === "function" ? (updater as (current: Project[]) => Project[])(prev) : updater;
-      if (projectCacheKey) setDashboardCache(projectCacheKey, next);
-      return next;
-    });
-  }, [projectCacheKey]);
-
   const fetchSection = useCallback(async (showLoading = true) => {
+    if (!user) return;
     try {
       if (section === "bookings") {
-        if (!bookingCacheKey) return;
-        const cached = getDashboardCache<Booking[]>(bookingCacheKey);
-        if (showLoading && !cached) setLoading(true);
-        const rows = await loadDashboardCache(bookingCacheKey, fetchClientBookingRows, { force: !showLoading || !!cached });
-        setBookings(rows);
+        if (showLoading) setLoading(true);
+        const res = await fetch("/api/bookings?role=client", { cache: "no-store" });
+        const { bookings } = await res.json();
+        setBookings(bookings ?? []);
       } else if (section === "projects") {
-        if (!projectCacheKey) return;
-        const cached = getDashboardCache<Project[]>(projectCacheKey);
-        if (showLoading && !cached) setLoading(true);
-        const rows = await loadDashboardCache(projectCacheKey, fetchClientProjectRows, { force: !showLoading || !!cached });
-        setProjects(rows);
+        if (showLoading) setLoading(true);
+        const res = await fetch("/api/projects?role=client", { cache: "no-store" });
+        const { projects } = await res.json();
+        setProjects(projects ?? []);
       }
     } catch (error) {
       console.error("[client-activity] load failed:", error);
     } finally {
       if (showLoading) setLoading(false);
     }
-  }, [bookingCacheKey, projectCacheKey, section, setBookings, setProjects]);
+  }, [user, section]);
 
   const reloadLoadedProjectProposals = useCallback(async () => {
     const ids = [...new Set([...Object.keys(projectProposals), expandedProject].filter(Boolean))] as string[];
@@ -273,17 +231,10 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
     }, delay);
   }, [fetchSection, reloadLoadedProjectProposals, section]);
 
-  useEffect(() => {
-    const hasCache = section === "bookings"
-      ? !!(bookingCacheKey && getDashboardCache<Booking[]>(bookingCacheKey))
-      : section === "projects"
-        ? !!(projectCacheKey && getDashboardCache<Project[]>(projectCacheKey))
-        : true;
-    queueMicrotask(() => fetchSection(!hasCache));
-  }, [bookingCacheKey, fetchSection, projectCacheKey, section]);
+  useEffect(() => { queueMicrotask(() => fetchSection(true)); }, [fetchSection]);
 
   useEffect(() => {
-    if (section === "saved" || loading) return;
+    if (!user || section === "saved" || loading) return;
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") {
         void fetchSection(false);
@@ -291,10 +242,10 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
       }
     }, 5000);
     return () => window.clearInterval(id);
-  }, [fetchSection, loading, reloadLoadedProjectProposals, section]);
+  }, [fetchSection, loading, reloadLoadedProjectProposals, section, user]);
 
   useEffect(() => {
-    if (section === "saved" || loading) return;
+    if (!user || section === "saved" || loading) return;
     window.addEventListener("notificationsChanged", refreshSoon);
     window.addEventListener("focus", refreshSoon);
     document.addEventListener("visibilitychange", refreshSoon);
@@ -304,7 +255,7 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
       document.removeEventListener("visibilitychange", refreshSoon);
       if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     };
-  }, [loading, refreshSoon, section]);
+  }, [loading, refreshSoon, section, user]);
 
   useEffect(() => {
     if (section !== "bookings") return;
@@ -359,6 +310,8 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
       window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
     }, 0);
     return () => window.clearTimeout(id);
+    // `loadProposals` reads the current proposals map; targetProjectHandledRef prevents repeat opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchSection, projects, searchParams, section]);
 
   useEffect(() => {
@@ -595,7 +548,11 @@ export function ClientActivity({ section, userId }: { section: ClientActivitySec
   }
 
   if (loading) {
-    return <FormLoadingState minHeight="min-h-[360px]" />;
+    return (
+      <div className="flex justify-center py-16">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      </div>
+    );
   }
 
   const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));

@@ -15,8 +15,6 @@ import { computeAge } from "@/lib/age";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
-import { FormLoadingState } from "@/components/ui/loading-state";
-import { getDashboardCache, loadDashboardCache, prefetchDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -56,36 +54,11 @@ type OpenProject = {
   beneficiary_is_minor?: boolean;
 };
 
-const openProjectsCacheKey = (userId: string, categoryId?: string) => `dashboard:pro-open-projects:${userId}:${categoryId ?? "all"}`;
-const myProposalsCacheKey = (userId: string) => `dashboard:pro-my-proposals:${userId}`;
-
-async function fetchOpenProjectRows(categoryId?: string): Promise<OpenProject[]> {
-  const url = `/api/projects?role=professional${categoryId ? `&category=${categoryId}` : ""}`;
-  const res = await fetch(url, { cache: "no-store" });
-  const { projects } = await res.json();
-  return projects ?? [];
-}
-
-async function fetchMyProposalRows(): Promise<MyProposal[]> {
-  const res = await fetch("/api/proposals?mine=true", { cache: "no-store" });
-  const { proposals } = await res.json();
-  return proposals ?? [];
-}
-
-export function prefetchProposalsTabData(userId: string, categoryId?: string) {
-  prefetchDashboardCache(openProjectsCacheKey(userId, categoryId), () => fetchOpenProjectRows(categoryId));
-  prefetchDashboardCache(myProposalsCacheKey(userId), fetchMyProposalRows);
-}
-
 const STATUS_VARIANT: Record<ProposalStatus, "default" | "success" | "error"> = {
   pending: "default",
   accepted: "success",
   declined: "error",
 };
-
-function PendingProposalBadge({ label }: { label: string }) {
-  return <Badge variant="default" className="shrink-0 text-[11px] font-semibold">{label}</Badge>;
-}
 
 function projStatusVariant(status?: string): "warning" | "success" | "error" | "default" {
   switch (status) {
@@ -98,7 +71,6 @@ function projStatusVariant(status?: string): "warning" | "success" | "error" | "
 }
 
 interface ProposalsTabProps {
-  userId: string;
   categoryId?: string;
   /** The professions on the pro's profile — the "Oportunidades" list can be filtered by
    *  them (the filter only appears when there's more than one). */
@@ -107,17 +79,10 @@ interface ProposalsTabProps {
   services?: { name?: string }[];
 }
 
-export function ProposalsTab({ userId, categoryId, professions = [], services = [] }: ProposalsTabProps) {
+export function ProposalsTab({ categoryId, professions = [], services = [] }: ProposalsTabProps) {
   const t = useTranslations("proposalsTab");
   const locale = useLocale();
   const searchParams = useSearchParams();
-  const openCacheKey = openProjectsCacheKey(userId, categoryId);
-  const mineCacheKey = myProposalsCacheKey(userId);
-  const cachedOpenProjects = openCacheKey ? getDashboardCache<OpenProject[]>(openCacheKey) : null;
-  const cachedGenericOpenProjects = getDashboardCache<OpenProject[]>(openProjectsCacheKey(userId));
-  const cachedMyProposals = mineCacheKey ? getDashboardCache<MyProposal[]>(mineCacheKey) : null;
-  const hasCachedOpenProjects = cachedOpenProjects !== null || cachedGenericOpenProjects !== null;
-  const hasCachedMyProposals = cachedMyProposals !== null;
 
   // Filter "Oportunidades" by profession — the user's ACTUAL professions only (no "all"
   // option); only surfaced when they have 2+ (defaults to the first profession).
@@ -148,16 +113,14 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
     return t(`projStatus.${k}`);
   };
   const [view, setView] = useState<"browse" | "mine">("browse");
-  const [openProjects, setOpenProjectsState] = useState<OpenProject[]>(() => cachedOpenProjects ?? cachedGenericOpenProjects ?? []);
-  const [myProposals, setMyProposalsState] = useState<MyProposal[]>(() => cachedMyProposals ?? []);
-  const [loading, setLoading] = useState(() => !hasCachedOpenProjects);
-  const [browseLoadedOnce, setBrowseLoadedOnce] = useState(() => hasCachedOpenProjects);
-  const [mineLoadedOnce, setMineLoadedOnce] = useState(() => hasCachedMyProposals);
+  const [openProjects, setOpenProjects] = useState<OpenProject[]>([]);
+  const [myProposals, setMyProposals] = useState<MyProposal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [expandedMine, setExpandedMine] = useState<string | null>(null);
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState<Set<string>>(() => new Set((cachedMyProposals ?? []).map((p) => p.project_id)));
+  const [submitted, setSubmitted] = useState<Set<string>>(new Set());
   const [projectFilter, setProjectFilter] = useState("activas");
   const openSnapshotRef = useRef("");
   const mineSnapshotRef = useRef("");
@@ -170,20 +133,6 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
   // ("No me interesa") opportunities.
   const [profFilter, setProfFilter] = useState<string>("");
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const setOpenProjects = useCallback((updater: OpenProject[] | ((prev: OpenProject[]) => OpenProject[])) => {
-    setOpenProjectsState((prev) => {
-      const next = typeof updater === "function" ? (updater as (current: OpenProject[]) => OpenProject[])(prev) : updater;
-      if (openCacheKey) setDashboardCache(openCacheKey, next);
-      return next;
-    });
-  }, [openCacheKey]);
-  const setMyProposals = useCallback((updater: MyProposal[] | ((prev: MyProposal[]) => MyProposal[])) => {
-    setMyProposalsState((prev) => {
-      const next = typeof updater === "function" ? (updater as (current: MyProposal[]) => MyProposal[])(prev) : updater;
-      if (mineCacheKey) setDashboardCache(mineCacheKey, next);
-      return next;
-    });
-  }, [mineCacheKey]);
   // The active profession (no "all"): the chosen one, else the first profession.
   const activeProf = professions.includes(profFilter) ? profFilter : (professions[0] ?? "");
   // Count of AVAILABLE opportunities per profession (excludes proposed/dismissed) → the
@@ -194,44 +143,41 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
   }, [openProjects, submitted, dismissed, professions]);
 
   async function fetchOpenProjects(silent = false) {
-    if (!openCacheKey || !mineCacheKey) return;
     try {
-      const cachedOpen = getDashboardCache<OpenProject[]>(openCacheKey);
-      const cachedMine = getDashboardCache<MyProposal[]>(mineCacheKey);
-      if (!silent && !cachedOpen) setLoading(true);
-      const [nextProjects, nextProposals] = await Promise.all([
-        loadDashboardCache(openCacheKey, () => fetchOpenProjectRows(categoryId), { force: silent || !!cachedOpen }),
-        loadDashboardCache(mineCacheKey, fetchMyProposalRows, { force: silent || !!cachedMine }),
+      if (!silent) setLoading(true);
+      const url = `/api/projects?role=professional${categoryId ? `&category=${categoryId}` : ""}`;
+      const [projRes, mineRes] = await Promise.all([
+        fetch(url, { cache: "no-store" }),
+        fetch("/api/proposals?mine=true", { cache: "no-store" }),
       ]);
+      const { projects } = await projRes.json();
+      const { proposals } = await mineRes.json().catch(() => ({ proposals: [] }));
+      const nextProjects = (projects ?? []) as OpenProject[];
+      const nextProposals = (proposals ?? []) as MyProposal[];
       const snapshot = JSON.stringify(nextProjects.map((p: OpenProject) => `${p.id}:${p.created_at}`));
       openSnapshotRef.current = snapshot;
       setOpenProjects(nextProjects);
       setMyProposals(nextProposals);
       setSubmitted(new Set<string>(nextProposals.map((p) => p.project_id)));
-      setBrowseLoadedOnce(true);
-      setMineLoadedOnce(true);
     } catch (error) {
       console.error("[proposals-tab] opportunities load failed:", error);
     } finally {
-      if (!silent) setBrowseLoadedOnce(true);
       if (!silent) setLoading(false);
     }
   }
 
   async function fetchMyProposals(silent = false) {
-    if (!mineCacheKey) return;
     try {
-      const cached = getDashboardCache<MyProposal[]>(mineCacheKey);
-      if (!silent && !cached) setLoading(true);
-      const nextProposals = await loadDashboardCache(mineCacheKey, fetchMyProposalRows, { force: silent || !!cached });
+      if (!silent) setLoading(true);
+      const res = await fetch("/api/proposals?mine=true", { cache: "no-store" });
+      const { proposals } = await res.json();
+      const nextProposals = (proposals ?? []) as MyProposal[];
       const snapshot = JSON.stringify(nextProposals.map((p: MyProposal) => `${p.id}:${p.status}:${p.projects?.status ?? ""}`));
       mineSnapshotRef.current = snapshot;
       setMyProposals(nextProposals);
-      setMineLoadedOnce(true);
     } catch (error) {
       console.error("[proposals-tab] my proposals load failed:", error);
     } finally {
-      if (!silent) setMineLoadedOnce(true);
       if (!silent) setLoading(false);
     }
   }
@@ -252,15 +198,12 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
   }, [view]);
 
   useEffect(() => {
-    const hasCache = view === "browse"
-      ? !!((openCacheKey && getDashboardCache<OpenProject[]>(openCacheKey)) || getDashboardCache<OpenProject[]>(openProjectsCacheKey(userId)))
-      : !!(mineCacheKey && getDashboardCache<MyProposal[]>(mineCacheKey));
     queueMicrotask(() => {
-      if (view === "browse") fetchOpenProjects(hasCache);
-      else fetchMyProposals(hasCache);
+      if (view === "browse") fetchOpenProjects();
+      else fetchMyProposals();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, openCacheKey, mineCacheKey]);
+  }, [view, categoryId]);
 
   useEffect(() => {
     if (loading) return;
@@ -616,10 +559,12 @@ export function ProposalsTab({ userId, categoryId, professions = [], services = 
     );
   }
 
-  const viewLoading = loading || (view === "browse" ? !browseLoadedOnce : !mineLoadedOnce);
-
-  if (viewLoading) {
-    return <FormLoadingState minHeight="min-h-[360px]" />;
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      </div>
+    );
   }
 
   return (
