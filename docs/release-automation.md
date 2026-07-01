@@ -39,9 +39,18 @@ Because this project started with migrations that were often pasted manually in 
 Run `target=test`, `dry_run=true`.
 
 - If it shows only new migrations that really need to run, continue normally.
-- If it shows old migrations that already exist in the database, do **not** apply. Ask Codex to repair/baseline Supabase migration history for that environment first.
+- If it shows old migrations that already exist in the database, do **not** apply. Use **Actions -> Supabase baseline migrations** first.
+- The migration workflow blocks automatically if `001_initial_schema.sql` is pending, unless `allow_initial_migrations=true` is explicitly selected for a brand-new empty database.
 
 Repeat the same dry-run check for production before the first real production migration.
+
+Recommended baseline for an existing environment that was already built manually:
+
+1. Run **Supabase baseline migrations** with `dry_run=true`.
+2. Use `baseline_through=083` when the database already has everything before `084_harden_padron_swap.sql`.
+3. If the listed versions look correct, run it again with `dry_run=false`.
+4. Run **Supabase migrations** with `dry_run=true`; it should now show only newer migrations such as `084_harden_padron_swap.sql`.
+5. If the list is correct, run **Supabase migrations** with `dry_run=false`.
 
 Recommended flow:
 
