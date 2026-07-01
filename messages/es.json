@@ -91,7 +91,6 @@
       "checkEmailTitle": "¡Revisa tu correo!",
       "close": "Cerrar",
       "continueGoogle": "Continuar con Google",
-      "continueFacebook": "Continuar con Facebook",
       "or": "o",
       "email": "Correo electrónico",
       "password": "Contraseña",
@@ -615,10 +614,10 @@
       "passwordRequired": "Ingresa tu contraseña",
       "loginError": "Correo o contraseña incorrectos.",
       "socialOnly": "Esta cuenta usa {provider}. Inicia sesión con {provider}.",
+      "facebookUnavailable": "Facebook no está disponible para iniciar sesión. Usa ¿Olvidaste tu contraseña? para crear una contraseña o contáctanos.",
       "blockedUsePassword": "Esta cuenta usa correo y contraseña. Inicia sesión con tu contraseña.",
       "redirecting": "Redirigiendo…",
-      "continueGoogle": "Continuar con Google",
-      "continueFacebook": "Continuar con Facebook"
+      "continueGoogle": "Continuar con Google"
     },
     "register": {
       "title": "Crear cuenta",

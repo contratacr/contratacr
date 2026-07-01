@@ -6,7 +6,7 @@ const ES_SECTIONS: LegalSection[] = [
   { id: "datos", h: "2. Que datos recolectamos", body: [
     { k: "p", text: "Recolectamos unicamente los datos necesarios para prestar nuestro servicio de intermediacion:" },
     { k: "sub", text: "2.1 De todos los Usuarios" },
-    { k: "ul", items: ["Nombre.", "Correo electronico.", "Contrasena (almacenada de forma cifrada; nunca la vemos ni la guardamos en texto legible).", "Datos basicos compartidos por Google o Facebook cuando el Usuario se registra con esos proveedores."] },
+    { k: "ul", items: ["Nombre.", "Correo electronico.", "Contrasena (almacenada de forma cifrada; nunca la vemos ni la guardamos en texto legible).", "Datos basicos compartidos por Google cuando el Usuario se registra con ese proveedor."] },
     { k: "sub", text: "2.2 De los Clientes" },
     { k: "ul", items: ["Numero de telefono / WhatsApp para coordinar servicios.", "Numero de identificacion, cuando lo proporciona al solicitar un servicio.", "Ubicacion o zona, cuando la indica.", "Historial de solicitudes, publicaciones y profesionales guardados dentro de la Plataforma."] },
     { k: "sub", text: "2.3 De los Profesionales" },
@@ -47,7 +47,7 @@ const EN_SECTIONS: LegalSection[] = [
   { id: "data", h: "2. What data we collect", body: [
     { k: "p", text: "We collect only the data necessary to provide our intermediation service:" },
     { k: "sub", text: "2.1 From all Users" },
-    { k: "ul", items: ["Name.", "Email address.", "Password (stored in encrypted form; we never see or store it in readable text).", "Basic data shared by Google or Facebook when the User registers with those providers."] },
+    { k: "ul", items: ["Name.", "Email address.", "Password (stored in encrypted form; we never see or store it in readable text).", "Basic data shared by Google when the User registers with that provider."] },
     { k: "sub", text: "2.2 From Clients" },
     { k: "ul", items: ["Phone / WhatsApp number to coordinate services.", "Identification number, when provided to request a service.", "Location or service area, when provided.", "History of requests, posted requests, and saved professionals within the Platform."] },
     { k: "sub", text: "2.3 From Professionals" },

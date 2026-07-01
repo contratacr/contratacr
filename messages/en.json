@@ -91,7 +91,6 @@
       "checkEmailTitle": "Check your email!",
       "close": "Close",
       "continueGoogle": "Continue with Google",
-      "continueFacebook": "Continue with Facebook",
       "or": "or",
       "email": "Email address",
       "password": "Password",
@@ -616,10 +615,10 @@
       "passwordRequired": "Enter your password",
       "loginError": "Incorrect email or password.",
       "socialOnly": "This account uses {provider}. Sign in with {provider}.",
+      "facebookUnavailable": "Facebook sign-in is not available. Use Forgot your password? to create a password or contact us.",
       "blockedUsePassword": "This account uses email and password. Sign in with your password.",
       "redirecting": "Redirecting…",
-      "continueGoogle": "Continue with Google",
-      "continueFacebook": "Continue with Facebook"
+      "continueGoogle": "Continue with Google"
     },
     "register": {
       "title": "Create account",
