@@ -47,18 +47,23 @@ Repeat the same dry-run check for production before the first real production mi
 Recommended baseline for an existing environment that was already built manually:
 
 1. Run **Supabase baseline migrations** with `dry_run=true`.
-2. Use `baseline_through=083` when the database already has everything before `084_harden_padron_swap.sql`.
+2. Use `baseline_through=084` when the database already has everything through `084_harden_padron_swap.sql`.
 3. If the listed versions look correct, run it again with `dry_run=false`.
-4. Run **Supabase migrations** with `dry_run=true`; it should now show only newer migrations such as `084_harden_padron_swap.sql`.
+4. Run **Supabase migrations** with `dry_run=true`; it should now show only newer migrations.
 5. If the list is correct, run **Supabase migrations** with `dry_run=false`.
 
-Recommended flow:
+### Normal flow after both environments are baselined
 
-1. Run `target=test`, `dry_run=true`.
-2. If the migration list is correct, run `target=test`, `dry_run=false`.
+New migrations apply automatically from GitHub:
+
+1. Commit a new file in `supabase/migrations/`.
+2. Push it to the `test` branch. GitHub Actions applies it to the `test` Supabase environment.
 3. Run **Regression Tests** against the test URL.
-4. Run `target=production`, `dry_run=true`.
-5. If production dry run matches expectation, run `target=production`, `dry_run=false`.
+4. Merge or push the same migration to `main`. GitHub Actions applies it to the `production` Supabase environment.
+
+Production still uses the `production` GitHub Environment. Keep required reviewers enabled there so production database changes wait for approval before running.
+
+Manual runs are still available from **Actions -> Supabase migrations** when you want to preview with `dry_run=true` or recover from a failed run.
 
 Production runs are blocked unless the workflow is run from `main`.
 

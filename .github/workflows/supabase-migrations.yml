@@ -1,6 +1,12 @@
 name: Supabase migrations
 
 on:
+  push:
+    branches:
+      - test
+      - main
+    paths:
+      - "supabase/migrations/**"
   workflow_dispatch:
     inputs:
       target:
@@ -22,19 +28,22 @@ on:
         default: false
 
 concurrency:
-  group: supabase-migrations-${{ inputs.target }}
+  group: supabase-migrations-${{ github.event_name == 'workflow_dispatch' && inputs.target || (github.ref == 'refs/heads/main' && 'production' || 'test') }}
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: ${{ inputs.dry_run && 'Dry run' || 'Apply' }} migrations to ${{ inputs.target }}
+    name: ${{ github.event_name == 'push' && 'Auto apply' || (inputs.dry_run && 'Dry run' || 'Apply') }} migrations to ${{ github.event_name == 'workflow_dispatch' && inputs.target || (github.ref == 'refs/heads/main' && 'production' || 'test') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment: ${{ inputs.target }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target || (github.ref == 'refs/heads/main' && 'production' || 'test') }}
     permissions:
       contents: read
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      TARGET_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.target || (github.ref == 'refs/heads/main' && 'production' || 'test') }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+      ALLOW_INITIAL_MIGRATIONS: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_initial_migrations || false }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -42,10 +51,10 @@ jobs:
       - name: Validate target
         run: |
           if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "Missing SUPABASE_DB_URL in the ${{ inputs.target }} GitHub Environment."
+            echo "Missing SUPABASE_DB_URL in the $TARGET_ENV GitHub Environment."
             exit 1
           fi
-          if [ "${{ inputs.target }}" = "production" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
+          if [ "$TARGET_ENV" = "production" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
             echo "Production migrations must run from main."
             exit 1
           fi
@@ -54,13 +63,13 @@ jobs:
         run: |
           set -euo pipefail
           npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --dry-run | tee migration-plan.log
-          if grep -q "001_initial_schema.sql" migration-plan.log && [ "${{ inputs.allow_initial_migrations }}" != "true" ]; then
+          if grep -q "001_initial_schema.sql" migration-plan.log && [ "$ALLOW_INITIAL_MIGRATIONS" != "true" ]; then
             echo "::error::001_initial_schema.sql is pending. This environment is probably not baselined. Do not apply migrations until migration history is repaired, unless this is a brand-new empty database."
             exit 1
           fi
 
       - name: Apply migrations
-        if: ${{ inputs.dry_run == false }}
+        if: ${{ github.event_name == 'push' || inputs.dry_run == false }}
         run: |
           set -euo pipefail
           npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --yes
