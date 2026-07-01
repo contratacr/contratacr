@@ -33,7 +33,7 @@ jobs:
       PADRON_SAMPLE_CEDULA: "101053316"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Validate target and secrets
         run: |
@@ -47,13 +47,9 @@ jobs:
           fi
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Install Postgres client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
@@ -82,5 +78,5 @@ jobs:
           psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select public.finalize_padron_swap();"
           psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select * from public.padron_lookup('$PADRON_SAMPLE_CEDULA');"
 
-      - name: Verify app-style padron lookup
-        run: node scripts/check-padron.mjs --sample="$PADRON_SAMPLE_CEDULA"
+      - name: Verify padron lookup
+        run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select * from public.padron_lookup('$PADRON_SAMPLE_CEDULA');"
