@@ -30,6 +30,7 @@ import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { writeStoredMode } from "@/hooks/use-mode";
 
 // Category data lives in src/lib/data/categories.ts (single source of truth).
 // The service catalog picker shares the same taxonomy and grouped UI used in
@@ -553,7 +554,8 @@ export default function RegisterProfessionalPage() {
         .maybeSingle();
       if (!cancelled && data) {
         setRedirecting(true);
-        router.replace("/dashboard/profesional");
+        writeStoredMode("offer");
+        router.replace("/dashboard/profesional?mode=offer");
       }
     })();
     return () => { cancelled = true; };
@@ -762,7 +764,8 @@ export default function RegisterProfessionalPage() {
         // Show the full-screen loader BEFORE navigating so the photo step never
         // flashes back. Hard navigation so the refreshed session (new role) is read.
         setRedirecting(true);
-        window.location.href = `/${locale}/dashboard/profesional`;
+        writeStoredMode("offer");
+        window.location.href = `/${locale}/dashboard/profesional?mode=offer`;
         return;
       } else {
         setOtpEmail(step1Data!.email);

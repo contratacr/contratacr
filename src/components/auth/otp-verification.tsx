@@ -6,6 +6,7 @@ import { AlertCircle, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "@/i18n/navigation";
 import { SpamNotice } from "@/components/ui/spam-notice";
+import { writeStoredMode } from "@/hooks/use-mode";
 
 interface OtpVerificationProps {
   email: string;
@@ -57,7 +58,9 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     } else {
       // Redirect based on role from the newly created session.
       const role = data.user?.user_metadata?.role as string | undefined;
-      router.push(role === "professional" ? "/dashboard/profesional" : "/dashboard/profesional?mode=use");
+      const isProfessional = role === "professional";
+      writeStoredMode(isProfessional ? "offer" : "use");
+      router.push(isProfessional ? "/dashboard/profesional?mode=offer" : "/dashboard/profesional?mode=use");
     }
   }
 
