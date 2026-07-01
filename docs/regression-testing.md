@@ -1,6 +1,6 @@
 # Regression testing
 
-This suite is designed to run against the **test environment** first. Production should normally receive the same deployed code after test passes; use production only for a small manual smoke check when needed.
+This suite is designed to run against the **test environment**. Production should receive the same deployed code after test passes; do production smoke checks manually in the browser when needed.
 
 ## Commands
 
@@ -37,9 +37,9 @@ npm run test:e2e:ui
 
 Use **Actions > Regression Tests > Run workflow**.
 
-- For normal validation, use `target=test` from the `test` branch. The workflow defaults to the test Vercel URL.
-- For production, use `target=production` from `main` and set `confirm_production=true`. Production regression is manual only.
-- `base_url` is optional and should only be used when testing a temporary deployment URL.
+- Select `test` in **Use workflow from**.
+- The workflow is fixed to the test Vercel URL and has no runtime inputs.
+- It refuses to run from any branch other than `test`.
 
 If the Vercel test deployment is protected, add `VERCEL_AUTOMATION_BYPASS_SECRET` to the GitHub Environment secrets for `test`. Playwright will send it as the Vercel automation bypass header.
 
