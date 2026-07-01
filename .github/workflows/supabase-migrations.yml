@@ -1,0 +1,55 @@
+name: Supabase migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Environment to update."
+        required: true
+        type: choice
+        options:
+          - test
+          - production
+      dry_run:
+        description: "Preview migrations without applying them."
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: supabase-migrations-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: ${{ inputs.dry_run && 'Dry run' || 'Apply' }} migrations to ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.target }}
+    permissions:
+      contents: read
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate target
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "Missing SUPABASE_DB_URL in the ${{ inputs.target }} GitHub Environment."
+            exit 1
+          fi
+          if [ "${{ inputs.target }}" = "production" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "Production migrations must run from main."
+            exit 1
+          fi
+
+      - name: Push migrations
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --dry-run
+          else
+            npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --yes
+          fi

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateUpload, IMAGE_KINDS } from "@/lib/upload-validation";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rl = enforceRateLimit(req, "upload", 12, 60_000);
+  if (rl) return rl;
+
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;

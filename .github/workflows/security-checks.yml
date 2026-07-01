@@ -1,0 +1,63 @@
+name: Security checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - test
+
+jobs:
+  checks:
+    name: Lint, build, and audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder
+      CLOUDINARY_CLOUD_NAME: ci-placeholder
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ci-placeholder
+      CLOUDINARY_API_KEY: ci-placeholder
+      CLOUDINARY_API_SECRET: ci-placeholder
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ci-placeholder
+      NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID: ci-placeholder
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+      BREVO_API_KEY: ci-placeholder
+      RESEND_API_KEY: ci-placeholder
+      GOOGLE_TRANSLATE_API_KEY: ci-placeholder
+      GOOGLE_CLOUD_PROJECT_ID: ci-placeholder
+      GOOGLE_TRANSLATE_LOCATION: global
+      WHATSAPP_CLOUD_TOKEN: ci-placeholder
+      WHATSAPP_PHONE_NUMBER_ID: ci-placeholder
+      NEXT_PUBLIC_PAYMENTS_ENABLED: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint automation scripts
+        run: npx eslint scripts/security-smoke.mjs scripts/sync-supabase-email-templates.mjs
+
+      - name: Security smoke
+        run: npm run security:smoke
+
+      - name: Validate Supabase email templates
+        run: npm run supabase:templates:validate
+
+      - name: Build
+        run: npm run build
+
+      - name: Audit high and critical vulnerabilities
+        run: npm run audit:high
