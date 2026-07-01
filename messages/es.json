@@ -468,9 +468,7 @@
   },
   "inputs": {
     "remove": "Quitar",
-    "suggestedLanguages": "Sugeridos",
     "languagePlaceholder": "Escribe un idioma… ejemplo: Inglés",
-    "languageSearchPlaceholder": "Buscar otro idioma…",
     "addAnotherLanguage": "Agregar otro…",
     "insurerPlaceholder": "Escribe una aseguradora… ejemplo: INS",
     "addAnotherInsurer": "Agregar otra…",

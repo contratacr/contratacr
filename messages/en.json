@@ -469,9 +469,7 @@
   },
   "inputs": {
     "remove": "Remove",
-    "suggestedLanguages": "Suggested",
     "languagePlaceholder": "Type a language… example: English",
-    "languageSearchPlaceholder": "Search another language…",
     "addAnotherLanguage": "Add another…",
     "insurerPlaceholder": "Type an insurer… example: INS",
     "addAnotherInsurer": "Add another…",

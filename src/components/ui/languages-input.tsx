@@ -7,8 +7,6 @@ import { X } from "lucide-react";
 import { useAnchoredPosition } from "@/components/ui/anchored-dropdown";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 
-const SUGGESTED_LANGUAGE_IDS = ["es", "en", "fr", "pt"];
-
 // Modern chip/tag multi-select with autocomplete over the full language list. Selected
 // languages render as removable pills inside the field; typing filters the rest. The
 // suggestions dropdown is PORTALED to <body> and positioned `fixed` from the field's rect, so
@@ -61,40 +59,7 @@ export function LanguagesInput({ value, onChange }: Props) {
     setOpen(true);
   }
 
-  function toggle(id: string) {
-    if (value.includes(id)) onChange(value.filter((l) => l !== id));
-    else onChange([...value, id]);
-    setQuery("");
-    setHighlight(0);
-    setOpen(false);
-  }
-
   return (
-    <div className="space-y-2">
-      <div>
-        <p className="mb-1.5 text-xs font-semibold text-[#6b7280]">{t("suggestedLanguages")}</p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {SUGGESTED_LANGUAGE_IDS.map((id) => {
-            const selected = value.includes(id);
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => toggle(id)}
-                aria-pressed={selected}
-                className={`min-h-10 rounded-xl border px-3 text-sm font-bold transition-colors ${
-                  selected
-                    ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]"
-                    : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#bfdbfe] hover:bg-[#f8fbfe]"
-                }`}
-              >
-                {languageLabel(id, locale)}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
     <div ref={containerRef} className="relative">
       <div
         onClick={() => {
@@ -103,7 +68,7 @@ export function LanguagesInput({ value, onChange }: Props) {
         }}
         className="flex min-h-11 cursor-text flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2.5 transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#009FD9]"
       >
-        {value.filter((id) => !SUGGESTED_LANGUAGE_IDS.includes(id)).map((id) => (
+        {value.map((id) => (
           <span key={id} className="inline-flex max-w-full items-center gap-1 rounded-full bg-[#EBF5FB] py-1 pl-3 pr-1.5 text-sm font-medium text-[#0089bb]">
             <span className="min-w-0 truncate">{languageLabel(id, locale)}</span>
             <button type="button" onClick={() => remove(id)} className="grid h-4 w-4 place-items-center rounded-full text-[#0089bb]/70 hover:bg-[#009FD9]/20 hover:text-[#0089bb] transition-colors" aria-label={t("remove")}>
@@ -124,7 +89,7 @@ export function LanguagesInput({ value, onChange }: Props) {
             else if (e.key === "Escape") { setOpen(false); }
             else if (e.key === "Backspace" && query === "" && value.length > 0) { remove(value[value.length - 1]); }
           }}
-          placeholder={value.length === 0 ? t("languagePlaceholder") : t("languageSearchPlaceholder")}
+          placeholder={value.length === 0 ? t("languagePlaceholder") : t("addAnotherLanguage")}
           role="combobox"
           aria-expanded={dropdownOpen}
           aria-autocomplete="list"
@@ -163,7 +128,6 @@ export function LanguagesInput({ value, onChange }: Props) {
         </div>,
         document.body
       )}
-    </div>
     </div>
   );
 }
