@@ -994,9 +994,10 @@ export default function RegisterProfessionalPage() {
 
               {/* Profession — searchable combobox (a profesión groups the servicios
                   the pro later adds in their panel). */}
-              <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
-                <h3 className="text-sm font-extrabold text-[#162543]">{t("servicesSectionTitle")}</h3>
-                <div className="mt-3">
+              <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
+                <div className="p-4">
+                  <h3 className="text-sm font-extrabold text-[#162543]">{t("servicesSectionTitle")}</h3>
+                  <div className="mt-3">
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("professionPrincipal")} <span className="text-red-500">*</span>
                 </label>
@@ -1075,34 +1076,35 @@ export default function RegisterProfessionalPage() {
                       <Plus className="h-4 w-4" /> {t("addAnotherProfession")}
                     </button>
                   )}
+                  </div>
                 </div>
-                </div>
-              </section>
 
               {/* Work zones — provincia/cantón FIRST (drives /buscar), optional exact
                   pin. "Me desplazo" travel is enabled later in the panel. */}
-              <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
-                <h3 className="text-sm font-extrabold text-[#162543]">{t("workplacesSectionTitle")}</h3>
-                <div className="mt-3 flex flex-col gap-2">
+                </div>
+                <div className="border-t border-[#eef0f2] p-4">
+                  <h3 className="text-sm font-extrabold text-[#162543]">{t("workplacesSectionTitle")}</h3>
+                  <div className="mt-3 flex flex-col gap-2">
                   <label className="text-sm font-medium text-[#374151]">
                     {t("workplacesLabel")} <span className="text-red-500">*</span>
                   </label>
                   <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
                 </div>
 
-                {locationError && <p className="mt-2 text-xs text-red-500">{locationError}</p>}
-              </section>
+                  {locationError && <p className="mt-2 text-xs text-red-500">{locationError}</p>}
+                </div>
 
               {/* WhatsApp */}
-              <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
-                <h3 className="mb-3 text-sm font-extrabold text-[#162543]">{t("contactSectionTitle")}</h3>
-                <PhoneInput
-                  label={t("whatsapp")}
-                  required
-                  value={whatsappValue}
-                  onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
-                  error={form2.formState.errors.whatsapp?.message}
-                />
+                <div className="border-t border-[#eef0f2] p-4">
+                  <h3 className="mb-3 text-sm font-extrabold text-[#162543]">{t("contactSectionTitle")}</h3>
+                  <PhoneInput
+                    label={t("whatsapp")}
+                    required
+                    value={whatsappValue}
+                    onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
+                    error={form2.formState.errors.whatsapp?.message}
+                  />
+                </div>
               </section>
 
               <div className="flex gap-3 mt-2">
