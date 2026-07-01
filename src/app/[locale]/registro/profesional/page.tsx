@@ -865,10 +865,14 @@ export default function RegisterProfessionalPage() {
 
           {/* ── OAuth identity confirmation ───────────────────────────────── */}
           {currentUser && (
-            <div className="mb-4 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
+            <div className="mb-4 overflow-hidden rounded-2xl border border-[#d8eef8] bg-[#f8fbfe]">
               <div className="flex items-center gap-3 px-4 py-3">
-                {photoPreview && (
+                {photoPreview ? (
                   <img src={photoPreview} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                ) : (
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-sm font-extrabold text-[#009FD9] ring-1 ring-[#d8eef8]">
+                    {(currentUser.email?.charAt(0) ?? "C").toUpperCase()}
+                  </span>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-[#6b7280]">
@@ -879,7 +883,9 @@ export default function RegisterProfessionalPage() {
               </div>
               {step === 1 && !noCrId && accountCedula && (
                 <div className="flex items-center gap-3 border-t border-[#eef0f2] px-4 py-3">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-[#009FD9]" />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#009FD9] ring-1 ring-[#d8eef8]">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold text-[#6b7280]">{t("identityAlreadyRegistered")}</p>
                     <p className="break-words text-sm font-bold text-[#111827]">{t("usesAccountId", { name: oauthFullName || t("yourAccount") })}</p>
