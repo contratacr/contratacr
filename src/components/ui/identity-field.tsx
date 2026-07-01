@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, AlertCircle } from "lucide-react";
+import { IdCard, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
@@ -141,11 +141,20 @@ export function IdentityField({
       {showManualName && status !== "loading" && (
         <>
           {status === "notfound" && cleanId(cedula) && isValidId(cleanId(cedula)) && (
-            <div className="flex items-start gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] p-3 text-xs text-[#92400e]">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>
-                {t.rich(manualOverride ? "mismatchNotice" : "notFoundNotice", { b: (c) => <strong>{c}</strong> })}
-              </span>
+            <div role="status" aria-live="polite" className="rounded-2xl border border-[#bae6fd] bg-[#f0f9ff] px-4 py-3 text-sm shadow-sm">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#009FD9] ring-1 ring-[#bae6fd]">
+                  <IdCard className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-[#0f172a]">
+                    {t(manualOverride ? "mismatchTitle" : "notFoundTitle")}
+                  </p>
+                  <p className="mt-1 leading-5 text-[#475569]">
+                    {t.rich(manualOverride ? "mismatchNotice" : "notFoundNotice", { b: (c) => <strong className="font-semibold text-[#0f172a]">{c}</strong> })}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
           <Input
