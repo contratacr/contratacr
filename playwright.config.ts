@@ -4,6 +4,7 @@ const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 const localBaseURL = `http://127.0.0.1:${port}`;
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || localBaseURL;
 const useLocalServer = !process.env.PLAYWRIGHT_BASE_URL;
+const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -20,6 +21,9 @@ export default defineConfig({
     video: "retain-on-failure",
     navigationTimeout: 30_000,
     actionTimeout: 15_000,
+    extraHTTPHeaders: vercelBypassSecret
+      ? { "x-vercel-protection-bypass": vercelBypassSecret }
+      : undefined,
   },
   webServer: useLocalServer
     ? {
