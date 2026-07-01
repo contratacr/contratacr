@@ -59,7 +59,7 @@ The TSE padron is operational data, not a schema migration. A new Supabase envir
 
 Use **Actions -> Padron refresh**.
 
-The refresh only touches `public.padron`, `public.padron_staging`, and `public.finalize_padron_swap()`. Migration `084_harden_padron_swap.sql` must be applied before running it in an environment: it restricts the swap function to server roles and refuses to promote staging if fewer than 3,000,000 rows were loaded.
+The refresh only touches `public.padron`, `public.padron_staging`, and `public.finalize_padron_swap()`. Migration `084_harden_padron_swap.sql` must be applied before running it in an environment: it restricts the swap function to server roles and refuses to promote staging if fewer than 3,000,000 rows were loaded. The workflow then verifies both the direct SQL lookup and the REST/RPC lookup used by the app server.
 
 Recommended flow for a new test environment:
 
