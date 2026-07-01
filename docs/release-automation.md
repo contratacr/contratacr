@@ -122,7 +122,7 @@ The sync logs only field names and hashes, not HTML content or secrets.
 
 ## Regression and security checks
 
-- **Regression Tests**: manual full Playwright suite fixed to the test deployment. Run it from the `test` branch.
+- **Regression Tests**: manual full Playwright suite fixed to the test branch and test deployment.
 - **Security checks**: automatic on `main`, `test`, pull requests, and manual runs. It runs secret smoke checks, Supabase template validation, automation-script lint, build, and `npm audit --audit-level=high`.
 - **Dependabot**: weekly npm PRs and monthly GitHub Actions PRs.
 

@@ -37,9 +37,9 @@ npm run test:e2e:ui
 
 Use **Actions > Regression Tests > Run workflow**.
 
-- Select `test` in **Use workflow from**.
+- You can leave **Use workflow from** on GitHub's default branch. The workflow checks out `test` internally.
 - The workflow is fixed to the test Vercel URL and has no runtime inputs.
-- It refuses to run from any branch other than `test`.
+- It always runs the regression suite against the `test` branch and test deployment.
 
 If the Vercel test deployment is protected, add `VERCEL_AUTOMATION_BYPASS_SECRET` to the GitHub Environment secrets for `test`. Playwright will send it as the Vercel automation bypass header.
 
