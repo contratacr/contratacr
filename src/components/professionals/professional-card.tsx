@@ -13,10 +13,10 @@ import { primaryPricingLabel, type PricingTier } from "@/lib/pricing";
 // (one given name + up to two surnames) are left as-is. The FULL official name is
 // still shown on the professional's profile page; this never touches a company
 // /brand name (only the person's name).
-function shortPersonName(name?: string): string {
+function cardPersonName(name?: string): string {
   const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length <= 3) return parts.join(" ");
-  return [parts[0], parts[parts.length - 2], parts[parts.length - 1]].join(" ");
+  if (parts.length <= 2) return parts.join(" ");
+  return [parts[0], parts[parts.length - 2]].join(" ");
 }
 
 // A certification is a plain TEXT entry (no images): the certificate name, and
@@ -115,9 +115,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // Brand hierarchy: company name leads (clients recognize the brand), personal
   // name becomes the muted subtitle. No company → personal name leads, no subtitle.
   const businessName = professional.businessName?.trim();
-  // The PERSON's name is shortened for the card (first name + both surnames); a
+  // The PERSON's name is shortened for the card (first name + first surname); a
   // company/brand name is shown verbatim. The full official name stays on the profile.
-  const personName = shortPersonName(professional.fullName);
+  const personName = cardPersonName(professional.fullName);
   const brandPrimary = businessName || personName;
   const brandSecondary = businessName ? personName : "";
   const categoryName = catLabel(professional.categoryId);
@@ -199,13 +199,17 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
-                  Verificado, then the personal name = first name + both surnames. */}
+                  Verificado, then the personal name = first name + first surname. */}
               <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
-                <h3 className="truncate font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
+                <h3 title={businessName ? businessName : professional.fullName} className="truncate font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
+                  {brandPrimary}
+                </h3>
               </Link>
               {verifiedMark}
               {brandSecondary && (
-                <p className="text-[12px] font-medium leading-snug text-[#6b7280] lg:line-clamp-1">{brandSecondary}</p>
+                <p title={professional.fullName} className="text-[12px] font-medium leading-snug text-[#6b7280] lg:line-clamp-1">
+                  {brandSecondary}
+                </p>
               )}
             </div>
             {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
