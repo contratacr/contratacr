@@ -141,16 +141,19 @@ export function CategorySearch({
         type="button"
         onClick={openDropdown}
         className={cn(
-          "w-full flex items-center justify-between h-10 px-3 rounded-xl border text-sm text-left transition-all bg-white",
+          "w-full flex items-center justify-between h-11 px-3.5 rounded-xl border text-sm text-left transition-all bg-white shadow-sm",
           error ? "border-red-400" : "border-[#e5e7eb]",
           open ? "border-[#009FD9] ring-2 ring-[#009FD9]/20" : "hover:border-[#009FD9]/50"
         )}
       >
-        {selectedLabel ? (
-          <span className="text-[#111827] truncate flex-1">{selectedLabel}</span>
-        ) : (
-          <span className="text-[#9ca3af] truncate flex-1">{placeholder ?? t("placeholderDefault")}</span>
-        )}
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          {!selectedLabel && <Search className="h-4 w-4 shrink-0 text-[#9ca3af]" />}
+          {selectedLabel ? (
+            <span className="truncate font-medium text-[#111827]">{selectedLabel}</span>
+          ) : (
+            <span className="truncate text-[#9ca3af]">{placeholder ?? t("placeholderDefault")}</span>
+          )}
+        </span>
         <div className="flex items-center gap-1 shrink-0 ml-2">
           {value && (
             <button
@@ -210,20 +213,21 @@ export function CategorySearch({
               </div>
             ) : (
               query ? grouped.map(([groupLabel, items]) => (
-                <div key={groupLabel}>
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
+                <div key={groupLabel} className="px-2 py-1.5">
+                  <p className="px-1.5 pb-1.5 pt-1 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
                     {items[0]?.groupId ? getCategoryGroupLabel(items[0].groupId, locale) : groupLabel}
                   </p>
+                  <div className="grid grid-cols-1 gap-1.5">
                   {items.map((item) => (
                     <button
                       key={item.id}
                       type="button"
                       onClick={() => handleSelect(item.id)}
                       className={cn(
-                        "w-full text-left px-3 py-2 text-sm transition-colors",
+                        "w-full rounded-xl border px-3.5 py-2.5 text-left text-sm transition-colors",
                         value === item.id
-                          ? "bg-[#EBF5FB] text-[#009FD9] font-medium"
-                          : "text-[#374151] hover:bg-[#f9fafb]"
+                          ? "border-[#009FD9] bg-[#EBF5FB] font-medium text-[#009FD9]"
+                          : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:bg-[#f8fbfe] hover:text-[#0089bb]"
                       )}
                     >
                       {query ? (
@@ -233,6 +237,7 @@ export function CategorySearch({
                       )}
                     </button>
                   ))}
+                  </div>
                 </div>
               )) : (
                 <CategoryGroupPicker
@@ -243,6 +248,9 @@ export function CategorySearch({
                   selectedId={value}
                   backLabel={t("back")}
                   countLabel={(count) => t("optionsCount", { count })}
+                  className="p-2"
+                  groupClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-[#f8fbfe]"
+                  optionClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-[#f8fbfe]"
                 />
               )
             )}
