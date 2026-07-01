@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,16 @@ export function CategoryGroupPicker({
   optionClassName?: string;
 }) {
   const locale = useLocale();
-  const activeGroup = activeGroupId ? groups.find((g) => g.id === activeGroupId) ?? null : null;
+  const normalizedGroups = useMemo(() => {
+    const byId = new Map<string, CategoryPickerGroup>();
+    for (const group of groups) {
+      const existing = byId.get(group.id);
+      if (existing) existing.items.push(...group.items);
+      else byId.set(group.id, { ...group, items: [...group.items] });
+    }
+    return Array.from(byId.values());
+  }, [groups]);
+  const activeGroup = activeGroupId ? normalizedGroups.find((g) => g.id === activeGroupId) ?? null : null;
 
   if (activeGroup) {
     return (
@@ -76,7 +85,7 @@ export function CategoryGroupPicker({
 
   return (
     <div className={cn("grid grid-cols-1 gap-1", className)}>
-      {groups.map((group) => (
+      {normalizedGroups.map((group) => (
         <button
           key={group.id}
           type="button"
