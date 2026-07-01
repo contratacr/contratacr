@@ -43,8 +43,22 @@ if (!Array.isArray(manifest) || manifest.length === 0) {
 }
 
 const payload = {};
+const usedKeys = new Set();
+const usedFiles = new Set();
 
 for (const item of manifest) {
+  for (const field of ["name", "file", "subjectKey", "contentKey", "subject"]) {
+    if (!item[field] || typeof item[field] !== "string") {
+      fail(`Template manifest item is missing ${field}.`);
+    }
+  }
+  for (const key of [item.subjectKey, item.contentKey]) {
+    if (usedKeys.has(key)) fail(`Template manifest uses ${key} more than once.`);
+    usedKeys.add(key);
+  }
+  if (usedFiles.has(item.file)) fail(`Template manifest uses ${item.file} more than once.`);
+  usedFiles.add(item.file);
+
   const filePath = path.join(templatesDir, item.file);
   const content = await fs.readFile(filePath, "utf8");
 

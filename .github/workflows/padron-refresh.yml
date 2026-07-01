@@ -90,5 +90,15 @@ jobs:
           psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select public.finalize_padron_swap();"
           psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select * from public.padron_lookup('$PADRON_SAMPLE_CEDULA');"
 
-      - name: Verify padron lookup
+      - name: Verify SQL padron lookup
         run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select * from public.padron_lookup('$PADRON_SAMPLE_CEDULA');"
+
+      - name: Verify REST padron lookup
+        run: |
+          set -euo pipefail
+          response="$(curl -fsS "$SUPABASE_URL/rest/v1/rpc/padron_lookup" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"p_cedula\":\"$PADRON_SAMPLE_CEDULA\"}")"
+          printf '%s' "$response" | node -e "const fs = require('fs'); const data = JSON.parse(fs.readFileSync(0, 'utf8')); const row = Array.isArray(data) ? data[0] : data; if (!row || !row.nombre) { console.error('padron_lookup REST returned no row.'); process.exit(1); } console.log('REST padron lookup ok.');"
