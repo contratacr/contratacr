@@ -24,4 +24,4 @@ export async function detectSocialOnly(email: string): Promise<string | null> {
 }
 
 export const providerLabel = (p: string): string =>
-  p === "google" ? "Google" : p === "facebook" ? "Facebook" : p;
+  p === "google" ? "Google" : p === "facebook" ? "Facebook" : p === "phone" || p === "whatsapp" ? "WhatsApp" : p;

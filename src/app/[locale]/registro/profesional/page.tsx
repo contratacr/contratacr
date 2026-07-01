@@ -414,6 +414,12 @@ export default function RegisterProfessionalPage() {
     }),
   }), [t, tRp]);
   const { user: currentUser, loading: authLoading } = useAuth();
+  const authMetadata = currentUser?.app_metadata as { provider?: string; providers?: string[] } | undefined;
+  const connectedProvider =
+    authMetadata?.provider && authMetadata.provider !== "email"
+      ? authMetadata.provider
+      : authMetadata?.providers?.find((provider) => provider !== "email") ?? null;
+  const connectedProviderLabel = connectedProvider ? providerLabel(connectedProvider) : null;
 
   // step: -1=loading, 0=identity (email/pw users), 1=service+location, 2=profile+photo
   const [step, setStep] = useState(-1);
@@ -864,7 +870,9 @@ export default function RegisterProfessionalPage() {
                 <img src={photoPreview} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-[#009FD9] font-semibold">{t("oauthConfirmed")}</p>
+                <p className="text-xs text-[#009FD9] font-semibold">
+                  {connectedProviderLabel ? t("oauthConfirmedWithProvider", { provider: connectedProviderLabel }) : t("oauthConfirmed")}
+                </p>
                 <p className="text-sm font-bold text-[#111827] truncate">{currentUser.email}</p>
               </div>
               <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
