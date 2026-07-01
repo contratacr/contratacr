@@ -179,8 +179,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           Verificado + personal name, then the service tags and rating DIRECTLY beneath —
           so tags/reviews read as part of the same block right under the name (they used to
           be siblings of this row and got pushed BELOW the taller avatar, leaving a gap).
-          PRICE is right-aligned on the company-name line only. The mobile `pr-7` keeps the
-          price clear of the top-right bookmark (`lg:pr-0` on desktop). */}
+          PRICE is right-aligned on the company-name line only. The mobile `pr-8` keeps the
+          price clear of the inside top-right bookmark (`lg:pr-0` on desktop). */}
       <div className="flex items-start gap-3">
         <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
           <Avatar className="h-14 w-14 rounded-full lg:h-16 lg:w-16">
@@ -195,7 +195,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         </Link>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           {/* Company-name line + PRICE (right-aligned on THIS line only). */}
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2 pr-8 lg:pr-0">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
@@ -274,7 +274,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     // body out in TWO columns (info + location tabs | schedule), separated by a vertical
     // divider; MOBILE stacks them — all owned by ProfessionalSchedule, which holds the
     // schedule state and receives the info above as a slot. The ranking number now rides on
-    // the avatar; the favorite bookmark floats outside the text/price flow.
+    // the avatar; the favorite bookmark sits inside the card so responsive sheets never clip it.
     <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
       <ProfessionalSchedule
         info={info}

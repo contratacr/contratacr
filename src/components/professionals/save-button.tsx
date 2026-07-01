@@ -176,8 +176,9 @@ export function SaveableCard({ pro, children, isOwn = false }: CardWrapperProps)
     // grows to its content — no equal-height plumbing needed here.
     <div className="relative">
       {children}
-      {/* Always-visible favorites button, floating outside the text/price row. */}
-      <div className="absolute -right-2 -top-2 z-20 rounded-full bg-white/95 shadow-sm ring-1 ring-black/5 lg:right-3 lg:top-1.5 lg:bg-transparent lg:shadow-none lg:ring-0">
+      {/* Always-visible favorites button. Keep it INSIDE the card on mobile so the
+          search bottom sheet/map container can never clip it. */}
+      <div className="absolute right-3 top-3 z-20 rounded-full bg-white/95 shadow-sm ring-1 ring-black/5 lg:right-3 lg:top-1.5 lg:bg-transparent lg:shadow-none lg:ring-0">
         <SaveButton pro={pro} isOwn={isOwn} />
       </div>
     </div>
