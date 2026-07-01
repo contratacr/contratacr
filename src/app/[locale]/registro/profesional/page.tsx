@@ -865,11 +865,7 @@ export default function RegisterProfessionalPage() {
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-[#009FD9] font-semibold">{t("oauthConfirmed")}</p>
-                <p className="text-sm font-bold text-[#111827] truncate">
-                  {(currentUser.user_metadata?.full_name as string) ||
-                   (currentUser.user_metadata?.name as string) ||
-                   currentUser.email}
-                </p>
+                <p className="text-sm font-bold text-[#111827] truncate">{currentUser.email}</p>
               </div>
               <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
             </div>
@@ -957,10 +953,10 @@ export default function RegisterProfessionalPage() {
                   A converting client who already has a cédula on file skips this
                   entirely (we reuse the stored, already-verified cédula). */}
               {currentUser && !noCrId && accountCedula ? (
-                <div className="flex items-center gap-3 bg-[#f0fdf4] border border-[#bbf7d0] rounded-xl px-4 py-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#16a34a] shrink-0" />
+                <div className="flex items-center gap-3 rounded-xl border border-[#bfdbfe] bg-[#EBF5FB] px-4 py-3">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-[#009FD9]" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[#15803d]">{t("identityAlreadyRegistered")}</p>
+                    <p className="text-xs font-semibold text-[#0089bb]">{t("identityAlreadyRegistered")}</p>
                     <p className="text-sm text-[#111827] break-words">{t("usesAccountId", { name: oauthFullName || t("yourAccount") })}</p>
                   </div>
                 </div>
