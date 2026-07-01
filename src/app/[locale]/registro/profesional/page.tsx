@@ -875,7 +875,6 @@ export default function RegisterProfessionalPage() {
                 </p>
                 <p className="text-sm font-bold text-[#111827] truncate">{currentUser.email}</p>
               </div>
-              <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
             </div>
           )}
 
