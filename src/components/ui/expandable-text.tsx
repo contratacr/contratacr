@@ -55,7 +55,7 @@ export function ExpandableText({
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className={cn("mt-1 text-[12px] font-semibold text-[#0089bb] transition-colors hover:text-[#009FD9]")}
+          className={cn("mt-1 cursor-pointer rounded-sm text-[12px] font-semibold text-[#0089bb] transition-colors hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30")}
         >
           {expanded ? t("seeLess") : t("seeMore")}
         </button>
