@@ -416,6 +416,8 @@
     "mismatchNotice": "Indicaste que la información encontrada no es tuya. Escribe tu nombre completo y dejaremos tu identidad <b>pendiente de revisión</b> para confirmarla manualmente.",
     "notFoundTitle": "Revisión manual",
     "notFoundNotice": "Esta identificación no aparece en el padrón. Puede ser DIMEX/NITE, extranjera o reciente. Escribe tu nombre completo y la revisaremos manualmente.",
+    "unavailableTitle": "Padrón no disponible",
+    "unavailableNotice": "No pudimos consultar el padrón en este momento. Intenta de nuevo en unos minutos.",
     "fullName": "Nombre completo",
     "namePlaceholder": "Juan Pérez González",
     "nameHint": "tal como aparece en tu documento"

@@ -51,6 +51,17 @@ export async function GET(
 
   const result = await getIdentityVerifier().lookup(cedula);
 
+  if (result.unavailable) {
+    return NextResponse.json(
+      {
+        found: false,
+        unavailable: true,
+        error: "No pudimos consultar el padrón en este momento.",
+      },
+      { status: 503 }
+    );
+  }
+
   if (result.found && result.fullName) {
     // dob is ALWAYS null (the padrón has no birth date — the unused fecha_nacimiento
     // column was dropped in migration 066; DOB is collected manually). isAdult is true

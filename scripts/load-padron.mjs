@@ -37,7 +37,8 @@ async function flush(rows) {
 
 async function main() {
   console.log("Clearing staging…");
-  await db.from("padron_staging").delete().neq("cedula", "");
+  const { error: clearError } = await db.from("padron_staging").delete().neq("cedula", "");
+  if (clearError) { console.error("clear staging error:", clearError.message); process.exit(1); }
 
   const rl = readline.createInterface({
     input: fs.createReadStream(FILE, { encoding: "latin1" }),
