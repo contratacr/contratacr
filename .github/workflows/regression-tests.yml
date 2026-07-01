@@ -24,6 +24,10 @@ jobs:
           set -euo pipefail
           echo "Checked out test branch for regression."
           echo "Running regression against $PLAYWRIGHT_BASE_URL"
+          if [ -z "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            echo "::error::Missing VERCEL_AUTOMATION_BYPASS_SECRET in the test GitHub Environment. Vercel preview deployments are protected, so Playwright will see the Vercel login page instead of ContrataCR."
+            exit 1
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v5
