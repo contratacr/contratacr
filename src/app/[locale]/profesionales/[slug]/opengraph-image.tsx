@@ -24,8 +24,8 @@ async function logoWordmarkDataUrl() {
 
 function LogoWordmark({
   src,
-  width = 244,
-  height = 54,
+  width = 292,
+  height = 65,
 }: {
   src: string;
   width?: number;
