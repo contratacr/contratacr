@@ -1958,6 +1958,7 @@
     "manageAccount": "Manage my {provider} account",
     "emailSent": "✓ Check your new email and open the link to confirm the change.",
     "emailApplied": "✓ Your email was updated successfully.",
+    "emailPending": "The email change is still pending. Open the confirmation link we sent you.",
     "emailTaken": "That email is already registered to another account.",
     "emailChangeError": "We couldn't change the email. Try again.",
     "newEmailPlaceholder": "new@email.com",

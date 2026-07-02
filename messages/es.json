@@ -1956,6 +1956,7 @@
     "manageAccount": "Administrar mi cuenta de {provider}",
     "emailSent": "✓ Revisa tu correo nuevo y abre el enlace para confirmar el cambio.",
     "emailApplied": "✓ Tu correo se actualizó correctamente.",
+    "emailPending": "El cambio de correo todavía está pendiente. Abre el enlace de confirmación que te enviamos.",
     "emailTaken": "Ese correo ya está registrado en otra cuenta.",
     "emailChangeError": "No pudimos cambiar el correo. Intenta de nuevo.",
     "newEmailPlaceholder": "nuevo@correo.com",
