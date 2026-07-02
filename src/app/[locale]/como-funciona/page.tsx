@@ -1,248 +1,391 @@
-"use client";
-
-import { useState } from "react";
-import { useTranslations } from "next-intl";
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { ComoFuncionaFaq } from "./faq-accordion";
 import {
-  ChevronDown, Search, BadgeCheck, MessageCircle, FileText,
-  Bell, Users, Banknote, CalendarClock, ArrowRight,
+  ArrowRight,
+  BadgeCheck,
+  Bell,
+  BriefcaseBusiness,
+  CalendarClock,
+  CheckCircle2,
+  ClipboardList,
+  FileText,
+  Heart,
+  Image as ImageIcon,
+  Languages,
+  MapPin,
+  MessageCircle,
+  PhoneCall,
+  Search,
+  ShieldCheck,
+  Star,
+  UserCheck,
+  Video,
+  WalletCards,
 } from "lucide-react";
 
-function FaqAccordion() {
-  const t = useTranslations("comoFunciona");
-  const [open, setOpen] = useState<number | null>(null);
-  const items = [0, 1, 2, 3, 4];
+type IconComponent = (props: { className?: string }) => ReactNode;
+type Translation = (key: string) => string;
+
+const iconTileClass = "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#0089bb]";
+const softCardClass = "rounded-2xl border border-[#e5e7eb] bg-white shadow-sm";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("comoFunciona");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDesc"),
+    openGraph: {
+      title: t("metaTitle"),
+      description: t("metaDesc"),
+      url: "https://contratacr.com/es/como-funciona",
+      siteName: "ContrataCR",
+      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: t("metaTitle") }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("metaTitle"),
+      description: t("metaDesc"),
+      images: ["/og-image.png"],
+    },
+  };
+}
+
+function SectionHeading({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle: string }) {
   return (
-    <div className="divide-y divide-gray-100">
-      {items.map((i) => (
-        <div key={i}>
-          <button
-            onClick={() => setOpen(open === i ? null : i)}
-            className="w-full flex items-center justify-between py-5 text-left gap-4 group"
-          >
-            <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#009FD9] transition-colors">
-              {t(`faq${i}Q`)}
-            </span>
-            <ChevronDown
-              className={`h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200 ${open === i ? "rotate-180 text-[#009FD9]" : ""}`}
-            />
-          </button>
-          {open === i && (
-            <p className="pb-5 text-sm text-gray-500 leading-relaxed">{t(`faq${i}A`)}</p>
-          )}
-        </div>
-      ))}
+    <div className="mx-auto mb-9 max-w-2xl text-center">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#009FD9]">{eyebrow}</p>
+      <h2 className="mt-2 text-2xl font-extrabold leading-tight text-[#162543] sm:text-3xl">{title}</h2>
+      <p className="mt-3 text-sm leading-relaxed text-[#6b7280] sm:text-base">{subtitle}</p>
     </div>
   );
 }
 
-/* ── Mini step card ── */
-function MiniStep({ n, label, sub }: { n: number; label: string; sub: string }) {
+function FeatureCard({ icon: Icon, title, body }: { icon: IconComponent; title: string; body: string }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="h-7 w-7 rounded-full bg-[#009FD9] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+    <div className={`${softCardClass} p-5`}>
+      <div className="mb-4 flex items-center gap-3">
+        <div className={iconTileClass}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <h3 className="text-sm font-bold leading-snug text-[#162543]">{title}</h3>
+      </div>
+      <p className="text-sm leading-relaxed text-[#6b7280]">{body}</p>
+    </div>
+  );
+}
+
+function StepCard({ n, title, body }: { n: number; title: string; body: string }) {
+  return (
+    <div className="flex gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4">
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-xs font-black text-white">
         {n}
       </div>
       <div>
-        <p className="text-sm font-semibold text-[#1a2744]">{label}</p>
-        <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{sub}</p>
+        <h3 className="text-sm font-bold text-[#162543]">{title}</h3>
+        <p className="mt-1 text-sm leading-relaxed text-[#6b7280]">{body}</p>
       </div>
     </div>
   );
 }
 
-const leadIconClass = "flex h-12 w-12 items-center justify-center rounded-2xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
+function MiniMetric({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="rounded-xl border border-[#d8eef8] bg-white px-4 py-3 text-left">
+      <p className="text-lg font-black text-[#162543]">{value}</p>
+      <p className="text-xs font-semibold leading-snug text-[#6b7280]">{label}</p>
+    </div>
+  );
+}
 
-export default function ComoFuncionaPage() {
-  const t = useTranslations("comoFunciona");
+function ProductPreview({ t }: { t: Translation }) {
+  return (
+    <div className="mx-auto mt-10 max-w-5xl rounded-[2rem] border border-[#d8eef8] bg-[#f8fbfd] p-3 shadow-[0_24px_70px_-45px_rgba(22,37,67,0.45)]">
+      <div className="grid gap-3 md:grid-cols-[1.05fr_0.95fr]">
+        <div className="rounded-[1.5rem] border border-[#e5e7eb] bg-white p-4">
+          <div className="mb-4 flex items-center gap-2 rounded-full border border-[#d8eef8] bg-white px-3 py-2">
+            <Search className="h-4 w-4 text-[#009FD9]" />
+            <span className="text-sm font-medium text-[#6b7280]">{t("mockSearch")}</span>
+          </div>
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EAF7FD] text-sm font-black text-[#009FD9]">CR</div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-extrabold text-[#162543]">{t("mockProName")}</p>
+                      <span className="mt-1 inline-flex rounded-full bg-[#009FD9] px-2 py-0.5 text-[11px] font-bold text-white">{t("verified")}</span>
+                    </div>
+                    <p className="text-right text-sm font-black leading-tight text-[#009FD9]">{t("mockPrice")}</p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <span className="rounded-full bg-[#f3f4f6] px-2 py-1 text-xs font-medium text-[#6b7280]">{t("mockServiceA")}</span>
+                    <span className="rounded-full bg-[#f3f4f6] px-2 py-1 text-xs font-medium text-[#6b7280]">{t("mockServiceB")}</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#0089bb]">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {t("mockLocation")}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-3 py-2.5 text-sm font-bold text-white">
+                <WhatsAppIcon className="h-4 w-4" /> {t("mockContact")}
+              </button>
+              <button className="inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-3 py-2.5 text-sm font-bold text-white">
+                <CalendarClock className="h-4 w-4" /> {t("mockBook")}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[1.5rem] border border-[#e5e7eb] bg-white p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#009FD9]">{t("mockPanelEyebrow")}</p>
+              <h3 className="text-lg font-extrabold text-[#162543]">{t("mockPanelTitle")}</h3>
+            </div>
+            <span className="rounded-full bg-[#EBF5FB] px-2.5 py-1 text-xs font-bold text-[#0089bb]">{t("mockPanelBadge")}</span>
+          </div>
+          <div className="space-y-3">
+            {[
+              { icon: Bell, title: t("mockPanelItem0"), body: t("mockPanelItem0Sub") },
+              { icon: ClipboardList, title: t("mockPanelItem1"), body: t("mockPanelItem1Sub") },
+              { icon: Star, title: t("mockPanelItem2"), body: t("mockPanelItem2Sub") },
+            ].map(({ icon: Icon, title, body }) => (
+              <div key={title} className="flex gap-3 rounded-xl bg-[#f8fafc] p-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#009FD9]">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[#162543]">{title}</p>
+                  <p className="text-xs leading-relaxed text-[#6b7280]">{body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default async function ComoFuncionaPage() {
+  const t = await getTranslations("comoFunciona");
+
+  const clientSteps = [0, 1, 2].map((i) => ({
+    title: t(`clientStep${i}Title`),
+    body: t(`clientStep${i}Body`),
+  }));
+  const publishSteps = [0, 1, 2].map((i) => ({
+    title: t(`publishStep${i}Title`),
+    body: t(`publishStep${i}Body`),
+  }));
+  const proSteps = [0, 1, 2].map((i) => ({
+    title: t(`proStep${i}Title`),
+    body: t(`proStep${i}Body`),
+  }));
+  const faqs = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({
+    question: t(`faq${i}Q`),
+    answer: t(`faq${i}A`),
+  }));
+
+  const clientBenefits = [
+    { icon: Search, title: t("clientBenefit0Title"), body: t("clientBenefit0Body") },
+    { icon: ShieldCheck, title: t("clientBenefit1Title"), body: t("clientBenefit1Body") },
+    { icon: CalendarClock, title: t("clientBenefit2Title"), body: t("clientBenefit2Body") },
+    { icon: Heart, title: t("clientBenefit3Title"), body: t("clientBenefit3Body") },
+  ];
+  const proBenefits = [
+    { icon: UserCheck, title: t("proBenefit0Title"), body: t("proBenefit0Body") },
+    { icon: ImageIcon, title: t("proBenefit1Title"), body: t("proBenefit1Body") },
+    { icon: MapPin, title: t("proBenefit2Title"), body: t("proBenefit2Body") },
+    { icon: Bell, title: t("proBenefit3Title"), body: t("proBenefit3Body") },
+    { icon: WalletCards, title: t("proBenefit4Title"), body: t("proBenefit4Body") },
+    { icon: BriefcaseBusiness, title: t("proBenefit5Title"), body: t("proBenefit5Body") },
+  ];
+  const trustItems = [
+    { icon: BadgeCheck, title: t("trust0Title"), body: t("trust0Body") },
+    { icon: Star, title: t("trust1Title"), body: t("trust1Body") },
+    { icon: MessageCircle, title: t("trust2Title"), body: t("trust2Body") },
+    { icon: PhoneCall, title: t("trust3Title"), body: t("trust3Body") },
+    { icon: Video, title: t("trust4Title"), body: t("trust4Body") },
+    { icon: Languages, title: t("trust5Title"), body: t("trust5Body") },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
 
-      {/* Hero */}
-      <section className="pt-32 pb-16 bg-white text-center px-4">
-        <FadeInUp>
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
-            {t("eyebrow")}
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
-            {t("titleA")}<br className="hidden sm:block" />{" "}{t("titleB")}
-          </h1>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            {t("subtitle")}
-          </p>
-        </FadeInUp>
-      </section>
-
-      {/* Two paths */}
-      <section className="pb-20 px-4">
-        <div className="mx-auto max-w-4xl">
+      <main className="flex-1">
+        <section className="bg-white px-4 pb-12 pt-28 sm:pt-32">
           <FadeInUp>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-              {/* Path 1 — Search */}
-              <div className="bg-white border-2 border-[#e5e7eb] rounded-3xl p-8 hover:border-[#009FD9]/40 hover:shadow-md transition-all">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className={leadIconClass}>
-                    <Search className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">{t("opt1Badge")}</p>
-                    <h2 className="text-xl font-bold text-[#1a2744]">{t("opt1Title")}</h2>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  {t("opt1Desc")}
-                </p>
-                <div className="flex flex-col gap-4">
-                  <MiniStep n={1} label={t("opt1Step1Title")} sub={t("opt1Step1Sub")} />
-                  <MiniStep n={2} label={t("opt1Step2Title")} sub={t("opt1Step2Sub")} />
-                  <MiniStep n={3} label={t("opt1Step3Title")} sub={t("opt1Step3Sub")} />
-                </div>
-                <Link
-                  href="/buscar"
-                  className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#009FD9] hover:underline"
-                >
-                  {t("opt1Cta")} <ArrowRight className="h-4 w-4" />
+            <div className="mx-auto max-w-4xl text-center">
+              <span className="inline-flex rounded-full bg-[#EBF5FB] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#009FD9]">
+                {t("eyebrow")}
+              </span>
+              <h1 className="mt-5 text-4xl font-black leading-tight text-[#162543] sm:text-6xl">
+                {t("title")}
+              </h1>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#6b7280] sm:text-lg">
+                {t("subtitle")}
+              </p>
+              <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+                <Link href="/buscar" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-[#0089bb]">
+                  <Search className="h-4 w-4" /> {t("heroSearchCta")}
+                </Link>
+                <Link href="/registro/profesional" className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8eef8] bg-white px-6 py-3 text-sm font-black text-[#162543] transition-colors hover:border-[#009FD9]">
+                  <BriefcaseBusiness className="h-4 w-4" /> {t("heroProCta")}
                 </Link>
               </div>
-
-              {/* Path 2 — Post project */}
-              <div className="bg-white border-2 border-[#e5e7eb] rounded-3xl p-8 hover:border-[#009FD9]/40 hover:shadow-md transition-all">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className={leadIconClass}>
-                    <FileText className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">{t("opt2Badge")}</p>
-                    <h2 className="text-xl font-bold text-[#1a2744]">{t("opt2Title")}</h2>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  {t("opt2Desc")}
-                </p>
-                <div className="flex flex-col gap-4">
-                  <MiniStep n={1} label={t("opt2Step1Title")} sub={t("opt2Step1Sub")} />
-                  <MiniStep n={2} label={t("opt2Step2Title")} sub={t("opt2Step2Sub")} />
-                  <MiniStep n={3} label={t("opt2Step3Title")} sub={t("opt2Step3Sub")} />
-                </div>
-                <Link
-                  href="/publicar-proyecto"
-                  className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#009FD9] hover:underline"
-                >
-                  {t("opt2Cta")} <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-
             </div>
           </FadeInUp>
-        </div>
-      </section>
+          <FadeInUp delay={80}>
+            <ProductPreview t={t} />
+          </FadeInUp>
+        </section>
 
-      {/* Para profesionales */}
-      <section className="py-20 px-4" style={{ background: "#EBF5FB" }}>
-        <div className="mx-auto max-w-4xl">
-          <FadeInUp>
-            <div className="text-center">
-              <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-white px-4 py-1.5 rounded-full mb-4">
-                {t("prosBadge")}
-              </span>
-              <h2 className="text-3xl font-extrabold text-[#1a2744] mb-4">
-                {t("prosTitle")}
-              </h2>
-              <p className="text-gray-500 mb-8 text-sm leading-relaxed max-w-xl mx-auto">
-                {t("prosSubtitle")}
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                {[
-                  { Icon: Banknote, key: "benefit0" },
-                  { Icon: BadgeCheck, key: "benefit1" },
-                  { Icon: Users, key: "benefit2" },
-                  { Icon: CalendarClock, key: "benefit3" },
-                ].map(({ Icon, key }) => (
-                  <div key={key} className="bg-white rounded-2xl p-4 text-center border border-white/80">
-                    <Icon className="h-6 w-6 text-[#009FD9] mx-auto mb-2" />
-                    <p className="text-xs font-semibold text-[#374151]">{t(key)}</p>
+        <section className="border-y border-[#e5e7eb] bg-[#f8fbfd] px-4 py-8">
+          <div className="mx-auto grid max-w-5xl gap-3 sm:grid-cols-3">
+            <MiniMetric value={t("metric0Value")} label={t("metric0Label")} />
+            <MiniMetric value={t("metric1Value")} label={t("metric1Label")} />
+            <MiniMetric value={t("metric2Value")} label={t("metric2Label")} />
+          </div>
+        </section>
+
+        <section className="bg-white px-4 py-16">
+          <div className="mx-auto max-w-5xl">
+            <SectionHeading eyebrow={t("pathsEyebrow")} title={t("pathsTitle")} subtitle={t("pathsSubtitle")} />
+            <div className="grid gap-5 lg:grid-cols-2">
+              <div className={`${softCardClass} h-full p-5 sm:p-6`}>
+                <div className="mb-5 flex items-center gap-3">
+                  <div className={iconTileClass}><Search className="h-5 w-5" /></div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#009FD9]">{t("clientPathBadge")}</p>
+                    <h2 className="text-xl font-black text-[#162543]">{t("clientPathTitle")}</h2>
                   </div>
+                </div>
+                <p className="mb-5 text-sm leading-relaxed text-[#6b7280]">{t("clientPathDesc")}</p>
+                <div className="space-y-3">
+                  {clientSteps.map((step, i) => <StepCard key={step.title} n={i + 1} title={step.title} body={step.body} />)}
+                </div>
+                <Link href="/buscar" className="mt-6 inline-flex items-center gap-2 text-sm font-black text-[#009FD9] hover:underline">
+                  {t("clientPathCta")} <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              <div className={`${softCardClass} h-full p-5 sm:p-6`}>
+                <div className="mb-5 flex items-center gap-3">
+                  <div className={iconTileClass}><FileText className="h-5 w-5" /></div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#009FD9]">{t("publishPathBadge")}</p>
+                    <h2 className="text-xl font-black text-[#162543]">{t("publishPathTitle")}</h2>
+                  </div>
+                </div>
+                <p className="mb-5 text-sm leading-relaxed text-[#6b7280]">{t("publishPathDesc")}</p>
+                <div className="space-y-3">
+                  {publishSteps.map((step, i) => <StepCard key={step.title} n={i + 1} title={step.title} body={step.body} />)}
+                </div>
+                <Link href="/publicar-proyecto" className="mt-6 inline-flex items-center gap-2 text-sm font-black text-[#009FD9] hover:underline">
+                  {t("publishPathCta")} <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[#f4f7fa] px-4 py-16">
+          <div className="mx-auto max-w-5xl">
+            <SectionHeading eyebrow={t("clientsEyebrow")} title={t("clientsTitle")} subtitle={t("clientsSubtitle")} />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {clientBenefits.map((item) => (
+                <FeatureCard key={item.title} icon={item.icon} title={item.title} body={item.body} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white px-4 py-16">
+          <div className="mx-auto max-w-5xl">
+            <SectionHeading eyebrow={t("prosEyebrow")} title={t("prosTitle")} subtitle={t("prosSubtitle")} />
+            <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+              <div className={`${softCardClass} p-5 sm:p-6`}>
+                <h3 className="text-lg font-black text-[#162543]">{t("proFlowTitle")}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#6b7280]">{t("proFlowDesc")}</p>
+                <div className="mt-5 space-y-3">
+                  {proSteps.map((step, i) => <StepCard key={step.title} n={i + 1} title={step.title} body={step.body} />)}
+                </div>
+                <Link href="/registro/profesional" className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-6 py-3 text-sm font-black text-white transition-colors hover:bg-[#0089bb]">
+                  {t("prosCta")} <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {proBenefits.map((item) => (
+                  <FeatureCard key={item.title} icon={item.icon} title={item.title} body={item.body} />
                 ))}
               </div>
-              <Link
-                href="/registro/profesional"
-                className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-8 py-3.5 rounded-full transition-all shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)]"
-              >
-                {t("prosCta")} <ArrowRight className="h-4 w-4" />
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[#EBF5FB] px-4 py-16">
+          <div className="mx-auto max-w-5xl">
+            <SectionHeading eyebrow={t("trustEyebrow")} title={t("trustTitle")} subtitle={t("trustSubtitle")} />
+            <div className="grid gap-4 md:grid-cols-3">
+              {trustItems.map((item) => (
+                <FeatureCard key={item.title} icon={item.icon} title={item.title} body={item.body} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white px-4 py-16">
+          <div className="mx-auto max-w-5xl">
+            <SectionHeading eyebrow={t("compareEyebrow")} title={t("compareTitle")} subtitle={t("compareSubtitle")} />
+            <div className="grid gap-4 lg:grid-cols-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className={`${softCardClass} p-5`}>
+                  <div className="mb-3 flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-[#009FD9]" />
+                    <h3 className="text-sm font-black text-[#162543]">{t(`compare${i}Title`)}</h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-[#6b7280]">{t(`compare${i}Body`)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[#f8fbfd] px-4 py-16">
+          <div className="mx-auto max-w-3xl">
+            <SectionHeading eyebrow={t("faqEyebrow")} title={t("faqTitle")} subtitle={t("faqSubtitle")} />
+            <ComoFuncionaFaq items={faqs} />
+          </div>
+        </section>
+
+        <section className="bg-[#162543] px-4 py-16 text-center">
+          <FadeInUp>
+            <h2 className="text-3xl font-black text-white">{t("ctaTitle")}</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#c7d2fe]">{t("ctaSubtitle")}</p>
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/buscar" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-7 py-3 text-sm font-black text-white transition-colors hover:bg-[#0089bb]">
+                <Search className="h-4 w-4" /> {t("ctaSearch")}
+              </Link>
+              <Link href="/publicar-proyecto" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20">
+                <MessageCircle className="h-4 w-4" /> {t("ctaPublish")}
               </Link>
             </div>
           </FadeInUp>
-
-          {/* How projects work for pros */}
-          <FadeInUp delay={80}>
-            <div className="mt-12 bg-white rounded-3xl p-8 border border-white/80">
-              <div className="flex items-center gap-3 mb-5">
-                <Bell className="h-5 w-5 text-[#009FD9]" />
-                <h3 className="text-base font-bold text-[#1a2744]">{t("projectsTitle")}</h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                {[
-                  { icon: "📋", key: "proj0" },
-                  { icon: "✉️", key: "proj1" },
-                  { icon: "🤝", key: "proj2" },
-                ].map(({ icon, key }) => (
-                  <div key={key} className="p-4">
-                    <div className="text-3xl mb-2">{icon}</div>
-                    <p className="text-sm font-semibold text-[#1a2744] mb-1">{t(`${key}Title`)}</p>
-                    <p className="text-xs text-gray-400">{t(`${key}Sub`)}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </FadeInUp>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-20 px-4 bg-white">
-        <div className="mx-auto max-w-4xl">
-          <FadeInUp>
-            <h2 className="text-3xl font-extrabold text-[#1a2744] mb-2 text-center">
-              {t("faqTitle")}
-            </h2>
-            <p className="text-gray-500 text-center mb-10">
-              {t("faqSubtitle")}
-            </p>
-            <FaqAccordion />
-          </FadeInUp>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-16 px-4 bg-[#1a2744] text-center">
-        <FadeInUp>
-          <h2 className="text-3xl font-extrabold text-white mb-3">
-            {t("ctaTitle")}
-          </h2>
-          <p className="text-[#93c5fd] mb-8 max-w-md mx-auto text-sm">
-            {t("ctaSubtitle")}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/buscar"
-              className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3 rounded-full transition-all"
-            >
-              <Search className="h-4 w-4" /> {t("ctaSearch")}
-            </Link>
-            <Link
-              href="/publicar-proyecto"
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-7 py-3 rounded-full transition-all border border-white/20"
-            >
-              <MessageCircle className="h-4 w-4" /> {t("ctaPublish")}
-            </Link>
-          </div>
-        </FadeInUp>
-      </section>
+        </section>
+      </main>
 
       <LandingFooter />
     </div>
