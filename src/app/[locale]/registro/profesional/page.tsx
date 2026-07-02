@@ -872,8 +872,8 @@ export default function RegisterProfessionalPage() {
             </div>
           )}
 
-          {/* ── OAuth identity confirmation ───────────────────────────────── */}
-          {currentUser && (
+          {/* ── OAuth identity confirmation (identity step only) ───────────── */}
+          {currentUser && step === 0 && (
             <div className="mb-4 overflow-hidden rounded-2xl border border-[#d8eef8] bg-[#f8fbfe]">
               <div className="px-4 py-3">
                 <div className="min-w-0 flex-1">
@@ -960,7 +960,7 @@ export default function RegisterProfessionalPage() {
             </div>
           )}
 
-          {/* ── Step 1: Service + Location ───────────────────────────────── */}
+          {/* ── Step 0: Identity for an already-connected account ─────────── */}
           {step === 0 && currentUser && (
             <div className="flex flex-col gap-4">
               {accountCedula === null ? (
