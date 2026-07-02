@@ -6,11 +6,11 @@
 // signature, so `sniffFileType` returns null for it and it's rejected everywhere.
 // The same goes for HTML, scripts and executables — none match a safe signature.
 
-export type FileKind = "jpeg" | "png" | "webp" | "gif" | "heic" | "pdf";
+export type FileKind = "jpeg" | "png" | "webp" | "gif" | "heic" | "heif" | "pdf";
 
 // Safe RASTER image formats (no SVG). HEIC is the iPhone default; Cloudinary
 // converts it. GIF is a safe raster.
-export const IMAGE_KINDS: FileKind[] = ["jpeg", "png", "webp", "gif", "heic"];
+export const IMAGE_KINDS: FileKind[] = ["jpeg", "png", "webp", "gif", "heic", "heif"];
 export const DOC_KINDS: FileKind[] = ["pdf"];
 
 // Real MIME for a detected kind — used to build a correct Cloudinary data URI
@@ -21,6 +21,7 @@ export const MIME_FOR: Record<FileKind, string> = {
   webp: "image/webp",
   gif: "image/gif",
   heic: "image/heic",
+  heif: "image/heif",
   pdf: "application/pdf",
 };
 
@@ -49,9 +50,10 @@ export function sniffFileType(buf: Uint8Array): FileKind | null {
   // HEIC/HEIF: ....ftyp<brand> (ISO-BMFF box at offset 4)
   if (at(4, "ftyp")) {
     const brand = String.fromCharCode(buf[8], buf[9], buf[10], buf[11]);
-    if (["heic", "heix", "hevc", "hevx", "heim", "heis", "hevm", "hevs", "mif1", "msf1"].includes(brand)) {
+    if (["heic", "heix", "hevc", "hevx", "heim", "heis", "hevm", "hevs"].includes(brand)) {
       return "heic";
     }
+    if (["heif", "mif1", "msf1"].includes(brand)) return "heif";
   }
   return null;
 }

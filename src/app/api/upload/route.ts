@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateUpload, IMAGE_KINDS } from "@/lib/upload-validation";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
+export const runtime = "nodejs";
+
 export async function POST(req: NextRequest) {
   const rl = enforceRateLimit(req, "upload", 12, 60_000);
   if (rl) return rl;
@@ -31,8 +33,8 @@ export async function POST(req: NextRequest) {
     // rejected). Server-side gate — `accept=` on the client can be bypassed.
     const check = validateUpload(buffer, {
       allow: IMAGE_KINDS,
-      maxBytes: 10 * 1024 * 1024,
-      allowLabel: "JPG, PNG, WEBP, HEIC o GIF",
+      maxBytes: 4 * 1024 * 1024,
+      allowLabel: "JPG, PNG, WEBP, HEIC/HEIF o GIF",
     });
     if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
 

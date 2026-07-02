@@ -31,6 +31,8 @@ import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { writeStoredMode } from "@/hooks/use-mode";
+import { IMAGE_ACCEPT } from "@/lib/upload-validation";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 
 // Category data lives in src/lib/data/categories.ts (single source of truth).
 // The service catalog picker shares the same taxonomy and grouped UI used in
@@ -160,7 +162,7 @@ function PhotoPicker({
       <input
         ref={ref}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={IMAGE_ACCEPT}
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
@@ -194,11 +196,10 @@ function ServiceCatalogModal({
   const [query, setQuery] = useState("");
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
+  function resetPicker() {
     setQuery("");
     setActiveGroupId(null);
-  }, [open]);
+  }
 
   const pickerList = useMemo(() => {
     const excluded = new Set(excludedIds);
@@ -222,13 +223,19 @@ function ServiceCatalogModal({
 
   function select(id: string) {
     onSelect(id);
+    resetPicker();
+    onClose();
+  }
+
+  function closePicker() {
+    resetPicker();
     onClose();
   }
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={closePicker}
       title={title}
       closeLabel={t("cancel")}
       bodyClassName="px-0 py-0"
@@ -654,15 +661,28 @@ export default function RegisterProfessionalPage() {
       // ── 1. Upload photo if provided ────────────────────────────────────────
       let photoUrl: string | undefined;
       if (photoFile) {
-        setUploadingPhoto(true);
-        const fd = new FormData();
-        fd.append("file", photoFile);
-        fd.append("type", "avatar");
-        const uploadRes = await fetch("/api/upload/photo", { method: "POST", body: fd });
-        setUploadingPhoto(false);
-        if (uploadRes.ok) {
-          const { url } = await uploadRes.json();
-          photoUrl = url;
+        try {
+          setUploadingPhoto(true);
+          const preparedFile = await prepareImageForUpload(photoFile, { maxDimension: 1200 });
+          const fd = new FormData();
+          fd.append("file", preparedFile);
+          fd.append("type", "avatar");
+          const uploadRes = await fetch("/api/upload/photo", { method: "POST", body: fd });
+          if (uploadRes.ok) {
+            const { url } = await uploadRes.json();
+            photoUrl = url;
+          } else {
+            const data = await uploadRes.json().catch(() => ({}));
+            throw new Error(data?.error || t("photoError"));
+          }
+        } catch (error) {
+          const code = getImageUploadPreparationErrorCode(error);
+          setError(code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : error instanceof Error && error.message ? error.message : t("photoError"));
+          setSubmitting(false);
+          setUploadingPhoto(false);
+          return;
+        } finally {
+          setUploadingPhoto(false);
         }
       }
 
