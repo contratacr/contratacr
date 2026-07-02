@@ -8,6 +8,7 @@ import { EmojiBlocker } from "@/components/util/emoji-blocker";
 import { BackToTop } from "@/components/landing/back-to-top";
 import { NotificationLiveToast } from "@/components/notifications/notification-live-toast";
 import { CustomCategoriesLoader } from "@/lib/data/use-custom-categories";
+import { ViewportEnvironment } from "@/components/util/viewport-environment";
 import "../globals.css";
 
 const inter = Inter({
@@ -75,6 +76,7 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  interactiveWidget: "resizes-content",
   viewportFit: "cover",
 };
 
@@ -98,6 +100,7 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col bg-white">
         <NextIntlClientProvider messages={messages}>
           <EmojiBlocker />
+          <ViewportEnvironment />
           <CustomCategoriesLoader />
           <NotificationLiveToast scope="all" />
           {children}

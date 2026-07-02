@@ -46,7 +46,7 @@ export function Modal({ open = true, onClose, title, subtitle, size = "md", chil
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
+    <div className="app-modal-screen fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
       {/* Dimmed backdrop — click to close */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
@@ -56,6 +56,7 @@ export function Modal({ open = true, onClose, title, subtitle, size = "md", chil
         aria-modal="true"
         className={cn(
           "relative z-10 flex w-full max-h-[92vh] flex-col rounded-t-2xl bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
+          "app-bottom-sheet min-h-0",
           SIZES[size]
         )}
       >
@@ -76,13 +77,13 @@ export function Modal({ open = true, onClose, title, subtitle, size = "md", chil
         </div>
 
         {/* Body (scrolls) */}
-        <div className={cn("flex-1 overflow-y-auto px-5 py-5 sm:px-6", bodyClassName)}>
+        <div className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6", bodyClassName)}>
           {children}
         </div>
 
         {/* Footer (pinned) */}
         {footer && (
-          <div className="flex justify-end gap-3 border-t border-[#f3f4f6] px-5 py-4 shrink-0 sm:px-6">
+          <div className="flex shrink-0 justify-end gap-3 border-t border-[#f3f4f6] px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4">
             {footer}
           </div>
         )}

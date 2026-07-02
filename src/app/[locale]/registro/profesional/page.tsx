@@ -247,7 +247,6 @@ function ServiceCatalogModal({
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveGroupId(null); }}
             placeholder={t("pickerSearch")}
-            autoFocus
             className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#111827] transition-all placeholder:text-[#9ca3af] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
           />
         </div>
