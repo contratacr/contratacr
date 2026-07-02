@@ -2550,8 +2550,6 @@
     "eyebrow": "How it works",
     "title": "The simplest way to find or get service jobs in Costa Rica",
     "subtitle": "ContrataCR connects clients with local professionals. You can search directly, post a request, review profiles, coordinate through WhatsApp, and manage everything from your dashboard.",
-    "heroSearchCta": "Find a service",
-    "heroProCta": "Offer my services",
     "metric0Value": "2 ways",
     "metric0Label": "Find professionals or post a request.",
     "metric1Value": "0 commissions",
@@ -2661,8 +2659,9 @@
     "faq7A": "Yes. You can search for everything from quick repairs to professional services, health, education, technology, home, events, and more.",
     "ctaTitle": "Try it and share it",
     "ctaSubtitle": "If you need help, find a service. If you offer services, create your profile and start building your presence on ContrataCR.",
-    "ctaSearch": "Find services",
-    "ctaPublish": "Post a request"
+    "ctaSearch": "Find a service",
+    "ctaPublish": "Post a request",
+    "ctaOffer": "Offer my services"
   },
   "ayuda": {
     "eyebrow": "Help center",
