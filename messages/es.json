@@ -218,6 +218,8 @@
       "showResults": "Ver resultados",
       "insurer": "Aseguradora",
       "anyInsurer": "Cualquier aseguradora",
+      "language": "Idioma",
+      "anyLanguage": "Cualquier idioma",
       "removeInsurer": "Quitar filtro de aseguradora",
       "nearMe": "Buscar profesionales cerca de mí",
       "nearMeActive": "Cerca de mí (activo)",

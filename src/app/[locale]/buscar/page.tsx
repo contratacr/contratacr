@@ -9,6 +9,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
+import { isHealthCategory } from "@/lib/data/categories";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
@@ -28,6 +29,7 @@ interface SearchPageProps {
     page?: string;
     verificados?: string;
     aseguradora?: string;
+    idioma?: string;
     lat?: string;
     lng?: string;
     // "Buscar en esta área" — the map's visible bounds (N/S/E/W).
@@ -64,6 +66,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     ? parsedMapBounds
     : undefined;
 
+  const canFilterByInsurer = isHealthCategory(params.categoria);
+
   const allResults = await searchProfessionals({
     categoryId: params.categoria,
     provinceId: params.provincia,
@@ -71,7 +75,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     sortBy: params.sortBy,
     query: params.q,
     verifiedOnly: params.verificados === "1",
-    insurerId: params.aseguradora,
+    insurerId: canFilterByInsurer ? params.aseguradora : undefined,
+    languageId: params.idioma,
     nearLat: params.lat ? Number(params.lat) : undefined,
     nearLng: params.lng ? Number(params.lng) : undefined,
     bounds: mapBounds,
@@ -248,7 +253,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (params.canton && params.canton !== "todos") next.set("canton", params.canton);
     if (params.sortBy && params.sortBy !== "rating") next.set("sortBy", params.sortBy);
     if (params.verificados === "1") next.set("verificados", "1");
-    if (params.aseguradora && params.aseguradora !== "todas") next.set("aseguradora", params.aseguradora);
+    if (canFilterByInsurer && params.aseguradora && params.aseguradora !== "todas") next.set("aseguradora", params.aseguradora);
+    if (params.idioma && params.idioma !== "todos") next.set("idioma", params.idioma);
     if (params.lat) next.set("lat", params.lat);
     if (params.lng) next.set("lng", params.lng);
     // Preserve the searched map area across pagination.

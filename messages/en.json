@@ -218,6 +218,8 @@
       "showResults": "Show results",
       "insurer": "Insurer",
       "anyInsurer": "Any insurer",
+      "language": "Language",
+      "anyLanguage": "Any language",
       "removeInsurer": "Remove insurer filter",
       "nearMe": "Search professionals near me",
       "nearMeActive": "Near me (on)",

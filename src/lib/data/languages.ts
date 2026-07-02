@@ -41,3 +41,15 @@ export function languageLabel(id: string, locale?: string): string {
   if (!l) return id;
   return locale === "en" ? l.labelEn : l.label;
 }
+
+export function languageSearchValues(value: string): string[] {
+  const raw = value.trim();
+  if (!raw) return [];
+  const needle = raw.toLowerCase();
+  const match = LANGUAGES.find((x) =>
+    x.id.toLowerCase() === needle ||
+    x.label.toLowerCase() === needle ||
+    x.labelEn.toLowerCase() === needle
+  );
+  return Array.from(new Set([raw, match?.id, match?.label, match?.labelEn].filter(Boolean) as string[]));
+}

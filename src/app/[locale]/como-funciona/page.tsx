@@ -365,6 +365,8 @@ export default async function ComoFuncionaPage() {
           </div>
         </section>
 
+        <InstallAppGuide />
+
         <section className="bg-[#162543] px-4 py-16 text-center">
           <h2 className="text-3xl font-black text-white">{t("ctaTitle")}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#c7d2fe]">{t("ctaSubtitle")}</p>
@@ -380,8 +382,6 @@ export default async function ComoFuncionaPage() {
             </Link>
           </div>
         </section>
-
-        <InstallAppGuide />
       </main>
 
       <LandingFooter />
