@@ -7,6 +7,7 @@ import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { PhoneFrame, ResultsScreen, buildLandingResultsCopy, type ResultsCopy } from "@/components/landing/phone-screens";
+import { InstallAppGuide } from "@/components/landing/install-app-card";
 import { ComoFuncionaFaq } from "./faq-accordion";
 import {
   ArrowRight,
@@ -244,6 +245,8 @@ export default async function ComoFuncionaPage() {
             <MiniMetric value={t("metric2Value")} label={t("metric2Label")} />
           </div>
         </section>
+
+        <InstallAppGuide />
 
         <section className="bg-white px-4 py-16">
           <div className="mx-auto max-w-5xl">
