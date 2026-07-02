@@ -182,7 +182,7 @@ export function BasicProfileSection({
       </div>
 
       {/* Foto */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="relative h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
           {profileAvatar ? (
             <img src={profileAvatar} alt="Foto" className="h-full w-full object-cover" />
@@ -196,11 +196,11 @@ export function BasicProfileSection({
           )}
         </div>
         {profileAvatar ? (
-          <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1 basis-[180px] flex flex-wrap items-center gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
               <Camera className="h-4 w-4" /> {t("changePhoto")}
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} disabled={photoUploading} className="text-red-500 hover:text-red-600">
+            <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} disabled={photoUploading} className="shrink-0 text-red-500 hover:text-red-600">
               <X className="h-4 w-4" /> {t("removePhoto")}
             </Button>
           </div>
