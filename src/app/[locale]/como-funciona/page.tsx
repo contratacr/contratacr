@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { PhoneFrame, ResultsScreen, buildLandingResultsCopy, type ResultsCopy } from "@/components/landing/phone-screens";
 import { ComoFuncionaFaq } from "./faq-accordion";
 import {
   ArrowRight,
   BadgeCheck,
   Bell,
-  Bookmark,
   BriefcaseBusiness,
   CalendarClock,
   CheckCircle2,
-  ClipboardList,
   FileText,
   Heart,
   Image as ImageIcon,
@@ -32,7 +31,6 @@ import {
 } from "lucide-react";
 
 type IconComponent = (props: { className?: string }) => ReactNode;
-type Translation = (key: string) => string;
 type FeatureAccent = "default" | "whatsapp";
 
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").replace(/\/$/, "");
@@ -156,88 +154,24 @@ function MiniMetric({ value, label }: { value: string; label: string }) {
   );
 }
 
-function ProductPreview({ t }: { t: Translation }) {
+function ProductPreview({ copy }: { copy: ResultsCopy }) {
   return (
-    <div className="mx-auto mt-10 max-w-6xl rounded-[2rem] border border-[#d8eef8] bg-[#f8fbfd] p-3 shadow-[0_24px_70px_-45px_rgba(22,37,67,0.45)]">
-      <div className="grid gap-3 lg:grid-cols-[1.08fr_0.92fr]">
-        <div className="rounded-[1.5rem] border border-[#e5e7eb] bg-white p-4">
-          <div className="mb-4 flex items-center gap-2 rounded-full border border-[#d8eef8] bg-white px-3 py-2">
-            <Search className="h-4 w-4 text-[#009FD9]" />
-            <span className="text-sm font-medium text-[#6b7280]">{t("mockSearch")}</span>
-          </div>
-          <p className="mb-3 text-left text-sm font-black text-[#162543]">{t("mockResults")}</p>
-          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 text-left shadow-sm">
-            <div className="relative flex items-start gap-3 pr-9">
-              <div className="relative shrink-0">
-                <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-[#e5e7eb] bg-[#EAF7FD] text-sm font-black text-[#009FD9]">SG</div>
-                <span className="absolute -left-1.5 -top-1.5 grid h-[22px] w-[22px] place-items-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white">1</span>
-              </div>
-              <Bookmark className="absolute right-0 top-0 h-5 w-5 text-[#9ca3af]" />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-bold leading-snug text-[#111827]">{t("mockProName")}</p>
-                    <span className="mt-1 inline-flex w-fit rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">{t("verified")}</span>
-                    <p className="mt-0.5 text-xs font-medium leading-snug text-[#6b7280]">{t("mockPersonName")}</p>
-                  </div>
-                  <p className="w-[78px] shrink-0 text-right text-[13px] font-black leading-tight text-[#009FD9] sm:w-[90px]">{t("mockPrice")}</p>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">{t("mockServiceA")}</span>
-                  <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">{t("mockServiceB")}</span>
-                </div>
-                <div className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#0089bb]">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {t("mockLocation")}
-                </div>
-                <div className="mt-3 border-t border-[#eef1f5] pt-3">
-                  <div className="mb-2 grid grid-cols-3 gap-1.5 text-center text-[11px] font-semibold text-[#6b7280]">
-                    <span>{t("mockDay0")}</span>
-                    <span>{t("mockDay1")}</span>
-                    <span>{t("mockDay2")}</span>
-                  </div>
-                  <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-3 py-2.5 text-[12px] font-bold text-white sm:text-sm whitespace-nowrap">
-                    <WhatsAppIcon className="h-4 w-4" /> {t("mockContact")}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-[1.5rem] border border-[#e5e7eb] bg-white p-4">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#009FD9]">{t("mockPanelEyebrow")}</p>
-              <h3 className="text-lg font-extrabold text-[#162543]">{t("mockPanelTitle")}</h3>
-            </div>
-            <span className="rounded-full bg-[#EBF5FB] px-2.5 py-1 text-xs font-bold text-[#0089bb]">{t("mockPanelBadge")}</span>
-          </div>
-          <div className="space-y-3">
-            {[
-              { icon: Bell, title: t("mockPanelItem0"), body: t("mockPanelItem0Sub") },
-              { icon: ClipboardList, title: t("mockPanelItem1"), body: t("mockPanelItem1Sub") },
-              { icon: Star, title: t("mockPanelItem2"), body: t("mockPanelItem2Sub") },
-            ].map(({ icon: Icon, title, body }) => (
-              <div key={title} className="flex gap-3 rounded-xl bg-[#f8fafc] p-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#009FD9]">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-[#162543]">{title}</p>
-                  <p className="text-xs leading-relaxed text-[#6b7280]">{body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="relative mx-auto mt-10 flex justify-center">
+      <div aria-hidden className="pointer-events-none absolute bottom-3 left-1/2 h-6 w-52 -translate-x-1/2 rounded-[50%] bg-[#1a2744]/15 blur-2xl" />
+      <PhoneFrame>
+        <ResultsScreen copy={copy} />
+      </PhoneFrame>
     </div>
   );
 }
 
 export default async function ComoFuncionaPage() {
   const t = await getTranslations("comoFunciona");
+  const tLanding = await getTranslations("landing.howItWorks");
+  const tCard = await getTranslations("card");
+  const tSchedule = await getTranslations("schedule");
+  const locale = await getLocale();
+  const resultsCopy = buildLandingResultsCopy({ locale, tLanding, tCard, tSchedule });
 
   const clientSteps = [0, 1, 2].map((i) => ({
     title: t(`clientStep${i}Title`),
@@ -307,7 +241,7 @@ export default async function ComoFuncionaPage() {
             </div>
           </FadeInUp>
           <FadeInUp delay={80}>
-            <ProductPreview t={t} />
+            <ProductPreview copy={resultsCopy} />
           </FadeInUp>
         </section>
 

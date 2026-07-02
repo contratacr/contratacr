@@ -1394,18 +1394,18 @@ preview of the CURRENT product, not a stylized fake. Rules:
   orange-star (`#ff9b32`) rating + **grey `(N reseñas)` in
   parens** (not a blue link); a **Doctoralia-style location TAB** (brand-blue, underlined,
   on a hairline divider) + address line. Then EITHER the **3-day availability strip**
-  (hero) + a SINGLE filled **"Ver horario completo"** button — the booking entry point;
-  the old separate **"Solicitar servicio" button no longer exists** — OR, for a pro with
-  no public schedule, the **coral contact note** (`#FDF3F1`/`#F7D8D1`/`#DC5B4B`,
-  `CalendarDays`) + a filled **WhatsApp** (`#25D366`) button. The live `ResultsScreen`
-  shows BOTH variants (one of each card) to mirror the real mixed list. When the real
-  card changes, update the mockup to match.
-- **Example content (illustrative — sprint 454):** the mockup features a **"Tecnología"**
-  professional (locale-aware "Technology" in EN; the search reads "Tecnología en San José").
-  The hero (SG) card replaces its single profession chip with **3 service-category chips** —
-  *Reparación de computadoras · Redes e internet · Cámaras de seguridad* — in the SAME grey
-  chip style (no separate "Tecnología" chip on that card; the 2nd card still shows the plain
-  "Tecnología" profession chip), plus a **"Precio a consultar"** price (grey). This is DEMO
+  (hero) + filled **"Ver horario completo"** and **WhatsApp** (`#25D366`) buttons — the
+  real search card lets a client either inspect the schedule or contact directly — OR, for
+  a pro with no public schedule, the **coral contact note** (`#FDF3F1`/`#F7D8D1`/`#DC5B4B`,
+  `CalendarDays`) + a filled **WhatsApp** button. The live `ResultsScreen` shows BOTH
+  variants (one of each card) to mirror the real mixed list. When the real card changes,
+  update the mockup to match.
+- **Example content (illustrative):** the mockup features a **"Plomería"** professional
+  (locale-aware "Plumbing" in EN; the search reads "Plomería en Atenas"). The hero (SG)
+  card replaces its single profession chip with **2 service-category chips** —
+  *Plomería · Reparaciones* — in the SAME grey chip style (no separate "Plomería" chip on
+  that card; the 2nd card still shows the plain profession chip), plus a **"Consultar
+  precio"** price. This is DEMO
   content; if it's changed keep it honest + fitting the phone (categories on the hero card
   only — the phone height is fixed and would clip otherwise).
 - **Example name:** the sample SG card is **"SG Solutions"** (company/brand) with the
@@ -2053,4 +2053,4 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Share images / Open Graph.** All non-profile public links must use the shared app Open Graph image at `/{locale}/opengraph-image` (resolved with `NEXT_PUBLIC_APP_URL` when a page defines its own metadata). The only exception is a professional profile, which uses `/{locale}/profesionales/{slug}/opengraph-image` so the shared preview can show that professional's name, services, and photo. Do not point public pages to the legacy static `/og-image.png`.
 
-> **Como funciona page.** The hero product mock should feel like the real `/buscar` responsive card: company/person hierarchy, verified pill, price on the right, favorite icon, service chips, location, availability hint, and WhatsApp action. Avoid fake labels such as "Profesional verificado" as a name. Keep informational content grouped into larger scan-friendly sections (two paths, client/pro benefits, pro flow, trust, FAQ) instead of many equal-weight cards competing for attention. Use the official WhatsApp glyph for any WhatsApp concept or action.
+> **Como funciona page.** The hero product mock must reuse the exact same `PhoneFrame` + `ResultsScreen` mock used by the home "Así funciona ContrataCR" section, including the SG Solutions / Luis Sanchez card and its WhatsApp action. Do not build a second static card on this page. Keep informational content grouped into larger scan-friendly sections (two paths, client/pro benefits, pro flow, trust, FAQ) instead of many equal-weight cards competing for attention. Use the official WhatsApp glyph for any WhatsApp concept or action.
