@@ -13,6 +13,8 @@ import { isSigningOut } from "@/lib/auth/sign-out";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { IMAGE_ACCEPT } from "@/lib/upload-validation";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 
 // Mandatory profile completion for OAuth (Facebook/Google) users who never
 // provided a cédula. Required before they can book.
@@ -72,22 +74,29 @@ export default function CompleteProfilePage() {
   // Optional profile photo — auto-uploads immediately on selection.
   async function handlePhotoSelect(file: File) {
     if (!user) return;
+    const previousAvatarUrl = avatarUrl;
     setError(null);
     setAvatarUrl(URL.createObjectURL(file));
     setPhotoUploading(true);
     try {
+      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1200 });
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", preparedFile);
       fd.append("type", "avatar");
       const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || t("photoError"));
+      }
       const { url } = await res.json();
       const supabase = createClient();
       await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
       await supabase.auth.updateUser({ data: { avatar_url: url } });
       setAvatarUrl(url);
-    } catch {
-      setError(t("photoError"));
+    } catch (error) {
+      const code = getImageUploadPreparationErrorCode(error);
+      setAvatarUrl(previousAvatarUrl);
+      setError(code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : error instanceof Error && error.message ? error.message : t("photoError"));
     } finally {
       setPhotoUploading(false);
     }
@@ -185,7 +194,7 @@ export default function CompleteProfilePage() {
               <input
                 ref={photoInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept={IMAGE_ACCEPT}
                 className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); e.target.value = ""; }}
               />

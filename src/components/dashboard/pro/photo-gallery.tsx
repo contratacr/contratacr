@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { cldThumb } from "@/lib/cloudinary";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, type ServiceLike } from "@/lib/services";
 
@@ -132,10 +133,16 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     try {
       const urls: string[] = [];
       for (const file of toUpload) {
-        const fd = new FormData(); fd.append("file", file); fd.append("type", "portfolio");
-        const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
-        const data = await res.json();
-        if (data.url) urls.push(data.url); else alert(data.error ?? t("uploadError"));
+        try {
+          const preparedFile = await prepareImageForUpload(file, { maxDimension: 1600 });
+          const fd = new FormData(); fd.append("file", preparedFile); fd.append("type", "portfolio");
+          const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
+          const data = await res.json();
+          if (data.url) urls.push(data.url); else alert(data.error ?? t("uploadError"));
+        } catch (error) {
+          const code = getImageUploadPreparationErrorCode(error);
+          alert(code === "too_large" ? t("uploadTooLarge") : code === "unsupported" ? t("uploadUnsupported") : t("uploadError"));
+        }
       }
       if (urls.length) setDraft((d) => (d ? { ...d, photos: [...d.photos, ...urls].slice(0, MAX_PHOTOS_PER_CASE) } : d));
     } catch { alert(t("uploadError")); } finally { setUploading(false); }

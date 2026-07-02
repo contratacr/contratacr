@@ -10,6 +10,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
 import { Camera, X, Plus, ChevronDown, Lock, Award } from "lucide-react";
@@ -302,8 +303,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     setAvatarPreview(URL.createObjectURL(file));
     setPhotoUploading(true);
     try {
+      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1200 });
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", preparedFile);
       fd.append("type", "avatar");
       const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
       if (!res.ok) {
@@ -320,7 +322,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     } catch (e) {
       // Revert the optimistic preview and show the specific reason (size/format).
       setAvatarPreview(initialAvatarUrl);
-      setError(e instanceof Error && e.message ? e.message : t("photoError"));
+      const code = getImageUploadPreparationErrorCode(e);
+      setError(code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : e instanceof Error && e.message ? e.message : t("photoError"));
     } finally {
       setPhotoUploading(false);
     }
@@ -560,7 +563,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             type="file"
             accept={IMAGE_ACCEPT}
             className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) void handlePhotoSelect(f); e.target.value = ""; }}
           />
         </div>
 

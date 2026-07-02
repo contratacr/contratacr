@@ -14,6 +14,8 @@ import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/pho
 import { SaveStatus } from "@/components/dashboard/save-status";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { IMAGE_ACCEPT } from "@/lib/upload-validation";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 
 // The SEEKER's "Mi perfil" — basic identity every account has (photo + name +
 // phone), with the same reliable autosave standard as the rest of the app. Used
@@ -130,10 +132,12 @@ export function BasicProfileSection({
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    const input = e.currentTarget;
     setPhotoUploading(true);
     try {
+      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1200 });
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", preparedFile);
       fd.append("type", "avatar");
       const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
       if (!res.ok) {
@@ -147,10 +151,12 @@ export function BasicProfileSection({
       await supabase.auth.updateUser({ data: { avatar_url: url } });
       setProfileAvatar(url);
       window.dispatchEvent(new Event("ccr:profile-updated"));
-    } catch {
-      alert(t("photoError"));
+    } catch (error) {
+      const code = getImageUploadPreparationErrorCode(error);
+      alert(code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : t("photoError"));
     } finally {
       setPhotoUploading(false);
+      input.value = "";
     }
   }
 
@@ -203,7 +209,7 @@ export function BasicProfileSection({
             <Camera className="h-4 w-4" /> {t("addPhoto")}
           </Button>
         )}
-        <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
+        <input ref={photoInputRef} type="file" accept={IMAGE_ACCEPT} className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
       </div>
 
       {/* Datos — nombre + teléfono */}

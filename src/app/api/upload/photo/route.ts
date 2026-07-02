@@ -3,6 +3,8 @@ import { v2 as cloudinary } from "cloudinary";
 import { validateUpload, IMAGE_KINDS, MIME_FOR } from "@/lib/upload-validation";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
   const rl = enforceRateLimit(req, "upload-photo", 12, 60_000);
   if (rl) return rl;
@@ -32,12 +34,12 @@ export async function POST(req: Request) {
 
     // Validate by MAGIC BYTES (not the spoofable file.type/extension) against a safe
     // raster-image allow-list. SVG (XML, scriptable → stored-XSS risk) and any
-    // non-image are REJECTED here, before anything reaches Cloudinary. 10 MB cap —
-    // modern phone photos routinely exceed 5 MB, and Cloudinary downscales anyway.
+    // non-image are REJECTED here, before anything reaches Cloudinary. Vercel
+    // Functions reject bodies over 4.5 MB, so this endpoint stays below that.
     const check = validateUpload(buffer, {
       allow: IMAGE_KINDS,
-      maxBytes: 10 * 1024 * 1024,
-      allowLabel: "JPG, PNG, WEBP, HEIC o GIF",
+      maxBytes: 4 * 1024 * 1024,
+      allowLabel: "JPG, PNG, WEBP, HEIC/HEIF o GIF",
     });
     if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
 
