@@ -997,8 +997,8 @@ export default function RegisterProfessionalPage() {
 
               {/* Profession — searchable combobox (a profesión groups the servicios
                   the pro later adds in their panel). */}
-              <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
-                <div className="p-4">
+              <section className="flex flex-col gap-3">
+                <div>
                   <h3 className="text-sm font-extrabold text-[#162543]">{t("servicesSectionTitle")}</h3>
                   <div className="mt-3">
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
@@ -1085,20 +1085,21 @@ export default function RegisterProfessionalPage() {
               {/* Work zones — provincia/cantón FIRST (drives /buscar), optional exact
                   pin. "Me desplazo" travel is enabled later in the panel. */}
                 </div>
-                <div className="border-t border-[#eef0f2] p-4">
+              </section>
+              <section className="flex flex-col gap-3 border-t border-[#f3f4f6] pt-4">
                   <h3 className="text-sm font-extrabold text-[#162543]">{t("workplacesSectionTitle")}</h3>
-                  <div className="mt-3 flex flex-col gap-2">
+                  <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-[#374151]">
                     {t("workplacesLabel")} <span className="text-red-500">*</span>
                   </label>
                   <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
                 </div>
 
-                  {locationError && <p className="mt-2 text-xs text-red-500">{locationError}</p>}
-                </div>
+                  {locationError && <p className="text-xs text-red-500">{locationError}</p>}
+              </section>
 
               {/* WhatsApp */}
-                <div className="border-t border-[#eef0f2] p-4">
+              <section className="border-t border-[#f3f4f6] pt-4">
                   <h3 className="mb-3 text-sm font-extrabold text-[#162543]">{t("contactSectionTitle")}</h3>
                   <PhoneInput
                     label={t("whatsapp")}
@@ -1107,7 +1108,6 @@ export default function RegisterProfessionalPage() {
                     onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
                     error={form2.formState.errors.whatsapp?.message}
                   />
-                </div>
               </section>
 
               <div className="flex gap-3 mt-2">
