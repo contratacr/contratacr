@@ -67,4 +67,10 @@ jobs:
         if: ${{ inputs.dry_run == false }}
         run: |
           set -euo pipefail
+          pending="$(npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --dry-run)"
+          echo "$pending"
+          if echo "$pending" | grep -q "001_initial_schema.sql"; then
+            echo "::error::001_initial_schema.sql is still pending. Run 'Supabase repair migration history' through 084 for this environment before applying new migrations."
+            exit 1
+          fi
           npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --yes
