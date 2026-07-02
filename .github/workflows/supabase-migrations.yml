@@ -41,6 +41,10 @@ jobs:
             echo "Missing SUPABASE_DB_URL in the $TARGET_ENV GitHub Environment."
             exit 1
           fi
+          if echo "$SUPABASE_DB_URL" | grep -q ":6543/"; then
+            echo "::error::SUPABASE_DB_URL is using the transaction pooler port 6543. Supabase migrations need a direct connection or the shared pooler in session mode, usually port 5432, because transaction pooling can fail with prepared statement errors."
+            exit 1
+          fi
           if [ "$TARGET_ENV" = "test" ] && [ "${{ github.ref }}" != "refs/heads/test" ]; then
             echo "Test migrations must run from test."
             exit 1
