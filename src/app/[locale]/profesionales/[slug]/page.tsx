@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
-  Share2, Flag, Award, Mail, SearchX, FileText, Globe2,
+  Share2, Flag, Award, Mail, SearchX, FileText, Globe,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
@@ -431,7 +431,7 @@ export default function ProfilePage() {
                 {(() => {
                   const sl = professional.socialLinks;
                   const items = [
-                    { k: "website", href: buildWebsiteUrl(sl?.website), Icon: Globe2 },
+                    { k: "website", href: buildWebsiteUrl(sl?.website), Icon: Globe },
                     { k: "instagram", href: buildSocialUrl("instagram", sl?.instagram), Icon: InstagramIcon },
                     { k: "facebook", href: buildSocialUrl("facebook", sl?.facebook), Icon: FacebookIcon },
                     { k: "tiktok", href: buildSocialUrl("tiktok", sl?.tiktok), Icon: TikTokIcon },

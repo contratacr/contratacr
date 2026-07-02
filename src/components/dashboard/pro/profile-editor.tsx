@@ -14,7 +14,7 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { Camera, X, Plus, ChevronDown, Lock, Award, Globe2 } from "lucide-react";
+import { Camera, X, Plus, ChevronDown, Lock, Award, Globe } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -807,7 +807,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         <div className="flex flex-col gap-3">
           <div>
             <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
-              <Globe2 className="h-4 w-4 text-[#6b7280]" /> {t("website")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+              <Globe className="h-4 w-4 text-[#6b7280]" strokeWidth={2.5} /> {t("website")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
             </label>
             <input
               type="url"
