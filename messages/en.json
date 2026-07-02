@@ -345,7 +345,8 @@
     "whatsapp": "Contact us on WhatsApp",
     "whatsappShort": "WhatsApp",
     "callShort": "Call",
-    "call": "Contact us by phone"
+    "call": "Contact us by phone",
+    "email": "Email"
   },
   "selfAction": {
     "title": "This is your profile",
