@@ -2546,6 +2546,35 @@
     "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión.",
     "optionsCount": "{count, plural, one {# opción} other {# opciones}}"
   },
+  "installGuide": {
+    "eyebrow": "Acceso rápido",
+    "title": "Agrega ContrataCR a la pantalla de inicio",
+    "subtitle": "Así queda como un acceso directo en tu celular: lo abres como app, sin buscar contratacr.com cada vez.",
+    "homeTitle": "Agrega ContrataCR a tu inicio",
+    "homeBody": "Abre la app más rápido desde tu celular.",
+    "homeGuideLink": "Ver cómo hacerlo",
+    "installCta": "Agregar al inicio",
+    "installed": "Ya está instalada",
+    "mockAppLine": "Servicios en Costa Rica",
+    "iosTitle": "iPhone o iPad",
+    "iosBody": "En iPhone se hace desde Safari. Apple no permite abrir este paso automáticamente desde la página.",
+    "iosBodyCurrent": "Estás en iPhone o iPad. Sigue estos pasos desde Safari.",
+    "iosSheetTitle": "Safari",
+    "iosVisualAction": "Compartir",
+    "iosVisualConfirm": "Agregar a inicio",
+    "iosStep1": "Abre contratacr.com en Safari.",
+    "iosStep2": "Toca el botón Compartir.",
+    "iosStep3": "Elige Agregar a inicio y confirma.",
+    "androidTitle": "Android",
+    "androidBody": "En Android puede aparecer un botón de instalar. Si no aparece, se hace desde el menú del navegador.",
+    "androidBodyCurrent": "Si el botón de instalar no aparece, usa el menú del navegador.",
+    "androidSheetTitle": "Chrome",
+    "androidVisualAction": "Instalar app",
+    "androidVisualConfirm": "Agregar a pantalla principal",
+    "androidStep1": "Abre contratacr.com en Chrome.",
+    "androidStep2": "Toca Instalar o el menú de tres puntos.",
+    "androidStep3": "Confirma Agregar a pantalla principal."
+  },
   "comoFunciona": {
     "metaTitle": "Cómo funciona ContrataCR | Clientes y profesionales en Costa Rica",
     "metaDesc": "Conoce cómo usar ContrataCR para buscar servicios, publicar solicitudes, recibir propuestas y ofrecer servicios profesionales en Costa Rica.",
@@ -2871,17 +2900,7 @@
       "pitchCta": "Ofrecer mis servicios",
       "pitchHow": "Cómo funciona",
       "mockResults": "3 profesionales en Costa Rica",
-      "mockSearch": "Plomería en Atenas",
-      "install": {
-        "title": "Guárdala en tu inicio",
-        "body": "Usa ContrataCR como acceso directo en tu celular, sin buscarla cada vez en el navegador.",
-        "cta": "Instalar acceso",
-        "installed": "Ya está instalada",
-        "iosStep1": "En Safari toca Compartir",
-        "iosStep2": "Elige Agregar a inicio",
-        "androidStep1": "Toca Instalar o el menú del navegador",
-        "androidStep2": "Confirma Agregar a pantalla principal"
-      }
+      "mockSearch": "Plomería en Atenas"
     },
     "why": {
       "heading": "Por qué los clientes eligen ContrataCR.",

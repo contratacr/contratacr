@@ -2548,6 +2548,35 @@
     "suggestThanks": "Thanks. We sent your suggestion to the team for review.",
     "optionsCount": "{count, plural, one {# option} other {# options}}"
   },
+  "installGuide": {
+    "eyebrow": "Quick access",
+    "title": "Add ContrataCR to your Home Screen",
+    "subtitle": "It becomes a shortcut on your phone: open it like an app without searching for contratacr.com every time.",
+    "homeTitle": "Add ContrataCR to your Home Screen",
+    "homeBody": "Open the app faster from your phone.",
+    "homeGuideLink": "See how",
+    "installCta": "Add to Home Screen",
+    "installed": "Already installed",
+    "mockAppLine": "Services in Costa Rica",
+    "iosTitle": "iPhone or iPad",
+    "iosBody": "On iPhone, this is done from Safari. Apple does not allow websites to open this step automatically.",
+    "iosBodyCurrent": "You're on iPhone or iPad. Follow these steps from Safari.",
+    "iosSheetTitle": "Safari",
+    "iosVisualAction": "Share",
+    "iosVisualConfirm": "Add to Home Screen",
+    "iosStep1": "Open contratacr.com in Safari.",
+    "iosStep2": "Tap the Share button.",
+    "iosStep3": "Choose Add to Home Screen and confirm.",
+    "androidTitle": "Android",
+    "androidBody": "On Android, an install button may appear. If it does not, use the browser menu.",
+    "androidBodyCurrent": "If the install button does not appear, use the browser menu.",
+    "androidSheetTitle": "Chrome",
+    "androidVisualAction": "Install app",
+    "androidVisualConfirm": "Add to Home Screen",
+    "androidStep1": "Open contratacr.com in Chrome.",
+    "androidStep2": "Tap Install or the three-dot menu.",
+    "androidStep3": "Confirm Add to Home Screen."
+  },
   "comoFunciona": {
     "metaTitle": "How ContrataCR works | Clients and professionals in Costa Rica",
     "metaDesc": "Learn how to use ContrataCR to find services, post requests, receive proposals, and offer professional services in Costa Rica.",
@@ -2873,17 +2902,7 @@
       "pitchCta": "Offer my services",
       "pitchHow": "How it works",
       "mockResults": "3 professionals in Costa Rica",
-      "mockSearch": "Plumbing in Atenas",
-      "install": {
-        "title": "Save it to your Home Screen",
-        "body": "Use ContrataCR as a shortcut on your phone, without searching for it in the browser each time.",
-        "cta": "Install shortcut",
-        "installed": "Already installed",
-        "iosStep1": "In Safari, tap Share",
-        "iosStep2": "Choose Add to Home Screen",
-        "androidStep1": "Tap Install or the browser menu",
-        "androidStep2": "Confirm Add to Home Screen"
-      }
+      "mockSearch": "Plumbing in Atenas"
     },
     "why": {
       "heading": "Why customers choose ContrataCR.",

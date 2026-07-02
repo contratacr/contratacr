@@ -5,7 +5,7 @@ import { PhoneFrame, ResultsScreen, buildLandingResultsCopy } from "@/components
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import { Link } from "@/i18n/navigation";
 import { FadeInUp } from "@/components/landing/fade-in-up";
-import { InstallAppCard } from "@/components/landing/install-app-card";
+import { InstallHomeLink } from "@/components/landing/install-app-card";
 
 /* "Así funciona ContrataCR" — ONE phone (the best/most representative app
    screen) with all the key info organized beside it. Merges how-it-works,
@@ -72,7 +72,7 @@ export async function WhyContratacr() {
               </div>
             </div>
 
-            <InstallAppCard />
+            <InstallHomeLink />
           </FadeInUp>
 
           {/* One phone — floats cleanly on the section, just a soft shadow */}
