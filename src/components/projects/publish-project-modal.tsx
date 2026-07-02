@@ -75,6 +75,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const [phoneOnProfile, setPhoneOnProfile] = useState(false);
   useEffect(() => {
     if (!user?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfileLoaded(true);
       setProfileLoadedFor(null);
       return;
@@ -126,6 +127,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   // full name from the padrón before submit. The API verifies again server-side.
   useEffect(() => {
     const cedula = cleanId(form.cedula);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOfficialName("");
     if (!isValidId(cedula) || detectIdType(cedula) !== "cedula") {
       setIdentityLookup("idle");
@@ -280,7 +282,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const shouldShowNoCedulaNotice = profileReady && !savedCedula && noCedula;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
+    <div className="app-modal-screen fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
       {/* Dimmed backdrop — click to close */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
@@ -289,7 +291,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         role="dialog"
         aria-modal="true"
         aria-labelledby="publish-project-title"
-        className="relative z-10 flex w-full max-h-[92vh] flex-col rounded-t-2xl bg-white shadow-2xl sm:max-w-lg sm:max-h-[90vh] sm:rounded-2xl"
+        className="app-bottom-sheet relative z-10 flex min-h-0 w-full max-h-[92vh] flex-col rounded-t-2xl bg-white shadow-2xl sm:max-w-lg sm:max-h-[90vh] sm:rounded-2xl"
       >
         {/* Header (pinned) */}
         <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] px-5 py-4 shrink-0 sm:px-6">
@@ -312,7 +314,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           {!profileReady ? (
             <FormLoadingState label={t("loadingProfile")} />
           ) : (
-          <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5 sm:px-6">
+          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
             {/* Category */}
             <div>
               <label className="text-sm font-medium text-[#374151] block mb-1.5">
@@ -535,7 +537,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           )}
 
           {/* Footer (pinned) */}
-          <div className="flex gap-3 border-t border-[#f3f4f6] px-5 py-4 shrink-0 sm:px-6">
+          <div className="flex shrink-0 gap-3 border-t border-[#f3f4f6] px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4">
             <Button type="button" variant="outline" size="lg" onClick={onClose}>
               {t("cancel")}
             </Button>

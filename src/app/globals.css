@@ -53,6 +53,13 @@
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
+  --app-visual-viewport-height: 100dvh;
+  --app-visual-viewport-width: 100vw;
+  --app-visual-viewport-top: 0px;
+  --app-visual-viewport-left: 0px;
+  --app-visual-viewport-center-y: 50dvh;
+  --app-visual-viewport-scale: 1;
+  --app-keyboard-inset-bottom: 0px;
 }
 
 body {
@@ -78,6 +85,35 @@ textarea:focus-visible,
 select:focus-visible {
   outline: none;
   outline-offset: 0;
+}
+
+/* Mobile keyboard + zoom resilience.
+   - app-bottom-sheet: bottom sheets sit above the virtual keyboard and scroll internally.
+   - app-centered-modal: fixed centered dialogs stay centered in the visual viewport.
+   - form controls use at least 16px on phones to avoid Safari's input auto-zoom, while
+     keeping user pinch-zoom enabled for accessibility. */
+@media (max-width: 640px) {
+  .app-modal-screen.app-modal-screen {
+    padding-bottom: var(--app-keyboard-inset-bottom);
+  }
+
+  .app-bottom-sheet.app-bottom-sheet {
+    max-height: min(92dvh, calc(var(--app-visual-viewport-height) - 0.75rem));
+  }
+
+  .app-centered-modal.app-centered-modal {
+    max-height: calc(var(--app-visual-viewport-height) - 1rem);
+  }
+
+  .app-centered-modal.app-centered-modal.fixed {
+    top: var(--app-visual-viewport-center-y);
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(.text-lg):not(.text-xl):not(.text-2xl),
+  textarea:not(.text-lg):not(.text-xl):not(.text-2xl),
+  select:not(.text-lg):not(.text-xl):not(.text-2xl) {
+    font-size: 16px;
+  }
 }
 
 /* Hide the browser's NATIVE password reveal / clear controls (Edge & IE render

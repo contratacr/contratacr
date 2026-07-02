@@ -976,7 +976,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onInteractOutside={keepSelectMenuOpen}
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
-            "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
+            "app-centered-modal fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
             "w-[95vw] max-w-4xl rounded-3xl overflow-hidden shadow-2xl",
             "flex flex-col md:flex-row",
             "max-h-[95vh] md:max-h-[720px]",

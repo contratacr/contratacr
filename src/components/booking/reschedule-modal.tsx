@@ -189,13 +189,13 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, onClos
   const days = getCalendarDays(currentYear, currentMonth);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+    <div className="app-modal-screen fixed inset-0 z-[100] flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={t("title")}
-        className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto pb-[env(safe-area-inset-bottom)]"
+        className="app-bottom-sheet relative w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white pb-[max(env(safe-area-inset-bottom),1rem)] shadow-2xl sm:max-w-md sm:rounded-2xl"
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#f3f4f6] bg-white px-4 py-3">
           <div className="min-w-0">

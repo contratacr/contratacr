@@ -432,7 +432,6 @@ export function ServicesEditor({
                 value={pickerQuery}
                 onChange={(e) => { setPickerQuery(e.target.value); setActivePickerGroupId(null); }}
                 placeholder={t("pickerSearch")}
-                autoFocus
                 className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
               />
             </div>
@@ -520,7 +519,6 @@ export function ServicesEditor({
                 value={form.description}
                 maxLength={SERVICE_DESCRIPTION_MAX_LENGTH}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value.slice(0, SERVICE_DESCRIPTION_MAX_LENGTH) }))}
-                autoFocus
               />
               <p className="mt-1.5 text-right text-xs text-[#6b7280]">
                 {t("descriptionLimit", { count: form.description.length, max: SERVICE_DESCRIPTION_MAX_LENGTH })}
