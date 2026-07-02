@@ -1,15 +1,10 @@
 "use client";
 
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
-  Bookmark,
   BookOpen,
-  Copy,
   Download,
-  Ellipsis,
-  Home,
-  Search,
-  Share2,
   Smartphone,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -165,150 +160,43 @@ export function InstallHomeLink() {
   );
 }
 
-type InstallMockStep = "menu" | "share" | "home";
-
-const highlightedRowClass = "border-[#9be3fb] bg-[#EAF7FD] text-[#0089bb] ring-2 ring-[#009FD9]/75 shadow-[0_10px_24px_rgba(0,159,217,0.18)]";
-
-function InstallPhoneFrame({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative mx-auto w-full max-w-[238px] rounded-[2.1rem] bg-[#162543] p-2 shadow-[0_22px_55px_-32px_rgba(15,23,42,0.78)]">
-      <div className="overflow-hidden rounded-[1.6rem] bg-[#f8fbfd] ring-1 ring-white/10">
-        <div className="flex items-center justify-between bg-white px-5 pb-2 pt-3 text-[10px] font-bold text-[#162543]">
-          <span>9:41</span>
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-3 rounded-sm bg-[#162543]" />
-            <span className="h-2 w-4 rounded-sm border border-[#162543]" />
-          </span>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function MiniContrataPage({ searchLabel, searchButton }: { searchLabel: string; searchButton: string }) {
-  return (
-    <div className="px-4 pb-20 pt-3">
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-1.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-mark.png" alt="" className="h-5 w-5" />
-          <span className="text-sm font-black text-[#162543]">
-            Contrata<span className="text-[#009FD9]">CR</span>
-          </span>
-        </span>
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-[#162543] shadow-sm">
-          <Ellipsis className="h-4 w-4 rotate-90" />
-        </span>
-      </div>
-      <div className="mt-9 rounded-2xl bg-white p-3 shadow-sm">
-        <div className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] px-3 py-3 text-[#9ca3af]">
-          <Search className="h-4 w-4" />
-          <span className="text-xs">{searchLabel}</span>
-        </div>
-        <button className="mt-3 w-full rounded-xl bg-[#009FD9] py-3 text-xs font-black text-white">{searchButton}</button>
-      </div>
-      <div className="mt-5 rounded-[1.6rem] bg-[#EBF5FB] p-4">
-        <p className="text-lg font-black leading-tight text-[#162543]">ContrataCR</p>
-        <p className="mt-1 text-xs leading-relaxed text-[#5f6b7a]">contratacr.com</p>
-      </div>
-    </div>
-  );
-}
-
-function BrowserToolbar({ highlightMenu = false }: { highlightMenu?: boolean }) {
-  return (
-    <div className="absolute inset-x-3 bottom-3 flex items-center gap-2 rounded-full bg-white/95 p-2 shadow-[0_12px_28px_rgba(15,23,42,0.16)] backdrop-blur">
-      <span className="grid h-8 w-8 place-items-center rounded-full bg-[#f3f4f6] text-lg font-bold text-[#162543]">&lt;</span>
-      <span className="min-w-0 flex-1 truncate rounded-full bg-[#f8fbfd] px-3 py-2 text-center text-xs font-black text-[#162543]">
-        contratacr.com
-      </span>
-      <span
-        className={`grid h-9 w-9 place-items-center rounded-full transition-colors ${
-          highlightMenu ? "bg-[#009FD9] text-white ring-4 ring-[#009FD9]/20 shadow-[0_8px_18px_rgba(0,159,217,0.32)]" : "bg-[#f3f4f6] text-[#162543]"
-        }`}
-      >
-        <Ellipsis className="h-5 w-5" />
-      </span>
-    </div>
-  );
-}
-
-function MockMenuRow({
-  icon: Icon,
-  label,
-  active = false,
+function ScreenshotStepCard({
+  number,
+  title,
+  body,
+  image,
+  targetClassName,
+  labelClassName,
 }: {
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  active?: boolean;
+  number: number;
+  title: string;
+  body: string;
+  image: string;
+  targetClassName: string;
+  labelClassName: string;
 }) {
   const t = useTranslations("installGuide");
-  return (
-    <div className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-bold ${active ? highlightedRowClass : "border-transparent text-[#374151]"}`}>
-      <Icon className="h-4 w-4 shrink-0" />
-      <span className="min-w-0 flex-1">{label}</span>
-      {active ? <span className="rounded-full bg-[#009FD9] px-2 py-0.5 text-[9px] font-black text-white">{t("tapHere")}</span> : null}
-    </div>
-  );
-}
 
-function InstallStepMock({ step }: { step: InstallMockStep }) {
-  const t = useTranslations("installGuide");
-  const page = <MiniContrataPage searchLabel={t("visualSearch")} searchButton={t("visualSearchButton")} />;
-
-  return (
-    <InstallPhoneFrame>
-      <div className="relative h-[420px] overflow-hidden bg-[#f8fbfd]">
-        {page}
-
-        {step === "menu" ? <BrowserToolbar highlightMenu /> : null}
-
-        {step === "share" ? (
-          <>
-            <div aria-hidden className="absolute inset-0 bg-[#162543]/18 backdrop-blur-[1px]" />
-            <div className="absolute inset-x-4 bottom-16 rounded-[1.6rem] bg-white/95 p-2 shadow-[0_18px_45px_rgba(15,23,42,0.26)]">
-              <MockMenuRow icon={Share2} label={t("iosVisualShare")} active />
-              <MockMenuRow icon={Bookmark} label={t("iosBookmark")} />
-              <MockMenuRow icon={BookOpen} label={t("iosReader")} />
-              <MockMenuRow icon={Copy} label={t("iosNewTab")} />
-            </div>
-            <BrowserToolbar />
-          </>
-        ) : null}
-
-        {step === "home" ? (
-          <>
-            <div aria-hidden className="absolute inset-0 bg-[#162543]/24 backdrop-blur-[1px]" />
-            <div className="absolute inset-x-4 top-8 rounded-[1.5rem] bg-white/90 p-3 shadow-[0_14px_34px_rgba(15,23,42,0.22)]">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/logo-mark.png" alt="" className="h-6 w-6" />
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-black text-[#162543]">ContrataCR</p>
-                  <p className="truncate text-xs text-[#6b7280]">contratacr.com</p>
-                </div>
-              </div>
-            </div>
-            <div className="absolute inset-x-4 bottom-7 rounded-[1.6rem] bg-white/95 p-2 shadow-[0_18px_45px_rgba(15,23,42,0.26)]">
-              <MockMenuRow icon={BookOpen} label={t("iosAddBookmark")} />
-              <MockMenuRow icon={Bookmark} label={t("iosFavorite")} />
-              <MockMenuRow icon={Search} label={t("iosFindPage")} />
-              <MockMenuRow icon={Home} label={t("iosVisualAdd")} active />
-            </div>
-          </>
-        ) : null}
-      </div>
-    </InstallPhoneFrame>
-  );
-}
-
-function InstallStepCard({ number, title, body, step }: { number: number; title: string; body: string; step: InstallMockStep }) {
   return (
     <article className="rounded-3xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-5">
-      <InstallStepMock step={step} />
+      <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-[1.65rem] bg-white shadow-[0_18px_48px_-30px_rgba(15,23,42,0.75)] ring-1 ring-[#dbe3ec]">
+        <Image
+          src={image}
+          alt=""
+          width={588}
+          height={1280}
+          sizes="(min-width: 1024px) 280px, 78vw"
+          className="h-auto w-full select-none"
+          priority={number === 1}
+        />
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute z-20 border-2 border-[#009FD9] bg-[#009FD9]/12 shadow-[0_0_0_5px_rgba(0,159,217,0.14),0_10px_24px_rgba(0,159,217,0.24)] ${targetClassName}`}
+        />
+        <span className={`pointer-events-none absolute z-30 rounded-full bg-[#009FD9] px-2.5 py-1 text-[10px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
+          {t("tapHere")}
+        </span>
+      </div>
       <div className="mt-4 flex gap-3">
         <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#009FD9] text-xs font-black text-white">
           {number}
@@ -328,17 +216,23 @@ function IosScreenshotGuide() {
     {
       title: t("iosStep1Title"),
       body: t("iosStep1Body"),
-      step: "menu" as const,
+      image: "/install-guide/add-home-step-1.jpg",
+      targetClassName: "bottom-[3.9%] right-[2.8%] h-[8%] w-[16%] rounded-[1.7rem]",
+      labelClassName: "bottom-[12.8%] right-[4.6%]",
     },
     {
       title: t("iosStep2Title"),
       body: t("iosStep2Body"),
-      step: "share" as const,
+      image: "/install-guide/add-home-step-2.jpg",
+      targetClassName: "left-[31%] top-[50.8%] h-[4.8%] w-[56%] rounded-2xl",
+      labelClassName: "left-1/2 top-[45%] -translate-x-1/2",
     },
     {
       title: t("iosStep3Title"),
       body: t("iosStep3Body"),
-      step: "home" as const,
+      image: "/install-guide/add-home-step-3.jpg",
+      targetClassName: "left-[5.8%] top-[56.9%] h-[5.7%] w-[59%] rounded-xl",
+      labelClassName: "right-[9%] top-[51.2%]",
     },
   ];
 
@@ -350,12 +244,14 @@ function IosScreenshotGuide() {
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
         {steps.map((step, index) => (
-          <InstallStepCard
+          <ScreenshotStepCard
             key={step.title}
             number={index + 1}
             title={step.title}
             body={step.body}
-            step={step.step}
+            image={step.image}
+            targetClassName={step.targetClassName}
+            labelClassName={step.labelClassName}
           />
         ))}
       </div>
