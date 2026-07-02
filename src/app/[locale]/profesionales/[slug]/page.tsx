@@ -5,12 +5,12 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
-  Share2, Flag, Award, Mail, SearchX, FileText,
+  Share2, Flag, Award, Mail, SearchX, FileText, Globe2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
-import { buildSocialUrl } from "@/lib/social";
+import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -431,6 +431,7 @@ export default function ProfilePage() {
                 {(() => {
                   const sl = professional.socialLinks;
                   const items = [
+                    { k: "website", href: buildWebsiteUrl(sl?.website), Icon: Globe2 },
                     { k: "instagram", href: buildSocialUrl("instagram", sl?.instagram), Icon: InstagramIcon },
                     { k: "facebook", href: buildSocialUrl("facebook", sl?.facebook), Icon: FacebookIcon },
                     { k: "tiktok", href: buildSocialUrl("tiktok", sl?.tiktok), Icon: TikTokIcon },

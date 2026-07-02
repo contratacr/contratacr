@@ -14,9 +14,9 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { Camera, X, Plus, ChevronDown, Lock, Award } from "lucide-react";
+import { Camera, X, Plus, ChevronDown, Lock, Award, Globe2 } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
-import { SOCIAL_NETWORKS, cleanUsername, isValidUsername, type SocialNetwork } from "@/lib/social";
+import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
@@ -169,6 +169,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     facebook: cleanUsername(initial.social_links?.facebook),
     tiktok: cleanUsername(initial.social_links?.tiktok),
   });
+  const [website, setWebsite] = useState<string>(cleanWebsiteUrl(initial.social_links?.website));
   const [fullName, setFullName] = useState<string>(initialFullName);
   // The official name comes from the cédula entered at signup, so it's NOT editable here —
   // EXACTLY like the client account (which locks on a national cédula). We lock when the
@@ -455,11 +456,19 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // column isn't migrated → PGRST204, or RLS), we surface a real error instead
       // of a false confirmation. (When there's nothing to save we ignore a missing
       // column so non-social pros aren't blocked.)
-      const social_links = Object.fromEntries(
+      const social_links: Record<string, string> = Object.fromEntries(
         SOCIAL_NETWORKS
           .map(({ key }) => [key, cleanUsername(social[key])] as const)
           .filter(([, u]) => u && isValidUsername(u))
       );
+      const websiteValue = website.trim();
+      const previousWebsite = cleanWebsiteUrl(initial.social_links?.website);
+      if (websiteValue && isValidWebsiteUrl(websiteValue)) {
+        social_links.website = cleanWebsiteUrl(websiteValue);
+      } else if (websiteValue && previousWebsite) {
+        // Keep the last saved website while the user is typing an incomplete URL.
+        social_links.website = previousWebsite;
+      }
       // NON-FATAL: a social_links failure must never abort the save (the core + locations
       // already persisted). If the column simply isn't migrated yet (056 pending), swallow
       // it silently. For a real failure with usernames present, surface a soft warning AFTER
@@ -796,6 +805,25 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       {/* ── Redes sociales — USERNAME only; we build the link (additive to casos). ── */}
       <Section id="social" title={t("secSocial")} desc={t("secSocialDesc")} open={openSections.has("social")} onToggle={toggleSection}>
         <div className="flex flex-col gap-3">
+          <div>
+            <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
+              <Globe2 className="h-4 w-4 text-[#6b7280]" /> {t("website")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+            </label>
+            <input
+              type="url"
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder={t("websitePlaceholder")}
+              value={website}
+              maxLength={120}
+              onChange={(e) => { setWebsite(e.target.value.slice(0, 120)); touch(); }}
+              onBlur={flush}
+              className={`h-11 w-full rounded-xl border bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[#009FD9] ${website.trim() && !isValidWebsiteUrl(website) ? "border-red-300" : "border-[#e5e7eb]"}`}
+            />
+            {website.trim() && !isValidWebsiteUrl(website) && <p className="text-xs text-red-500 mt-1">{t("websiteInvalid")}</p>}
+          </div>
           {SOCIAL_NETWORKS.map(({ key, label, prefix }) => {
             const Icon = { instagram: InstagramIcon, facebook: FacebookIcon, tiktok: TikTokIcon }[key];
             const cleaned = cleanUsername(social[key]);
