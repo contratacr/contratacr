@@ -3,14 +3,10 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
-  ArrowDown,
-  ArrowDownRight,
   BookOpen,
-  CheckCircle2,
   Download,
   Smartphone,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
@@ -95,16 +91,7 @@ function InstallAction({
 }) {
   const t = useTranslations("installGuide");
 
-  if (installed) {
-    return (
-      <span className={`inline-flex items-center justify-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-bold text-[#15803d] ring-1 ring-[#bbf7d0] ${className}`}>
-        <CheckCircle2 className="h-4 w-4" />
-        {t("installed")}
-      </span>
-    );
-  }
-
-  if (!canPrompt) return null;
+  if (installed || !canPrompt) return null;
 
   return (
     <button
@@ -179,18 +166,17 @@ function ScreenshotStepCard({
   body,
   image,
   labelClassName,
-  arrowClassName,
-  ArrowIcon,
+  arrowPath,
 }: {
   number: number;
   title: string;
   body: string;
   image: string;
   labelClassName: string;
-  arrowClassName: string;
-  ArrowIcon: LucideIcon;
+  arrowPath: string;
 }) {
   const t = useTranslations("installGuide");
+  const markerId = `install-arrow-${number}`;
 
   return (
     <article className="rounded-3xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-5">
@@ -207,7 +193,28 @@ function ScreenshotStepCard({
         <span className={`absolute z-20 rounded-full bg-[#009FD9] px-2.5 py-1 text-[10px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
           {t("tapHere")}
         </span>
-        <ArrowIcon className={`absolute z-20 h-6 w-6 text-[#009FD9] drop-shadow-[0_4px_10px_rgba(0,159,217,0.35)] ${arrowClassName}`} strokeWidth={3} />
+        <svg
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-20 h-full w-full overflow-visible drop-shadow-[0_4px_10px_rgba(0,159,217,0.35)]"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <marker id={markerId} markerWidth="2.8" markerHeight="2.8" refX="2.45" refY="1.4" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M0,0 L2.8,1.4 L0,2.8 Z" fill="#009FD9" />
+            </marker>
+          </defs>
+          <path
+            d={arrowPath}
+            fill="none"
+            stroke="#009FD9"
+            strokeWidth="0.85"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            markerEnd={`url(#${markerId})`}
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
       </div>
       <div className="mt-4 flex gap-3">
         <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#009FD9] text-xs font-black text-white">
@@ -229,25 +236,22 @@ function IosScreenshotGuide() {
       title: t("iosStep1Title"),
       body: t("iosStep1Body"),
       image: "/install-guide/add-home-step-1.jpg",
-      labelClassName: "bottom-[13.5%] right-[13%]",
-      arrowClassName: "bottom-[7.7%] right-[8%]",
-      ArrowIcon: ArrowDownRight,
+      labelClassName: "bottom-[14.5%] right-[13%]",
+      arrowPath: "M 79 83.5 C 84 84.5 88 87.5 91 90.3",
     },
     {
       title: t("iosStep2Title"),
       body: t("iosStep2Body"),
       image: "/install-guide/add-home-step-2.jpg",
-      labelClassName: "left-1/2 top-[40.5%] -translate-x-1/2",
-      arrowClassName: "left-1/2 top-[46.5%] -translate-x-1/2",
-      ArrowIcon: ArrowDown,
+      labelClassName: "left-1/2 top-[38%] -translate-x-1/2",
+      arrowPath: "M 50 42.5 C 50 45.5 47.5 48.5 43.5 50.5",
     },
     {
       title: t("iosStep3Title"),
       body: t("iosStep3Body"),
       image: "/install-guide/add-home-step-3.jpg",
       labelClassName: "right-[10%] top-[51.5%]",
-      arrowClassName: "right-[26%] top-[57%]",
-      ArrowIcon: ArrowDown,
+      arrowPath: "M 79 55 C 66 56.5 45 57.8 24 58.7",
     },
   ];
 
@@ -266,8 +270,7 @@ function IosScreenshotGuide() {
             body={step.body}
             image={step.image}
             labelClassName={step.labelClassName}
-            arrowClassName={step.arrowClassName}
-            ArrowIcon={step.ArrowIcon}
+            arrowPath={step.arrowPath}
           />
         ))}
       </div>
