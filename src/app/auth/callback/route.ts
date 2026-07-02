@@ -42,16 +42,25 @@ export async function GET(request: NextRequest) {
       : await supabase.auth.exchangeCodeForSession(code!);
 
     // ── Email change confirmation — handle FIRST and TOLERANTLY ─────────────────
-    // The change is applied by `verifyOtp`, but email security scanners (Outlook /
-    // corporate) often PREFETCH the link and CONSUME the single-use token_hash before
-    // the human clicks — so by the real click verifyOtp ERRORS even though the email
-    // already changed. Previously that fell through to the error page (= the MAIN
-    // page). Instead, resolve the user from the verify result OR the existing session
-    // and land on the role-aware "Cuenta y seguridad" tab with the success-banner flag
-    // (?emailChanged=1) — never the main page.
+    // The change is applied by `verifyOtp`, but email security scanners can prefetch
+    // the single-use token before the human click. Be tolerant, but never show success
+    // unless Auth really reports the expected new email; otherwise the old email would
+    // still be reserved while the UI claims it changed.
     if (tokenHash && type === "email_change") {
       const u = data.user ?? (await supabase.auth.getUser()).data.user;
       if (u) {
+        const lc = u.user_metadata?.email_change_locale === "en" ? "en" : "es";
+        const expectedEmail =
+          typeof u.user_metadata?.email_change_pending_to === "string"
+            ? u.user_metadata.email_change_pending_to.trim().toLowerCase()
+            : "";
+        const authEmail = (u.email ?? "").trim().toLowerCase();
+        const emailChanged = !!authEmail && (!expectedEmail ? !error : authEmail === expectedEmail);
+
+        if (!emailChanged) {
+          return NextResponse.redirect(`${origin}/${lc}/dashboard/profesional?tab=cuenta&emailChangePending=1`);
+        }
+
         // Keep public.profiles.email IN SYNC with the new auth email. The unique index
         // on profiles.email (migration 007) would otherwise keep the OLD email reserved
         // and wrongly block a future signup from reusing the freed email. This mirrors
@@ -62,9 +71,6 @@ export async function GET(request: NextRequest) {
             await admin.from("profiles").update({ email: u.email }).eq("id", u.id);
           } catch { /* best-effort — never block the redirect over the email mirror */ }
         }
-        // Preserve the UI locale the user changed their email from (stashed in
-        // user_metadata by account-security — the static email template can't know it).
-        const lc = u.user_metadata?.email_change_locale === "en" ? "en" : "es";
         // One unified panel for everyone — land on "Cuenta y seguridad" with the
         // success flag intact (a single hop keeps the emailChanged banner).
         return NextResponse.redirect(`${origin}/${lc}/dashboard/profesional?tab=cuenta&emailChanged=1`);

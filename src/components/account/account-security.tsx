@@ -83,6 +83,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailApplied, setEmailApplied] = useState(false);
+  const [emailPending, setEmailPending] = useState(false);
   const emailResend = useResendCooldown();
   const pwResend = useResendCooldown();
 
@@ -99,6 +100,12 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       // without a sign-out/in (refresh fires onAuthStateChange → useAuth re-renders).
       createClient().auth.refreshSession().catch(() => {});
       params.delete("emailChanged");
+      const qs = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash);
+    }
+    if (params.get("emailChangePending") === "1") {
+      window.setTimeout(() => setEmailPending(true), 0);
+      params.delete("emailChangePending");
       const qs = params.toString();
       window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash);
     }
@@ -150,7 +157,13 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     const next = `/${locale}/dashboard/${role}?tab=cuenta&emailChanged=1`;
     const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
     const { error } = await supabase.auth.updateUser(
-      { email: newEmail.trim(), data: { email_change_locale: locale } },
+      {
+        email: newEmail.trim(),
+        data: {
+          email_change_locale: locale,
+          email_change_pending_to: newEmail.trim().toLowerCase(),
+        },
+      },
       { emailRedirectTo }
     );
     return error?.message ?? null;
@@ -167,6 +180,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       return;
     }
     setEmailSent(true);
+    setEmailPending(false);
     setEmailMode(false);
     emailResend.armCooldown();
   }
@@ -228,6 +242,11 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         {emailApplied && (
           <div className="mb-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
             {t("emailApplied")}
+          </div>
+        )}
+        {emailPending && (
+          <div className="mb-3 rounded-xl bg-[#EBF5FB] border border-[#b8e4f5] px-4 py-3 text-sm text-[#16617a]">
+            {t("emailPending")}
           </div>
         )}
         {isOAuthAccount ? (
