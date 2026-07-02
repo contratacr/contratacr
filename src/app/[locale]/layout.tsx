@@ -32,6 +32,7 @@ function buildMetadata(locale: string): Metadata {
   const socialDescription = isEn
     ? "Find and hire professionals in Costa Rica"
     : "Encuentra y contrata profesionales en Costa Rica";
+  const socialImage = `/${locale}/opengraph-image`;
 
   return {
     metadataBase: new URL("https://contratacr.com"),
@@ -53,13 +54,13 @@ function buildMetadata(locale: string): Metadata {
       description: socialDescription,
       url: "https://contratacr.com",
       locale: isEn ? "en_US" : "es_CR",
-      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: `ContrataCR - ${socialDescription}` }],
+      images: [{ url: socialImage, width: 1200, height: 630, alt: `ContrataCR - ${socialDescription}` }],
     },
     twitter: {
       card: "summary_large_image",
       title: "ContrataCR",
       description: socialDescription,
-      images: ["/og-image.png"],
+      images: [socialImage],
     },
   };
 }
