@@ -8,11 +8,11 @@ import { useTranslations } from "next-intl";
 /* ─── Inline phone mockup (no client state needed) ─── */
 function AppPhoneMock() {
   const items = [
-    { color: "#009FD9", label: "Limpieza del hogar",      price: "₡18,000 – ₡45,000 prom." },
-    { color: "#22c55e", label: "Plomería y tuberías",     price: "₡25,000 – ₡80,000 prom." },
-    { color: "#f59e0b", label: "Electricidad residencial", price: "₡30,000 – ₡100,000 prom." },
-    { color: "#6366f1", label: "Pintura interior",        price: "₡20,000 – ₡60,000 prom." },
-    { color: "#10b981", label: "Jardinería y poda",       price: "₡15,000 – ₡40,000 prom." },
+    { color: "#009FD9", label: "Limpieza del hogar",      price: "₡18,000 – ₡45,000 I.V.A.I." },
+    { color: "#22c55e", label: "Plomería y tuberías",     price: "₡25,000 – ₡80,000 I.V.A.I." },
+    { color: "#f59e0b", label: "Electricidad residencial", price: "₡30,000 – ₡100,000 I.V.A.I." },
+    { color: "#6366f1", label: "Pintura interior",        price: "₡20,000 – ₡60,000 I.V.A.I." },
+    { color: "#10b981", label: "Jardinería y poda",       price: "₡15,000 – ₡40,000 I.V.A.I." },
   ];
 
   return (

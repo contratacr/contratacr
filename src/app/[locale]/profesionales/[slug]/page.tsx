@@ -20,7 +20,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, proDisplayName, cn } from "@/lib/utils";
 import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
-import { formatServicePrice, primaryPricingLabel } from "@/lib/pricing";
+import { addTaxIncludedToPriceLabel, formatServicePrice, primaryPricingLabel, splitPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
@@ -386,13 +386,12 @@ export default function ProfilePage() {
                   <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("from")}</span>
                   {(() => {
                     const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
-                    const slash = label.indexOf("/");
-                    const amount = slash >= 0 ? label.slice(0, slash).trim() : label;
-                    const unit = slash >= 0 ? label.slice(slash) : "";
+                    const { amount, unit, taxSuffix } = splitPricingLabel(label);
                     return (
                       <p className="leading-tight">
                         <span className="text-xl font-bold text-[#009FD9]">{amount}</span>
                         {unit && <span className="text-sm font-medium text-[#9ca3af]"> {unit}</span>}
+                        {taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#9ca3af]">{taxSuffix}</span>}
                       </p>
                     );
                   })()}
@@ -513,16 +512,16 @@ export default function ProfilePage() {
                   {activeTab === "servicios" && (() => {
                     // Text-only service cards: ONE card per service CATEGORY (the pro's professions),
                     // with its description, price and request action. Images belong to casos/photos.
-                    const profs = (professional.professions && professional.professions.length > 0)
+                    const rawProfs = (professional.professions && professional.professions.length > 0)
                       ? professional.professions
                       : (professional.categoryId ? [professional.categoryId] : []);
                     const byCat = new Map<string, typeof services>();
                     for (const s of services) {
-                      const cat = (s as { category?: string }).category || profs[0] || "otro";
+                      const cat = (s as { category?: string }).category || rawProfs[0] || "otro";
                       const arr = byCat.get(cat) ?? []; arr.push(s); byCat.set(cat, arr);
                     }
-                    // Cards = the pro's professions (even with no priced offering yet) + any extra
-                    // categories that DO have offerings; de-duplicated, professions first.
+                    const profs = rawProfs.filter((c) => byCat.has(c));
+                    // Cards = active service categories only; de-duplicated, profile order first.
                     const cats = [...profs, ...[...byCat.keys()].filter((c) => !profs.includes(c))]
                       .filter((c, i, a) => a.indexOf(c) === i);
                     return (
@@ -544,11 +543,12 @@ export default function ProfilePage() {
                               const priced = items.find((s) => s.priceAmount || s.price || (s as { priceType?: string }).priceType === "a_convenir");
                               const priceLabel = priced
                                 ? formatServicePrice(priced.priceAmount, priced.priceType, locale)
-                                  ?? (priced.price ? priced.price.replaceAll("/hora", locale === "en" ? " /hour" : " /hora").replaceAll("Precio a consultar", t("priceConsult")).replaceAll("Consultar precio", t("priceConsult")) : t("priceConsult"))
+                                  ?? (priced.price ? addTaxIncludedToPriceLabel(priced.price.replaceAll("/hora", locale === "en" ? " /hour" : " /hora").replaceAll("Precio a consultar", t("priceConsult")).replaceAll("Consultar precio", t("priceConsult"))) : t("priceConsult"))
                                 : t("priceConsult");
                               const title = getCategoryLabel(cat, locale);
                               const description = rep?.description?.trim() ?? "";
                               const hasFullDescription = description.length > 150;
+                              const priceParts = splitPricingLabel(priceLabel);
                               return (
                                 <div key={cat} className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
                                   <div className="flex flex-1 flex-col">
@@ -586,7 +586,11 @@ export default function ProfilePage() {
                                       ) : null}
                                       <p className="flex items-center gap-2 text-[#111827]">
                                         <Banknote className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                                        <span className="font-bold [overflow-wrap:anywhere]">{priceLabel}</span>
+                                        <span className="font-bold [overflow-wrap:anywhere]">
+                                          {priceParts.amount}
+                                          {priceParts.unit && <span className="font-semibold text-[#6b7280]"> {priceParts.unit}</span>}
+                                          {priceParts.taxSuffix && <span className="ml-1 text-[10px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span>}
+                                        </span>
                                       </p>
                                     </div>
                                     <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4">

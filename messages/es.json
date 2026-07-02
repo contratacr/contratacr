@@ -1529,7 +1529,7 @@
     "noDescriptionYet": "Agrega una descripción de lo que ofreces en este servicio.",
     "offerDescPlaceholder": "¿Qué incluye este servicio? Describe lo que ofreces.",
     "emptyTitle": "Aún no ofreces servicios",
-    "emptyHelp": "Agrega los servicios que ofreces desde nuestro catálogo.",
+    "emptyHelp": "Agrega al menos un servicio para aparecer en búsqueda.",
         "pickerBack": "Volver a servicios",
     "pickerOptionsCount": "{count, plural, one {# opción} other {# opciones}}"
   },

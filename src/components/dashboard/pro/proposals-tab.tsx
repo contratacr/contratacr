@@ -12,6 +12,7 @@ import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, formatRelativeOrDate } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
+import { formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
@@ -676,6 +677,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     ? getWhatsAppLink(phone, t("waMessage", { name: (clientName ?? "").split(" ")[0], title: p.projects?.title ?? "" }))
                     : null;
                   const sentDate = formatRelativeOrDate(p.created_at, locale);
+                  const proposalPriceParts = p.price ? splitPricingLabel(formatColonesTaxIncluded(p.price)) : null;
                   return (
                     <Card id={`project-${p.project_id}`} key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isOpen && "shadow-md ring-1 ring-[#d8eef8]")}>
                       {/* COLLAPSED header — client avatar + project title (primary) + a status chip
@@ -705,7 +707,15 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                             <span className="inline-flex w-full max-w-full items-center text-[#374151]">
                               <span className="truncate font-semibold">
-                                <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span> <span className={p.price ? "text-[#111827]" : "text-[#374151]"}>{p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}</span>
+                                <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span>{" "}
+                                <span className={proposalPriceParts ? "text-[#111827]" : "text-[#374151]"}>
+                                  {proposalPriceParts ? (
+                                    <>
+                                      {proposalPriceParts.amount}
+                                      <span className="ml-1 text-[10px] font-semibold tracking-wide text-[#9ca3af]">{proposalPriceParts.taxSuffix}</span>
+                                    </>
+                                  ) : t("priceTBD")}
+                                </span>
                               </span>
                             </span>
                           </div>

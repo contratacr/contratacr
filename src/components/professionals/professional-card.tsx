@@ -1,11 +1,11 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Star } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { primaryPricingLabel, type PricingTier } from "@/lib/pricing";
+import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
 
 // CARD-ONLY: shorten a PERSON's name to first name + both surnames, dropping any
 // middle name(s) — e.g. "Isaac Alberto Sanchez Monge" → "Isaac Sanchez Monge".
@@ -103,6 +103,7 @@ interface ProfessionalCardProps {
 export async function ProfessionalCard({ professional, className, slots = [], activeCategory, viewerProfileId, rank }: ProfessionalCardProps) {
   const tCat = await getTranslations("categories");
   const tCard = await getTranslations("card");
+  const locale = await getLocale();
   // Safe category label: if a translation key is missing, next-intl returns the
   // raw "categories.xxx" path — fall back to the taxonomy label (e.g. "otro" →
   // "Otro servicio") so no internal key ever leaks into the UI.
@@ -134,12 +135,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
-  const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
-  const priceSlash = priceLabel.indexOf("/");
-  const priceAmount = priceSlash >= 0 ? priceLabel.slice(0, priceSlash).trim() : priceLabel;
-  const priceUnit = priceSlash >= 0 ? priceLabel.slice(priceSlash) : "";
-  const priceIsColones = priceLabel.includes("₡");
-  const priceBoxClass = priceUnit ? "max-w-[38%] sm:max-w-[40%]" : "w-[74px] sm:w-[86px]";
+  const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
+  const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix, isColones: priceIsColones } = splitPricingLabel(priceLabel);
+  const priceBoxClass = priceUnit || priceTaxSuffix ? "max-w-[38%] sm:max-w-[40%]" : "w-[74px] sm:w-[86px]";
   const isVerified = professional.verificationStatus === "verified";
   const extraProfessions = allProfessions.length - professionList.length;
   // A pro viewing their OWN card cannot request a service from themselves. The
@@ -218,6 +216,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               <div className={`ml-auto shrink-0 text-right leading-tight ${priceBoxClass}`}>
                 <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
                 {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
+                {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
               </div>
             )}
           </div>

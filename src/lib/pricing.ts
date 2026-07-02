@@ -14,6 +14,8 @@ export type PricingTier = {
   label?: string;  // optional package name
 };
 
+export const TAX_INCLUDED_SUFFIX = "I.V.A.I.";
+
 export const PRICING_TYPES: { value: PricingType; label: string; suffix: string }[] = [
   { value: "por_hora", label: "Por hora", suffix: "/hora" },
   { value: "por_consulta", label: "Por consulta", suffix: "/consulta" },
@@ -25,6 +27,32 @@ export const PRICING_TYPES: { value: PricingType; label: string; suffix: string 
 
 export function formatColones(amount: number): string {
   return `₡${amount.toLocaleString("es-CR")}`;
+}
+
+export function formatColonesTaxIncluded(amount: number): string {
+  return `${formatColones(amount)} ${TAX_INCLUDED_SUFFIX}`;
+}
+
+export function addTaxIncludedToPriceLabel(label: string): string {
+  if (!label.includes("₡") || label.includes(TAX_INCLUDED_SUFFIX)) return label;
+  return `${label} ${TAX_INCLUDED_SUFFIX}`;
+}
+
+export function splitPricingLabel(label: string): {
+  amount: string;
+  unit: string;
+  taxSuffix: string;
+  isColones: boolean;
+} {
+  const taxSuffix = label.includes(TAX_INCLUDED_SUFFIX) ? TAX_INCLUDED_SUFFIX : "";
+  const clean = taxSuffix ? label.replace(TAX_INCLUDED_SUFFIX, "").trim() : label;
+  const slash = clean.indexOf("/");
+  return {
+    amount: slash >= 0 ? clean.slice(0, slash).trim() : clean,
+    unit: slash >= 0 ? clean.slice(slash).trim() : "",
+    taxSuffix,
+    isColones: clean.includes("₡"),
+  };
 }
 
 const PRICING_COPY: Record<"es" | "en", Record<PricingType, { fallback: string; suffix: string; packagePrefix: string }>> = {
@@ -50,19 +78,25 @@ function pricingLocale(locale?: string): "es" | "en" {
   return locale?.startsWith("en") ? "en" : "es";
 }
 
-/** Human-readable single tier, e.g. "₡15,000/hora" or "Consultar precio". */
+function formatAmountWithUnit(amount: number, suffix: string): string {
+  return suffix
+    ? `${formatColones(amount)} ${suffix} ${TAX_INCLUDED_SUFFIX}`
+    : formatColonesTaxIncluded(amount);
+}
+
+/** Human-readable single tier, e.g. "₡15,000 /hora I.V.A.I." or "Consultar precio". */
 export function formatPricingTier(tier: PricingTier, locale?: string): string {
   const copy = PRICING_COPY[pricingLocale(locale)][tier.type];
   if (tier.type === "a_convenir") return copy.fallback;
   const suffix = copy.suffix;
   if (tier.type === "paquete") {
     const base = tier.label ? `${tier.label}: ` : copy.packagePrefix;
-    return tier.amount != null ? `${base}${formatColones(tier.amount)}` : `${base}${copy.fallback}`;
+    return tier.amount != null ? `${base}${formatColonesTaxIncluded(tier.amount)}` : `${base}${copy.fallback}`;
   }
-  return tier.amount != null ? `${formatColones(tier.amount)} ${suffix}` : copy.fallback;
+  return tier.amount != null ? formatAmountWithUnit(tier.amount, suffix) : copy.fallback;
 }
 
-/** Format a single service's price from its amount + type, e.g. "₡15,000/hora". */
+/** Format a single service's price from its amount + type, e.g. "₡15,000 /hora I.V.A.I.". */
 export function formatServicePrice(amount?: number | null, type?: PricingType | null, locale?: string): string | null {
   if (amount == null && !type) return null;
   return formatPricingTier({ id: "", type: type ?? "a_convenir", amount: amount ?? undefined }, locale);
@@ -101,6 +135,6 @@ export function primaryPricingLabel(
   locale?: string
 ): string {
   if (pricing && pricing.length > 0) return formatPricingTier(pricing[0], locale);
-  if (hourlyRate) return `${formatColones(hourlyRate)} ${pricingLocale(locale) === "en" ? "/hour" : "/hora"}`;
+  if (hourlyRate) return formatAmountWithUnit(hourlyRate, pricingLocale(locale) === "en" ? "/hour" : "/hora");
   return pricingLocale(locale) === "en" ? "Ask for price" : "Consultar precio";
 }
