@@ -2548,8 +2548,6 @@
     "eyebrow": "Cómo funciona",
     "title": "La forma más simple de encontrar o conseguir servicios en Costa Rica",
     "subtitle": "ContrataCR conecta clientes con profesionales locales. Puedes buscar directamente, publicar una solicitud, revisar perfiles, coordinar por WhatsApp y manejar todo desde tu panel.",
-    "heroSearchCta": "Buscar un servicio",
-    "heroProCta": "Ofrecer mis servicios",
     "metric0Value": "2 formas",
     "metric0Label": "Buscar profesionales o publicar una solicitud.",
     "metric1Value": "0 comisiones",
@@ -2659,8 +2657,9 @@
     "faq7A": "Sí. Puedes buscar desde una reparación rápida hasta servicios profesionales, salud, educación, tecnología, hogar, eventos y más.",
     "ctaTitle": "Pruébala y compártela",
     "ctaSubtitle": "Si necesitas ayuda, busca un servicio. Si ofreces servicios, crea tu perfil y empieza a construir presencia en ContrataCR.",
-    "ctaSearch": "Buscar servicios",
-    "ctaPublish": "Publicar una solicitud"
+    "ctaSearch": "Buscar un servicio",
+    "ctaPublish": "Publicar una solicitud",
+    "ctaOffer": "Ofrecer mis servicios"
   },
   "ayuda": {
     "eyebrow": "Centro de ayuda",

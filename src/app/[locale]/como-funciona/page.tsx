@@ -230,14 +230,6 @@ export default async function ComoFuncionaPage() {
               <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#6b7280] sm:text-lg">
                 {t("subtitle")}
               </p>
-              <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-                <Link href="/buscar" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-[#0089bb]">
-                  <Search className="h-4 w-4" /> {t("heroSearchCta")}
-                </Link>
-                <Link href="/registro/profesional" className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8eef8] bg-white px-6 py-3 text-sm font-black text-[#162543] transition-colors hover:border-[#009FD9]">
-                  <BriefcaseBusiness className="h-4 w-4" /> {t("heroProCta")}
-                </Link>
-              </div>
             </div>
           </FadeInUp>
           <FadeInUp delay={80}>
@@ -373,18 +365,19 @@ export default async function ComoFuncionaPage() {
         </section>
 
         <section className="bg-[#162543] px-4 py-16 text-center">
-          <FadeInUp>
-            <h2 className="text-3xl font-black text-white">{t("ctaTitle")}</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#c7d2fe]">{t("ctaSubtitle")}</p>
-            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link href="/buscar" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-7 py-3 text-sm font-black text-white transition-colors hover:bg-[#0089bb]">
-                <Search className="h-4 w-4" /> {t("ctaSearch")}
-              </Link>
-              <Link href="/publicar-proyecto" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20">
-                <MessageCircle className="h-4 w-4" /> {t("ctaPublish")}
-              </Link>
-            </div>
-          </FadeInUp>
+          <h2 className="text-3xl font-black text-white">{t("ctaTitle")}</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#c7d2fe]">{t("ctaSubtitle")}</p>
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/buscar" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-7 py-3 text-sm font-black text-white transition-colors hover:bg-[#0089bb]">
+              <Search className="h-4 w-4" /> {t("ctaSearch")}
+            </Link>
+            <Link href="/publicar-proyecto" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20">
+              <MessageCircle className="h-4 w-4" /> {t("ctaPublish")}
+            </Link>
+            <Link href="/registro/profesional" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20">
+              <BriefcaseBusiness className="h-4 w-4" /> {t("ctaOffer")}
+            </Link>
+          </div>
         </section>
       </main>
 
