@@ -561,7 +561,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
                 </Button>
               </div>
             ) : (
-              <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
+              <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} className="self-start">
                 <Camera className="h-4 w-4" /> {t("addPhoto")}
               </Button>
             )}
