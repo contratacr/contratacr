@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
+  ArrowDown,
   BookOpen,
   CheckCircle2,
   Download,
-  MonitorDown,
   Smartphone,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -121,17 +121,17 @@ export function InstallHomeBand() {
   const { canPrompt, installed, install } = useInstallPrompt();
 
   return (
-    <section className="bg-white px-4 pb-16 pt-4 sm:px-6 sm:pb-20 lg:px-8">
+    <section className="bg-white px-4 pb-12 pt-2 sm:px-6 sm:pb-16 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <div className="overflow-hidden rounded-[2rem] border border-[#d8edf7] bg-[#f8fbfd] shadow-[0_20px_60px_-42px_rgba(26,39,68,0.45)]">
-          <div className="grid gap-6 p-5 sm:p-7 md:grid-cols-[1fr_auto] md:items-center lg:p-8">
+        <div className="overflow-hidden rounded-3xl border border-[#d8edf7] bg-gradient-to-br from-[#f8fbfd] via-white to-[#eef8fc]">
+          <div className="grid gap-5 p-5 sm:p-7 md:grid-cols-[1fr_auto] md:items-center">
             <div className="flex min-w-0 items-start gap-4">
-              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EAF7FD] text-[#0089bb] shadow-[0_12px_28px_-24px_rgba(0,159,217,0.95)]">
-                <Smartphone className="h-6 w-6" />
+              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#0089bb] ring-1 ring-[#cfeaf5]">
+                <Smartphone className="h-5 w-5" />
               </span>
               <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#009FD9]">{t("homeEyebrow")}</p>
-                <h2 className="mt-1 text-2xl font-extrabold leading-tight text-[#162543] sm:text-3xl">{t("homeTitle")}</h2>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#009FD9]">{t("homeEyebrow")}</p>
+                <h2 className="mt-1 text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl">{t("homeTitle")}</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#5f6b7a] sm:text-base">{t("homeBody")}</p>
               </div>
             </div>
@@ -176,14 +176,12 @@ function ScreenshotStepCard({
   title,
   body,
   image,
-  markerClassName,
   labelClassName,
 }: {
   number: number;
   title: string;
   body: string;
   image: string;
-  markerClassName: string;
   labelClassName: string;
 }) {
   const t = useTranslations("installGuide");
@@ -200,9 +198,9 @@ function ScreenshotStepCard({
           className="h-auto w-full select-none"
           priority={number === 1}
         />
-        <span aria-hidden className={`absolute z-10 border-[3px] border-[#009FD9] bg-[#009FD9]/10 shadow-[0_0_0_6px_rgba(0,159,217,0.12)] ${markerClassName}`} />
-        <span className={`absolute z-20 rounded-full bg-[#009FD9] px-2.5 py-1 text-[10px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
+        <span className={`absolute z-20 inline-flex items-center gap-1 rounded-full bg-[#009FD9] px-2.5 py-1 text-[10px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
           {t("tapHere")}
+          <ArrowDown className="h-3 w-3" />
         </span>
       </div>
       <div className="mt-4 flex gap-3">
@@ -225,21 +223,18 @@ function IosScreenshotGuide() {
       title: t("iosStep1Title"),
       body: t("iosStep1Body"),
       image: "/install-guide/add-home-step-1.jpg",
-      markerClassName: "bottom-[2.6%] right-[3.6%] h-14 w-14 rounded-full",
-      labelClassName: "bottom-[12%] right-[2.5%]",
+      labelClassName: "bottom-[10.5%] right-[2.5%]",
     },
     {
       title: t("iosStep2Title"),
       body: t("iosStep2Body"),
       image: "/install-guide/add-home-step-2.jpg",
-      markerClassName: "left-[32%] top-[51.5%] h-[5.5%] w-[56%] rounded-2xl",
       labelClassName: "left-1/2 top-[47.5%] -translate-x-1/2",
     },
     {
       title: t("iosStep3Title"),
       body: t("iosStep3Body"),
       image: "/install-guide/add-home-step-3.jpg",
-      markerClassName: "left-[4%] top-[58.8%] h-[5.8%] w-[91%] rounded-2xl",
       labelClassName: "left-1/2 top-[55%] -translate-x-1/2",
     },
   ];
@@ -258,7 +253,6 @@ function IosScreenshotGuide() {
             title={step.title}
             body={step.body}
             image={step.image}
-            markerClassName={step.markerClassName}
             labelClassName={step.labelClassName}
           />
         ))}
@@ -285,15 +279,6 @@ export function InstallAppGuide({ compact = false }: { compact?: boolean }) {
 
         <div className="space-y-8">
           <IosScreenshotGuide />
-          <div className="rounded-2xl border border-[#d8edf7] bg-white p-4 sm:flex sm:items-center sm:gap-4 sm:p-5">
-            <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#0089bb] sm:mb-0">
-              <MonitorDown className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <h3 className="text-sm font-black text-[#162543]">{t("androidTitle")}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-[#6b7280]">{t("androidQuickTip")}</p>
-            </div>
-          </div>
         </div>
       </div>
     </section>

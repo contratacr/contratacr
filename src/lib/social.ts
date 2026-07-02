@@ -42,3 +42,31 @@ export function buildSocialUrl(network: SocialNetwork, username: string | null |
     case "tiktok": return `https://tiktok.com/@${u}`;
   }
 }
+
+export function cleanWebsiteUrl(value: string | null | undefined): string {
+  let s = (value ?? "").trim();
+  if (!s) return "";
+  if (!/^https?:\/\//i.test(s)) s = `https://${s}`;
+  try {
+    const url = new URL(s);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return s;
+  }
+}
+
+export function isValidWebsiteUrl(value: string | null | undefined): boolean {
+  const url = cleanWebsiteUrl(value);
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return (parsed.protocol === "http:" || parsed.protocol === "https:") && parsed.hostname.includes(".");
+  } catch {
+    return false;
+  }
+}
+
+export function buildWebsiteUrl(value: string | null | undefined): string {
+  return isValidWebsiteUrl(value) ? cleanWebsiteUrl(value) : "";
+}
