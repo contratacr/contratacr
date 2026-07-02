@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, AlertCircle } from "lucide-react";
+import { ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,7 @@ export default function LoginPage() {
   const locale = useLocale();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
   // When a manual login fails because the email is a Google-only account, highlight
   // the provider button and show a specific message.
@@ -81,10 +82,14 @@ export default function LoginPage() {
   // password account — bounces back here with ?autherror=use_password (set by
   // /auth/callback). Surface the reason so the user signs in with their password.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("autherror") === "use_password") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("autherror") === "use_password") {
       // This mirrors a callback query param after mount; it should not affect SSR.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setError(t("blockedUsePassword"));
+    }
+    if (params.get("emailChanged") === "1") {
+      setSuccessNotice(t("emailChangedLogin"));
     }
   }, [t]);
 
@@ -188,6 +193,16 @@ export default function LoginPage() {
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 mb-4">
               <AlertCircle className="h-4 w-4 shrink-0" />
               {error}
+            </div>
+          )}
+
+          {successNotice && (
+            <div className="flex items-start gap-3 p-3.5 bg-[#f0f9ff] border border-[#bae6fd] rounded-xl text-sm text-[#075985] mb-4">
+              <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[#009FD9]" />
+              <div>
+                <p className="font-semibold text-[#0f172a]">{t("emailChangedTitle")}</p>
+                <p>{successNotice}</p>
+              </div>
             </div>
           )}
 

@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
     // MUST be finalized with verifyOtp, or the change is NEVER applied and the user
     // lands on the error page (= the main page). The token_hash flow needs NO PKCE
     // code_verifier (so it works from any browser/device) and NO redirect_to allowlist.
+    const hadSessionBeforeVerification = !!(await supabase.auth.getSession()).data.session;
     const { data, error } = tokenHash
       ? await supabase.auth.verifyOtp({ type: (type ?? "email") as EmailOtpType, token_hash: tokenHash })
       : await supabase.auth.exchangeCodeForSession(code!);
@@ -71,6 +72,11 @@ export async function GET(request: NextRequest) {
             await admin.from("profiles").update({ email: u.email }).eq("id", u.id);
           } catch { /* best-effort — never block the redirect over the email mirror */ }
         }
+        if (!hadSessionBeforeVerification) {
+          await supabase.auth.signOut();
+          return NextResponse.redirect(`${origin}/${lc}/login?emailChanged=1`);
+        }
+
         // One unified panel for everyone — land on "Cuenta y seguridad" with the
         // success flag intact (a single hop keeps the emailChanged banner).
         return NextResponse.redirect(`${origin}/${lc}/dashboard/profesional?tab=cuenta&emailChanged=1`);

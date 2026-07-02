@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
+import { CheckCircle2, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -96,6 +96,10 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     const params = new URLSearchParams(window.location.search);
     if (params.get("emailChanged") === "1") {
       window.setTimeout(() => setEmailApplied(true), 0);
+      window.setTimeout(() => {
+        setEmailSent(false);
+        setEmailPending(false);
+      }, 0);
       // Pull the NEW email into the client session immediately so the UI reflects it
       // without a sign-out/in (refresh fires onAuthStateChange → useAuth re-renders).
       createClient().auth.refreshSession().catch(() => {});
@@ -105,6 +109,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     }
     if (params.get("emailChangePending") === "1") {
       window.setTimeout(() => setEmailPending(true), 0);
+      window.setTimeout(() => setEmailSent(false), 0);
       params.delete("emailChangePending");
       const qs = params.toString();
       window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash);
@@ -240,8 +245,21 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           <h3 className="text-sm font-semibold text-[#374151]">{t("email")}</h3>
         </div>
         {emailApplied && (
-          <div className="mb-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
-            {t("emailApplied")}
+          <div className="mb-3 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-emerald-800">{t("emailAppliedTitle")}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-emerald-700">{t("emailAppliedBody")}</p>
+            </div>
+          </div>
+        )}
+        {emailPending && (
+          <div className="mb-3 flex items-start gap-3 rounded-2xl border border-[#b8e4f5] bg-[#f8fbfe] px-4 py-3">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#162543]">{t("emailPendingTitle")}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-[#4b6270]">{t("emailPendingBody")}</p>
+            </div>
           </div>
         )}
         {emailPending && (
@@ -264,18 +282,24 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             />
           </div>
         ) : emailSent ? (
-          <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
-            {t("emailSent")}
-            <SpamNotice className="mt-1 text-emerald-600/80" />
+          <div className="rounded-2xl border border-[#b8e4f5] bg-[#f8fbfe] px-4 py-3">
+            <div className="flex items-start gap-3">
+              <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#162543]">{t("emailSentTitle")}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-[#4b6270]">{t("emailSentBody")}</p>
+                <SpamNotice className="mt-1.5 text-[#6b7280]" />
+              </div>
+            </div>
             {/* Resend (brief cooldown so it can't be spammed) */}
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-emerald-600/90">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl bg-white/80 px-3 py-2 text-xs text-[#4b6270] ring-1 ring-[#d8eef8]">
               {emailResend.resent && <span className="font-semibold">{tc("resent")}</span>}
               <span>{tc("resendPrompt")}</span>
               <button
                 type="button"
                 onClick={() => emailResend.resend(async () => { await performEmailChange(); })}
                 disabled={emailResend.cooldown > 0 || emailResend.resending}
-                className="font-semibold text-emerald-700 underline hover:no-underline disabled:text-emerald-600/50 disabled:no-underline disabled:cursor-not-allowed"
+                className="font-semibold text-[#009FD9] hover:underline disabled:text-[#9ca3af] disabled:no-underline disabled:cursor-not-allowed"
               >
                 {emailResend.cooldown > 0 ? tc("resendIn", { seconds: emailResend.cooldown }) : emailResend.resending ? tc("resending") : tc("resend")}
               </button>
