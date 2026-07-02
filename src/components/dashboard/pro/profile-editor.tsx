@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { Input } from "@/components/ui/input";
+import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
@@ -522,19 +523,26 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       <Section id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
         {/* Photo — explicit buttons, no hover-to-change */}
         <div data-field="photo" className="flex flex-wrap items-center gap-4">
-          <div className="relative h-20 w-20 rounded-full shrink-0">
-            {avatarPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarPreview}
-                alt={t("photoAlt")}
-                className="h-20 w-20 rounded-full object-cover border-2 border-[#e5e7eb]"
-              />
-            ) : (
-              <div className="h-20 w-20 rounded-full bg-[#EBF5FB] border-2 border-dashed border-[#bfdbfe] flex items-center justify-center">
-                <Camera className="h-7 w-7 text-[#009FD9]" />
-              </div>
-            )}
+          <div className="relative h-20 w-20 shrink-0 rounded-full">
+            <ImagePreviewDialog
+              src={avatarPreview}
+              alt={t("photoAlt")}
+              openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+              closeLabel={locale === "en" ? "Close" : "Cerrar"}
+            >
+              {avatarPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarPreview}
+                  alt={t("photoAlt")}
+                  className="h-20 w-20 rounded-full border-2 border-[#e5e7eb] object-cover"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-[#bfdbfe] bg-[#EBF5FB]">
+                  <Camera className="h-7 w-7 text-[#009FD9]" />
+                </div>
+              )}
+            </ImagePreviewDialog>
             {photoUploading && (
               <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
                 <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
