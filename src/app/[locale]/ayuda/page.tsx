@@ -7,15 +7,15 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
-import { InstallAppGuide } from "@/components/landing/install-app-card";
 import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
-import { ChevronDown, Headset, Search, UserCheck, CalendarDays, Star, ShieldCheck, HelpCircle } from "lucide-react";
+import { ChevronDown, Headset, Search, UserCheck, CalendarDays, Star, ShieldCheck, HelpCircle, Smartphone } from "lucide-react";
 
 const FAQ_ICONS = [
   <HelpCircle key="0" className="h-4 w-4" />, <UserCheck key="1" className="h-4 w-4" />,
   <ShieldCheck key="2" className="h-4 w-4" />, <Search key="3" className="h-4 w-4" />,
   <CalendarDays key="4" className="h-4 w-4" />, <Star key="5" className="h-4 w-4" />,
   <HelpCircle key="6" className="h-4 w-4" />, <UserCheck key="7" className="h-4 w-4" />,
+  <Smartphone key="8" className="h-4 w-4" />,
 ];
 
 /* ── Help categories. Each card leads to ITS ANSWER: most open + scroll to the
@@ -97,8 +97,6 @@ export default function AyudaPage() {
       </section>
 
       {/* FAQ — same max-width as category cards above */}
-      <InstallAppGuide />
-
       <section className="py-16 px-4 bg-white">
         <div className="mx-auto max-w-4xl">
           <FadeInUp>
@@ -123,7 +121,17 @@ export default function AyudaPage() {
                     />
                   </button>
                   {openFaq === i && (
-                    <p className="pb-5 text-sm text-gray-500 leading-relaxed pl-7">{t(`faq${i}A`)}</p>
+                    <p className="pb-5 text-sm text-gray-500 leading-relaxed pl-7">
+                      {t(`faq${i}A`)}
+                      {i === 8 && (
+                        <>
+                          {" "}
+                          <Link href="/como-funciona#agregar-a-inicio" className="font-bold text-[#009FD9] hover:underline">
+                            {t("faq8Link")}
+                          </Link>
+                        </>
+                      )}
+                    </p>
                   )}
                 </div>
               ))}
