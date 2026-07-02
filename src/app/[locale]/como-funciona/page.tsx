@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
-import { PhoneFrame, ResultsScreen, buildLandingResultsCopy, type ResultsCopy } from "@/components/landing/phone-screens";
 import { InstallAppGuide } from "@/components/landing/install-app-card";
 import { ComoFuncionaFaq } from "./faq-accordion";
 import {
@@ -155,24 +153,8 @@ function MiniMetric({ value, label }: { value: string; label: string }) {
   );
 }
 
-function ProductPreview({ copy }: { copy: ResultsCopy }) {
-  return (
-    <div className="relative mx-auto mt-10 flex justify-center">
-      <div aria-hidden className="pointer-events-none absolute bottom-3 left-1/2 h-6 w-52 -translate-x-1/2 rounded-[50%] bg-[#1a2744]/15 blur-2xl" />
-      <PhoneFrame>
-        <ResultsScreen copy={copy} />
-      </PhoneFrame>
-    </div>
-  );
-}
-
 export default async function ComoFuncionaPage() {
   const t = await getTranslations("comoFunciona");
-  const tLanding = await getTranslations("landing.howItWorks");
-  const tCard = await getTranslations("card");
-  const tSchedule = await getTranslations("schedule");
-  const locale = await getLocale();
-  const resultsCopy = buildLandingResultsCopy({ locale, tLanding, tCard, tSchedule });
 
   const clientSteps = [0, 1, 2].map((i) => ({
     title: t(`clientStep${i}Title`),
@@ -219,23 +201,18 @@ export default async function ComoFuncionaPage() {
       <LandingNavbar />
 
       <main className="flex-1">
-        <section className="bg-white px-4 pb-12 pt-28 sm:pt-32">
-          <FadeInUp>
-            <div className="mx-auto max-w-4xl text-center">
-              <span className="inline-flex rounded-full bg-[#EBF5FB] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#009FD9]">
-                {t("eyebrow")}
-              </span>
-              <h1 className="mt-5 text-3xl font-black leading-tight text-[#162543] sm:text-5xl lg:text-6xl">
-                {t("title")}
-              </h1>
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#6b7280] sm:text-lg">
-                {t("subtitle")}
-              </p>
-            </div>
-          </FadeInUp>
-          <FadeInUp delay={80}>
-            <ProductPreview copy={resultsCopy} />
-          </FadeInUp>
+        <section className="bg-white px-4 pb-10 pt-24 sm:pb-12 sm:pt-32">
+          <div className="mx-auto max-w-4xl text-center">
+            <span className="inline-flex rounded-full bg-[#EBF5FB] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#009FD9]">
+              {t("eyebrow")}
+            </span>
+            <h1 className="mt-5 text-3xl font-black leading-tight text-[#162543] sm:text-5xl lg:text-6xl">
+              {t("title")}
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#6b7280] sm:text-lg">
+              {t("subtitle")}
+            </p>
+          </div>
         </section>
 
         <section className="border-y border-[#e5e7eb] bg-[#f8fbfd] px-4 py-8">
