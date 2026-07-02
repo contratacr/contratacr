@@ -326,29 +326,30 @@ export default function DashboardPage() {
     );
   }
 
+  const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
   const displayName =
     profile?.full_name ||
-    pro?.profiles?.full_name ||
+    proProfile?.full_name ||
     (user.user_metadata?.full_name as string) ||
     user.email?.split("@")[0] ||
     "";
-  const headerAvatar = profile?.avatar_url || pro?.profiles?.avatar_url || null;
-  const proForCompletion = pro && headerAvatar && !pro.profiles?.avatar_url
-    ? { ...pro, profiles: { ...(pro.profiles ?? {}), avatar_url: headerAvatar } }
+  const headerAvatar = profile?.avatar_url || proProfile?.avatar_url || null;
+  const proForCompletion = pro && headerAvatar && !proProfile?.avatar_url
+    ? { ...pro, profiles: { ...(proProfile ?? {}), avatar_url: headerAvatar } }
     : pro;
   const proForEditor = pro
     ? {
         ...pro,
         profiles: {
-          ...(pro.profiles ?? {}),
+          ...(proProfile ?? {}),
           full_name:
-            pro.profiles?.full_name ||
+            proProfile?.full_name ||
             profile?.full_name ||
             (user.user_metadata?.full_name as string) ||
             user.email?.split("@")[0] ||
             "",
-          email: pro.profiles?.email || user.email || "",
-          avatar_url: pro.profiles?.avatar_url || headerAvatar || null,
+          email: proProfile?.email || user.email || "",
+          avatar_url: proProfile?.avatar_url || headerAvatar || null,
         },
       }
     : pro;
