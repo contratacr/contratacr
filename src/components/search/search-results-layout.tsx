@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-map-panel";
+import { isHealthCategory } from "@/lib/data/categories";
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
@@ -48,10 +49,11 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   const t = useTranslations("search");
   const params = useSearchParams();
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
+  const hasActiveInsurer = !!params.get("aseguradora") && isHealthCategory(params.get("categoria"));
   const hasActiveFilters =
     !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
     !!(params.get("n") && params.get("s") && params.get("e") && params.get("w")) ||
-    !!params.get("aseguradora") || params.get("verificados") === "1" || !!params.get("lat") ||
+    hasActiveInsurer || !!params.get("idioma") || params.get("verificados") === "1" || !!params.get("lat") ||
     (!!params.get("sortBy") && params.get("sortBy") !== "rating");
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which

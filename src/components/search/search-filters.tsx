@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
 import { CategorySearch } from "@/components/ui/category-search";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
-import { searchCategories, getCategoryLabel } from "@/lib/data/categories";
+import { searchCategories, getCategoryLabel, isHealthCategory } from "@/lib/data/categories";
 import { INSURERS } from "@/lib/data/insurers";
+import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 import { createClient } from "@/lib/supabase/client";
 
 // Filter Select triggers keep a NEUTRAL border in every state. The shared Select
@@ -29,6 +30,7 @@ const FILTER_CONTENT = "min-w-0 w-[var(--radix-select-trigger-width)]";
 // Sentinel for the in-dropdown "Cualquier aseguradora" reset item (Radix Select forbids
 // an empty-string value, so we map this back to "" = no insurer filter).
 const ANY_INSURER = "__any__";
+const ANY_LANGUAGE = "__any_language__";
 
 export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false }: { variant?: "sidebar" | "chips"; hideSearch?: boolean; hideHeader?: boolean; closable?: boolean } = {}) {
   const router = useRouter();
@@ -54,7 +56,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [province, setProvince] = useState(params.get("provincia") ?? "");
   const [canton, setCanton] = useState(params.get("canton") ?? "");
   const [sortBy, setSortBy] = useState(params.get("sortBy") ?? "rating");
-  const [aseguradora, setAseguradora] = useState(params.get("aseguradora") ?? "");
+  const [aseguradora, setAseguradora] = useState(() =>
+    isHealthCategory(params.get("categoria")) ? (params.get("aseguradora") ?? "") : ""
+  );
+  const [language, setLanguage] = useState(params.get("idioma") ?? "");
   const [verifiedOnly, setVerifiedOnly] = useState(params.get("verificados") === "1");
   // Geolocation ("cerca de mí") — opt-in, requested only when the user taps the
   // control, never auto-popped. Denied/unavailable → text search still works.
@@ -90,6 +95,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cantons = getCantonsByProvince(province);
   const areaActive = !!(params.get("n") && params.get("s") && params.get("e") && params.get("w"));
+  const showInsurerFilter = isHealthCategory(category && category !== "todas" ? category : null);
 
   const applyFilters = useCallback(
     (overrides: Record<string, string> = {}) => {
@@ -104,6 +110,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         canton,
         sortBy,
         aseguradora,
+        idioma: language,
         verificados: verifiedOnly ? "1" : "",
         lat: params.get("lat") ?? "",
         lng: params.get("lng") ?? "",
@@ -123,7 +130,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
       if (vals.canton && vals.canton !== "todos" && vals.provincia) next.set("canton", vals.canton);
       if (vals.sortBy && vals.sortBy !== "rating") next.set("sortBy", vals.sortBy);
-      if (vals.aseguradora && vals.aseguradora !== "todas") next.set("aseguradora", vals.aseguradora);
+      if (isHealthCategory(vals.categoria) && vals.aseguradora && vals.aseguradora !== "todas") next.set("aseguradora", vals.aseguradora);
+      if (vals.idioma && vals.idioma !== "todos") next.set("idioma", vals.idioma);
       if (vals.verificados === "1") next.set("verificados", "1");
       // Carry the geolocation coords so changing another filter keeps proximity.
       if (vals.lat && vals.lng) { next.set("lat", vals.lat); next.set("lng", vals.lng); }
@@ -137,7 +145,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       }
       router.push(`${pathname}?${next.toString()}`);
     },
-    [query, category, province, canton, sortBy, aseguradora, verifiedOnly, params, router, pathname, variant]
+    [query, category, province, canton, sortBy, aseguradora, language, verifiedOnly, params, router, pathname, variant]
   );
 
   // Request geolocation on demand (item 11). Granted → proximity sort + autofill
@@ -176,15 +184,17 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setQuery(value);
     // Free text supersedes any picked category (mutually exclusive).
     if (category) setCategory("");
+    if (aseguradora) setAseguradora("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => applyFilters({ q: value, categoria: "" }), 400);
+    debounceRef.current = setTimeout(() => applyFilters({ q: value, categoria: "", aseguradora: "" }), 400);
   }
 
   function handleQueryKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       setCategory("");
-      applyFilters({ q: query, categoria: "" });
+      setAseguradora("");
+      applyFilters({ q: query, categoria: "", aseguradora: "" });
     }
   }
 
@@ -192,16 +202,18 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   // any pending free-text debounce (so it can't fire afterward and wipe the category).
   function pickCategory(id: string) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    const nextInsurer = isHealthCategory(id) ? aseguradora : "";
     setCategory(id);
+    if (!nextInsurer) setAseguradora("");
     setQuery(getCategoryLabel(id, locale));
     setSearchOpen(false);
-    applyFilters({ categoria: id, q: "" });
+    applyFilters({ categoria: id, q: "", aseguradora: nextInsurer });
   }
 
   function clearQuery() {
-    setQuery(""); setCategory("");
+    setQuery(""); setCategory(""); setAseguradora("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    applyFilters({ q: "", categoria: "" });
+    applyFilters({ q: "", categoria: "", aseguradora: "" });
   }
 
   useEffect(() => {
@@ -209,7 +221,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   }, []);
 
   function clearAll() {
-    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setSortBy("rating"); setAseguradora(""); setVerifiedOnly(false);
+    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setSortBy("rating"); setAseguradora(""); setLanguage(""); setVerifiedOnly(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push(pathname);
   }
@@ -221,7 +233,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     (serviceActive ? 1 : 0) +
     [province, canton].filter((v) => v && v !== "todas" && v !== "todos").length +
     (areaActive ? 1 : 0) +
-    (aseguradora ? 1 : 0) +
+    (showInsurerFilter && aseguradora ? 1 : 0) +
+    (language ? 1 : 0) +
     (verifiedOnly ? 1 : 0) +
     (geoActive ? 1 : 0);
 
@@ -240,7 +253,12 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <div className="shrink-0 w-[170px]">
           <CategorySearch
             value={category && category !== "todas" ? category : ""}
-            onChange={(id) => { setCategory(id); applyFilters({ categoria: id }); }}
+            onChange={(id) => {
+              const nextInsurer = isHealthCategory(id) ? aseguradora : "";
+              setCategory(id);
+              if (!nextInsurer) setAseguradora("");
+              applyFilters({ categoria: id, aseguradora: nextInsurer });
+            }}
             placeholder={t("filters.category")}
           />
         </div>
@@ -277,6 +295,20 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             </SelectContent>
           </Select>
         </div>
+        <div className="shrink-0 w-[155px]">
+          <Select value={language || undefined} onValueChange={(v) => { const next = v === ANY_LANGUAGE ? "" : v; setLanguage(next); applyFilters({ idioma: next }); }}>
+            <SelectTrigger className={pill}>
+              <SelectValue placeholder={t("filters.anyLanguage")}>
+                {language ? languageLabel(language, locale) : <span className="text-[#9ca3af]">{t("filters.anyLanguage")}</span>}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className={FILTER_CONTENT}>
+              {language && <SelectItem value={ANY_LANGUAGE} className="text-[#6b7280]">{t("filters.anyLanguage")}</SelectItem>}
+              {LANGUAGES.map((item) => <SelectItem key={item.id} value={item.id}>{languageLabel(item.id, locale)}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        {showInsurerFilter && (
         <div className="shrink-0 w-[170px]">
           <Select value={aseguradora || undefined} onValueChange={(v) => { const next = v === ANY_INSURER ? "" : v; setAseguradora(next); applyFilters({ aseguradora: next }); }}>
             <SelectTrigger className={pill}>
@@ -290,6 +322,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             </SelectContent>
           </Select>
         </div>
+        )}
         <button type="button" onClick={requestMyLocation} disabled={geoLoading} className={toggleChip(geoActive)}>
           {geoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
           {geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}
@@ -471,6 +504,25 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         </div>
 
         <div>
+          <label className={fieldLabel}>{t("filters.language")}</label>
+          <Select
+            value={language || undefined}
+            onValueChange={(v) => { const next = v === ANY_LANGUAGE ? "" : v; setLanguage(next); applyFilters({ idioma: next }); }}
+          >
+            <SelectTrigger className={FILTER_TRIGGER}>
+              <SelectValue placeholder={t("filters.anyLanguage")}>
+                {language ? languageLabel(language, locale) : <span className="text-[#9ca3af]">{t("filters.anyLanguage")}</span>}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className={FILTER_CONTENT}>
+              {language && <SelectItem value={ANY_LANGUAGE} className="text-[#6b7280]">{t("filters.anyLanguage")}</SelectItem>}
+              {LANGUAGES.map((item) => <SelectItem key={item.id} value={item.id}>{languageLabel(item.id, locale)}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {showInsurerFilter && (
+        <div>
           <label className={fieldLabel}>{t("filters.insurer")}</label>
           {/* Non-filtering default: nothing selected shows "Cualquier aseguradora"
               (greyed, like a placeholder, so it reads as NOT an active filter — most
@@ -495,6 +547,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             </SelectContent>
           </Select>
         </div>
+        )}
       </div>
 
       {/* On/off filters → clean toggle ROWS (no bordered boxes): label left, switch
@@ -539,9 +592,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
 export function MobileFiltersButton() {
   const t = useTranslations("search");
   const params = useSearchParams();
+  const hasActiveInsurer = !!params.get("aseguradora") && isHealthCategory(params.get("categoria"));
   const hasActive =
     !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
-    !!params.get("aseguradora") || params.get("verificados") === "1" || !!params.get("lat") ||
+    hasActiveInsurer || !!params.get("idioma") || params.get("verificados") === "1" || !!params.get("lat") ||
     (!!params.get("sortBy") && params.get("sortBy") !== "rating");
   return (
     <button
@@ -590,6 +644,7 @@ export function MobileServiceSearch() {
     const next = new URLSearchParams(params.toString());
     next.set("categoria", id);
     next.delete("q");
+    if (!isHealthCategory(id)) next.delete("aseguradora");
     next.delete("page");
     setQ(getCategoryLabel(id, locale));
     setOpen(false);

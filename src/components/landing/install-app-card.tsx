@@ -226,21 +226,21 @@ function IosScreenshotGuide() {
       body: t("iosStep1Body"),
       image: "/install-guide/add-home-step-1.jpg",
       markerClassName: "bottom-[2.6%] right-[3.6%] h-14 w-14 rounded-full",
-      labelClassName: "bottom-[12%] right-[7%]",
+      labelClassName: "bottom-[12%] right-[2.5%]",
     },
     {
       title: t("iosStep2Title"),
       body: t("iosStep2Body"),
       image: "/install-guide/add-home-step-2.jpg",
       markerClassName: "left-[32%] top-[51.5%] h-[5.5%] w-[56%] rounded-2xl",
-      labelClassName: "left-[36%] top-[47.5%]",
+      labelClassName: "left-1/2 top-[47.5%] -translate-x-1/2",
     },
     {
       title: t("iosStep3Title"),
       body: t("iosStep3Body"),
       image: "/install-guide/add-home-step-3.jpg",
       markerClassName: "left-[4%] top-[58.8%] h-[5.8%] w-[91%] rounded-2xl",
-      labelClassName: "left-[12%] top-[55%]",
+      labelClassName: "left-1/2 top-[55%] -translate-x-1/2",
     },
   ];
 

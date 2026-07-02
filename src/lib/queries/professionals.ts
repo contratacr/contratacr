@@ -2,6 +2,7 @@ import type { ProfessionalCardData, Certification } from "@/components/professio
 import { deriveDisplayPricing } from "@/lib/pricing";
 import { getMatchingCategoryIds, normalizeText } from "@/lib/data/categories";
 import { getProvinceById, PROVINCE_CENTROIDS, PROVINCES, haversineKm } from "@/lib/data/cr-geography";
+import { languageSearchValues } from "@/lib/data/languages";
 
 // Build the real travel-coverage summary for "me desplazo" pros (item 16):
 // whole country, specific provinces, and/or specific cantones (display names).
@@ -77,6 +78,8 @@ export type SearchFilters = {
   verifiedOnly?: boolean;
   /** Filter by an insurance network (aseguradora) the pro belongs to. */
   insurerId?: string;
+  /** Filter by a language the professional can attend in. */
+  languageId?: string;
   /** User coordinates (geolocation) — enables the "cerca de mí" proximity sort. */
   nearLat?: number;
   nearLng?: number;
@@ -157,7 +160,7 @@ export async function searchProfessionals(
             `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
              category_id, professions, pricing, services, lat, lng, service_type, availability_public, contact_preference,
-             business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications, call_phone" : ""},
+             business_name, workplaces, verification_status${modern ? ", languages, no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications, call_phone" : ""},
              profiles(full_name, avatar_url${modern ? ", is_disabled" : ""}),
              provincias(id, name),
              cantones(id, name)`
@@ -267,7 +270,7 @@ export async function searchProfessionals(
               .order("review_count", { ascending: false })
               .order("created_at", { ascending: false });
         }
-        return query.limit(filters.bounds ? 250 : 50);
+        return query.limit(filters.bounds || filters.languageId ? 250 : 50);
       };
 
       let { data, error } = await build(true);
@@ -276,7 +279,7 @@ export async function searchProfessionals(
       }
       if (error) throw error;
 
-      const mapped = (data ?? [])
+      let mapped = (data ?? [])
         // Hide soft-disabled accounts (item 17). undefined (pre-migration) → shown.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((row: any) => !row.profiles?.is_disabled)
@@ -313,6 +316,7 @@ export async function searchProfessionals(
         businessName: row.business_name ?? undefined,
         workplaces: (row.workplaces as ProfessionalCardData["workplaces"]) ?? [],
         verificationStatus: (row.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
+        languages: (row.languages as string[]) ?? [],
         lat: row.lat ?? null,
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,
@@ -324,6 +328,11 @@ export async function searchProfessionals(
         profileId: row.profile_id ?? undefined,
         callPhone: row.call_phone ?? undefined,
       }));
+
+      if (filters.languageId && filters.languageId !== "todos") {
+        const wanted = new Set(languageSearchValues(filters.languageId).map((value) => normalizeText(value)));
+        mapped = mapped.filter((p) => (p.languages ?? []).some((language) => wanted.has(normalizeText(language))));
+      }
 
       // "Cerca de mí" — proximity sort by distance to the user's coordinates,
       // using the pro's exact pin when present, else their province centroid.
