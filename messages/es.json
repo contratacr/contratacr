@@ -2871,7 +2871,17 @@
       "pitchCta": "Ofrecer mis servicios",
       "pitchHow": "Cómo funciona",
       "mockResults": "3 profesionales en Costa Rica",
-      "mockSearch": "Plomería en Atenas"
+      "mockSearch": "Plomería en Atenas",
+      "install": {
+        "title": "Guárdala en tu inicio",
+        "body": "Usa ContrataCR como acceso directo en tu celular, sin buscarla cada vez en el navegador.",
+        "cta": "Instalar acceso",
+        "installed": "Ya está instalada",
+        "iosStep1": "En Safari toca Compartir",
+        "iosStep2": "Elige Agregar a inicio",
+        "androidStep1": "Toca Instalar o el menú del navegador",
+        "androidStep2": "Confirma Agregar a pantalla principal"
+      }
     },
     "why": {
       "heading": "Por qué los clientes eligen ContrataCR.",
