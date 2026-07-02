@@ -6,7 +6,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
 import {
-  Camera, Star, MapPin, ArrowRight,
+  Camera, Star, MapPin, BriefcaseBusiness,
   CheckCircle2, UserCheck, Clock, Image as ImageIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -144,13 +144,13 @@ export default function AtraerClientesPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/registro/profesional"
-              className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3 rounded-full transition-all"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20"
             >
-              {t("ctaRegister")} <ArrowRight className="h-4 w-4" />
+              <BriefcaseBusiness className="h-4 w-4" /> {t("ctaRegister")}
             </Link>
             <Link
               href="/dashboard/profesional"
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-7 py-3 rounded-full transition-all border border-white/20"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20"
             >
               {t("ctaPanel")}
             </Link>

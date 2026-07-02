@@ -358,14 +358,14 @@ export default async function ComoFuncionaPage() {
           </div>
         </section>
 
+        <InstallAppGuide />
+
         <section className="bg-[#f8fbfd] px-4 py-16">
           <div className="mx-auto max-w-3xl">
             <SectionHeading eyebrow={t("faqEyebrow")} title={t("faqTitle")} subtitle={t("faqSubtitle")} />
             <ComoFuncionaFaq items={faqs} />
           </div>
         </section>
-
-        <InstallAppGuide />
 
         <section className="bg-[#162543] px-4 py-16 text-center">
           <h2 className="text-3xl font-black text-white">{t("ctaTitle")}</h2>

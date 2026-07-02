@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   ArrowDown,
+  ArrowDownRight,
   BookOpen,
   CheckCircle2,
   Download,
   Smartphone,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
@@ -177,12 +179,16 @@ function ScreenshotStepCard({
   body,
   image,
   labelClassName,
+  arrowClassName,
+  ArrowIcon,
 }: {
   number: number;
   title: string;
   body: string;
   image: string;
   labelClassName: string;
+  arrowClassName: string;
+  ArrowIcon: LucideIcon;
 }) {
   const t = useTranslations("installGuide");
 
@@ -198,10 +204,10 @@ function ScreenshotStepCard({
           className="h-auto w-full select-none"
           priority={number === 1}
         />
-        <span className={`absolute z-20 inline-flex items-center gap-1 rounded-full bg-[#009FD9] px-2.5 py-1 text-[10px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
+        <span className={`absolute z-20 rounded-full bg-[#009FD9] px-2.5 py-1 text-[10px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
           {t("tapHere")}
-          <ArrowDown className="h-3 w-3" />
         </span>
+        <ArrowIcon className={`absolute z-20 h-6 w-6 text-[#009FD9] drop-shadow-[0_4px_10px_rgba(0,159,217,0.35)] ${arrowClassName}`} strokeWidth={3} />
       </div>
       <div className="mt-4 flex gap-3">
         <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#009FD9] text-xs font-black text-white">
@@ -223,19 +229,25 @@ function IosScreenshotGuide() {
       title: t("iosStep1Title"),
       body: t("iosStep1Body"),
       image: "/install-guide/add-home-step-1.jpg",
-      labelClassName: "bottom-[10.5%] right-[2.5%]",
+      labelClassName: "bottom-[13.5%] right-[13%]",
+      arrowClassName: "bottom-[7.7%] right-[8%]",
+      ArrowIcon: ArrowDownRight,
     },
     {
       title: t("iosStep2Title"),
       body: t("iosStep2Body"),
       image: "/install-guide/add-home-step-2.jpg",
-      labelClassName: "left-1/2 top-[47.5%] -translate-x-1/2",
+      labelClassName: "left-1/2 top-[40.5%] -translate-x-1/2",
+      arrowClassName: "left-1/2 top-[46.5%] -translate-x-1/2",
+      ArrowIcon: ArrowDown,
     },
     {
       title: t("iosStep3Title"),
       body: t("iosStep3Body"),
       image: "/install-guide/add-home-step-3.jpg",
-      labelClassName: "left-1/2 top-[55%] -translate-x-1/2",
+      labelClassName: "right-[10%] top-[51.5%]",
+      arrowClassName: "right-[26%] top-[57%]",
+      ArrowIcon: ArrowDown,
     },
   ];
 
@@ -254,6 +266,8 @@ function IosScreenshotGuide() {
             body={step.body}
             image={step.image}
             labelClassName={step.labelClassName}
+            arrowClassName={step.arrowClassName}
+            ArrowIcon={step.ArrowIcon}
           />
         ))}
       </div>
