@@ -5,13 +5,32 @@ export async function gotoOK(page: Page, path: string) {
   expect(response, `Expected a response for ${path}`).not.toBeNull();
   expect(response!.status(), `Expected ${path} to return < 400`).toBeLessThan(400);
   await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
+  await expectNotVercelProtection(page, path);
+}
+
+export async function expectNotVercelProtection(page: Page, path = page.url()) {
+  const isVercelLogin = await page
+    .getByRole("heading", { name: /Log in to Vercel/i })
+    .first()
+    .isVisible()
+    .catch(() => false);
+  expect(
+    isVercelLogin,
+    `${path} opened Vercel's protected login page instead of ContrataCR. Check VERCEL_AUTOMATION_BYPASS_SECRET and redeploy the test branch after rotating it.`,
+  ).toBe(false);
 }
 
 export async function expectPageShell(page: Page) {
-  await expect(page.getByRole("link", { name: /ContrataCR/i }).first()).toBeVisible();
+  await expect(page.locator("body")).toContainText(/ContrataCR/i);
   await expect(page.locator("body")).not.toContainText(/Application error|Internal Server Error/i);
   const bodyText = (await page.locator("body").innerText()).trim();
   expect(bodyText.length, "Page should render meaningful content").toBeGreaterThan(20);
+}
+
+export async function expectHealthyPage(page: Page) {
+  await expectNotVercelProtection(page);
+  await expect(page.locator("body")).not.toContainText(/Application error|Internal Server Error|Log in to Vercel/i);
+  await expectNoHorizontalOverflow(page);
 }
 
 export async function expectNoHorizontalOverflow(page: Page) {

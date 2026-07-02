@@ -22,6 +22,7 @@ Each environment needs these secrets:
 |---|---|---|
 | `SUPABASE_DB_URL` | Supabase migrations, padron refresh | Percent-encoded Postgres connection string for that environment. |
 | `SUPABASE_URL` | Padron refresh | Supabase project URL for that environment. |
+| `NEXT_PUBLIC_SUPABASE_URL` | Regression Tests | Optional if `SUPABASE_URL` already exists in the same GitHub Environment; the workflow accepts either one. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Padron refresh | Server-only service role key. Never expose it in Vercel public variables. |
 | `VERCEL_AUTOMATION_BYPASS_SECRET` | Regression Tests | Required in the `test` environment so Playwright can access protected Vercel preview deployments. |
 

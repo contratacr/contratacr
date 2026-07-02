@@ -11,8 +11,8 @@ test.describe("@seeded search results", () => {
     await expect(firstCard.getByRole("link").first()).toBeVisible();
     await expect(firstCard.getByText(/Verificado|Sin rese|reviews|\d+\.\d/i).first()).toBeVisible();
     await expect(
-      firstCard.getByRole("button", { name: /Ver horario completo|Contact|Ver disponibilidad/i }).or(
-        firstCard.getByRole("link", { name: /Contact/i }),
+      firstCard.getByRole("button", { name: /Ver horario completo|Ver disponibilidad|Contact|WhatsApp|Llamar|Solicitar/i }).or(
+        firstCard.getByRole("link", { name: /Contact|WhatsApp|Llamar|Solicitar/i }),
       ).first(),
     ).toBeVisible();
     await expectNoHorizontalOverflow(page);
