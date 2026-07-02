@@ -621,7 +621,9 @@
       "facebookUnavailable": "Facebook no está disponible para iniciar sesión. Usa ¿Olvidaste tu contraseña? para crear una contraseña o contáctanos.",
       "blockedUsePassword": "Esta cuenta usa correo y contraseña. Inicia sesión con tu contraseña.",
       "redirecting": "Redirigiendo…",
-      "continueGoogle": "Continuar con Google"
+      "continueGoogle": "Continuar con Google",
+      "emailChangedTitle": "Correo actualizado",
+      "emailChangedLogin": "El cambio quedó confirmado. Inicia sesión con tu correo nuevo."
     },
     "register": {
       "title": "Crear cuenta",
@@ -1955,8 +1957,14 @@
     "emailStep2": "Vuelve a iniciar sesión en ContrataCR con el correo actualizado.",
     "manageAccount": "Administrar mi cuenta de {provider}",
     "emailSent": "✓ Revisa tu correo nuevo y abre el enlace para confirmar el cambio.",
+    "emailSentTitle": "Revisa tu correo nuevo",
+    "emailSentBody": "Abre el enlace que te enviamos para confirmar el cambio.",
     "emailApplied": "✓ Tu correo se actualizó correctamente.",
+    "emailAppliedTitle": "Correo actualizado",
+    "emailAppliedBody": "Ya puedes ingresar con tu correo nuevo.",
     "emailPending": "El cambio de correo todavía está pendiente. Abre el enlace de confirmación que te enviamos.",
+    "emailPendingTitle": "Cambio pendiente",
+    "emailPendingBody": "El cambio todavía no se completó. Abre el enlace más reciente desde tu correo nuevo.",
     "emailTaken": "Ese correo ya está registrado en otra cuenta.",
     "emailChangeError": "No pudimos cambiar el correo. Intenta de nuevo.",
     "newEmailPlaceholder": "nuevo@correo.com",

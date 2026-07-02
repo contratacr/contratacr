@@ -208,8 +208,19 @@ export async function PATCH(req: NextRequest) {
 
     if (!status) return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
 
-    // Persist via service-role so the status change isn't silently dropped by RLS.
     const adminStatus = createAdminClient();
+    const { data: statusProposal } = await adminStatus
+      .from("proposals")
+      .select("project_id, professional_id, projects:project_id(client_id)")
+      .eq("id", id)
+      .maybeSingle();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const projectOwnerId = (statusProposal as any)?.projects?.client_id;
+    if (!statusProposal || projectOwnerId !== session.user.id) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    // Persist via service-role so the status change isn't silently dropped by RLS.
     const { error } = await adminStatus
       .from("proposals")
       .update({ status })

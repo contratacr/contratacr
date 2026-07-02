@@ -12,6 +12,9 @@ jobs:
     env:
       PLAYWRIGHT_BASE_URL: https://contratacr-git-test-isanchezm421-6251s-projects.vercel.app
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      E2E_SEED: "1"
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       CI: true
     steps:
       - name: Checkout
@@ -26,6 +29,14 @@ jobs:
           echo "Running regression against $PLAYWRIGHT_BASE_URL"
           if [ -z "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
             echo "::error::Missing VERCEL_AUTOMATION_BYPASS_SECRET in the test GitHub Environment. Vercel preview deployments are protected, so Playwright will see the Vercel login page instead of ContrataCR."
+            exit 1
+          fi
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in the test GitHub Environment. These are required to seed regression accounts in the test Supabase project."
+            exit 1
+          fi
+          if echo "$NEXT_PUBLIC_SUPABASE_URL" | grep -q "kskueodxaksxvjrysouw"; then
+            echo "::error::Refusing to run seeded regression against production Supabase."
             exit 1
           fi
 

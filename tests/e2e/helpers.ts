@@ -22,6 +22,50 @@ export async function expectNoHorizontalOverflow(page: Page) {
   expect(size.scrollWidth, "Page should not overflow horizontally").toBeLessThanOrEqual(size.clientWidth + 4);
 }
 
+export async function loginAs(page: Page, email: string, password: string) {
+  await resetAuth(page);
+  await gotoOK(page, "/es/login");
+  await page.locator('input[type="email"]').fill(email);
+  await page.locator('input[type="password"]').fill(password);
+  await page.getByRole("button", { name: /Ingresar|Sign in/i }).click();
+  await page.waitForURL(/\/(?:es|en)\/dashboard\/profesional/, { timeout: 20_000 });
+  await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
+}
+
+export async function resetAuth(page: Page) {
+  await page.context().clearCookies();
+  await page.goto("/es", { waitUntil: "domcontentloaded" }).catch(() => undefined);
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }).catch(() => undefined);
+}
+
+export async function apiJson<T = unknown>(
+  page: Page,
+  path: string,
+  options: { method?: string; body?: unknown } = {},
+): Promise<{ status: number; body: T }> {
+  return page.evaluate(
+    async ({ path: requestPath, method, body }) => {
+      const response = await fetch(requestPath, {
+        method,
+        headers: body === undefined ? undefined : { "content-type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      const text = await response.text();
+      let parsed: unknown = null;
+      try {
+        parsed = text ? JSON.parse(text) : null;
+      } catch {
+        parsed = text;
+      }
+      return { status: response.status, body: parsed };
+    },
+    { path, method: options.method ?? "GET", body: options.body },
+  ) as Promise<{ status: number; body: T }>;
+}
+
 export function isMobileProject(testInfo: TestInfo) {
   return testInfo.project.name.toLowerCase().includes("mobile");
 }

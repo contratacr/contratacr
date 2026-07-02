@@ -622,7 +622,9 @@
       "facebookUnavailable": "Facebook sign-in is not available. Use Forgot your password? to create a password or contact us.",
       "blockedUsePassword": "This account uses email and password. Sign in with your password.",
       "redirecting": "Redirecting…",
-      "continueGoogle": "Continue with Google"
+      "continueGoogle": "Continue with Google",
+      "emailChangedTitle": "Email updated",
+      "emailChangedLogin": "The change was confirmed. Sign in with your new email."
     },
     "register": {
       "title": "Create account",
@@ -1957,8 +1959,14 @@
     "emailStep2": "Sign in to ContrataCR again with the updated email.",
     "manageAccount": "Manage my {provider} account",
     "emailSent": "✓ Check your new email and open the link to confirm the change.",
+    "emailSentTitle": "Check your new email",
+    "emailSentBody": "Open the link we sent you to confirm the change.",
     "emailApplied": "✓ Your email was updated successfully.",
+    "emailAppliedTitle": "Email updated",
+    "emailAppliedBody": "You can now sign in with your new email.",
     "emailPending": "The email change is still pending. Open the confirmation link we sent you.",
+    "emailPendingTitle": "Change pending",
+    "emailPendingBody": "The change has not finished yet. Open the latest link from your new email.",
     "emailTaken": "That email is already registered to another account.",
     "emailChangeError": "We couldn't change the email. Try again.",
     "newEmailPlaceholder": "new@email.com",
