@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
+import { formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
 import { getInitials, getWhatsAppLink, cn, formatRelativeOrDate } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
@@ -1004,6 +1005,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             const renderProposal = (proposal: Proposal) => {
                               const isAccepted = proposal.status === "accepted";
                               const proVerified = proposal.professionals?.verification_status === "verified";
+                              const proposalPriceParts = proposal.price ? splitPricingLabel(formatColonesTaxIncluded(proposal.price)) : null;
                               return (
                                 <div key={proposal.id} className={cn("rounded-xl border p-3.5", isAccepted ? "border-[#b8e7cf] bg-[#f2fbf6] shadow-[0_10px_24px_-22px_rgba(22,163,74,0.8)]" : "border-[#e5e7eb] bg-white")}>
                                   {isAccepted && (
@@ -1046,7 +1048,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                         </div>
                                         <div className="flex shrink-0 flex-col items-end gap-1">
                                           <p className={cn("text-xs font-bold", isAccepted ? "text-[#15803d]" : "text-[#009FD9]")}>
-                                            {proposal.price ? `\u20a1${proposal.price.toLocaleString("es-CR")}` : t("priceTBD")}
+                                            {proposalPriceParts ? (
+                                              <>
+                                                {proposalPriceParts.amount}
+                                                <span className="ml-1 text-[9px] font-semibold tracking-wide text-[#9ca3af]">{proposalPriceParts.taxSuffix}</span>
+                                              </>
+                                            ) : t("priceTBD")}
                                           </p>
                                           {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
                                         </div>

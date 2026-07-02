@@ -5,11 +5,13 @@ import { Bookmark, MapPin, Star, CheckCircle2, ExternalLink, Wrench } from "luci
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { getSavedPros, unsavePro, type SavedPro } from "./save-button";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatServicePrice } from "@/lib/pricing";
 
 function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string) => void }) {
   const tCat = useTranslations("categories");
   const tSaved = useTranslations("savedPros");
+  const locale = useLocale();
 
   return (
     <div className="p-4 flex items-center gap-4 hover:bg-[#fafafa] transition-colors">
@@ -51,7 +53,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
           )}
           {pro.hourlyRate && (
             <span className="text-xs text-[#9ca3af] ml-2">
-              · ₡{pro.hourlyRate.toLocaleString("es-CR")}/hr
+              · {formatServicePrice(pro.hourlyRate, "por_hora", locale)}
             </span>
           )}
         </div>
@@ -87,8 +89,10 @@ export function SavedProfessionalsTab() {
   }
 
   useEffect(() => {
-    setMounted(true);
-    refresh();
+    queueMicrotask(() => {
+      setMounted(true);
+      refresh();
+    });
     window.addEventListener("savedProsChanged", refresh);
     return () => window.removeEventListener("savedProsChanged", refresh);
   }, []);

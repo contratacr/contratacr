@@ -97,6 +97,15 @@ export type ProService = {
   modalities?: Array<"in_person" | "at_home" | "video">;
 };
 
+function hasActiveService(services: unknown): boolean {
+  if (!Array.isArray(services)) return false;
+  return services.some((service) => {
+    if (!service || typeof service !== "object") return false;
+    const item = service as { active?: boolean; category?: string; name?: string };
+    return item.active !== false && Boolean(item.category || item.name);
+  });
+}
+
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
 export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
@@ -271,6 +280,11 @@ export async function searchProfessionals(
         // Hide soft-disabled accounts (item 17). undefined (pre-migration) → shown.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((row: any) => !row.profiles?.is_disabled)
+        // A professional must have at least one active service to appear in public
+        // search. If they removed all services by mistake, the dashboard shows the
+        // empty state and profile-completion prompt instead of listing a wrong card.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((row: any) => hasActiveService(row.services))
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((row: any) => ({
         id: row.id,

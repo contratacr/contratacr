@@ -27,6 +27,7 @@ import {
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs, proDisplayName } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { formatServicePrice, splitPricingLabel } from "@/lib/pricing";
 import { isTooSoonCR } from "@/lib/time-cr";
 import { createClient } from "@/lib/supabase/client";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
@@ -1028,10 +1029,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {professional.hourlyRate && (
                 <div className="text-center">
                   <span className="text-xs text-white/60">{t("from")}</span>
-                  <p className="font-bold text-white text-lg">
-                    ₡{professional.hourlyRate.toLocaleString("es-CR")}
-                    <span className="text-xs font-normal text-white/60">{locale === "en" ? " /hour" : " /hora"}</span>
-                  </p>
+                  {(() => {
+                    const label = formatServicePrice(professional.hourlyRate, "por_hora", locale) ?? "";
+                    const { amount, unit, taxSuffix } = splitPricingLabel(label);
+                    return (
+                      <p className="font-bold text-white text-lg leading-tight">
+                        {amount}
+                        {unit && <span className="text-xs font-normal text-white/60"> {unit}</span>}
+                        {taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-white/50">{taxSuffix}</span>}
+                      </p>
+                    );
+                  })()}
                 </div>
               )}
             </div>

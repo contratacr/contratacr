@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
+import { PRICING_TYPES, formatServicePrice, splitPricingLabel, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { parseMoneyAmount } from "@/lib/money-limits";
 
@@ -161,9 +161,9 @@ export function ServicesEditor({
     persist(next, services);
   }
 
-  // Remove a service entirely (the category + its info). Keep at least one service.
+  // Remove a service entirely (the category + its info). If it was the last one,
+  // the profile becomes incomplete and is hidden from public search until one is added.
   function removeService(id: string) {
-    if (professions.length <= 1) return;
     const next = professions.filter((p) => p !== id);
     const nextServices = services.filter((s) => effectiveCategory(s) !== id);
     setProfessions(next);
@@ -321,7 +321,10 @@ export function ServicesEditor({
               const isPrincipal = professions.indexOf(prof) === 0;
               const info = serviceInfo(prof);
               const isActive = serviceActive(prof);
-              const priceLabel = info?.price && info.priceType !== "a_convenir" ? info.price : t("priceConsult");
+              const priceLabel = info?.priceType === "a_convenir"
+                ? t("priceConsult")
+                : formatServicePrice(info?.priceAmount, info?.priceType, locale) ?? info?.price ?? t("priceConsult");
+              const priceParts = splitPricingLabel(priceLabel);
               return (
                 <section
                   key={prof}
@@ -336,7 +339,11 @@ export function ServicesEditor({
                       <h3 className={cn("text-[16px] font-bold leading-tight [overflow-wrap:anywhere]", isActive ? "text-[#162543]" : "text-[#9ca3af]")}>
                         {getCategoryLabel(prof, locale)}
                       </h3>
-                      <p className={cn("mt-1.5 text-[13px] font-semibold", isActive ? "text-[#0089bb]" : "text-[#9ca3af]")}>{priceLabel}</p>
+                      <p className={cn("mt-1.5 text-[13px] font-semibold", isActive ? "text-[#0089bb]" : "text-[#9ca3af]")}>
+                        {priceParts.amount}
+                        {priceParts.unit && <span className="text-[#6b7280]"> {priceParts.unit}</span>}
+                        {priceParts.taxSuffix && <span className="ml-1 text-[10px] tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span>}
+                      </p>
                     </div>
                     {/* Active/inactive toggle — FAR RIGHT (end of the header row). */}
                     <button
@@ -389,17 +396,15 @@ export function ServicesEditor({
                       <Pencil className="h-3.5 w-3.5" /> {t("editInfo")}
                     </button>
                     <div className="ml-auto flex items-center gap-0.5">
-                      {professions.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeService(prof)}
-                          title={t("removeProfession")}
-                          aria-label={t("removeProfession")}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeService(prof)}
+                        title={t("removeProfession")}
+                        aria-label={t("removeProfession")}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                 </section>
