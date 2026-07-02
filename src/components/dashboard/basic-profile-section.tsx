@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Lock, Camera, X, Info, Briefcase } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
 import { Button } from "@/components/ui/button";
+import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { canOffer } from "@/lib/auth/capabilities";
@@ -28,6 +29,7 @@ export function BasicProfileSection({
 }) {
   const { user } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("clientPage");
   // A client-only account (offering not unlocked) gets the "Ofrecer mis servicios"
   // invitation at the END of this section — that's how they start offering.
@@ -183,12 +185,20 @@ export function BasicProfileSection({
 
       {/* Foto */}
       <div className="flex flex-wrap items-center gap-4">
-        <div className="relative h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
-          {profileAvatar ? (
-            <img src={profileAvatar} alt="Foto" className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-[#009FD9] font-bold text-xl">{getInitials(displayName)}</span>
-          )}
+        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB]">
+          <ImagePreviewDialog
+            src={profileAvatar}
+            alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
+            openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+            closeLabel={locale === "en" ? "Close" : "Cerrar"}
+          >
+            {profileAvatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profileAvatar} alt={locale === "en" ? "Profile photo" : "Foto"} className="h-16 w-16 rounded-full object-cover" />
+            ) : (
+              <span className="text-xl font-bold text-[#009FD9]">{getInitials(displayName)}</span>
+            )}
+          </ImagePreviewDialog>
           {photoUploading && (
             <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
               <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />

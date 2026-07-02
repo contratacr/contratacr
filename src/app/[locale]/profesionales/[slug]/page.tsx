@@ -16,6 +16,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, proDisplayName, cn } from "@/lib/utils";
 import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
@@ -315,10 +316,17 @@ export default function ProfilePage() {
             <SaveButton pro={savedPro} isOwn={isOwn} className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full border border-[#e5e7eb] bg-white !p-0 shadow-sm hover:border-[#009FD9] hover:text-[#009FD9]" />
             <div className="flex flex-col gap-4 pr-10 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4 min-w-0">
-                <Avatar className="h-20 w-20 sm:h-[88px] sm:w-[88px] shrink-0">
-                  <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
-                  <AvatarFallback className="text-2xl bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
-                </Avatar>
+                <ImagePreviewDialog
+                  src={professional.avatarUrl}
+                  alt={professional.fullName}
+                  openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+                  closeLabel={locale === "en" ? "Close" : "Cerrar"}
+                >
+                  <Avatar className="h-20 w-20 sm:h-[88px] sm:w-[88px] shrink-0">
+                    <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
+                    <AvatarFallback className="text-2xl bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
+                  </Avatar>
+                </ImagePreviewDialog>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <h1 className="text-2xl font-bold leading-tight text-[#111827]">{professional.businessName?.trim() || proDisplayName(professional.fullName)}</h1>
