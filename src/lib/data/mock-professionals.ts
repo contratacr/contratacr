@@ -28,4 +28,6 @@ export type ProfessionalCardData = {
   allowPhoneCall?: boolean;
   /** Optional separate call number (else the WhatsApp number is used for calls). */
   callPhone?: string;
+  /** Optional public contact email the pro opted in to show clients. */
+  contactEmail?: string;
 };
