@@ -45,7 +45,6 @@ jobs:
           set -euo pipefail
           html="$(curl -sSL \
             -H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" \
-            -H "x-vercel-set-bypass-cookie: true" \
             "$PLAYWRIGHT_BASE_URL/es")"
           if echo "$html" | grep -qi "Log in to Vercel"; then
             echo "::error::Vercel protection still intercepted the test URL. The bypass secret is present in GitHub, but this deployment did not accept it. Rotate/check the Vercel Automation Bypass secret, update the GitHub test Environment secret, then redeploy the test branch before rerunning."
