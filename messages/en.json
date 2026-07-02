@@ -2579,6 +2579,7 @@
     "androidTitle": "Android",
     "androidBody": "On Android, Chrome may show Install app. If it does not, use the three-dot menu.",
     "androidBodyCurrent": "If the install button does not appear, use Chrome's menu.",
+    "androidQuickTip": "On Android it is similar: open contratacr.com in Chrome, tap the three dots, choose Install app or Add to Home Screen, and confirm.",
     "androidStep1Title": "Open the menu",
     "androidStep1Body": "Open contratacr.com in Chrome and tap the three dots in the corner.",
     "androidStep2Title": "Tap Install app",

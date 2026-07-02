@@ -2577,6 +2577,7 @@
     "androidTitle": "Android",
     "androidBody": "En Android, Chrome puede mostrar Instalar app. Si no aparece, usa el menú de tres puntos.",
     "androidBodyCurrent": "Si el botón de instalar no aparece, usa el menú de Chrome.",
+    "androidQuickTip": "En Android es similar: abre contratacr.com en Chrome, toca los tres puntos, elige Instalar app o Agregar a pantalla principal y confirma.",
     "androidStep1Title": "Abre el menú",
     "androidStep1Body": "Abre contratacr.com en Chrome y toca los tres puntos de la esquina.",
     "androidStep2Title": "Toca Instalar app",

@@ -246,8 +246,6 @@ export default async function ComoFuncionaPage() {
           </div>
         </section>
 
-        <InstallAppGuide />
-
         <section className="bg-white px-4 py-16">
           <div className="mx-auto max-w-5xl">
             <SectionHeading eyebrow={t("pathsEyebrow")} title={t("pathsTitle")} subtitle={t("pathsSubtitle")} />
@@ -382,6 +380,8 @@ export default async function ComoFuncionaPage() {
             </Link>
           </div>
         </section>
+
+        <InstallAppGuide />
       </main>
 
       <LandingFooter />
