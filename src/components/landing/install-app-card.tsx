@@ -179,24 +179,40 @@ function ScreenshotStepCard({
 
   return (
     <article className="rounded-3xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-5">
-      <div className="mx-auto w-full max-w-[270px] rounded-[2rem] bg-[#162543] p-1.5 shadow-[0_20px_48px_-30px_rgba(15,23,42,0.9)]">
-        <div className="relative overflow-hidden rounded-[1.55rem] bg-white">
-          <Image
-            src={image}
-            alt=""
-            width={588}
-            height={1280}
-            sizes="(min-width: 1024px) 270px, 78vw"
-            className="h-auto w-full select-none"
-            priority={number === 1}
-          />
-          <span
-            aria-hidden
-            className={`pointer-events-none absolute z-20 border-2 border-[#009FD9] bg-[#009FD9]/14 shadow-[0_0_0_5px_rgba(0,159,217,0.16),0_10px_24px_rgba(0,159,217,0.26)] ${targetClassName}`}
-          />
-          <span className={`pointer-events-none absolute z-30 rounded-full bg-[#009FD9] px-2.5 py-1 text-[10px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
-            {t("tapHere")}
-          </span>
+      <div className="relative mx-auto w-full max-w-[284px]">
+        <div aria-hidden className="absolute -left-[2px] top-[118px] h-8 w-[3px] rounded-l-sm bg-[#2b2f36]" />
+        <div aria-hidden className="absolute -left-[2px] top-[166px] h-12 w-[3px] rounded-l-sm bg-[#2b2f36]" />
+        <div aria-hidden className="absolute -right-[2px] top-[154px] h-16 w-[3px] rounded-r-sm bg-[#2b2f36]" />
+        <div
+          className="relative"
+          style={{
+            background: "linear-gradient(135deg,#f1f3f6 0%,#c6cbd2 18%,#777c85 50%,#c6cbd2 82%,#f1f3f6 100%)",
+            borderRadius: 56,
+            padding: 3,
+            boxShadow:
+              "0 50px 100px -28px rgba(15,23,42,0.38), 0 24px 48px -22px rgba(15,23,42,0.34), inset 0 0 0 0.5px rgba(255,255,255,0.45)",
+          }}
+        >
+          <div className="relative bg-[#04060a]" style={{ borderRadius: 53, padding: 8 }}>
+            <div className="relative overflow-hidden bg-white" style={{ borderRadius: 46 }}>
+              <Image
+                src={image}
+                alt=""
+                width={588}
+                height={1280}
+                sizes="(min-width: 1024px) 284px, 78vw"
+                className="h-auto w-full select-none"
+                priority={number === 1}
+              />
+              <span
+                aria-hidden
+                className={`pointer-events-none absolute z-20 border-2 border-[#009FD9] bg-[#009FD9]/10 shadow-[0_0_0_5px_rgba(0,159,217,0.14),0_10px_24px_rgba(0,159,217,0.24)] ${targetClassName}`}
+              />
+              <span className={`pointer-events-none absolute z-30 rounded-full bg-[#009FD9] px-2.5 py-1 text-[9px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
+                {t("tapHere")}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       <div className="mt-4 flex gap-3">
@@ -219,22 +235,22 @@ function IosScreenshotGuide() {
       title: t("iosStep1Title"),
       body: t("iosStep1Body"),
       image: "/install-guide/add-home-step-1.jpg",
-      targetClassName: "bottom-[3.7%] right-[2.7%] h-[7.8%] w-[16%] rounded-[1.7rem]",
-      labelClassName: "bottom-[12.4%] right-[4.4%]",
+      targetClassName: "bottom-[4.2%] right-[2.1%] h-[7.1%] w-[15.2%] rounded-full",
+      labelClassName: "bottom-[12.1%] right-[3.8%]",
     },
     {
       title: t("iosStep2Title"),
       body: t("iosStep2Body"),
       image: "/install-guide/add-home-step-2.jpg",
-      targetClassName: "left-[30.5%] top-[52.15%] h-[5.15%] w-[56%] rounded-2xl",
-      labelClassName: "right-[15%] top-[53.25%]",
+      targetClassName: "left-[30.2%] top-[52.05%] h-[5.45%] w-[56.6%] rounded-2xl",
+      labelClassName: "right-[9%] top-[48.85%]",
     },
     {
       title: t("iosStep3Title"),
       body: t("iosStep3Body"),
       image: "/install-guide/add-home-step-3.jpg",
-      targetClassName: "left-[4.4%] top-[57.75%] h-[6.9%] w-[72%] rounded-2xl",
-      labelClassName: "right-[18%] top-[59.45%]",
+      targetClassName: "left-[4.2%] top-[57.35%] h-[7.35%] w-[72.5%] rounded-2xl",
+      labelClassName: "right-[7.5%] top-[54.8%]",
     },
   ];
 
