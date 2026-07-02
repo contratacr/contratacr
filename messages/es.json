@@ -474,6 +474,9 @@
   "inputs": {
     "remove": "Quitar",
     "languagePlaceholder": "Escribe un idioma… ejemplo: Inglés",
+    "languageSearch": "Buscar idioma",
+    "languagePick": "Selecciona idiomas",
+    "noLanguageResults": "Sin resultados",
     "addAnotherLanguage": "Agregar otro…",
     "insurerPlaceholder": "Escribe una aseguradora… ejemplo: INS",
     "addAnotherInsurer": "Agregar otra…",

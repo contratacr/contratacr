@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { X } from "lucide-react";
@@ -27,9 +27,9 @@ export function LanguagesInput({ value, onChange }: Props) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const suggestions = useMemo(() => {
     const q = normalize(query.trim());
@@ -42,31 +42,35 @@ export function LanguagesInput({ value, onChange }: Props) {
   // Portaled dropdown positioned `fixed` from the field's rect via the shared,
   // keyboard-aware helper (opens below, flips up only with no room; never covers
   // the field; recomputes on scroll/resize + keyboard show/hide).
-  const dropdownOpen = open && suggestions.length > 0;
-  const pos = useAnchoredPosition(containerRef, dropdownOpen, 264);
+  const dropdownOpen = open;
+  const pos = useAnchoredPosition(containerRef, dropdownOpen, 300);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (containerRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [open]);
 
   function add(id: string) {
     if (!value.includes(id)) onChange([...value, id]);
     setQuery("");
     setHighlight(0);
     setOpen(false);
-    inputRef.current?.focus();
   }
 
   function remove(id: string) {
     onChange(value.filter((l) => l !== id));
-    inputRef.current?.focus();
-    setOpen(true);
   }
 
   return (
     <div ref={containerRef} className="relative">
       <div
-        onClick={() => {
-          inputRef.current?.focus();
-          setOpen(true);
-        }}
-        className="flex min-h-11 cursor-text flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2.5 transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#009FD9]"
+        className="flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2.5 transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#009FD9]"
       >
         {value.map((id) => (
           <span key={id} className="inline-flex max-w-full items-center gap-1 rounded-full bg-[#EBF5FB] py-1 pl-3 pr-1.5 text-sm font-medium text-[#0089bb]">
@@ -76,54 +80,69 @@ export function LanguagesInput({ value, onChange }: Props) {
             </button>
           </span>
         ))}
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true); setHighlight(0); }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 120)}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
           onKeyDown={(e) => {
-            if (e.key === "ArrowDown") { e.preventDefault(); setHighlight((h) => Math.min(h + 1, suggestions.length - 1)); }
-            else if (e.key === "ArrowUp") { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
-            else if (e.key === "Enter" && suggestions[highlight]) { e.preventDefault(); add(suggestions[highlight].id); }
-            else if (e.key === "Escape") { setOpen(false); }
-            else if (e.key === "Backspace" && query === "" && value.length > 0) { remove(value[value.length - 1]); }
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setOpen(true);
+            }
           }}
-          placeholder={value.length === 0 ? t("languagePlaceholder") : t("addAnotherLanguage")}
-          role="combobox"
+          aria-haspopup="listbox"
           aria-expanded={dropdownOpen}
-          aria-autocomplete="list"
-          className="min-w-[120px] flex-1 bg-transparent py-1 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus-visible:outline-none"
-        />
+          className="min-h-8 min-w-[150px] flex-1 rounded-lg px-1.5 text-left text-sm text-[#9ca3af] transition-colors hover:text-[#6b7280] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+        >
+          {value.length === 0 ? t("languagePick") : t("addAnotherLanguage")}
+        </button>
       </div>
 
       {/* Portaled to <body> so the card's overflow can't clip it; absolute in
           document coords so it stays attached below the field; matches its width. */}
       {dropdownOpen && pos && typeof document !== "undefined" && createPortal(
         <div
+          ref={dropdownRef}
           style={{ position: "absolute", left: pos.left, width: pos.width, top: pos.top, zIndex: 9999 }}
           className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-2xl"
         >
+          <div className="border-b border-[#eef0f2] p-2">
+            <input
+              ref={searchRef}
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setHighlight(0); }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") { e.preventDefault(); setHighlight((h) => Math.min(h + 1, Math.max(suggestions.length - 1, 0))); }
+                else if (e.key === "ArrowUp") { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
+                else if (e.key === "Enter" && suggestions[highlight]) { e.preventDefault(); add(suggestions[highlight].id); }
+                else if (e.key === "Escape") { setOpen(false); }
+              }}
+              placeholder={t("languageSearch")}
+              aria-label={t("languageSearch")}
+              className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+            />
+          </div>
           <div
-            ref={listRef}
             style={{ maxHeight: pos.maxH, WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
             className="overflow-y-auto overscroll-contain py-1"
             role="listbox"
           >
-            {suggestions.map((s, i) => (
-              <button
-                key={s.id}
-                type="button"
-                role="option"
-                aria-selected={i === highlight}
-                onMouseDown={(e) => e.preventDefault()}
-                onMouseEnter={() => setHighlight(i)}
-                onClick={() => add(s.id)}
-                className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition-colors ${i === highlight ? "bg-[#EBF5FB] text-[#0089bb] font-medium" : "text-[#374151] hover:bg-[#f9fafb]"}`}
-              >
-                <span className="min-w-0 truncate">{languageLabel(s.id, locale)}</span>
-              </button>
-            ))}
+            {suggestions.length > 0 ? (
+              suggestions.map((s, i) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="option"
+                  aria-selected={i === highlight}
+                  onMouseEnter={() => setHighlight(i)}
+                  onClick={() => add(s.id)}
+                  className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition-colors ${i === highlight ? "bg-[#EBF5FB] text-[#0089bb] font-medium" : "text-[#374151] hover:bg-[#f9fafb]"}`}
+                >
+                  <span className="min-w-0 truncate">{languageLabel(s.id, locale)}</span>
+                </button>
+              ))
+            ) : (
+              <p className="px-3.5 py-3 text-sm text-[#9ca3af]">{t("noLanguageResults")}</p>
+            )}
           </div>
         </div>,
         document.body

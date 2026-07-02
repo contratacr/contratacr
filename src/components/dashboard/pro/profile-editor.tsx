@@ -22,6 +22,7 @@ import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
 import { getCategoryLabel, anyHealthCategory, anyVideoConsultCategory } from "@/lib/data/categories";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
 import { NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
@@ -192,6 +193,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       : initial.category_id ? [initial.category_id] : [];
   // Read-only here — professions are managed in the "Profesiones" tab now.
   const professions = seedProfessions;
+  // Loads admin-managed service flags (es_salud / videoconsulta) so optional
+  // health-only fields also work for services added after deploy.
+  useCustomCategories();
   // Aseguradoras only apply to health (es_salud) professionals.
   const isHealthPro = anyHealthCategory(professions);
   const canOfferVideoConsult = anyVideoConsultCategory(professions);
