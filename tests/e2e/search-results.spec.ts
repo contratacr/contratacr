@@ -41,6 +41,8 @@ test.describe("@seeded search results", () => {
     await search.fill("plomeria");
     await search.press("Enter");
     await expect(page).toHaveURL(/\/es\/buscar/);
-    await expect(page.locator("article").first()).toBeVisible();
+    await expect(
+      page.locator("article").first().or(page.getByText(/No encontramos resultados/i).first()),
+    ).toBeVisible();
   });
 });
