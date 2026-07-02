@@ -20,42 +20,225 @@ async function logoWordmarkDataUrl() {
   return logoWordmarkCache;
 }
 
-function Pill({ children }: { children: string }) {
+function LogoWordmark({ src }: { src: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        width="318"
+        height="72"
+        alt="ContrataCR"
+        style={{ display: "block", width: 318, height: 72, objectFit: "contain" }}
+      />
+    </div>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <div style={{ display: "flex", width: 30, height: 30, position: "relative" }}>
+      <div
+        style={{
+          position: "absolute",
+          left: 3,
+          top: 3,
+          width: 17,
+          height: 17,
+          borderRadius: 999,
+          border: "4px solid #009FD9",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          left: 20,
+          top: 20,
+          width: 12,
+          height: 4,
+          borderRadius: 999,
+          background: "#009FD9",
+          transform: "rotate(45deg)",
+        }}
+      />
+    </div>
+  );
+}
+
+function PinIcon() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        width: 21,
+        height: 21,
+        borderRadius: 999,
+        border: "3px solid #009FD9",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div style={{ display: "flex", width: 6, height: 6, borderRadius: 999, background: "#009FD9" }} />
+    </div>
+  );
+}
+
+function CategoryPill({ label }: { label: string }) {
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
         borderRadius: 999,
-        background: "#eff8fc",
+        background: "#ffffff",
         color: "#162543",
-        border: "1px solid #cfeaf6",
-        padding: "10px 18px",
-        fontSize: 22,
-        fontWeight: 800,
+        border: "1px solid #d8e8f2",
+        padding: "10px 16px",
+        fontSize: 20,
+        fontWeight: 850,
+        boxShadow: "0 14px 28px rgba(22, 37, 67, 0.06)",
       }}
     >
-      {children}
+      {label}
     </div>
   );
 }
 
-function ResultRow({ title, location }: { title: string; location: string }) {
+function VerifiedBadge({ label }: { label: string }) {
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
-        gap: 7,
+        alignItems: "center",
+        alignSelf: "flex-start",
+        borderRadius: 999,
+        background: "#009FD9",
+        color: "#ffffff",
+        padding: "5px 10px",
+        fontSize: 14,
+        fontWeight: 900,
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
+function MiniProfessionalCard({
+  initials,
+  name,
+  service,
+  location,
+  verified,
+}: {
+  initials: string;
+  name: string;
+  service: string;
+  location: string;
+  verified: string;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
         borderRadius: 24,
         background: "#ffffff",
         border: "1px solid #dfe7ef",
-        padding: "22px 24px",
-        boxShadow: "0 18px 38px rgba(22, 37, 67, 0.08)",
+        padding: "20px",
+        boxShadow: "0 18px 40px rgba(22, 37, 67, 0.10)",
       }}
     >
-      <div style={{ display: "flex", color: "#162543", fontSize: 27, fontWeight: 900 }}>{title}</div>
-      <div style={{ display: "flex", color: "#009FD9", fontSize: 21, fontWeight: 800 }}>{location}</div>
+      <div
+        style={{
+          display: "flex",
+          width: 66,
+          height: 66,
+          borderRadius: 999,
+          background: "#EBF5FB",
+          color: "#009FD9",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          fontSize: 25,
+          fontWeight: 900,
+        }}
+      >
+        {initials}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1, marginLeft: 16, gap: 7 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: 5 }}>
+            <div style={{ display: "flex", color: "#162543", fontSize: 24, fontWeight: 900, lineHeight: 1.02 }}>
+              {name}
+            </div>
+            <VerifiedBadge label={verified} />
+          </div>
+        </div>
+        <div style={{ display: "flex", color: "#607089", fontSize: 19, fontWeight: 750 }}>{service}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#009FD9", fontSize: 18, fontWeight: 850 }}>
+          <PinIcon />
+          {location}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhonePreview({
+  resultTitle,
+  searchPlaceholder,
+  verifiedLabel,
+  cards,
+}: {
+  resultTitle: string;
+  searchPlaceholder: string;
+  verifiedLabel: string;
+  cards: Array<{
+    initials: string;
+    name: string;
+    service: string;
+    location: string;
+  }>;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        width: 405,
+        height: 516,
+        borderRadius: 42,
+        background: "#ffffff",
+        border: "1px solid #dbe6ee",
+        boxShadow: "0 34px 90px rgba(22, 37, 67, 0.18)",
+        padding: 24,
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          borderRadius: 999,
+          background: "#f7fbfe",
+          border: "1px solid #dbe6ee",
+          padding: "12px 16px",
+          color: "#8b98aa",
+          fontSize: 21,
+          fontWeight: 750,
+        }}
+      >
+        <SearchIcon />
+        {searchPlaceholder}
+      </div>
+      <div style={{ display: "flex", marginTop: 22, color: "#162543", fontSize: 24, fontWeight: 900 }}>
+        {resultTitle}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 18 }}>
+        {cards.map((card) => (
+          <MiniProfessionalCard key={card.name} verified={verifiedLabel} {...card} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -64,26 +247,36 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const { locale } = await params;
   const isEn = locale === "en";
   const logoSrc = await logoWordmarkDataUrl();
-  const titleLines = isEn
-    ? [["Hire", "services"], ["in", "Costa", "Rica"]]
-    : [["Contrata", "servicios"], ["en", "Costa", "Rica"]];
-  const subtitle = isEn
-    ? "Find professionals by service and location, then coordinate directly."
-    : "Encuentra profesionales por servicio y ubicación, y coordina directo.";
-  const pills = isEn
-    ? ["Home", "Health", "Technology", "Education"]
-    : ["Hogar", "Salud", "Tecnología", "Educación"];
-  const rows = isEn
-    ? [
-        ["Plumbing", "Atenas, Alajuela"],
-        ["General medicine", "San José, San José"],
-        ["Tech support", "Heredia, Heredia"],
-      ]
-    : [
-        ["Plomería", "Atenas, Alajuela"],
-        ["Medicina general", "San José, San José"],
-        ["Soporte técnico", "Heredia, Heredia"],
-      ];
+
+  const copy = isEn
+    ? {
+        eyebrow: "Services marketplace in Costa Rica",
+        titleLines: ["Find services", "in Costa Rica"],
+        subtitle: "Search by service and coordinate directly.",
+        search: "I need home cleaning",
+        phoneSearch: "Search a service",
+        resultTitle: "3 professionals near you",
+        verified: "Verified",
+        chips: ["Home", "Health", "Technology", "Education"],
+        cards: [
+          { initials: "SV", name: "Sharon Velasquez", service: "Digital marketing", location: "Atenas, Alajuela" },
+          { initials: "CR", name: "Test Company", service: "Plumbing", location: "San José, San José" },
+        ],
+      }
+    : {
+        eyebrow: "Servicios en Costa Rica",
+        titleLines: ["Contrata servicios", "en Costa Rica"],
+        subtitle: "Busca por servicio y coordina directo.",
+        search: "Necesito limpiar mi casa",
+        phoneSearch: "Busca un servicio",
+        resultTitle: "3 profesionales cerca de ti",
+        verified: "Verificado",
+        chips: ["Hogar", "Salud", "Tecnología", "Educación"],
+        cards: [
+          { initials: "SV", name: "Sharon Velasquez", service: "Marketing digital", location: "Atenas, Alajuela" },
+          { initials: "CR", name: "Test Company", service: "Plomería", location: "San José, San José" },
+        ],
+      };
 
   return new ImageResponse(
     (
@@ -92,23 +285,47 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
           width: "100%",
           height: "100%",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#eef5fa",
+          position: "relative",
+          overflow: "hidden",
+          background: "#eef6fb",
           color: "#162543",
           fontFamily: "Inter, Arial, sans-serif",
-          padding: 52,
         }}
       >
         <div
           style={{
-            width: "100%",
-            height: "100%",
+            position: "absolute",
+            right: -90,
+            top: -130,
+            width: 390,
+            height: 390,
+            borderRadius: 999,
+            background: "#ccecf8",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: -120,
+            bottom: -150,
+            width: 430,
+            height: 430,
+            borderRadius: 999,
+            background: "#dff3fb",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: 52,
+            top: 52,
+            right: 52,
+            bottom: 52,
             display: "flex",
             borderRadius: 44,
             background: "#ffffff",
-            border: "1px solid #dfe7ef",
-            boxShadow: "0 28px 76px rgba(22, 37, 67, 0.14)",
+            border: "1px solid #dce8f0",
+            boxShadow: "0 30px 90px rgba(22, 37, 67, 0.14)",
             overflow: "hidden",
           }}
         >
@@ -119,65 +336,85 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               minWidth: 0,
               flexDirection: "column",
               justifyContent: "center",
-              padding: "58px 46px 58px 66px",
+              padding: "52px 36px 52px 58px",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={logoSrc}
-              width="360"
-              height="86"
-              alt="ContrataCR"
-              style={{
-                display: "block",
-                width: 360,
-                height: 86,
-                objectFit: "contain",
-              }}
-            />
+            <LogoWordmark src={logoSrc} />
 
             <div
               style={{
                 display: "flex",
-                marginTop: 32,
-                fontSize: 54,
-                lineHeight: 1.05,
+                alignSelf: "flex-start",
+                marginTop: 30,
+                borderRadius: 999,
+                background: "#EBF5FB",
+                color: "#0089bb",
+                padding: "9px 15px",
+                fontSize: 20,
+                fontWeight: 900,
+              }}
+            >
+              {copy.eyebrow}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                marginTop: 22,
+                fontSize: 58,
+                lineHeight: 1.02,
                 letterSpacing: 0,
                 fontWeight: 900,
                 color: "#162543",
                 maxWidth: 610,
               }}
             >
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {titleLines.map((line) => (
-                  <div key={line.join("-")} style={{ display: "flex", gap: 12 }}>
-                    {line.map((word) => (
-                      <div key={word} style={{ display: "flex" }}>
-                        {word}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
+              {copy.titleLines.map((line) => (
+                <div key={line} style={{ display: "flex" }}>
+                  {line}
+                </div>
+              ))}
             </div>
 
             <div
               style={{
                 display: "flex",
                 marginTop: 18,
-                fontSize: 24,
+                fontSize: 25,
                 lineHeight: 1.25,
                 color: "#607089",
                 fontWeight: 750,
-                maxWidth: 700,
+                maxWidth: 600,
               }}
             >
-              {subtitle}
+              {copy.subtitle}
             </div>
 
-            <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap", maxWidth: 760 }}>
-              {pills.map((pill) => (
-                <Pill key={pill}>{pill}</Pill>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                width: 570,
+                marginTop: 30,
+                borderRadius: 999,
+                background: "#ffffff",
+                border: "1px solid #d5e5ef",
+                boxShadow: "0 20px 42px rgba(22, 37, 67, 0.09)",
+                padding: "16px 20px",
+                color: "#162543",
+                fontSize: 25,
+                fontWeight: 850,
+              }}
+            >
+              <SearchIcon />
+              {copy.search}
+            </div>
+
+            <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap", maxWidth: 620 }}>
+              {copy.chips.map((chip) => (
+                <CategoryPill key={chip} label={chip} />
               ))}
             </div>
           </div>
@@ -185,19 +422,33 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
           <div
             style={{
               display: "flex",
-              width: 370,
+              width: 466,
               flexShrink: 0,
-              flexDirection: "column",
+              alignItems: "center",
               justifyContent: "center",
-              gap: 18,
-              background: "#f5fbfe",
-              borderLeft: "1px solid #dfe7ef",
-              padding: "48px 36px",
+              background: "#f7fbfe",
+              borderLeft: "1px solid #dce8f0",
+              position: "relative",
             }}
           >
-            {rows.map(([rowTitle, location]) => (
-              <ResultRow key={rowTitle} title={rowTitle} location={location} />
-            ))}
+            <div
+              style={{
+                position: "absolute",
+                right: 38,
+                top: 56,
+                width: 72,
+                height: 72,
+                borderRadius: 999,
+                background: "#009FD9",
+                opacity: 0.12,
+              }}
+            />
+            <PhonePreview
+              resultTitle={copy.resultTitle}
+              searchPlaceholder={copy.phoneSearch}
+              verifiedLabel={copy.verified}
+              cards={copy.cards}
+            />
           </div>
         </div>
       </div>
