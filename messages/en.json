@@ -185,6 +185,7 @@
       "withCategory": "{category}"
     },
     "resultsIn": "{count} professionals in {location}",
+    "thisArea": "this area",
     "resultsInCR": "{count} professionals in Costa Rica",
     "list": "List",
     "map": "Map",

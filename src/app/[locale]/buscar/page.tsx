@@ -9,7 +9,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
-import { PROVINCES, nearestProvinceId } from "@/lib/data/cr-geography";
+import { PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -57,8 +57,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // "Buscar en esta área" → filter to the map's visible viewport (ADDS to the active
   // filters; the map sends N/S/E/W when the user searches the moved area).
-  const mapBounds = params.n && params.s && params.e && params.w
+  const parsedMapBounds = params.n && params.s && params.e && params.w
     ? { north: Number(params.n), south: Number(params.s), east: Number(params.e), west: Number(params.w) }
+    : undefined;
+  const mapBounds = parsedMapBounds && Object.values(parsedMapBounds).every(Number.isFinite)
+    ? parsedMapBounds
     : undefined;
 
   const allResults = await searchProfessionals({
@@ -230,15 +233,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     ? tCat(activeCategoryId as Parameters<typeof tCat>[0])
     : t("title.default");
 
-  // Area-aware count label: the cantón (most specific) → the province → the searched map
-  // AREA (bounds centroid → nearest province) → generic "en Costa Rica". So the count and
-  // the place name always match what's actually being searched.
-  let areaName = activeCanton?.name ?? activeProvince?.name;
-  if (!areaName && mapBounds) {
-    const cLat = (mapBounds.north + mapBounds.south) / 2;
-    const cLng = (mapBounds.east + mapBounds.west) / 2;
-    areaName = PROVINCES.find((p) => p.id === nearestProvinceId(cLat, cLng))?.name;
-  }
+  // Area-aware count label: exact map bounds -> "esta area"; otherwise canton
+  // (most specific) -> province -> generic "en Costa Rica".
+  const areaName = mapBounds ? t("thisArea") : activeCanton?.name ?? activeProvince?.name;
   const subtitle = areaName
     ? t("resultsIn", { count: allResults.length, location: areaName })
     : t("resultsInCR", { count: allResults.length });

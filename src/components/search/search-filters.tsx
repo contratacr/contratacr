@@ -89,6 +89,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cantons = getCantonsByProvince(province);
+  const areaActive = !!(params.get("n") && params.get("s") && params.get("e") && params.get("w"));
 
   const applyFilters = useCallback(
     (overrides: Record<string, string> = {}) => {
@@ -96,7 +97,27 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       // In CHIPS mode the search input lives in a SEPARATE component (MobileServiceSearch),
       // so take `q` from the URL — never from this instance's stale local `query` — to
       // avoid clobbering what the search bar set. The sidebar keeps using its own input.
-      const vals = { q: variant === "chips" ? (params.get("q") ?? "") : query, categoria: category, provincia: province, canton, sortBy, aseguradora, verificados: verifiedOnly ? "1" : "", lat: params.get("lat") ?? "", lng: params.get("lng") ?? "", ...overrides };
+      const vals = {
+        q: variant === "chips" ? (params.get("q") ?? "") : query,
+        categoria: category,
+        provincia: province,
+        canton,
+        sortBy,
+        aseguradora,
+        verificados: verifiedOnly ? "1" : "",
+        lat: params.get("lat") ?? "",
+        lng: params.get("lng") ?? "",
+        n: params.get("n") ?? "",
+        s: params.get("s") ?? "",
+        e: params.get("e") ?? "",
+        w: params.get("w") ?? "",
+        ...overrides,
+      };
+      const locationChanged =
+        Object.prototype.hasOwnProperty.call(overrides, "provincia") ||
+        Object.prototype.hasOwnProperty.call(overrides, "canton") ||
+        Object.prototype.hasOwnProperty.call(overrides, "lat") ||
+        Object.prototype.hasOwnProperty.call(overrides, "lng");
       if (vals.q) next.set("q", vals.q);
       if (vals.categoria && vals.categoria !== "todas") next.set("categoria", vals.categoria);
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
@@ -106,6 +127,14 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       if (vals.verificados === "1") next.set("verificados", "1");
       // Carry the geolocation coords so changing another filter keeps proximity.
       if (vals.lat && vals.lng) { next.set("lat", vals.lat); next.set("lng", vals.lng); }
+      // Keep "Buscar en esta area" active while changing service/sort/verified
+      // filters. A province/canton or "cerca de mi" pick is a new location filter.
+      if (!locationChanged && vals.n && vals.s && vals.e && vals.w) {
+        next.set("n", vals.n);
+        next.set("s", vals.s);
+        next.set("e", vals.e);
+        next.set("w", vals.w);
+      }
       router.push(`${pathname}?${next.toString()}`);
     },
     [query, category, province, canton, sortBy, aseguradora, verifiedOnly, params, router, pathname, variant]
@@ -191,6 +220,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const activeCount =
     (serviceActive ? 1 : 0) +
     [province, canton].filter((v) => v && v !== "todas" && v !== "todos").length +
+    (areaActive ? 1 : 0) +
     (aseguradora ? 1 : 0) +
     (verifiedOnly ? 1 : 0) +
     (geoActive ? 1 : 0);
