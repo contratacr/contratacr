@@ -15,12 +15,12 @@ import {
   BriefcaseBusiness,
   CalendarClock,
   CheckCircle2,
+  ClipboardList,
   FileText,
   Heart,
   Image as ImageIcon,
   Languages,
   MapPin,
-  MessageCircle,
   PhoneCall,
   Search,
   ShieldCheck,
@@ -372,7 +372,7 @@ export default async function ComoFuncionaPage() {
               <Search className="h-4 w-4" /> {t("ctaSearch")}
             </Link>
             <Link href="/publicar-proyecto" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20">
-              <MessageCircle className="h-4 w-4" /> {t("ctaPublish")}
+              <ClipboardList className="h-4 w-4" /> {t("ctaPublish")}
             </Link>
             <Link href="/registro/profesional" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20">
               <BriefcaseBusiness className="h-4 w-4" /> {t("ctaOffer")}
