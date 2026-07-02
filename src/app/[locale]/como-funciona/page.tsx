@@ -33,26 +33,32 @@ import {
 type IconComponent = (props: { className?: string }) => ReactNode;
 type Translation = (key: string) => string;
 
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").replace(/\/$/, "");
 const iconTileClass = "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#0089bb]";
 const softCardClass = "rounded-2xl border border-[#e5e7eb] bg-white shadow-sm";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
   const t = await getTranslations("comoFunciona");
+  const path = `/${locale}/como-funciona`;
+  const imageUrl = `${APP_URL}/${locale}/opengraph-image`;
+
   return {
     title: t("metaTitle"),
     description: t("metaDesc"),
+    alternates: { canonical: path },
     openGraph: {
       title: t("metaTitle"),
       description: t("metaDesc"),
-      url: "https://contratacr.com/es/como-funciona",
+      url: path,
       siteName: "ContrataCR",
-      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: t("metaTitle") }],
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: "ContrataCR" }],
     },
     twitter: {
       card: "summary_large_image",
       title: t("metaTitle"),
       description: t("metaDesc"),
-      images: ["/og-image.png"],
+      images: [imageUrl],
     },
   };
 }
