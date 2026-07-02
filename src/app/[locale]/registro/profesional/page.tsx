@@ -422,7 +422,7 @@ export default function RegisterProfessionalPage() {
       : authMetadata?.providers?.find((provider) => provider !== "email") ?? null;
   const connectedProviderLabel = connectedProvider ? providerLabel(connectedProvider) : null;
 
-  // step: -1=loading, 0=identity (email/pw users), 1=service+location, 2=profile+photo
+  // step: -1=loading, 0=identity/account, 1=service+location, 2=profile+photo
   const [step, setStep] = useState(-1);
   const [whatsappValue, setWhatsappValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -452,7 +452,7 @@ export default function RegisterProfessionalPage() {
   const [oauthNameError, setOauthNameError] = useState<string | null>(null);
   // A converting client may already have a verified cédula on file — never re-ask
   // for it (re-entering would error as "already registered"). null = still loading.
-  const [accountCedula, setAccountCedula] = useState<string | null>("");
+  const [accountCedula, setAccountCedula] = useState<string | null>(null);
   // Additional categories (multi-category support). Primary = step2 `category`.
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [extraCatInput, setExtraCatInput] = useState("");
@@ -504,7 +504,7 @@ export default function RegisterProfessionalPage() {
 
   useEffect(() => {
     if (!authLoading) {
-      setStep(currentUser ? 1 : 0);
+      setStep(0);
       // Pre-fill photo preview + legal name from OAuth provider if available
       if (currentUser) {
         if (!photoPreview) {
@@ -605,6 +605,30 @@ export default function RegisterProfessionalPage() {
     setStep(1);
   }
 
+  function onCurrentUserIdentityContinue() {
+    if (accountCedula) {
+      setOauthCedulaError(null);
+      setOauthNameError(null);
+      setStep(1);
+      return;
+    }
+    if (!noCrId && !identityMismatch && !validateCedulaFormat(oauthCedula)) {
+      setOauthCedulaError(t("errIdRequired"));
+      return;
+    }
+    if (!noCrId && !identityMismatch && oauthCedulaCheck.taken) {
+      setOauthCedulaError(t("errIdTaken"));
+      return;
+    }
+    if (oauthFullName.trim().length < 3) {
+      setOauthNameError(t("errNameRequired"));
+      return;
+    }
+    setOauthNameError(null);
+    setOauthCedulaError(null);
+    setStep(1);
+  }
+
   function onStep2(data: Step2Data) {
     // The WhatsApp number must match the exact digit length of its country.
     if (!isPhoneComplete(data.whatsapp)) {
@@ -617,22 +641,6 @@ export default function RegisterProfessionalPage() {
       return;
     }
     setLocationError(null);
-    // OAuth professionals must provide a cédula UNLESS they have no CR ID (→ review)
-    // or already have one on file (converting client — reuse it, never re-ask).
-    if (currentUser && !noCrId && !identityMismatch && !accountCedula && !validateCedulaFormat(oauthCedula)) {
-      setOauthCedulaError(t("errIdRequired"));
-      return;
-    }
-    if (currentUser && !noCrId && !identityMismatch && !accountCedula && oauthCedulaCheck.taken) {
-      setOauthCedulaError(t("errIdTaken"));
-      return;
-    }
-    if (currentUser && oauthFullName.trim().length < 3) {
-      setOauthNameError(t("errNameRequired"));
-      return;
-    }
-    setOauthNameError(null);
-    setOauthCedulaError(null);
     setStep2Data(data);
     setStep(2);
   }
@@ -827,10 +835,8 @@ export default function RegisterProfessionalPage() {
     );
   }
 
-  const stepLabels = currentUser
-    ? [t("steps.service"), t("steps.profile")]
-    : [t("steps.identity"), t("steps.service"), t("steps.profile")];
-  const indicatorStep = currentUser ? step - 1 : step;
+  const stepLabels = [t("steps.identity"), t("steps.service"), t("steps.profile")];
+  const indicatorStep = step;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -877,18 +883,10 @@ export default function RegisterProfessionalPage() {
                   <p className="truncate text-sm font-bold text-[#111827]">{currentUser.email}</p>
                 </div>
               </div>
-              {step === 1 && !noCrId && accountCedula && (
-                <div className="border-t border-[#eef0f2] px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-[#6b7280]">{t("identityAlreadyRegistered")}</p>
-                    <p className="break-words text-sm font-bold text-[#111827]">{t("usesAccountId", { name: oauthFullName || t("yourAccount") })}</p>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
-          {/* ── Step 0: Identity (email/password users only) ─────────────── */}
+          {/* ── Step 0: Identity / account confirmation ─────────────────── */}
           {/* Social sign-up lives on the LOGIN page only; from there the user
               proceeds into registration. Registration is email/password here. */}
           {step === 0 && !currentUser && (
@@ -963,13 +961,20 @@ export default function RegisterProfessionalPage() {
           )}
 
           {/* ── Step 1: Service + Location ───────────────────────────────── */}
-          {step === 1 && (
-            <form noValidate onSubmit={form2.handleSubmit(onStep2, scrollToFirstError)} className="flex flex-col gap-4">
-
-              {/* Identity — required for OAuth professionals (no identity step).
-                  A converting client who already has a cédula on file skips this
-                  entirely (we reuse the stored, already-verified cédula). */}
-              {currentUser && !noCrId && !accountCedula ? (
+          {step === 0 && currentUser && (
+            <div className="flex flex-col gap-4">
+              {accountCedula === null ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" />
+                </div>
+              ) : accountCedula ? (
+                <div className="rounded-2xl border border-[#d8eef8] bg-[#f8fbfe] px-4 py-3">
+                  <p className="text-xs font-semibold text-[#6b7280]">{t("identityAlreadyRegistered")}</p>
+                  <p className="mt-1 break-words text-sm font-bold text-[#111827]">
+                    {t("usesAccountId", { name: oauthFullName || t("yourAccount") })}
+                  </p>
+                </div>
+              ) : !noCrId ? (
                 <IdentityField
                   cedula={oauthCedula}
                   fullName={oauthFullName}
@@ -980,8 +985,7 @@ export default function RegisterProfessionalPage() {
                   cedulaError={oauthCedulaError ?? (!identityMismatch && oauthCedulaCheck.taken ? t("errIdentificationTaken") : undefined)}
                   nameError={oauthNameError ?? undefined}
                 />
-              ) : null}
-              {currentUser && noCrId && (
+              ) : (
                 <NoCrIdFields
                   fullName={oauthFullName}
                   onFullName={(n) => { setOauthFullName(limitText(n, NAME_MAX_LENGTH)); setOauthNameError(null); }}
@@ -989,14 +993,26 @@ export default function RegisterProfessionalPage() {
                 />
               )}
 
-              {/* Disclosure attached to the identity field (hidden once a stored,
-                  already-verified cédula is reused). */}
-              {currentUser && !accountCedula && (
+              {accountCedula === "" && (
                 <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
               )}
 
-              {/* Profession — searchable combobox (a profesión groups the servicios
-                  the pro later adds in their panel). */}
+              <Button
+                type="button"
+                size="lg"
+                className="mt-2"
+                disabled={accountCedula === null}
+                onClick={onCurrentUserIdentityContinue}
+              >
+                {t("continue")} <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          {step === 1 && (
+            <form noValidate onSubmit={form2.handleSubmit(onStep2, scrollToFirstError)} className="flex flex-col gap-4">
+
+              {/* Profession: searchable service combobox. */}
               <section className="flex flex-col gap-3">
                 <div>
                   <h3 className="text-sm font-extrabold text-[#162543]">{t("servicesSectionTitle")}</h3>
@@ -1111,15 +1127,20 @@ export default function RegisterProfessionalPage() {
               </section>
 
               <div className="flex gap-3 mt-2">
-                {!currentUser && (
-                  // Going BACK keeps the non-sensitive fields (nombre, cédula, correo —
-                  // react-hook-form preserves them) but CLEARS the password + confirm so
-                  // they're re-entered (safest/cleanest; a plain password shouldn't linger
-                  // in form state across back-navigation).
-                  <Button variant="outline" size="lg" type="button" onClick={() => { form1.setValue("password", ""); form1.setValue("confirmPassword", ""); setStep(0); }}>
-                    <ArrowLeft className="h-4 w-4" /> {t("back")}
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  type="button"
+                  onClick={() => {
+                    if (!currentUser) {
+                      form1.setValue("password", "");
+                      form1.setValue("confirmPassword", "");
+                    }
+                    setStep(0);
+                  }}
+                >
+                  <ArrowLeft className="h-4 w-4" /> {t("back")}
+                </Button>
                 <Button type="submit" size="lg" className="flex-1">
                   {t("continue")} <ArrowRight className="h-4 w-4" />
                 </Button>
