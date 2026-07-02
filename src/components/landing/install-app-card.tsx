@@ -179,23 +179,25 @@ function ScreenshotStepCard({
 
   return (
     <article className="rounded-3xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-5">
-      <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-[1.65rem] bg-white shadow-[0_18px_48px_-30px_rgba(15,23,42,0.75)] ring-1 ring-[#dbe3ec]">
-        <Image
-          src={image}
-          alt=""
-          width={588}
-          height={1280}
-          sizes="(min-width: 1024px) 280px, 78vw"
-          className="h-auto w-full select-none"
-          priority={number === 1}
-        />
-        <span
-          aria-hidden
-          className={`pointer-events-none absolute z-20 border-2 border-[#009FD9] bg-[#009FD9]/12 shadow-[0_0_0_5px_rgba(0,159,217,0.14),0_10px_24px_rgba(0,159,217,0.24)] ${targetClassName}`}
-        />
-        <span className={`pointer-events-none absolute z-30 rounded-full bg-[#009FD9] px-2.5 py-1 text-[10px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
-          {t("tapHere")}
-        </span>
+      <div className="mx-auto w-full max-w-[270px] rounded-[2rem] bg-[#162543] p-1.5 shadow-[0_20px_48px_-30px_rgba(15,23,42,0.9)]">
+        <div className="relative overflow-hidden rounded-[1.55rem] bg-white">
+          <Image
+            src={image}
+            alt=""
+            width={588}
+            height={1280}
+            sizes="(min-width: 1024px) 270px, 78vw"
+            className="h-auto w-full select-none"
+            priority={number === 1}
+          />
+          <span
+            aria-hidden
+            className={`pointer-events-none absolute z-20 border-2 border-[#009FD9] bg-[#009FD9]/14 shadow-[0_0_0_5px_rgba(0,159,217,0.16),0_10px_24px_rgba(0,159,217,0.26)] ${targetClassName}`}
+          />
+          <span className={`pointer-events-none absolute z-30 rounded-full bg-[#009FD9] px-2.5 py-1 text-[10px] font-black text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)] ${labelClassName}`}>
+            {t("tapHere")}
+          </span>
+        </div>
       </div>
       <div className="mt-4 flex gap-3">
         <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#009FD9] text-xs font-black text-white">
@@ -217,22 +219,22 @@ function IosScreenshotGuide() {
       title: t("iosStep1Title"),
       body: t("iosStep1Body"),
       image: "/install-guide/add-home-step-1.jpg",
-      targetClassName: "bottom-[3.9%] right-[2.8%] h-[8%] w-[16%] rounded-[1.7rem]",
-      labelClassName: "bottom-[12.8%] right-[4.6%]",
+      targetClassName: "bottom-[3.7%] right-[2.7%] h-[7.8%] w-[16%] rounded-[1.7rem]",
+      labelClassName: "bottom-[12.4%] right-[4.4%]",
     },
     {
       title: t("iosStep2Title"),
       body: t("iosStep2Body"),
       image: "/install-guide/add-home-step-2.jpg",
-      targetClassName: "left-[31%] top-[50.8%] h-[4.8%] w-[56%] rounded-2xl",
-      labelClassName: "left-1/2 top-[45%] -translate-x-1/2",
+      targetClassName: "left-[30.5%] top-[52.15%] h-[5.15%] w-[56%] rounded-2xl",
+      labelClassName: "right-[15%] top-[53.25%]",
     },
     {
       title: t("iosStep3Title"),
       body: t("iosStep3Body"),
       image: "/install-guide/add-home-step-3.jpg",
-      targetClassName: "left-[5.8%] top-[56.9%] h-[5.7%] w-[59%] rounded-xl",
-      labelClassName: "right-[9%] top-[51.2%]",
+      targetClassName: "left-[4.4%] top-[57.75%] h-[6.9%] w-[72%] rounded-2xl",
+      labelClassName: "right-[18%] top-[59.45%]",
     },
   ];
 
