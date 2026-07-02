@@ -41,6 +41,11 @@ function buildMetadata(locale: string): Metadata {
     description,
     applicationName: "ContrataCR",
     manifest: "/site.webmanifest",
+    appleWebApp: {
+      capable: true,
+      title: "ContrataCR",
+      statusBarStyle: "default",
+    },
     icons: {
       icon: [
         { url: "/favicon.ico", sizes: "any" },
@@ -76,6 +81,7 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#ffffff",
   interactiveWidget: "resizes-content",
   viewportFit: "cover",
 };
