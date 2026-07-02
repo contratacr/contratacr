@@ -115,9 +115,8 @@ export function SearchScreen() {
 // (brand-blue amount + grey unit); grey profession chip; orange-star rating + GREY
 // "(N reseñas)" in parens; a Doctoralia-style LOCATION TAB (brand-blue, underlined) on
 // a hairline divider + the address line. Then EITHER (pro with published hours) the
-// 3-day availability strip + a SINGLE filled "Ver horario completo" button — the
-// booking entry point; the old separate "Solicitar servicio" button no longer exists —
-// OR (no public schedule) the coral contact note + a filled WhatsApp button.
+// 3-day availability strip + direct actions: the schedule entry point and WhatsApp for
+// coordination. OR (no public schedule) the coral contact note + a filled WhatsApp button.
 function ProCard({
   rank, initials, image, company, person, profession, categories, place, address,
   rating, reviews, price, priceUnit, verified,
@@ -209,8 +208,9 @@ function ProCard({
             </div>
             <ChevronRight className="mt-3 h-3 w-3 shrink-0 text-[#9ca3af]" />
           </div>
-          {/* SINGLE filled primary button (the booking entry point). */}
+          {/* Direct actions, matching the real search-card contact language. */}
           <button className="mt-2.5 w-full rounded-full bg-[#009FD9] py-2 text-[10px] font-semibold text-white">{viewSchedule}</button>
+          <button className="mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2 text-[10px] font-bold text-white"><WhatsAppIcon className="h-3 w-3" /> {whatsapp}</button>
         </>
       ) : (
         <>
@@ -228,9 +228,12 @@ function ProCard({
   );
 }
 
+export type ResultsCopyTranslation = (key: string, values?: Record<string, string | number>) => string;
+
 export type ResultsCopy = {
   title: string; categories: string[]; results: string; search: string; verified: string;
   whatsapp: string; viewSchedule: string; noScheduleNote: string; priceUnit: string; priceOnRequest: string;
+  primaryPlace: string; primaryAddress?: string; secondaryPlace: string; secondaryAddress?: string;
   reviews: (n: number) => string;
   days: { label: string; times: string[] }[];
 };
@@ -238,16 +241,18 @@ export type ResultsCopy = {
 // Spanish defaults so the dead SHOWCASE_SCREENS reference still renders; the live
 // "Así funciona" section passes locale-aware copy from why-contratacr.tsx.
 const DEFAULT_RESULTS_COPY: ResultsCopy = {
-  title: "Tecnología",
-  categories: ["Reparación de computadoras", "Redes e internet", "Cámaras de seguridad"],
-  results: "128 servicios en Costa Rica",
-  search: "Tecnología en San José",
+  title: "Plomería",
+  categories: ["Plomería", "Reparaciones"],
+  results: "3 profesionales en Costa Rica",
+  search: "Plomería en Atenas",
   verified: "Verificado",
   whatsapp: "Contáctanos por WhatsApp",
   viewSchedule: "Ver horario completo",
   noScheduleNote: "La disponibilidad de este perfil no es pública. Contáctanos y conoce sus horarios.",
   priceUnit: "/hora",
   priceOnRequest: "Consultar precio",
+  primaryPlace: "Atenas, Alajuela",
+  secondaryPlace: "Grecia, Alajuela",
   reviews: (n) => `${n} reseñas`,
   days: [
     { label: "Hoy", times: ["9:00", "14:00"] },
@@ -255,6 +260,49 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
     { label: "Jue 18", times: ["10:00"] },
   ],
 };
+
+export function buildLandingResultsCopy({
+  locale,
+  tLanding,
+  tCard,
+  tSchedule,
+}: {
+  locale: string;
+  tLanding: ResultsCopyTranslation;
+  tCard: ResultsCopyTranslation;
+  tSchedule: ResultsCopyTranslation;
+}): ResultsCopy {
+  const isEnglish = locale === "en";
+  const loc = isEnglish ? "en-US" : "es-CR";
+  const today = new Date();
+  const days = [1, 2, 3].map((i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const day = d.getDate();
+    const month = d.toLocaleDateString(loc, { month: "short" }).replace(".", "");
+    return {
+      label: isEnglish ? `${month} ${day}` : `${day} ${month}`,
+      times: i === 3 ? ["10:00"] : ["9:00", "14:00"],
+    };
+  });
+
+  return {
+    title: isEnglish ? "Plumbing" : "Plomería",
+    categories: isEnglish ? ["Plumbing", "Repairs"] : ["Plomería", "Reparaciones"],
+    results: tLanding("mockResults"),
+    search: tLanding("mockSearch"),
+    verified: tCard("verifiedShort"),
+    whatsapp: tSchedule("whatsapp"),
+    viewSchedule: tSchedule("viewFullSchedule"),
+    noScheduleNote: tSchedule("availabilityHiddenNote"),
+    priceUnit: tCard("perHour"),
+    priceOnRequest: isEnglish ? "Ask price" : "Consultar precio",
+    primaryPlace: "Atenas, Alajuela",
+    secondaryPlace: "Grecia, Alajuela",
+    reviews: (n: number) => tCard("reviewsCount", { count: n }),
+    days,
+  };
+}
 
 export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsCopy }) {
   return (
@@ -273,13 +321,13 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
       <div className="flex-1 space-y-2 overflow-hidden p-3">
         <ProCard
           rank={1} initials="SG" image={cloudinaryAssetUrl("sgimage_psyvpn_hyyp4c.jpg", "f_auto,q_auto")} company="SG Solutions" person="Luis Sánchez" profession={copy.title} categories={copy.categories}
-          place="San José" address="Escazú, San José" rating="4.9" reviews={copy.reviews(48)}
+          place={copy.primaryPlace} address={copy.primaryAddress} rating="4.9" reviews={copy.reviews(48)}
           price={copy.priceOnRequest} verified={copy.verified} schedule={copy.days}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
         />
         <ProCard
           rank={2} initials="AM" image="https://randomuser.me/api/portraits/women/68.jpg" company="Ana Mora" profession={copy.title}
-          place="Heredia" address="Heredia centro" rating="4.8" reviews={copy.reviews(31)}
+          place={copy.secondaryPlace} address={copy.secondaryAddress} rating="4.8" reviews={copy.reviews(31)}
           price={copy.priceOnRequest} verified={copy.verified}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp} noScheduleNote={copy.noScheduleNote}
         />

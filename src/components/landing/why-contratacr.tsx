@@ -1,7 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { Search, BadgeCheck, Headset, ArrowRight } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
-import { PhoneFrame, ResultsScreen, type ResultsCopy } from "@/components/landing/phone-screens";
+import { PhoneFrame, ResultsScreen, buildLandingResultsCopy } from "@/components/landing/phone-screens";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import { Link } from "@/i18n/navigation";
 import { FadeInUp } from "@/components/landing/fade-in-up";
@@ -25,41 +25,7 @@ export async function WhyContratacr() {
   const tSched = await getTranslations("schedule");
   const locale = await getLocale();
 
-  // Locale-aware copy for the in-phone /buscar preview. Reuses the SAME strings
-  // the real app shows (card/schedule namespaces) so the mockup stays faithful and
-  // correct in ES/EN. Day labels are real upcoming dates, localized.
-  const loc = locale === "en" ? "en-US" : "es-CR";
-  const today = new Date();
-  const days = [1, 2, 3].map((i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const day = d.getDate();
-    const month = d.toLocaleDateString(loc, { month: "short" }).replace(".", "");
-    return {
-      label: locale === "en" ? `${month} ${day}` : `${day} ${month}`,
-      times: i === 3 ? ["10:00"] : ["9:00", "14:00"],
-    };
-  });
-  // The phone mockup features a "Tecnología" professional (illustrative content only) with
-  // three example service categories and a "consultar precio" price. Locale-aware so EN reads right.
-  const mockProfession = locale === "en" ? "Technology" : "Tecnología";
-  const mockCategories = locale === "en"
-    ? ["Computer repair", "Networks & internet", "Security cameras"]
-    : ["Reparación de computadoras", "Redes e internet", "Cámaras de seguridad"];
-  const resultsCopy: ResultsCopy = {
-    title: mockProfession,
-    categories: mockCategories,
-    results: t("mockResults"),
-    search: t("mockSearch"),
-    verified: tCard("verifiedShort"),
-    whatsapp: tSched("whatsapp"),
-    viewSchedule: tSched("viewFullSchedule"),
-    noScheduleNote: tSched("availabilityHiddenNote"),
-    priceUnit: tCard("perHour"),
-    priceOnRequest: locale === "en" ? "Ask price" : "Consultar precio",
-    reviews: (n: number) => tCard("reviewsCount", { count: n }),
-    days,
-  };
+  const resultsCopy = buildLandingResultsCopy({ locale, tLanding: t, tCard, tSchedule: tSched });
 
   return (
     <section className="relative overflow-hidden py-20 sm:py-28 bg-white">
