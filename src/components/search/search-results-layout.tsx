@@ -50,6 +50,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const hasActiveFilters =
     !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
+    !!(params.get("n") && params.get("s") && params.get("e") && params.get("w")) ||
     !!params.get("aseguradora") || params.get("verificados") === "1" || !!params.get("lat") ||
     (!!params.get("sortBy") && params.get("sortBy") !== "rating");
 
