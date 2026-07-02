@@ -111,6 +111,10 @@ function seedZones(init: ProData): Workplace[] {
 export function ProfileEditor({ professionalId, profileId, initial, onSaved, focusField, focusKey }: ProfileEditorProps) {
   const locale = useLocale();
   const t = useTranslations("profileEditor");
+  const initialProfile = Array.isArray(initial.profiles) ? initial.profiles[0] : initial.profiles;
+  const initialFullName = typeof initialProfile?.full_name === "string" ? initialProfile.full_name.trim() : "";
+  const initialEmail = typeof initialProfile?.email === "string" ? initialProfile.email : "";
+  const initialAvatarUrl = typeof initialProfile?.avatar_url === "string" ? initialProfile.avatar_url : null;
   // Which collapsible sections are open. Empty = all collapsed (default), so a
   // pro lands on a tidy, scannable list and opens what they want.
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
@@ -150,7 +154,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // "Permitir contacto por llamada" — moved here from Disponibilidad (it's a
   // contact setting). Saved with the rest of the profile.
   const [allowPhoneCall, setAllowPhoneCall] = useState<boolean>(!!initial.allow_phone_call);
-  const accountEmail = (initial.profiles?.email as string | undefined) ?? "";
+  const accountEmail = initialEmail;
   const [contactEmail, setContactEmail] = useState<string>(initial.contact_email ?? accountEmail);
   // Optional public email is opt-in (toggle): on only if one is already saved.
   const [showContactEmail, setShowContactEmail] = useState<boolean>(!!initial.contact_email);
@@ -162,7 +166,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     facebook: cleanUsername(initial.social_links?.facebook),
     tiktok: cleanUsername(initial.social_links?.tiktok),
   });
-  const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
+  const [fullName, setFullName] = useState<string>(initialFullName);
   // The official name comes from the cédula entered at signup, so it's NOT editable here —
   // EXACTLY like the client account (which locks on a national cédula). We lock when the
   // pro is verified OR simply has a NATIONAL (padrón) cédula on file (fetched via the
@@ -179,6 +183,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     });
   }, []);
   const nameLocked = verified || hasNationalCedula;
+  const resolvedFullName = fullName.trim() || initialFullName;
   const seedProfessions: string[] =
     Array.isArray(initial.professions) && initial.professions.length > 0
       ? initial.professions
@@ -208,7 +213,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const [certError, setCertError] = useState<string | null>(null);
   const [videoConsult, setVideoConsult] = useState(!!initial.videoconsulta && canOfferVideoConsult);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    initial.profiles?.avatar_url ?? null
+    initialAvatarUrl
   );
   const [photoUploading, setPhotoUploading] = useState(false);
 
@@ -232,12 +237,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   });
 
   useEffect(() => {
-    const nextName = (initial.profiles?.full_name as string | undefined)?.trim() ?? "";
-    if (!dirtyRef.current && nextName && !fullName.trim()) {
-      const tmr = window.setTimeout(() => setFullName(nextName), 0);
+    if (!dirtyRef.current && initialFullName && !fullName.trim()) {
+      const tmr = window.setTimeout(() => setFullName(initialFullName), 0);
       return () => window.clearTimeout(tmr);
     }
-  }, [initial.profiles?.full_name, fullName]);
+  }, [initialFullName, fullName]);
 
   function touch() {
     setSaved(false);
@@ -315,7 +319,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       onSaved?.();
     } catch (e) {
       // Revert the optimistic preview and show the specific reason (size/format).
-      setAvatarPreview(initial.profiles?.avatar_url ?? null);
+      setAvatarPreview(initialAvatarUrl);
       setError(e instanceof Error && e.message ? e.message : t("photoError"));
     } finally {
       setPhotoUploading(false);
@@ -485,7 +489,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         setError(socialWarning);
       } else {
         setSaved(true);
-        setTimeout(() => setSaved((_p) => false), 3000);
+        setTimeout(() => setSaved(false), 3000);
       }
       onSaved?.();
     } catch (err: unknown) {
@@ -517,6 +521,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         <div data-field="photo" className="flex items-center gap-4">
           <div className="relative h-20 w-20 rounded-full shrink-0">
             {avatarPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarPreview}
                 alt={t("photoAlt")}
@@ -567,7 +572,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           <div>
             <Input
               label={<>{t("fullName")} <span className="text-red-500">*</span></>}
-              value={fullName}
+              value={resolvedFullName}
               disabled
               rightIcon={<Lock className="h-4 w-4" />}
             />
