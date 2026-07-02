@@ -344,7 +344,8 @@
     "whatsapp": "Contáctanos por WhatsApp",
     "whatsappShort": "WhatsApp",
     "callShort": "Llamar",
-    "call": "Contáctanos por llamada"
+    "call": "Contáctanos por llamada",
+    "email": "Correo"
   },
   "selfAction": {
     "title": "Este es tu perfil",

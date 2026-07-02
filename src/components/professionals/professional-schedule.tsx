@@ -501,6 +501,36 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     </>
   );
 
+  const profileContactButtons = (
+    <>
+      {showWa && (
+        <a
+          href={isOwn ? undefined : waHref}
+          target={isOwn ? undefined : "_blank"}
+          rel="noopener noreferrer"
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
+          className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2.5 text-[13px] font-semibold text-white hover:bg-[#1ebe5d] transition-colors"
+        >
+          <WhatsAppIcon className="h-4 w-4" /> {t("whatsappShort")}
+        </a>
+      )}
+      {(showCall || showEmail) && (
+        <div className={`grid gap-2 ${showCall && showEmail ? "grid-cols-2" : "grid-cols-1"}`}>
+          {showCall && renderCall(true)}
+          {showEmail && (
+            <a
+              href={isOwn ? undefined : emailHref}
+              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => e.stopPropagation()}
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-3 py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
+            >
+              <Mail className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">{t("email")}</span>
+            </a>
+          )}
+        </div>
+      )}
+    </>
+  );
+
   // Contact-to-coordinate note — CORAL (calendar icon + text on a pale coral panel),
   // matching the target screenshots. The coral here is an intentional, single-purpose
   // accent for the "availability not public" state (the general "serious app, no
@@ -599,7 +629,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           {scheduleBody}
           <div className="flex flex-col gap-2">
             {hasSchedule && verHorarioButton}
-            {contactButtons}
+            {profileContactButtons}
           </div>
         </div>
         {bookingModals}
