@@ -231,6 +231,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     saveRef.current = handleSave;
   });
 
+  useEffect(() => {
+    const nextName = (initial.profiles?.full_name as string | undefined)?.trim() ?? "";
+    if (!dirtyRef.current && nextName && !fullName.trim()) {
+      const tmr = window.setTimeout(() => setFullName(nextName), 0);
+      return () => window.clearTimeout(tmr);
+    }
+  }, [initial.profiles?.full_name, fullName]);
+
   function touch() {
     setSaved(false);
     setDirty(true);

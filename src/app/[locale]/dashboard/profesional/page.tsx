@@ -336,6 +336,22 @@ export default function DashboardPage() {
   const proForCompletion = pro && headerAvatar && !pro.profiles?.avatar_url
     ? { ...pro, profiles: { ...(pro.profiles ?? {}), avatar_url: headerAvatar } }
     : pro;
+  const proForEditor = pro
+    ? {
+        ...pro,
+        profiles: {
+          ...(pro.profiles ?? {}),
+          full_name:
+            pro.profiles?.full_name ||
+            profile?.full_name ||
+            (user.user_metadata?.full_name as string) ||
+            user.email?.split("@")[0] ||
+            "",
+          email: pro.profiles?.email || user.email || "",
+          avatar_url: pro.profiles?.avatar_url || headerAvatar || null,
+        },
+      }
+    : pro;
   // Client (use mode) identity: verified via cédula (saved at solicitud/booking or before).
   // Drives the "Verificado" badge below the name — the SAME badge the pro side uses.
   const clientVerified =
@@ -584,7 +600,7 @@ export default function DashboardPage() {
                           <ProfileEditor
                             professionalId={pro.id}
                             profileId={user.id}
-                            initial={pro}
+                            initial={proForEditor ?? pro}
                             onSaved={handleSaved}
                             focusField={profileFocus?.field ?? null}
                             focusKey={profileFocus?.key}
