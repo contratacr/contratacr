@@ -15,11 +15,11 @@ const vercelBypassHeaders = vercelBypassSecret
 export default defineConfig({
   testDir: "./tests/e2e",
   globalSetup: "./tests/e2e/global-setup.ts",
-  timeout: 45_000,
-  expect: { timeout: 10_000 },
+  timeout: 60_000,
+  expect: { timeout: 12_000 },
   fullyParallel: true,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : 1,
+  workers: 1,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL,

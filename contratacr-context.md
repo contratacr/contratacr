@@ -1,4 +1,5 @@
 # ContrataCR.com — Project Context
+_Last updated: 2026-07-02 (sprint 597 - **Open Graph share images refined for service positioning** (`src/app/[locale]/opengraph-image.tsx`, `src/app/[locale]/profesionales/[slug]/opengraph-image.tsx`). The main app share image now uses the transparent logo mark above the exact navbar wordmark on a clean white brand card, with no decorative corner rings/circles. The localized service-focused tagline is now `Contrata servicios profesionales en Costa Rica` / `Hire professional services in Costa Rica`. Professional profile share images keep their existing profile-card layout and add the same localized tagline in the header as a single-line brand statement.)_
 
 _Last updated: 2026-07-02 (sprint 596 - **Main app share image changed to white brand card** (src/app/[locale]/opengraph-image.tsx). Replaced the previous app-preview/dark-card attempts with the requested clean white Open Graph image: the exact navbar wordmark asset (logo-wordmark-transparent.png) centered, subtle brand-blue rings, a short blue divider, and localized ES/EN tagline. No extra logo container, no redrawn wordmark text.)_
 

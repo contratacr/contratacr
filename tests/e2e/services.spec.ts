@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectNoHorizontalOverflow, gotoOK } from "./helpers";
+import { expectHealthyPage, gotoOK } from "./helpers";
 
 test.describe("@smoke services catalog", () => {
   test("service search finds a known service without leaving the page", async ({ page }) => {
@@ -13,6 +13,20 @@ test.describe("@smoke services catalog", () => {
     await search.fill("");
     await search.press("Enter");
     await expect(page).toHaveURL(/\/es\/servicios\/?\??$/);
-    await expectNoHorizontalOverflow(page);
+    await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
+    await expectHealthyPage(page);
+  });
+
+  test("unknown service shows one consistent suggestion CTA", async ({ page }) => {
+    await gotoOK(page, "/es/servicios");
+
+    const search = page.getByRole("textbox").first();
+    await search.fill(`Servicio inexistente ${Date.now()}`);
+
+    await expect(page.getByText(/No ves tu servicio|No encontramos ese servicio/i).first()).toBeVisible();
+    await expect(page.getByText(/Cuentanos que servicio|Cu.ntanos qu. servicio|Tell us what service/i).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Sugerir servicio|Suggest a service/i }).first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
+    await expectHealthyPage(page);
   });
 });

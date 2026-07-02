@@ -1,17 +1,43 @@
 import { expect, test } from "playwright/test";
-import { expectNoHorizontalOverflow, expectPageShell, gotoOK, isMobileProject } from "./helpers";
+import { expectHealthyPage, expectPageShell, gotoOK, isMobileProject } from "./helpers";
 
 const routes = [
   "/es",
+  "/es/categorias",
   "/es/servicios",
   "/es/buscar",
   "/es/login",
+  "/es/registro",
+  "/es/registro/cliente",
+  "/es/registro/profesional",
+  "/es/olvide-contrasena",
   "/es/soporte",
+  "/es/ayuda",
+  "/es/contacto",
+  "/es/como-funciona",
+  "/es/atraer-clientes",
+  "/es/publicar-proyecto",
+  "/es/proveedores-autorizados",
+  "/es/privacidad",
+  "/es/terminos",
   "/en",
+  "/en/categorias",
   "/en/servicios",
   "/en/buscar",
   "/en/login",
+  "/en/registro",
+  "/en/registro/cliente",
+  "/en/registro/profesional",
+  "/en/olvide-contrasena",
   "/en/soporte",
+  "/en/ayuda",
+  "/en/contacto",
+  "/en/como-funciona",
+  "/en/atraer-clientes",
+  "/en/publicar-proyecto",
+  "/en/proveedores-autorizados",
+  "/en/privacidad",
+  "/en/terminos",
 ];
 
 test.describe("@smoke public routes", () => {
@@ -19,7 +45,7 @@ test.describe("@smoke public routes", () => {
     test(`${route} renders a healthy page`, async ({ page }) => {
       await gotoOK(page, route);
       await expectPageShell(page);
-      await expectNoHorizontalOverflow(page);
+      await expectHealthyPage(page);
     });
   }
 
@@ -39,5 +65,6 @@ test.describe("@smoke public routes", () => {
       await expect(page.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: /Ofrecer mis servicios/i }).first()).toBeVisible();
     }
+    await expectHealthyPage(page);
   });
 });

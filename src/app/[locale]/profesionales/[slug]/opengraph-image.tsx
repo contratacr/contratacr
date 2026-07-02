@@ -95,6 +95,9 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const location = [pro?.cantonName, pro?.provinceName].filter(Boolean).join(", ");
   const logoSrc = await logoWordmarkDataUrl();
   const avatarDataUrl = await imageDataUrl(pro?.avatarUrl);
+  const brandLine = isEn
+    ? "Hire professional services in Costa Rica"
+    : "Contrata servicios profesionales en Costa Rica";
 
   return new ImageResponse(
     (
@@ -129,10 +132,25 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              gap: 32,
               padding: "44px 56px 20px",
             }}
           >
             <LogoWordmark src={logoSrc} />
+            <div
+              style={{
+                display: "flex",
+                color: "#607089",
+                fontSize: 20,
+                fontWeight: 750,
+                lineHeight: 1.2,
+                textAlign: "right",
+                whiteSpace: "nowrap",
+                maxWidth: 640,
+              }}
+            >
+              {brandLine}
+            </div>
           </div>
 
           <div

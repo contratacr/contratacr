@@ -67,6 +67,10 @@ function adminClient() {
   });
 }
 
+export function regressionAdminClient() {
+  return adminClient();
+}
+
 async function findUserByEmail(admin: AdminClient, email: string) {
   for (let page = 1; page <= 10; page += 1) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });

@@ -7,13 +7,13 @@ jobs:
   e2e:
     name: Playwright regression (test)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     environment: test
     env:
       PLAYWRIGHT_BASE_URL: https://contratacr-git-test-isanchezm421-6251s-projects.vercel.app
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       E2E_SEED: "1"
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       CI: true
     steps:
@@ -37,6 +37,22 @@ jobs:
           fi
           if echo "$NEXT_PUBLIC_SUPABASE_URL" | grep -q "kskueodxaksxvjrysouw"; then
             echo "::error::Refusing to run seeded regression against production Supabase."
+            exit 1
+          fi
+
+      - name: Verify Vercel bypass opens ContrataCR
+        run: |
+          set -euo pipefail
+          html="$(curl -sSL \
+            -H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" \
+            -H "x-vercel-set-bypass-cookie: true" \
+            "$PLAYWRIGHT_BASE_URL/es")"
+          if echo "$html" | grep -qi "Log in to Vercel"; then
+            echo "::error::Vercel protection still intercepted the test URL. The bypass secret is present in GitHub, but this deployment did not accept it. Rotate/check the Vercel Automation Bypass secret, update the GitHub test Environment secret, then redeploy the test branch before rerunning."
+            exit 1
+          fi
+          if ! echo "$html" | grep -qi "ContrataCR"; then
+            echo "::error::The test URL did not look like ContrataCR after bypass. Check PLAYWRIGHT_BASE_URL and the latest test deployment."
             exit 1
           fi
 

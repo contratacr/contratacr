@@ -12,6 +12,7 @@ export const size = {
 export const contentType = "image/png";
 
 let logoWordmarkCache: string | null = null;
+let logoMarkCache: string | null = null;
 
 async function logoWordmarkDataUrl() {
   if (logoWordmarkCache) return logoWordmarkCache;
@@ -20,29 +21,21 @@ async function logoWordmarkDataUrl() {
   return logoWordmarkCache;
 }
 
-function Ring({ left, top, size: ringSize }: { left: number; top: number; size: number }) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left,
-        top,
-        width: ringSize,
-        height: ringSize,
-        borderRadius: 999,
-        border: "2px solid rgba(0, 159, 217, 0.12)",
-      }}
-    />
-  );
+async function logoMarkDataUrl() {
+  if (logoMarkCache) return logoMarkCache;
+  const bytes = await readFile(join(process.cwd(), "public", "logo-mark-transparent.png"));
+  logoMarkCache = `data:image/png;base64,${Buffer.from(bytes).toString("base64")}`;
+  return logoMarkCache;
 }
 
 export default async function Image({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const isEn = locale === "en";
-  const logoSrc = await logoWordmarkDataUrl();
+  const wordmarkSrc = await logoWordmarkDataUrl();
+  const markSrc = await logoMarkDataUrl();
   const subtitle = isEn
-    ? "Find and hire professionals in Costa Rica"
-    : "Encuentra y contrata profesionales en Costa Rica";
+    ? "Hire professional services in Costa Rica"
+    : "Contrata servicios profesionales en Costa Rica";
 
   return new ImageResponse(
     (
@@ -60,17 +53,11 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
           fontFamily: "Inter, Arial, sans-serif",
         }}
       >
-        <Ring left={-84} top={-130} size={420} />
-        <Ring left={20} top={-26} size={210} />
-        <Ring left={900} top={-96} size={360} />
-        <Ring left={972} top={-24} size={182} />
-        <Ring left={466} top={432} size={210} />
-
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background: "radial-gradient(circle at 50% 28%, rgba(235, 245, 251, 0.9) 0%, rgba(255,255,255,0) 46%)",
+            background: "linear-gradient(180deg, #ffffff 0%, #ffffff 66%, #f3f9fd 100%)",
           }}
         />
 
@@ -83,22 +70,49 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            padding: "64px 72px 72px",
+            padding: "58px 72px 72px",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={logoSrc}
-            width="720"
-            height="157"
+            src={markSrc}
+            width="224"
+            height="224"
             alt="ContrataCR"
             style={{
               display: "block",
-              width: 720,
-              height: 157,
+              width: 224,
+              height: 224,
               objectFit: "contain",
+              marginBottom: 26,
             }}
           />
+
+          <div
+            style={{
+              display: "flex",
+              width: 640,
+              height: 136,
+              overflow: "hidden",
+              alignItems: "center",
+              justifyContent: "flex-start",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={wordmarkSrc}
+              width="810"
+              height="169"
+              alt="ContrataCR"
+              style={{
+                display: "block",
+                width: 810,
+                height: 169,
+                objectFit: "contain",
+                marginLeft: -200,
+              }}
+            />
+          </div>
 
           <div
             style={{
@@ -107,7 +121,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               height: 6,
               borderRadius: 999,
               background: "#009FD9",
-              marginTop: 26,
+              marginTop: 14,
               marginBottom: 28,
             }}
           />
