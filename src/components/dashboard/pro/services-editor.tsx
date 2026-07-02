@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { PRICING_TYPES, formatServicePrice, splitPricingLabel, type PricingType } from "@/lib/pricing";
+import { PRICING_TYPES, TAX_INCLUDED_SUFFIX, formatServicePrice, splitPricingLabel, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { parseMoneyAmount } from "@/lib/money-limits";
 
@@ -535,6 +535,7 @@ export function ServicesEditor({
                     placeholder={t("amountPlaceholder")}
                     value={form.priceAmount}
                     onChange={(v) => setForm((f) => ({ ...f, priceAmount: v }))}
+                    suffix={form.aConsultar ? undefined : TAX_INCLUDED_SUFFIX}
                   />
                 </div>
                 <select

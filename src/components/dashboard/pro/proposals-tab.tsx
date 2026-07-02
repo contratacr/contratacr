@@ -12,7 +12,7 @@ import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, formatRelativeOrDate } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
-import { formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
+import { TAX_INCLUDED_SUFFIX, formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
@@ -542,7 +542,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             <div className="flex flex-col gap-3">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#374151]">{t("yourPrice")} <span className="font-normal text-[#6b7280]">{t("optional")}</span></label>
-                <PriceInput value={form.price} onChange={(v) => updateForm(project.id, "price", v)} />
+                <PriceInput value={form.price} onChange={(v) => updateForm(project.id, "price", v)} suffix={TAX_INCLUDED_SUFFIX} />
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#374151]">{t("yourMessage")} <span className="text-red-500">*</span></label>
@@ -806,7 +806,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             <div className="mt-2 pt-3 border-t border-[#f3f4f6] flex flex-col gap-3">
                               <div>
                                 <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourPrice")} <span className="text-[#6b7280] font-normal">{t("optional")}</span></label>
-                                <PriceInput placeholder={t("pricePlaceholder")} value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
+                                <PriceInput placeholder={t("pricePlaceholder")} value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} suffix={TAX_INCLUDED_SUFFIX} />
                               </div>
                               <div>
                                 <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourMessage")} <span className="text-red-500">*</span></label>

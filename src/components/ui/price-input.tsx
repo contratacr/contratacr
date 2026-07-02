@@ -13,6 +13,8 @@ interface PriceInputProps {
   className?: string;
   /** Show the ₡ prefix inside the field. */
   colonPrefix?: boolean;
+  /** Compact text shown inside the field after the amount, e.g. I.V.A.I. */
+  suffix?: string;
   id?: string;
   maxLength?: number;
 }
@@ -23,6 +25,7 @@ export function PriceInput({
   placeholder,
   className,
   colonPrefix = true,
+  suffix,
   id,
   maxLength = String(MAX_MONEY_AMOUNT).length,
 }: PriceInputProps) {
@@ -34,6 +37,11 @@ export function PriceInput({
     <div className="relative">
       {colonPrefix && (
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af] pointer-events-none">₡</span>
+      )}
+      {suffix && (
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold tracking-[0.04em] text-[#9ca3af]">
+          {suffix}
+        </span>
       )}
       <input
         id={id}
@@ -50,6 +58,7 @@ export function PriceInput({
         className={cn(
           "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white pr-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
           colonPrefix ? "pl-7" : "pl-3",
+          suffix && "pr-[4.75rem]",
           className
         )}
       />
