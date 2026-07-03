@@ -237,11 +237,12 @@ export function ServicesEditor({
     const years = yearsValue && yearsValue > 0 ? yearsValue : undefined;
 
     // Consolidate this service's category to exactly ONE info object — preserving the
-    // existing id (caso de éxito linkage), display name and active state.
+    // existing id (caso de éxito linkage) and active state. The display name comes
+    // from the current catalog so old saved labels stay consistent across the app.
     const rep = serviceInfo(editCategory);
     const info: ProService = {
       id: rep?.id ?? genId(),
-      name: rep?.name?.trim() || getCategoryLabel(editCategory, locale),
+      name: getCategoryLabel(editCategory, locale),
       description: description || undefined,
       priceAmount: amount,
       priceType,
