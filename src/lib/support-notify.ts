@@ -6,6 +6,7 @@ import { cloudinaryAssetUrl } from "@/lib/cloudinary";
 const SUPPORT_TO = "soporte@contratacr.com";
 const SITE = "https://contratacr.com";
 const LOGO = cloudinaryAssetUrl("contratacr/brand/email-logo.png", "f_png,w_128");
+type SupportLocale = "es" | "en";
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -53,6 +54,34 @@ export async function notifySupportInbox(opts: {
     { href: `${SITE}/es/admin/soporte`, label: "Abrir en el panel" },
   );
   await sendEmail(SUPPORT_TO, `[Soporte] ${opts.isReply ? "Re: " : ""}${opts.subject}`, html, opts.fromEmail);
+}
+
+export function supportTicketCreatedAutoMessage(locale: SupportLocale = "es"): string {
+  return locale === "en"
+    ? "Thank you, we received your support ticket. Our team will review it and reply as soon as possible."
+    : "Gracias, recibimos su tiquete de soporte. Nuestro equipo lo revisará y le responderá lo antes posible.";
+}
+
+export async function notifyUserTicketCreated(opts: {
+  toEmail: string;
+  locale?: SupportLocale;
+  ticketRef?: string;
+}): Promise<void> {
+  const locale = opts.locale === "en" ? "en" : "es";
+  const message = supportTicketCreatedAutoMessage(locale);
+  const headline = locale === "en" ? "Support ticket received" : "Tiquete de soporte recibido";
+  const subject = locale === "en"
+    ? "We received your support ticket | ContrataCR"
+    : "Recibimos su tiquete de soporte | ContrataCR";
+  const refHtml = opts.ticketRef
+    ? `<p style="margin:12px 0 0 0;color:#6b7280;font-size:13px;"><strong>${locale === "en" ? "Ticket" : "Tiquete"}:</strong> ${escapeHtml(opts.ticketRef)}</p>`
+    : "";
+
+  const html = shell(
+    headline,
+    `<p style="margin:0;">${escapeHtml(message)}</p>${refHtml}`,
+  );
+  await sendEmail(opts.toEmail, subject, html);
 }
 
 /** Admin replied → email the user so they receive it (with a link to continue).

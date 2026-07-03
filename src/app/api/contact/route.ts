@@ -6,6 +6,8 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { validateUpload, IMAGE_KINDS, DOC_KINDS } from "@/lib/upload-validation";
 import { sendBrevoEmail } from "@/lib/email/send";
+import { notifyUserTicketCreated, supportTicketCreatedAutoMessage } from "@/lib/support-notify";
+import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 
 // ALL of the app's automated email goes through BREVO (the contratacr.com domain is
@@ -14,11 +16,29 @@ import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrim
 // soporte@contratacr.com (a person can read/reply there manually) — the app never
 // sends through it. From-address is the verified @contratacr.com domain.
 const SUPPORT_TO = "soporte@contratacr.com";
+type SupportLocale = "es" | "en";
+
+function normalizeLocale(value?: string | null): SupportLocale {
+  return value === "en" ? "en" : "es";
+}
+
+function localeFromRequest(req: NextRequest, submittedLocale?: string | null): SupportLocale {
+  if (submittedLocale === "en" || submittedLocale === "es") return submittedLocale;
+  const referer = req.headers.get("referer");
+  if (referer) {
+    try {
+      const path = new URL(referer).pathname;
+      if (path === "/en" || path.startsWith("/en/")) return "en";
+      if (path === "/es" || path.startsWith("/es/")) return "es";
+    } catch { /* ignore malformed referers */ }
+  }
+  return normalizeLocale(req.headers.get("accept-language")?.toLowerCase().startsWith("en") ? "en" : "es");
+}
 
 /* ─── Parse FormData from request ─── */
 async function parseRequest(req: NextRequest) {
   const contentType = req.headers.get("content-type") ?? "";
-  let name = "", email = "", subject = "", message = "", topic = "";
+  let name = "", email = "", subject = "", message = "", topic = "", locale = "";
   const fileAttachments: { filename: string; content: Buffer; contentType: string }[] = [];
 
   if (contentType.includes("multipart/form-data")) {
@@ -28,6 +48,7 @@ async function parseRequest(req: NextRequest) {
     subject = (fd.get("subject") as string) ?? "";
     message = (fd.get("message") as string) ?? "";
     topic   = (fd.get("topic")   as string) ?? "";
+    locale  = (fd.get("locale")  as string) ?? "";
     for (const file of fd.getAll("attachments") as File[]) {
       if (file && file.size > 0) {
         fileAttachments.push({
@@ -39,7 +60,7 @@ async function parseRequest(req: NextRequest) {
     }
   } else {
     const body = await req.json();
-    ({ name = "", email = "", subject = "", message = "", topic = "" } = body);
+    ({ name = "", email = "", subject = "", message = "", topic = "", locale = "" } = body);
   }
 
   return {
@@ -48,6 +69,7 @@ async function parseRequest(req: NextRequest) {
     subject: limitTrimmedText(subject, SHORT_TEXT_MAX_LENGTH),
     message: limitTrimmedText(message, LONG_TEXT_MAX_LENGTH),
     topic: limitTrimmedText(topic, SHORT_TEXT_MAX_LENGTH),
+    locale: limitTrimmedText(locale, SHORT_TEXT_MAX_LENGTH),
     fileAttachments,
   };
 }
@@ -99,7 +121,13 @@ async function sendInboxEmail(
 }
 
 /* ─── Persist as an admin support ticket + seed the thread's first message ─── */
-async function saveTicket(name: string, email: string, subject: string, message: string, topic?: string): Promise<boolean> {
+type SavedSupportTicket = {
+  id: string;
+  created_at?: string | null;
+  case_number?: number | string | null;
+};
+
+async function saveTicket(name: string, email: string, subject: string, message: string, topic: string | undefined, locale: SupportLocale): Promise<SavedSupportTicket | null> {
   try {
     let userId: string | null = null;
     try {
@@ -112,19 +140,34 @@ async function saveTicket(name: string, email: string, subject: string, message:
     const { data: ticket, error } = await admin
       .from("support_tickets")
       .insert({ user_id: userId, name: name || null, email, subject, message, topic: topic || null, last_reply_at: now, last_reply_role: "user" })
-      .select("id")
+      .select("id, created_at, case_number")
       .single();
-    if (error) { console.error("[contact] ticket insert:", error.message); return false; }
-    // Seed the conversation thread with the user's first message.
+    if (error) { console.error("[contact] ticket insert:", error.message); return null; }
+    // Seed the conversation thread with the user's first message plus the one-time
+    // support acknowledgement. Keep last_reply_role as "user" so admin queues still
+    // treat the new ticket as needing attention.
     if (ticket?.id) {
-      await admin.from("support_ticket_messages").insert({
-        ticket_id: ticket.id, sender_role: "user", sender_id: userId, sender_name: name || null, body: message,
-      });
+      const { error: msgErr } = await admin.from("support_ticket_messages").insert([
+        {
+          ticket_id: ticket.id,
+          sender_role: "user",
+          sender_id: userId,
+          sender_name: name || null,
+          body: message,
+        },
+        {
+          ticket_id: ticket.id,
+          sender_role: "admin",
+          sender_name: "Soporte ContrataCR",
+          body: supportTicketCreatedAutoMessage(locale),
+        },
+      ]);
+      if (msgErr) console.error("[contact] ticket messages insert:", msgErr.message);
     }
-    return true;
+    return ticket;
   } catch (e) {
     console.error("[contact] ticket insert:", e);
-    return false;
+    return null;
   }
 }
 
@@ -158,6 +201,7 @@ export async function POST(req: NextRequest) {
   try {
     const parsed = await parseRequest(req);
     const { subject, message, topic, fileAttachments } = parsed;
+    const locale = localeFromRequest(req, parsed.locale);
     const { name, email } = await resolveRequester({ name: parsed.name, email: parsed.email });
 
     if (!email || !subject || !message) {
@@ -180,8 +224,15 @@ export async function POST(req: NextRequest) {
     // Record the ticket in the admin panel (primary record), then notify the support
     // inbox by email — via Brevo. Even if the email can't be sent, the ticket is
     // already saved and shows in the admin panel.
-    const ticketSaved = await saveTicket(name, email, subject, message, topic);
+    const ticketSaved = await saveTicket(name, email, subject, message, topic, locale);
     const sent = await sendInboxEmail(name, email, subject, message, fileAttachments);
+    if (ticketSaved) {
+      await notifyUserTicketCreated({
+        toEmail: email,
+        locale,
+        ticketRef: supportTicketRef(ticketSaved.id, ticketSaved.created_at, ticketSaved.case_number),
+      });
+    }
 
     if (!ticketSaved && !sent) {
       return NextResponse.json({

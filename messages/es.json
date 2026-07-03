@@ -2044,9 +2044,9 @@
     "sendError": "No se pudo enviar el mensaje.",
     "actionError": "No se pudo procesar. Intenta de nuevo.",
     "yourConversations": "Tus tiquetes de soporte.",
-    "inboxTitle": "Casos de soporte",
-    "caseRef": "Caso {ref}",
-    "inboxBody": "Abre un caso nuevo o continúa una conversación existente. Te respondemos aquí y por correo.",
+    "inboxTitle": "Tiquetes de soporte",
+    "caseRef": "Tiquete {ref}",
+    "inboxBody": "Abre un tiquete nuevo o continúa una conversación existente. Te respondemos aquí y por correo.",
     "newTicket": "Contactar soporte",
     "empty": "Todavía no tienes tiquetes",
     "emptySub": "Si necesitas ayuda, contáctanos y te respondemos por aquí y por correo.",
@@ -2058,9 +2058,9 @@
     "viewReply": "Ver respuesta",
     "openConversation": "Abrir conversación",
     "statusHelp": {
-      "open": "Recibimos tu caso y soporte lo revisará.",
+      "open": "Recibimos tu tiquete y soporte lo revisará.",
       "in_progress": "Hay una conversación activa con soporte.",
-      "resolved": "Este caso está marcado como resuelto."
+      "resolved": "Este tiquete está marcado como resuelto."
     },
     "subjects": {
       "subject0": "Problema técnico en la plataforma",

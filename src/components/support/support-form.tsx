@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { AlertCircle, Paperclip, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -22,6 +22,7 @@ type AttachedFile = { file: File; preview?: string };
 
 export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void }) {
   const t = useTranslations("soporte");
+  const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -130,6 +131,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
       fd.append("subject", form.subject);
       fd.append("topic", form.topic);
       fd.append("message", form.message);
+      fd.append("locale", locale);
       for (const { file } of attachments) {
         fd.append("attachments", file);
       }

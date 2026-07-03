@@ -2046,9 +2046,9 @@
     "sendError": "Couldn't send the message.",
     "actionError": "Couldn't process it. Try again.",
     "yourConversations": "Your support tickets.",
-    "inboxTitle": "Support cases",
-    "caseRef": "Case {ref}",
-    "inboxBody": "Open a new case or continue an existing conversation. We reply here and by email.",
+    "inboxTitle": "Support tickets",
+    "caseRef": "Ticket {ref}",
+    "inboxBody": "Open a new ticket or continue an existing conversation. We reply here and by email.",
     "newTicket": "Contact support",
     "empty": "You don't have any tickets yet",
     "emptySub": "If you need help, contact us and we'll reply here and by email.",
@@ -2060,9 +2060,9 @@
     "viewReply": "View reply",
     "openConversation": "Open conversation",
     "statusHelp": {
-      "open": "We received your case and support will review it.",
+      "open": "We received your ticket and support will review it.",
       "in_progress": "There is an active conversation with support.",
-      "resolved": "This case is marked as resolved."
+      "resolved": "This ticket is marked as resolved."
     },
     "subjects": {
       "subject0": "Technical problem on the platform",
