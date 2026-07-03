@@ -4,16 +4,13 @@ export async function gotoOK(page: Page, path: string) {
   const response = await page.goto(path, { waitUntil: "domcontentloaded" });
   expect(response, `Expected a response for ${path}`).not.toBeNull();
   expect(response!.status(), `Expected ${path} to return < 400`).toBeLessThan(400);
-  await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
+  await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
   await expectNotVercelProtection(page, path);
 }
 
 export async function expectNotVercelProtection(page: Page, path = page.url()) {
-  const isVercelLogin = await page
-    .getByRole("heading", { name: /Log in to Vercel/i })
-    .first()
-    .isVisible()
-    .catch(() => false);
+  const bodyText = await page.locator("body").innerText({ timeout: 3_000 }).catch(() => "");
+  const isVercelLogin = /Log in to Vercel|Continue with GitHub|Continue with SAML SSO/i.test(bodyText);
   expect(
     isVercelLogin,
     `${path} opened Vercel's protected login page instead of ContrataCR. Check VERCEL_AUTOMATION_BYPASS_SECRET and redeploy the test branch after rotating it.`,
@@ -48,7 +45,7 @@ export async function loginAs(page: Page, email: string, password: string) {
   await page.locator('input[type="password"]').fill(password);
   await page.getByRole("button", { name: /Ingresar|Sign in/i }).click();
   await page.waitForURL(/\/(?:es|en)\/dashboard\/profesional/, { timeout: 20_000 });
-  await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
+  await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
 }
 
 export async function resetAuth(page: Page) {

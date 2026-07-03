@@ -71,23 +71,40 @@ export function useAuth() {
 
   useEffect(() => {
     const supabase = createClient();
+    let mounted = true;
+    let sessionSettled = false;
+    const sessionTimeout = window.setTimeout(() => {
+      if (!mounted || sessionSettled) return;
+      setUser(null);
+      setAvatarUrl(null);
+      setAvatarReady(true);
+      setLoading(false);
+    }, 4000);
 
     supabase.auth
       .getSession()
       .then(({ data }) => {
+        if (!mounted) return;
+        sessionSettled = true;
+        window.clearTimeout(sessionTimeout);
         const u = data.session?.user ?? null;
         setUser(u);
         if (u) syncAvatar(u);
         else setAvatarReady(true); // logged out → nothing to load, render immediately
       })
-      .catch(async () => {
+      .catch(() => {
+        if (!mounted) return;
+        sessionSettled = true;
+        window.clearTimeout(sessionTimeout);
         // Corrupt/stale local session — clear it and treat the user as logged
         // out instead of letting the error surface as a broken UI.
-        try { await supabase.auth.signOut(); } catch { /* ignore */ }
+        supabase.auth.signOut().catch(() => undefined);
         setUser(null);
         setAvatarReady(true);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
 
     const {
       data: { subscription },
@@ -115,6 +132,8 @@ export function useAuth() {
     window.addEventListener("ccr:profile-updated", onProfileUpdated);
 
     return () => {
+      mounted = false;
+      window.clearTimeout(sessionTimeout);
       subscription.unsubscribe();
       window.removeEventListener("ccr:profile-updated", onProfileUpdated);
     };

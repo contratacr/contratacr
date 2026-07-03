@@ -36,7 +36,7 @@ test.describe("@admin surfaces", () => {
     await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(password!);
     await page.getByRole("button", { name: /Ingresar/i }).click();
     await page.waitForURL(/\/es\/admin/, { timeout: 20_000 });
-    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
+    await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
 
     for (const route of adminRoutes) {
       await gotoOK(page, route.path);

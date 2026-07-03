@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "playwright/test";
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
-const localBaseURL = `http://127.0.0.1:${port}`;
+const localBaseURL = `http://localhost:${port}`;
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || localBaseURL;
 const useLocalServer = !process.env.PLAYWRIGHT_BASE_URL;
 const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
