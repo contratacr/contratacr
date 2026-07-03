@@ -52,20 +52,20 @@
     "servicePlaceholder": "Busca un servicio",
     "servicePlaceholderShort": "Busca un servicio",
     "searchExamples": [
-      "Limpieza",
-      "Plomería",
-      "Pintura",
-      "Computadora",
-      "Cuido adulto",
-      "DJ fiesta"
+      "Fisioterapeuta",
+      "Mecánico en Atenas",
+      "Contador",
+      "Electricista",
+      "Psicólogo",
+      "Veterinario"
     ],
     "searchExamplesDesktop": [
-      "Necesito limpiar mi casa",
-      "Arreglar una fuga de agua",
-      "Pintar mi sala",
-      "Reparar mi computadora",
-      "Cuidar a un adulto mayor",
-      "DJ para una fiesta"
+      "Necesito un fisioterapeuta",
+      "Mecánico en Atenas",
+      "Contabilidad para mi negocio",
+      "Electricista en Cartago",
+      "Psicólogo en línea",
+      "Veterinario a domicilio"
     ],
     "location": "Ubicación",
     "searchAll": "Buscar “{q}” en todos los servicios",

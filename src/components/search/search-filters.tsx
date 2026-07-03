@@ -29,6 +29,48 @@ const FILTER_CONTENT = "min-w-0 w-[var(--radix-select-trigger-width)]";
 const ANY_INSURER = "__any__";
 const ANY_LANGUAGE = "__any_language__";
 
+function useSearchExamplePlaceholder(examples: string[], active: boolean) {
+  const [text, setText] = useState(examples[0] ?? "");
+
+  useEffect(() => {
+    if (!active || examples.length === 0) return;
+
+    let exampleIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = () => {
+      const phrase = examples[exampleIndex] ?? "";
+      setText(phrase.slice(0, charIndex));
+
+      if (!deleting && charIndex < phrase.length) {
+        charIndex += 1;
+        timer = setTimeout(tick, 48);
+        return;
+      }
+      if (!deleting) {
+        deleting = true;
+        timer = setTimeout(tick, 1350);
+        return;
+      }
+      if (charIndex > 0) {
+        charIndex -= 1;
+        timer = setTimeout(tick, 24);
+        return;
+      }
+      deleting = false;
+      exampleIndex = (exampleIndex + 1) % examples.length;
+      timer = setTimeout(tick, 260);
+    };
+
+    timer = setTimeout(tick, 250);
+    return () => { if (timer) clearTimeout(timer); };
+  }, [active, examples]);
+
+  return text;
+}
+
 export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false }: { variant?: "sidebar" | "chips"; hideSearch?: boolean; hideHeader?: boolean; closable?: boolean } = {}) {
   const router = useRouter();
   const pathname = usePathname();
@@ -620,6 +662,7 @@ export function MobileServiceSearch() {
   const pathname = usePathname();
   const params = useSearchParams();
   const t = useTranslations("search");
+  const tHeader = useTranslations("header");
   const locale = useLocale();
   const [q, setQ] = useState(params.get("q") ?? "");
   const [open, setOpen] = useState(false);
@@ -629,6 +672,11 @@ export function MobileServiceSearch() {
   const fieldRef = useRef<HTMLDivElement>(null);
 
   const suggestions = useMemo(() => (q.trim().length >= 2 ? searchCategories(q).slice(0, 6) : []), [q]);
+  const searchExamples = useMemo(() => {
+    const raw = tHeader.raw("searchExamples");
+    return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
+  }, [tHeader]);
+  const searchPlaceholder = useSearchExamplePlaceholder(searchExamples, !q.trim());
 
   const pushQuery = useCallback((value: string) => {
     const next = new URLSearchParams(params.toString());
@@ -676,7 +724,7 @@ export function MobileServiceSearch() {
         onKeyDown={onKeyDown}
         onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
         onBlur={() => { blurRef.current = setTimeout(() => setOpen(false), 150); }}
-        placeholder={t("filters.searchPlaceholder")}
+        placeholder={searchPlaceholder || t("filters.searchPlaceholder")}
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"

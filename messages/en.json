@@ -52,20 +52,20 @@
     "servicePlaceholder": "Search service",
     "servicePlaceholderShort": "Search service",
     "searchExamples": [
-      "Cleaning",
-      "Plumbing",
-      "Painting",
-      "Laptop repair",
-      "Senior care",
-      "Party DJ"
+      "Physiotherapist",
+      "Mechanic in Atenas",
+      "Accountant",
+      "Electrician",
+      "Psychologist",
+      "Veterinarian"
     ],
     "searchExamplesDesktop": [
-      "I need my house cleaned",
-      "Fix a water leak",
-      "Paint my living room",
-      "Repair my laptop",
-      "Care for an older adult",
-      "DJ for a party"
+      "I need a physiotherapist",
+      "Mechanic in Atenas",
+      "Accounting for my business",
+      "Electrician in Cartago",
+      "Online psychologist",
+      "Veterinarian at home"
     ],
     "location": "Location",
     "searchAll": "Search “{q}” across all services",
