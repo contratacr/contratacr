@@ -2556,7 +2556,7 @@
   "installGuide": {
     "eyebrow": "Quick access",
     "title": "Add ContrataCR to your Home Screen",
-    "subtitle": "Save it as a shortcut on your phone so you can open it in one tap without searching for contratacr.com every time.",
+    "subtitle": "Open it from your phone in one tap.",
     "homeEyebrow": "Quick access",
     "homeTitle": "Save ContrataCR to your Home Screen",
     "homeBody": "Open it like an app from your phone whenever you need to find, post, or coordinate a service.",
@@ -2635,6 +2635,7 @@
     "publishStep2Body": "Compare profiles and proposals, accept one, and coordinate the details directly.",
     "publishPathCta": "Post a request",
     "clientsEyebrow": "Benefits for clients",
+    "clientsBadge": "Clients",
     "clientsTitle": "Less fuss, more clarity",
     "clientsSubtitle": "The app is designed so anyone can find help without understanding technology or chasing contacts.",
     "clientBenefit0Title": "Smart search",
@@ -2646,6 +2647,7 @@
     "clientBenefit3Title": "Favorites and tracking",
     "clientBenefit3Body": "Save professionals, review your requests, confirm completions, leave reviews, and keep track of your history in your dashboard.",
     "prosEyebrow": "Benefits for professionals",
+    "prosBadge": "Professionals",
     "prosTitle": "A profile that works for you",
     "prosSubtitle": "ContrataCR helps you get found, compared with confidence, and contacted without taking away control of your schedule or your prices.",
     "proFlowTitle": "How do you start getting clients?",
@@ -2926,6 +2928,7 @@
       "pitchDesc": "Create your professional profile and receive requests from clients in your area. No commissions, and verified professionals appear first.",
       "pitchCta": "Offer my services",
       "pitchHow": "How it works",
+      "installLink": "Add app to phone",
       "mockResults": "3 professionals in Costa Rica",
       "mockSearch": "Plumbing in Atenas"
     },

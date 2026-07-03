@@ -1,5 +1,5 @@
 import { getTranslations, getLocale } from "next-intl/server";
-import { Search, BadgeCheck, Headset, ArrowRight } from "lucide-react";
+import { Search, BadgeCheck, Headset, ArrowRight, Smartphone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { PhoneFrame, ResultsScreen, buildLandingResultsCopy } from "@/components/landing/phone-screens";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
@@ -68,6 +68,10 @@ export async function WhyContratacr() {
                   {t("pitchCta")} <ArrowRight className="h-4 w-4" />
                 </SmartRegisterLink>
                 <Link href="/como-funciona" className="text-sm font-bold text-[#009FD9] hover:underline">{t("pitchHow")}</Link>
+                <Link href="/como-funciona#agregar-a-inicio" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] hover:underline">
+                  <Smartphone className="h-4 w-4" />
+                  {t("installLink")}
+                </Link>
               </div>
             </div>
           </FadeInUp>

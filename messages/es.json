@@ -2554,7 +2554,7 @@
   "installGuide": {
     "eyebrow": "Acceso rápido",
     "title": "Agrega ContrataCR a la pantalla de inicio",
-    "subtitle": "Guárdala como acceso directo en tu celular para abrirla en un toque, sin buscar contratacr.com cada vez.",
+    "subtitle": "Ábrela en un toque desde tu celular.",
     "homeEyebrow": "Acceso rápido",
     "homeTitle": "Guarda ContrataCR en tu inicio",
     "homeBody": "Ábrela como una app desde tu celular cuando necesites buscar, publicar o coordinar un servicio.",
@@ -2633,6 +2633,7 @@
     "publishStep2Body": "Comparas perfiles y propuestas, aceptas una y coordinas los detalles directamente.",
     "publishPathCta": "Publicar una solicitud",
     "clientsEyebrow": "Beneficios para clientes",
+    "clientsBadge": "Clientes",
     "clientsTitle": "Menos vueltas, más claridad",
     "clientsSubtitle": "La app está pensada para que cualquier persona pueda encontrar ayuda sin entender tecnología ni perseguir contactos.",
     "clientBenefit0Title": "Búsqueda inteligente",
@@ -2644,6 +2645,7 @@
     "clientBenefit3Title": "Favoritos y seguimiento",
     "clientBenefit3Body": "Guarda profesionales, revisa tus solicitudes, confirma finalizaciones, deja reseñas y mantén historial en tu panel.",
     "prosEyebrow": "Beneficios para profesionales",
+    "prosBadge": "Profesionales",
     "prosTitle": "Un perfil que trabaja por ti",
     "prosSubtitle": "ContrataCR ayuda a que te encuentren, te comparen con confianza y te contacten sin quitarte control de tu agenda ni de tus precios.",
     "proFlowTitle": "Cómo empiezas a recibir clientes",
@@ -2924,6 +2926,7 @@
       "pitchDesc": "Crea tu perfil profesional y recibe solicitudes de clientes de tu zona. Sin comisiones, y los profesionales verificados aparecen primero.",
       "pitchCta": "Ofrecer mis servicios",
       "pitchHow": "Cómo funciona",
+      "installLink": "Agregar app al celular",
       "mockResults": "3 profesionales en Costa Rica",
       "mockSearch": "Plomería en Atenas"
     },

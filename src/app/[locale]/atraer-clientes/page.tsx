@@ -4,9 +4,8 @@ import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
-import { Link } from "@/i18n/navigation";
 import {
-  Camera, Star, MapPin, BriefcaseBusiness,
+  Camera, Star, MapPin,
   CheckCircle2, UserCheck, Clock, Image as ImageIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -130,32 +129,6 @@ export default function AtraerClientesPage() {
             </div>
           </FadeInUp>
         </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 px-4 bg-[#1a2744] text-center">
-        <FadeInUp>
-          <h2 className="text-2xl font-extrabold text-white mb-3">
-            {t("ctaTitle")}
-          </h2>
-          <p className="text-[#93c5fd] mb-8 max-w-md mx-auto text-sm">
-            {t("ctaSubtitle")}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/registro/profesional"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20"
-            >
-              <BriefcaseBusiness className="h-4 w-4" /> {t("ctaRegister")}
-            </Link>
-            <Link
-              href="/dashboard/profesional"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20"
-            >
-              {t("ctaPanel")}
-            </Link>
-          </div>
-        </FadeInUp>
       </section>
 
       <LandingFooter />

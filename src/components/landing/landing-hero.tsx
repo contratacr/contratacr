@@ -27,11 +27,6 @@ const ROTATING_LINES: Record<string, string[]> = {
   en: ["Plumbing,", "Cleaning,", "Babysitting,", "Classes,", "Therapy,", "Beauty,", "Electrical,", "Caregiving,", "Gardening,", "Moving,"],
 };
 
-const POPULAR_TAGS: Record<string, string[]> = {
-  es: ["Plomería", "Limpieza", "Niñera", "Clases", "Fisioterapia", "Belleza"],
-  en: ["Plumbing", "Cleaning", "Babysitting", "Classes", "Therapy", "Beauty"],
-};
-
 /* ── Hero image — ONE easy-to-swap asset shown in the dome. ──
    Replace `src` (and `alt`) with the final high-quality Costa Rican photo when
    it's provided; nothing else needs to change. Placeholder = a local service
@@ -322,8 +317,6 @@ export function LandingHero() {
   const t = useTranslations("landing.hero");
 
   const lines = ROTATING_LINES[locale] ?? ROTATING_LINES.es;
-  const tags = POPULAR_TAGS[locale] ?? POPULAR_TAGS.es;
-
   // Debounced service suggestion fetch as the user types
   useEffect(() => {
     const q = service.trim();
@@ -688,19 +681,6 @@ export function LandingHero() {
         {/* Sentinel — IntersectionObserver in navbar watches this */}
         <div id="hero-search-sentinel" aria-hidden className="h-0" />
 
-        {/* Popular tags */}
-        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mt-4 text-center">
-          <span className="text-sm text-gray-400 self-center">{t("popular")}</span>
-          {tags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => { setService(tag); setServiceSel(null); }}
-              className="text-sm text-gray-500 hover:text-[#009FD9] transition-colors"
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Arch / dome image — responsive height */}

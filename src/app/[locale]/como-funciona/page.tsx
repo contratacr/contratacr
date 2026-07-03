@@ -14,7 +14,6 @@ import {
   BriefcaseBusiness,
   CalendarClock,
   CheckCircle2,
-  ClipboardList,
   FileText,
   Heart,
   Image as ImageIcon,
@@ -26,7 +25,6 @@ import {
   Star,
   UserCheck,
   Video,
-  WalletCards,
 } from "lucide-react";
 
 type IconComponent = (props: { className?: string }) => ReactNode;
@@ -184,8 +182,6 @@ export default async function ComoFuncionaPage() {
     { icon: ImageIcon, title: t("proBenefit1Title"), body: t("proBenefit1Body") },
     { icon: MapPin, title: t("proBenefit2Title"), body: t("proBenefit2Body") },
     { icon: Bell, title: t("proBenefit3Title"), body: t("proBenefit3Body") },
-    { icon: WalletCards, title: t("proBenefit4Title"), body: t("proBenefit4Body") },
-    { icon: BriefcaseBusiness, title: t("proBenefit5Title"), body: t("proBenefit5Body") },
   ];
   const trustItems: Array<{ icon: IconComponent; title: string; body: string; accent?: FeatureAccent }> = [
     { icon: BadgeCheck, title: t("trust0Title"), body: t("trust0Body") },
@@ -270,14 +266,14 @@ export default async function ComoFuncionaPage() {
             <div className="grid gap-5 lg:grid-cols-2">
               <BenefitListCard
                 icon={Search}
-                eyebrow={t("clientPathBadge")}
+                eyebrow={t("clientsBadge")}
                 title={t("clientPathTitle")}
                 body={t("clientPathDesc")}
                 items={clientBenefits}
               />
               <BenefitListCard
                 icon={BriefcaseBusiness}
-                eyebrow={t("prosEyebrow")}
+                eyebrow={t("prosBadge")}
                 title={t("prosTitle")}
                 body={t("prosSubtitle")}
                 items={proBenefits}
@@ -341,22 +337,6 @@ export default async function ComoFuncionaPage() {
           <div className="mx-auto max-w-3xl">
             <SectionHeading eyebrow={t("faqEyebrow")} title={t("faqTitle")} subtitle={t("faqSubtitle")} />
             <ComoFuncionaFaq items={faqs} />
-          </div>
-        </section>
-
-        <section className="bg-[#162543] px-4 py-16 text-center">
-          <h2 className="text-3xl font-black text-white">{t("ctaTitle")}</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#c7d2fe]">{t("ctaSubtitle")}</p>
-          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/buscar" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-7 py-3 text-sm font-black text-white transition-colors hover:bg-[#0089bb]">
-              <Search className="h-4 w-4" /> {t("ctaSearch")}
-            </Link>
-            <Link href="/publicar-proyecto" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20">
-              <ClipboardList className="h-4 w-4" /> {t("ctaPublish")}
-            </Link>
-            <Link href="/registro/profesional" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3 text-sm font-black text-white transition-colors hover:bg-white/20">
-              <BriefcaseBusiness className="h-4 w-4" /> {t("ctaOffer")}
-            </Link>
           </div>
         </section>
       </main>

@@ -3,12 +3,9 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
-  BookOpen,
   Download,
-  Smartphone,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -105,61 +102,6 @@ function InstallAction({
   );
 }
 
-export function InstallHomeBand() {
-  const t = useTranslations("installGuide");
-  const { canPrompt, installed, install } = useInstallPrompt();
-
-  return (
-    <section className="bg-white px-4 pb-12 pt-2 sm:px-6 sm:pb-16 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="overflow-hidden rounded-3xl border border-[#d8edf7] bg-gradient-to-br from-[#f8fbfd] via-white to-[#eef8fc]">
-          <div className="grid gap-5 p-5 sm:p-7 md:grid-cols-[1fr_auto] md:items-center">
-            <div className="flex min-w-0 items-start gap-4">
-              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#0089bb] ring-1 ring-[#cfeaf5]">
-                <Smartphone className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#009FD9]">{t("homeEyebrow")}</p>
-                <h2 className="mt-1 text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl">{t("homeTitle")}</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#5f6b7a] sm:text-base">{t("homeBody")}</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row md:justify-end">
-              <InstallAction canPrompt={canPrompt} installed={installed} install={install} className="w-full sm:w-auto" />
-              <Link
-                href="/como-funciona#agregar-a-inicio"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#cfeaf5] bg-white px-5 py-2.5 text-sm font-black text-[#0089bb] transition-colors hover:bg-[#EBF5FB] sm:w-auto"
-              >
-                <BookOpen className="h-4 w-4" />
-                {t("homeGuideLink")}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export function InstallHomeLink() {
-  const t = useTranslations("installGuide");
-  const { canPrompt, installed, install } = useInstallPrompt();
-
-  return (
-    <div className="rounded-2xl bg-[#f4fbfe] p-4">
-      <p className="font-bold leading-snug text-[#1a2744]">{t("homeTitle")}</p>
-      <p className="mt-1 text-sm leading-relaxed text-[#6b7280]">{t("homeBody")}</p>
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <InstallAction canPrompt={canPrompt} installed={installed} install={install} />
-        <Link href="/como-funciona#agregar-a-inicio" className="text-sm font-bold text-[#009FD9] hover:underline">
-          {t("homeGuideLink")}
-        </Link>
-      </div>
-    </div>
-  );
-}
-
 function ScreenshotStepCard({
   number,
   title,
@@ -178,7 +120,7 @@ function ScreenshotStepCard({
   const t = useTranslations("installGuide");
 
   return (
-    <article className="rounded-3xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-5">
+    <article className="min-w-0">
       <div className="relative mx-auto w-full max-w-[284px]">
         <div aria-hidden className="absolute -left-[2px] top-[118px] h-8 w-[3px] rounded-l-sm bg-[#2b2f36]" />
         <div aria-hidden className="absolute -left-[2px] top-[166px] h-12 w-[3px] rounded-l-sm bg-[#2b2f36]" />
@@ -215,7 +157,7 @@ function ScreenshotStepCard({
           </div>
         </div>
       </div>
-      <div className="mt-4 flex gap-3">
+      <div className="mx-auto mt-5 flex max-w-[284px] gap-3">
         <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#009FD9] text-xs font-black text-white">
           {number}
         </span>
@@ -234,32 +176,28 @@ function IosScreenshotGuide() {
     {
       title: t("iosStep1Title"),
       body: t("iosStep1Body"),
-      image: "/install-guide/add-home-step-1.jpg",
-      targetClassName: "bottom-[4.2%] right-[2.1%] h-[7.1%] w-[15.2%] rounded-full",
-      labelClassName: "bottom-[12.1%] right-[3.8%]",
+      image: "/install-guide/add-home-ios-step-1.jpg",
+      targetClassName: "bottom-[3.45%] right-[7.8%] h-[6.15%] w-[13.2%] rounded-full",
+      labelClassName: "bottom-[11.05%] right-[8.6%]",
     },
     {
       title: t("iosStep2Title"),
       body: t("iosStep2Body"),
-      image: "/install-guide/add-home-step-2.jpg",
+      image: "/install-guide/add-home-ios-step-2.jpg",
       targetClassName: "left-[30.2%] top-[52.05%] h-[5.45%] w-[56.6%] rounded-2xl",
       labelClassName: "right-[9%] top-[48.85%]",
     },
     {
       title: t("iosStep3Title"),
       body: t("iosStep3Body"),
-      image: "/install-guide/add-home-step-3.jpg",
-      targetClassName: "left-[4.2%] top-[57.35%] h-[7.35%] w-[72.5%] rounded-2xl",
-      labelClassName: "right-[7.5%] top-[54.8%]",
+      image: "/install-guide/add-home-ios-step-3.jpg",
+      targetClassName: "left-[4.2%] top-[50.55%] h-[6.75%] w-[91.5%] rounded-2xl",
+      labelClassName: "right-[8%] top-[52.25%]",
     },
   ];
 
   return (
     <div>
-      <div className="mb-5 max-w-3xl">
-        <h3 className="text-xl font-black text-[#162543]">{t("iosTitle")}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-[#6b7280] sm:text-base">{t("iosBody")}</p>
-      </div>
       <div className="grid gap-4 lg:grid-cols-3">
         {steps.map((step, index) => (
           <ScreenshotStepCard
