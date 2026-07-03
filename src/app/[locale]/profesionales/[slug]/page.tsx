@@ -790,7 +790,9 @@ export default function ProfilePage() {
                             <span key={line} className="[overflow-wrap:anywhere]">{line}</span>
                           ))}
                           {offersVideoConsult && (
-                            <span className="[overflow-wrap:anywhere]">{t("videoConsult")}</span>
+                            <span className="[overflow-wrap:anywhere]">
+                              {professional.coverage?.country ? t("videoConsultCountry") : t("videoConsult")}
+                            </span>
                           )}
                         </span>
                       ),

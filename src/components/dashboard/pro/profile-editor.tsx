@@ -219,6 +219,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const [certDraft, setCertDraft] = useState<{ profession?: string; name: string; institution: string; year: string } | null>(null);
   const [certError, setCertError] = useState<string | null>(null);
   const [videoConsult, setVideoConsult] = useState(!!initial.videoconsulta && canOfferVideoConsult);
+  const [videoCoverageCountry, setVideoCoverageCountry] = useState(!!initial.coverage_country && canOfferVideoConsult);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initialAvatarUrl
   );
@@ -359,11 +360,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // provincia_id/canton_id keep the PRIMARY area for back-compat display;
       // search_* arrays drive location-aware /buscar.
       const effectiveWorkplaces = workplaces;
+      const effectiveVideoConsult = canOfferVideoConsult && videoConsult;
+      const onlineCoverage = effectiveVideoConsult && videoCoverageCountry ? [{ level: "country" as const }] : [];
       const hasExactWorkplace = effectiveWorkplaces.some((w) => w.lat != null && w.lng != null);
       const hasCoverageZone = effectiveWorkplaces.some((w) => w.lat == null || w.lng == null);
       const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
-      const { provincias, cantones } = computeSearchAreas(effectiveWorkplaces, []);
-      const primary = primaryArea(effectiveWorkplaces, []);
+      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effectiveWorkplaces, onlineCoverage);
+      const primary = primaryArea(effectiveWorkplaces, onlineCoverage);
 
       const baseUpdate: Record<string, unknown> = {
         bio: limitText(bio, PROFILE_BIO_MAX_LENGTH),
@@ -384,9 +387,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // NEVER drop the saved locations.
       const identityFields = {
         business_name: limitText(businessName.trim(), NAME_MAX_LENGTH) || null,
-        coverage_areas: [],
-        coverage_provincias: [],
-        coverage_country: false,
+        coverage_areas: onlineCoverage,
+        coverage_provincias: coverageProvincias,
+        coverage_country: coverageCountry,
         insurance_networks: insurers,
         call_phone: allowPhoneCall ? callPhone.trim() || whatsapp.trim() || null : null,
         allow_phone_call: allowPhoneCall,
@@ -431,7 +434,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // from the best-effort optional identity bundle above.
       const { error: videoError } = await supabase
         .from("professionals")
-        .update({ videoconsulta: canOfferVideoConsult ? videoConsult : false })
+        .update({ videoconsulta: effectiveVideoConsult })
         .eq("id", professionalId);
       if (videoError) throw videoError;
 
@@ -703,18 +706,45 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         </div>
 
         {canOfferVideoConsult && (
-          <div className="flex items-start justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-            <div>
-              <p className="text-sm font-medium text-[#111827]">{t("videoConsultLabel")}</p>
+          <div className="flex flex-col gap-3 rounded-xl border border-[#dbeafe] bg-[#f8fbfe] p-3.5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex min-w-0 gap-3">
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
+                  <Globe className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#111827]">{t("videoCoverageTitle")}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-[#6b7280]">{t("videoCoverageDesc")}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !videoConsult;
+                  setVideoConsult(next);
+                  if (!next) setVideoCoverageCountry(false);
+                  touch();
+                }}
+                className={cn("relative h-6 w-11 rounded-full transition-all shrink-0 mt-1", videoConsult ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+                aria-label={t("videoConsultLabel")}
+              >
+                <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoConsult ? "left-5" : "left-0.5")} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => { setVideoConsult((v) => !v); touch(); }}
-              className={cn("relative h-6 w-11 rounded-full transition-all shrink-0 mt-0.5", videoConsult ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-              aria-label={t("videoConsultLabel")}
-            >
-              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoConsult ? "left-5" : "left-0.5")} />
-            </button>
+            {videoConsult && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#dbeafe] bg-white px-3 py-3">
+                <input
+                  type="checkbox"
+                  checked={videoCoverageCountry}
+                  onChange={(event) => { setVideoCoverageCountry(event.target.checked); touch(); }}
+                  className="mt-0.5 h-4 w-4 rounded border-[#bfdbfe] text-[#009FD9] focus:ring-[#009FD9]"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-[#162543]">{t("videoCountryLabel")}</span>
+                  <span className="mt-0.5 block text-xs leading-5 text-[#6b7280]">{t("videoCountryHelp")}</span>
+                </span>
+              </label>
+            )}
           </div>
         )}
       </Section>

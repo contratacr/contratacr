@@ -5,7 +5,7 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
-import { getCategoryLabel } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 
 type SeedService = {
   id: string;
@@ -19,6 +19,12 @@ type SeedService = {
 function uniqueServices(category: string, professions: unknown): string[] {
   const selected = Array.isArray(professions) && professions.length > 0 ? [category, ...professions] : [category];
   return [...new Set(selected.filter((item): item is string => typeof item === "string" && item.trim().length > 0))];
+}
+
+function isCountryCoverageArea(area: unknown): boolean {
+  if (!area || typeof area !== "object") return false;
+  const item = area as { level?: string; cantonId?: string };
+  return (item.level ?? (item.cantonId ? "canton" : "provincia")) === "country";
 }
 
 function seedServicesFromProfessions(professions: string[]): SeedService[] {
@@ -77,14 +83,16 @@ export async function POST(req: Request) {
     // Workplaces: [{ id, name, address, lat, lng, provinciaId, cantonId, distrito }]
     // — fixed-location pins (single source of truth). Coverage = travel areas.
     const workplaces = Array.isArray(bodyWorkplaces) ? bodyWorkplaces : [];
-    const coverageAreas = Array.isArray(bodyCoverage) ? bodyCoverage : [];
+    const rawCoverageAreas = Array.isArray(bodyCoverage) ? bodyCoverage : [];
     const searchProvincias = Array.isArray(bodySearchProv) ? bodySearchProv : [];
     const searchCantones = Array.isArray(bodySearchCant) ? bodySearchCant : [];
     const coverageProvincias = Array.isArray(bodyCoverageProv) ? bodyCoverageProv : [];
-    const coverageCountry = !!bodyCoverageCountry;
     const noCrId = !!bodyNoCrId;
     const idDocNote = limitTrimmedText(bodyIdDocNote, LONG_TEXT_MAX_LENGTH) || null;
     const professions = uniqueServices(category, bodyProfessions);
+    const supportsCountryCoverage = anyVideoConsultCategory(professions);
+    const coverageCountry = supportsCountryCoverage && !!bodyCoverageCountry;
+    const coverageAreas = rawCoverageAreas.filter((area) => !isCountryCoverageArea(area) || coverageCountry);
     const seededServices = seedServicesFromProfessions(professions);
 
     // Optional columns (migrations 019/021/022/030) — if the DB hasn't been

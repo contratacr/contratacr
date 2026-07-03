@@ -10,7 +10,7 @@ import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, TAX_INCLUDED_SUFFIX, formatServicePrice, splitPricingLabel, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
@@ -130,13 +130,21 @@ export function ServicesEditor({
   async function persist(nextProfessions: string[], nextServices: ProService[]) {
     setSaving(true);
     const supabase = createClient();
+    const supportsVideoConsult = anyVideoConsultCategory(nextProfessions);
+    const update: Record<string, unknown> = {
+      professions: nextProfessions,
+      category_id: nextProfessions[0] ?? null,
+      services: nextServices,
+    };
+    if (!supportsVideoConsult) {
+      update.videoconsulta = false;
+      update.coverage_areas = [];
+      update.coverage_provincias = [];
+      update.coverage_country = false;
+    }
     await supabase
       .from("professionals")
-      .update({
-        professions: nextProfessions,
-        category_id: nextProfessions[0] ?? null,
-        services: nextServices,
-      })
+      .update(update)
       .eq("id", professionalId);
     setSaving(false);
     setSaved(true);
