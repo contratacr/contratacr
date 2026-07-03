@@ -2502,6 +2502,7 @@
     "alarmas": "Alarmas",
     "cctv": "Circuito cerrado (CCTV)",
     "control_acceso": "Control de acceso",
+    "mecanica_bicicletas": "Mecánica de bicicletas",
     "hojalateria": "Hojalatería",
     "electricidad_automotriz": "Electricidad automotriz",
     "tapiceria": "Tapicería",
@@ -2521,7 +2522,7 @@
     "transporte": "Mudanzas y transporte",
     "eventos": "Eventos",
     "seguridad": "Seguridad",
-    "automotriz": "Automotriz"
+    "automotriz": "Vehículos y movilidad"
   },
   "categoriesPage": {
     "eyebrow": "Servicios",

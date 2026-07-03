@@ -118,7 +118,7 @@ const GROUPS = [
   {
     key: "automotriz",
     Icon: Car,
-    ids: ["mecanica","hojalateria","electricidad_automotriz","tapiceria","detailing","cambio_llantas"],
+    ids: ["mecanica","mecanica_bicicletas","hojalateria","electricidad_automotriz","tapiceria","detailing","cambio_llantas"],
   },
 ] as const;
 

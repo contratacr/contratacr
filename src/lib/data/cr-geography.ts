@@ -240,7 +240,7 @@ export const CATEGORIES = [
   { id: "alarmas", icon: "" },
   { id: "cctv", icon: "" },
   { id: "control_acceso", icon: "" },
-  // AUTOMOTRIZ
+  // VEHÍCULOS Y MOVILIDAD
   { id: "mecanica", icon: "" },
   { id: "mecanica_bicicletas", icon: "" },
   { id: "hojalateria", icon: "" },

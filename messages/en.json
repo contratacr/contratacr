@@ -2504,6 +2504,7 @@
     "alarmas": "Alarms",
     "cctv": "CCTV",
     "control_acceso": "Access Control",
+    "mecanica_bicicletas": "Bicycle Repair",
     "hojalateria": "Auto Body",
     "electricidad_automotriz": "Auto Electrical",
     "tapiceria": "Upholstery",
@@ -2523,7 +2524,7 @@
     "transporte": "Moving & Transport",
     "eventos": "Events",
     "seguridad": "Security",
-    "automotriz": "Automotive"
+    "automotriz": "Vehicles & Mobility"
   },
   "categoriesPage": {
     "eyebrow": "Services",

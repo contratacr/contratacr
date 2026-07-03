@@ -96,7 +96,7 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   camaras_seguridad: U("1557597774-9d273605dfa9"),      // v
   guardas_seguridad: U("1551836022-d5d88e9218df"),
   alarmas: U("1558002038-1055907df827"),
-  // ── Automotriz (verified mecánica photo reused) ──
+  // ── Vehículos y movilidad (verified mecánica photo reused) ──
   mecanica: U("1625047509248-ec889cbff17f"),            // v
   hojalateria: U("1599256621730-535171e28e50"),
   electricidad_automotriz: U("1625047509248-ec889cbff17f"),  // v

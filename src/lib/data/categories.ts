@@ -247,11 +247,11 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
   },
   {
     id: "automotriz",
-    label: "Automotriz",
+    label: "Vehículos y movilidad",
     emoji: "🚗",
     items: [
       { id: "mecanica", label: "Mecánica general", keywords: ["mecanico", "mecanico automotriz", "taller", "motor", "frenos", "transmision", "aceite", "servicio de auto"] },
-      { id: "mecanica_bicicletas", label: "Mecánica de bicicletas", keywords: ["bicicleta", "bicicletas", "bici", "bicis", "cleta", "cletas", "mecanico de bicicletas", "reparacion de bicicletas", "taller de bicicletas", "frenos de bicicleta", "cadena de bicicleta", "llantas de bicicleta", "mountain bike", "ciclismo"] },
+      { id: "mecanica_bicicletas", label: "Mecánica de bicicletas", keywords: ["bicicleta", "bicicletas", "bici", "bicis", "cleta", "cletas", "mecanico de bicicletas", "reparacion de bicicletas", "taller de bicicletas", "frenos de bicicleta", "cadena de bicicleta", "llantas de bicicleta", "mountain bike", "ciclismo", "bicycle", "bike", "bike repair", "bicycle repair", "bicycle mechanic", "bike mechanic"] },
       { id: "hojalateria", label: "Hojalatería y pintura de carros", keywords: ["hojalatero", "chapisteria", "enderezado y pintura", "latoneria", "carroceria", "abolladuras", "pintura de carro"] },
       { id: "electricidad_automotriz", label: "Electricidad automotriz", keywords: ["electrico automotriz", "bateria", "alternador", "luces del carro", "alarmas para carro"] },
       { id: "tapiceria", label: "Tapicería", keywords: ["tapicero", "asientos", "tela de carro", "cuero", "tapizado"] },
@@ -813,7 +813,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   monitoreo_alarmas: "Alarm monitoring", cercas_electricas: "Electric fences",
   cctv: "Closed-circuit CCTV", control_acceso: "Access control",
   investigacion_privada: "Private investigation",
-  // Automotriz
+  // Vehículos y movilidad
   mecanica: "General mechanics", mecanica_bicicletas: "Bicycle repair",
   hojalateria: "Body work & car painting",
   electricidad_automotriz: "Auto electrical", tapiceria: "Upholstery",
@@ -830,7 +830,7 @@ export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   belleza: "Beauty & aesthetics", moda_y_cuidado_personal: "Fashion & personal care",
   educacion: "Education & classes",
   transporte: "Moving & transport", eventos: "Events", seguridad: "Security",
-  automotriz: "Automotive", turismo: "Tourism",
+  automotriz: "Vehicles & mobility", turismo: "Tourism",
 };
 
 /* ─── Get category label from ID (locale-aware) ─── */
