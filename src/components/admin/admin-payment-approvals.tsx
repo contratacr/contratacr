@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, Check, X, FileText, ExternalLink, Inbox } from "lucide-react";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 
 // Admin queue of SINPE/transfer payments submitted with a comprobante, awaiting
 // review. Approve → activates the pro's paid period automatically (status active +
@@ -21,6 +22,7 @@ export function AdminPaymentApprovals() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<Pending[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const { dialogNode, confirm } = useAppDialog();
 
   const load = useCallback((silent = false) => {
     if (!silent) setLoading(true);
@@ -30,15 +32,27 @@ export function AdminPaymentApprovals() {
       .finally(() => { if (!silent) setLoading(false); });
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { queueMicrotask(() => load()); }, [load]);
   useAdminAutoRefresh(() => {
     if (busyId) return;
     load(true);
   }, [busyId, load]);
 
   async function review(paymentId: string, action: "approve" | "reject") {
-    if (action === "reject" && !confirm("¿Rechazar este pago? El profesional no recibe el plan.")) return;
-    const note = action === "reject" ? (prompt("Motivo del rechazo (opcional):") ?? undefined) : undefined;
+    let note: string | undefined;
+    if (action === "reject") {
+      const result = await confirm({
+        title: "Rechazar pago",
+        description: "El profesional no recibirá el plan con este pago.",
+        detail: "El motivo queda guardado en el historial para revisión interna.",
+        confirmLabel: "Rechazar pago",
+        cancelLabel: "Cancelar",
+        tone: "danger",
+        input: { label: "Motivo del rechazo", placeholder: "Ejemplo: comprobante ilegible, monto incorrecto..." },
+      });
+      if (!result.confirmed) return;
+      note = result.value || undefined;
+    }
     setBusyId(paymentId);
     await fetch("/api/admin/subscriptions", {
       method: "PATCH",
@@ -100,6 +114,7 @@ export function AdminPaymentApprovals() {
           ))}
         </ul>
       )}
+      {dialogNode}
     </div>
   );
 }

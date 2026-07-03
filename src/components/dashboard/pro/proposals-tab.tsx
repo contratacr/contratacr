@@ -16,6 +16,7 @@ import { TAX_INCLUDED_SUFFIX, formatColonesTaxIncluded, splitPricingLabel } from
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -84,6 +85,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const t = useTranslations("proposalsTab");
   const locale = useLocale();
   const searchParams = useSearchParams();
+  const { dialogNode, showMessage } = useAppDialog();
+  const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
 
   // Filter "Oportunidades" by profession — the user's ACTUAL professions only (no "all"
   // option); only surfaced when they have 2+ (defaults to the first profession).
@@ -387,7 +390,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       );
     } else {
       const j = await res.json().catch(() => ({}));
-      alert(j.error ?? t("markWorkDoneError"));
+      void showMessage({ title: errorTitle, description: j.error ?? t("markWorkDoneError"), tone: "danger" });
     }
   }
 
@@ -436,7 +439,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       body: JSON.stringify({ id, action: "archive" }),
     });
     if (!res.ok) {
-      alert(t("archiveError"));
+      void showMessage({ title: errorTitle, description: t("archiveError"), tone: "danger" });
       return;
     }
     setMyProposals((prev) => prev.filter((p) => p.id !== id));
@@ -836,6 +839,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
           )}
         </div>
       )}
+      {dialogNode}
 
       {/* WITHDRAW proposal — clean on-brand confirm modal (replaces window.confirm). */}
       {withdrawTarget && (

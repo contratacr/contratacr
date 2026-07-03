@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Check, CreditCard, Gift, Loader2 } from "lucide-react";
 import { LAUNCH_BENEFITS, PRICES, formatColones } from "@/lib/payments/config";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 
 // Admin-only subscription management for one professional. Public launch is
 // planned as card-only automatic billing; admin manual actions are limited to
@@ -38,6 +39,7 @@ export function AdminSubscription({ professionalId }: { professionalId: string }
   const [payments, setPayments] = useState<Payment[]>([]);
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const { dialogNode, confirm } = useAppDialog();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -64,6 +66,18 @@ export function AdminSubscription({ professionalId }: { professionalId: string }
     });
     setBusy(false);
     load();
+  }
+
+  async function confirmReset() {
+    const result = await confirm({
+      title: "Eliminar suscripción",
+      description: "Esto elimina la suscripción y todo su historial de pagos.",
+      detail: "El profesional quedará sin registro de suscripción.",
+      confirmLabel: "Eliminar / reset",
+      cancelLabel: "Cancelar",
+      tone: "danger",
+    });
+    if (result.confirmed) void act("reset");
   }
 
   const active =
@@ -129,7 +143,7 @@ export function AdminSubscription({ professionalId }: { professionalId: string }
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => { if (confirm("¿Eliminar la suscripción y todo su historial de pagos? Esto deja al profesional sin registro de suscripción.")) act("reset"); }}
+                  onClick={confirmReset}
                   className="rounded-lg border border-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#9ca3af] hover:border-red-300 hover:text-red-600 disabled:opacity-50"
                 >
                   Eliminar / reset
@@ -158,6 +172,7 @@ export function AdminSubscription({ professionalId }: { professionalId: string }
           </div>
         </div>
       )}
+      {dialogNode}
     </div>
   );
 }

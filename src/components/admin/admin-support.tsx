@@ -9,6 +9,7 @@ import { supportTicketRef } from "@/lib/support-ticket";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 
 type Ticket = {
   id: string;
@@ -69,6 +70,7 @@ export function AdminSupport() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  const { dialogNode, showMessage } = useAppDialog();
 
   const load = useCallback((s: string, silent = false) => {
     if (!silent) setLoading(true);
@@ -121,7 +123,7 @@ export function AdminSupport() {
     });
     setSending(false);
     if (res.ok) { setReply(""); openTicket(openId); }
-    else alert("No se pudo enviar la respuesta.");
+    else void showMessage({ title: "No se pudo enviar la respuesta", description: "Inténtalo de nuevo en unos segundos.", tone: "danger" });
   }
 
   async function changeStatus(next: string) {
@@ -137,6 +139,7 @@ export function AdminSupport() {
   // ── Thread view ──
   if (openId) {
     return (
+      <>
       <div>
         <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="inline-flex items-center gap-1.5 text-sm text-[#374151] hover:text-[#0f172a] mb-4">
           <ArrowLeft className="h-4 w-4" /> Volver a la lista
@@ -220,6 +223,8 @@ export function AdminSupport() {
           </div>
         )}
       </div>
+      {dialogNode}
+      </>
     );
   }
 
@@ -276,6 +281,7 @@ export function AdminSupport() {
           ))}
         </div>
       )}
+      {dialogNode}
     </div>
   );
 }

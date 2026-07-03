@@ -14,6 +14,7 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, type ServiceLike } from "@/lib/services";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 
 // NEW per-profession model (sprint 493): a "caso de éxito" is a CASE (service done · for whom ·
 // when · up to 3 photos), and there can be up to 3 cases PER PROFESSION (the old overall limit of
@@ -80,6 +81,8 @@ export function seedCases(items: (SuccessCase | LegacyItem)[] | undefined, urls:
 export function PhotoGallery({ professionalId, initialUrls = [], initialItems, professions = [], services = [], onSaved }: PhotoGalleryProps) {
   const locale = useLocale();
   const t = useTranslations("photoGallery");
+  const { dialogNode, showMessage } = useAppDialog();
+  const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const primary = professions[0];
 
@@ -128,7 +131,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     if (!draft) return;
     const remaining = MAX_PHOTOS_PER_CASE - draft.photos.length;
     const toUpload = Array.from(files).slice(0, Math.max(0, remaining));
-    if (toUpload.length === 0) { alert(t("maxPhotosAlert", { max: MAX_PHOTOS_PER_CASE })); return; }
+    if (toUpload.length === 0) {
+      void showMessage({ title: errorTitle, description: t("maxPhotosAlert", { max: MAX_PHOTOS_PER_CASE }), tone: "danger" });
+      return;
+    }
     setUploading(true);
     try {
       const urls: string[] = [];
@@ -138,14 +144,16 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           const fd = new FormData(); fd.append("file", preparedFile); fd.append("type", "portfolio");
           const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
           const data = await res.json();
-          if (data.url) urls.push(data.url); else alert(data.error ?? t("uploadError"));
+          if (data.url) urls.push(data.url); else void showMessage({ title: errorTitle, description: data.error ?? t("uploadError"), tone: "danger" });
         } catch (error) {
           const code = getImageUploadPreparationErrorCode(error);
-          alert(code === "too_large" ? t("uploadTooLarge") : code === "unsupported" ? t("uploadUnsupported") : t("uploadError"));
+          void showMessage({ title: errorTitle, description: code === "too_large" ? t("uploadTooLarge") : code === "unsupported" ? t("uploadUnsupported") : t("uploadError"), tone: "danger" });
         }
       }
       if (urls.length) setDraft((d) => (d ? { ...d, photos: [...d.photos, ...urls].slice(0, MAX_PHOTOS_PER_CASE) } : d));
-    } catch { alert(t("uploadError")); } finally { setUploading(false); }
+    } catch {
+      void showMessage({ title: errorTitle, description: t("uploadError"), tone: "danger" });
+    } finally { setUploading(false); }
   }
 
   async function saveCase() {
@@ -304,6 +312,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           </div>
         </Modal>
       )}
+      {dialogNode}
     </div>
   );
 }

@@ -24,6 +24,7 @@ import { PublishProjectModal } from "@/components/projects/publish-project-modal
 import { RescheduleModal } from "@/components/booking/reschedule-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import { useAuth } from "@/hooks/use-auth";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
 
 /**
@@ -134,6 +135,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const locale = useLocale();
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
+  const { dialogNode, showMessage } = useAppDialog();
+  const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
 
   // The service a booking is for (the specific category requested, else the pro's primary).
   function bookingServiceLabel(b: Booking): string | null {
@@ -362,7 +365,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       body: JSON.stringify({ id, action: "archive" }),
     });
     if (!res.ok) {
-      alert(t("archiveError"));
+      void showMessage({ title: errorTitle, description: t("archiveError"), tone: "danger" });
       return;
     }
     setBookings((prev) => prev.filter((b) => b.id !== id));
@@ -412,7 +415,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: projectId, status }),
     });
-    if (!res.ok) { alert(t("projectUpdateError")); return; }
+    if (!res.ok) {
+      void showMessage({ title: errorTitle, description: t("projectUpdateError"), tone: "danger" });
+      return;
+    }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status, ...(status === "open" ? { proposals: [] } : {}) } : p)));
     if (status === "open") {
       setProjectProposals((prev) => {
@@ -430,7 +436,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       body: JSON.stringify({ id: projectId, action: "archive" }),
     });
     if (!res.ok) {
-      alert(t("archiveError"));
+      void showMessage({ title: errorTitle, description: t("archiveError"), tone: "danger" });
       return;
     }
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
@@ -455,7 +461,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: projectId, action: "confirm" }),
     });
-    if (!res.ok) { alert(t("confirmError")); return; }
+    if (!res.ok) {
+      void showMessage({ title: errorTitle, description: t("confirmError"), tone: "danger" });
+      return;
+    }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed" } : p)));
     refreshProjects();
     // Immediately invite a review (optional — close = skip; already completed).
@@ -468,7 +477,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     const res = await fetch(`/api/projects?id=${deleteTarget}`, { method: "DELETE" });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      alert(j.error ?? t("deleteProjectError"));
+      void showMessage({ title: errorTitle, description: j.error ?? t("deleteProjectError"), tone: "danger" });
       setDeleting(false);
       return;
     }
@@ -497,7 +506,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (pro?.id) {
       setReviewModal({ professionalId: pro.id, professionalName: pro.profiles?.full_name ?? t("professional"), projectId });
     } else {
-      alert(t("noAssignedPro"));
+      void showMessage({ title: errorTitle, description: t("noAssignedPro"), tone: "danger" });
     }
   }
 
@@ -1182,6 +1191,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           onSubmit={submitReportPro}
         />
       )}
+      {dialogNode}
     </>
   );
 }

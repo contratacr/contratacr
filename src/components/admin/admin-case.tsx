@@ -12,6 +12,7 @@ import {
   verificationLabel, verificationPillClasses, caseRef, type VerificationStatus,
 } from "@/lib/verification";
 import { formatId } from "@/lib/cedula";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = Record<string, any>;
@@ -23,6 +24,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const { dialogNode, confirm } = useAppDialog();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -38,7 +40,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
   }, [providerId]);
 
   useEffect(() => {
-    load();
+    queueMicrotask(load);
   }, [load]);
 
   async function decide(action: "verify" | "reject" | "revert_pending", reasonText?: string) {
@@ -82,6 +84,18 @@ export function AdminCase({ providerId }: { providerId: string }) {
     }
   }
 
+  async function confirmRemovePhoto(url: string) {
+    const result = await confirm({
+      title: "Eliminar foto por moderación",
+      description: "Esta foto se quitará de los casos de éxito del profesional.",
+      detail: "Úsalo solo si la imagen no corresponde, es inapropiada o afecta la confianza del perfil.",
+      confirmLabel: "Eliminar foto",
+      cancelLabel: "Cancelar",
+      tone: "danger",
+    });
+    if (result.confirmed) void moderate("remove_photo", { url });
+  }
+
   if (loading) {
     return (
       <div className="py-20 flex justify-center">
@@ -110,8 +124,9 @@ export function AdminCase({ providerId }: { providerId: string }) {
   );
 
   return (
-    // Width/centering is owned by AdminShell's shared container — this page must NOT
-    // re-apply its own max-width (it would drift from every other admin page).
+    <>
+    {/* Width/centering is owned by AdminShell's shared container — this page must NOT
+        re-apply its own max-width (it would drift from every other admin page). */}
     <div>
       <Link href="/admin/verificacion" className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] mb-4">
         <ArrowLeft className="h-4 w-4" /> Volver a la cola
@@ -262,7 +277,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={url} alt="" className="h-full w-full object-cover" />
                     <button
-                      onClick={() => { if (confirm("¿Eliminar esta foto por moderación?")) moderate("remove_photo", { url }); }}
+                      onClick={() => confirmRemovePhoto(url)}
                       disabled={busy}
                       className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                       aria-label="Eliminar foto"
@@ -417,7 +432,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     <p className="text-[#6b7280]">
                       {l.admin_name ?? "Sistema"} · {new Date(l.created_at).toLocaleString("es-CR")}
                     </p>
-                    {l.reason && <p className="text-[#374151] mt-0.5 italic">"{l.reason}"</p>}
+                    {l.reason && <p className="text-[#374151] mt-0.5 italic">&quot;{l.reason}&quot;</p>}
                   </li>
                 ))}
               </ol>
@@ -426,6 +441,8 @@ export function AdminCase({ providerId }: { providerId: string }) {
         </div>
       </div>
     </div>
+    {dialogNode}
+    </>
   );
 }
 

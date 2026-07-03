@@ -17,6 +17,7 @@ import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guar
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 
 // The SEEKER's "Mi perfil" — basic identity every account has (photo + name +
 // phone), with the same reliable autosave standard as the rest of the app. Used
@@ -31,6 +32,8 @@ export function BasicProfileSection({
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("clientPage");
+  const { dialogNode, showMessage } = useAppDialog();
+  const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
   // A client-only account (offering not unlocked) gets the "Ofrecer mis servicios"
   // invitation at the END of this section — that's how they start offering.
   const userCanOffer = canOffer(user);
@@ -89,7 +92,7 @@ export function BasicProfileSection({
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
 
-  async function saveProfile() {
+  const saveProfile = useCallback(async () => {
     if (!user) return;
     const currentForm = profileFormRef.current;
     setProfileDirty(false);
@@ -110,7 +113,7 @@ export function BasicProfileSection({
     setProfileSaved(true);
     profileDirtyRef.current = false;
     setTimeout(() => setProfileSaved(false), 3000);
-  }
+  }, [profileData?.client_identity_status, user]);
   useEffect(() => {
     profileFormRef.current = profileForm;
     saveProfileRef.current = saveProfile;
@@ -144,7 +147,7 @@ export function BasicProfileSection({
       const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        alert(j.error || t("photoError"));
+        void showMessage({ title: errorTitle, description: j.error || t("photoError"), tone: "danger" });
         return;
       }
       const { url } = await res.json();
@@ -155,7 +158,7 @@ export function BasicProfileSection({
       window.dispatchEvent(new Event("ccr:profile-updated"));
     } catch (error) {
       const code = getImageUploadPreparationErrorCode(error);
-      alert(code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : t("photoError"));
+      void showMessage({ title: errorTitle, description: code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : t("photoError"), tone: "danger" });
     } finally {
       setPhotoUploading(false);
       input.value = "";
@@ -278,6 +281,7 @@ export function BasicProfileSection({
       )}
 
       <UnsavedChangesGuard dirty={profileDirty} onSave={saveProfile} />
+      {dialogNode}
     </div>
   );
 }

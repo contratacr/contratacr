@@ -9,6 +9,7 @@ import { SupportModal } from "@/components/support/support-modal";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 
 type Ticket = {
   id: string;
@@ -68,6 +69,8 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   const { user } = useAuth();
   const t = useTranslations("supportTickets");
   const locale = useLocale();
+  const { dialogNode, showMessage } = useAppDialog();
+  const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
   const statusLabel = (s: string) => {
     const keys = ["open", "in_progress", "resolved"];
@@ -201,7 +204,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     });
     setSending(false);
     if (res.ok) { setReply(""); openTicket(openId); }
-    else alert(t("sendError"));
+    else void showMessage({ title: errorTitle, description: t("sendError"), tone: "danger" });
   }
 
   async function ticketAction(action: "confirm" | "reopen") {
@@ -214,7 +217,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     });
     setSending(false);
     if (res.ok) openTicket(openId);
-    else alert(t("actionError"));
+    else void showMessage({ title: errorTitle, description: t("actionError"), tone: "danger" });
   }
 
   const filtered = useMemo(
@@ -231,6 +234,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   // ── Thread view ──
   if (openId) {
     return (
+      <>
       <div>
         <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#374151] hover:text-[#009FD9] mb-4">
           <ArrowLeft className="h-4 w-4" /> {t("backToTickets")}
@@ -312,6 +316,8 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
           </div>
         )}
       </div>
+      {dialogNode}
+      </>
     );
   }
 
@@ -416,6 +422,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
           onSubmitted={() => { setShowModal(false); setFilter("open"); load(); loadUnread(); }}
         />
       )}
+      {dialogNode}
     </div>
   );
 }

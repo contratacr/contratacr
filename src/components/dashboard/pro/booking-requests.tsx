@@ -17,6 +17,7 @@ import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
 
 type Booking = {
@@ -88,6 +89,8 @@ export function BookingRequests() {
   const t = useTranslations("bookingRequests");
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
+  const { dialogNode, showMessage } = useAppDialog();
+  const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
 
   function ageLabel(dob?: string | null) {
     const age = dob ? computeAge(dob) : null;
@@ -228,7 +231,7 @@ export function BookingRequests() {
       body: JSON.stringify({ id, action: "archive" }),
     });
     if (!res.ok) {
-      alert(t("archiveError"));
+      void showMessage({ title: errorTitle, description: t("archiveError"), tone: "danger" });
       return;
     }
     setBookings((prev) => prev.filter((b) => b.id !== id));
@@ -547,6 +550,7 @@ export function BookingRequests() {
           onSubmit={submitReport}
         />
       )}
+      {dialogNode}
     </div>
   );
 }
