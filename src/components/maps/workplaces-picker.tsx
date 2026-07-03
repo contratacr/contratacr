@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { MapPin, X, Plus, ChevronDown, Check, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
@@ -28,6 +28,15 @@ interface WorkplacesPickerProps {
   apiKey?: string;
   /** Map viewport height in px (default 200). */
   mapHeight?: number;
+  extraPlaces?: {
+    id: string;
+    label: string;
+    description?: string;
+    icon?: ReactNode;
+    onRemove?: () => void;
+    removeLabel?: string;
+  }[];
+  afterPlaces?: ReactNode;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,14 +55,13 @@ function genId() {
  * re-asks or overrides the provincia/cantón the pro already chose. Multiple zones
  * are supported; each is listed and removable.
  */
-export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: WorkplacesPickerProps) {
+export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, extraPlaces = [], afterPlaces }: WorkplacesPickerProps) {
   const t = useTranslations("workplacesPicker");
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GMaps>(null);
   const geocoderRef = useRef<GMaps>(null);
   const markersRef = useRef<GMaps[]>([]);
   const valueRef = useRef<Workplace[]>(value);
-  valueRef.current = value;
 
   // Address search — OUR OWN standard input + dropdown (NOT the Google
   // `gmp-place-autocomplete` web component, whose shadow-DOM input draws its own
@@ -78,17 +86,25 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
   const [adding, setAdding] = useState(value.length === 0);
   const [draftPin, setDraftPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const draftPinRef = useRef<typeof draftPin>(null);
-  draftPinRef.current = draftPin;
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const cantons = getCantonsByProvince(province);
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+  const addedCount = value.length + extraPlaces.length;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getMaps(): any {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (window as any).google?.maps;
   }
+
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+
+  useEffect(() => {
+    draftPinRef.current = draftPin;
+  }, [draftPin]);
 
   function commitWorkplace() {
     if (!province || !canton) return;
@@ -129,6 +145,16 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
 
   function removeWorkplace(id: string) {
     onChange(valueRef.current.filter((w) => w.id !== id));
+  }
+
+  function toggleMap() {
+    if (showMap) {
+      mapInstanceRef.current = null;
+      setAddrQuery("");
+      setAddrSug([]);
+      setAddrOpen(false);
+    }
+    setShowMap(!showMap);
   }
 
   function renderMarkers() {
@@ -236,7 +262,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
   // doesn't exist until then). On CLOSE, drop the map instance + clear the search.
   useEffect(() => {
     if (!effectiveKey) return;
-    if (!showMap) { mapInstanceRef.current = null; setAddrQuery(""); setAddrSug([]); setAddrOpen(false); return; }
+    if (!showMap) return;
     loadGoogleMaps(effectiveKey).then(initMap).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showMap]);
@@ -250,7 +276,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
   // Best-effort: any failure just leaves the map click + "use my location" working.
   useEffect(() => {
     const q = addrQuery.trim();
-    if (q.length < 3) { setAddrSug([]); return; }
+    if (q.length < 3) return;
     const id = setTimeout(async () => {
       try {
         const maps = getMaps();
@@ -272,9 +298,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
   return (
     <div className="flex flex-col gap-2.5">
       {/* Added zones — listed FIRST, above the add-another-location form. */}
-      {value.length > 0 && (
+      {addedCount > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-medium text-[#374151]">{t("addedPlaces", { count: value.length })}</p>
+          <p className="text-xs font-medium text-[#374151]">{t("addedPlaces", { count: addedCount })}</p>
           {value.map((wp) => (
             <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
               <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
@@ -295,8 +321,31 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
               </button>
             </div>
           ))}
+          {extraPlaces.map((place) => (
+            <div key={place.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
+              <span className="grid h-4 w-4 shrink-0 place-items-center text-[#009FD9]">
+                {place.icon ?? <MapPin className="h-4 w-4" />}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-[#0089bb] truncate">{place.label}</p>
+                {place.description && <p className="text-[10px] text-[#6b7280] truncate">{place.description}</p>}
+              </div>
+              {place.onRemove && (
+                <button
+                  type="button"
+                  onClick={place.onRemove}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                  aria-label={place.removeLabel ?? t("removePlace")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       )}
+
+      {afterPlaces}
 
       {/* Add-another-location form — the COMPLETE group BELOW the list, in order:
           provincia → cantón → optional map pin → "Agregar esta ubicación". Shown
@@ -331,7 +380,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
         <div className="flex flex-col gap-2">
           <button
             type="button"
-            onClick={() => setShowMap((v) => !v)}
+            onClick={toggleMap}
             aria-expanded={showMap}
             className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
           >
@@ -350,7 +399,12 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
                 <input
                   type="text"
                   value={addrQuery}
-                  onChange={(e) => { setAddrQuery(e.target.value); setAddrOpen(true); }}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setAddrQuery(next);
+                    setAddrOpen(true);
+                    if (next.trim().length < 3) setAddrSug([]);
+                  }}
                   onFocus={() => { if (addrSug.length > 0) setAddrOpen(true); }}
                   onBlur={() => setTimeout(() => setAddrOpen(false), 150)}
                   placeholder={t("searchPlaceholder")}

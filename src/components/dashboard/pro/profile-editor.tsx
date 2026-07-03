@@ -14,7 +14,7 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { Camera, X, Plus, ChevronDown, Lock, Award, Globe } from "lucide-react";
+import { Camera, X, Plus, ChevronDown, Lock, Award, Globe, Video } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -702,51 +702,54 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           <label className="text-sm font-medium text-[#374151] block mb-2">
             {t("workplaces")} <span className="text-red-500">*</span>
           </label>
-          <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
-        </div>
-
-        {canOfferVideoConsult && (
-          <div className="flex flex-col gap-3 rounded-xl border border-[#dbeafe] bg-[#f8fbfe] p-3.5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex min-w-0 gap-3">
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
-                  <Globe className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#111827]">{t("videoCoverageTitle")}</p>
-                  <p className="mt-0.5 text-xs leading-5 text-[#6b7280]">{t("videoCoverageDesc")}</p>
+          <WorkplacesPicker
+            value={workplaces}
+            onChange={(next) => { setWorkplaces(next); touch(); }}
+            mapHeight={168}
+            extraPlaces={videoConsult && videoCoverageCountry ? [{
+              id: "video_country",
+              label: t("videoCountryPlace"),
+              description: t("videoConsultOption"),
+              icon: <Globe className="h-4 w-4" />,
+              onRemove: () => { setVideoCoverageCountry(false); touch(); },
+              removeLabel: t("videoCountryRemove"),
+            }] : []}
+            afterPlaces={canOfferVideoConsult ? (
+              <div className="flex flex-col gap-2.5 rounded-xl bg-[#f9fafb] px-3 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
+                      <Video className="h-4 w-4" />
+                    </span>
+                    <p className="truncate text-sm font-semibold text-[#111827]">{t("videoConsultOption")}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !videoConsult;
+                      setVideoConsult(next);
+                      if (!next) setVideoCoverageCountry(false);
+                      touch();
+                    }}
+                    className={cn("relative h-6 w-11 shrink-0 rounded-full transition-all", videoConsult ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+                    aria-label={t("videoConsultLabel")}
+                  >
+                    <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoConsult ? "left-5" : "left-0.5")} />
+                  </button>
                 </div>
+                {videoConsult && !videoCoverageCountry && (
+                  <button
+                    type="button"
+                    onClick={() => { setVideoCoverageCountry(true); touch(); }}
+                    className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline"
+                  >
+                    <Plus className="h-4 w-4" /> {t("videoCountryAdd")}
+                  </button>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const next = !videoConsult;
-                  setVideoConsult(next);
-                  if (!next) setVideoCoverageCountry(false);
-                  touch();
-                }}
-                className={cn("relative h-6 w-11 rounded-full transition-all shrink-0 mt-1", videoConsult ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-                aria-label={t("videoConsultLabel")}
-              >
-                <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoConsult ? "left-5" : "left-0.5")} />
-              </button>
-            </div>
-            {videoConsult && (
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#dbeafe] bg-white px-3 py-3">
-                <input
-                  type="checkbox"
-                  checked={videoCoverageCountry}
-                  onChange={(event) => { setVideoCoverageCountry(event.target.checked); touch(); }}
-                  className="mt-0.5 h-4 w-4 rounded border-[#bfdbfe] text-[#009FD9] focus:ring-[#009FD9]"
-                />
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-[#162543]">{t("videoCountryLabel")}</span>
-                  <span className="mt-0.5 block text-xs leading-5 text-[#6b7280]">{t("videoCountryHelp")}</span>
-                </span>
-              </label>
-            )}
-          </div>
-        )}
+            ) : null}
+          />
+        </div>
       </Section>
 
       {/* ── Contacto ──────────────────────────────────────────────────── */}
