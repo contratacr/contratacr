@@ -1,5 +1,5 @@
-import { expect, test } from "playwright/test";
-import { expectHealthyPage, gotoOK, loginAs } from "./helpers";
+import { test } from "playwright/test";
+import { expectHealthyPage, expectVisibleText, gotoOK, loginAs } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
 
 const professionalTabs = [
@@ -40,7 +40,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
     for (const section of professionalTabs) {
       await gotoOK(page, `/es/dashboard/profesional?tab=${section.tab}`);
-      await expect(page.locator("main").getByText(section.marker).first()).toBeVisible();
+      await expectVisibleText(page.locator("main"), section.marker);
       await expectHealthyPage(page);
     }
   });
@@ -51,7 +51,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
     for (const section of clientTabs) {
       await gotoOK(page, `/es/dashboard/profesional?tab=${section.tab}`);
-      await expect(page.locator("main").getByText(section.marker).first()).toBeVisible();
+      await expectVisibleText(page.locator("main"), section.marker);
       await expectHealthyPage(page);
     }
   });

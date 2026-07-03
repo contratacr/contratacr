@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, gotoOK, loginAs } from "./helpers";
+import { expectHealthyPage, expectVisibleText, gotoOK, loginAs } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 
 test.describe.configure({ mode: "serial" });
@@ -37,9 +37,12 @@ test.describe("@seeded interaction surfaces", () => {
     await expect(publish).toBeVisible();
     await publish.click();
 
-    await expect(
-      page.getByText(/Titulo|T.tulo|Servicio|Descripcion|Descripci.n|Provincia|Canton|Cant.n|Cuando lo necesitas|Cu.ndo lo necesitas/i).first(),
-    ).toBeVisible();
+    const dialog = page.getByRole("dialog", { name: /Publicar una solicitud|Post a request/i });
+    await expect(dialog).toBeVisible();
+    await expectVisibleText(
+      dialog,
+      /Titulo|T.tulo|Servicio|Descripcion|Descripci.n|Provincia|Canton|Cant.n|Cuando lo necesitas|Cu.ndo lo necesitas/i,
+    );
     await expectHealthyPage(page);
   });
 });

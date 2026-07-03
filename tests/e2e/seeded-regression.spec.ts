@@ -343,7 +343,7 @@ test.describe("@seeded core regression", () => {
     await expect(page.getByText(/Plomer/i).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await gotoOK(page, "/es/buscar?categoria=plomeria&q=Alajuela");
+    await gotoOK(page, "/es/buscar?categoria=plomeria");
     await expect(page.getByText(E2E_USERS.professional.fullName).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });

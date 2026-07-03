@@ -1,4 +1,4 @@
-import { expect, type Page, type TestInfo } from "playwright/test";
+import { expect, type Locator, type Page, type TestInfo } from "playwright/test";
 
 export async function gotoOK(page: Page, path: string) {
   const response = await page.goto(path, { waitUntil: "domcontentloaded" });
@@ -28,6 +28,22 @@ export async function expectHealthyPage(page: Page) {
   await expectNotVercelProtection(page);
   await expect(page.locator("body")).not.toContainText(/Application error|Internal Server Error|Log in to Vercel/i);
   await expectNoHorizontalOverflow(page);
+}
+
+export async function expectVisibleText(scope: Locator, matcher: string | RegExp, timeout = 12_000) {
+  const matches = scope.getByText(matcher);
+  await expect
+    .poll(
+      async () => {
+        const count = await matches.count();
+        for (let i = 0; i < count; i += 1) {
+          if (await matches.nth(i).isVisible()) return true;
+        }
+        return false;
+      },
+      { timeout, message: `Expected visible text matching ${String(matcher)}` },
+    )
+    .toBe(true);
 }
 
 export async function expectNoHorizontalOverflow(page: Page) {
