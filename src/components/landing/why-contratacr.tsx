@@ -1,8 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
-import { Search, BadgeCheck, Headset, ArrowRight, Smartphone } from "lucide-react";
+import { Search, CalendarDays, BadgeCheck, ArrowRight, Smartphone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { PhoneFrame, ResultsScreen, buildLandingResultsCopy } from "@/components/landing/phone-screens";
-import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import { Link } from "@/i18n/navigation";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 
@@ -12,12 +11,11 @@ import { FadeInUp } from "@/components/landing/fade-in-up";
    Copy lives in the landing.howItWorks namespace (ES/EN). */
 const POINTS = [
   { Icon: Search, key: "point0" },
-  { Icon: BadgeCheck, key: "point1" },
+  { Icon: CalendarDays, key: "point1" },
   { Icon: WhatsAppIcon, key: "point2" },
-  { Icon: Headset, key: "point3" },
 ];
 
-const leadIconClass = "mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
+const leadIconClass = "absolute -left-[18px] top-0 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_18px_-14px_rgba(0,159,217,0.9)]";
 
 export async function WhyContratacr() {
   const t = await getTranslations("landing.howItWorks");
@@ -38,16 +36,43 @@ export async function WhyContratacr() {
           <p className="text-gray-500 mt-3 max-w-xl mx-auto">
             {t("subtitle")}
           </p>
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link
+              href="/como-funciona"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_26px_rgba(0,159,217,0.22)] transition-colors hover:bg-[#0089bb]"
+            >
+              {t("guideCta")} <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/como-funciona#agregar-a-inicio"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ccecf8] bg-white px-5 py-3 text-sm font-bold text-[#009FD9] transition-colors hover:bg-[#f1faff]"
+            >
+              <Smartphone className="h-4 w-4" />
+              {t("installLink")}
+            </Link>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(320px,430px)] gap-12 lg:gap-16 items-center">
           {/* Info */}
           <FadeInUp className="lg:order-1 order-2">
-            <ul className="space-y-6">
+            <div className="max-w-xl">
+              <span className="inline-flex rounded-full bg-[#F1F8FC] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#009FD9]">
+                {t("flowLabel")}
+              </span>
+              <h3 className="mt-4 text-2xl font-extrabold leading-tight text-[#1a2744] sm:text-3xl">
+                {t("flowTitle")}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-500 sm:text-base">
+                {t("flowDesc")}
+              </p>
+            </div>
+
+            <ol className="relative mt-8 ml-[18px] space-y-6 border-l border-[#d7edf7]">
               {POINTS.map(({ Icon, key }) => (
-                <li key={key} className="flex items-start gap-4">
+                <li key={key} className="relative pl-8">
                   <span className={leadIconClass}>
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0">
                     <p className="font-bold text-[#1a2744] leading-snug">{t(`${key}Title`)}</p>
@@ -55,25 +80,20 @@ export async function WhyContratacr() {
                   </div>
                 </li>
               ))}
-            </ul>
+            </ol>
 
-            {/* Professional pitch + CTA */}
-            <div className="mt-8 rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-5">
-              <p className="font-bold text-[#1a2744]">{t("pitchTitle")}</p>
-              <p className="mt-1 text-sm text-gray-500 leading-relaxed">
-                {t("pitchDesc")}
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <SmartRegisterLink className="inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] px-5 py-2.5 text-sm font-bold text-white transition-colors shadow-[0_10px_26px_rgba(0,159,217,0.3)]">
-                  {t("pitchCta")} <ArrowRight className="h-4 w-4" />
-                </SmartRegisterLink>
-                <Link href="/como-funciona" className="text-sm font-bold text-[#009FD9] hover:underline">{t("pitchHow")}</Link>
-                <Link href="/como-funciona#agregar-a-inicio" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] hover:underline">
-                  <Smartphone className="h-4 w-4" />
-                  {t("installLink")}
-                </Link>
+            <div className="mt-8 rounded-2xl border border-[#d7edf7] bg-[#f8fcff] p-5">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#009FD9] shadow-sm">
+                  <BadgeCheck className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-bold text-[#1a2744]">{t("pitchTitle")}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-500">{t("pitchDesc")}</p>
+                </div>
               </div>
             </div>
+
           </FadeInUp>
 
           {/* One phone — floats cleanly on the section, just a soft shadow */}

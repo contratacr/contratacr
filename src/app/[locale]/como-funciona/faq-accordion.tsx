@@ -9,7 +9,7 @@ type FaqItem = {
 };
 
 export function ComoFuncionaFaq({ items }: { items: FaqItem[] }) {
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(null);
 
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">

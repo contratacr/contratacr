@@ -12,6 +12,18 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
+type InstallPlatform = "ios" | "android";
+
+type ScreenshotStep = {
+  title: string;
+  body: string;
+  image: string;
+  width: number;
+  height: number;
+  targetClassName: string;
+  labelClassName: string;
+};
+
 function isIosDevice() {
   if (typeof window === "undefined") return false;
   const ua = window.navigator.userAgent.toLowerCase();
@@ -107,6 +119,9 @@ function ScreenshotStepCard({
   title,
   body,
   image,
+  platform,
+  width,
+  height,
   targetClassName,
   labelClassName,
 }: {
@@ -114,34 +129,52 @@ function ScreenshotStepCard({
   title: string;
   body: string;
   image: string;
+  platform: InstallPlatform;
+  width: number;
+  height: number;
   targetClassName: string;
   labelClassName: string;
 }) {
   const t = useTranslations("installGuide");
+  const isAndroid = platform === "android";
 
   return (
     <article className="min-w-0">
-      <div className="relative mx-auto w-full max-w-[284px]">
-        <div aria-hidden className="absolute -left-[2px] top-[118px] h-8 w-[3px] rounded-l-sm bg-[#2b2f36]" />
-        <div aria-hidden className="absolute -left-[2px] top-[166px] h-12 w-[3px] rounded-l-sm bg-[#2b2f36]" />
-        <div aria-hidden className="absolute -right-[2px] top-[154px] h-16 w-[3px] rounded-r-sm bg-[#2b2f36]" />
+      <div className={`relative mx-auto w-full ${isAndroid ? "max-w-[270px]" : "max-w-[284px]"}`}>
+        {!isAndroid ? (
+          <>
+            <div aria-hidden className="absolute -left-[2px] top-[118px] h-8 w-[3px] rounded-l-sm bg-[#2b2f36]" />
+            <div aria-hidden className="absolute -left-[2px] top-[166px] h-12 w-[3px] rounded-l-sm bg-[#2b2f36]" />
+            <div aria-hidden className="absolute -right-[2px] top-[154px] h-16 w-[3px] rounded-r-sm bg-[#2b2f36]" />
+          </>
+        ) : null}
         <div
           className="relative"
-          style={{
-            background: "linear-gradient(135deg,#f1f3f6 0%,#c6cbd2 18%,#777c85 50%,#c6cbd2 82%,#f1f3f6 100%)",
-            borderRadius: 56,
-            padding: 3,
-            boxShadow:
-              "0 50px 100px -28px rgba(15,23,42,0.38), 0 24px 48px -22px rgba(15,23,42,0.34), inset 0 0 0 0.5px rgba(255,255,255,0.45)",
-          }}
+          style={
+            isAndroid
+              ? {
+                  background: "linear-gradient(135deg,#23314d 0%,#0f172a 48%,#1f2a44 100%)",
+                  borderRadius: 30,
+                  padding: 5,
+                  boxShadow:
+                    "0 42px 90px -34px rgba(15,23,42,0.42), 0 20px 44px -28px rgba(15,23,42,0.36)",
+                }
+              : {
+                  background: "linear-gradient(135deg,#f1f3f6 0%,#c6cbd2 18%,#777c85 50%,#c6cbd2 82%,#f1f3f6 100%)",
+                  borderRadius: 56,
+                  padding: 3,
+                  boxShadow:
+                    "0 50px 100px -28px rgba(15,23,42,0.38), 0 24px 48px -22px rgba(15,23,42,0.34), inset 0 0 0 0.5px rgba(255,255,255,0.45)",
+                }
+          }
         >
-          <div className="relative bg-[#04060a]" style={{ borderRadius: 53, padding: 8 }}>
-            <div className="relative overflow-hidden bg-white" style={{ borderRadius: 46 }}>
+          <div className="relative bg-[#04060a]" style={{ borderRadius: isAndroid ? 26 : 53, padding: isAndroid ? 5 : 8 }}>
+            <div className="relative overflow-hidden bg-white" style={{ borderRadius: isAndroid ? 22 : 46 }}>
               <Image
                 src={image}
                 alt=""
-                width={588}
-                height={1280}
+                width={width}
+                height={height}
                 sizes="(min-width: 1024px) 284px, 78vw"
                 className="h-auto w-full select-none"
                 priority={number === 1}
@@ -170,31 +203,68 @@ function ScreenshotStepCard({
   );
 }
 
-function IosScreenshotGuide() {
+function ScreenshotGuide({ platform }: { platform: InstallPlatform }) {
   const t = useTranslations("installGuide");
-  const steps = [
-    {
-      title: t("iosStep1Title"),
-      body: t("iosStep1Body"),
-      image: "/install-guide/install-ios-step-1.jpg",
-      targetClassName: "bottom-[3.45%] right-[7.8%] h-[6.15%] w-[13.2%] rounded-full",
-      labelClassName: "bottom-[11.05%] right-[8.6%]",
-    },
-    {
-      title: t("iosStep2Title"),
-      body: t("iosStep2Body"),
-      image: "/install-guide/install-ios-step-2.jpg",
-      targetClassName: "left-[30.2%] top-[52.05%] h-[5.45%] w-[56.6%] rounded-2xl",
-      labelClassName: "right-[9%] top-[48.85%]",
-    },
-    {
-      title: t("iosStep3Title"),
-      body: t("iosStep3Body"),
-      image: "/install-guide/install-ios-step-3.jpg",
-      targetClassName: "left-[4.2%] top-[50.55%] h-[6.75%] w-[91.5%] rounded-2xl",
-      labelClassName: "right-[8%] top-[52.25%]",
-    },
-  ];
+  const steps: ScreenshotStep[] =
+    platform === "android"
+      ? [
+          {
+            title: t("androidStep1Title"),
+            body: t("androidStep1Body"),
+            image: "/install-guide/install-android-step-1.jpg",
+            width: 576,
+            height: 1280,
+            targetClassName: "right-[3.2%] top-[4.8%] h-[4.1%] w-[8.4%] rounded-full",
+            labelClassName: "right-[5.8%] top-[9.4%]",
+          },
+          {
+            title: t("androidStep2Title"),
+            body: t("androidStep2Body"),
+            image: "/install-guide/install-android-step-2.jpg",
+            width: 576,
+            height: 1280,
+            targetClassName: "left-[35.2%] top-[68.25%] h-[5.9%] w-[58.8%] rounded-2xl",
+            labelClassName: "right-[6.2%] top-[65.35%]",
+          },
+          {
+            title: t("androidStep3Title"),
+            body: t("androidStep3Body"),
+            image: "/install-guide/install-android-step-3.jpg",
+            width: 576,
+            height: 1280,
+            targetClassName: "left-[5.4%] top-[74.6%] h-[8.35%] w-[89.2%] rounded-2xl",
+            labelClassName: "right-[8.2%] top-[71.55%]",
+          },
+        ]
+      : [
+          {
+            title: t("iosStep1Title"),
+            body: t("iosStep1Body"),
+            image: "/install-guide/install-ios-step-1.jpg",
+            width: 588,
+            height: 1280,
+            targetClassName: "bottom-[3.45%] right-[7.8%] h-[6.15%] w-[13.2%] rounded-full",
+            labelClassName: "bottom-[11.05%] right-[8.6%]",
+          },
+          {
+            title: t("iosStep2Title"),
+            body: t("iosStep2Body"),
+            image: "/install-guide/install-ios-step-2.jpg",
+            width: 588,
+            height: 1280,
+            targetClassName: "left-[30.2%] top-[52.05%] h-[5.45%] w-[56.6%] rounded-2xl",
+            labelClassName: "right-[9%] top-[48.85%]",
+          },
+          {
+            title: t("iosStep3Title"),
+            body: t("iosStep3Body"),
+            image: "/install-guide/install-ios-step-3.jpg",
+            width: 588,
+            height: 1280,
+            targetClassName: "left-[4.2%] top-[50.55%] h-[6.75%] w-[91.5%] rounded-2xl",
+            labelClassName: "right-[8%] top-[52.25%]",
+          },
+        ];
 
   return (
     <div>
@@ -206,6 +276,9 @@ function IosScreenshotGuide() {
             title={step.title}
             body={step.body}
             image={step.image}
+            platform={platform}
+            width={step.width}
+            height={step.height}
             targetClassName={step.targetClassName}
             labelClassName={step.labelClassName}
           />
@@ -218,6 +291,7 @@ function IosScreenshotGuide() {
 export function InstallAppGuide({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("installGuide");
   const { canPrompt, installed, install } = useInstallPrompt();
+  const [platform, setPlatform] = useState<InstallPlatform>("ios");
 
   return (
     <section id="agregar-a-inicio" className={compact ? "py-10" : "bg-[#f8fbfd] px-4 py-16"}>
@@ -232,7 +306,33 @@ export function InstallAppGuide({ compact = false }: { compact?: boolean }) {
         </div>
 
         <div className="space-y-8">
-          <IosScreenshotGuide />
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7b8794]">{t("platformLabel")}</p>
+            <div
+              role="tablist"
+              aria-label={t("platformLabel")}
+              className="inline-flex rounded-full border border-[#d9e5ee] bg-white p-1 shadow-[0_12px_30px_rgba(15,35,67,0.08)]"
+            >
+              {(["ios", "android"] as InstallPlatform[]).map((option) => {
+                const selected = platform === option;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    onClick={() => setPlatform(option)}
+                    className={`min-w-[104px] rounded-full px-5 py-2 text-sm font-black transition-colors ${
+                      selected ? "bg-[#009FD9] text-white shadow-[0_8px_18px_rgba(0,159,217,0.22)]" : "text-[#162543] hover:bg-[#eef7fc]"
+                    }`}
+                  >
+                    {option === "ios" ? t("iosTab") : t("androidTab")}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <ScreenshotGuide platform={platform} />
         </div>
       </div>
     </section>
