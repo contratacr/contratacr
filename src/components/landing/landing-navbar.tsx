@@ -468,9 +468,9 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const matches = useMemo(() => matchCategories(q, 18, locale), [q, locale]);
   const filtering = q.trim().length > 0;
   const selectedGroup = menuGroups.find((group) => group.id === selectedGroupId) ?? menuGroups[0];
-  const groupedMatches = useMemo(() => menuGroups
+  const groupedMatches = menuGroups
     .map((group) => ({ group, items: matches.filter((match) => match.groupId === group.id) }))
-    .filter(({ items }) => items.length > 0), [matches, menuGroups]);
+    .filter(({ items }) => items.length > 0);
 
   const groupIcons: Record<string, React.ComponentType<{ className?: string }>> = {
     hogar: Home,
@@ -510,9 +510,9 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   }
 
   return (
-    <>
+    <div className="flex max-h-[calc(100vh-7rem)] min-h-0 flex-col overflow-hidden">
       {/* Search — inline; typing filters the list below IN PLACE (no portal/overlay). */}
-      <div className="mb-4 flex h-11 items-center rounded-xl border border-gray-200 bg-gray-50/70 px-3.5 transition-all focus-within:border-[#009FD9] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20">
+      <div className="mb-4 flex h-11 shrink-0 items-center rounded-xl border border-gray-200 bg-gray-50/70 px-3.5 transition-all focus-within:border-[#009FD9] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20">
         <Search className="h-4 w-4 shrink-0 text-gray-400" />
         <input
           ref={inputRef}
@@ -533,8 +533,8 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
 
       {filtering ? (
         matches.length > 0 ? (
-          <div className="grid max-h-[430px] grid-cols-[15rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
-            <div className="min-w-0 overflow-y-auto border-r border-[#eef2f6] bg-[#f8fafc] p-2">
+          <div className="grid min-h-0 flex-1 grid-cols-[15rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
+            <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-[#f8fafc] p-2">
               {groupedMatches.map(({ group, items }) => {
                 const Icon = groupIcons[group.id] ?? Briefcase;
                 const selected = selectedGroupId === group.id || (!groupedMatches.some(({ group: g }) => g.id === selectedGroupId) && groupedMatches[0]?.group.id === group.id);
@@ -561,7 +561,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                 );
               })}
             </div>
-            <div className="min-w-0 overflow-y-auto p-4">
+            <div className="min-w-0 overflow-y-auto overscroll-contain p-4">
               {(() => {
                 const activeGroup = groupedMatches.find(({ group }) => group.id === selectedGroupId) ?? groupedMatches[0];
                 if (!activeGroup) return null;
@@ -618,8 +618,8 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           </div>
         )
       ) : (
-        <div className="grid max-h-[64vh] grid-cols-[16.5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
-          <div className="min-w-0 overflow-y-auto border-r border-[#eef2f6] bg-[#f8fafc] p-2">
+        <div className="grid min-h-0 flex-1 grid-cols-[16.5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
+          <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-[#f8fafc] p-2">
             {menuGroups.map((group) => {
               const Icon = groupIcons[group.id] ?? Briefcase;
               const selected = selectedGroup?.id === group.id;
@@ -646,7 +646,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
               );
             })}
           </div>
-          <div className="min-w-0 overflow-y-auto p-4">
+          <div className="min-w-0 overflow-y-auto overscroll-contain p-4">
             {selectedGroup && (
               <section>
                 <div className="mb-3 flex items-end justify-between gap-3">
@@ -689,7 +689,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
         </div>
       )}
 
-      <div className="mt-4 border-t border-gray-100 pt-3">
+      <div className="mt-4 shrink-0 border-t border-gray-100 pt-3">
         <Link
           href="/servicios"
           onClick={onNavigate}
@@ -699,7 +699,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           {t("viewAllCategories")}
         </Link>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -1195,7 +1195,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
                   {openMenu === "categorias" && (
                     <div
-                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-5 z-50 w-[840px]"
+                      className="absolute top-full left-0 z-50 mt-1.5 flex max-h-[calc(100vh-5rem)] w-[840px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]"
                       style={{ animation: "tab-cards-in 0.15s ease both" }}
                     >
                       {/* ONE container: typing in the search FILTERS the categories in place. */}
