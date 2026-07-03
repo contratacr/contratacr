@@ -1,9 +1,50 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { defineConfig, devices } from "playwright/test";
+
+function loadLocalEnvFile(fileName: string) {
+  const filePath = resolve(process.cwd(), fileName);
+  if (!existsSync(filePath)) return false;
+
+  const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!match) continue;
+
+    const key = match[1];
+    let value = match[2] ?? "";
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    if (!process.env[key]) process.env[key] = value;
+  }
+  return true;
+}
+
+function currentEnvWith(overrides: Record<string, string>) {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === "string") env[key] = value;
+  }
+  return { ...env, ...overrides };
+}
+
+const loadedTestEnv = !process.env.CI && loadLocalEnvFile(".env.test");
+if (loadedTestEnv && !process.env.E2E_SEED) process.env.E2E_SEED = "1";
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 const localBaseURL = `http://localhost:${port}`;
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || localBaseURL;
-const useLocalServer = !process.env.PLAYWRIGHT_BASE_URL;
+const testPreviewBaseURL = "https://contratacr-git-test-isanchezm421-6251s-projects.vercel.app";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || (loadedTestEnv ? testPreviewBaseURL : localBaseURL);
+const useLocalServer = !process.env.PLAYWRIGHT_BASE_URL && !loadedTestEnv;
+const webServerEnv = loadedTestEnv ? currentEnvWith({ NODE_ENV: "test" }) : undefined;
 const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const vercelBypassHeaders = vercelBypassSecret
   ? {
@@ -34,6 +75,7 @@ export default defineConfig({
     ? {
         command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
         url: localBaseURL,
+        env: webServerEnv,
         reuseExistingServer: true,
         timeout: 120_000,
       }

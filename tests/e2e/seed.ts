@@ -19,6 +19,13 @@ export const E2E_USERS = {
     cedula: "990000002",
     slug: "e2e-profesional-contratacr",
   },
+  admin: {
+    email: "e2e.admin@contratacr.test",
+    password: process.env.E2E_TEST_PASSWORD || "ContrataCR!2026",
+    fullName: "E2E Admin ContrataCR",
+    phone: "+50688880003",
+    cedula: "990000003",
+  },
 } as const;
 
 export type RegressionSeedState = {
@@ -82,7 +89,12 @@ async function findUserByEmail(admin: AdminClient, email: string) {
   return null;
 }
 
-async function ensureAuthUser(admin: AdminClient, user: typeof E2E_USERS.client | typeof E2E_USERS.professional, isProvider: boolean) {
+async function ensureAuthUser(
+  admin: AdminClient,
+  user: typeof E2E_USERS.client | typeof E2E_USERS.professional | typeof E2E_USERS.admin,
+  role: "client" | "professional" | "admin",
+) {
+  const isProvider = role === "professional";
   const existing = await findUserByEmail(admin, user.email);
   if (existing) {
     const { error } = await admin.auth.admin.updateUserById(existing.id, {
@@ -91,7 +103,7 @@ async function ensureAuthUser(admin: AdminClient, user: typeof E2E_USERS.client 
       user_metadata: {
         full_name: user.fullName,
         onboarding_completed: true,
-        role: isProvider ? "professional" : "client",
+        role,
         is_provider: isProvider,
       },
     });
@@ -106,7 +118,7 @@ async function ensureAuthUser(admin: AdminClient, user: typeof E2E_USERS.client 
     user_metadata: {
       full_name: user.fullName,
       onboarding_completed: true,
-      role: isProvider ? "professional" : "client",
+      role,
       is_provider: isProvider,
     },
   });
@@ -161,8 +173,9 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   const admin = adminClient();
   const now = new Date().toISOString();
 
-  const clientUser = await ensureAuthUser(admin, E2E_USERS.client, false);
-  const proUser = await ensureAuthUser(admin, E2E_USERS.professional, true);
+  const clientUser = await ensureAuthUser(admin, E2E_USERS.client, "client");
+  const proUser = await ensureAuthUser(admin, E2E_USERS.professional, "professional");
+  const adminUser = await ensureAuthUser(admin, E2E_USERS.admin, "admin");
 
   await ensureCategory(admin);
 
@@ -203,6 +216,22 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
     { onConflict: "id" },
   );
   if (proProfileError) throw proProfileError;
+
+  const { error: adminProfileError } = await admin.from("profiles").upsert(
+    {
+      id: adminUser.id,
+      cedula: E2E_USERS.admin.cedula,
+      full_name: E2E_USERS.admin.fullName,
+      email: E2E_USERS.admin.email,
+      phone: E2E_USERS.admin.phone,
+      role: "admin",
+      is_provider: false,
+      onboarding_completed: true,
+      updated_at: now,
+    },
+    { onConflict: "id" },
+  );
+  if (adminProfileError) throw adminProfileError;
 
   const workplaces = [
     {

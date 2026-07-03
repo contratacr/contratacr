@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, isMobileProject } from "./helpers";
+import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK } from "./helpers";
 
 test.describe("@seeded search results", () => {
   test("search results render professional cards with primary actions", async ({ page }) => {
@@ -18,8 +18,7 @@ test.describe("@seeded search results", () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test("mobile card keeps favorite visible and avoids layout overflow", async ({ page }, testInfo) => {
-    test.skip(!isMobileProject(testInfo), "Mobile card layout is covered on the mobile project.");
+  test("card keeps favorite visible and avoids layout overflow", async ({ page }) => {
     const href = await firstProfessionalHref(page);
     test.skip(!href, "No seeded professionals found in this environment.");
 

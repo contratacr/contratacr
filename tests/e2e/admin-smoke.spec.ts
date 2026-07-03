@@ -1,5 +1,6 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, gotoOK, resetAuth } from "./helpers";
+import { expectHealthyPage, expectVisibleText, gotoOK, resetAuth } from "./helpers";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
 
 const adminRoutes = [
   { path: "/es/admin", marker: /Resumen|Panel de administracion|Panel de administraci.n/i },
@@ -16,6 +17,10 @@ const adminRoutes = [
 ] as const;
 
 test.describe("@admin surfaces", () => {
+  test.beforeAll(async () => {
+    if (canRunSeededRegression()) await ensureRegressionSeed();
+  });
+
   test("admin entry shows the restricted login when signed out", async ({ page }) => {
     await resetAuth(page);
     await gotoOK(page, "/es/admin");
@@ -26,8 +31,9 @@ test.describe("@admin surfaces", () => {
   });
 
   test("admin panel sections render when admin credentials are configured", async ({ page }) => {
-    const email = process.env.E2E_ADMIN_EMAIL;
-    const password = process.env.E2E_ADMIN_PASSWORD;
+    const seeded = canRunSeededRegression();
+    const email = process.env.E2E_ADMIN_EMAIL || (seeded ? E2E_USERS.admin.email : "");
+    const password = process.env.E2E_ADMIN_PASSWORD || (seeded ? E2E_USERS.admin.password : "");
     test.skip(!email || !password, "Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD to run authenticated admin regression.");
 
     await resetAuth(page);
@@ -35,12 +41,12 @@ test.describe("@admin surfaces", () => {
     await page.getByPlaceholder(/Correo de administrador/i).fill(email!);
     await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(password!);
     await page.getByRole("button", { name: /Ingresar/i }).click();
-    await page.waitForURL(/\/es\/admin/, { timeout: 20_000 });
-    await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
+    await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeHidden({ timeout: 20_000 });
+    await expectVisibleText(page.locator("body"), adminRoutes[0].marker);
 
     for (const route of adminRoutes) {
       await gotoOK(page, route.path);
-      await expect(page.locator("body").getByText(route.marker).first()).toBeVisible();
+      await expectVisibleText(page.locator("body"), route.marker);
       await expectHealthyPage(page);
     }
   });
