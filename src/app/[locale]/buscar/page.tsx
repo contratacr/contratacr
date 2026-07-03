@@ -311,8 +311,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               {allResults.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-2xl border border-[#e5e7eb]">
                   <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 rounded-full bg-[#f3f4f6] flex items-center justify-center">
-                      <Search className="h-8 w-8 text-[#9ca3af]" />
+                    <div className="w-16 h-16 rounded-full bg-[#EBF5FB] flex items-center justify-center">
+                      <Search className="h-8 w-8 text-[#009FD9]" />
                     </div>
                   </div>
                   <h2 className="text-xl font-semibold text-[#111827] mb-2">{t("noResults.title")}</h2>

@@ -276,7 +276,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                 className={`shrink-0 -mb-px inline-flex items-center gap-1 whitespace-nowrap border-b-2 px-0.5 pb-1.5 text-[12px] font-semibold transition-colors ${
                   active
                     ? "border-[#009FD9] text-[#009FD9]"
-                    : "border-transparent text-[#6b7280] hover:text-[#374151]"
+                    : "border-transparent text-[#6b7280] hover:border-[#ccecf8] hover:text-[#009FD9]"
                 }`}
               >
                 <MapPin className="h-3 w-3 shrink-0" />

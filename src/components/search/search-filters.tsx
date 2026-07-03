@@ -14,12 +14,9 @@ import { INSURERS } from "@/lib/data/insurers";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 import { createClient } from "@/lib/supabase/client";
 
-// Filter Select triggers keep a NEUTRAL border in every state. The shared Select
-// shows a brand-blue focus-visible ring; after picking an option Radix returns
-// focus to the trigger and that ring can "stick", looking like a colored/stuck
-// border. We override it here (filters only) so selecting never leaves an ugly
-// outline — the open dropdown + chevron are the affordance.
-const FILTER_TRIGGER = "text-sm focus-visible:ring-0 focus-visible:border-[#e5e7eb]";
+// Filter Select triggers stay on the ContrataCR blue system for focus/hover so
+// the fields read the same whether a service filter is active or not.
+const FILTER_TRIGGER = "text-sm focus-visible:border-[#009FD9] focus-visible:ring-[#009FD9]/20";
 // Open menu = EXACTLY the trigger's width, flush-aligned (left+right edges line up with
 // the field) — like the "Servicio" autocomplete. By default Radix popper content sizes to
 // its OPTIONS (with a min-w), so a short list (e.g. Aseguradora) opens narrower than its
@@ -418,7 +415,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 // EXACT same box as the Select triggers: h-10 w-full rounded-xl border, px-4
                 // left, and pr-9 ALWAYS so the right glyph sits exactly where the dropdowns'
                 // chevron does — so this field is indistinguishable in size + layout.
-                className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+                className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
               />
               {/* Right-side glyph: a Search icon at rest (matches the Select chevron spot/
                   size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field — a
