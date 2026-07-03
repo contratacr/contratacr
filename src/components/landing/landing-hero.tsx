@@ -19,12 +19,11 @@ import { resolveCategoryIntent } from "@/lib/data/categories";
 type AddressSuggestion = { type: "address"; placeId: string; label: string };
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
-// Spread the rotating examples ACROSS the app's real breadth (home, care, classes,
-// health, beauty…), not just home repair — so a first-time visitor sees at a glance
-// that ContrataCR is more than a handyman app.
+// Show professional, high-trust service examples first so the landing page feels
+// broad enough for Costa Rica: health, finance, technical and home services.
 const ROTATING_LINES: Record<string, string[]> = {
-  es: ["Plomería,", "Limpieza,", "Niñera,", "Clases,", "Fisioterapia,", "Belleza,", "Electricidad,", "Cuidados,", "Jardinería,", "Mudanzas,"],
-  en: ["Plumbing,", "Cleaning,", "Babysitting,", "Classes,", "Therapy,", "Beauty,", "Electrical,", "Caregiving,", "Gardening,", "Moving,"],
+  es: ["Salud,", "Contabilidad,", "Fisioterapia,", "Electricidad,", "Tecnología,", "Psicología,", "Arquitectura,", "Veterinaria,"],
+  en: ["Health,", "Accounting,", "Physical therapy,", "Electrical,", "Technology,", "Psychology,", "Architecture,", "Veterinary,"],
 };
 
 /* ── Hero image — ONE easy-to-swap asset shown in the dome. ──
