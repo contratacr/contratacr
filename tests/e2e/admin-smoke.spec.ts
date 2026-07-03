@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, expectVisibleText, gotoOK, resetAuth } from "./helpers";
+import { expectHealthyPage, expectVisibleText, gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
 
 const adminRoutes = [
@@ -32,12 +32,13 @@ test.describe("@admin surfaces", () => {
 
   test("admin panel sections render when admin credentials are configured", async ({ page }) => {
     const seeded = canRunSeededRegression();
-    const email = process.env.E2E_ADMIN_EMAIL || (seeded ? E2E_USERS.admin.email : "");
-    const password = process.env.E2E_ADMIN_PASSWORD || (seeded ? E2E_USERS.admin.password : "");
+    const email = seeded ? E2E_USERS.admin.email : (process.env.E2E_ADMIN_EMAIL || "");
+    const password = seeded ? E2E_USERS.admin.password : (process.env.E2E_ADMIN_PASSWORD || "");
     test.skip(!email || !password, "Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD to run authenticated admin regression.");
 
     await resetAuth(page);
     await gotoOK(page, "/es/admin");
+    await waitForInteractivePage(page);
     await page.getByPlaceholder(/Correo de administrador/i).fill(email!);
     await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(password!);
     await page.getByRole("button", { name: /Ingresar/i }).click();

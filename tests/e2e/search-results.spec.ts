@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK } from "./helpers";
+import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, waitForInteractivePage } from "./helpers";
 
 test.describe("@seeded search results", () => {
   test("search results render professional cards with primary actions", async ({ page }) => {
@@ -36,9 +36,10 @@ test.describe("@seeded search results", () => {
 
   test("search query can navigate from the header to filtered results", async ({ page }) => {
     await gotoOK(page, "/es");
-    const search = page.getByRole("combobox", { name: /servicio|buscando|necesitas/i }).first();
+    await waitForInteractivePage(page);
+    const search = page.getByRole("combobox", { name: /Qu[eé] servicio|Qu[eé] necesitas|What service|What do you need/i }).first();
     await search.fill("plomeria");
-    await search.press("Enter");
+    await search.locator("xpath=ancestor::form[1]").getByRole("button", { name: /Buscar|Search/i }).first().click();
     await expect(page).toHaveURL(/\/es\/buscar/);
     await expect(
       page.locator("article").first().or(page.getByText(/No encontramos resultados/i).first()),

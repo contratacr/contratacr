@@ -5,6 +5,20 @@ import { ShieldCheck, AlertCircle, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 
+async function waitForAuthCookie(maxMs = 2000): Promise<void> {
+  const hasAuthCookie = () =>
+    typeof document !== "undefined" &&
+    document.cookie.split(";").some((cookie) => {
+      const name = cookie.trim();
+      return name.startsWith("sb-") && name.includes("-auth-token");
+    });
+
+  const start = Date.now();
+  while (!hasAuthCookie() && Date.now() - start < maxMs) {
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  }
+}
+
 // Inline admin login (rendered at /admin when the visitor isn't an admin).
 // Signs in, confirms role=admin, and only then reloads into the panel.
 export function AdminLogin() {
@@ -34,6 +48,7 @@ export function AdminLogin() {
       return;
     }
 
+    await waitForAuthCookie();
     window.location.assign("/es/admin");
   }
 

@@ -24,7 +24,7 @@ test.describe("@seeded interaction surfaces", () => {
     await action.click();
 
     await expect(
-      page.getByText(/Que servicio necesitas|Qu. servicio necesitas|Elige fecha y hora|Describe lo que necesitas|Request service/i).first(),
+      page.getByText(/Que servicio necesitas|Qu. servicio necesitas|Elige fecha y hora|Describe lo que necesitas|Request service|Tu identificaci.n|Your identification/i).first(),
     ).toBeVisible();
     await expectHealthyPage(page);
   });

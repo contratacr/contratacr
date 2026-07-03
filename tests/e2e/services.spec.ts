@@ -1,11 +1,12 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, gotoOK } from "./helpers";
+import { expectHealthyPage, gotoOK, waitForInteractivePage } from "./helpers";
 
 test.describe("@smoke services catalog", () => {
   test("service search finds a known service without leaving the page", async ({ page }) => {
     await gotoOK(page, "/es/servicios");
+    await waitForInteractivePage(page);
 
-    const search = page.getByRole("textbox").first();
+    const search = page.getByTestId("services-page-search").locator("input");
     await search.fill("Plomer");
     await expect(page.getByText(/Plomer/i).first()).toBeVisible();
     await expect(page.getByText(/Hogar y construcci/i).first()).toBeVisible();
@@ -19,8 +20,9 @@ test.describe("@smoke services catalog", () => {
 
   test("unknown service shows one consistent suggestion CTA", async ({ page }) => {
     await gotoOK(page, "/es/servicios");
+    await waitForInteractivePage(page);
 
-    const search = page.getByRole("textbox").first();
+    const search = page.getByTestId("services-page-search").locator("input");
     await search.fill(`Servicio inexistente ${Date.now()}`);
 
     await expect(page.getByText(/No ves tu servicio|No encontramos ese servicio/i).first()).toBeVisible();

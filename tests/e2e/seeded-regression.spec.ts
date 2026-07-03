@@ -344,7 +344,12 @@ test.describe("@seeded core regression", () => {
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, "/es/buscar?categoria=plomeria");
-    await expect(page.getByText(E2E_USERS.professional.fullName).first()).toBeVisible();
+    const resultCard = page.locator("article", {
+      has: page.locator(`a[href="/es/profesionales/${seed.professionalSlug}"]`),
+    }).first();
+    await expect(resultCard).toBeVisible();
+    await expect(resultCard.getByRole("link", { name: /E2E Profesional/i }).first()).toBeVisible();
+    await expect(resultCard).toContainText(/Plomer/i);
     await expectNoHorizontalOverflow(page);
   });
 });

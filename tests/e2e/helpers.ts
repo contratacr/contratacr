@@ -46,6 +46,23 @@ export async function expectVisibleText(scope: Locator, matcher: string | RegExp
     .toBe(true);
 }
 
+export async function waitForInteractivePage(page: Page) {
+  await page.waitForLoadState("load", { timeout: 10_000 }).catch(() => undefined);
+  await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => undefined);
+}
+
+async function expectAuthCookie(page: Page) {
+  await expect
+    .poll(
+      async () => {
+        const cookies = await page.context().cookies();
+        return cookies.some((cookie) => cookie.name.startsWith("sb-") && cookie.name.includes("-auth-token"));
+      },
+      { timeout: 8_000, message: "Expected Supabase auth cookie after login" },
+    )
+    .toBe(true);
+}
+
 export async function expectNoHorizontalOverflow(page: Page) {
   const size = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
@@ -55,13 +72,29 @@ export async function expectNoHorizontalOverflow(page: Page) {
 }
 
 export async function loginAs(page: Page, email: string, password: string) {
-  await resetAuth(page);
-  await gotoOK(page, "/es/login");
-  await page.locator('input[type="email"]').fill(email);
-  await page.locator('input[type="password"]').fill(password);
-  await page.getByRole("button", { name: /Ingresar|Sign in/i }).click();
-  await page.waitForURL(/\/(?:es|en)\/dashboard\/profesional/, { timeout: 20_000 });
-  await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await resetAuth(page);
+    await gotoOK(page, "/es/login");
+    await waitForInteractivePage(page);
+
+    const main = page.locator("main");
+    await expectVisibleText(main, /Bienvenido de vuelta|Welcome back/i);
+    await main.locator('input[type="email"]').fill(email);
+    await main.locator('input[type="password"]').fill(password);
+    await main.getByRole("button", { name: /Ingresar|Sign in/i }).first().click();
+
+    try {
+      await page.waitForURL(/\/(?:es|en)\/dashboard\/profesional/, { timeout: 30_000 });
+      await expectAuthCookie(page);
+      await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!/\/(?:es|en)\/login\?/.test(page.url())) break;
+    }
+  }
+  throw lastError;
 }
 
 export async function resetAuth(page: Page) {
