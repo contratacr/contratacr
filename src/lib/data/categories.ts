@@ -79,7 +79,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     label: "Tecnología",
     emoji: "💻",
     items: [
-      { id: "tecnologia", label: "Tecnología / TI", keywords: ["tecnologia", "TI", "informatica", "sistemas", "servicios tecnologicos", "IT"] },
+      { id: "tecnologia", label: "TI", keywords: ["tecnologia", "TI", "informatica", "sistemas", "servicios tecnologicos", "IT"] },
       { id: "reparacion_computadoras", label: "Reparación de computadoras", keywords: ["computadora", "laptop", "PC", "Mac", "tecnico en computo", "notebook"] },
       { id: "redes_internet", label: "Redes e internet", keywords: ["WiFi", "router", "red", "cableado estructurado", "internet", "fibra"] },
       { id: "camaras_seguridad", label: "Cámaras de seguridad", keywords: ["CCTV", "vigilancia", "camaras", "circuito cerrado", "DVR", "NVR"] },
@@ -163,7 +163,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     label: "Belleza y estética",
     emoji: "💅",
     items: [
-      { id: "belleza", label: "Belleza y estética", keywords: ["belleza", "estetica", "salon de belleza", "cuidado personal"] },
+      { id: "belleza", label: "Servicios de belleza", keywords: ["belleza", "estetica", "salon de belleza", "cuidado personal"] },
       { id: "peluqueria", label: "Peluquería y barbería", keywords: ["barbero", "estilista", "corte de pelo", "cabello", "coloracion", "mechas", "peluquero"] },
       { id: "maquillaje", label: "Maquillaje", keywords: ["maquillista", "makeup", "maquillaje artistico", "novia", "maquillaje de noche"] },
       { id: "unhas", label: "Uñas / Manicure", keywords: ["nail tech", "manicure", "pedicure", "unas acrilicas", "gel", "nail art", "semipermanente"] },
@@ -487,6 +487,7 @@ const ENGLISH_SERVICE_PHRASES: Record<string, string> = {
   "capacitacion empresarial": "Business training",
   "cercas electricas": "Electric fences",
   "belleza y estetica": "Beauty & aesthetics",
+  "servicios de belleza": "Beauty services",
   "clases de cocina": "Cooking classes",
   "clases de manejo": "Driving lessons",
   "clases de baile": "Dance classes",
@@ -538,7 +539,7 @@ const ENGLISH_SERVICE_PHRASES: Record<string, string> = {
   "servicio tecnico": "Technical support",
   "servicio de grua": "Tow truck service",
   "soporte tecnico": "Tech support",
-  "tecnologia ti": "Technology / IT",
+  "tecnologia ti": "IT",
   "transporte privado": "Private transportation",
   "transporte de mascotas": "Pet transport",
   "venta de computadoras": "Computer sales",
@@ -759,7 +760,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   lavado_vehiculos: "Car washing",
   // Tecnología
   reparacion_computadoras: "Computer repair", redes_internet: "Networks & internet",
-  tecnologia: "Technology / IT",
+  tecnologia: "IT",
   camaras_seguridad: "Security cameras", domotica: "Smart home automation",
   desarrollo_web: "Web development", diseno_grafico: "Graphic design", diseno_apps: "Mobile app development",
   soporte_tecnico: "Tech support", ciberseguridad: "Cybersecurity", consultoria_ti: "IT consulting",
@@ -794,7 +795,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   cuidado_infantil: "Childcare / Nanny",
   veterinaria: "Veterinary", peluqueria_canina: "Dog grooming", cuido_mascotas: "Pet sitting & dog walking",
   // Belleza y estética
-  belleza: "Beauty & aesthetics",
+  belleza: "Beauty services",
   peluqueria: "Hair & barber", maquillaje: "Makeup", unhas: "Nails / Manicure",
   pestanas: "Eyelashes", depilacion: "Hair removal", estetica_facial: "Facial aesthetics",
   spa: "Spa", bronceado: "Tanning",
