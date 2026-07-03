@@ -15,8 +15,7 @@ UPDATE public.categories
 SET group_id = 'automotriz',
     is_hidden = false,
     es_salud = false,
-    supports_videoconsulta = false,
-    updated_at = now()
+    supports_videoconsulta = false
 WHERE id = 'mecanica_bicicletas';
 
 NOTIFY pgrst, 'reload schema';

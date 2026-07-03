@@ -19,7 +19,6 @@ ON CONFLICT (id) DO UPDATE SET
   group_id = EXCLUDED.group_id,
   is_hidden = false,
   es_salud = false,
-  supports_videoconsulta = false,
-  updated_at = now();
+  supports_videoconsulta = false;
 
 NOTIFY pgrst, 'reload schema';
