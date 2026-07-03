@@ -311,7 +311,7 @@ export default function ServiciosPage() {
                 </div>
               </section>
             ) : (
-                <section className="grid min-h-[560px] scroll-mt-32 lg:grid-cols-[300px_minmax(0,1fr)]">
+                <section className="grid scroll-mt-32 lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)]">
                   <aside className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-[#f8fafc] p-2 lg:border-b-0 lg:border-r">
                     <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
                       {groups.map((group) => {
