@@ -5,6 +5,36 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { getCategoryLabel } from "@/lib/data/categories";
+
+type SeedService = {
+  id: string;
+  name: string;
+  category: string;
+  active: boolean;
+  priceType: "a_convenir";
+  price: string;
+};
+
+function uniqueServices(category: string, professions: unknown): string[] {
+  const selected = Array.isArray(professions) && professions.length > 0 ? [category, ...professions] : [category];
+  return [...new Set(selected.filter((item): item is string => typeof item === "string" && item.trim().length > 0))];
+}
+
+function seedServicesFromProfessions(professions: string[]): SeedService[] {
+  return professions.map((categoryId, index) => ({
+    id: `svc_${Date.now()}_${index}_${crypto.randomUUID().slice(0, 8)}`,
+    name: getCategoryLabel(categoryId),
+    category: categoryId,
+    active: true,
+    priceType: "a_convenir",
+    price: "Consultar precio",
+  }));
+}
+
+function hasStoredServices(services: unknown): boolean {
+  return Array.isArray(services) && services.length > 0;
+}
 
 export async function POST(req: Request) {
   try {
@@ -54,6 +84,8 @@ export async function POST(req: Request) {
     const coverageCountry = !!bodyCoverageCountry;
     const noCrId = !!bodyNoCrId;
     const idDocNote = limitTrimmedText(bodyIdDocNote, LONG_TEXT_MAX_LENGTH) || null;
+    const professions = uniqueServices(category, bodyProfessions);
+    const seededServices = seedServicesFromProfessions(professions);
 
     // Optional columns (migrations 019/021/022/030) — if the DB hasn't been
     // migrated yet, retry the write without them instead of failing registration.
@@ -190,13 +222,15 @@ export async function POST(req: Request) {
     // ── 4. Check if professional already exists ───────────────────────────────
     const { data: existingPro } = await supabase
       .from("professionals")
-      .select("id, slug")
+      .select("id, slug, services")
       .eq("profile_id", userId)
       .maybeSingle();
 
     if (existingPro) {
       const baseUpdate = {
         category_id: category,
+        professions,
+        ...(hasStoredServices((existingPro as { services?: unknown }).services) ? {} : { services: seededServices }),
         bio: safeBio,
         whatsapp,
         years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
@@ -238,14 +272,11 @@ export async function POST(req: Request) {
     const slug = `${baseName}-${Math.random().toString(36).slice(2, 10)}`;
 
     // ── 6. Insert professional ────────────────────────────────────────────────
-    const professions: string[] = Array.isArray(bodyProfessions) && bodyProfessions.length > 0
-      ? [...new Set([category, ...bodyProfessions].filter(Boolean))]
-      : [category];
-
     const baseInsert = {
       profile_id: userId,
       category_id: category,
       professions,
+      services: seededServices,
       // Availability is PUBLIC by default (privada OFF): a new pro is reachable and
       // can publish hours right away. They can turn "Disponibilidad privada" on
       // anytime to hide the agenda and go WhatsApp-only.
