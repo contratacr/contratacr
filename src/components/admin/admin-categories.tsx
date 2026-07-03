@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, HeartPulse, Layers3, Loader2, Plus, Save, Search, Tag, Trash2, Video, X } from "lucide-react";
+import { Check, Layers3, Loader2, Plus, Save, Search, Tag, Trash2, X } from "lucide-react";
 import {
   ALL_CATEGORIES,
   autoEnglishCategoryLabel,
@@ -16,6 +16,10 @@ type Suggestion = {
   label: string;
   labelEn?: string | null;
   suggested_name?: string | null;
+  suggested_by?: string | null;
+  suggestedByName?: string | null;
+  suggestedByEmail?: string | null;
+  suggestedByBusinessName?: string | null;
   status: string;
   created_at: string;
 };
@@ -80,6 +84,70 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{children}</label>;
 }
 
+type AdminDialogState = {
+  title: string;
+  description: string;
+  detail?: string;
+  confirmLabel: string;
+  cancelLabel?: string;
+  tone?: "default" | "danger";
+  onConfirm?: () => void | Promise<void>;
+};
+
+function AdminDialog({
+  dialog,
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  dialog: AdminDialogState | null;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!dialog) return null;
+
+  const danger = dialog.tone === "danger";
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#0f172a]/40 px-4 py-6 backdrop-blur-sm">
+      <div role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title" className="w-full max-w-md overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-2xl">
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p id="admin-dialog-title" className="text-lg font-bold text-[#111827]">{dialog.title}</p>
+              <p className="mt-2 text-sm leading-6 text-[#4b5563]">{dialog.description}</p>
+            </div>
+            <button type="button" onClick={onClose} disabled={busy} aria-label="Cerrar" className="rounded-full p-1 text-[#9ca3af] transition hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-50">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          {dialog.detail && (
+            <div className={`mt-4 rounded-xl border px-3 py-2 text-sm leading-5 ${danger ? "border-[#fecaca] bg-[#fef2f2] text-[#991b1b]" : "border-[#bfdbfe] bg-[#eff6ff] text-[#1e3a8a]"}`}>
+              {dialog.detail}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col-reverse gap-2 border-t border-[#eef2f7] bg-[#f8fafc] p-4 sm:flex-row sm:justify-end">
+          {dialog.cancelLabel && (
+            <button type="button" onClick={onClose} disabled={busy} className="inline-flex h-10 items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-4 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:opacity-50">
+              {dialog.cancelLabel}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={busy}
+            className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white transition disabled:opacity-50 ${danger ? "bg-[#dc2626] hover:bg-[#b91c1c]" : "bg-[#009FD9] hover:bg-[#0089bb]"}`}
+          >
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+            {dialog.confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminCategories() {
   const [view, setView] = useState<"suggestions" | "services" | "groups">("services");
   const [status, setStatus] = useState<"pending" | "approved" | "rejected">("pending");
@@ -100,15 +168,37 @@ export function AdminCategories() {
   const [newServiceName, setNewServiceName] = useState("");
   const [newServiceNameEn, setNewServiceNameEn] = useState("");
   const [newServiceNameEnManual, setNewServiceNameEnManual] = useState(false);
-  const [newServiceNameManual, setNewServiceNameManual] = useState(false);
+  const [, setNewServiceNameManual] = useState(false);
   const [newServiceGroupId, setNewServiceGroupId] = useState("profesional");
   const [newServiceFlags, setNewServiceFlags] = useState({ esSalud: false, supportsVideoconsulta: false });
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupNameEn, setNewGroupNameEn] = useState("");
-  const [newGroupNameManual, setNewGroupNameManual] = useState(false);
+  const [, setNewGroupNameManual] = useState(false);
   const [newGroupNameEnManual, setNewGroupNameEnManual] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<AdminDialogState | null>(null);
+  const [dialogBusy, setDialogBusy] = useState(false);
   const translatedSuggestionIds = useRef<Set<string>>(new Set());
+
+  function showNotice(title: string, description: string, detail?: string, tone: AdminDialogState["tone"] = "default") {
+    setDialog({ title, description, detail, tone, confirmLabel: "Entendido" });
+  }
+
+  async function confirmDialogAction() {
+    const onConfirm = dialog?.onConfirm;
+    if (!onConfirm) {
+      setDialog(null);
+      return;
+    }
+    const currentDialog = dialog;
+    setDialogBusy(true);
+    try {
+      await onConfirm();
+      setDialog((latest) => latest === currentDialog ? null : latest);
+    } finally {
+      setDialogBusy(false);
+    }
+  }
 
   async function loadCatalog() {
     const data = await fetch("/api/admin/categories?status=catalog").then((r) => r.json());
@@ -119,7 +209,6 @@ export function AdminCategories() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     const run = async () => {
       try {
         if (view === "suggestions") {
@@ -226,6 +315,12 @@ export function AdminCategories() {
     return draft.label.trim() !== group.label || draft.labelEn.trim() !== (group.labelEn || autoEnglishCategoryLabel(group.label));
   }
 
+  function suggestionSender(i: Suggestion) {
+    const name = i.suggestedByBusinessName || i.suggestedByName;
+    if (name && i.suggestedByEmail) return `${name} · ${i.suggestedByEmail}`;
+    return name || i.suggestedByEmail || "";
+  }
+
   async function fetchEnglishSuggestion(label: string) {
     const clean = label.trim();
     if (!clean) return "";
@@ -330,21 +425,27 @@ export function AdminCategories() {
     setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), labelEn: translated } }));
   }
 
-  async function decide(i: Suggestion, next: "approved" | "rejected") {
-    let label: string | undefined;
-    const flags = flagsOf(i);
-    if (next === "approved") {
-      label = nameOf(i).trim();
-      if (!label) { window.alert("Agrega el nombre del servicio antes de aprobar la sugerencia."); return; }
-      const similar = findSimilarCategory(label);
-      if (similar && !window.confirm(`Ya existe un servicio parecido: "${similar}".\n\n¿Quieres aprobar "${label}" de todos modos?`)) return;
-    }
+  async function applySuggestionDecision(
+    i: Suggestion,
+    next: "approved" | "rejected",
+    label?: string,
+    labelEn?: string,
+    groupId?: string,
+    flags?: { esSalud: boolean; supportsVideoconsulta: boolean }
+  ) {
     setBusy(i.id);
     try {
       await fetch("/api/admin/categories", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: i.id, status: next, label, labelEn: label ? englishNameOf(i) : undefined, groupId: groupOfSuggestion(i), ...flags }),
+        body: JSON.stringify({
+          id: i.id,
+          status: next,
+          label,
+          labelEn,
+          groupId: groupId ?? groupOfSuggestion(i),
+          ...(flags ?? flagsOf(i)),
+        }),
       });
       setItems((prev) => prev.filter((x) => x.id !== i.id));
       if (next === "approved" || next === "rejected") setPendingCount((count) => Math.max(0, count - 1));
@@ -354,11 +455,38 @@ export function AdminCategories() {
     }
   }
 
+  async function decide(i: Suggestion, next: "approved" | "rejected") {
+    let label: string | undefined;
+    const flags = flagsOf(i);
+    const groupId = groupOfSuggestion(i);
+    const labelEn = next === "approved" ? englishNameOf(i) : undefined;
+    if (next === "approved") {
+      label = nameOf(i).trim();
+      if (!label) {
+        showNotice("Falta el nombre del servicio", "Agrega el nombre antes de aprobar esta sugerencia.");
+        return;
+      }
+      const similar = findSimilarCategory(label);
+      if (similar) {
+        setDialog({
+          title: "Servicio parecido encontrado",
+          description: `Ya existe un servicio parecido: "${similar}".`,
+          detail: `Puedes revisar la sugerencia o aprobar "${label}" de todos modos si realmente es un servicio distinto.`,
+          confirmLabel: "Aprobar de todos modos",
+          cancelLabel: "Revisar",
+          onConfirm: () => applySuggestionDecision(i, next, label, labelEn, groupId, flags),
+        });
+        return;
+      }
+    }
+    await applySuggestionDecision(i, next, label, labelEn, groupId, flags);
+  }
+
   async function saveCatalogItem(item: CatalogCategory) {
     const draft = draftOf(item);
     const label = draft.label.trim();
     const labelEn = draft.labelEn.trim() || autoEnglishCategoryLabel(label);
-    if (!label) { window.alert("Agrega el nombre del servicio antes de guardar."); return; }
+    if (!label) { showNotice("Falta el nombre del servicio", "Agrega el nombre antes de guardar los cambios."); return; }
     setBusy(item.id);
     try {
       const res = await fetch("/api/admin/categories", {
@@ -376,7 +504,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No pudimos guardar el servicio. Inténtalo de nuevo.");
+        showNotice("No se pudo guardar el servicio", data.error || "Inténtalo de nuevo.");
         return;
       }
       setCatalog((prev) => prev.map((row) => row.id === item.id ? {
@@ -409,7 +537,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No pudimos guardar la sección. Inténtalo de nuevo.");
+        showNotice("No se pudo guardar la sección", data.error || "Inténtalo de nuevo.");
         return;
       }
       await loadCatalog();
@@ -460,7 +588,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No pudimos agregar el servicio. Inténtalo de nuevo.");
+        showNotice("No se pudo agregar el servicio", data.error || "Inténtalo de nuevo.");
         return;
       }
       setNewServiceName("");
@@ -489,7 +617,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No pudimos agregar la sección. Inténtalo de nuevo.");
+        showNotice("No se pudo agregar la sección", data.error || "Inténtalo de nuevo.");
         return;
       }
       setNewGroupName("");
@@ -503,16 +631,27 @@ export function AdminCategories() {
   }
 
   async function deleteService(item: CatalogCategory) {
-    const message = item.source === "base"
-      ? `¿Ocultar "${item.label}" del catálogo?\n\nDejará de aparecer para nuevos perfiles, búsquedas y solicitudes. Los datos históricos se mantienen.`
-      : `¿Eliminar "${item.label}" del catálogo?\n\nEste servicio dejará de aparecer en la app. Esta acción no afecta datos históricos.`;
-    if (!window.confirm(message)) return;
+    const isBase = item.source === "base";
+    setDialog({
+      title: isBase ? "Ocultar servicio" : "Eliminar servicio",
+      description: isBase
+        ? `"${item.label}" dejará de aparecer para nuevos perfiles, búsquedas y solicitudes.`
+        : `"${item.label}" dejará de aparecer en el catálogo de la app.`,
+      detail: "Los datos históricos se mantienen.",
+      confirmLabel: isBase ? "Ocultar servicio" : "Eliminar servicio",
+      cancelLabel: "Cancelar",
+      tone: "danger",
+      onConfirm: () => deleteServiceConfirmed(item),
+    });
+  }
+
+  async function deleteServiceConfirmed(item: CatalogCategory) {
     setBusy(item.id);
     try {
       const res = await fetch(`/api/admin/categories?id=${encodeURIComponent(item.id)}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No pudimos eliminar el servicio. Inténtalo de nuevo.");
+        showNotice("No se pudo eliminar el servicio", data.error || "Inténtalo de nuevo.", undefined, "danger");
         return;
       }
       setCatalog((prev) => prev.filter((row) => row.id !== item.id));
@@ -524,16 +663,31 @@ export function AdminCategories() {
   async function deleteGroup(group: CatalogGroup) {
     const inUse = catalog.filter((item) => item.groupId === group.id).length;
     if (inUse > 0) {
-      window.alert(`No puedes eliminar esta sección todavía.\n\nTiene ${inUse} servicio${inUse === 1 ? "" : "s"} asociado${inUse === 1 ? "" : "s"}. Muévelos a otra sección y vuelve a intentarlo.`);
+      showNotice(
+        "Esta sección todavía tiene servicios",
+        `Tiene ${inUse} servicio${inUse === 1 ? "" : "s"} asociado${inUse === 1 ? "" : "s"}.`,
+        "Mueve esos servicios a otra sección y vuelve a intentarlo."
+      );
       return;
     }
-    if (!window.confirm(`¿Eliminar la sección "${group.label}"?\n\nLa sección dejará de aparecer en el catálogo.`)) return;
+    setDialog({
+      title: "Eliminar sección",
+      description: `"${group.label}" dejará de aparecer en el catálogo.`,
+      detail: "Esta acción solo oculta la sección. No elimina servicios ni datos históricos.",
+      confirmLabel: "Eliminar sección",
+      cancelLabel: "Cancelar",
+      tone: "danger",
+      onConfirm: () => deleteGroupConfirmed(group),
+    });
+  }
+
+  async function deleteGroupConfirmed(group: CatalogGroup) {
     setBusy(`group-${group.id}`);
     try {
       const res = await fetch(`/api/admin/categories?groupId=${encodeURIComponent(group.id)}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No pudimos eliminar la sección. Inténtalo de nuevo.");
+        showNotice("No se pudo eliminar la sección", data.error || "Inténtalo de nuevo.", undefined, "danger");
         return;
       }
       await loadCatalog();
@@ -543,6 +697,7 @@ export function AdminCategories() {
   }
 
   return (
+    <>
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -630,6 +785,7 @@ export function AdminCategories() {
             <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
               {items.map((i) => {
                 const flags = flagsOf(i);
+                const sender = suggestionSender(i);
                 return (
                   <div key={i.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 xl:grid-cols-[minmax(0,1fr)_220px_210px_auto] xl:items-center">
                     <div className="min-w-0">
@@ -665,7 +821,10 @@ export function AdminCategories() {
                       ) : (
                         <p className="text-sm font-semibold text-[#111827]">{i.suggested_name || i.label}</p>
                       )}
-                      <p className="mt-2 text-xs text-[#9ca3af]">Sugerida el {new Date(i.created_at).toLocaleDateString("es-CR")}</p>
+                      <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[#9ca3af]">
+                        <span>Sugerida el {new Date(i.created_at).toLocaleDateString("es-CR")}</span>
+                        {sender && <span className="text-[#64748b]">Sugerida por {sender}</span>}
+                      </div>
                     </div>
                     {status === "pending" && (
                       <>
@@ -886,7 +1045,6 @@ export function AdminCategories() {
             <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
               {groups.map((group) => {
                 const draft = groupDraftOf(group);
-                const inUse = catalog.filter((item) => item.groupId === group.id).length;
                 return (
                   <div key={group.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-center">
                     <input
@@ -919,5 +1077,14 @@ export function AdminCategories() {
         </section>
       )}
     </div>
+    <AdminDialog
+      dialog={dialog}
+      busy={dialogBusy}
+      onClose={() => {
+        if (!dialogBusy) setDialog(null);
+      }}
+      onConfirm={confirmDialogAction}
+    />
+    </>
   );
 }

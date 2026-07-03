@@ -33,6 +33,17 @@ type DbCategoryGroup = {
   is_hidden?: boolean | null;
 };
 
+type SuggestionAuthor = {
+  id: string;
+  full_name?: string | null;
+  email?: string | null;
+};
+
+type SuggestionProfessional = {
+  profile_id?: string | null;
+  business_name?: string | null;
+};
+
 // GET /api/admin/categories?status=pending|approved|rejected|catalog
 export async function GET(req: Request) {
   const admin = await getApiAdmin();
@@ -108,12 +119,25 @@ export async function GET(req: Request) {
   const { data } = await q;
   const suggestionRows = data ?? [];
   const ids = suggestionRows.map((row) => row.id).filter(Boolean);
+  const suggestedByIds = [...new Set(suggestionRows.map((row) => row.suggested_by).filter(Boolean) as string[])];
   let englishById = new Map<string, string>();
   if (ids.length) {
     const english = await db.from("categories").select("id, name_en").in("id", ids);
     englishById = new Map((english.data ?? [])
       .filter((row) => row.id && row.name_en)
       .map((row) => [row.id, row.name_en as string]));
+  }
+  let authorById = new Map<string, SuggestionAuthor>();
+  let professionalById = new Map<string, SuggestionProfessional>();
+  if (suggestedByIds.length) {
+    const [authors, professionals] = await Promise.all([
+      db.from("profiles").select("id, full_name, email").in("id", suggestedByIds),
+      db.from("professionals").select("profile_id, business_name").in("profile_id", suggestedByIds),
+    ]);
+    authorById = new Map(((authors.data ?? []) as SuggestionAuthor[]).map((row) => [row.id, row]));
+    professionalById = new Map(((professionals.data ?? []) as SuggestionProfessional[])
+      .filter((row) => row.profile_id)
+      .map((row) => [row.profile_id as string, row]));
   }
 
   const { count: pendingCount } = await db
@@ -122,7 +146,17 @@ export async function GET(req: Request) {
     .eq("status", "pending");
 
   return NextResponse.json({
-    categories: suggestionRows.map((row) => ({ ...row, labelEn: englishById.get(row.id) ?? null })),
+    categories: suggestionRows.map((row) => {
+      const author = row.suggested_by ? authorById.get(row.suggested_by) : null;
+      const professional = row.suggested_by ? professionalById.get(row.suggested_by) : null;
+      return {
+        ...row,
+        labelEn: englishById.get(row.id) ?? null,
+        suggestedByName: author?.full_name ?? null,
+        suggestedByEmail: author?.email ?? null,
+        suggestedByBusinessName: professional?.business_name ?? null,
+      };
+    }),
     pendingCount: pendingCount ?? 0,
   });
 }
