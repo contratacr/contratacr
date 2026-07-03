@@ -242,6 +242,7 @@ export const CATEGORIES = [
   { id: "control_acceso", icon: "" },
   // AUTOMOTRIZ
   { id: "mecanica", icon: "" },
+  { id: "mecanica_bicicletas", icon: "" },
   { id: "hojalateria", icon: "" },
   { id: "electricidad_automotriz", icon: "" },
   { id: "tapiceria", icon: "" },

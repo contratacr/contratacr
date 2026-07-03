@@ -251,6 +251,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     emoji: "🚗",
     items: [
       { id: "mecanica", label: "Mecánica general", keywords: ["mecanico", "mecanico automotriz", "taller", "motor", "frenos", "transmision", "aceite", "servicio de auto"] },
+      { id: "mecanica_bicicletas", label: "Mecánica de bicicletas", keywords: ["bicicleta", "bicicletas", "bici", "bicis", "cleta", "cletas", "mecanico de bicicletas", "reparacion de bicicletas", "taller de bicicletas", "frenos de bicicleta", "cadena de bicicleta", "llantas de bicicleta", "mountain bike", "ciclismo"] },
       { id: "hojalateria", label: "Hojalatería y pintura de carros", keywords: ["hojalatero", "chapisteria", "enderezado y pintura", "latoneria", "carroceria", "abolladuras", "pintura de carro"] },
       { id: "electricidad_automotriz", label: "Electricidad automotriz", keywords: ["electrico automotriz", "bateria", "alternador", "luces del carro", "alarmas para carro"] },
       { id: "tapiceria", label: "Tapicería", keywords: ["tapicero", "asientos", "tela de carro", "cuero", "tapizado"] },
@@ -513,6 +514,7 @@ const ENGLISH_SERVICE_PHRASES: Record<string, string> = {
   "limpieza post construccion": "Post-construction cleaning",
   "maestro de ceremonias": "Master of ceremonies",
   "maestro de obras": "Construction foreman",
+  "mecanica de bicicletas": "Bicycle repair",
   "medicina general": "General medicine",
   "medico especialista": "Medical specialist",
   "mensajeria express": "Express courier",
@@ -640,6 +642,7 @@ const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   dj_sonido: ["musica para fiesta", "dj para fiesta", "sonido para evento", "dj for a party", "sound for event"],
   catering: ["comida para evento", "comida para fiesta", "banquete para evento"],
   mecanica: ["arreglar carro", "mecanico para carro", "revisar motor", "cambio de aceite"],
+  mecanica_bicicletas: ["arreglar bicicleta", "reparar bici", "mecanico de bicicletas", "taller de bicicletas", "arreglar cleta"],
   grua: ["ocupo grua", "carro varado", "remolcar carro", "asistencia en carretera"],
   polarizado: ["polarizar carro", "poner polarizado", "lamina solar carro"],
   aire_acondicionado: ["arreglar aire acondicionado", "instalar aire acondicionado", "mantenimiento de aire"],
@@ -811,7 +814,8 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   cctv: "Closed-circuit CCTV", control_acceso: "Access control",
   investigacion_privada: "Private investigation",
   // Automotriz
-  mecanica: "General mechanics", hojalateria: "Body work & car painting",
+  mecanica: "General mechanics", mecanica_bicicletas: "Bicycle repair",
+  hojalateria: "Body work & car painting",
   electricidad_automotriz: "Auto electrical", tapiceria: "Upholstery",
   detailing: "Car detailing", polarizado: "Window tinting", cambio_llantas: "Tire change",
   grua: "Tow truck service",
