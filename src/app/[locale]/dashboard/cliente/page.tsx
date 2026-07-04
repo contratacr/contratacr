@@ -22,8 +22,8 @@ export default function ClientDashboardRedirect() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const legacy = searchParams.get("tab") ?? "profile";
-    const tab = TAB_MAP[legacy] ?? "profile";
+    const legacy = searchParams.get("tab") ?? "bookings";
+    const tab = TAB_MAP[legacy] ?? "sent_bookings";
     const params = new URLSearchParams({ tab });
     // Ambiguous tabs (profile + shared) need the mode so we land in "Usar servicios".
     if (!["sent_bookings", "sent_projects", "saved"].includes(tab)) params.set("mode", "use");
