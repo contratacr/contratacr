@@ -432,10 +432,10 @@ export function ServicesEditor({
           onClose={closePicker}
           title={t("pickerTitle")}
           closeLabel={t("cancel")}
-          bodyClassName="flex !overflow-hidden px-0 py-0"
+          bodyClassName="px-0 py-0"
         >
-          <div data-testid="services-add-picker" className="flex min-h-0 flex-1 flex-col">
-            <div className="shrink-0 bg-white px-5 pb-3 pt-4 sm:px-6">
+          <div data-testid="services-add-picker">
+            <div className="sticky top-0 z-10 bg-white px-5 pb-3 pt-4 sm:px-6">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                 <input
@@ -447,39 +447,39 @@ export function ServicesEditor({
               </div>
             </div>
             <div data-testid="services-add-picker-scroll" className={cn(
-              "min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4 pr-4 [scrollbar-gutter:stable] sm:px-4 sm:pr-5",
+              "px-3 pb-4 sm:px-4",
               pickerList.length === 0 && pickerQuery.trim() ? "pt-0" : "pt-2"
             )}>
-            {pickerList.length === 0 && pickerQuery.trim() ? (
-              null
-            ) : pickerQuery.trim() ? (
-              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                {pickerList.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => addService(cat.id)}
-                    className="group flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[#374151] transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe] hover:text-[#0089bb]"
-                  >
-                    <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
-                    <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <CategoryGroupPicker
-                groups={pickerGroups}
-                activeGroupId={activePickerGroupId}
-                onActiveGroupChange={setActivePickerGroupId}
-                onSelect={addService}
-                backLabel={t("pickerBack")}
-                countLabel={(count) => t("pickerOptionsCount", { count })}
-                optionAction={<Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
-                className="gap-1"
-                groupClassName="rounded-xl border border-[#e5e7eb] bg-white py-2 hover:border-[#009FD9] hover:bg-[#f8fbfe]"
-                optionClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-[#f8fbfe]"
-              />
-            )}
+              {pickerList.length === 0 && pickerQuery.trim() ? (
+                null
+              ) : pickerQuery.trim() ? (
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                  {pickerList.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => addService(cat.id)}
+                      className="group flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[#374151] transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe] hover:text-[#0089bb]"
+                    >
+                      <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
+                      <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <CategoryGroupPicker
+                  groups={pickerGroups}
+                  activeGroupId={activePickerGroupId}
+                  onActiveGroupChange={setActivePickerGroupId}
+                  onSelect={addService}
+                  backLabel={t("pickerBack")}
+                  countLabel={(count) => t("pickerOptionsCount", { count })}
+                  optionAction={<Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
+                  className="gap-1"
+                  groupClassName="rounded-xl border border-[#e5e7eb] bg-white py-2 hover:border-[#009FD9] hover:bg-[#f8fbfe]"
+                  optionClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-[#f8fbfe]"
+                />
+              )}
 
             {/* "¿No ves tu servicio?" — type → submit → admin reviews → becomes selectable. */}
             <div className={cn("text-center", pickerList.length === 0 && pickerQuery.trim() ? "mt-1" : "mt-4")}>
