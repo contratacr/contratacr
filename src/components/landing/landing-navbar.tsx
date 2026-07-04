@@ -287,19 +287,11 @@ function editDistance(a: string, b: string): number {
 type CatMatch = (typeof ALL_CATEGORIES)[number];
 function matchCategories(query: string, limit = 8, locale?: string): CatMatch[] {
   if (!query.trim()) return [];
-  const needle = normalizeText(query.trim());
-  const localized = ALL_CATEGORIES
-    .filter((item) => {
-      const label = normalizeText(getCategoryLabel(item.id, locale));
-      const group = normalizeText(getCategoryGroupLabel(item.groupId, locale));
-      return label.includes(needle) || group.includes(needle);
-    })
-    .slice(0, limit);
-  if (localized.length) return localized;
-  const direct = searchCategories(query);
+  const direct = searchCategories(query, locale);
   if (direct.length) return direct.slice(0, limit);
+  const needle = normalizeText(query.trim());
   const tol = needle.length > 6 ? 2 : 1;
-  return ALL_CATEGORIES
+  return getAllCategories()
     .map((item) => {
       const words = normalizeText(`${getCategoryLabel(item.id, locale)} ${item.label}`).split(/\s+/);
       const best = Math.min(...words.map((w) => editDistance(w, needle)));

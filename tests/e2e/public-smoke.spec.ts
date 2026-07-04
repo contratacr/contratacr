@@ -82,4 +82,26 @@ test.describe("@smoke public routes", () => {
     await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
     await expectHealthyPage(page);
   });
+
+  test("services search uses the canonical design and art label", async ({ page }, testInfo) => {
+    await gotoOK(page, "/es/servicios");
+    const pageSearch = page.locator('[data-testid="services-page-search"] input').first();
+    await pageSearch.fill("diseño");
+
+    await expect(page.getByText("Diseño y arte").first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/Diseño\s*\/\s*Arte|Diseno/i);
+    await expectHealthyPage(page);
+
+    if (!isMobileProject(testInfo)) {
+      await gotoOK(page, "/es");
+      await page.getByRole("button", { name: /^Servicios$/i }).first().hover();
+      const menuSearch = page.locator('input[aria-label*="servicio" i], input[placeholder*="servicio" i]').first();
+      await expect(menuSearch).toBeVisible();
+      await menuSearch.fill("diseño");
+
+      await expect(page.getByRole("button", { name: /Diseño y arte/i }).first()).toBeVisible();
+      await expect(page.locator("body")).not.toContainText(/Diseño\s*\/\s*Arte|Diseno/i);
+      await expectHealthyPage(page);
+    }
+  });
 });
