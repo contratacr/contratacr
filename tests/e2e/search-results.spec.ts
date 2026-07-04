@@ -44,7 +44,7 @@ test.describe("@seeded search results", () => {
     await waitForInteractivePage(page);
     const search = page.getByRole("combobox", { name: /Qu[eé] servicio|Qu[eé] necesitas|What service|What do you need/i }).first();
     await search.fill("plomeria");
-    await search.locator("xpath=ancestor::form[1]").getByRole("button", { name: /Buscar|Search/i }).first().click();
+    await search.press("Enter");
     await expect(page).toHaveURL(/\/es\/buscar/);
     await expect(
       page.locator("article").first().or(page.getByText(/No encontramos resultados/i).first()),
