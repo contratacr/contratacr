@@ -300,6 +300,7 @@ export const OTHER_CATEGORY: CategoryItem = {
    server (no fetch) — there `getCategoryLabel` falls back to a clean slug label. */
 export const CUSTOM_GROUP_ID = "otras";
 let CUSTOM_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] = [];
+let CATEGORY_CATALOG_OVERRIDES = new Map<string, { label?: string; labelEn?: string; groupId?: string; keywords?: string[]; isHidden?: boolean }>();
 let CATEGORY_FEATURE_OVERRIDES = new Map<string, { esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }>();
 let CUSTOM_CATEGORY_GROUPS: { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }[] = [];
 const customListeners = new Set<() => void>();
@@ -320,8 +321,14 @@ export function setCustomCategories(
   groups: { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }[] = []
 ): void {
   CUSTOM_CATEGORY_GROUPS = groups.filter((group) => group && group.id && group.label && !group.isHidden);
+  const fixedIds = new Set(ALL_CATEGORIES.map((category) => category.id));
+  CATEGORY_CATALOG_OVERRIDES = new Map(
+    list
+      .filter((c) => c && c.id && !c.isHidden && (c.label || c.labelEn || c.groupId))
+      .map((c) => [c.id, { label: c.label, labelEn: c.labelEn, groupId: c.groupId, keywords: c.keywords, isHidden: c.isHidden }])
+  );
   CUSTOM_CATEGORIES = list
-    .filter((c) => c && c.id && c.label && !c.isHidden)
+    .filter((c) => c && c.id && c.label && !c.isHidden && !fixedIds.has(c.id))
     .map((c) => ({
       id: c.id,
       label: c.label,
@@ -330,7 +337,18 @@ export function setCustomCategories(
       groupId: c.groupId || CUSTOM_GROUP_ID,
       groupLabel: getCategoryGroupLabel(c.groupId || CUSTOM_GROUP_ID),
     }));
-  setCategoryFeatureOverrides(list);
+  const mergedFeatureOverrides = new Map(CATEGORY_FEATURE_OVERRIDES);
+  for (const c of list) {
+    if (!c?.id) continue;
+    mergedFeatureOverrides.set(c.id, {
+      ...mergedFeatureOverrides.get(c.id),
+      esSalud: c.esSalud,
+      supportsVideoconsulta: c.supportsVideoconsulta,
+      isHidden: c.isHidden,
+    });
+  }
+  CATEGORY_FEATURE_OVERRIDES = mergedFeatureOverrides;
+  customListeners.forEach((fn) => { try { fn(); } catch { /* ignore */ } });
 }
 
 export function getCustomCategories(): (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] {
@@ -357,7 +375,19 @@ export function subscribeCustomCategories(fn: () => void): () => void {
 
 /** The full catalog = fixed taxonomy + admin-approved custom categories. */
 export function getAllCategories(): (CategoryItem & { groupId: string; groupLabel: string })[] {
-  const fixed = ALL_CATEGORIES.filter((category) => CATEGORY_FEATURE_OVERRIDES.get(category.id)?.isHidden !== true);
+  const fixed = ALL_CATEGORIES
+    .filter((category) => CATEGORY_FEATURE_OVERRIDES.get(category.id)?.isHidden !== true && CATEGORY_CATALOG_OVERRIDES.get(category.id)?.isHidden !== true)
+    .map((category) => {
+      const override = CATEGORY_CATALOG_OVERRIDES.get(category.id);
+      const groupId = override?.groupId || category.groupId;
+      return {
+        ...category,
+        label: override?.label || category.label,
+        keywords: override?.keywords ?? category.keywords,
+        groupId,
+        groupLabel: getCategoryGroupLabel(groupId),
+      };
+    });
   return CUSTOM_CATEGORIES.length ? [...fixed, ...CUSTOM_CATEGORIES] : fixed;
 }
 
@@ -867,6 +897,11 @@ export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
 
 /* ─── Get category label from ID (locale-aware) ─── */
 export function getCategoryLabel(id: string, locale?: string): string {
+  const override = CATEGORY_CATALOG_OVERRIDES.get(id);
+  if (override) {
+    if (locale === "en" && override.labelEn) return override.labelEn;
+    if (override.label) return override.label;
+  }
   if (locale === "en" && CATEGORY_LABELS_EN[id]) return CATEGORY_LABELS_EN[id];
   if (id === "otro") return locale === "en" ? "Other service" : "Otro servicio";
   const found = ALL_CATEGORIES.find((c) => c.id === id);

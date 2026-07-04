@@ -36,7 +36,7 @@ export async function GET() {
   }>();
 
   for (const row of flags ?? []) {
-    if (!row.id || fixedIds.has(row.id) || row.is_hidden) continue;
+    if (!row.id || row.is_hidden) continue;
     const label = (row.name || "").trim();
     if (!label) continue;
     categoriesById.set(row.id, {

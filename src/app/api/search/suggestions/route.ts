@@ -46,27 +46,44 @@ export async function GET(req: NextRequest) {
 
   // 1. Matching service categories from the fixed taxonomy (keyword synonyms), localized.
   const inferredCat = resolveCategoryIntent(q, locale);
+  const dbCategoryLabels = new Map<string, { label: string; labelEn?: string }>();
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from("categories")
+        .select("id, name, name_en, is_hidden")
+        .eq("is_hidden", false);
+      for (const row of data ?? []) {
+        const id = String(row.id ?? "");
+        const label = String(row.name ?? "").trim();
+        if (!id || !label) continue;
+        dbCategoryLabels.set(id, { label, labelEn: typeof row.name_en === "string" ? row.name_en : undefined });
+      }
+    } catch (err) {
+      console.error("[GET /api/search/suggestions] categories lookup failed:", err);
+    }
+  }
+  const categoryLabel = (id: string) => {
+    const dbLabel = dbCategoryLabels.get(id);
+    if (dbLabel) return locale === "en" && dbLabel.labelEn ? dbLabel.labelEn : dbLabel.label;
+    return getCategoryLabel(id, locale);
+  };
   const staticCats: SearchSuggestion[] = [
     ...(inferredCat ? [inferredCat] : []),
     ...searchCategories(q).filter((c) => c.id !== inferredCat?.id),
   ]
     .slice(0, 6)
-    .map((c) => ({ type: "category", id: c.id, label: getCategoryLabel(c.id, locale) }));
+    .map((c) => ({ type: "category", id: c.id, label: categoryLabel(c.id) }));
 
-  // 1b. Matching admin-approved CUSTOM categories read LIVE from the DB, so newly
-  //     approved ones appear here just like in the other searches (no redeploy).
+  // 1b. Matching admin-managed categories read LIVE from the DB, so newly approved
+  //     services and label overrides appear here just like in the other searches.
   const customCats: SearchSuggestion[] = [];
   const customIds: string[] = [];
   if (supabase) {
     try {
       const seen = new Set(staticCats.map((c) => (c.type === "category" ? c.id : "")));
-      const { data } = await supabase
-        .from("category_suggestions")
-        .select("id, label, suggested_name")
-        .eq("status", "approved");
-      for (const row of data ?? []) {
-        const id = String(row.id ?? "");
-        const label = String(row.label ?? row.suggested_name ?? "").trim();
+      for (const [id, labels] of dbCategoryLabels) {
+        const label = locale === "en" && labels.labelEn ? labels.labelEn : labels.label;
         if (!id || !label || seen.has(id)) continue;
         if (!normalizeText(label).includes(norm)) continue;
         seen.add(id);
