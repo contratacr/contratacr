@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
-import Link from "next/link";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters, MobileServiceSearch } from "@/components/search/search-filters";
@@ -9,15 +8,13 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
-import { isHealthCategory } from "@/lib/data/categories";
+import { getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import type { ScheduleSlot } from "@/components/professionals/professional-schedule";
-
-const PAGE_SIZE = 9;
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -26,10 +23,9 @@ interface SearchPageProps {
     canton?: string;
     sortBy?: string;
     q?: string;
-    page?: string;
-    verificados?: string;
     aseguradora?: string;
     idioma?: string;
+    modalidad?: string;
     lat?: string;
     lng?: string;
     // "Buscar en esta área" — the map's visible bounds (N/S/E/W).
@@ -45,10 +41,11 @@ const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const t = await getTranslations("search");
-  const tCat = await getTranslations("categories");
   const locale = await getLocale();
-
-  const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
+  const sortBy = params.sortBy && params.sortBy !== "cercania" ? params.sortBy : undefined;
+  const selectedCategory = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
+  const effectiveQuery = selectedCategory ? undefined : params.q;
 
   // Who is viewing — so we can hide self-service actions on a pro's OWN card.
   // safeGetUser never throws on a stale session (would otherwise crash this
@@ -69,14 +66,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const canFilterByInsurer = isHealthCategory(params.categoria);
 
   const allResults = await searchProfessionals({
-    categoryId: params.categoria,
+    categoryId: selectedCategory,
     provinceId: params.provincia,
     cantonId: params.canton,
-    sortBy: params.sortBy,
-    query: params.q,
-    verifiedOnly: params.verificados === "1",
+    sortBy,
+    query: effectiveQuery,
     insurerId: canFilterByInsurer ? params.aseguradora : undefined,
     languageId: params.idioma,
+    modality: params.modalidad === "video" || params.modalidad === "in_person" ? params.modalidad : "any",
     nearLat: params.lat ? Number(params.lat) : undefined,
     nearLng: params.lng ? Number(params.lng) : undefined,
     bounds: mapBounds,
@@ -86,7 +83,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // slot (those with no upcoming slots go last). Done here (not in the SQL query)
   // because slots live in a separate table; best-effort, falls back to default order.
   let orderedResults = allResults;
-  if (params.sortBy === "availability") {
+  if (sortBy === "availability") {
     try {
       const supabase = createAdminClient();
       const todayISO = new Date().toISOString().slice(0, 10);
@@ -133,15 +130,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
   }
 
-  const totalPages = Math.max(1, Math.ceil(allResults.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const results = orderedResults.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const results = orderedResults;
 
   // Fetch upcoming published slots for the professionals on THIS page so each
   // card can show inline availability (Hulihealth-style). Private pros are
   // skipped — their slots must not appear.
   const slotsByPro: Record<string, ScheduleSlot[]> = {};
-  const publicIds = results.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
+  const videoMode = params.modalidad === "video";
+  const publicIds = videoMode ? [] : results.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
   if (publicIds.length > 0) {
     try {
       const supabase = createAdminClient();
@@ -205,10 +201,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       avatarUrl: pro.avatarUrl ?? null,
       ratingAvg: pro.ratingAvg,
       reviewCount: pro.reviewCount,
-      categoryLabel: pro.categoryId ? tCat(pro.categoryId as Parameters<typeof tCat>[0]) : undefined,
+      categoryLabel: catLabel(pro.categoryId),
       // Profession labels + verified flag power the pin popup mini-card.
       professions: ((pro.professions && pro.professions.length > 0) ? pro.professions : (pro.categoryId ? [pro.categoryId] : []))
-        .map((id) => tCat(id as Parameters<typeof tCat>[0])),
+        .map((id) => catLabel(id)),
       verified: pro.verificationStatus === "verified",
       hourlyRate: pro.hourlyRate ?? null,
       priceLabel: primaryPricingLabel(pro.pricing, pro.hourlyRate, locale),
@@ -233,9 +229,33 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const activeCanton = activeProvince && params.canton && params.canton !== "todos"
     ? activeProvince.cantons.find((c) => c.id === params.canton)
     : undefined;
+  const videoCompatibleSearch = !!activeCategoryId && supportsVideoConsultCategory(activeCategoryId);
+  const selectedProvinceName = activeProvince?.name ?? "";
+  const selectedCantonName = activeCanton?.name ?? "";
+
+  function matchesSelectedPhysicalLocation(pro: (typeof results)[number]) {
+    if (!activeProvince && !activeCanton) return true;
+    const workplaces = (pro.workplaces ?? []) as Array<{ provinciaId?: string; cantonId?: string; provinceId?: string; name?: string; address?: string }>;
+    if (activeCanton) {
+      return pro.cantonName === selectedCantonName ||
+        pro.coverage?.cantones?.includes(selectedCantonName) ||
+        workplaces.some((w) => w.cantonId === activeCanton.id || w.name?.includes(selectedCantonName) || w.address?.includes(selectedCantonName));
+    }
+    return pro.provinceName === selectedProvinceName ||
+      pro.coverage?.provincias?.includes(selectedProvinceName) ||
+      workplaces.some((w) => w.provinciaId === activeProvince?.id || w.provinceId === activeProvince?.id || w.name?.includes(selectedProvinceName) || w.address?.includes(selectedProvinceName));
+  }
+
+  function shouldShowContactOnly(pro: (typeof results)[number]) {
+    if (videoMode) return true;
+    if (params.modalidad === "in_person") return false;
+    if (!videoCompatibleSearch || (!pro.videoconsulta && !pro.coverage?.country)) return false;
+    if (!activeProvince && !activeCanton) return false;
+    return !matchesSelectedPhysicalLocation(pro);
+  }
 
   const pageTitle = activeCategoryId
-    ? tCat(activeCategoryId as Parameters<typeof tCat>[0])
+    ? catLabel(activeCategoryId)
     : t("title.default");
 
   // Area-aware count label: exact map bounds -> "esta area"; otherwise canton
@@ -244,28 +264,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const subtitle = areaName
     ? t("resultsIn", { count: allResults.length, location: areaName })
     : t("resultsInCR", { count: allResults.length });
-
-  function buildPageUrl(page: number) {
-    const next = new URLSearchParams();
-    if (params.q) next.set("q", params.q);
-    if (params.categoria && params.categoria !== "todas") next.set("categoria", params.categoria);
-    if (params.provincia && params.provincia !== "todas") next.set("provincia", params.provincia);
-    if (params.canton && params.canton !== "todos") next.set("canton", params.canton);
-    if (params.sortBy && params.sortBy !== "rating") next.set("sortBy", params.sortBy);
-    if (params.verificados === "1") next.set("verificados", "1");
-    if (canFilterByInsurer && params.aseguradora && params.aseguradora !== "todas") next.set("aseguradora", params.aseguradora);
-    if (params.idioma && params.idioma !== "todos") next.set("idioma", params.idioma);
-    if (params.lat) next.set("lat", params.lat);
-    if (params.lng) next.set("lng", params.lng);
-    // Preserve the searched map area across pagination.
-    if (params.n) next.set("n", params.n);
-    if (params.s) next.set("s", params.s);
-    if (params.e) next.set("e", params.e);
-    if (params.w) next.set("w", params.w);
-    if (page > 1) next.set("page", String(page));
-    const qs = next.toString();
-    return qs ? `?${qs}` : "?";
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
@@ -332,50 +330,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       // card on pin hover; the number badge matches the map pin.
                       <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative w-full max-w-[520px] lg:max-w-none scroll-mt-24 rounded-2xl transition-shadow">
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
-                          <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} viewerProfileId={viewerProfileId} rank={i + 1} />
+                          <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} viewerProfileId={viewerProfileId} rank={i + 1} forceContactOnly={shouldShowContactOnly(pro)} />
                         </SaveableCard>
                       </div>
                     )))}
                   </div>
 
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="mt-8 flex items-center justify-center gap-3">
-                      {safePage > 1 ? (
-                        <Link
-                          href={buildPageUrl(safePage - 1)}
-                          className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-white text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
-                        >
-                          <ChevronLeft className="h-4 w-4" /> {t("pagination.prev")}
-                        </Link>
-                      ) : (
-                        <span className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-sm font-medium text-[#d1d5db] cursor-not-allowed">
-                          <ChevronLeft className="h-4 w-4" /> {t("pagination.prev")}
-                        </span>
-                      )}
-
-                      <span className="text-sm text-[#6b7280] px-2">
-                        {t.rich("pagination.pageOf", {
-                          page: safePage,
-                          total: totalPages,
-                          b: (c) => <strong className="text-[#111827]">{c}</strong>,
-                        })}
-                      </span>
-
-                      {safePage < totalPages ? (
-                        <Link
-                          href={buildPageUrl(safePage + 1)}
-                          className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-white text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
-                        >
-                          {t("pagination.next")} <ChevronRight className="h-4 w-4" />
-                        </Link>
-                      ) : (
-                        <span className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-sm font-medium text-[#d1d5db] cursor-not-allowed">
-                          {t("pagination.next")} <ChevronRight className="h-4 w-4" />
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </>
               )}
             </div>

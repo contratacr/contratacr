@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { getSavedPros, unsavePro, type SavedPro } from "./save-button";
 import { useLocale, useTranslations } from "next-intl";
 import { formatServicePrice } from "@/lib/pricing";
+import { getCategoryLabel } from "@/lib/data/categories";
 
 function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string) => void }) {
-  const tCat = useTranslations("categories");
   const tSaved = useTranslations("savedPros");
   const locale = useLocale();
 
@@ -34,7 +34,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
         </div>
         <div className="flex items-center gap-3 mt-0.5 flex-wrap">
           <span className="flex items-center gap-1 text-xs text-[#6b7280]">
-            <Wrench className="h-3 w-3 shrink-0 text-[#374151]" /> {tCat(pro.categoryId)}
+            <Wrench className="h-3 w-3 shrink-0 text-[#374151]" /> {getCategoryLabel(pro.categoryId, locale)}
           </span>
           <span className="flex items-center gap-1 text-xs text-[#6b7280]">
             <MapPin className="h-3 w-3 shrink-0 text-[#374151]" />

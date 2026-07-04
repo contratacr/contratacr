@@ -40,6 +40,8 @@ interface ProfessionalScheduleProps {
    *  contact buttons (WhatsApp + Llamar) ALWAYS show, plus "Ver horario completo" when
    *  bookable (Llamar renders outlined). Default false = the /buscar card layout (unchanged). */
   stacked?: boolean;
+  /** Explicit video-consultation search result: clients coordinate by contact, no schedule strip. */
+  forceContactOnly?: boolean;
 }
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
@@ -71,7 +73,7 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   const [liveData, setLiveData] = useState<{
@@ -100,7 +102,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // What the professional accepts. Booking needs public availability AND a
   // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
   // appointments-only.
-  const canBook = liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
+  const canBook = !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
 
   useEffect(() => {
     let active = true;
@@ -179,9 +181,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       if (id?.startsWith("cov_")) continue;
       if (id && id !== "general" && !map.has(id)) map.set(id, locLabel(id));
     }
+    if (professional.videoconsulta && !map.has("videoconsulta")) {
+      map.set("videoconsulta", t("videoconsulta"));
+    }
     return Array.from(map, ([id, label]) => ({ id, label }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professional.workplaces, slots]);
+  }, [professional.workplaces, professional.videoconsulta, slots, t]);
 
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
   // Default to the first location that ACTUALLY has slots (so the card doesn't open on an
@@ -217,8 +222,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // Address under the tabs: the selected workplace's street address, else the
   // province/cantón fallback. Home service is shown as a separate card chip, never
   // as an address.
-  const workplaceAddr = hasRealLoc && effectiveId ? locAddress(effectiveId) : "";
-  const addressLine = workplaceAddr || placeAddress || "";
+  const isVideoLocation = effectiveId === "videoconsulta";
+  const workplaceAddr = hasRealLoc && effectiveId && !isVideoLocation ? locAddress(effectiveId) : "";
+  const addressLine = isVideoLocation ? "" : (workplaceAddr || placeAddress || "");
   const venueName = workplaceAddr ? businessName.trim() : "";
   // Show the chevron nav whenever the tab row actually OVERFLOWS its container (FIT-based, not a
   // fixed count) — so on a NARROW card (e.g. the profile contact rail) where the 3rd location is
@@ -545,7 +551,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   let scheduleBody: ReactNode;
   if (!canBook) {
     // No public booking at all (private availability OR WhatsApp-only preference).
-    scheduleBody = scheduleNote(t("availabilityHiddenNote"));
+    scheduleBody = scheduleNote(forceContactOnly ? t("videoContactNote") : t("availabilityHiddenNote"));
   } else if (!hasUpcoming) {
     // Booking is enabled but the SELECTED location has no upcoming times. If the pro DOES
     // publish times at ANOTHER of their locations, say so SPECIFICALLY (it's not that their

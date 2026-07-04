@@ -206,12 +206,20 @@
       "clearAll": "Clear filters",
       "category": "Category",
       "allCategories": "All categories",
+      "location": "Location",
+      "costaRica": "Costa Rica",
+      "locationPlaceholder": "Search a location",
+      "clearLocation": "Clear location",
       "province": "Province",
       "allProvinces": "All provinces",
       "canton": "Canton",
       "allCantons": "All cantons",
       "selectProvince": "Select a province first",
       "sortBy": "Sort by",
+      "attention": "Mode",
+      "attentionAny": "Any mode",
+      "attentionInPerson": "In person",
+      "attentionVideo": "Video consultation",
       "service": "Service",
       "searchPlaceholder": "Search service",
       "clearSearch": "Clear search",
@@ -219,10 +227,11 @@
       "insurer": "Insurer",
       "anyInsurer": "Any insurer",
       "language": "Language",
-      "anyLanguage": "Any language",
+      "anyLanguage": "Select a language",
+      "allLanguages": "All languages",
       "removeInsurer": "Remove insurer filter",
       "nearMe": "Search professionals near me",
-      "nearMeActive": "Near me (on)",
+      "nearMeActive": "Near me",
       "verifiedOnly": "Verified only",
       "geoUnsupported": "Your browser doesn't allow location. Use the province or cantón search.",
       "geoFailed": "We couldn't get your location. You can search by province and cantón."
@@ -233,8 +242,7 @@
       "priceAsc": "Price: low to high",
       "priceDesc": "Price: high to low",
       "newest": "Newest",
-      "availability": "Immediate availability",
-      "cercania": "Proximity"
+      "availability": "Immediate availability"
     }
   },
   "hero": {
@@ -337,6 +345,7 @@
     "upcomingTimes": "Upcoming times",
     "noUpcoming": "No upcoming times. Request the service to coordinate.",
     "availabilityHiddenNote": "This profile's availability is private. Contact us to find out their hours.",
+    "videoContactNote": "Video consultation available. Coordinate the details directly with the professional.",
     "noScheduleNote": "This profile's availability is private. Contact us to find out their hours.",
     "noTimesAtLocation": "No available times at this location. Pick another location or contact us to coordinate.",
     "prevDays": "Previous days",
@@ -2228,7 +2237,7 @@
     "step3Body": "The padrón is updated periodically. If your case doesn't pass automatically, you can appeal and it's re-verified.",
     "disclaimerTitle": "Important notice",
     "disclaimer": "ContrataCR is an <strong>intermediary platform</strong> that connects clients with service providers; it is not the service provider. The <strong>“Verified”</strong> badge only confirms the ID is real and the name matches official records. <strong>It does not guarantee or ensure the quality, outcome or completion of any work</strong>, and does not by itself prove that the person who registered is physically that person. Hiring happens directly between the client and the provider.",
-    "ctaVerified": "See verified providers"
+    "ctaVerified": "See professionals"
   },
   "contacto": {
     "sendError": "There was an error sending your message. Please try again.",

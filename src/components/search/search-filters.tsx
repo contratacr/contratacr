@@ -3,13 +3,14 @@
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, X, Loader2, MapPin, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { Search, X, Loader2, MapPin, SlidersHorizontal } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
+import { PROVINCES } from "@/lib/data/cr-geography";
 import { CategorySearch } from "@/components/ui/category-search";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
-import { searchCategories, getCategoryLabel, isHealthCategory } from "@/lib/data/categories";
+import { searchCategories, getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { resolveLocation, searchLocations, type LocationSuggestion } from "@/lib/data/location-search";
 import { INSURERS } from "@/lib/data/insurers";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 import { createClient } from "@/lib/supabase/client";
@@ -18,16 +19,32 @@ import { createClient } from "@/lib/supabase/client";
 // the fields read the same whether a service filter is active or not.
 const FILTER_TRIGGER = "text-sm focus-visible:border-[#009FD9] focus-visible:ring-[#009FD9]/20";
 // Open menu = EXACTLY the trigger's width, flush-aligned (left+right edges line up with
-// the field) — like the "Servicio" autocomplete. By default Radix popper content sizes to
+// the field) â€” like the "Servicio" autocomplete. By default Radix popper content sizes to
 // its OPTIONS (with a min-w), so a short list (e.g. Aseguradora) opens narrower than its
 // full-width trigger and misaligns. `--radix-select-trigger-width` is the trigger's width
 // (exposed on popper content); `min-w-0` drops the shared `min-w-[8rem]` so the match is
-// exact even for a narrow trigger. Filters only — the shared Select is untouched.
+// exact even for a narrow trigger. Filters only â€” the shared Select is untouched.
 const FILTER_CONTENT = "min-w-0 w-[var(--radix-select-trigger-width)]";
 // Sentinel for the in-dropdown "Cualquier aseguradora" reset item (Radix Select forbids
 // an empty-string value, so we map this back to "" = no insurer filter).
 const ANY_INSURER = "__any__";
 const ANY_LANGUAGE = "__any_language__";
+const ANY_MODALITY = "any";
+
+function locationFilterLabel(provinceId: string, cantonId: string) {
+  if (!provinceId || provinceId === "todas") return "";
+  const province = PROVINCES.find((p) => p.id === provinceId);
+  if (!province) return "";
+  if (cantonId && cantonId !== "todos") {
+    const canton = province.cantons.find((c) => c.id === cantonId);
+    if (canton) return `${canton.name}, ${province.name}`;
+  }
+  return province.name;
+}
+
+function suggestionLabel(suggestion: LocationSuggestion) {
+  return suggestion.type === "canton" ? `${suggestion.label}, ${suggestion.sublabel}` : suggestion.label;
+}
 
 function useSearchExamplePlaceholder(examples: string[], active: boolean) {
   const [text, setText] = useState(examples[0] ?? "");
@@ -94,20 +111,30 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [category, setCategory] = useState(params.get("categoria") ?? "");
   const [province, setProvince] = useState(params.get("provincia") ?? "");
   const [canton, setCanton] = useState(params.get("canton") ?? "");
-  const [sortBy, setSortBy] = useState(params.get("sortBy") ?? "rating");
+  const [locationQuery, setLocationQuery] = useState(() =>
+    params.get("lat") && params.get("lng")
+      ? t("filters.nearMeActive")
+      : locationFilterLabel(params.get("provincia") ?? "", params.get("canton") ?? "")
+  );
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [locationActiveIndex, setLocationActiveIndex] = useState(-1);
+  const locationBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locationFieldRef = useRef<HTMLDivElement>(null);
+  const initialSort = params.get("sortBy");
+  const [sortBy, setSortBy] = useState(initialSort && initialSort !== "cercania" ? initialSort : "rating");
+  const [modality, setModality] = useState(params.get("modalidad") ?? ANY_MODALITY);
   const [aseguradora, setAseguradora] = useState(() =>
     isHealthCategory(params.get("categoria")) ? (params.get("aseguradora") ?? "") : ""
   );
   const [language, setLanguage] = useState(params.get("idioma") ?? "");
-  const [verifiedOnly, setVerifiedOnly] = useState(params.get("verificados") === "1");
-  // Geolocation ("cerca de mí") — opt-in, requested only when the user taps the
-  // control, never auto-popped. Denied/unavailable → text search still works.
+  // Geolocation ("cerca de mÃ­") â€” opt-in, requested only when the user taps the
+  // control, never auto-popped. Denied/unavailable â†’ text search still works.
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
-  const geoActive = !!params.get("lat") && params.get("sortBy") === "cercania";
+  const geoActive = !!params.get("lat") && !!params.get("lng");
 
   // Official list = static INSURERS + admin-approved additions from the DB.
-  // The filter never offers a "Ninguna / Todas / sin seguros" entry — those are a
+  // The filter never offers a "Ninguna / Todas / sin seguros" entry â€” those are a
   // pro attribute or a stray placeholder, NOT a way to filter clients. Default is
   // simply no insurer selected (unfiltered). Excluded by id AND by label so a DB
   // row like "Ninguna" can't leak in regardless of its id.
@@ -132,15 +159,16 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   }, []);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cantons = getCantonsByProvince(province);
+  const locationSug = useMemo(() => (locationQuery.trim().length >= 2 ? searchLocations(locationQuery, 7) : []), [locationQuery]);
   const areaActive = !!(params.get("n") && params.get("s") && params.get("e") && params.get("w"));
   const showInsurerFilter = isHealthCategory(category && category !== "todas" ? category : null);
+  const showVideoFilter = supportsVideoConsultCategory(category && category !== "todas" ? category : null);
 
   const applyFilters = useCallback(
     (overrides: Record<string, string> = {}) => {
       const next = new URLSearchParams();
       // In CHIPS mode the search input lives in a SEPARATE component (MobileServiceSearch),
-      // so take `q` from the URL — never from this instance's stale local `query` — to
+      // so take `q` from the URL â€” never from this instance's stale local `query` â€” to
       // avoid clobbering what the search bar set. The sidebar keeps using its own input.
       const vals = {
         q: variant === "chips" ? (params.get("q") ?? "") : query,
@@ -148,9 +176,9 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         provincia: province,
         canton,
         sortBy,
+        modalidad: modality,
         aseguradora,
         idioma: language,
-        verificados: verifiedOnly ? "1" : "",
         lat: params.get("lat") ?? "",
         lng: params.get("lng") ?? "",
         n: params.get("n") ?? "",
@@ -164,14 +192,15 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         Object.prototype.hasOwnProperty.call(overrides, "canton") ||
         Object.prototype.hasOwnProperty.call(overrides, "lat") ||
         Object.prototype.hasOwnProperty.call(overrides, "lng");
-      if (vals.q) next.set("q", vals.q);
-      if (vals.categoria && vals.categoria !== "todas") next.set("categoria", vals.categoria);
+      const hasSelectedCategory = !!(vals.categoria && vals.categoria !== "todas");
+      if (vals.q && !hasSelectedCategory) next.set("q", vals.q);
+      if (hasSelectedCategory) next.set("categoria", vals.categoria);
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
       if (vals.canton && vals.canton !== "todos" && vals.provincia) next.set("canton", vals.canton);
       if (vals.sortBy && vals.sortBy !== "rating") next.set("sortBy", vals.sortBy);
+      if (showVideoFilter && vals.modalidad && vals.modalidad !== ANY_MODALITY) next.set("modalidad", vals.modalidad);
       if (isHealthCategory(vals.categoria) && vals.aseguradora && vals.aseguradora !== "todas") next.set("aseguradora", vals.aseguradora);
       if (vals.idioma && vals.idioma !== "todos") next.set("idioma", vals.idioma);
-      if (vals.verificados === "1") next.set("verificados", "1");
       // Carry the geolocation coords so changing another filter keeps proximity.
       if (vals.lat && vals.lng) { next.set("lat", vals.lat); next.set("lng", vals.lng); }
       // Keep "Buscar en esta area" active while changing service/sort/verified
@@ -184,16 +213,19 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       }
       router.push(`${pathname}?${next.toString()}`);
     },
-    [query, category, province, canton, sortBy, aseguradora, language, verifiedOnly, params, router, pathname, variant]
+    [query, category, province, canton, sortBy, modality, aseguradora, language, params, router, pathname, variant, showVideoFilter]
   );
 
-  // Request geolocation on demand (item 11). Granted → proximity sort + autofill
-  // the nearest provincia. Denied/unavailable → keep the text-based search.
-  function requestMyLocation() {
+  // Request geolocation on demand (item 11). Granted â†’ proximity sort + autofill
+  // the nearest provincia. Denied/unavailable â†’ keep the text-based search.
+  function requestMyLocation(nextSortBy = sortBy) {
     if (geoActive) {
-      // Toggle OFF — drop the proximity sort + coords, keep other filters.
+      // Toggle OFF â€” drop the proximity sort + coords, keep other filters.
       setGeoError(null);
-      applyFilters({ sortBy: "rating", lat: "", lng: "" });
+      setLocationQuery("");
+      const fallbackSort = sortBy === "cercania" ? "rating" : sortBy;
+      if (sortBy === "cercania") setSortBy("rating");
+      applyFilters({ sortBy: fallbackSort, lat: "", lng: "", provincia: "", canton: "" });
       return;
     }
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -205,11 +237,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        const pid = nearestProvinceId(latitude, longitude);
-        if (pid) { setProvince(pid); setCanton(""); }
-        setSortBy("cercania");
+        setProvince("");
+        setCanton("");
+        setLocationQuery(t("filters.nearMeActive"));
         setGeoLoading(false);
-        applyFilters({ sortBy: "cercania", provincia: pid ?? "", canton: "", lat: String(latitude.toFixed(5)), lng: String(longitude.toFixed(5)) });
+        applyFilters({ sortBy: nextSortBy, provincia: "", canton: "", lat: String(latitude.toFixed(5)), lng: String(longitude.toFixed(5)) });
       },
       () => {
         setGeoLoading(false);
@@ -223,63 +255,120 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setQuery(value);
     // Free text supersedes any picked category (mutually exclusive).
     if (category) setCategory("");
+    if (modality !== ANY_MODALITY) setModality(ANY_MODALITY);
     if (aseguradora) setAseguradora("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => applyFilters({ q: value, categoria: "", aseguradora: "" }), 400);
+    debounceRef.current = setTimeout(() => applyFilters({ q: value, categoria: "", aseguradora: "", modalidad: ANY_MODALITY }), 400);
   }
 
   function handleQueryKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       setCategory("");
+      setModality(ANY_MODALITY);
       setAseguradora("");
-      applyFilters({ q: query, categoria: "", aseguradora: "" });
+      applyFilters({ q: query, categoria: "", aseguradora: "", modalidad: ANY_MODALITY });
     }
   }
 
-  // Picking a category suggestion → set `categoria`, clear the free-text `q`, and cancel
+  // Picking a category suggestion â†’ set `categoria`, clear the free-text `q`, and cancel
   // any pending free-text debounce (so it can't fire afterward and wipe the category).
   function pickCategory(id: string) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const nextInsurer = isHealthCategory(id) ? aseguradora : "";
+    const nextModality = supportsVideoConsultCategory(id) ? modality : ANY_MODALITY;
     setCategory(id);
     if (!nextInsurer) setAseguradora("");
+    if (nextModality === ANY_MODALITY) setModality(ANY_MODALITY);
     setQuery(getCategoryLabel(id, locale));
     setSearchOpen(false);
-    applyFilters({ categoria: id, q: "", aseguradora: nextInsurer });
+    applyFilters({ categoria: id, q: "", aseguradora: nextInsurer, modalidad: nextModality });
   }
 
   function clearQuery() {
-    setQuery(""); setCategory(""); setAseguradora("");
+    setQuery(""); setCategory(""); setModality(ANY_MODALITY); setAseguradora("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    applyFilters({ q: "", categoria: "", aseguradora: "" });
+    applyFilters({ q: "", categoria: "", aseguradora: "", modalidad: ANY_MODALITY });
   }
 
   useEffect(() => {
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (locationBlurRef.current) clearTimeout(locationBlurRef.current);
+    };
   }, []);
 
+  function pickLocation(suggestion: LocationSuggestion) {
+    const nextProvince = suggestion.type === "province" ? suggestion.id : suggestion.provinceId;
+    const nextCanton = suggestion.type === "canton" ? suggestion.id : "";
+    setProvince(nextProvince);
+    setCanton(nextCanton);
+    setLocationQuery(suggestionLabel(suggestion));
+    setLocationOpen(false);
+    setLocationActiveIndex(-1);
+    applyFilters({ provincia: nextProvince, canton: nextCanton, lat: "", lng: "" });
+  }
+
+  function clearLocation() {
+    setProvince("");
+    setCanton("");
+    setLocationQuery("");
+    setLocationOpen(false);
+    setLocationActiveIndex(-1);
+    applyFilters({ provincia: "", canton: "", lat: "", lng: "" });
+  }
+
+  function handleLocationKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "ArrowDown" && locationSug.length > 0) {
+      e.preventDefault();
+      setLocationOpen(true);
+      setLocationActiveIndex((i) => Math.min(i + 1, locationSug.length - 1));
+      return;
+    }
+    if (e.key === "ArrowUp" && locationSug.length > 0) {
+      e.preventDefault();
+      setLocationActiveIndex((i) => Math.max(i - 1, 0));
+      return;
+    }
+    if (e.key === "Escape") {
+      setLocationOpen(false);
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const trimmed = locationQuery.trim();
+      if (!trimmed || /^costa\s+rica$/i.test(trimmed)) {
+        clearLocation();
+        return;
+      }
+      const selected = locationSug[locationActiveIndex >= 0 ? locationActiveIndex : 0] ?? resolveLocation(trimmed);
+      if (selected) pickLocation(selected);
+    }
+  }
+
   function clearAll() {
-    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setSortBy("rating"); setAseguradora(""); setLanguage(""); setVerifiedOnly(false);
+    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModality(ANY_MODALITY); setAseguradora(""); setLanguage("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push(pathname);
   }
 
-  // The unified service field (free text OR a picked category) counts as ONE filter — not
-  // two — even though it's backed by `q` XOR `categoria`.
+  // The unified service field (free text OR a picked category) counts as ONE filter â€” not
+  // two â€” even though it's backed by `q` XOR `categoria`.
   const serviceActive = !!(query.trim() || (category && category !== "todas"));
+  const locationDisplay = geoActive ? t("filters.nearMeActive") : locationFilterLabel(province, canton);
+  const locationFilterActive = geoActive || !!locationDisplay;
   const activeCount =
     (serviceActive ? 1 : 0) +
-    [province, canton].filter((v) => v && v !== "todas" && v !== "todos").length +
+    (locationFilterActive ? 1 : 0) +
+    (showVideoFilter && modality !== ANY_MODALITY ? 1 : 0) +
     (areaActive ? 1 : 0) +
     (showInsurerFilter && aseguradora ? 1 : 0) +
     (language ? 1 : 0) +
-    (verifiedOnly ? 1 : 0) +
     (geoActive ? 1 : 0);
 
-  // ── MOBILE chips variant ──────────────────────────────────────────────────
+  // â”€â”€ MOBILE chips variant â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // A single horizontally-scrollable row of pill controls (NO vertical sidebar, NO
-  // search input — that's the separate MobileServiceSearch). Reuses every handler above,
+  // search input â€” that's the separate MobileServiceSearch). Reuses every handler above,
   // so the filtering/URL logic is identical; only the presentation differs.
   if (variant === "chips") {
     const pill = `${FILTER_TRIGGER} h-9 w-full rounded-full bg-white`;
@@ -294,35 +383,21 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             value={category && category !== "todas" ? category : ""}
             onChange={(id) => {
               const nextInsurer = isHealthCategory(id) ? aseguradora : "";
+              const nextModality = supportsVideoConsultCategory(id) ? modality : ANY_MODALITY;
               setCategory(id);
               if (!nextInsurer) setAseguradora("");
-              applyFilters({ categoria: id, aseguradora: nextInsurer });
+              if (nextModality === ANY_MODALITY) setModality(ANY_MODALITY);
+              applyFilters({ categoria: id, aseguradora: nextInsurer, modalidad: nextModality });
             }}
             placeholder={t("filters.category")}
           />
         </div>
-        <div className="shrink-0 w-[140px]">
-          <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
-            <SelectTrigger className={pill}><SelectValue placeholder={t("filters.province")} /></SelectTrigger>
-            <SelectContent className={FILTER_CONTENT}>
-              <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
-              {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="shrink-0 w-[140px]">
-          <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
-            <SelectTrigger className={pill}><SelectValue placeholder={!province ? t("filters.selectProvince") : t("filters.canton")} /></SelectTrigger>
-            <SelectContent className={FILTER_CONTENT}>
-              <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
-              {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("ccr:open-filters"))} className={toggleChip(locationFilterActive)}>
+          {locationDisplay || t("filters.costaRica")}
+        </button>
         <div className="shrink-0 w-[150px]">
           <Select value={sortBy} onValueChange={(v) => {
             setSortBy(v);
-            if (v === "cercania" && !geoActive) { requestMyLocation(); return; }
             applyFilters({ sortBy: v });
           }}>
             <SelectTrigger className={pill}><SelectValue /></SelectTrigger>
@@ -330,10 +405,21 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
               <SelectItem value="availability">{t("sort.availability")}</SelectItem>
-              <SelectItem value="cercania">{t("sort.cercania")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
+        {showVideoFilter && (
+          <div className="shrink-0 w-[155px]">
+            <Select value={modality} onValueChange={(v) => { setModality(v); applyFilters({ modalidad: v }); }}>
+              <SelectTrigger className={pill}><SelectValue /></SelectTrigger>
+              <SelectContent className={FILTER_CONTENT}>
+                <SelectItem value={ANY_MODALITY}>{t("filters.attentionAny")}</SelectItem>
+                <SelectItem value="in_person">{t("filters.attentionInPerson")}</SelectItem>
+                <SelectItem value="video">{t("filters.attentionVideo")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="shrink-0 w-[155px]">
           <Select value={language || undefined} onValueChange={(v) => { const next = v === ANY_LANGUAGE ? "" : v; setLanguage(next); applyFilters({ idioma: next }); }}>
             <SelectTrigger className={pill}>
@@ -342,7 +428,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               </SelectValue>
             </SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
-              {language && <SelectItem value={ANY_LANGUAGE} className="text-[#6b7280]">{t("filters.anyLanguage")}</SelectItem>}
+              {language && <SelectItem value={ANY_LANGUAGE} className="text-[#6b7280]">{t("filters.allLanguages")}</SelectItem>}
               {LANGUAGES.map((item) => <SelectItem key={item.id} value={item.id}>{languageLabel(item.id, locale)}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -362,13 +448,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           </Select>
         </div>
         )}
-        <button type="button" onClick={requestMyLocation} disabled={geoLoading} className={toggleChip(geoActive)}>
-          {geoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
-          {geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}
-        </button>
-        <button type="button" onClick={() => { const v = !verifiedOnly; setVerifiedOnly(v); applyFilters({ verificados: v ? "1" : "" }); }} className={toggleChip(verifiedOnly)}>
-          <ShieldCheck className="h-3.5 w-3.5" /> {t("filters.verifiedOnly")}
-        </button>
         {activeCount > 0 && (
           <button type="button" onClick={clearAll} className="shrink-0 inline-flex items-center gap-1 h-9 rounded-full px-3 text-[13px] font-medium text-[#6b7280] hover:text-red-500 whitespace-nowrap">
             <X className="h-3.5 w-3.5" /> {t("filters.clear")}
@@ -380,11 +459,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
 
   const fieldLabel = "mb-1 block text-[11px] font-semibold text-[#6b7280]";
   // `hideHeader` = rendered inside the mobile filter sheet, which supplies its own
-  // chrome (title bar / padding) — so drop the card border/rounding/padding here.
+  // chrome (title bar / padding) â€” so drop the card border/rounding/padding here.
   const inDrawer = hideHeader;
   return (
     <div className={inDrawer ? "" : "rounded-2xl border border-[#e5e7eb] bg-white p-4"}>
-      {/* Header — "Filtros" + a live active-count (inline clear when any are on) + an
+      {/* Header â€” "Filtros" + a live active-count (inline clear when any are on) + an
           optional close X. `closable` is set ONLY for the mobile drawer instance, so the
           X lives INSIDE this white container's header; the desktop sidebar has no X. */}
       {!hideHeader && (
@@ -392,7 +471,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <h2 className="text-sm font-bold text-[#111827]">{t("filters.title")}</h2>
           <div className="flex items-center gap-1.5">
             {activeCount > 0 && (
-              // CLEAR = a LABELLED text link "Limpiar filtros (N)" — NOT a bare X (which read
+              // CLEAR = a LABELLED text link "Limpiar filtros (N)" â€” NOT a bare X (which read
               // like a close). A modern, unambiguous "clear all filters" affordance, visually
               // distinct from the panel-close X beside it (sprint 333).
               <button onClick={clearAll} className="text-[12px] font-semibold text-[#009FD9] hover:underline transition-colors whitespace-nowrap">
@@ -400,7 +479,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               </button>
             )}
             {closable && (
-              // CLOSE the whole filters panel — a distinct, LARGER FILLED circle X button, so
+              // CLOSE the whole filters panel â€” a distinct, LARGER FILLED circle X button, so
               // it never reads like the labelled "Limpiar filtros" clear action beside it.
               <button
                 type="button"
@@ -415,16 +494,16 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         </div>
       )}
 
-      {/* Vertical stack — EVERY filter is the SAME field shape: a `fieldLabel` + an
+      {/* Vertical stack â€” EVERY filter is the SAME field shape: a `fieldLabel` + an
           `h-10 w-full rounded-xl border px-4` box, so all five line up identically (the
           user wants them all the exact size of Aseguradora). The unified service/category
-          control is the FIRST field — a search INPUT, but boxed + padded to match the
+          control is the FIRST field â€” a search INPUT, but boxed + padded to match the
           Select triggers EXACTLY (it used to be a label-less, icon-indented `pl-9` input,
           which read as a different size next to the px-4 dropdowns). */}
       <div className="flex flex-col gap-3">
-        {/* Service/category — free text OR a picked category. Same box as the Selects:
+        {/* Service/category â€” free text OR a picked category. Same box as the Selects:
             label + h-10 w-full px-4 (NO left search icon, so its text starts at the same
-            x as Provincia/Cantón/Ordenar/Aseguradora). */}
+            x as Provincia/CantÃ³n/Ordenar/Aseguradora). */}
         {!hideSearch && (
           <div>
             <label className={fieldLabel}>{t("filters.service")}</label>
@@ -440,7 +519,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                     if (e.key === "ArrowDown") { e.preventDefault(); setSearchActive((i) => Math.min(i + 1, searchSug.length - 1)); return; }
                     if (e.key === "ArrowUp") { e.preventDefault(); setSearchActive((i) => Math.max(i - 1, 0)); return; }
                     // Enter resolves the partial term to the highlighted OR the FIRST (best)
-                    // match and searches THAT (e.g. "electrici" → "electricista").
+                    // match and searches THAT (e.g. "electrici" â†’ "electricista").
                     if (e.key === "Enter") {
                       e.preventDefault();
                       pickCategory(searchSug[searchActive >= 0 ? searchActive : 0].id);
@@ -456,13 +535,13 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 aria-autocomplete="list"
                 // EXACT same box as the Select triggers: h-10 w-full rounded-xl border, px-4
                 // left, and pr-9 ALWAYS so the right glyph sits exactly where the dropdowns'
-                // chevron does — so this field is indistinguishable in size + layout.
+                // chevron does â€” so this field is indistinguishable in size + layout.
                 className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
               />
               {/* Right-side glyph: a Search icon at rest (matches the Select chevron spot/
-                  size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field — a
+                  size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field â€” a
                   tiny icon in a hover-only circle, deliberately quieter + smaller than the
-                  filled close-panel button so "clear my text" ≠ "close the panel" (sprint 327). */}
+                  filled close-panel button so "clear my text" â‰  "close the panel" (sprint 327). */}
               {query ? (
                 <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
                   <X className="h-3.5 w-3.5" />
@@ -493,43 +572,87 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           </div>
         )}
 
-        {/* Provincia + Cantón — FULL-WIDTH stacked, exactly like every other filter
-            (Categoría / Ordenar / Aseguradora). The old 2-column row made each box too
+        {/* Provincia + CantÃ³n â€” FULL-WIDTH stacked, exactly like every other filter
+            (CategorÃ­a / Ordenar / Aseguradora). The old 2-column row made each box too
             narrow for "Todas las provincias"/"Todos los cantones" (overflow) and put the
-            disabled-Cantón faded border right next to Provincia — visually inconsistent. */}
+            disabled-CantÃ³n faded border right next to Provincia â€” visually inconsistent. */}
         <div>
-          <label className={fieldLabel}>{t("filters.province")}</label>
-          <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
-            <SelectTrigger className={FILTER_TRIGGER}>
-              <SelectValue placeholder={t("filters.allProvinces")} />
-            </SelectTrigger>
-            <SelectContent className={FILTER_CONTENT}>
-              <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
-              {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className={fieldLabel}>{t("filters.canton")}</label>
-          <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
-            <SelectTrigger className={FILTER_TRIGGER}>
-              <SelectValue placeholder={!province ? t("filters.selectProvince") : t("filters.allCantons")} />
-            </SelectTrigger>
-            <SelectContent className={FILTER_CONTENT}>
-              <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
-              {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <label className={fieldLabel}>{t("filters.location")}</label>
+          <div ref={locationFieldRef} className="relative">
+            <input
+              type="text"
+              value={locationQuery}
+              onChange={(e) => {
+                setLocationQuery(e.target.value);
+                setLocationActiveIndex(-1);
+                setLocationOpen(true);
+                if (!e.target.value.trim()) {
+                  setProvince("");
+                  setCanton("");
+                  applyFilters({ provincia: "", canton: "", lat: "", lng: "" });
+                }
+              }}
+              onFocus={() => { if (locationSug.length > 0) setLocationOpen(true); }}
+              onBlur={() => { locationBlurRef.current = setTimeout(() => setLocationOpen(false), 150); }}
+              onKeyDown={handleLocationKeyDown}
+              placeholder={t("filters.locationPlaceholder")}
+              role="combobox"
+              aria-expanded={locationOpen}
+              aria-autocomplete="list"
+              className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+            />
+            {locationQuery ? (
+              <button
+                type="button"
+                onClick={clearLocation}
+                className="absolute right-3 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
+                aria-label={t("filters.clearLocation")}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => requestMyLocation()}
+                disabled={geoLoading}
+                className={`group absolute right-2.5 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full transition-colors ${
+                  geoActive ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+                }`}
+                aria-label={geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}
+              >
+                {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                <span className="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-50 hidden whitespace-nowrap rounded-lg bg-[#0f2747] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg group-hover:block group-focus-visible:block">
+                  {t("filters.nearMeActive")}
+                </span>
+              </button>
+            )}
+            <AnchoredDropdown anchorRef={locationFieldRef} open={locationOpen && locationSug.length > 0} maxHeight={288}>
+              <ul className="py-1" role="listbox">
+                {locationSug.map((suggestion, i) => (
+                  <li key={`${suggestion.type}-${suggestion.type === "province" ? suggestion.id : `${suggestion.provinceId}-${suggestion.id}`}`}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={i === locationActiveIndex}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => pickLocation(suggestion)}
+                      className={`flex w-full flex-col px-3.5 py-2.5 text-left text-sm transition-colors ${i === locationActiveIndex ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
+                    >
+                      <span className="font-semibold text-[#111827]">{suggestion.label}</span>
+                      {suggestion.type === "canton" && <span className="text-xs text-[#6b7280]">{suggestion.sublabel}</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </AnchoredDropdown>
+          </div>
+          {geoError && <span className="mt-1 block px-1 text-[11px] text-[#b45309]">{geoError}</span>}
         </div>
 
         <div>
           <label className={fieldLabel}>{t("filters.sortBy")}</label>
           <Select value={sortBy} onValueChange={(v) => {
             setSortBy(v);
-            // "Cercanía" needs the user's coordinates — request geolocation if we
-            // don't have them yet; otherwise apply directly.
-            if (v === "cercania" && !geoActive) { requestMyLocation(); return; }
             applyFilters({ sortBy: v });
           }}>
             <SelectTrigger className={FILTER_TRIGGER}><SelectValue /></SelectTrigger>
@@ -537,10 +660,23 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
               <SelectItem value="availability">{t("sort.availability")}</SelectItem>
-              <SelectItem value="cercania">{t("sort.cercania")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
+
+        {showVideoFilter && (
+          <div>
+            <label className={fieldLabel}>{t("filters.attention")}</label>
+            <Select value={modality} onValueChange={(v) => { setModality(v); applyFilters({ modalidad: v }); }}>
+              <SelectTrigger className={FILTER_TRIGGER}><SelectValue /></SelectTrigger>
+              <SelectContent className={FILTER_CONTENT}>
+                <SelectItem value={ANY_MODALITY}>{t("filters.attentionAny")}</SelectItem>
+                <SelectItem value="in_person">{t("filters.attentionInPerson")}</SelectItem>
+                <SelectItem value="video">{t("filters.attentionVideo")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div>
           <label className={fieldLabel}>{t("filters.language")}</label>
@@ -554,7 +690,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               </SelectValue>
             </SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
-              {language && <SelectItem value={ANY_LANGUAGE} className="text-[#6b7280]">{t("filters.anyLanguage")}</SelectItem>}
+              {language && <SelectItem value={ANY_LANGUAGE} className="text-[#6b7280]">{t("filters.allLanguages")}</SelectItem>}
               {LANGUAGES.map((item) => <SelectItem key={item.id} value={item.id}>{languageLabel(item.id, locale)}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -564,10 +700,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <div>
           <label className={fieldLabel}>{t("filters.insurer")}</label>
           {/* Non-filtering default: nothing selected shows "Cualquier aseguradora"
-              (greyed, like a placeholder, so it reads as NOT an active filter — most
+              (greyed, like a placeholder, so it reads as NOT an active filter â€” most
               pros don't work with insurers). Pick one to filter. Clearing is the
               in-dropdown "Cualquier aseguradora" item (shown only when one is picked) so
-              the field stays the SAME full-width size as every other filter — an external
+              the field stays the SAME full-width size as every other filter â€” an external
               X button used to shrink this control ~40px narrower than the rest. */}
           <Select
             value={aseguradora || undefined}
@@ -588,44 +724,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         </div>
         )}
       </div>
-
-      {/* On/off filters → clean toggle ROWS (no bordered boxes): label left, switch
-          right, the whole row a subtle hover target. A thin divider separates them. */}
-      <div className="mt-3 flex flex-col gap-0.5 border-t border-[#f3f4f6] pt-2">
-        <button
-          type="button"
-          onClick={requestMyLocation}
-          disabled={geoLoading}
-          className="inline-flex w-full items-center justify-between gap-2 rounded-lg px-1.5 py-2 text-[13px] font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] focus:outline-none focus-visible:bg-[#f9fafb]"
-        >
-          <span className="flex-1 text-left">{geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}</span>
-          {geoLoading ? (
-            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-[#009FD9]" />
-          ) : (
-            <span className={`flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${geoActive ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
-              <span className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${geoActive ? "translate-x-4" : "translate-x-0.5"}`} />
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => { const v = !verifiedOnly; setVerifiedOnly(v); applyFilters({ verificados: v ? "1" : "" }); }}
-          className="inline-flex w-full items-center justify-between gap-2 rounded-lg px-1.5 py-2 text-[13px] font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] focus:outline-none focus-visible:bg-[#f9fafb]"
-        >
-          <span>{t("filters.verifiedOnly")}</span>
-          <span className={`flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${verifiedOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
-            <span className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${verifiedOnly ? "translate-x-4" : "translate-x-0.5"}`} />
-          </span>
-        </button>
-
-        {geoError && <span className="px-1.5 text-[11px] text-[#b45309]">{geoError}</span>}
-      </div>
     </div>
   );
 }
 
-// ── MOBILE "Filtros" icon-button (in the single-line /buscar header) ──
+// â”€â”€ MOBILE "Filtros" icon-button (in the single-line /buscar header) â”€â”€
 // Compact icon-only trigger; dispatches `ccr:open-filters`, which `SearchResultsLayout`
 // listens for to open the full-filter drawer. A brand-blue dot marks active filters.
 export function MobileFiltersButton() {
@@ -634,8 +737,8 @@ export function MobileFiltersButton() {
   const hasActiveInsurer = !!params.get("aseguradora") && isHealthCategory(params.get("categoria"));
   const hasActive =
     !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
-    hasActiveInsurer || !!params.get("idioma") || params.get("verificados") === "1" || !!params.get("lat") ||
-    (!!params.get("sortBy") && params.get("sortBy") !== "rating");
+    hasActiveInsurer || !!params.get("idioma") || !!params.get("lat") ||
+    (!!params.get("sortBy") && params.get("sortBy") !== "rating") || (!!params.get("modalidad") && params.get("modalidad") !== ANY_MODALITY);
   return (
     <button
       type="button"
@@ -652,11 +755,11 @@ export function MobileFiltersButton() {
   );
 }
 
-// ── MOBILE service-search bar (the "Busca un servicio…" field, pinned at the top) ──
+// â”€â”€ MOBILE service-search bar (the "Busca un servicioâ€¦" field, pinned at the top) â”€â”€
 // Self-contained: manages the `q` param (PRESERVING every other param), AND autocompletes
-// against OUR professions/categories taxonomy (`searchCategories`) — typing shows matching
+// against OUR professions/categories taxonomy (`searchCategories`) â€” typing shows matching
 // services; picking one filters by `categoria` (clears `q`). Same debounced free-text search
-// on Enter / blur. The taxonomy is the same one the "Categoría" filter + hero use.
+// on Enter / blur. The taxonomy is the same one the "CategorÃ­a" filter + hero use.
 export function MobileServiceSearch() {
   const router = useRouter();
   const pathname = usePathname();
@@ -690,6 +793,7 @@ export function MobileServiceSearch() {
     next.set("categoria", id);
     next.delete("q");
     if (!isHealthCategory(id)) next.delete("aseguradora");
+    if (!supportsVideoConsultCategory(id)) next.delete("modalidad");
     next.delete("page");
     setQ(getCategoryLabel(id, locale));
     setOpen(false);
@@ -706,11 +810,11 @@ export function MobileServiceSearch() {
       if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => Math.min(i + 1, suggestions.length - 1)); return; }
       if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); return; }
       // Enter resolves the partial term to the highlighted OR the FIRST (best) matching service
-      // and searches THAT — e.g. "electrici" → "electricista" (not a literal `q=electrici`).
+      // and searches THAT â€” e.g. "electrici" â†’ "electricista" (not a literal `q=electrici`).
       if (e.key === "Enter") { e.preventDefault(); if (debounceRef.current) clearTimeout(debounceRef.current); pickCategory(suggestions[active >= 0 ? active : 0].id); return; }
       if (e.key === "Escape") { setOpen(false); return; }
     }
-    // No taxonomy match → fall back to a literal text search (graceful).
+    // No taxonomy match â†’ fall back to a literal text search (graceful).
     if (e.key === "Enter") { if (debounceRef.current) clearTimeout(debounceRef.current); setOpen(false); pushQuery(q); }
   }
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); if (blurRef.current) clearTimeout(blurRef.current); }, []);

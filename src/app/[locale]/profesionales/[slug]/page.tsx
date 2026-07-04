@@ -65,8 +65,8 @@ function searchParamFromUrl(key: string): string | null {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const t = useTranslations("profile");
-  const tCat = useTranslations("categories");
   const locale = useLocale();
+  const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
   const routeParams = useParams();
   const routeSlugParam = routeParams?.slug;
   const routeSlug = Array.isArray(routeSlugParam) ? routeSlugParam[0] : routeSlugParam;
@@ -338,7 +338,7 @@ export default function ProfilePage() {
                   <p className="mt-1 text-sm text-[#6b7280]">
                     {(professional.professions && professional.professions.length > 0 ? professional.professions : [professional.categoryId])
                       .filter(Boolean)
-                      .map((cat) => tCat(cat as Parameters<typeof tCat>[0]))
+                      .map((cat) => catLabel(cat))
                       .join(" · ")}
                   </p>
                   {locationText && (
@@ -415,7 +415,7 @@ export default function ProfilePage() {
                   stacked
                   professional={professional}
                   activeCategory={activeCategory}
-                  categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
+                  categoryName={catLabel(professional.categoryId)}
                   availabilityPublic={professional.availabilityPublic ?? true}
                   contactPreference={professional.contactPreference ?? "ambas"}
                   slots={profileSlots}
@@ -837,7 +837,7 @@ export default function ProfilePage() {
       />
       <BookingModal
         professional={professional}
-        categoryName={bookingCat ? tCat(bookingCat as Parameters<typeof tCat>[0]) : ""}
+        categoryName={catLabel(bookingCat)}
         open={bookingOpen}
         onClose={() => setBookingOpen(false)}
         initialCategoryId={bookingCat}

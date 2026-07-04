@@ -105,6 +105,7 @@ export async function POST(req: Request) {
       search_cantones: searchCantones,
       coverage_provincias: coverageProvincias,
       coverage_country: coverageCountry,
+      videoconsulta: coverageCountry,
       no_cr_id: noCrId,
       id_document_note: idDocNote,
       // Public agenda by default → contact via both WhatsApp + schedule.
@@ -112,7 +113,7 @@ export async function POST(req: Request) {
       ...(noCrId ? { verification_status: "pending" } : {}),
     };
     const isUnknownColumn = (msg?: string) =>
-      !!msg && /account_type|business_name|affiliations|workplaces|coverage_areas|search_provincias|search_cantones|coverage_provincias|coverage_country|no_cr_id|id_document_note|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
+      !!msg && /account_type|business_name|affiliations|workplaces|coverage_areas|search_provincias|search_cantones|coverage_provincias|coverage_country|videoconsulta|no_cr_id|id_document_note|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
 
     // ── 1. Identify the user ──────────────────────────────────────────────────
     //    Two cases:

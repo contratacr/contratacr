@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -9,14 +8,7 @@ import { BackToTop } from "@/components/landing/back-to-top";
 import { NotificationLiveToast } from "@/components/notifications/notification-live-toast";
 import { CustomCategoriesLoader } from "@/lib/data/use-custom-categories";
 import { ViewportEnvironment } from "@/components/util/viewport-environment";
-import "../globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800", "900"],
-});
+import { DocumentLocale } from "@/components/util/document-locale";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -102,17 +94,14 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-white">
-        <NextIntlClientProvider messages={messages}>
-          <EmojiBlocker />
-          <ViewportEnvironment />
-          <CustomCategoriesLoader />
-          <NotificationLiveToast scope="all" />
-          {children}
-          <BackToTop />
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages}>
+      <DocumentLocale locale={locale} />
+      <EmojiBlocker />
+      <ViewportEnvironment />
+      <CustomCategoriesLoader />
+      <NotificationLiveToast scope="all" />
+      {children}
+      <BackToTop />
+    </NextIntlClientProvider>
   );
 }

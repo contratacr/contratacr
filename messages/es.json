@@ -206,12 +206,20 @@
       "clearAll": "Limpiar filtros",
       "category": "Categoría",
       "allCategories": "Todas las categorías",
+      "location": "Ubicación",
+      "costaRica": "Costa Rica",
+      "locationPlaceholder": "Busca una ubicación",
+      "clearLocation": "Limpiar ubicación",
       "province": "Provincia",
       "allProvinces": "Todas las provincias",
       "canton": "Cantón",
       "allCantons": "Todos los cantones",
       "selectProvince": "Selecciona la provincia",
       "sortBy": "Ordenar por",
+      "attention": "Modalidad",
+      "attentionAny": "Cualquier modalidad",
+      "attentionInPerson": "Presencial",
+      "attentionVideo": "Videoconsulta",
       "service": "Servicio",
       "searchPlaceholder": "Busca un servicio",
       "clearSearch": "Limpiar búsqueda",
@@ -219,10 +227,11 @@
       "insurer": "Aseguradora",
       "anyInsurer": "Cualquier aseguradora",
       "language": "Idioma",
-      "anyLanguage": "Cualquier idioma",
+      "anyLanguage": "Selecciona un idioma",
+      "allLanguages": "Todos los idiomas",
       "removeInsurer": "Quitar filtro de aseguradora",
       "nearMe": "Buscar profesionales cerca de mí",
-      "nearMeActive": "Cerca de mí (activo)",
+      "nearMeActive": "Cerca de mí",
       "verifiedOnly": "Solo verificados",
       "geoUnsupported": "Tu navegador no permite ubicación. Usa la búsqueda por provincia o cantón.",
       "geoFailed": "No pudimos obtener tu ubicación. Puedes buscar por provincia y cantón."
@@ -233,8 +242,7 @@
       "priceAsc": "Precio (de menor a mayor)",
       "priceDesc": "Precio: mayor a menor",
       "newest": "Más recientes",
-      "availability": "Disponibilidad inmediata",
-      "cercania": "Cercanía"
+      "availability": "Disponibilidad inmediata"
     }
   },
   "hero": {
@@ -336,6 +344,7 @@
     "upcomingTimes": "Próximos horarios",
     "noUpcoming": "Sin horarios próximos. Solicita el servicio para coordinar.",
     "availabilityHiddenNote": "La disponibilidad de este perfil no es pública. Contáctanos y conoce sus horarios.",
+    "videoContactNote": "Videoconsulta disponible. Coordina los detalles directamente con el profesional.",
     "noScheduleNote": "La disponibilidad de este perfil no es pública. Contáctanos y conoce sus horarios.",
     "noTimesAtLocation": "No hay horarios disponibles en esta ubicación. Elige otra ubicación o contáctanos para coordinar.",
     "prevDays": "Días anteriores",
@@ -2226,7 +2235,7 @@
     "step3Body": "El padrón se actualiza periódicamente. Si tu caso no pasa automáticamente, puedes apelar y se vuelve a verificar.",
     "disclaimerTitle": "Aviso importante",
     "disclaimer": "ContrataCR es una <strong>plataforma intermediaria</strong> que conecta a clientes con proveedores de servicios; no es la proveedora del servicio. La insignia <strong>“Verificado”</strong> confirma únicamente que la cédula es real y el nombre coincide con los registros oficiales. <strong>No garantiza ni asegura la calidad, el resultado ni la finalización de ningún trabajo</strong>, y no prueba por sí sola que quien se registró sea físicamente esa persona. La contratación ocurre directamente entre el cliente y el proveedor.",
-    "ctaVerified": "Ver proveedores verificados"
+    "ctaVerified": "Ver profesionales"
   },
   "contacto": {
     "sendError": "Hubo un error al enviar el mensaje. Por favor intenta de nuevo.",

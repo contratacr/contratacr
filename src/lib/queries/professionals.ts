@@ -1,7 +1,7 @@
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
 import { deriveDisplayPricing } from "@/lib/pricing";
-import { getMatchingCategoryIds, normalizeText } from "@/lib/data/categories";
-import { getProvinceById, PROVINCE_CENTROIDS, PROVINCES, haversineKm } from "@/lib/data/cr-geography";
+import { getMatchingCategoryIds, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { getProvinceById, PROVINCES, haversineKm } from "@/lib/data/cr-geography";
 import { languageSearchValues } from "@/lib/data/languages";
 
 // Build the real travel-coverage summary for "me desplazo" pros (item 16):
@@ -25,14 +25,8 @@ function buildCoverage(row: any): { country: boolean; provincias: string[]; cant
 const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Province display name → id (for the proximity sort's centroid fallback).
-const PROVINCE_NAME_TO_ID: Record<string, string> = {
-  "San José": "sj", Alajuela: "al", Cartago: "ca", Heredia: "he",
-  Guanacaste: "gu", Puntarenas: "pu", Limón: "li",
-};
-function getProvinceIdByName(name?: string): string {
-  return (name && PROVINCE_NAME_TO_ID[name]) || "";
-}
+const NEAR_ME_RADIUS_KM = 25;
+
 
 type LocationQueryMatch =
   | { type: "province"; id: string }
@@ -74,16 +68,18 @@ export type SearchFilters = {
   cantonId?: string;
   sortBy?: string;
   query?: string;
-  /** "Solo con identidad verificada" — only show verified providers. */
+  /** "Solo con identidad verificada" â€” only show verified providers. */
   verifiedOnly?: boolean;
   /** Filter by an insurance network (aseguradora) the pro belongs to. */
   insurerId?: string;
   /** Filter by a language the professional can attend in. */
   languageId?: string;
-  /** User coordinates (geolocation) — enables the "cerca de mí" proximity sort. */
+  /** How the client wants to be attended. Video is only shown for compatible services. */
+  modality?: "any" | "in_person" | "video";
+  /** User coordinates (geolocation) â€” enables the "cerca de mÃ­" proximity sort. */
   nearLat?: number;
   nearLng?: number;
-  /** "Buscar en esta área" — keep only pros within the map's visible viewport.
+  /** "Buscar en esta Ã¡rea" â€” keep only pros within the map's visible viewport.
    *  Applied IN ADDITION to the other filters (a JS post-filter on the results). */
   bounds?: { north: number; south: number; east: number; west: number };
 };
@@ -109,11 +105,15 @@ function hasActiveService(services: unknown): boolean {
   });
 }
 
+function serviceCategoryContains(categoryId: string): string {
+  return `services.cs.[{"category":"${categoryId}"}]`;
+}
+
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
 export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
 // Optional website/social links. Social networks are stored as usernames; the
-// website is stored as a normalized URL. Additive to "casos de éxito" photos.
+// website is stored as a normalized URL. Additive to "casos de Ã©xito" photos.
 export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; website?: string };
 
 export type ProfessionalDetail = ProfessionalCardData & {
@@ -133,7 +133,7 @@ export type Review = {
   rating: number;
   comment: string;
   createdAt: string;
-  /** The job (solicitud/proyecto) this review belongs to — shown for context. */
+  /** The job (solicitud/proyecto) this review belongs to â€” shown for context. */
   jobTitle?: string | null;
 };
 
@@ -150,7 +150,7 @@ export async function searchProfessionals(
       const supabase = await createClient();
 
       // Built as a closure so we can retry without the `is_banned` filter if that
-      // column hasn't been migrated yet (migration 029) — search never breaks.
+      // column hasn't been migrated yet (migration 029) â€” search never breaks.
       // modern = use is_banned + location-aware search arrays (migrations 029/030).
       // legacy = fall back to the old single provincia_id/canton_id columns.
       const build = (modern: boolean) => {
@@ -159,7 +159,7 @@ export async function searchProfessionals(
           .select(
             `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-             category_id, professions, pricing, services, lat, lng, service_type, availability_public, contact_preference,
+             category_id, professions, pricing, services, lat, lng, service_type, availability_public, contact_preference, videoconsulta,
              business_name, workplaces, verification_status${modern ? ", languages, no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications, call_phone" : ""},
              profiles(full_name, avatar_url${modern ? ", is_disabled" : ""}),
              provincias(id, name),
@@ -167,34 +167,52 @@ export async function searchProfessionals(
           );
 
         if (modern) query = query.eq("is_banned", false);
-        // Unverified professionals (no_cr_id / pending / under appeal) ARE listed —
+        // Unverified professionals (no_cr_id / pending / under appeal) ARE listed â€”
         // shown with an explicit "Identidad sin verificar" label and ranked BELOW
         // verified ones (see the verified-first pass below). Only rejected profiles
         // are never visible.
         if (modern) query = query.neq("verification_status", "rejected");
+        const includeVideoNationwide =
+          filters.modality !== "in_person" &&
+          (filters.modality === "video" ||
+            (!!filters.categoryId && filters.categoryId !== "todas" && supportsVideoConsultCategory(filters.categoryId)));
+
         if (modern && filters.insurerId && filters.insurerId !== "todas") {
           query = query.contains("insurance_networks", [filters.insurerId]);
         }
+        if (modern && filters.modality === "video") {
+          query = query.or("videoconsulta.eq.true,coverage_country.eq.true");
+        }
 
         if (filters.categoryId && filters.categoryId !== "todas") {
-          // Match the professional if ANY of their professions matches (multi-category).
-          query = query.or(`category_id.eq.${filters.categoryId},professions.cs.{${filters.categoryId}}`);
+          // Match the professional if the selected service is their main category,
+          // one of their professions, or one of the service rows they added in the
+          // professional panel. The last case matters for multi-service profiles.
+          query = query.or(`category_id.eq.${filters.categoryId},professions.cs.{${filters.categoryId}},${serviceCategoryContains(filters.categoryId)}`);
         }
         if (filters.provinceId && filters.provinceId !== "todas") {
-          // Hierarchy-aware: appears under every covered provincia (pins + cantón/
+          // Hierarchy-aware: appears under every covered provincia (pins + cantÃ³n/
           // provincia coverage) OR whole-country coverage. Legacy fallback for
           // un-migrated pros.
           query = modern
-            ? query.or(`search_provincias.cs.{${filters.provinceId}},provincia_id.eq.${filters.provinceId},coverage_country.eq.true`)
+            ? query.or([
+                `search_provincias.cs.{${filters.provinceId}}`,
+                `provincia_id.eq.${filters.provinceId}`,
+                includeVideoNationwide ? "coverage_country.eq.true" : "",
+                includeVideoNationwide ? "videoconsulta.eq.true" : "",
+              ].filter(Boolean).join(","))
             : query.eq("provincia_id", filters.provinceId);
         }
         if (filters.cantonId && filters.cantonId !== "todos") {
-          // A searched cantón matches if covered directly (search_cantones), via its
+          // A searched cantÃ³n matches if covered directly (search_cantones), via its
           // whole provincia (coverage_provincias), or via whole-country coverage.
           const parts = [`search_cantones.cs.{${filters.cantonId}}`, `canton_id.eq.${filters.cantonId}`];
           if (modern) {
             if (filters.provinceId && filters.provinceId !== "todas") parts.push(`coverage_provincias.cs.{${filters.provinceId}}`);
-            parts.push("coverage_country.eq.true");
+            if (includeVideoNationwide) {
+              parts.push("coverage_country.eq.true");
+              parts.push("videoconsulta.eq.true");
+            }
           }
           query = modern ? query.or(parts.join(",")) : query.eq("canton_id", filters.cantonId);
         }
@@ -209,11 +227,19 @@ export async function searchProfessionals(
           const q = filters.query.trim().slice(0, 80).replace(/[,()*%_:\\"']/g, " ").replace(/\s+/g, " ").trim();
           // Match text against bio/name AND expand keyword synonyms to category IDs
           const keywordCategoryIds = getMatchingCategoryIds(filters.query.trim());
+          const queryIncludesVideoNationwide =
+            includeVideoNationwide ||
+            (filters.modality !== "in_person" && keywordCategoryIds.some((id) => supportsVideoConsultCategory(id)));
           const locationMatches = getMatchingLocationIds(filters.query.trim());
           const locationFilterParts = locationMatches.flatMap((loc) => {
             if (loc.type === "province") {
               return modern
-                ? [`search_provincias.cs.{${loc.id}}`, `provincia_id.eq.${loc.id}`, "coverage_country.eq.true"]
+                ? [
+                    `search_provincias.cs.{${loc.id}}`,
+                    `provincia_id.eq.${loc.id}`,
+                    queryIncludesVideoNationwide ? "coverage_country.eq.true" : "",
+                    queryIncludesVideoNationwide ? "videoconsulta.eq.true" : "",
+                  ].filter(Boolean)
                 : [`provincia_id.eq.${loc.id}`];
             }
             return modern
@@ -221,25 +247,37 @@ export async function searchProfessionals(
                   `search_cantones.cs.{${loc.id}}`,
                   `canton_id.eq.${loc.id}`,
                   `coverage_provincias.cs.{${loc.provinceId}}`,
-                  "coverage_country.eq.true",
-                ]
+                  queryIncludesVideoNationwide ? "coverage_country.eq.true" : "",
+                  queryIncludesVideoNationwide ? "videoconsulta.eq.true" : "",
+                ].filter(Boolean)
               : [`canton_id.eq.${loc.id}`];
           });
-          if (!q) {
+          const categoryFilterParts =
+            keywordCategoryIds.length > 0 && !filters.categoryId
+              ? keywordCategoryIds.flatMap((id) => [
+                  `category_id.eq.${id}`,
+                  `professions.cs.{${id}}`,
+                  serviceCategoryContains(id),
+                ])
+              : [];
+          const appliedStructuredTextFilter = categoryFilterParts.length > 0 && locationFilterParts.length > 0;
+          if (appliedStructuredTextFilter) {
+            query = query.or(categoryFilterParts.join(","));
+            query = query.or(locationFilterParts.join(","));
+            // A query like "desarrollo web nicoya guanacaste" should mean:
+            // service AND place, while still allowing nationwide videoconsulta
+            // providers for compatible services.
+          } else if (!q) {
             const parts = [...locationFilterParts];
-            if (keywordCategoryIds.length > 0 && !filters.categoryId) {
-              parts.push(...keywordCategoryIds.map((id) => `category_id.eq.${id}`));
-            }
+            parts.push(...categoryFilterParts);
             if (parts.length > 0) {
               query = query.or(parts.join(","));
             }
-            // No usable text after sanitizing → skip the text filter entirely.
+            // No usable text after sanitizing â†’ skip the text filter entirely.
           } else {
-            const textFilter = `bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%,business_name.ilike.%${q}%,workplaces::text.ilike.%${q}%`;
+            const textFilter = `bio.ilike.%${q}%,business_name.ilike.%${q}%`;
             const parts = [textFilter, ...locationFilterParts];
-            if (keywordCategoryIds.length > 0 && !filters.categoryId) {
-              parts.push(...keywordCategoryIds.map((id) => `category_id.eq.${id}`));
-            }
+            parts.push(...categoryFilterParts);
             query = query.or(parts.join(","));
           }
         }
@@ -263,14 +301,14 @@ export async function searchProfessionals(
             query = query.order("created_at", { ascending: false });
             break;
           default:
-            // No filters / "Mejor calificados": best-rated → most reviews → most
+            // No filters / "Mejor calificados": best-rated â†’ most reviews â†’ most
             // recently active, applied by default and reflected in the control.
             query = query
               .order("rating_avg", { ascending: false })
               .order("review_count", { ascending: false })
               .order("created_at", { ascending: false });
         }
-        return query.limit(filters.bounds || filters.languageId ? 250 : 50);
+        return query.limit(filters.bounds || filters.languageId || (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") ? 250 : 50);
       };
 
       let { data, error } = await build(true);
@@ -280,7 +318,7 @@ export async function searchProfessionals(
       if (error) throw error;
 
       let mapped = (data ?? [])
-        // Hide soft-disabled accounts (item 17). undefined (pre-migration) → shown.
+        // Hide soft-disabled accounts (item 17). undefined (pre-migration) â†’ shown.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((row: any) => !row.profiles?.is_disabled)
         // A professional must have at least one active service to appear in public
@@ -297,7 +335,7 @@ export async function searchProfessionals(
         categoryId: row.category_id ?? "",
         categoryIcon: "",
         professions: (row.professions as string[]) ?? (row.category_id ? [row.category_id] : []),
-        // Price now lives ONLY in Servicios — derive the card "Desde" from the
+        // Price now lives ONLY in Servicios â€” derive the card "Desde" from the
         // services (legacy profile-level pricing/hourly_rate kept as fallback).
         pricing: deriveDisplayPricing(row.services, row.pricing as ProfessionalCardData["pricing"], row.hourly_rate),
         bio: row.bio,
@@ -320,6 +358,7 @@ export async function searchProfessionals(
         lat: row.lat ?? null,
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,
+        videoconsulta: !!row.videoconsulta,
         portfolioCount: Array.isArray(row.portfolio_urls) ? row.portfolio_urls.length : 0,
         certificationCount: Array.isArray(row.certifications) ? row.certifications.length : 0,
         insuranceNetworks: (row.insurance_networks as string[]) ?? [],
@@ -334,29 +373,35 @@ export async function searchProfessionals(
         mapped = mapped.filter((p) => (p.languages ?? []).some((language) => wanted.has(normalizeText(language))));
       }
 
-      // "Cerca de mí" — proximity sort by distance to the user's coordinates,
-      // using the pro's exact pin when present, else their province centroid.
-      if (filters.sortBy === "cercania" && typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
+      // "Cerca de mí" is a real location filter: only exact professional pins or
+      // exact workplace pins inside a short radius count.
+      if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
         const { nearLat, nearLng } = filters;
-        const distOf = (p: ProfessionalCardData): number => {
-          if (typeof p.lat === "number" && typeof p.lng === "number") return haversineKm(nearLat, nearLng, p.lat, p.lng);
-          const wp = (p.workplaces ?? []).find((w) => typeof w.lat === "number" && typeof w.lng === "number");
-          if (wp) return haversineKm(nearLat, nearLng, wp.lat as number, wp.lng as number);
-          const c = PROVINCE_CENTROIDS[getProvinceIdByName(p.provinceName)];
-          return c ? haversineKm(nearLat, nearLng, c.lat, c.lng) : Number.POSITIVE_INFINITY;
+        const distOfExactPin = (p: ProfessionalCardData): number => {
+          const distances: number[] = [];
+          if (typeof p.lat === "number" && typeof p.lng === "number") {
+            distances.push(haversineKm(nearLat, nearLng, p.lat, p.lng));
+          }
+          for (const wp of p.workplaces ?? []) {
+            if (typeof wp.lat === "number" && typeof wp.lng === "number") {
+              distances.push(haversineKm(nearLat, nearLng, wp.lat as number, wp.lng as number));
+            }
+          }
+          return distances.length ? Math.min(...distances) : Number.POSITIVE_INFINITY;
         };
-        mapped.sort((a, b) => distOf(a) - distOf(b));
+        mapped = mapped.filter((p) => distOfExactPin(p) <= NEAR_ME_RADIUS_KM);
+        mapped.sort((a, b) => distOfExactPin(a) - distOfExactPin(b));
       }
 
       // Verified-first ranking (default trust incentive): verified above unverified,
-      // featured above non-featured — applied as a STABLE pass so the chosen sort
-      // (rating/price/proximity/…) is preserved within each rank group. Unverified
+      // featured above non-featured â€” applied as a STABLE pass so the chosen sort
+      // (rating/price/proximity/â€¦) is preserved within each rank group. Unverified
       // pros still appear, just lower.
       const rank = (p: ProfessionalCardData) =>
         (p.verificationStatus === "verified" ? 2 : 0) + (p.isFeatured ? 1 : 0);
       mapped.sort((a, b) => rank(b) - rank(a));
 
-      // "Buscar en esta área" — keep only pros whose exact pin/workplace falls
+      // "Buscar en esta Ã¡rea" â€” keep only pros whose exact pin/workplace falls
       // within the map's visible viewport. A broad canton/province coverage zone
       // is not precise enough for a zoomed-in map rectangle.
       if (filters.bounds) {
@@ -375,20 +420,20 @@ export async function searchProfessionals(
     }
   }
 
-  // No fake/seed fallback — only real professionals are ever listed.
+  // No fake/seed fallback â€” only real professionals are ever listed.
   return [];
 }
 
 // ---------------------------------------------------------------------------
 // Real zone coverage (home "Encuentra profesionales en tu zona")
 // ---------------------------------------------------------------------------
-// Returns, per province id, the set of cantón ids that GENUINELY have at least
-// one listed professional — mirroring /buscar search semantics so a clicked
+// Returns, per province id, the set of cantÃ³n ids that GENUINELY have at least
+// one listed professional â€” mirroring /buscar search semantics so a clicked
 // zone never lands on an empty result. NO fabricated counts: a province with no
 // professionals returns an empty list, and the UI then hides the count / shows
 // an honest empty state. Best-effort + column-fallback so it never breaks home.
 export type ZoneCoverage = {
-  /** province id → covered cantón ids (deduped). Empty array = no coverage yet. */
+  /** province id â†’ covered cantÃ³n ids (deduped). Empty array = no coverage yet. */
   byProvince: Record<string, string[]>;
   /** True if ANY professional covers the whole country (every zone then matches). */
   countryWide: boolean;
@@ -438,7 +483,7 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
         add(prov, c);
       }
 
-      // Whole-province coverage → every cantón in that province genuinely matches.
+      // Whole-province coverage â†’ every cantÃ³n in that province genuinely matches.
       const covProvs = Array.isArray(row.coverage_provincias) ? (row.coverage_provincias as string[]) : [];
       for (const pid of covProvs) {
         const prov = getProvinceById(pid);
@@ -488,7 +533,7 @@ export async function getProfessionalBySlug(
 
       if (error || !pro) throw error ?? new Error("Not found");
 
-      // Tagged casos-de-éxito + phone-call opt-in + coverage. Best-effort: separate
+      // Tagged casos-de-Ã©xito + phone-call opt-in + coverage. Best-effort: separate
       // queries so a missing column (pre-migration 033/034) never breaks the profile.
       let portfolioItems: PortfolioItem[] = [];
       try {
@@ -543,7 +588,7 @@ export async function getProfessionalBySlug(
 
       // Job-title snapshot per review (best-effort; column from migration 036) so
       // each review shows which job it belongs to. (Edited timestamps are NOT
-      // surfaced publicly — only the author sees that, item 4.)
+      // surfaced publicly â€” only the author sees that, item 4.)
       const titleMap: Record<string, string | null> = {};
       try {
         const { data: rj } = await supabase.from("reviews").select("id, job_title").eq("professional_id", pro.id);
@@ -566,7 +611,7 @@ export async function getProfessionalBySlug(
         slug: pro.slug,
         fullName: (pro.profiles as any)?.full_name ?? "Profesional",
         avatarUrl: (pro.profiles as any)?.avatar_url ?? null,
-        // category_id is a plain text column — no join needed
+        // category_id is a plain text column â€” no join needed
         categoryId: (pro as any).category_id ?? "",
         categoryIcon: "",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

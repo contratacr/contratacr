@@ -53,8 +53,9 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   const hasActiveFilters =
     !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
     !!(params.get("n") && params.get("s") && params.get("e") && params.get("w")) ||
-    hasActiveInsurer || !!params.get("idioma") || params.get("verificados") === "1" || !!params.get("lat") ||
-    (!!params.get("sortBy") && params.get("sortBy") !== "rating");
+    hasActiveInsurer || !!params.get("idioma") || !!params.get("lat") ||
+    (!!params.get("sortBy") && params.get("sortBy") !== "rating" && params.get("sortBy") !== "cercania") ||
+    (!!params.get("modalidad") && params.get("modalidad") !== "any");
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
   // dispatches `ccr:open-filters`; the drawer's in-card X dispatches `ccr:close-filters`.

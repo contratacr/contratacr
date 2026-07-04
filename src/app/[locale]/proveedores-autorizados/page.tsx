@@ -63,7 +63,7 @@ export default async function IdentityVerificationPage() {
           {/* CTAs */}
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/buscar?verificados=1"
+              href="/buscar"
               className="inline-flex items-center gap-2 rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white hover:bg-[#15803d]"
             >
               <Search className="h-4 w-4" /> {t("ctaVerified")}

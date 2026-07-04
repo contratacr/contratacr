@@ -98,19 +98,20 @@ interface ProfessionalCardProps {
   viewerProfileId?: string;
   /** 1-based rank — rendered as a navy badge overlapping the avatar, matching the map pin. */
   rank?: number;
+  /** Search is explicitly for video consultation: show contact actions, not schedules. */
+  forceContactOnly?: boolean;
 }
 
-export async function ProfessionalCard({ professional, className, slots = [], activeCategory, viewerProfileId, rank }: ProfessionalCardProps) {
-  const tCat = await getTranslations("categories");
+export async function ProfessionalCard({ professional, className, slots = [], activeCategory, viewerProfileId, rank, forceContactOnly = false }: ProfessionalCardProps) {
   const tCard = await getTranslations("card");
+  const tSchedule = await getTranslations("schedule");
   const locale = await getLocale();
   // Safe category label: if a translation key is missing, next-intl returns the
   // raw "categories.xxx" path — fall back to the taxonomy label (e.g. "otro" →
   // "Otro servicio") so no internal key ever leaks into the UI.
   const catLabel = (id: string) => {
     if (!id) return "";
-    const l = tCat(id as never);
-    return l.startsWith("categories.") ? getCategoryLabel(id) : l;
+    return getCategoryLabel(id, locale);
   };
   const isPrivate = professional.availabilityPublic === false;
   // Brand hierarchy: company name leads (clients recognize the brand), personal
@@ -159,10 +160,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // column under the rating — see ProfessionalSchedule). The per-place TABS +
   // street addresses come from the pro's workplaces; here we only supply the
   // FALLBACK tab (province/cantón, shown when there are no named workplaces) and
-  // the general province/cantón address. Service modalities such as home service
-  // and video consultation stay off the search card to keep results easy to scan;
-  // the profile/service request flow carries that detail.
-  const placeFallback = professional.cantonName || professional.provinceName || "";
+  // the general province/cantón address. Video-only national coverage uses this
+  // same row with "Videoconsulta" so the card never looks location-empty.
+  const placeFallback = professional.cantonName || professional.provinceName || (professional.videoconsulta || professional.coverage?.country ? tSchedule("videoconsulta") : "");
   const placeAddress = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
 
   // ── LEFT-column professional info (slotted into ProfessionalSchedule, which owns the
@@ -199,7 +199,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
                   Verificado, then the personal name = first name + first surname. */}
               <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
-                <h3 title={businessName ? businessName : professional.fullName} className="truncate font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
+                <h3 title={businessName ? businessName : professional.fullName} className="line-clamp-2 font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
                   {brandPrimary}
                 </h3>
               </Link>
@@ -291,6 +291,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         placeFallback={placeFallback}
         placeAddress={placeAddress}
         businessName={businessName ?? ""}
+        forceContactOnly={forceContactOnly}
       />
 
       {/* Whole card → the professional's profile (stretched low-z overlay). The interactive

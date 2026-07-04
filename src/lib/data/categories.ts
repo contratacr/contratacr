@@ -979,9 +979,18 @@ export function classifySuggestedCategory(name: string): {
 
 export function getMatchingCategoryIds(query: string): string[] {
   if (!query.trim()) return [];
+  const normalizedQuery = normalizeText(query);
   const inferred = resolveCategoryIntent(query);
+  const embeddedMatches = ALL_CATEGORIES.filter((category) => {
+    const terms = [category.label, ...(category.keywords ?? [])]
+      .filter((term): term is string => !!term)
+      .map((term) => normalizeText(term))
+      .filter((term) => term.length >= 3);
+    return terms.some((term) => normalizedQuery.includes(term) || term.includes(normalizedQuery));
+  }).map((category) => category.id);
   return [...new Set([
     ...(inferred ? [inferred.id] : []),
+    ...embeddedMatches,
     ...searchCategories(query).map((c) => c.id),
   ])];
 }
