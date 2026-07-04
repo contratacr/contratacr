@@ -42,6 +42,8 @@ interface ProfessionalScheduleProps {
   stacked?: boolean;
   /** Explicit video-consultation search result: clients coordinate by contact, no schedule strip. */
   forceContactOnly?: boolean;
+  /** Preferred tab when search context should open a specific location/modality. */
+  preferredLocationId?: string;
 }
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
@@ -73,7 +75,7 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   const [liveData, setLiveData] = useState<{
@@ -195,7 +197,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // identical to a chosen tab in the multi-location case (and shows its address). When the
   // pro has no named workplaces at all, there's nothing to select (handled by the fallback).
   const defaultLoc = locationOptions.length > 0
-    ? (locationOptions.find((o) => slots.some((s) => (s.locationId ?? "general") === o.id))?.id ?? locationOptions[0].id)
+    ? (locationOptions.find((o) => preferredLocationId && o.id === preferredLocationId)?.id
+      ?? locationOptions.find((o) => slots.some((s) => (s.locationId ?? "general") === o.id))?.id
+      ?? locationOptions[0].id)
     : null;
   const effectiveId = selectedLoc ?? defaultLoc;
   // STRICT per-location: a selected location shows ONLY its OWN slots — plus any

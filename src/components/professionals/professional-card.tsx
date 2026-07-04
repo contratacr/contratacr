@@ -292,6 +292,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         placeAddress={placeAddress}
         businessName={businessName ?? ""}
         forceContactOnly={forceContactOnly}
+        preferredLocationId={forceContactOnly ? "videoconsulta" : undefined}
       />
 
       {/* Whole card → the professional's profile (stretched low-z overlay). The interactive
