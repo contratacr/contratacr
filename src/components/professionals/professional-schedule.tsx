@@ -183,12 +183,20 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       if (id?.startsWith("cov_")) continue;
       if (id && id !== "general" && !map.has(id)) map.set(id, locLabel(id));
     }
-    if (professional.videoconsulta && !map.has("videoconsulta")) {
+    if ((professional.videoconsulta || professional.coverage?.country) && !map.has("videoconsulta")) {
       map.set("videoconsulta", t("videoconsulta"));
     }
     return Array.from(map, ([id, label]) => ({ id, label }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professional.workplaces, professional.videoconsulta, slots, t]);
+  }, [professional.coverage?.country, professional.workplaces, professional.videoconsulta, slots, t]);
+
+  const visibleLocationOptions = useMemo(() => {
+    if (forceContactOnly && preferredLocationId) {
+      const preferred = locationOptions.find((o) => o.id === preferredLocationId);
+      if (preferred) return [preferred];
+    }
+    return locationOptions;
+  }, [forceContactOnly, locationOptions, preferredLocationId]);
 
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
   // Default to the first location that ACTUALLY has slots (so the card doesn't open on an
@@ -196,12 +204,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // so a single location renders in the SELECTED (active, brand-blue + underline) state,
   // identical to a chosen tab in the multi-location case (and shows its address). When the
   // pro has no named workplaces at all, there's nothing to select (handled by the fallback).
-  const defaultLoc = locationOptions.length > 0
-    ? (locationOptions.find((o) => preferredLocationId && o.id === preferredLocationId)?.id
-      ?? locationOptions.find((o) => slots.some((s) => (s.locationId ?? "general") === o.id))?.id
-      ?? locationOptions[0].id)
+  const defaultLoc = visibleLocationOptions.length > 0
+    ? (visibleLocationOptions.find((o) => preferredLocationId && o.id === preferredLocationId)?.id
+      ?? visibleLocationOptions.find((o) => slots.some((s) => (s.locationId ?? "general") === o.id))?.id
+      ?? visibleLocationOptions[0].id)
     : null;
-  const effectiveId = selectedLoc ?? defaultLoc;
+  const effectiveId = selectedLoc && visibleLocationOptions.some((o) => o.id === selectedLoc) ? selectedLoc : defaultLoc;
   // STRICT per-location: a selected location shows ONLY its OWN slots — plus any
   // location-agnostic "general" slots (available anywhere) — so a slot available only
   // at B can NEVER appear under A. A selected location with no slots shows the
@@ -219,9 +227,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // (independent of whether there are upcoming slots) so a pro with no published
   // schedule still says WHERE they work. When the pro has no named workplaces we fall
   // back to a single static province/cantón tab. (Supersedes §50's right-rail placement.)
-  const hasRealLoc = locationOptions.length > 0;
+  const hasRealLoc = visibleLocationOptions.length > 0;
   const locTabs = hasRealLoc
-    ? locationOptions
+    ? visibleLocationOptions
     : (placeFallback ? [{ id: "__fallback", label: placeFallback }] : []);
   // Address under the tabs: the selected workplace's street address, else the
   // province/cantón fallback. Home service is shown as a separate card chip, never

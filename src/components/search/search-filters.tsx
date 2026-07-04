@@ -10,7 +10,7 @@ import { PROVINCES } from "@/lib/data/cr-geography";
 import { CategorySearch } from "@/components/ui/category-search";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { searchCategories, getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
-import { resolveLocation, searchLocations, type LocationSuggestion } from "@/lib/data/location-search";
+import { allLocationSuggestions, resolveLocation, searchLocations, type LocationSuggestion } from "@/lib/data/location-search";
 import { INSURERS } from "@/lib/data/insurers";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 import { createClient } from "@/lib/supabase/client";
@@ -159,7 +159,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   }, []);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const locationSug = useMemo(() => (locationQuery.trim().length >= 2 ? searchLocations(locationQuery, 7) : []), [locationQuery]);
+  const locationSug = useMemo(() => {
+    const trimmed = locationQuery.trim();
+    if (!trimmed) return locationOpen ? allLocationSuggestions() : [];
+    return searchLocations(trimmed);
+  }, [locationOpen, locationQuery]);
   const areaActive = !!(params.get("n") && params.get("s") && params.get("e") && params.get("w"));
   const showInsurerFilter = isHealthCategory(category && category !== "todas" ? category : null);
   const showVideoFilter = supportsVideoConsultCategory(category && category !== "todas" ? category : null);
@@ -592,7 +596,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                   applyFilters({ provincia: "", canton: "", lat: "", lng: "" });
                 }
               }}
-              onFocus={() => { if (locationSug.length > 0) setLocationOpen(true); }}
+              onFocus={() => setLocationOpen(true)}
               onBlur={() => { locationBlurRef.current = setTimeout(() => setLocationOpen(false), 150); }}
               onKeyDown={handleLocationKeyDown}
               placeholder={t("filters.locationPlaceholder")}

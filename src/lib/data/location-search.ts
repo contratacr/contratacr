@@ -21,9 +21,13 @@ const ALL_LOCATIONS: LocationSuggestion[] = [
   ),
 ];
 
+export function allLocationSuggestions(): LocationSuggestion[] {
+  return ALL_LOCATIONS;
+}
+
 /* Smart-ish match: provinces always rank above cantons; prefix matches above
    loose "contains" matches. Returns up to `limit` suggestions. */
-export function searchLocations(query: string, limit = 8): LocationSuggestion[] {
+export function searchLocations(query: string, limit = ALL_LOCATIONS.length): LocationSuggestion[] {
   const q = normalizeText(query.trim());
   if (!q) return [];
 
