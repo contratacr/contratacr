@@ -432,10 +432,10 @@ export function ServicesEditor({
           onClose={closePicker}
           title={t("pickerTitle")}
           closeLabel={t("cancel")}
-          bodyClassName="px-0 py-0"
+          bodyClassName="overflow-hidden px-0 py-0"
         >
-          <div data-testid="services-add-picker">
-            <div className="sticky top-0 z-10 bg-white px-5 pb-3 pt-4 sm:px-6">
+          <div data-testid="services-add-picker" className="flex h-full min-h-0 flex-col">
+            <div className="shrink-0 bg-white px-5 pb-3 pt-4 sm:px-6">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                 <input
@@ -447,7 +447,7 @@ export function ServicesEditor({
               </div>
             </div>
             <div data-testid="services-add-picker-scroll" className={cn(
-              "px-3 pb-4 sm:px-4",
+              "min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4 sm:px-4",
               pickerList.length === 0 && pickerQuery.trim() ? "pt-0" : "pt-2"
             )}>
               {pickerList.length === 0 && pickerQuery.trim() ? (
