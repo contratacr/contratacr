@@ -24,7 +24,8 @@ export async function GET() {
     flags = withoutEnglish.data;
   }
   const flagMap = new Map((flags ?? []).map((c) => [c.id, c]));
-  const fixedIds = new Set(ALL_CATEGORIES.map((category) => category.id));
+  const fixedById = new Map(ALL_CATEGORIES.map((category) => [category.id, category]));
+  const fixedIds = new Set(fixedById.keys());
   const categoriesById = new Map<string, {
     id: string;
     label: string;
@@ -39,11 +40,14 @@ export async function GET() {
     if (!row.id || row.is_hidden) continue;
     const label = (row.name || "").trim();
     if (!label) continue;
+    const fixedCategory = fixedById.get(row.id);
+    const groupId = row.group_id || fixedCategory?.groupId;
+    if (!fixedCategory && !groupId) continue;
     categoriesById.set(row.id, {
       id: row.id,
       label,
       labelEn: row.name_en || autoEnglishCategoryLabel(label),
-      groupId: row.group_id || undefined,
+      groupId,
       isHidden: false,
       esSalud: !!row.es_salud,
       supportsVideoconsulta: !!row.supports_videoconsulta,
@@ -56,11 +60,12 @@ export async function GET() {
     if (row?.is_hidden) continue;
     const label = (row?.name || suggestion.label || suggestion.suggested_name || "").trim();
     if (!label) continue;
+    if (!row?.group_id) continue;
     categoriesById.set(suggestion.id, {
       id: suggestion.id,
       label,
       labelEn: row?.name_en || autoEnglishCategoryLabel(label),
-      groupId: row?.group_id || undefined,
+      groupId: row.group_id,
       isHidden: false,
       esSalud: !!row?.es_salud,
       supportsVideoconsulta: !!row?.supports_videoconsulta,
