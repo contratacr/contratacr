@@ -67,4 +67,19 @@ test.describe("@smoke public routes", () => {
     }
     await expectHealthyPage(page);
   });
+
+  test("desktop services dropdown search keeps the matching section context", async ({ page }, testInfo) => {
+    test.skip(isMobileProject(testInfo), "Mobile navbar uses the full /servicios page instead of the desktop mega menu.");
+
+    await gotoOK(page, "/es");
+    await page.getByRole("button", { name: /^Servicios$/i }).first().hover();
+    const menuSearch = page.locator('input[aria-label*="servicio" i], input[placeholder*="servicio" i]').first();
+    await expect(menuSearch).toBeVisible();
+    await menuSearch.fill("Plomer");
+
+    await expect(page.getByText(/Hogar y construcci/i).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Plomer/i }).first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
+    await expectHealthyPage(page);
+  });
 });

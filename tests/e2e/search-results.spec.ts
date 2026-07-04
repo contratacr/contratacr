@@ -1,7 +1,12 @@
 import { expect, test } from "playwright/test";
-import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, waitForInteractivePage } from "./helpers";
+import { expectHealthyPage, expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, waitForInteractivePage } from "./helpers";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
 
 test.describe("@seeded search results", () => {
+  test.beforeAll(async () => {
+    if (canRunSeededRegression()) await ensureRegressionSeed();
+  });
+
   test("search results render professional cards with primary actions", async ({ page }) => {
     const href = await firstProfessionalHref(page);
     test.skip(!href, "No seeded professionals found in this environment.");
@@ -44,5 +49,43 @@ test.describe("@seeded search results", () => {
     await expect(
       page.locator("article").first().or(page.getByText(/No encontramos resultados/i).first()),
     ).toBeVisible();
+  });
+
+  test("location filter suggests Costa Rica provinces and cantons", async ({ page }) => {
+    await gotoOK(page, "/es/buscar");
+    await waitForInteractivePage(page);
+
+    const location = page.getByPlaceholder(/Busca una ubicaci[oó]n|Search a location/i).first();
+    await location.fill("Liber");
+    await expect(page.getByRole("option", { name: /Liberia/i }).first()).toBeVisible();
+    await page.getByRole("option", { name: /Liberia/i }).first().click();
+
+    await expect(page).toHaveURL(/provincia=gu/);
+    await expect(page).toHaveURL(/canton=gu-li/);
+    await expectHealthyPage(page);
+  });
+
+  test("nationwide video consultations survive a different physical location filter", async ({ page }) => {
+    test.skip(!canRunSeededRegression(), "Seeded video professional is required for video/location regression.");
+    const seed = await ensureRegressionSeed();
+
+    for (const query of [
+      `/es/buscar?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li`,
+      `/es/buscar?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li&modalidad=video`,
+    ]) {
+      await gotoOK(page, query);
+      await waitForInteractivePage(page);
+
+      const card = page.locator("article").filter({ hasText: E2E_USERS.videoProfessional.businessName }).first();
+      await expect(card).toBeVisible();
+      await expect(card).toContainText(/Videoconsulta|Video consultation/i);
+      await expect(card).toContainText(/I\.V\.A\.I\.|VAT included/i);
+      await expect(card).not.toContainText(/Atenas|Alajuela/i);
+      await expect(
+        card.getByRole("link", { name: /WhatsApp/i }).or(card.getByRole("button", { name: /WhatsApp/i })).first(),
+      ).toBeVisible();
+      await expect(card).not.toContainText(/\b10:00\b|\b11:00\b/);
+      await expectHealthyPage(page);
+    }
   });
 });
