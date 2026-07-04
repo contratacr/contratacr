@@ -8,7 +8,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
+import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
 import {
   Home,
   Leaf,
@@ -131,6 +131,7 @@ export default function ServiciosPage() {
   void customCategories;
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
+  const [searchGroupSelection, setSearchGroupSelection] = useState<{ query: string; key: string } | null>(null);
   const groups = getAllCategoryGroups().map((group) => {
     const meta = GROUPS.find((item) => item.key === group.id);
     return {
@@ -140,32 +141,43 @@ export default function ServiciosPage() {
       ids: getAllCategories().filter((category) => category.groupId === group.id).map((category) => category.id),
     };
   });
+  const categoriesById = useMemo(() => new Map(getAllCategories().map((category) => [category.id, category])), []);
   const normalizedQuery = normalizeText(query.trim());
   const matchedIds = useMemo(() => {
     if (!normalizedQuery) return null;
-    return new Set(searchCategories(query).map((category) => category.id));
-  }, [normalizedQuery, query]);
+    return new Set(searchCategories(query, locale).map((category) => category.id));
+  }, [locale, normalizedQuery, query]);
   const visibleGroups = useMemo(() => groups
     .map((group) => ({
       ...group,
       visibleIds: matchedIds ? group.ids.filter((id) => matchedIds.has(id)) : [...group.ids],
+      bestScore: matchedIds
+        ? Math.max(0, ...group.ids
+          .filter((id) => matchedIds.has(id))
+          .map((id) => {
+            const category = categoriesById.get(id);
+            return category ? categorySearchScore(category, query, locale) : 0;
+          }))
+        : 0,
     }))
     .filter((group) => group.visibleIds.length > 0)
     .sort((a, b) => {
       if (!matchedIds) return 0;
+      if (a.bestScore !== b.bestScore) return b.bestScore - a.bestScore;
       const aLabel = normalizeText(a.label);
       const bLabel = normalizeText(b.label);
       const aLabelMatch = aLabel.includes(normalizedQuery) ? 1 : 0;
       const bLabelMatch = bLabel.includes(normalizedQuery) ? 1 : 0;
       if (aLabelMatch !== bLabelMatch) return bLabelMatch - aLabelMatch;
       return b.visibleIds.length - a.visibleIds.length;
-    }), [groups, matchedIds, normalizedQuery]);
+    }), [categoriesById, groups, locale, matchedIds, normalizedQuery, query]);
   const searchResults = useMemo(() => visibleGroups.flatMap((group) =>
     group.visibleIds.map((id) => ({ id, groupLabel: group.label, Icon: group.Icon }))
   ), [visibleGroups]);
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
   const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0] ?? GROUPS[0];
-  const activeSearchGroup = visibleGroups.find((group) => group.key === activeGroupKey) ?? visibleGroups[0];
+  const selectedSearchGroupKey = searchGroupSelection?.query === normalizedQuery ? searchGroupSelection.key : "";
+  const activeSearchGroup = visibleGroups.find((group) => group.key === selectedSearchGroupKey) ?? visibleGroups[0];
   const activeSearchIds = activeSearchGroup?.visibleIds ?? searchResults.map((item) => item.id);
   const activeGroupHasServices = activeGroup.ids.length > 0;
 
@@ -258,7 +270,7 @@ export default function ServiciosPage() {
                         <button
                           key={group.key}
                           type="button"
-                          onClick={() => setActiveGroupKey(group.key)}
+                          onClick={() => setSearchGroupSelection({ query: normalizedQuery, key: group.key })}
                           className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors lg:w-full ${
                             active ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"
                           }`}

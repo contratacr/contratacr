@@ -112,6 +112,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "traduccion", label: "Traducción e interpretación", keywords: ["traductor", "interprete", "traduccion", "idiomas", "english", "frances"] },
       { id: "recursos_humanos", label: "Recursos humanos", keywords: ["reclutamiento", "seleccion de personal", "RRHH", "HR", "planilla", "nomina"] },
       { id: "marketing_digital", label: "Marketing digital", keywords: ["community manager", "redes sociales", "publicidad digital", "SEO", "SEM", "Google Ads", "Instagram"] },
+      { id: "diseno", label: "Diseño y arte", keywords: ["diseno", "diseño", "arte", "artista", "ilustracion", "ilustración", "creativo", "creativa", "visual", "logo", "logos", "branding", "diseño / arte", "diseno y arte"] },
       { id: "publicidad", label: "Publicidad", keywords: ["publicista", "campañas publicitarias", "anuncios", "medios", "estrategia publicitaria"] },
       { id: "redaccion_contenido", label: "Redacción de contenido", keywords: ["redactor", "copywriter", "contenido web", "blogs", "textos", "articulos"] },
       { id: "fotografia", label: "Fotografía profesional", keywords: ["fotografo", "fotografia", "retrato", "foto profesional", "sesion de fotos"] },
@@ -598,17 +599,36 @@ export function slugifyCategory(name: string): string {
 }
 
 /* ─── Fuzzy search across all categories (fixed + custom) by label + keywords ─── */
-export function searchCategories(query: string): (CategoryItem & { groupId: string; groupLabel: string })[] {
+export function categorySearchScore(
+  item: CategoryItem & { groupId: string; groupLabel: string },
+  query: string,
+  locale?: string,
+): number {
+  const q = normalizeText(query.trim());
+  if (!q) return 0;
+  const serviceLabels = [getCategoryLabel(item.id, locale), item.label].filter(Boolean);
+  const groupLabels = [item.groupLabel, getCategoryGroupLabel(item.groupId), getCategoryGroupLabel(item.groupId, locale)].filter(Boolean);
+  const scoreTerm = (term: string, exact: number, starts: number, contains: number) => {
+    const normalized = normalizeText(term);
+    if (normalized === q) return exact;
+    if (normalized.startsWith(q)) return starts;
+    if (normalized.includes(q)) return contains;
+    return 0;
+  };
+  const serviceScore = Math.max(0, ...serviceLabels.map((term) => scoreTerm(term, 120, 90, 55)));
+  const keywordScore = Math.max(0, ...item.keywords.map((term) => scoreTerm(term, 110, 45, 28)));
+  const groupScore = Math.max(0, ...groupLabels.map((term) => scoreTerm(term, 38, 28, 18)));
+  return Math.max(serviceScore, keywordScore, groupScore);
+}
+
+export function searchCategories(query: string, locale?: string): (CategoryItem & { groupId: string; groupLabel: string })[] {
   const pool = getAllCategories();
   if (!query.trim()) return pool;
-  const q = normalizeText(query);
-  return pool.filter((item) => {
-    if (normalizeText(item.label).includes(q)) return true;
-    if (normalizeText(item.groupLabel).includes(q)) return true;
-    if (normalizeText(getCategoryGroupLabel(item.groupId)).includes(q)) return true;
-    if (normalizeText(getCategoryGroupLabel(item.groupId, "en")).includes(q)) return true;
-    return item.keywords.some((k) => normalizeText(k).includes(q));
-  });
+  return pool
+    .map((item, index) => ({ item, index, score: categorySearchScore(item, query, locale) }))
+    .filter((match) => match.score > 0)
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((match) => match.item);
 }
 
 const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
@@ -645,6 +665,7 @@ const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   tutorias: ["clases particulares", "ayuda con tareas", "tutor para mi hijo"],
   costura_y_arreglos_de_ropa: ["hacer ruedo", "arreglar pantalon", "costurera", "sastre", "ajustar vestido", "arreglos de ropa"],
   lavanderia: ["lavar ropa", "planchado", "lavaseco", "lavar edredon"],
+  diseno: ["diseño arte", "diseno arte", "diseño y arte", "diseno y arte", "diseño / arte", "necesito diseño", "necesito arte", "arte digital", "ilustracion", "ilustración", "artista", "diseñador"],
   fotografia: ["tomar fotos profesionales", "sesion de fotos", "fotografo profesional"],
   fotografia_eventos: ["fotografo para boda", "fotografo para evento", "fotos de quinceanos"],
   organizacion_eventos: ["organizar boda", "organizar fiesta", "event planner", "coordinador de eventos"],
@@ -774,7 +795,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   ingenieria_civil: "Civil engineering", arquitectura: "Architecture", topografia: "Surveying",
   consultoria: "Business consulting", traduccion: "Translation & interpreting",
   recursos_humanos: "Human resources", marketing_digital: "Digital marketing",
-  publicidad: "Advertising", redaccion_contenido: "Content writing",
+  diseno: "Design and art", publicidad: "Advertising", redaccion_contenido: "Content writing",
   fotografia: "Professional photography", produccion_video: "Video production",
   capacitacion_empresarial: "Business training", gestoria_tramites: "Administrative errands",
   bienes_raices: "Real estate", avaluos: "Appraisals",
@@ -927,7 +948,7 @@ export const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
   "contabilidad", "legal", "consultoria", "traduccion",
   "notaria", "auditoria", "asesoria_financiera", "corredor_seguros",
   "asesoria_tributaria", "recursos_humanos", "marketing_digital", "publicidad",
-  "redaccion_contenido", "capacitacion_empresarial", "gestoria_tramites",
+  "diseno", "redaccion_contenido", "capacitacion_empresarial", "gestoria_tramites",
   "bienes_raices", "avaluos", "consultoria_ambiental", "coaching",
   "arquitectura", "ingenieria_civil", "ingenieria_electrica", "ingenieria_mecanica",
   "desarrollo_web", "diseno_grafico", "diseno_apps", "soporte_tecnico",
