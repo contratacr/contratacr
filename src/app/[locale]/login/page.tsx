@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
+import { OtpVerification } from "@/components/auth/otp-verification";
 
 type FormData = { email: string; password: string };
 
@@ -58,6 +59,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [otpEmail, setOtpEmail] = useState<string | null>(null);
   // When a manual login fails because the email is a Google-only account, highlight
   // the provider button and show a specific message.
   const [socialHint, setSocialHint] = useState<"google" | null>(null);
@@ -93,10 +95,35 @@ export default function LoginPage() {
     }
   }, [t]);
 
+  async function finishPasswordLogin(supabase: ReturnType<typeof createClient>) {
+    const redirect = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect"));
+    await waitForAuthCookie();
+
+    const { data: userData } = await supabase.auth.getUser();
+    const metadata = userData.user?.user_metadata ?? {};
+    if (metadata.professional_signup_started === true && metadata.is_provider !== true) {
+      window.location.assign(`/${locale}/registro/profesional`);
+      return;
+    }
+
+    if (redirect && redirect !== "projects") {
+      const dest = /^\/(es|en)(\/|$)/.test(redirect) ? redirect : `/${locale}${redirect}`;
+      window.location.assign(dest);
+      return;
+    }
+
+    const dest =
+      redirect === "projects"
+        ? "/dashboard/profesional?tab=sent_projects"
+        : "/dashboard/profesional";
+    window.location.assign(`/${locale}${dest}`);
+  }
+
   async function onSubmit(data: FormData) {
     setSubmitting(true);
     setError(null);
     setSocialHint(null);
+    setOtpEmail(null);
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithPassword({
       email: data.email,
@@ -104,6 +131,12 @@ export default function LoginPage() {
     });
     setSubmitting(false);
     if (authError) {
+      const code = (authError as { code?: string }).code ?? "";
+      const message = authError.message.toLowerCase();
+      if (code === "email_not_confirmed" || message.includes("email not confirmed") || message.includes("not confirmed")) {
+        setOtpEmail(data.email);
+        return;
+      }
       // The email may belong to an account created with a social provider (no password
       // in our app). Detect that and guide the user to that EXACT method, instead of
       // a dead-end "wrong password". Falls back to the generic message otherwise.
@@ -120,31 +153,7 @@ export default function LoginPage() {
       setError(t("loginError"));
       return;
     }
-    // Every account uses the ONE unified panel ("Mi panel"); it opens in the right
-    // MODE on its own (offer if the account can offer, otherwise use), so login no
-    // longer needs to resolve a role to pick a panel.
-    // Optional post-login destination — see `meaningfulRedirect`: ONLY a /dashboard
-    // deep-link (incl. support-ticket links the proxy preserves) or the "projects"
-    // alias is honored; a generic/public target (the navbar "Ingresar" current-path,
-    // home, /buscar…) is ignored so login ALWAYS lands on the role-based panel. Read
-    // at submit time (avoids a useSearchParams suspense boundary on this client page).
-    const redirect = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect"));
-    // Make sure the session cookie is written before the hard navigation, so the
-    // proxy lets the user into the panel instead of bouncing back to /login.
-    await waitForAuthCookie();
-    // Hard redirect so the new page loads with the session already in cookies
-    // (prevents the navbar flashing logged-out state).
-    if (redirect && redirect !== "projects") {
-      // A /dashboard deep-link (locale-prefixed or not) → go straight there.
-      const dest = /^\/(es|en)(\/|$)/.test(redirect) ? redirect : `/${locale}${redirect}`;
-      window.location.assign(dest);
-      return;
-    }
-    const dest =
-      redirect === "projects"
-        ? "/dashboard/profesional?tab=sent_projects"
-        : "/dashboard/profesional";
-    window.location.assign(`/${locale}${dest}`);
+    await finishPasswordLogin(supabase);
   }
 
   // Carry the post-login destination through the OAuth round-trip via the callback's
@@ -172,6 +181,27 @@ export default function LoginPage() {
       options: { redirectTo: oauthCallbackUrl() },
     });
     setGoogleLoading(false);
+  }
+
+  if (otpEmail) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#fafafa]">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center py-12 px-4">
+          <div className="w-full max-w-sm">
+            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+              <OtpVerification
+                email={otpEmail}
+                onVerified={async () => {
+                  await finishPasswordLogin(createClient());
+                }}
+              />
+            </div>
+          </div>
+        </main>
+        <LandingFooter />
+      </div>
+    );
   }
 
   return (
