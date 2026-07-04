@@ -201,9 +201,13 @@ export function AdminCategories() {
   }
 
   async function loadCatalog() {
-    const data = await fetch("/api/admin/categories?status=catalog").then((r) => r.json());
+    const [data, suggestions] = await Promise.all([
+      fetch("/api/admin/categories?status=catalog").then((r) => r.json()),
+      fetch("/api/admin/categories?status=pending").then((r) => r.json()),
+    ]);
     setCatalog(data.catalog ?? []);
     setGroups(data.groups ?? []);
+    setPendingCount(suggestions.pendingCount ?? 0);
     if (!newServiceGroupId && data.groups?.[0]?.id) setNewServiceGroupId(data.groups[0].id);
   }
 
