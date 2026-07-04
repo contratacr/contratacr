@@ -373,10 +373,15 @@ export async function searchProfessionals(
         mapped = mapped.filter((p) => (p.languages ?? []).some((language) => wanted.has(normalizeText(language))));
       }
 
-      // "Cerca de mí" is a real location filter: only exact professional pins or
-      // exact workplace pins inside a short radius count.
+      // "Cerca de mí" is a real location filter: exact professional pins or
+      // exact workplace pins inside a short radius count first. For video-compatible
+      // services, keep nationwide videoconsulta pros as remote results after that.
       if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
         const { nearLat, nearLng } = filters;
+        const includeVideoNationwideForNear =
+          filters.modality !== "in_person" &&
+          (filters.modality === "video" ||
+            (!!filters.categoryId && filters.categoryId !== "todas" && supportsVideoConsultCategory(filters.categoryId)));
         const distOfExactPin = (p: ProfessionalCardData): number => {
           const distances: number[] = [];
           if (typeof p.lat === "number" && typeof p.lng === "number") {
@@ -389,8 +394,21 @@ export async function searchProfessionals(
           }
           return distances.length ? Math.min(...distances) : Number.POSITIVE_INFINITY;
         };
-        mapped = mapped.filter((p) => distOfExactPin(p) <= NEAR_ME_RADIUS_KM);
-        mapped.sort((a, b) => distOfExactPin(a) - distOfExactPin(b));
+        mapped = mapped.filter((p) => {
+          const distance = distOfExactPin(p);
+          if (distance <= NEAR_ME_RADIUS_KM) return true;
+          return includeVideoNationwideForNear && (p.videoconsulta || !!p.coverage?.country);
+        });
+        mapped.sort((a, b) => {
+          const da = distOfExactPin(a);
+          const db = distOfExactPin(b);
+          const aNear = da <= NEAR_ME_RADIUS_KM;
+          const bNear = db <= NEAR_ME_RADIUS_KM;
+          if (aNear && bNear) return da - db;
+          if (aNear) return -1;
+          if (bNear) return 1;
+          return 0;
+        });
       }
 
       // Verified-first ranking (default trust incentive): verified above unverified,

@@ -6,14 +6,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, X, Loader2, MapPin, SlidersHorizontal } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PROVINCES } from "@/lib/data/cr-geography";
+import { matchProvinceCanton, PROVINCES } from "@/lib/data/cr-geography";
 import { CategorySearch } from "@/components/ui/category-search";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { searchCategories, getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
-import { allLocationSuggestions, resolveLocation, searchLocations, type LocationSuggestion } from "@/lib/data/location-search";
+import { resolveLocation, searchLocations, type LocationSuggestion } from "@/lib/data/location-search";
 import { INSURERS } from "@/lib/data/insurers";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 import { createClient } from "@/lib/supabase/client";
+import { loadGoogleMaps } from "@/lib/maps/loader";
 
 // Filter Select triggers stay on the ContrataCR blue system for focus/hover so
 // the fields read the same whether a service filter is active or not.
@@ -30,6 +31,16 @@ const FILTER_CONTENT = "min-w-0 w-[var(--radix-select-trigger-width)]";
 const ANY_INSURER = "__any__";
 const ANY_LANGUAGE = "__any_language__";
 const ANY_MODALITY = "any";
+const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+
+type AddressSuggestion = {
+  type: "address";
+  placeId: string;
+  label: string;
+  sublabel?: string;
+};
+
+type LocationOption = LocationSuggestion | AddressSuggestion;
 
 function locationFilterLabel(provinceId: string, cantonId: string) {
   if (!provinceId || provinceId === "todas") return "";
@@ -44,6 +55,11 @@ function locationFilterLabel(provinceId: string, cantonId: string) {
 
 function suggestionLabel(suggestion: LocationSuggestion) {
   return suggestion.type === "canton" ? `${suggestion.label}, ${suggestion.sublabel}` : suggestion.label;
+}
+
+function locationOptionLabel(suggestion: LocationOption) {
+  if (suggestion.type === "address") return suggestion.sublabel ? `${suggestion.label}, ${suggestion.sublabel}` : suggestion.label;
+  return suggestionLabel(suggestion);
 }
 
 function useSearchExamplePlaceholder(examples: string[], active: boolean) {
@@ -112,14 +128,20 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [province, setProvince] = useState(params.get("provincia") ?? "");
   const [canton, setCanton] = useState(params.get("canton") ?? "");
   const [locationQuery, setLocationQuery] = useState(() =>
-    params.get("lat") && params.get("lng")
+    params.get("ubicacion")
+      ? params.get("ubicacion")!
+      : params.get("lat") && params.get("lng")
       ? t("filters.nearMeActive")
       : locationFilterLabel(params.get("provincia") ?? "", params.get("canton") ?? "")
   );
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationActiveIndex, setLocationActiveIndex] = useState(-1);
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const locationBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locationFieldRef = useRef<HTMLDivElement>(null);
+  const mapsReadyRef = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sessionTokenRef = useRef<any>(null);
   const initialSort = params.get("sortBy");
   const [sortBy, setSortBy] = useState(initialSort && initialSort !== "cercania" ? initialSort : "rating");
   const [modality, setModality] = useState(params.get("modalidad") ?? ANY_MODALITY);
@@ -158,12 +180,76 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     })();
   }, []);
 
+  useEffect(() => {
+    if (!GMAPS_KEY) return;
+    loadGoogleMaps(GMAPS_KEY).then(() => { mapsReadyRef.current = true; }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const q = locationQuery.trim();
+    if (q.length < 3) return;
+    const id = setTimeout(async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const maps = (window as any).google?.maps;
+        if (!mapsReadyRef.current || !maps?.places?.AutocompleteSuggestion) {
+          setAddressSuggestions([]);
+          return;
+        }
+        if (!sessionTokenRef.current) sessionTokenRef.current = new maps.places.AutocompleteSessionToken();
+        const { suggestions } = await maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: q,
+          includedRegionCodes: ["cr"],
+          sessionToken: sessionTokenRef.current,
+        });
+        const items: AddressSuggestion[] = (suggestions ?? [])
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map((s: any) => s.placePrediction)
+          .filter(Boolean)
+          .slice(0, 5)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map((p: any) => {
+            const full = (p.text?.text ?? p.text ?? "").toString();
+            const main = (p.mainText?.text ?? "").toString();
+            const secondary = (p.secondaryText?.text ?? "").toString();
+            return {
+              type: "address" as const,
+              placeId: p.placeId,
+              label: main || full,
+              sublabel: secondary || (main && full && full !== main ? full : undefined),
+            };
+          })
+          .filter((item: AddressSuggestion) => item.placeId && item.label);
+        setAddressSuggestions(items);
+      } catch {
+        setAddressSuggestions([]);
+      }
+    }, 250);
+    return () => clearTimeout(id);
+  }, [locationQuery]);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const locationSug = useMemo(() => {
+  const localLocationSug = useMemo(() => {
     const trimmed = locationQuery.trim();
-    if (!trimmed) return locationOpen ? allLocationSuggestions() : [];
+    if (trimmed.length < 2) return [];
     return searchLocations(trimmed);
-  }, [locationOpen, locationQuery]);
+  }, [locationQuery]);
+  const locationSug = useMemo<LocationOption[]>(() => {
+    const includeAddresses = locationQuery.trim().length >= 3;
+    const seen = new Set<string>();
+    const options: LocationOption[] = [];
+    for (const suggestion of localLocationSug) {
+      seen.add(locationOptionLabel(suggestion).toLowerCase());
+      options.push(suggestion);
+    }
+    if (includeAddresses) {
+      for (const suggestion of addressSuggestions) {
+        const key = locationOptionLabel(suggestion).toLowerCase();
+        if (!seen.has(key)) options.push(suggestion);
+      }
+    }
+    return options;
+  }, [addressSuggestions, localLocationSug, locationQuery]);
   const areaActive = !!(params.get("n") && params.get("s") && params.get("e") && params.get("w"));
   const showInsurerFilter = isHealthCategory(category && category !== "todas" ? category : null);
   const showVideoFilter = supportsVideoConsultCategory(category && category !== "todas" ? category : null);
@@ -185,6 +271,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         idioma: language,
         lat: params.get("lat") ?? "",
         lng: params.get("lng") ?? "",
+        ubicacion: params.get("ubicacion") ?? "",
         n: params.get("n") ?? "",
         s: params.get("s") ?? "",
         e: params.get("e") ?? "",
@@ -195,7 +282,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         Object.prototype.hasOwnProperty.call(overrides, "provincia") ||
         Object.prototype.hasOwnProperty.call(overrides, "canton") ||
         Object.prototype.hasOwnProperty.call(overrides, "lat") ||
-        Object.prototype.hasOwnProperty.call(overrides, "lng");
+        Object.prototype.hasOwnProperty.call(overrides, "lng") ||
+        Object.prototype.hasOwnProperty.call(overrides, "ubicacion");
       const hasSelectedCategory = !!(vals.categoria && vals.categoria !== "todas");
       if (vals.q && !hasSelectedCategory) next.set("q", vals.q);
       if (hasSelectedCategory) next.set("categoria", vals.categoria);
@@ -207,6 +295,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       if (vals.idioma && vals.idioma !== "todos") next.set("idioma", vals.idioma);
       // Carry the geolocation coords so changing another filter keeps proximity.
       if (vals.lat && vals.lng) { next.set("lat", vals.lat); next.set("lng", vals.lng); }
+      if (vals.ubicacion && vals.lat && vals.lng) next.set("ubicacion", vals.ubicacion);
       // Keep "Buscar en esta area" active while changing service/sort/verified
       // filters. A province/canton or "cerca de mi" pick is a new location filter.
       if (!locationChanged && vals.n && vals.s && vals.e && vals.w) {
@@ -229,7 +318,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       setLocationQuery("");
       const fallbackSort = sortBy === "cercania" ? "rating" : sortBy;
       if (sortBy === "cercania") setSortBy("rating");
-      applyFilters({ sortBy: fallbackSort, lat: "", lng: "", provincia: "", canton: "" });
+      applyFilters({ sortBy: fallbackSort, lat: "", lng: "", ubicacion: "", provincia: "", canton: "" });
       return;
     }
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -245,7 +334,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         setCanton("");
         setLocationQuery(t("filters.nearMeActive"));
         setGeoLoading(false);
-        applyFilters({ sortBy: nextSortBy, provincia: "", canton: "", lat: String(latitude.toFixed(5)), lng: String(longitude.toFixed(5)) });
+        applyFilters({ sortBy: nextSortBy, provincia: "", canton: "", ubicacion: "", lat: String(latitude.toFixed(5)), lng: String(longitude.toFixed(5)) });
       },
       () => {
         setGeoLoading(false);
@@ -310,7 +399,59 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setLocationQuery(suggestionLabel(suggestion));
     setLocationOpen(false);
     setLocationActiveIndex(-1);
-    applyFilters({ provincia: nextProvince, canton: nextCanton, lat: "", lng: "" });
+    setAddressSuggestions([]);
+    applyFilters({ provincia: nextProvince, canton: nextCanton, lat: "", lng: "", ubicacion: "" });
+  }
+
+  async function pickAddress(suggestion: AddressSuggestion) {
+    const label = locationOptionLabel(suggestion);
+    setLocationQuery(label);
+    setLocationOpen(false);
+    setLocationActiveIndex(-1);
+    setAddressSuggestions([]);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const maps = (window as any).google?.maps;
+      if (!mapsReadyRef.current || !maps?.places?.Place) throw new Error("Google Places unavailable");
+      const place = new maps.places.Place({ id: suggestion.placeId });
+      await place.fetchFields({ fields: ["location", "addressComponents"] });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const components: any[] = place.addressComponents ?? [];
+      const pick = (type: string) => components.find((c) => c.types?.includes(type))?.longText as string | undefined;
+      const { provinceId, cantonId } = matchProvinceCanton(
+        pick("administrative_area_level_1"),
+        pick("administrative_area_level_2")
+      );
+      const lat = typeof place.location?.lat === "function" ? place.location.lat() : place.location?.lat;
+      const lng = typeof place.location?.lng === "function" ? place.location.lng() : place.location?.lng;
+      setProvince(provinceId ?? "");
+      setCanton(cantonId ?? "");
+      sessionTokenRef.current = null;
+      if (typeof lat === "number" && typeof lng === "number") {
+        applyFilters({
+          provincia: provinceId ?? "",
+          canton: cantonId ?? "",
+          lat: String(lat.toFixed(5)),
+          lng: String(lng.toFixed(5)),
+          ubicacion: label,
+        });
+        return;
+      }
+      if (provinceId) {
+        applyFilters({ provincia: provinceId, canton: cantonId ?? "", lat: "", lng: "", ubicacion: "" });
+      }
+    } catch {
+      const fallback = resolveLocation(label);
+      if (fallback) pickLocation(fallback);
+    }
+  }
+
+  function pickLocationOption(suggestion: LocationOption) {
+    if (suggestion.type === "address") {
+      void pickAddress(suggestion);
+      return;
+    }
+    pickLocation(suggestion);
   }
 
   function clearLocation() {
@@ -319,7 +460,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setLocationQuery("");
     setLocationOpen(false);
     setLocationActiveIndex(-1);
-    applyFilters({ provincia: "", canton: "", lat: "", lng: "" });
+    setAddressSuggestions([]);
+    applyFilters({ provincia: "", canton: "", lat: "", lng: "", ubicacion: "" });
   }
 
   function handleLocationKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -346,12 +488,13 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         return;
       }
       const selected = locationSug[locationActiveIndex >= 0 ? locationActiveIndex : 0] ?? resolveLocation(trimmed);
-      if (selected) pickLocation(selected);
+      if (selected) pickLocationOption(selected);
     }
   }
 
   function clearAll() {
     setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModality(ANY_MODALITY); setAseguradora(""); setLanguage("");
+    setAddressSuggestions([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push(pathname);
   }
@@ -359,7 +502,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   // The unified service field (free text OR a picked category) counts as ONE filter â€” not
   // two â€” even though it's backed by `q` XOR `categoria`.
   const serviceActive = !!(query.trim() || (category && category !== "todas"));
-  const locationDisplay = geoActive ? t("filters.nearMeActive") : locationFilterLabel(province, canton);
+  const locationDisplay = params.get("ubicacion") ?? (geoActive ? t("filters.nearMeActive") : locationFilterLabel(province, canton));
   const locationFilterActive = geoActive || !!locationDisplay;
   const activeCount =
     (serviceActive ? 1 : 0) +
@@ -367,8 +510,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     (showVideoFilter && modality !== ANY_MODALITY ? 1 : 0) +
     (areaActive ? 1 : 0) +
     (showInsurerFilter && aseguradora ? 1 : 0) +
-    (language ? 1 : 0) +
-    (geoActive ? 1 : 0);
+    (language ? 1 : 0);
 
   // â”€â”€ MOBILE chips variant â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // A single horizontally-scrollable row of pill controls (NO vertical sidebar, NO
@@ -587,16 +729,18 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               type="text"
               value={locationQuery}
               onChange={(e) => {
-                setLocationQuery(e.target.value);
+                const nextValue = e.target.value;
+                setLocationQuery(nextValue);
                 setLocationActiveIndex(-1);
-                setLocationOpen(true);
-                if (!e.target.value.trim()) {
+                setLocationOpen(nextValue.trim().length >= 2);
+                if (!nextValue.trim()) {
                   setProvince("");
                   setCanton("");
-                  applyFilters({ provincia: "", canton: "", lat: "", lng: "" });
+                  setAddressSuggestions([]);
+                  applyFilters({ provincia: "", canton: "", lat: "", lng: "", ubicacion: "" });
                 }
               }}
-              onFocus={() => setLocationOpen(true)}
+              onFocus={() => { if (locationQuery.trim().length >= 2) setLocationOpen(true); }}
               onBlur={() => { locationBlurRef.current = setTimeout(() => setLocationOpen(false), 150); }}
               onKeyDown={handleLocationKeyDown}
               placeholder={t("filters.locationPlaceholder")}
@@ -633,17 +777,17 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             <AnchoredDropdown anchorRef={locationFieldRef} open={locationOpen && locationSug.length > 0} maxHeight={288}>
               <ul className="py-1" role="listbox">
                 {locationSug.map((suggestion, i) => (
-                  <li key={`${suggestion.type}-${suggestion.type === "province" ? suggestion.id : `${suggestion.provinceId}-${suggestion.id}`}`}>
+                  <li key={suggestion.type === "address" ? `address-${suggestion.placeId}` : `${suggestion.type}-${suggestion.type === "province" ? suggestion.id : `${suggestion.provinceId}-${suggestion.id}`}`}>
                     <button
                       type="button"
                       role="option"
                       aria-selected={i === locationActiveIndex}
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => pickLocation(suggestion)}
+                      onClick={() => pickLocationOption(suggestion)}
                       className={`flex w-full flex-col px-3.5 py-2.5 text-left text-sm transition-colors ${i === locationActiveIndex ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
                     >
                       <span className="font-semibold text-[#111827]">{suggestion.label}</span>
-                      {suggestion.type === "canton" && <span className="text-xs text-[#6b7280]">{suggestion.sublabel}</span>}
+                      {suggestion.type !== "province" && suggestion.sublabel && <span className="text-xs text-[#6b7280]">{suggestion.sublabel}</span>}
                     </button>
                   </li>
                 ))}
