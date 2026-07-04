@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, waitForInteractivePage } from "./helpers";
+import { expectHealthyPage, expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
 
 test.describe("@seeded search results", () => {
@@ -51,11 +51,26 @@ test.describe("@seeded search results", () => {
     ).toBeVisible();
   });
 
-  test("location filter suggests Costa Rica provinces and cantons", async ({ page }) => {
+  test("location filter suggests Costa Rica provinces and cantons", async ({ page }, testInfo) => {
     await gotoOK(page, "/es/buscar");
     await waitForInteractivePage(page);
 
-    const location = page.getByPlaceholder(/Busca una ubicaci[oó]n|Search a location/i).first();
+    if (isMobileProject(testInfo)) {
+      const closeMenu = page.getByRole("button", { name: /Cerrar men|Close menu/i }).first();
+      const closeBox = await closeMenu.boundingBox().catch(() => null);
+      const viewport = page.viewportSize();
+      const closeIsOnScreen =
+        closeBox && viewport &&
+        closeBox.x < viewport.width &&
+        closeBox.x + closeBox.width > 0 &&
+        closeBox.y < viewport.height &&
+        closeBox.y + closeBox.height > 0;
+      if (closeIsOnScreen) await closeMenu.click();
+      await page.locator("button:visible").filter({ hasText: /^Filtros$|^Filters$/i }).first().click();
+    }
+
+    const location = page.locator('input[placeholder*="ubicaci"]:visible, input[placeholder*="location" i]:visible').first();
+    await expect(location).toBeVisible();
     await location.fill("Liber");
     await expect(page.getByRole("option", { name: /Liberia/i }).first()).toBeVisible();
     await page.getByRole("option", { name: /Liberia/i }).first().click();

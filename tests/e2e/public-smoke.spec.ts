@@ -68,10 +68,17 @@ test.describe("@smoke public routes", () => {
     await expectHealthyPage(page);
   });
 
-  test("desktop services dropdown search keeps the matching section context", async ({ page }, testInfo) => {
-    test.skip(isMobileProject(testInfo), "Mobile navbar uses the full /servicios page instead of the desktop mega menu.");
-
+  test("services navigation keeps the matching section context", async ({ page }, testInfo) => {
     await gotoOK(page, "/es");
+
+    if (isMobileProject(testInfo)) {
+      await page.getByRole("button", { name: /Abrir menu|Abrir men/i }).first().click();
+      await expect(page.getByRole("link", { name: /^Servicios$/i }).first()).toBeVisible();
+      await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
+      await expectHealthyPage(page);
+      return;
+    }
+
     await page.getByRole("button", { name: /^Servicios$/i }).first().hover();
     const menuSearch = page.locator('input[aria-label*="servicio" i], input[placeholder*="servicio" i]').first();
     await expect(menuSearch).toBeVisible();

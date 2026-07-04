@@ -456,6 +456,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const [selectedGroupId, setSelectedGroupId] = useState(CATEGORY_GROUPS[0]?.id ?? "");
+  const [searchGroupSelection, setSearchGroupSelection] = useState<{ query: string; id: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const customCategories = useCustomCategories();
   void customCategories;
@@ -469,7 +470,18 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const selectedGroup = menuGroups.find((group) => group.id === selectedGroupId) ?? menuGroups[0];
   const groupedMatches = menuGroups
     .map((group) => ({ group, items: matches.filter((match) => match.groupId === group.id) }))
-    .filter(({ items }) => items.length > 0);
+    .filter(({ items }) => items.length > 0)
+    .sort((a, b) => {
+      const firstA = Math.min(...a.items.map((item) => matches.findIndex((match) => match.id === item.id)));
+      const firstB = Math.min(...b.items.map((item) => matches.findIndex((match) => match.id === item.id)));
+      return firstA - firstB;
+    });
+  const firstMatchGroupId = groupedMatches[0]?.group.id ?? "";
+  const normalizedSearchQuery = normalizeText(q.trim());
+  const selectedSearchGroupId =
+    searchGroupSelection?.query === normalizedSearchQuery
+      ? searchGroupSelection.id
+      : firstMatchGroupId;
 
   const groupIcons: Record<string, React.ComponentType<{ className?: string }>> = {
     hogar: Home,
@@ -536,13 +548,13 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
             <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-[#f8fafc] p-2">
               {groupedMatches.map(({ group, items }) => {
                 const Icon = groupIcons[group.id] ?? Briefcase;
-                const selected = selectedGroupId === group.id || (!groupedMatches.some(({ group: g }) => g.id === selectedGroupId) && groupedMatches[0]?.group.id === group.id);
+                const selected = selectedSearchGroupId === group.id;
                 return (
                   <button
                     key={group.id}
                     type="button"
-                    onClick={() => setSelectedGroupId(group.id)}
-                    onMouseEnter={() => setSelectedGroupId(group.id)}
+                    onClick={() => setSearchGroupSelection({ query: normalizedSearchQuery, id: group.id })}
+                    onMouseEnter={() => setSearchGroupSelection({ query: normalizedSearchQuery, id: group.id })}
                     className={cn(
                       "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20",
                       selected ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"
@@ -562,7 +574,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
             </div>
             <div className="min-w-0 overflow-y-auto overscroll-contain p-4">
               {(() => {
-                const activeGroup = groupedMatches.find(({ group }) => group.id === selectedGroupId) ?? groupedMatches[0];
+                const activeGroup = groupedMatches.find(({ group }) => group.id === selectedSearchGroupId) ?? groupedMatches[0];
                 if (!activeGroup) return null;
                 return (
                   <section>
