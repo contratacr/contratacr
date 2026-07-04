@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
-  LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, Send, Handshake, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Check,
-  HelpCircle, Lightbulb, Headset, ListChecks,
+  LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, Handshake, Briefcase, Compass, Settings, Bell, Globe, Check,
+  HelpCircle, Lightbulb, Headset, ListChecks, UserRound, Wrench, Award, CreditCard,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -20,7 +20,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
+import { ModeSwitcher } from "@/components/ui/mode-switcher";
 import { SupportLink } from "@/components/support/support-link";
+import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
@@ -71,6 +73,8 @@ const LANGS = [
   { code: "es", label: "Español" },
   { code: "en", label: "English" },
 ] as const;
+const DASHBOARD_OFFER_ONLY_TABS = new Set(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion"]);
+const DASHBOARD_USE_ONLY_TABS = new Set(["sent_bookings", "sent_projects", "saved"]);
 
 function useTypedPlaceholder(examples: string[], active: boolean) {
   const [text, setText] = useState(examples[0] ?? "");
@@ -241,10 +245,8 @@ function LanguageInline({ className }: { className?: string }) {
    + mobile drawer); the inline default is used in the navbar bar.
    NO notification badge — context switchers stay clean; notifications live in the
    bell (modern-app practice). */
-/* The mode switch (Cliente/Profesional segmented control) was REMOVED from the navbar +
-   responsive menu in sprint 518 — it now lives ONLY inside "Mi panel"
-   (`@/components/ui/mode-switcher`). Anyone wanting to switch goes to their panel anyway,
-   and removing it freed the navbar room to restore the "ContrataCR" wordmark on mobile. */
+/* In the navbar itself we still keep one compact account entry point. Inside that
+   account menu/drawer, providers can switch Cliente/Profesional in place. */
 
 /* ─── Header data ───
    The "Categorías" mega-menu (desktop) is built from the FULL catalog `CATEGORY_GROUPS`
@@ -711,28 +713,41 @@ interface AccountMenuProps {
   avatarUrl: string | null;
   avatarReady: boolean;
   initials: string;
-  panelHref: string;
+  professionalPanelHref: string;
+  clientPanelHref: string;
+  professionalProfileHref: string;
+  clientProfileHref: string;
+  servicesHref: string;
+  photosHref: string;
+  availabilityHref: string;
   bookingsHref: string;
   proposalsHref: string;
+  subscriptionHref: string;
   sentBookingsHref: string;
   sentProjectsHref: string;
   savedHref: string;
   notificationsHref: string;
+  supportPanelHref: string;
   accountHref: string;
   notifUnread: number;
+  onSwitchMode: (mode: Mode) => void;
   onSignOut: () => void;
   onOpen?: () => void;
 }
 
 function AccountMenu({
   user, isPro, mode, displayName, avatarUrl, avatarReady, initials,
-  panelHref, bookingsHref, proposalsHref, sentBookingsHref, sentProjectsHref,
-  savedHref, notificationsHref, accountHref, notifUnread,
-  onSignOut, onOpen,
+  professionalPanelHref, clientPanelHref, clientProfileHref, professionalProfileHref, servicesHref, photosHref, availabilityHref, bookingsHref, proposalsHref,
+  subscriptionHref, sentBookingsHref, sentProjectsHref, savedHref, notificationsHref, supportPanelHref,
+  accountHref, notifUnread,
+  onSwitchMode, onSignOut, onOpen,
 }: AccountMenuProps) {
   const t = useTranslations("header");
+  const td = useTranslations("proPanel");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const menuItemClass = "flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors";
+  const menuDividerClass = "mt-1 border-t border-gray-50 pt-1";
 
   useEffect(() => {
     function onClickOutside(e: Event) {
@@ -774,71 +789,112 @@ function AccountMenu({
         )}
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-100 rounded-2xl shadow-[0_22px_55px_-18px_rgba(15,23,42,0.45)] z-50 py-1.5 overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 max-h-[min(720px,calc(100vh-92px))] w-72 overflow-y-auto bg-white border border-gray-100 rounded-2xl shadow-[0_22px_55px_-18px_rgba(15,23,42,0.45)] z-50 py-1.5">
           <div className="px-3 py-2 border-b border-gray-50 mb-1">
             {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
             <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
           </div>
 
-          {/* Mode switch removed from the account menu (sprint 518) — it lives inside "Mi panel".
-              The menu just shows the "Mi cuenta" heading; its quick links still reflect the mode. */}
           <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
-          <a
-            href={panelHref}
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-          >
-            <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-            {t("myPanel")}
-          </a>
-
-          {mode === "offer" ? (
-            <>
-              <a href={bookingsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
-                <CalendarCheck className="h-4 w-4 text-gray-400" />
-                {t("receivedRequests")}
-              </a>
-              <a href={proposalsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
-                <Handshake className="h-4 w-4 text-gray-400" />
-                {t("myProposals")}
-              </a>
-            </>
-          ) : (
-            <>
-              <a href={sentBookingsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
-                <CalendarClock className="h-4 w-4 text-gray-400" />
-                {t("myRequests")}
-              </a>
-              <a href={sentProjectsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
-                <ClipboardList className="h-4 w-4 text-gray-400" />
-                {t("myProjects")}
-              </a>
-              <a href={savedHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
-                <Bookmark className="h-4 w-4 text-gray-400" />
-                {t("favorites")}
-              </a>
-            </>
+          {isPro && (
+            <div className="px-3 pb-2">
+              <ModeSwitcher mode={mode} onSwitch={onSwitchMode} block />
+            </div>
           )}
 
-          <a
-            href={notificationsHref}
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-          >
-            <Bell className="h-4 w-4 text-gray-400" />
-            <span className="flex-1">{t("notifications")}</span>
-            {notifUnread > 0 && (
-              <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{notifUnread > 9 ? "9+" : notifUnread}</span>
+          <div className={menuDividerClass}>
+            <a
+              href={isPro && mode === "offer" ? professionalPanelHref : clientPanelHref}
+              onClick={() => setOpen(false)}
+              className={menuItemClass}
+            >
+              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+              {t("myPanel")}
+            </a>
+            {isPro && mode === "offer" ? (
+              <>
+                <a href={professionalProfileHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <UserRound className="h-4 w-4 text-gray-400" />
+                  {td("tabs.profile")}
+                </a>
+                <a href={servicesHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <Wrench className="h-4 w-4 text-gray-400" />
+                  {td("tabs.services")}
+                </a>
+                <a href={photosHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <Award className="h-4 w-4 text-gray-400" />
+                  {td("tabs.photos")}
+                </a>
+                <a href={availabilityHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <CalendarDays className="h-4 w-4 text-gray-400" />
+                  {td("tabs.availability")}
+                </a>
+                <a href={bookingsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <CalendarCheck className="h-4 w-4 text-gray-400" />
+                  {td("tabs.bookings")}
+                </a>
+                <a href={proposalsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <Handshake className="h-4 w-4 text-gray-400" />
+                  {td("tabs.proposals")}
+                </a>
+                {PAYMENTS_ENABLED && (
+                  <a href={subscriptionHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                    <CreditCard className="h-4 w-4 text-gray-400" />
+                    {td("tabs.suscripcion")}
+                  </a>
+                )}
+              </>
+            ) : (
+              <>
+                <a href={clientProfileHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <UserRound className="h-4 w-4 text-gray-400" />
+                  {td("tabs.profile")}
+                </a>
+                <a href={sentBookingsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <CalendarClock className="h-4 w-4 text-gray-400" />
+                  {td("tabs.sent_bookings")}
+                </a>
+                <a href={sentProjectsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <ClipboardList className="h-4 w-4 text-gray-400" />
+                  {td("tabs.sent_projects")}
+                </a>
+                <a href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <Bookmark className="h-4 w-4 text-gray-400" />
+                  {td("tabs.saved")}
+                </a>
+              </>
             )}
-          </a>
-          <a
-            href={accountHref}
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-          >
-            <Settings className="h-4 w-4 text-gray-400" />
-            {t("accountSecurity")}
-          </a>
+          </div>
+
+          <div>
+            <a
+              href={notificationsHref}
+              onClick={() => setOpen(false)}
+              className={menuItemClass}
+            >
+              <Bell className="h-4 w-4 text-gray-400" />
+              <span className="flex-1">{t("notifications")}</span>
+              {notifUnread > 0 && (
+                <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{notifUnread > 9 ? "9+" : notifUnread}</span>
+              )}
+            </a>
+            <a
+              href={supportPanelHref}
+              onClick={() => setOpen(false)}
+              className={menuItemClass}
+            >
+              <Headset className="h-4 w-4 text-gray-400" />
+              {t("supportTickets")}
+            </a>
+            <a
+              href={accountHref}
+              onClick={() => setOpen(false)}
+              className={menuItemClass}
+            >
+              <Settings className="h-4 w-4 text-gray-400" />
+              {t("accountSecurity")}
+            </a>
+          </div>
 
           {!isPro && (
             <Link
@@ -894,6 +950,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const drawerTouchX = useRef<number | null>(null);
   const router = useRouter();
   const t = useTranslations("header");
+  const td = useTranslations("proPanel");
   const locale = useLocale();
   const pathname = usePathname();
   const { user, avatarUrl, avatarReady } = useAuth();
@@ -917,23 +974,36 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const isPro = canOffer(user);
   const initials = getInitials(user?.user_metadata?.full_name ?? user?.email ?? "?");
   const displayName = (user?.user_metadata?.full_name as string) || (user?.user_metadata?.name as string) || user?.email?.split("@")[0] || "";
+  const { mode, setMode } = useMode(isPro);
 
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
   // by itself. The "Usar servicios" sections live under their own tabs there.
   const panelHref = `/${locale}/dashboard/profesional`;
-  const primaryPanelHref = panelHref;
-  const bookingsHref = `${panelHref}?tab=bookings`;
-  const proposalsHref = `${panelHref}?tab=proposals`;
-  const sentBookingsHref = `${panelHref}?tab=sent_bookings`;
-  const sentProjectsHref = `${panelHref}?tab=sent_projects`;
-  const savedHref = `${panelHref}?tab=saved`;
-  const accountHref = `${panelHref}?tab=cuenta`;
-  const notificationsHref = `${panelHref}?tab=notifications`;
+  const panelTabHref = (tab: string, targetMode: Mode = mode) => `${panelHref}?tab=${tab}&mode=${targetMode}`;
+  const professionalPanelHref = `${panelHref}?mode=offer`;
+  const clientPanelHref = `${panelHref}?mode=use`;
+  const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
+  const professionalProfileHref = panelTabHref("profile", "offer");
+  const clientProfileHref = panelTabHref("profile", "use");
+  const servicesHref = panelTabHref("services", "offer");
+  const photosHref = panelTabHref("photos", "offer");
+  const availabilityHref = panelTabHref("availability", "offer");
+  const bookingsHref = panelTabHref("bookings", "offer");
+  const proposalsHref = panelTabHref("proposals", "offer");
+  const subscriptionHref = panelTabHref("suscripcion", "offer");
+  const sentBookingsHref = panelTabHref("sent_bookings", "use");
+  const sentProjectsHref = panelTabHref("sent_projects", "use");
+  const savedHref = panelTabHref("saved", "use");
+  const supportPanelHref = `${panelHref}?tab=soporte`;
+  const accountHref = panelTabHref("cuenta");
+  const notificationsHref = panelTabHref("notifications");
+  const visibleResourceLinks = useMemo(
+    () => RESOURCES_LINKS.filter((link) => link.key !== "proTips" || !user || isPro),
+    [isPro, user],
+  );
 
-  // Airbnb FULL mode switch — flips the whole experience (panel sections + bell). The
-  // SWITCH UI now lives ONLY inside "Mi panel" (sprint 518); the navbar just READS the
-  // active mode to show the right quick links + bell.
-  const { mode } = useMode(isPro);
+  // Airbnb FULL mode switch: providers can change Cliente/Profesional from the
+  // panel header or account menus, and the navbar reads that mode for quick links.
   const notificationScope: "all" | Mode = pathname.startsWith("/dashboard/profesional")
     ? mode
     : pathname.startsWith("/dashboard/cliente")
@@ -965,6 +1035,18 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
         setProUnread(pro); setClientUnread(cli); setNeutralUnread(neu);
       });
   }, [user]);
+  const switchMenuMode = useCallback((next: Mode) => {
+    setMode(next);
+    if (pathname.startsWith("/dashboard/profesional")) {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (next === "offer" && tab && DASHBOARD_USE_ONLY_TABS.has(tab)) params.set("tab", "bookings");
+      if (next === "use" && tab && DASHBOARD_OFFER_ONLY_TABS.has(tab)) params.set("tab", "sent_bookings");
+      params.set("mode", next);
+      router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
+    }
+    queueMicrotask(() => refreshNotifUnread());
+  }, [pathname, refreshNotifUnread, router, setMode]);
   useEffect(() => {
     queueMicrotask(() => refreshNotifUnread());
     const id = window.setInterval(refreshNotifUnread, 3000);
@@ -982,14 +1064,16 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
       ? clientUnread + neutralUnread
       : proUnread + clientUnread + neutralUnread;
   const mobileRowBase = "relative flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors before:absolute before:left-0 before:top-3 before:bottom-3 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity";
-  const mobileRowClass = (_active: boolean, strong = false) => cn(
+  const mobileRowClass = (active: boolean, strong = false) => cn(
     mobileRowBase,
-    strong
-      ? "text-[#162543] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
+    active
+      ? "bg-[#EBF5FB] text-[#0089bb] before:opacity-100"
+      : strong
+        ? "text-[#162543] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
       : "text-[#4b5563] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
   );
-  const mobileIconClass = (_active: boolean) => "h-4 w-4 shrink-0 text-[#9ca3af]";
-  const mobileChevronClass = (_active: boolean) => "h-4 w-4 shrink-0 text-gray-300";
+  const mobileIconClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#009FD9]" : "text-[#9ca3af]");
+  const mobileChevronClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#009FD9]/60" : "text-gray-300");
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery, 8, locale), [searchQuery, locale]);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
@@ -1225,7 +1309,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       style={{ animation: "tab-cards-in 0.15s ease both" }}
                     >
                       <ul className="space-y-1">
-                        {RESOURCES_LINKS.map((link) => (
+                        {visibleResourceLinks.map((link) => (
                           <li key={link.href}>
                             {link.key === "support" ? (
                               <SupportLink
@@ -1268,7 +1352,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         {t("offerServices")}
                       </Link>
                     )}
-                    {/* Mode switch removed from the navbar (sprint 518) — it lives inside "Mi panel". */}
+                    {/* The context switcher lives inside account menus/drawers, keeping this bar compact. */}
                     <a
                       href={primaryPanelHref}
                       className="relative text-sm font-medium px-3 py-2 text-[#374151] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#1a2744]"
@@ -1284,15 +1368,24 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       avatarUrl={avatarUrl}
                       avatarReady={avatarReady}
                       initials={initials}
-                      panelHref={panelHref}
+                      professionalPanelHref={professionalPanelHref}
+                      clientPanelHref={clientPanelHref}
+                      professionalProfileHref={professionalProfileHref}
+                      clientProfileHref={clientProfileHref}
+                      servicesHref={servicesHref}
+                      photosHref={photosHref}
+                      availabilityHref={availabilityHref}
                       bookingsHref={bookingsHref}
                       proposalsHref={proposalsHref}
+                      subscriptionHref={subscriptionHref}
                       sentBookingsHref={sentBookingsHref}
                       sentProjectsHref={sentProjectsHref}
                       savedHref={savedHref}
                       notificationsHref={notificationsHref}
+                      supportPanelHref={supportPanelHref}
                       accountHref={accountHref}
                       notifUnread={activeUnread}
+                      onSwitchMode={switchMenuMode}
                       onSignOut={handleSignOut}
                       onOpen={refreshNotifUnread}
                     />
@@ -1444,11 +1537,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 </div>
               </form>
 
-              {/* Session access stays in the compact/scrolled row for logged-in
-                  users (logo links home above; here: bell + account menu). One
-                  header for both roles; logged-out users see only the search. */}
+              {/* Desktop keeps bell + account menu in the compact row. On mobile,
+                  the hamburger is the single entry point so account options do not
+                  split across two menus. */}
               {user && (
-                <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+                <div className="hidden lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
                   <NotificationBell scope={notificationScope} />
                   <AccountMenu
                     user={user}
@@ -1458,20 +1551,37 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     avatarUrl={avatarUrl}
                     avatarReady={avatarReady}
                     initials={initials}
-                    panelHref={panelHref}
+                    professionalPanelHref={professionalPanelHref}
+                    clientPanelHref={clientPanelHref}
+                    professionalProfileHref={professionalProfileHref}
+                    clientProfileHref={clientProfileHref}
+                    servicesHref={servicesHref}
+                    photosHref={photosHref}
+                    availabilityHref={availabilityHref}
                     bookingsHref={bookingsHref}
                     proposalsHref={proposalsHref}
+                    subscriptionHref={subscriptionHref}
                     sentBookingsHref={sentBookingsHref}
                     sentProjectsHref={sentProjectsHref}
                     savedHref={savedHref}
                     notificationsHref={notificationsHref}
+                    supportPanelHref={supportPanelHref}
                     accountHref={accountHref}
                     notifUnread={activeUnread}
+                    onSwitchMode={switchMenuMode}
                     onSignOut={handleSignOut}
                     onOpen={refreshNotifUnread}
                   />
                 </div>
               )}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className="lg:hidden ml-1 shrink-0 p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
+                aria-label={t("openMenu")}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
             </div>
 
           </div>
@@ -1533,7 +1643,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               </div>
 
               {user ? (
-                <div className="border-b border-[#edf2f7] p-1.5">
+                <div className="p-1.5">
                   <div className="mb-1 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={avatarUrl ?? undefined} />
@@ -1547,19 +1657,102 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     </div>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
-                      <LayoutDashboard className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{t("myPanel")}</span>
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </a>
-                    <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
-                      <Bell className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{t("notifications")}</span>
-                      {activeUnread > 0 && (
-                        <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{activeUnread > 9 ? "9+" : activeUnread}</span>
+                    {isPro && (
+                      <div className="px-2 pb-2 pt-1">
+                        <ModeSwitcher mode={mode} onSwitch={switchMenuMode} block />
+                      </div>
+                    )}
+                    <div className="mt-1 flex flex-col gap-0.5 border-t border-[#edf2f7] pt-1">
+                      <a href={isPro && mode === "offer" ? professionalPanelHref : clientPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
+                        <LayoutDashboard className={mobileIconClass(false)} />
+                        <span className="min-w-0 flex-1">{t("myPanel")}</span>
+                        <ChevronRight className={mobileChevronClass(false)} />
+                      </a>
+                      {isPro && mode === "offer" ? (
+                        <>
+                          <a href={professionalProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <UserRound className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.profile")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={servicesHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <Wrench className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.services")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={photosHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <Award className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.photos")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={availabilityHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <CalendarDays className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.availability")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={bookingsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <CalendarCheck className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.bookings")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={proposalsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <Handshake className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.proposals")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          {PAYMENTS_ENABLED && (
+                            <a href={subscriptionHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                              <CreditCard className={mobileIconClass(false)} />
+                              <span className="min-w-0 flex-1">{td("tabs.suscripcion")}</span>
+                              <ChevronRight className={mobileChevronClass(false)} />
+                            </a>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <a href={clientProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <UserRound className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.profile")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <CalendarClock className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.sent_bookings")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <ClipboardList className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.sent_projects")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={savedHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <Bookmark className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.saved")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                        </>
                       )}
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </a>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                        <Bell className={mobileIconClass(false)} />
+                        <span className="min-w-0 flex-1">{t("notifications")}</span>
+                        {activeUnread > 0 && (
+                          <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{activeUnread > 9 ? "9+" : activeUnread}</span>
+                        )}
+                        <ChevronRight className={mobileChevronClass(false)} />
+                      </a>
+                      <a href={supportPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                        <Headset className={mobileIconClass(false)} />
+                        <span className="min-w-0 flex-1">{t("supportTickets")}</span>
+                        <ChevronRight className={mobileChevronClass(false)} />
+                      </a>
+                      <a href={accountHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                        <Settings className={mobileIconClass(false)} />
+                        <span className="min-w-0 flex-1">{t("accountSecurity")}</span>
+                        <ChevronRight className={mobileChevronClass(false)} />
+                      </a>
+                    </div>
                     {!isPro && (
                       <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
                         <Briefcase className={mobileIconClass(false)} />
@@ -1570,7 +1763,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   </div>
                 </div>
               ) : (
-                <div className="border-b border-[#edf2f7] p-1.5">
+                <div className="p-1.5">
                   <div className="flex flex-col gap-0.5">
                     <Link
                       href="/registro/profesional"
@@ -1594,7 +1787,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 </div>
               )}
 
-              <div className="border-b border-[#edf2f7] p-1.5">
+              <div className="mt-1 border-t border-[#dbe3ea] bg-white/70 p-1.5">
                 <div className="flex flex-col gap-0.5">
                   <Link
                     href="/servicios"
@@ -1605,7 +1798,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <span className="min-w-0 flex-1">{t("categories")}</span>
                     <ChevronRight className={mobileChevronClass(false)} />
                   </Link>
-                  {RESOURCES_LINKS.map((link) => {
+                  {visibleResourceLinks.filter((link) => link.key !== "support").map((link) => {
                     const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
                     const content = (
                       <>
