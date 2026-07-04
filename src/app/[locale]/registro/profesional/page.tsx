@@ -497,6 +497,9 @@ export default function RegisterProfessionalPage() {
     [selectedServiceIds],
   );
   const effectiveVideoCoverageCountry = canOfferVideoConsult && videoCoverageCountry;
+  const pendingProfessionalSignup =
+    currentUser?.user_metadata?.professional_signup_started === true &&
+    currentUser.user_metadata?.is_provider !== true;
 
   // On a failed submit, jump to the first field with an error.
   function scrollToFirstError() {
@@ -521,7 +524,7 @@ export default function RegisterProfessionalPage() {
 
   useEffect(() => {
     if (!authLoading) {
-      setStep(0);
+      setStep((prev) => (prev === -1 ? 0 : prev));
       // Pre-fill photo preview + legal name from OAuth provider if available
       if (currentUser) {
         if (!photoPreview) {
@@ -554,6 +557,13 @@ export default function RegisterProfessionalPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, currentUser]);
+
+  useEffect(() => {
+    if (!currentUser || !pendingProfessionalSignup || accountCedula === null || step !== 0) return;
+    if (accountCedula || oauthFullName.trim().length >= 3) {
+      setStep(1);
+    }
+  }, [accountCedula, currentUser, oauthFullName, pendingProfessionalSignup, step]);
 
   // Registro guard — a user who is ALREADY a professional must never land on the
   // registration/convert flow; bounce them to their professional panel. A client
@@ -619,7 +629,63 @@ export default function RegisterProfessionalPage() {
       return;
     }
     setStep1Data(data);
-    setStep(1);
+
+    if (currentUser) {
+      setStep(1);
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const fullName = limitText(data.fullName.trim(), NAME_MAX_LENGTH);
+      const skipCedula = noCrId || identityMismatch;
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: fullName,
+            cedula: skipCedula ? null : data.cedula.replace(/\D/g, ""),
+            role: "client",
+            intended_role: "professional",
+            professional_signup_started: true,
+            professional_no_cr_id: noCrId,
+            professional_identity_mismatch: identityMismatch,
+            onboarding_completed: true,
+          },
+        },
+      });
+
+      if (signUpError) throw signUpError;
+      if (!signUpData.user?.id) throw new Error(t("errCreateAccount"));
+      if (Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
+        throw new Error(t("errAccountExists"));
+      }
+
+      if (signUpData.session) {
+        setStep(1);
+      } else {
+        setOtpEmail(data.email);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : t("errTitle");
+      if (
+        msg.includes("already registered") ||
+        msg.includes("already been registered") ||
+        msg.includes("already exists") ||
+        msg.includes("ya está registrado") ||
+        msg.includes("Ya existe una cuenta")
+      ) {
+        const provider = await detectSocialOnly(data.email);
+        form1.setError("email", { message: provider ? t("errSocialAccount", { provider: providerLabel(provider) }) : t("errAccountExists") });
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function onCurrentUserIdentityContinue() {
@@ -697,51 +763,24 @@ export default function RegisterProfessionalPage() {
       }
 
       const supabase = createClient();
-      let userId: string;
-      let userEmail: string;
-
-      if (currentUser) {
-        // ── 2a. OAuth / already-logged-in path ────────────────────────────────
-        userId = currentUser.id;
-        userEmail = currentUser.email ?? "";
-      } else {
-        // ── 2b. Email/password path ───────────────────────────────────────────
-        if (!step1Data) return;
-      const fullName = limitText(step1Data.fullName.trim(), NAME_MAX_LENGTH);
-
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: step1Data.email,
-          password: step1Data.password,
-          options: {
-            data: {
-              full_name: fullName,
-              // Manual-review cases (no CR ID / "not my info") do NOT store the cédula
-              // — so it is never auto-verified against the padrón.
-              cedula: (noCrId || identityMismatch) ? null : step1Data.cedula.replace(/\D/g, ""),
-              role: "professional",
-              is_provider: true,
-              onboarding_completed: true,
-            },
-          },
-        });
-        if (signUpError) throw signUpError;
-        if (!signUpData.user?.id) throw new Error(t("errCreateAccount"));
-        // Supabase anti-enumeration: an already-registered email returns a user
-        // object with an EMPTY identities array (no error). Detect it explicitly.
-        if (Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
-          throw new Error(t("errAccountExists"));
-        }
-        userId = signUpData.user.id;
-        userEmail = step1Data.email;
+      let submitUser = currentUser;
+      if (!submitUser) {
+        const { data: sessionData } = await supabase.auth.getUser();
+        submitUser = sessionData.user;
       }
+      if (!submitUser) throw new Error(t("errCreateAccount"));
+
+      const userId = submitUser.id;
+      const userEmail = submitUser.email ?? step1Data?.email ?? "";
 
       // ── 3. Build names for the profile upsert ─────────────────────────────
-      const fullName = limitText(currentUser
-        ? (oauthFullName.trim() ||
-          (currentUser.user_metadata?.full_name as string) ||
-          (currentUser.user_metadata?.name as string) ||
-          (currentUser.email?.split("@")[0] ?? "profesional"))
-        : step1Data!.fullName.trim(), NAME_MAX_LENGTH);
+      const fullName = limitText(
+        oauthFullName.trim() ||
+          (submitUser.user_metadata?.full_name as string) ||
+          (submitUser.user_metadata?.name as string) ||
+          (submitUser.email?.split("@")[0] ?? "profesional"),
+        NAME_MAX_LENGTH,
+      );
 
       const effWorkplaces = workplaces;
       const selectedProfessions = [step2Data.category, ...extraCategories].filter(Boolean);
@@ -752,6 +791,10 @@ export default function RegisterProfessionalPage() {
       const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
       const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effWorkplaces, onlineCoverage);
       const primary = primaryArea(effWorkplaces, onlineCoverage);
+      const submitMetadata = submitUser.user_metadata ?? {};
+      const storedNoCrId = submitMetadata.professional_no_cr_id === true;
+      const storedIdentityMismatch = submitMetadata.professional_identity_mismatch === true;
+      const skipCedula = noCrId || identityMismatch || storedNoCrId || storedIdentityMismatch;
 
       // ── 4. Create/upsert profile + professional record ─────────────────────
       const proRes = await fetch("/api/register/professional", {
@@ -762,12 +805,12 @@ export default function RegisterProfessionalPage() {
           email: userEmail,
           fullName,
           businessName: limitText(businessName.trim(), NAME_MAX_LENGTH) || null,
-          cedula: (noCrId || identityMismatch) ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (accountCedula || oauthCedula ? (accountCedula || oauthCedula).replace(/\D/g, "") : null)),
+          cedula: skipCedula ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (accountCedula || oauthCedula ? (accountCedula || oauthCedula).replace(/\D/g, "") : null)),
           // Skipping the cédula (noCrId) is a normal unverified registration — NOT a
           // review case. Only "¿No es tu información?" (identityMismatch) routes to
           // manual review; both simply mean no cédula is stored (so no auto-verify).
-          noCrId: identityMismatch,
-          idDocNote: identityMismatch ? "El usuario indicó que la información del padrón no es suya." : null,
+          noCrId: identityMismatch || storedIdentityMismatch,
+          idDocNote: (identityMismatch || storedIdentityMismatch) ? "El usuario indicó que la información del padrón no es suya." : null,
           photoUrl,
           category: step2Data.category,
           professions: selectedProfessions,
@@ -795,22 +838,28 @@ export default function RegisterProfessionalPage() {
         throw new Error(proErr ?? t("errCreateProfile"));
       }
 
-      if (currentUser) {
-        // Persist the professional role in auth metadata too, so navigating away
-        // and back never reverts to the role-selection screen (and a converted
-        // client stays professional across sessions).
-        try {
-          await supabase.auth.updateUser({ data: { role: "professional", is_provider: true, onboarding_completed: true } });
-        } catch { /* best-effort */ }
-        // Show the full-screen loader BEFORE navigating so the photo step never
-        // flashes back. Hard navigation so the refreshed session (new role) is read.
-        setRedirecting(true);
-        writeStoredMode("offer");
-        window.location.href = `/${locale}/dashboard/profesional?mode=offer`;
-        return;
-      } else {
-        setOtpEmail(step1Data!.email);
-      }
+      // Persist the professional role in auth metadata too, so navigating away
+      // and back never reverts to the role-selection screen (and a converted
+      // client stays professional across sessions).
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            role: "professional",
+            intended_role: null,
+            is_provider: true,
+            professional_signup_started: false,
+            professional_no_cr_id: false,
+            professional_identity_mismatch: false,
+            onboarding_completed: true,
+          },
+        });
+      } catch { /* best-effort */ }
+      // Show the full-screen loader BEFORE navigating so the photo step never
+      // flashes back. Hard navigation so the refreshed session (new role) is read.
+      setRedirecting(true);
+      writeStoredMode("offer");
+      window.location.href = `/${locale}/dashboard/profesional?mode=offer`;
+      return;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t("errTitle");
       if (
@@ -840,7 +889,7 @@ export default function RegisterProfessionalPage() {
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
-              <OtpVerification email={otpEmail} />
+              <OtpVerification email={otpEmail} onVerified={() => { setOtpEmail(null); setStep(1); }} />
             </div>
           </div>
         </main>
@@ -980,7 +1029,7 @@ export default function RegisterProfessionalPage() {
                 {...form1.register("confirmPassword")}
               />
 
-              <Button type="submit" size="lg" className="mt-2">
+              <Button type="submit" size="lg" className="mt-2" loading={submitting} disabled={submitting}>
                 {t("continue")} <ArrowRight className="h-4 w-4" />
               </Button>
               <p className="text-center text-xs text-[#9ca3af]">
