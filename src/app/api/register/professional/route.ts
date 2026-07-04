@@ -42,6 +42,15 @@ function hasStoredServices(services: unknown): boolean {
   return Array.isArray(services) && services.length > 0;
 }
 
+async function rollbackFreshSignup(supabase: ReturnType<typeof createAdminClient>, userId: string, freshSignup: boolean) {
+  if (!freshSignup) return;
+  try {
+    await supabase.auth.admin.deleteUser(userId);
+  } catch {
+    // Best effort: the user can still be recovered by signing in and completing the flow.
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -156,6 +165,7 @@ export async function POST(req: Request) {
       email = bodyEmail ?? adminLookup.user.email ?? "";
       fullName = limitTrimmedText(bodyFullName ?? (adminLookup.user.user_metadata?.full_name as string) ?? "", NAME_MAX_LENGTH);
     }
+    const freshSignup = !sessionUser;
 
     const rawBodyCedula = typeof bodyCedula === "string" ? bodyCedula.replace(/\D/g, "") : null;
     const { data: existingProfile } = await supabase
@@ -176,6 +186,7 @@ export async function POST(req: Request) {
         .maybeSingle();
 
       if (existingCedula) {
+        await rollbackFreshSignup(supabase, userId, freshSignup);
         return NextResponse.json(
           { error: "Esta identificación ya está registrada. Inicia sesión o recupera tu cuenta.", code: "cedula_taken" },
           { status: 409 }
@@ -210,6 +221,7 @@ export async function POST(req: Request) {
 
     if (profileError) {
       console.error("[register/professional] profile upsert error:", profileError);
+      await rollbackFreshSignup(supabase, userId, freshSignup);
       const dupEmail = /profiles_email_key|idx_profiles_email_unique/i.test(profileError.message);
       const friendly = dupEmail
         ? "Este correo ya está registrado. Inicia sesión."
@@ -260,6 +272,7 @@ export async function POST(req: Request) {
       }
       if (updErr) {
         console.error("[register/professional] update error:", updErr);
+        await rollbackFreshSignup(supabase, userId, freshSignup);
         return NextResponse.json({ error: "No pudimos actualizar tu perfil. Intenta de nuevo." }, { status: 500 });
       }
 
@@ -310,6 +323,7 @@ export async function POST(req: Request) {
 
     if (proError) {
       console.error("[register/professional] insert error:", proError);
+      await rollbackFreshSignup(supabase, userId, freshSignup);
       const friendly =
         /duplicate key|already exists/i.test(proError.message)
           ? "Ya existe un perfil profesional para esta cuenta."
