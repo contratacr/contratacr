@@ -11,10 +11,8 @@ import type { Mode } from "@/hooks/use-mode";
    (role=tablist/tab, ArrowLeft/Right operable), smooth fill transition, fits ~360px.
    `block` makes the two segments share the full width.
 
-   Sprint 518: this lives ONLY inside "Mi panel" now (it was removed from the navbar +
-   responsive menu — anyone wanting to switch goes to their panel anyway, and it freed
-   navbar room for the "ContrataCR" wordmark). Only render it for accounts with BOTH
-   modes (providers). */
+   Used anywhere the account needs to change context in place (panel header and
+   account navigation menus). Only render it for accounts with BOTH modes (providers). */
 export function ModeSwitcher({
   mode,
   onSwitch,

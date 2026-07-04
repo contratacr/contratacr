@@ -1,20 +1,16 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Link, usePathname } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 
 // Session- + location-aware "Soporte" entry point, consistent app-wide:
-//  • logged OUT, or anywhere OUTSIDE the dashboard → the PUBLIC /soporte page/form
-//    (support works without an account; everyone in the public context lands here).
-//  • logged IN and INSIDE the dashboard → the panel's INLINE "Soporte" SECTION
-//    (?tab=soporte) — no modal, no separate page.
+//  • logged OUT → the PUBLIC /soporte page/form.
+//  • logged IN → the account's single inline support inbox in the unified panel.
 // `onNavigate` closes the host menu/drawer.
 export function SupportLink({ className, children, onNavigate }: { className?: string; children: ReactNode; onNavigate?: () => void }) {
   const { user } = useAuth();
-  const pathname = usePathname();
-  const inDashboard = pathname === "/dashboard" || pathname.includes("/dashboard/");
-  const href = user && inDashboard
+  const href = user
     ? "/dashboard/profesional?tab=soporte"
     : "/soporte";
 
