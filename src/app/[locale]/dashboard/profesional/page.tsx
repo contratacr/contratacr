@@ -129,6 +129,9 @@ export default function DashboardPage() {
   // The account CAN offer if it has a professional profile (authoritative once
   // loaded) — fall back to the metadata capability for an instant first paint.
   const isProvider = !!pro || canOffer(user);
+  const pendingProfessionalSignup =
+    user?.user_metadata?.professional_signup_started === true &&
+    user.user_metadata?.is_provider !== true;
 
   // Airbnb FULL switch: the active mode is the GLOBAL (persisted) mode shared with the
   // navbar + bell. A mode-specific tab in the URL (a deep link from a notification or a
@@ -149,6 +152,11 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!authLoading && !user && !isSigningOut()) router.push("/login");
   }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (authLoading || loading || !user || pro || !pendingProfessionalSignup) return;
+    router.replace("/registro/profesional");
+  }, [authLoading, loading, pendingProfessionalSignup, pro, router, user]);
 
   // Deep-link focus: `?tab=profile&focus=location` opens the editor at that field.
   useEffect(() => {
@@ -318,7 +326,7 @@ export default function DashboardPage() {
   }, [moreOpen]);
 
 
-  if (authLoading || loading || !user) {
+  if (authLoading || loading || !user || (pendingProfessionalSignup && !pro)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
