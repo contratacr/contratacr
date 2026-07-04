@@ -27,7 +27,14 @@ export async function expectPageShell(page: Page) {
 export async function expectHealthyPage(page: Page) {
   await expectNotVercelProtection(page);
   await expect(page.locator("body")).not.toContainText(/Application error|Internal Server Error|Log in to Vercel/i);
+  await expectNoRawI18nKeys(page);
   await expectNoHorizontalOverflow(page);
+}
+
+export async function expectNoRawI18nKeys(page: Page) {
+  const bodyText = await page.locator("body").innerText({ timeout: 3_000 }).catch(() => "");
+  const rawKey = bodyText.match(/\b(?:servicesPage|categoriesPage|clientActivity|schedule|categories|dashboard|card)\.[A-Za-z0-9_.-]+/i)?.[0] ?? "";
+  expect(rawKey, `UI should not expose raw translation key "${rawKey}"`).toBe("");
 }
 
 export async function expectVisibleText(scope: Locator, matcher: string | RegExp, timeout = 12_000) {

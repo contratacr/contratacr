@@ -1,4 +1,4 @@
-import { test } from "playwright/test";
+import { expect, test } from "playwright/test";
 import { expectHealthyPage, expectVisibleText, gotoOK, loginAs } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
 
@@ -43,6 +43,36 @@ test.describe("@seeded dashboard surfaces", () => {
       await expectVisibleText(page.locator("main"), section.marker);
       await expectHealthyPage(page);
     }
+  });
+
+  test("professional add-service picker keeps its scroll inside the modal", async ({ page }) => {
+    test.slow();
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional?tab=services");
+    await expectVisibleText(page.locator("main"), /Servicios|Services/i);
+
+    await page.getByRole("button", { name: /Agregar servicio|Add service/i }).last().click();
+    const dialog = page.getByRole("dialog").filter({ hasText: /Agregar servicio|Add service/i }).first();
+    const scroll = dialog.locator('[data-testid="services-add-picker-scroll"], .overflow-y-auto').last();
+
+    await expect(dialog).toBeVisible();
+    await expect(scroll).toBeVisible();
+    await expect(dialog.getByText(/Hogar y construcci|Home and construction|Tecnolog|Technology/i).first()).toBeVisible();
+
+    const dialogBox = await dialog.boundingBox();
+    const scrollBox = await scroll.boundingBox();
+    expect(dialogBox, "Dialog should have a bounding box").not.toBeNull();
+    expect(scrollBox, "Add-service picker scroll area should have a bounding box").not.toBeNull();
+    const contained =
+      scrollBox!.x >= dialogBox!.x - 1 &&
+      scrollBox!.x + scrollBox!.width <= dialogBox!.x + dialogBox!.width + 1 &&
+      scrollBox!.y >= dialogBox!.y - 1 &&
+      scrollBox!.y + scrollBox!.height <= dialogBox!.y + dialogBox!.height + 1;
+    expect(contained, "Add-service picker scroll area should stay inside the modal").toBe(true);
+
+    await scroll.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+    await expect(dialog.getByRole("button", { name: /Sugerir servicio|Suggest a service/i }).first()).toBeVisible();
+    await expectHealthyPage(page);
   });
 
   test("client mode sections render without broken states", async ({ page }) => {
