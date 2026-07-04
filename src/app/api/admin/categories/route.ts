@@ -182,7 +182,7 @@ export async function PATCH(req: Request) {
   if (!status) {
     const rawLabel = normalizeServiceDisplayName(typeof label === "string" ? label : "");
     const rawLabelEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
-    const cleanLabel = rawLabel ? await suggestSpanishServiceLabel(rawLabel) : rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : normalizeServiceDisplayName(labelFromId(id));
+    const cleanLabel = rawLabel || (rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : normalizeServiceDisplayName(labelFromId(id)));
     const cleanLabelEn = rawLabelEn ? await suggestEnglishServiceLabel(rawLabelEn) : await suggestEnglishServiceLabel(cleanLabel);
     const { error } = await upsertCategory(db, {
       id,
@@ -219,7 +219,7 @@ export async function PATCH(req: Request) {
       .single();
     const rawName = cleanLabel || row?.label || row?.suggested_name || labelFromId(id);
     const rawNameEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
-    const finalName = await suggestSpanishServiceLabel(rawName);
+    const finalName = normalizeServiceDisplayName(rawName);
     const finalNameEn = rawNameEn ? await suggestEnglishServiceLabel(rawNameEn) : await suggestEnglishServiceLabel(finalName);
     const review = classifySuggestedCategory(finalName);
     await upsertCategory(db, {
@@ -246,7 +246,7 @@ export async function POST(req: Request) {
   const { label, labelEn, groupId, esSalud, supportsVideoconsulta } = body;
   const rawLabel = normalizeServiceDisplayName(typeof label === "string" ? label : "");
   const rawLabelEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
-  const cleanLabel = rawLabel ? await suggestSpanishServiceLabel(rawLabel) : rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "";
+  const cleanLabel = rawLabel || (rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "");
   if (!cleanLabel) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
 
   const id = slugifyCategory(cleanLabel);
