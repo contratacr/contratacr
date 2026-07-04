@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, expectPageShell, gotoOK, isMobileProject } from "./helpers";
+import { expectHealthyPage, expectPageShell, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
 
 const routes = [
   "/es",
@@ -92,7 +92,9 @@ test.describe("@smoke public routes", () => {
 
   test("services search uses the canonical design and art label", async ({ page }, testInfo) => {
     await gotoOK(page, "/es/servicios");
+    await waitForInteractivePage(page);
     const pageSearch = page.locator('[data-testid="services-page-search"] input').first();
+    await expect(pageSearch).toBeVisible();
     await pageSearch.fill("diseño");
 
     await expect(page.getByText("Diseño y arte").first()).toBeVisible();
