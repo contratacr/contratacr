@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
   LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, Send, Handshake, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Check,
-  HelpCircle, Lightbulb, Headset, ListChecks, Home, Leaf, Sparkles, Laptop, Heart, Star, BookOpen, Truck, Shield, Car,
+  HelpCircle, Lightbulb, Headset, ListChecks,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -22,6 +22,7 @@ import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
+import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 
@@ -463,6 +464,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const menuCategories = getAllCategories();
   const menuGroups = getAllCategoryGroups().map((group) => ({
     id: group.id,
+    iconKey: group.iconKey,
     items: menuCategories.filter((category) => category.groupId === group.id),
   }));
   const matches = useMemo(() => matchCategories(q, 18, locale), [q, locale]);
@@ -482,23 +484,6 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
     searchGroupSelection?.query === normalizedSearchQuery
       ? searchGroupSelection.id
       : firstMatchGroupId;
-
-  const groupIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-    hogar: Home,
-    jardin: Leaf,
-    limpieza: Sparkles,
-    tecnologia: Laptop,
-    profesional: Briefcase,
-    salud: Heart,
-    belleza: Star,
-    educacion: BookOpen,
-    mudanzas: Truck,
-    eventos: CalendarDays,
-    seguridad: Shield,
-    automotriz: Car,
-    vehiculos: Car,
-    transporte: Truck,
-  };
 
   useEffect(() => { queueMicrotask(() => setActive(0)); }, [q]);
 
@@ -547,7 +532,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           <div className="grid min-h-0 flex-1 grid-cols-[15rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
             <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-[#f8fafc] p-2">
               {groupedMatches.map(({ group, items }) => {
-                const Icon = groupIcons[group.id] ?? Briefcase;
+                const Icon = getCategoryGroupIcon(group.id, group.iconKey);
                 const selected = selectedSearchGroupId === group.id;
                 return (
                   <button
@@ -632,7 +617,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
         <div className="grid min-h-0 flex-1 grid-cols-[16.5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
           <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-[#f8fafc] p-2">
             {menuGroups.map((group) => {
-              const Icon = groupIcons[group.id] ?? Briefcase;
+              const Icon = getCategoryGroupIcon(group.id, group.iconKey);
               const selected = selectedGroup?.id === group.id;
               return (
                 <button

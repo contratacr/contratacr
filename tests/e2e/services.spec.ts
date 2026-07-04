@@ -62,4 +62,16 @@ test.describe("@smoke services catalog", () => {
     await expect(page.getByRole("link", { name: /Servicio especial E2E/i })).toHaveCount(0);
     await expectHealthyPage(page);
   });
+
+  test("Moda y Turismo use distinct service group icons", async ({ page }) => {
+    await gotoOK(page, "/es/servicios");
+    await waitForInteractivePage(page);
+
+    const groups = page.getByTestId("services-group-option");
+    const fashionIcon = await groups.filter({ hasText: /Moda y cuidado personal/i }).locator("svg").first().evaluate((svg) => svg.innerHTML);
+    const tourismIcon = await groups.filter({ hasText: /Turismo/i }).locator("svg").first().evaluate((svg) => svg.innerHTML);
+
+    expect(fashionIcon).not.toBe(tourismIcon);
+    await expectHealthyPage(page);
+  });
 });

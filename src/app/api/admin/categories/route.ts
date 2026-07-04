@@ -3,6 +3,7 @@ import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   ALL_CATEGORIES,
+  CATEGORY_GROUP_ICON_KEYS,
   CATEGORY_GROUPS,
   autoEnglishCategoryLabel,
   classifySuggestedCategory,
@@ -424,6 +425,7 @@ async function getAdminGroups(db: ReturnType<typeof createAdminClient>): Promise
       id: group.id,
       label: group.label,
       labelEn: getCategoryGroupLabel(group.id, "en"),
+      iconKey: CATEGORY_GROUP_ICON_KEYS[group.id],
       sortOrder: (index + 1) * 10,
     }));
 
