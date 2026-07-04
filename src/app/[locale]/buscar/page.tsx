@@ -9,7 +9,7 @@ import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
 import { getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
-import { PROVINCES } from "@/lib/data/cr-geography";
+import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -28,6 +28,7 @@ interface SearchPageProps {
     modalidad?: string;
     lat?: string;
     lng?: string;
+    ubicacion?: string;
     // "Buscar en esta área" — the map's visible bounds (N/S/E/W).
     n?: string;
     s?: string;
@@ -46,6 +47,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const sortBy = params.sortBy && params.sortBy !== "cercania" ? params.sortBy : undefined;
   const selectedCategory = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const effectiveQuery = selectedCategory ? undefined : params.q;
+  const parsedNearLat = params.lat ? Number(params.lat) : undefined;
+  const parsedNearLng = params.lng ? Number(params.lng) : undefined;
+  const nearLat = typeof parsedNearLat === "number" && Number.isFinite(parsedNearLat) ? parsedNearLat : undefined;
+  const nearLng = typeof parsedNearLng === "number" && Number.isFinite(parsedNearLng) ? parsedNearLng : undefined;
 
   // Who is viewing — so we can hide self-service actions on a pro's OWN card.
   // safeGetUser never throws on a stale session (would otherwise crash this
@@ -74,8 +79,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     insurerId: canFilterByInsurer ? params.aseguradora : undefined,
     languageId: params.idioma,
     modality: params.modalidad === "video" || params.modalidad === "in_person" ? params.modalidad : "any",
-    nearLat: params.lat ? Number(params.lat) : undefined,
-    nearLng: params.lng ? Number(params.lng) : undefined,
+    nearLat,
+    nearLng,
     bounds: mapBounds,
   });
 
@@ -232,8 +237,21 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const videoCompatibleSearch = !!activeCategoryId && supportsVideoConsultCategory(activeCategoryId);
   const selectedProvinceName = activeProvince?.name ?? "";
   const selectedCantonName = activeCanton?.name ?? "";
+  const exactLocationActive = typeof nearLat === "number" && typeof nearLng === "number";
 
   function matchesSelectedPhysicalLocation(pro: (typeof results)[number]) {
+    if (exactLocationActive) {
+      const distances: number[] = [];
+      if (typeof pro.lat === "number" && typeof pro.lng === "number") {
+        distances.push(haversineKm(nearLat, nearLng, pro.lat, pro.lng));
+      }
+      for (const wp of pro.workplaces ?? []) {
+        if (typeof wp.lat === "number" && typeof wp.lng === "number") {
+          distances.push(haversineKm(nearLat, nearLng, wp.lat as number, wp.lng as number));
+        }
+      }
+      return distances.some((distance) => distance <= 25);
+    }
     if (!activeProvince && !activeCanton) return true;
     const workplaces = (pro.workplaces ?? []) as Array<{ provinciaId?: string; cantonId?: string; provinceId?: string; name?: string; address?: string }>;
     if (activeCanton) {
@@ -250,7 +268,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (videoMode) return true;
     if (params.modalidad === "in_person") return false;
     if (!videoCompatibleSearch || (!pro.videoconsulta && !pro.coverage?.country)) return false;
-    if (!activeProvince && !activeCanton) return false;
+    if (!activeProvince && !activeCanton && !exactLocationActive) return false;
     return !matchesSelectedPhysicalLocation(pro);
   }
 
@@ -260,7 +278,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // Area-aware count label: exact map bounds -> "esta area"; otherwise canton
   // (most specific) -> province -> generic "en Costa Rica".
-  const areaName = mapBounds ? t("thisArea") : activeCanton?.name ?? activeProvince?.name;
+  const areaName = mapBounds ? t("thisArea") : params.ubicacion ?? activeCanton?.name ?? activeProvince?.name;
   const subtitle = areaName
     ? t("resultsIn", { count: allResults.length, location: areaName })
     : t("resultsInCR", { count: allResults.length });
