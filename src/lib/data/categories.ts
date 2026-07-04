@@ -11,6 +11,24 @@ export type CategoryGroup = {
   items: CategoryItem[];
 };
 
+export const CATEGORY_GROUP_ICON_KEYS: Record<string, string> = {
+  hogar: "home",
+  jardin: "leaf",
+  limpieza: "sparkles",
+  tecnologia: "laptop",
+  profesional: "briefcase",
+  salud: "heart",
+  belleza: "star",
+  moda_y_cuidado_personal: "shirt",
+  educacion: "book-open",
+  transporte: "truck",
+  eventos: "calendar-days",
+  seguridad: "shield",
+  automotriz: "car",
+  turismo: "map",
+  otras: "tag",
+};
+
 export const CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "hogar",
@@ -401,6 +419,7 @@ export function getAllCategoryGroups(): { id: string; label: string; labelEn?: s
     id: group.id,
     label: group.label,
     labelEn: CATEGORY_GROUP_LABELS_EN[group.id],
+    iconKey: CATEGORY_GROUP_ICON_KEYS[group.id],
     sortOrder: (index + 1) * 10,
   }));
   const fixedIds = new Set(fixed.map((group) => group.id));

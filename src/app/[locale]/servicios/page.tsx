@@ -9,118 +9,12 @@ import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories } from "@/lib/data/categories";
+import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import {
-  Home,
-  Leaf,
-  Sparkles,
-  Laptop,
-  Briefcase,
-  Heart,
-  Star,
-  BookOpen,
-  Truck,
-  CalendarDays,
-  Shield,
-  Car,
   ChevronRight,
   Search,
-  Tag,
   X,
 } from "lucide-react";
-
-const GROUPS = [
-  {
-    key: "hogar",
-    Icon: Home,
-    ids: [
-      "plomeria","electricidad","construccion","pintura","carpinteria",
-      "remodelacion","techos","pisos","impermeabilizacion","fumigacion",
-      "cerrajeria","aire_acondicionado","calentadores","ventanas_puertas",
-      "soldadura","gypsum",
-    ],
-  },
-  {
-    key: "jardin",
-    Icon: Leaf,
-    ids: [
-      "jardineria","poda_arboles","paisajismo","limpieza_piscinas",
-      "riego_automatizado","control_plagas",
-    ],
-  },
-  {
-    key: "limpieza",
-    Icon: Sparkles,
-    ids: [
-      "limpieza","limpieza_oficinas","desinfeccion","lavado_alfombras",
-      "limpieza_post_construccion","lavado_vehiculos",
-    ],
-  },
-  {
-    key: "tecnologia",
-    Icon: Laptop,
-    ids: [
-      "reparacion_computadoras","redes_internet","camaras_seguridad","domotica",
-      "desarrollo_web","diseno_grafico","diseno_apps","soporte_tecnico",
-      "impresion_3d","audio_video",
-    ],
-  },
-  {
-    key: "profesional",
-    Icon: Briefcase,
-    ids: [
-      "contabilidad","legal","ingenieria_civil","arquitectura","topografia",
-      "consultoria","traduccion","recursos_humanos","marketing_digital",
-      "fotografia","produccion_video","bienes_raices",
-    ],
-  },
-  {
-    key: "salud",
-    Icon: Heart,
-    ids: [
-      "entrenamiento_personal","nutricion","masajes","psicologia","fisioterapia",
-      "enfermeria","cuidado_adultos","cuidado_infantil","veterinaria","peluqueria_canina",
-    ],
-  },
-  {
-    key: "belleza",
-    Icon: Star,
-    ids: [
-      "peluqueria","maquillaje","unhas","pestanas","depilacion",
-      "estetica_facial","bronceado",
-    ],
-  },
-  {
-    key: "educacion",
-    Icon: BookOpen,
-    ids: [
-      "tutorias","idiomas","musica","matematicas","preparacion_universitaria",
-      "clases_manejo","clases_cocina",
-    ],
-  },
-  {
-    key: "transporte",
-    Icon: Truck,
-    ids: ["mudanzas","fletes","mensajeria","transporte_mascotas"],
-  },
-  {
-    key: "eventos",
-    Icon: CalendarDays,
-    ids: [
-      "fotografia_eventos","videografia","dj_sonido","catering",
-      "decoracion","animacion_infantil","bartending",
-    ],
-  },
-  {
-    key: "seguridad",
-    Icon: Shield,
-    ids: ["guardas_seguridad","alarmas","cctv","control_acceso"],
-  },
-  {
-    key: "automotriz",
-    Icon: Car,
-    ids: ["mecanica","mecanica_bicicletas","hojalateria","electricidad_automotriz","tapiceria","detailing","cambio_llantas"],
-  },
-] as const;
 
 export default function ServiciosPage() {
   const t = useTranslations("categories");
@@ -133,10 +27,9 @@ export default function ServiciosPage() {
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
   const [searchGroupSelection, setSearchGroupSelection] = useState<{ query: string; key: string } | null>(null);
   const groups = getAllCategoryGroups().map((group) => {
-    const meta = GROUPS.find((item) => item.key === group.id);
     return {
       key: group.id,
-      Icon: meta?.Icon ?? Tag,
+      Icon: getCategoryGroupIcon(group.id, group.iconKey),
       label: getCategoryGroupLabel(group.id, locale),
       ids: getAllCategories().filter((category) => category.groupId === group.id).map((category) => category.id),
     };
@@ -178,7 +71,7 @@ export default function ServiciosPage() {
     group.visibleIds.map((id) => ({ id, groupLabel: group.label, Icon: group.Icon }))
   ), [visibleGroups]);
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
-  const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0] ?? GROUPS[0];
+  const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0];
   const selectedSearchGroupKey = searchGroupSelection?.query === normalizedQuery ? searchGroupSelection.key : "";
   const activeSearchGroup = visibleGroups.find((group) => group.key === selectedSearchGroupKey) ?? visibleGroups[0];
   const activeSearchIds = activeSearchGroup?.visibleIds ?? searchResults.map((item) => item.id);
