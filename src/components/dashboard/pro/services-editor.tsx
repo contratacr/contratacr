@@ -432,20 +432,24 @@ export function ServicesEditor({
           onClose={closePicker}
           title={t("pickerTitle")}
           closeLabel={t("cancel")}
-          bodyClassName="px-0 py-0"
+          bodyClassName="flex !overflow-hidden px-0 py-0"
         >
-          <div className="sticky top-0 z-10 bg-white px-5 pb-3 pt-4 sm:px-6">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
-              <input
-                value={pickerQuery}
-                onChange={(e) => { setPickerQuery(e.target.value); setActivePickerGroupId(null); }}
-                placeholder={t("pickerSearch")}
-                className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-              />
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 bg-white px-5 pb-3 pt-4 sm:px-6">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+                <input
+                  value={pickerQuery}
+                  onChange={(e) => { setPickerQuery(e.target.value); setActivePickerGroupId(null); }}
+                  placeholder={t("pickerSearch")}
+                  className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                />
+              </div>
             </div>
-          </div>
-          <div className={cn("px-3 sm:px-4", pickerList.length === 0 && pickerQuery.trim() ? "pt-0 pb-2" : "py-2")}>
+            <div className={cn(
+              "min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4 pr-4 [scrollbar-gutter:stable] sm:px-4 sm:pr-5",
+              pickerList.length === 0 && pickerQuery.trim() ? "pt-0" : "pt-2"
+            )}>
             {pickerList.length === 0 && pickerQuery.trim() ? (
               null
             ) : pickerQuery.trim() ? (
@@ -471,6 +475,8 @@ export function ServicesEditor({
                 backLabel={t("pickerBack")}
                 countLabel={(count) => t("pickerOptionsCount", { count })}
                 optionAction={<Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
+                className="gap-1"
+                groupClassName="rounded-xl border border-[#e5e7eb] bg-white py-2 hover:border-[#009FD9] hover:bg-[#f8fbfe]"
                 optionClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-[#f8fbfe]"
               />
             )}
@@ -493,6 +499,7 @@ export function ServicesEditor({
                 defaultName={pickerQuery}
               />
             </div>
+          </div>
           </div>
         </Modal>
       )}
