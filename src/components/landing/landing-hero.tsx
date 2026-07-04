@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { Search, MapPin, User } from "lucide-react";
+import { Loader2, LocateFixed, Search, MapPin, User } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
@@ -304,16 +304,20 @@ export function LandingHero() {
   const [addrSug, setAddrSug] = useState<AddressSuggestion[]>([]);
   const [openLoc, setOpenLoc] = useState(false);
   const [locActive, setLocActive] = useState(-1);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
   // Google Places (new API): ready flag, a session token, and the resolved place a user picked
   // (provincia/cantón from its admin areas + lat/lng) used when the search runs.
   const mapsReadyRef = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sessionTokenRef = useRef<any>(null);
   const pickedAddrRef = useRef<{ provinceId?: string; cantonId?: string; lat?: number; lng?: number; label: string } | null>(null);
+  const nearMeRef = useRef<{ lat: number; lng: number } | null>(null);
 
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("landing.hero");
+  const nearMeActiveLabel = t("nearMeActive");
 
   const lines = ROTATING_LINES[locale] ?? ROTATING_LINES.es;
   // Debounced service suggestion fetch as the user types
@@ -355,6 +359,7 @@ export function LandingHero() {
   // only. Best-effort: any failure just leaves the province/cantón taxonomy working.
   useEffect(() => {
     const q = location.trim();
+    if (nearMeRef.current && q === nearMeActiveLabel) return;
     if (q.length < 3) { setAddrSug([]); return; }
     const id = setTimeout(async () => {
       try {
@@ -373,7 +378,7 @@ export function LandingHero() {
       } catch { setAddrSug([]); }
     }, 250);
     return () => clearTimeout(id);
-  }, [location]);
+  }, [location, nearMeActiveLabel]);
 
   // Selecting a service suggestion FILLS the field — it does NOT search. The
   // search runs only on Buscar/Enter (see runSearch).
@@ -387,6 +392,8 @@ export function LandingHero() {
     setLocation(s.label);
     setLocationSel(s);
     pickedAddrRef.current = null;
+    nearMeRef.current = null;
+    setGeoError(null);
     setAddrSug([]);
     setOpenLoc(false);
   }
@@ -396,6 +403,8 @@ export function LandingHero() {
   async function selectAddress(a: AddressSuggestion) {
     setLocation(a.label);
     setLocationSel(null);
+    nearMeRef.current = null;
+    setGeoError(null);
     setAddrSug([]);
     setOpenLoc(false);
     pickedAddrRef.current = { label: a.label };
@@ -424,7 +433,8 @@ export function LandingHero() {
   // province/cantón, or a resolved Google address (province/cantón + lat/lng).
   type LocOverride =
     | { kind: "taxonomy"; sug: LocationSuggestion }
-    | { kind: "address"; provinceId?: string; cantonId?: string; lat?: number; lng?: number };
+    | { kind: "address"; provinceId?: string; cantonId?: string; lat?: number; lng?: number }
+    | { kind: "nearMe"; lat: number; lng: number };
   function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride) {
     const params = new URLSearchParams();
     // `serviceOverride` (from Enter) resolves a partial term to the best suggestion. A CATEGORY
@@ -444,6 +454,7 @@ export function LandingHero() {
     // Location resolution order: explicit Enter override → a picked Google ADDRESS
     // (province/cantón + proximity) → a picked/typed province/cantón from our taxonomy.
     const picked = pickedAddrRef.current;
+    const nearMe = nearMeRef.current;
     if (locationOverride?.kind === "taxonomy") {
       const loc = locationOverride.sug;
       if (loc.type === "province") params.set("provincia", loc.id);
@@ -458,6 +469,10 @@ export function LandingHero() {
         params.set("lng", locationOverride.lng.toFixed(5));
         params.set("sortBy", "cercania");
       }
+    } else if (locationOverride?.kind === "nearMe") {
+      params.set("lat", locationOverride.lat.toFixed(5));
+      params.set("lng", locationOverride.lng.toFixed(5));
+      params.set("sortBy", "cercania");
     } else if (picked && picked.label === location && (picked.provinceId || picked.lat != null)) {
       if (picked.provinceId) {
         params.set("provincia", picked.provinceId);
@@ -468,6 +483,10 @@ export function LandingHero() {
         params.set("lng", picked.lng.toFixed(5));
         params.set("sortBy", "cercania");
       }
+    } else if (nearMe && location === nearMeActiveLabel) {
+      params.set("lat", nearMe.lat.toFixed(5));
+      params.set("lng", nearMe.lng.toFixed(5));
+      params.set("sortBy", "cercania");
     } else {
       const loc = locationSel && locationSel.label === location ? locationSel : resolveLocation(location);
       if (loc) {
@@ -558,6 +577,41 @@ export function LandingHero() {
     runSearch();
   }
 
+  function requestNearMe() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoError(t("geoUnsupported"));
+      return;
+    }
+    setGeoLoading(true);
+    setGeoError(null);
+    setOpenLoc(false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        nearMeRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        pickedAddrRef.current = null;
+        setLocationSel(null);
+        setLocation(nearMeActiveLabel);
+        setAddrSug([]);
+        setLocSug([]);
+        setGeoLoading(false);
+      },
+      () => {
+        nearMeRef.current = null;
+        setGeoLoading(false);
+        setGeoError(t("geoFailed"));
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+    );
+  }
+
+  function handleLocationChange(value: string) {
+    setLocation(value);
+    setLocationSel(null);
+    nearMeRef.current = null;
+    setGeoError(null);
+    setOpenLoc(true);
+  }
+
   return (
     <section className="relative bg-white overflow-hidden">
       {/* Headline — narrower container for readability */}
@@ -579,7 +633,7 @@ export function LandingHero() {
         >
           {/* Desktop row: single line h-14 */}
           <div className="hidden sm:block relative">
-            <div className="flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 pr-2 shadow-[0_8px_48px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)] transition-shadow duration-300">
+            <div className="flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 shadow-[0_8px_48px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)] transition-shadow duration-300">
               {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
                   so the bar's `overflow-hidden` can never clip it. */}
               <div ref={svcDesktopRef} className="flex items-center gap-3 flex-1 min-w-0 h-full">
@@ -606,7 +660,7 @@ export function LandingHero() {
                 <input
                   type="text"
                   value={location}
-                  onChange={(e) => { setLocation(e.target.value); setLocationSel(null); setOpenLoc(true); }}
+                  onChange={(e) => handleLocationChange(e.target.value)}
                   onKeyDown={handleLocKeyDown}
                   onFocus={() => { if (locSug.length > 0) setOpenLoc(true); }}
                   onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
@@ -616,12 +670,25 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
+                <button
+                  type="button"
+                  data-testid="landing-near-me"
+                  onClick={requestNearMe}
+                  disabled={geoLoading}
+                  aria-label={t("nearMe")}
+                  className="group relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] disabled:cursor-wait disabled:opacity-70"
+                >
+                  {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+                  <span className="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-50 hidden whitespace-nowrap rounded-lg bg-[#0f2747] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg group-hover:block group-focus-visible:block">
+                    {t("nearMeActive")}
+                  </span>
+                </button>
                 <LocationDropdown anchorRef={locDesktopRef} open={openLoc} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
               </div>
               {/* Buscar button */}
               <button
                 type="submit"
-                className="ml-2 h-10 px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] shadow-sm whitespace-nowrap shrink-0"
+                className="ml-2 h-full self-stretch px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold transition-colors duration-150 active:bg-[#007da8] whitespace-nowrap shrink-0"
               >
                 {t("search")}
               </button>
@@ -655,7 +722,7 @@ export function LandingHero() {
                 <input
                   type="text"
                   value={location}
-                  onChange={(e) => { setLocation(e.target.value); setLocationSel(null); setOpenLoc(true); }}
+                  onChange={(e) => handleLocationChange(e.target.value)}
                   onKeyDown={handleLocKeyDown}
                   onFocus={() => { if (locSug.length > 0) setOpenLoc(true); }}
                   onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
@@ -665,6 +732,19 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
+                <button
+                  type="button"
+                  data-testid="landing-near-me"
+                  onClick={requestNearMe}
+                  disabled={geoLoading}
+                  aria-label={t("nearMe")}
+                  className="group relative ml-2 grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] disabled:cursor-wait disabled:opacity-70"
+                >
+                  {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+                  <span className="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-50 hidden whitespace-nowrap rounded-lg bg-[#0f2747] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg group-hover:block group-focus-visible:block">
+                    {t("nearMeActive")}
+                  </span>
+                </button>
               </div>
               <LocationDropdown anchorRef={locMobileRef} open={openLoc} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
             </div>
@@ -676,6 +756,9 @@ export function LandingHero() {
             </button>
           </div>
         </form>
+        {geoError && (
+          <p className="mt-2 text-center text-xs font-medium text-red-600">{geoError}</p>
+        )}
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}
         <div id="hero-search-sentinel" aria-hidden className="h-0" />
