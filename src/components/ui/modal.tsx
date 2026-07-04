@@ -55,7 +55,7 @@ export function Modal({ open = true, onClose, title, subtitle, size = "md", chil
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-10 flex w-full max-h-[92vh] flex-col rounded-t-2xl bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
+          "relative z-10 flex w-full max-h-[92vh] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
           "app-bottom-sheet min-h-0",
           SIZES[size]
         )}

@@ -2916,6 +2916,10 @@
       "searchPlaceholder": "¿Qué servicio estás buscando?",
       "searchPlaceholderShort": "¿Qué necesitas?",
       "location": "Ubicación",
+      "nearMe": "Buscar profesionales cerca de mí",
+      "nearMeActive": "Cerca de mí",
+      "geoUnsupported": "Tu navegador no permite ubicación. Puedes buscar por provincia o cantón.",
+      "geoFailed": "No pudimos obtener tu ubicación. Puedes buscar por provincia o cantón.",
       "search": "Buscar",
       "popular": "Popular:",
       "installLink": "Agregar app al celular"

@@ -2918,6 +2918,10 @@
       "searchPlaceholder": "What service are you looking for?",
       "searchPlaceholderShort": "What do you need?",
       "location": "Location",
+      "nearMe": "Search professionals near me",
+      "nearMeActive": "Near me",
+      "geoUnsupported": "Your browser doesn't allow location. You can search by province or canton.",
+      "geoFailed": "We couldn't get your location. You can search by province or canton.",
       "search": "Search",
       "popular": "Popular:",
       "installLink": "Add app to phone"
