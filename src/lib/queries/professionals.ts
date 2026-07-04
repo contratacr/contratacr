@@ -109,6 +109,12 @@ function serviceCategoryContains(categoryId: string): string {
   return `services.cs.[{"category":"${categoryId}"}]`;
 }
 
+function primaryPriceAmount(p: ProfessionalCardData): number | null {
+  const amount = p.pricing?.[0]?.amount;
+  if (typeof amount === "number" && amount > 0) return amount;
+  return null;
+}
+
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
 export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
@@ -371,6 +377,19 @@ export async function searchProfessionals(
       if (filters.languageId && filters.languageId !== "todos") {
         const wanted = new Set(languageSearchValues(filters.languageId).map((value) => normalizeText(value)));
         mapped = mapped.filter((p) => (p.languages ?? []).some((language) => wanted.has(normalizeText(language))));
+      }
+
+      if (filters.sortBy === "priceAsc" || filters.sortBy === "priceDesc") {
+        mapped.sort((a, b) => {
+          const pa = primaryPriceAmount(a);
+          const pb = primaryPriceAmount(b);
+          const aHasPrice = pa != null;
+          const bHasPrice = pb != null;
+          if (aHasPrice && bHasPrice) return filters.sortBy === "priceDesc" ? pb - pa : pa - pb;
+          if (aHasPrice) return -1;
+          if (bHasPrice) return 1;
+          return 0;
+        });
       }
 
       // "Cerca de mí" is a real location filter: exact professional pins or

@@ -239,7 +239,7 @@
     "sort": {
       "rating": "Mejor calificados",
       "reviews": "Más reseñas",
-      "priceAsc": "Precio (de menor a mayor)",
+      "priceAsc": "Menor precio",
       "priceDesc": "Precio: mayor a menor",
       "newest": "Más recientes",
       "availability": "Disponibilidad inmediata"

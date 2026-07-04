@@ -20,9 +20,10 @@ const SelectTrigger = React.forwardRef<
       // focus-VISIBLE only: a mouse click that returns focus to the trigger (Radix
       // does this after picking an option) must NOT leave a stuck ring; keyboard
       // users still get a clear brand-blue ring.
-      "transition-all duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:border-transparent",
+      "transition-all duration-150 outline-none hover:border-[#009FD9]/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20 focus-visible:border-[#009FD9] data-[state=open]:border-[#009FD9] data-[state=open]:ring-2 data-[state=open]:ring-[#009FD9]/20",
       "disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
       "data-[placeholder]:text-[#9ca3af]",
+      "[&>span:first-child]:min-w-0 [&>span:first-child]:truncate",
       className
     )}
     {...props}
@@ -67,16 +68,16 @@ const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full cursor-pointer select-none items-center rounded-lg px-3 py-2 text-sm text-[#111827]",
-      "outline-none focus:bg-[#EBF5FB] focus:text-[#0089bb]",
+      "outline-none focus:bg-[#EBF5FB] focus:text-[#0089bb] data-[highlighted]:bg-[#EBF5FB] data-[highlighted]:text-[#0089bb]",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      "data-[state=checked]:text-[#0089bb] data-[state=checked]:font-medium",
+      "data-[state=checked]:bg-[#EBF5FB] data-[state=checked]:text-[#0089bb] data-[state=checked]:font-semibold",
       className
     )}
     {...props}
   >
     <span className="absolute right-2 flex h-4 w-4 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-3.5 w-3.5 text-[#319278]" />
+        <Check className="h-3.5 w-3.5 text-[#009FD9]" />
       </SelectPrimitive.ItemIndicator>
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
