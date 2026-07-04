@@ -31,4 +31,35 @@ test.describe("@smoke services catalog", () => {
     await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
     await expectHealthyPage(page);
   });
+
+  test("ungrouped approved services are not exposed as Otras categorías", async ({ page }) => {
+    await page.route("**/api/categories/approved", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          categories: [
+            {
+              id: "servicio_especial_e2e",
+              label: "Servicio especial E2E",
+              labelEn: "E2E special service",
+              isHidden: false,
+              esSalud: false,
+              supportsVideoconsulta: false,
+            },
+          ],
+          categoryFlags: [],
+          groups: [],
+        }),
+      });
+    });
+
+    await gotoOK(page, "/es/servicios");
+    await waitForInteractivePage(page);
+
+    const groupOptions = page.getByTestId("services-group-option");
+    await expect(groupOptions.filter({ hasText: /Otras categor/i })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Servicio especial E2E/i })).toHaveCount(0);
+    await expectHealthyPage(page);
+  });
 });

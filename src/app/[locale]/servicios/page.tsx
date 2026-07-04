@@ -8,7 +8,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
+import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories } from "@/lib/data/categories";
 import {
   Home,
   Leaf,
@@ -162,6 +162,9 @@ export default function ServiciosPage() {
     }))
     .filter((group) => group.visibleIds.length > 0)
     .sort((a, b) => {
+      const aOther = isOtherCategoryGroup(a.key, a.label);
+      const bOther = isOtherCategoryGroup(b.key, b.label);
+      if (aOther !== bOther) return aOther ? 1 : -1;
       if (!matchedIds) return 0;
       if (a.bestScore !== b.bestScore) return b.bestScore - a.bestScore;
       const aLabel = normalizeText(a.label);
@@ -333,6 +336,7 @@ export default function ServiciosPage() {
                           <button
                             key={group.key}
                             type="button"
+                            data-testid="services-group-option"
                             onClick={() => setActiveGroupKey(group.key)}
                             className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors lg:w-full ${
                               active ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"

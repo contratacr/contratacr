@@ -320,23 +320,44 @@ export function setCustomCategories(
   list: { id: string; label: string; labelEn?: string; groupId?: string; keywords?: string[]; esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }[],
   groups: { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }[] = []
 ): void {
-  CUSTOM_CATEGORY_GROUPS = groups.filter((group) => group && group.id && group.label && !group.isHidden);
+  const normalizedGroups = new Map<string, { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }>();
+  for (const group of groups) {
+    if (!group?.id || !group.label || group.isHidden) continue;
+    const id = normalizeCategoryGroupId(group.id, group.label);
+    normalizedGroups.set(id, {
+      ...group,
+      id,
+      label: isOtherCategoryGroup(id, group.label) ? "Otras categorías" : group.label,
+      labelEn: isOtherCategoryGroup(id, group.label) ? "Other categories" : group.labelEn,
+      sortOrder: isOtherCategoryGroup(id, group.label) ? Number.MAX_SAFE_INTEGER : group.sortOrder,
+    });
+  }
+  CUSTOM_CATEGORY_GROUPS = Array.from(normalizedGroups.values());
   const fixedIds = new Set(ALL_CATEGORIES.map((category) => category.id));
   CATEGORY_CATALOG_OVERRIDES = new Map(
     list
       .filter((c) => c && c.id && !c.isHidden && (c.label || c.labelEn || c.groupId))
-      .map((c) => [c.id, { label: c.label, labelEn: c.labelEn, groupId: c.groupId, keywords: c.keywords, isHidden: c.isHidden }])
+      .map((c) => [c.id, {
+        label: c.label,
+        labelEn: c.labelEn,
+        groupId: c.groupId ? normalizeCategoryGroupId(c.groupId) : undefined,
+        keywords: c.keywords,
+        isHidden: c.isHidden,
+      }])
   );
   CUSTOM_CATEGORIES = list
-    .filter((c) => c && c.id && c.label && !c.isHidden && !fixedIds.has(c.id))
-    .map((c) => ({
-      id: c.id,
-      label: c.label,
-      labelEn: c.labelEn,
-      keywords: c.keywords ?? [],
-      groupId: c.groupId || CUSTOM_GROUP_ID,
-      groupLabel: getCategoryGroupLabel(c.groupId || CUSTOM_GROUP_ID),
-    }));
+    .filter((c) => c && c.id && c.label && c.groupId && !c.isHidden && !fixedIds.has(c.id))
+    .map((c) => {
+      const groupId = normalizeCategoryGroupId(c.groupId);
+      return {
+        id: c.id,
+        label: c.label,
+        labelEn: c.labelEn,
+        keywords: c.keywords ?? [],
+        groupId,
+        groupLabel: getCategoryGroupLabel(groupId),
+      };
+    });
   const mergedFeatureOverrides = new Map(CATEGORY_FEATURE_OVERRIDES);
   for (const c of list) {
     if (!c?.id) continue;
@@ -355,6 +376,26 @@ export function getCustomCategories(): (CategoryItem & { groupId: string; groupL
   return CUSTOM_CATEGORIES;
 }
 
+export function isOtherCategoryGroup(groupId?: string | null, label?: string | null): boolean {
+  if (groupId === CUSTOM_GROUP_ID || groupId === "otras_categorias") return true;
+  const normalized = normalizeText(`${groupId ?? ""} ${label ?? ""}`).replace(/[^a-z]/g, "");
+  return normalized === "otrascategorias" || normalized === "othercategories";
+}
+
+export function normalizeCategoryGroupId(groupId?: string | null, label?: string | null): string {
+  const id = (groupId || "").trim();
+  return isOtherCategoryGroup(id, label) ? CUSTOM_GROUP_ID : id;
+}
+
+export function sortCategoryGroups<T extends { id: string; label?: string; sortOrder?: number }>(groups: T[]): T[] {
+  return [...groups].sort((a, b) => {
+    const aOther = isOtherCategoryGroup(a.id, a.label);
+    const bOther = isOtherCategoryGroup(b.id, b.label);
+    if (aOther !== bOther) return aOther ? 1 : -1;
+    return (a.sortOrder ?? 100) - (b.sortOrder ?? 100) || (a.label ?? "").localeCompare(b.label ?? "");
+  });
+}
+
 export function getAllCategoryGroups(): { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number }[] {
   const fixed = CATEGORY_GROUPS.map((group, index) => ({
     id: group.id,
@@ -364,7 +405,22 @@ export function getAllCategoryGroups(): { id: string; label: string; labelEn?: s
   }));
   const fixedIds = new Set(fixed.map((group) => group.id));
   const custom = CUSTOM_CATEGORY_GROUPS.filter((group) => !fixedIds.has(group.id));
-  return [...fixed, ...custom].sort((a, b) => (a.sortOrder ?? 100) - (b.sortOrder ?? 100) || a.label.localeCompare(b.label));
+  const knownIds = new Set([...fixedIds, ...custom.map((group) => group.id)]);
+  const missingGroups = Array.from(
+    new Set([
+      ...CUSTOM_CATEGORIES.map((category) => category.groupId),
+      ...Array.from(CATEGORY_CATALOG_OVERRIDES.values()).map((override) => override.groupId).filter(Boolean),
+    ])
+  )
+    .map((id) => normalizeCategoryGroupId(id))
+    .filter((id): id is string => typeof id === "string" && !!id && !knownIds.has(id))
+    .map((id) => ({
+      id,
+      label: getCategoryGroupLabel(id),
+      labelEn: getCategoryGroupLabel(id, "en"),
+      sortOrder: isOtherCategoryGroup(id) ? Number.MAX_SAFE_INTEGER : 100,
+    }));
+  return sortCategoryGroups([...fixed, ...custom, ...missingGroups]);
 }
 
 /** Subscribe to custom-category registry changes (used by the client hook). */
@@ -922,7 +978,7 @@ export function getCategoryLabel(id: string, locale?: string): string {
 
 /* ─── Get category GROUP label from group ID (locale-aware) ─── */
 export function getCategoryGroupLabel(groupId: string, locale?: string): string {
-  if (groupId === CUSTOM_GROUP_ID) return locale === "en" ? "Other categories" : "Otras categorías";
+  if (isOtherCategoryGroup(groupId)) return locale === "en" ? "Other categories" : "Otras categorías";
   const custom = CUSTOM_CATEGORY_GROUPS.find((group) => group.id === groupId);
   if (custom) return locale === "en" && custom.labelEn ? custom.labelEn : custom.label;
   if (locale === "en" && CATEGORY_GROUP_LABELS_EN[groupId]) return CATEGORY_GROUP_LABELS_EN[groupId];

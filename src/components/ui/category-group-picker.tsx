@@ -4,7 +4,7 @@ import { useMemo, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
-import { getCategoryGroupLabel, getCategoryLabel, type CategoryItem } from "@/lib/data/categories";
+import { getCategoryGroupLabel, getCategoryLabel, normalizeCategoryGroupId, sortCategoryGroups, type CategoryItem } from "@/lib/data/categories";
 
 export type CategoryPickerGroup = {
   id: string;
@@ -41,11 +41,12 @@ export function CategoryGroupPicker({
   const normalizedGroups = useMemo(() => {
     const byId = new Map<string, CategoryPickerGroup>();
     for (const group of groups) {
-      const existing = byId.get(group.id);
+      const id = normalizeCategoryGroupId(group.id, group.label);
+      const existing = byId.get(id);
       if (existing) existing.items.push(...group.items);
-      else byId.set(group.id, { ...group, items: [...group.items] });
+      else byId.set(id, { ...group, id, items: [...group.items] });
     }
-    return Array.from(byId.values());
+    return sortCategoryGroups(Array.from(byId.values()));
   }, [groups]);
   const activeGroup = activeGroupId ? normalizedGroups.find((g) => g.id === activeGroupId) ?? null : null;
 
