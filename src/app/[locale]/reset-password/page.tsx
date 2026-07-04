@@ -80,10 +80,25 @@ export default function ResetPasswordPage() {
     register,
     handleSubmit,
     formState: { errors },
+    trigger,
     watch,
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const watchedPassword = watch("password") ?? "";
+  const watchedConfirmPassword = watch("confirmPassword") ?? "";
+  const confirmPasswordFieldError = errors.confirmPassword?.message;
+  const confirmPasswordMismatch = watchedConfirmPassword.length > 0 && watchedPassword !== watchedConfirmPassword;
+  const confirmPasswordMatches = watchedConfirmPassword.length > 0 && watchedPassword === watchedConfirmPassword;
+  const confirmPasswordError = confirmPasswordMismatch
+    ? t("passwordsDontMatch")
+    : confirmPasswordMatches
+      ? undefined
+      : confirmPasswordFieldError;
+
+  useEffect(() => {
+    if (!watchedConfirmPassword && !confirmPasswordFieldError) return;
+    void trigger("confirmPassword");
+  }, [confirmPasswordFieldError, trigger, watchedPassword, watchedConfirmPassword]);
 
   useEffect(() => {
     let active = true;
@@ -227,7 +242,7 @@ export default function ResetPasswordPage() {
               label={t("confirmPassword")}
               type="password"
               placeholder="••••••••"
-              error={errors.confirmPassword?.message}
+              error={confirmPasswordError}
               disabled={initializing || submitting}
               {...register("confirmPassword")}
             />

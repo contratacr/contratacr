@@ -513,8 +513,22 @@ export default function RegisterProfessionalPage() {
   }
 
   const watchedPassword = form1.watch("password") ?? "";
+  const watchedConfirmPassword = form1.watch("confirmPassword") ?? "";
   const watchedEmail = form1.watch("email") ?? "";
   const watchedCedula = form1.watch("cedula") ?? "";
+  const confirmPasswordFieldError = form1.formState.errors.confirmPassword?.message;
+  const confirmPasswordMismatch = watchedConfirmPassword.length > 0 && watchedPassword !== watchedConfirmPassword;
+  const confirmPasswordMatches = watchedConfirmPassword.length > 0 && watchedPassword === watchedConfirmPassword;
+  const confirmPasswordError = confirmPasswordMismatch
+    ? tRp("passwordsDontMatch")
+    : confirmPasswordMatches
+      ? undefined
+      : confirmPasswordFieldError;
+
+  useEffect(() => {
+    if (!watchedConfirmPassword && !confirmPasswordFieldError) return;
+    void form1.trigger("confirmPassword");
+  }, [confirmPasswordFieldError, form1, watchedPassword, watchedConfirmPassword]);
 
   // Real-time duplicate detection (email/password identity step)
   const emailCheck = useAvailabilityCheck(watchedEmail, "email", !currentUser);
@@ -1025,7 +1039,7 @@ export default function RegisterProfessionalPage() {
                 label={<>{t("confirmPassword")} <span className="text-red-500">*</span></>}
                 type="password"
                 placeholder="••••••••"
-                error={form1.formState.errors.confirmPassword?.message}
+                error={confirmPasswordError}
                 {...form1.register("confirmPassword")}
               />
 
