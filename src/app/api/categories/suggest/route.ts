@@ -12,11 +12,12 @@ import { normalizeServiceDisplayName, suggestEnglishServiceLabel, suggestSpanish
 // "suggestion" tag is gone).
 export async function POST(req: NextRequest) {
   try {
-    const { name } = await req.json();
+    const { name, locale } = await req.json();
     const clean = normalizeServiceDisplayName(typeof name === "string" ? name : "");
     if (!clean) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
-    const labelEs = await suggestSpanishServiceLabel(clean);
-    const labelEn = await suggestEnglishServiceLabel(clean);
+    const submittedFromEnglish = locale === "en";
+    const labelEs = submittedFromEnglish ? await suggestSpanishServiceLabel(clean) : clean;
+    const labelEn = submittedFromEnglish ? clean : await suggestEnglishServiceLabel(clean);
 
     // Suggestions are allowed even pre-account (category selection happens during
     // registration before the session exists). Attach the user id when present.
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     const { data: { session } } = await supabase.auth.getSession();
 
     const admin = createAdminClient();
-    const id = slugifyCategory(labelEs);
+    const id = slugifyCategory(labelEs || clean);
 
     // `ignoreDuplicates` = re-suggesting the SAME name reuses its existing ticket
     // (the slug is the primary key) instead of creating a duplicate or erroring.
