@@ -241,10 +241,10 @@ export type ResultsCopy = {
 // Spanish defaults so the dead SHOWCASE_SCREENS reference still renders; the live
 // "Así funciona" section passes locale-aware copy from why-contratacr.tsx.
 const DEFAULT_RESULTS_COPY: ResultsCopy = {
-  title: "Plomería",
-  categories: ["Plomería", "Reparaciones"],
+  title: "Tecnología",
+  categories: ["Soporte Técnico", "Redes e Internet"],
   results: "3 profesionales en Costa Rica",
-  search: "Plomería en Atenas",
+  search: "Soporte técnico en Costa Rica",
   verified: "Verificado",
   whatsapp: "Contáctanos por WhatsApp",
   viewSchedule: "Ver horario completo",
@@ -287,8 +287,8 @@ export function buildLandingResultsCopy({
   });
 
   return {
-    title: isEnglish ? "Plumbing" : "Plomería",
-    categories: isEnglish ? ["Plumbing", "Repairs"] : ["Plomería", "Reparaciones"],
+    title: isEnglish ? "Technology" : "Tecnología",
+    categories: isEnglish ? ["Technical Support", "Networks & Internet"] : ["Soporte Técnico", "Redes e Internet"],
     results: tLanding("mockResults"),
     search: tLanding("mockSearch"),
     verified: tCard("verifiedShort"),
