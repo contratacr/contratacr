@@ -922,7 +922,7 @@ export function anyHealthCategory(ids?: (string | null | undefined)[]): boolean 
    need in-person care, while some non-health services work very well remotely.
 */
 export const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
-  "nutricion", "psicologia", "medicina_domicilio",
+  "nutricion", "psicologia", "fisioterapia", "medicina_domicilio",
   "psiquiatria", "medico_especialista", "terapia_lenguaje", "terapia_ocupacional",
   "contabilidad", "legal", "consultoria", "traduccion",
   "notaria", "auditoria", "asesoria_financiera", "corredor_seguros",

@@ -50,6 +50,7 @@ export function computeSearchAreas(
   for (const w of workplaces) {
     if (w.provinciaId) provincias.add(w.provinciaId);
     if (w.cantonId) cantones.add(w.cantonId);
+    if (w.provinciaId && !w.cantonId) coverageProvincias.add(w.provinciaId);
   }
   for (const c of coverage) {
     const level = c.level ?? (c.cantonId ? "canton" : "provincia");

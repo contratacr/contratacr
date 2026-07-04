@@ -15,9 +15,9 @@ export type Workplace = {
   address: string;
   lat?: number;
   lng?: number;
-  // Authoritative administrative areas — chosen by the pro in the selects. These
+  // Authoritative administrative areas â€” chosen by the pro in the selects. These
   // drive /buscar. The pin (lat/lng) is an OPTIONAL exact marker only; it never
-  // changes the provincia/cantón the pro picked.
+  // changes the provincia/cantÃ³n the pro picked.
   provinciaId?: string;
   cantonId?: string;
 };
@@ -36,7 +36,7 @@ interface WorkplacesPickerProps {
     onRemove?: () => void;
     removeLabel?: string;
   }[];
-  afterPlaces?: ReactNode;
+  extraActions?: ReactNode;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,13 +49,13 @@ function genId() {
 }
 
 /**
- * Add one or more work zones — Uber/Airbnb style: the STRUCTURED field comes
- * first (provincia → cantón, the authoritative data used by search), then an
+ * Add one or more work zones â€” Uber/Airbnb style: the STRUCTURED field comes
+ * first (provincia â†’ cantÃ³n, the authoritative data used by search), then an
  * OPTIONAL map pin refines the exact spot. The pin only stores lat/lng; it never
- * re-asks or overrides the provincia/cantón the pro already chose. Multiple zones
+ * re-asks or overrides the provincia/cantÃ³n the pro already chose. Multiple zones
  * are supported; each is listed and removable.
  */
-export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, extraPlaces = [], afterPlaces }: WorkplacesPickerProps) {
+export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, extraPlaces = [], extraActions }: WorkplacesPickerProps) {
   const t = useTranslations("workplacesPicker");
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GMaps>(null);
@@ -63,9 +63,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const markersRef = useRef<GMaps[]>([]);
   const valueRef = useRef<Workplace[]>(value);
 
-  // Address search — OUR OWN standard input + dropdown (NOT the Google
+  // Address search â€” OUR OWN standard input + dropdown (NOT the Google
   // `gmp-place-autocomplete` web component, whose shadow-DOM input draws its own
-  // border we can't remove → a double border). Suggestions come from the
+  // border we can't remove â†’ a double border). Suggestions come from the
   // `AutocompleteSuggestion` data API (same one the homepage hero uses), so the
   // field uses the app's standard input chrome with ONE clean border.
   const mapsReadyRef = useRef(false);
@@ -76,13 +76,13 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const [addrSug, setAddrSug] = useState<{ placeId: string; label: string }[]>([]);
   const [addrOpen, setAddrOpen] = useState(false);
 
-  // Draft for the zone being added: provincia/cantón (+ optional pin). The exact
+  // Draft for the zone being added: provincia/cantÃ³n (+ optional pin). The exact
   // place SEARCH now lives inside the map option (no separate "name" field).
   const [province, setProvince] = useState("");
   const [canton, setCanton] = useState("");
   const [showMap, setShowMap] = useState(false);
   // The draft form is shown while adding; once a zone is committed it collapses
-  // behind an explicit "+ Agregar otra ubicación" action so the flow is clear.
+  // behind an explicit "+ Agregar otra ubicaciÃ³n" action so the flow is clear.
   const [adding, setAdding] = useState(value.length === 0);
   const [draftPin, setDraftPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const draftPinRef = useRef<typeof draftPin>(null);
@@ -107,13 +107,13 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   }, [draftPin]);
 
   function commitWorkplace() {
-    if (!province || !canton) return;
-    const pin = draftPinRef.current;
+    if (!province) return;
+    const pin = canton ? draftPinRef.current : null;
     const cantonName = getCantonById(canton)?.name ?? "";
     const provinceName = getProvinceById(province)?.name ?? "";
-    // `name` is the READABLE label shown in listings: cantón, provincia.
-    // `address` keeps the exact geocoded string for the optional pin.
-    const readable = [cantonName, provinceName].filter(Boolean).join(", ") || "Ubicación";
+    const readable = canton
+      ? [cantonName, provinceName].filter(Boolean).join(", ")
+      : t("wholeProvinceName", { province: provinceName });
     onChange([
       ...valueRef.current,
       {
@@ -123,7 +123,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         lat: pin?.lat,
         lng: pin?.lng,
         provinciaId: province,
-        cantonId: canton,
+        cantonId: canton || undefined,
       },
     ]);
     setProvince("");
@@ -135,9 +135,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     setAddrSug([]);
     setAddrOpen(false);
   }
-
-  // A pin placed via search / map click / current location → just stores lat/lng.
-  // It does NOT touch provincia/cantón (the selects are the source of truth).
+  // A pin placed via search / map click / current location â†’ just stores lat/lng.
+  // It does NOT touch provincia/cantÃ³n (the selects are the source of truth).
   function onPinPlaced(lat: number, lng: number, address: string) {
     setGeoError(null);
     setDraftPin({ lat, lng, address });
@@ -182,9 +181,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     }
   }
 
-  // Picking an address suggestion → resolve its lat/lng + formatted address and
+  // Picking an address suggestion â†’ resolve its lat/lng + formatted address and
   // drop the pin (same outcome the old web component produced). The provincia/
-  // cantón selects stay the source of truth; the pin is just the exact marker.
+  // cantÃ³n selects stay the source of truth; the pin is just the exact marker.
   async function selectAddress(placeId: string, label: string) {
     setAddrOpen(false);
     setAddrQuery(label);
@@ -297,7 +296,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
 
   return (
     <div className="flex flex-col gap-2.5">
-      {/* Added zones — listed FIRST, above the add-another-location form. */}
+      {/* Added zones â€” listed FIRST, above the add-another-location form. */}
       {addedCount > 0 && (
         <div className="flex flex-col gap-2">
           <p className="text-xs font-medium text-[#374151]">{t("addedPlaces", { count: addedCount })}</p>
@@ -307,7 +306,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-[#0089bb] truncate">{wp.name}</p>
                 <p className="text-[10px] text-[#6b7280] truncate">
-                  {[getCantonById(wp.cantonId ?? "")?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
+                  {wp.cantonId
+                    ? [getCantonById(wp.cantonId)?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")
+                    : t("wholeProvinceTag")}
                   {wp.lat != null && wp.lng != null ? ` · ${t("pinnedTag")}` : ""}
                 </p>
               </div>
@@ -320,8 +321,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
                 <X className="h-4 w-4" />
               </button>
             </div>
-          ))}
-          {extraPlaces.map((place) => (
+          ))}          {extraPlaces.map((place) => (
             <div key={place.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
               <span className="grid h-4 w-4 shrink-0 place-items-center text-[#009FD9]">
                 {place.icon ?? <MapPin className="h-4 w-4" />}
@@ -345,19 +345,20 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         </div>
       )}
 
-      {afterPlaces}
 
-      {/* Add-another-location form — the COMPLETE group BELOW the list, in order:
-          provincia → cantón → optional map pin → "Agregar esta ubicación". Shown
-          while adding; collapses behind "Agregar otra ubicación" after a commit. */}
+      {extraActions && <div className="flex flex-wrap items-center gap-3">{extraActions}</div>}
+
+      {/* Add-another-location form â€” the COMPLETE group BELOW the list, in order:
+          provincia â†’ cantÃ³n â†’ optional map pin â†’ "Agregar esta ubicaciÃ³n". Shown
+          while adding; collapses behind "Agregar otra ubicaciÃ³n" after a commit. */}
       {adding && (
       <div className="flex flex-col gap-2.5">
-      {/* 1 — Structured field FIRST: provincia → cantón (authoritative for search).
-          Polished popover dropdowns (shared SelectMenu) — same look/behavior as the
-          Disponibilidad time selector. SIDE-BY-SIDE (provincia | cantón), matching the
+      {/* 1 â€” Structured field FIRST: provincia â†’ cantÃ³n (authoritative for search).
+          Polished popover dropdowns (shared SelectMenu) â€” same look/behavior as the
+          Disponibilidad time selector. SIDE-BY-SIDE (provincia | cantÃ³n), matching the
           publicar-proyecto layout exactly (`grid grid-cols-2 gap-3`). The SelectMenu's
           OPTIONS popup grows to its content + scrolls past `max-h-72` (sprint 301/321), so
-          a long cantón name is never cut off in the open list even in a half-width cell. */}
+          a long cantÃ³n name is never cut off in the open list even in a half-width cell. */}
       <div className="grid grid-cols-2 gap-3">
         <SelectMenu
           value={province}
@@ -374,9 +375,11 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         />
       </div>
 
-      {/* 2 — OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
+      {/* 2 â€” OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
              link reveals the address search + map only when the pro chooses to pin. */}
-      {effectiveKey ? (
+      {province && !canton && <p className="text-xs leading-5 text-[#6b7280]">{t("wholeProvinceHint")}</p>}
+
+      {effectiveKey && canton ? (
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -392,7 +395,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           </button>
           {showMap && (
             <div className="flex flex-col gap-2">
-              {/* Address search → drops the pin. OUR standard input (single border
+              {/* Address search â†’ drops the pin. OUR standard input (single border
                   matching the section's other fields) + the app's shared dropdown. */}
               <div ref={addrFieldRef} className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
@@ -451,32 +454,33 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           )}
         </div>
       ) : (
-        <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
+        canton && <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
       )}
 
-      {/* 3 — Add THIS zone (the one selected above). Enabled once provincia + cantón
+      {/* 3 â€” Add THIS zone (the one selected above). Enabled once provincia + cantÃ³n
              are chosen, so it's clear it commits the current selection. */}
       <button
         type="button"
         onClick={commitWorkplace}
-        disabled={!province || !canton}
+        disabled={!province}
         className="self-start inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        <Plus className="h-4 w-4" /> {t("addThisPlace")}
+        <Plus className="h-4 w-4" /> {canton ? t("addThisPlace") : t("addWholeProvince")}
       </button>
-      {province && !canton && <p className="text-[11px] text-amber-600 -mt-1">{t("hintCanton")}</p>}
       </div>
       )}
 
       {/* Separate, explicit way to add ANOTHER zone (only when the draft is closed). */}
       {!adding && (
-        <button
-          type="button"
-          onClick={() => setAdding(true)}
-          className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
-        >
-          <Plus className="h-4 w-4" /> {t("addAnotherPlace")}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
+          >
+            <Plus className="h-4 w-4" /> {t("addAnotherPlace")}
+          </button>
+        </div>
       )}
     </div>
   );

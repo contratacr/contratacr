@@ -202,7 +202,7 @@ function LanguageInline({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "grid h-12 grid-cols-2 overflow-hidden rounded-2xl border border-[#dcecf5] bg-[#f6fbfe] shadow-inner shadow-white/80",
+        "grid grid-cols-2 gap-2",
         className
       )}
       role="group"
@@ -216,10 +216,10 @@ function LanguageInline({ className }: { className?: string }) {
             onClick={() => switchLang(l.code)}
             aria-pressed={active}
             className={cn(
-              "inline-flex h-full items-center justify-center px-3 text-sm font-bold transition-all",
+              "inline-flex h-10 items-center justify-center rounded-xl border px-3 text-sm font-bold transition-all",
               active
-                ? "bg-[#009FD9] text-white shadow-[0_10px_22px_-16px_rgba(0,159,217,0.85)]"
-                : "text-[#64748b] hover:bg-white/70 hover:text-[#162543]",
+                ? "border-[#009FD9] bg-[#009FD9] text-white shadow-sm"
+                : "border-[#dbe7ef] bg-white text-[#64748b] shadow-sm hover:border-[#bfe3f5] hover:text-[#162543]",
             )}
           >
             <span>{l.label}</span>

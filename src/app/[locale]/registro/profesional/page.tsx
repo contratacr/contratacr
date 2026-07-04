@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
-  CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
+  CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle, Video,
   Circle, Camera, X, Plus, Search, ChevronDown,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -23,7 +23,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Modal } from "@/components/ui/modal";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
-import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
@@ -440,6 +440,7 @@ export default function RegisterProfessionalPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [videoCoverageCountry, setVideoCoverageCountry] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
@@ -486,6 +487,16 @@ export default function RegisterProfessionalPage() {
     mode: "onBlur",
     defaultValues: { yearsExperience: "", hourlyRate: "" },
   });
+  const watchedPrimaryCategory = form2.watch("category");
+  const selectedServiceIds = useMemo(
+    () => [watchedPrimaryCategory, ...extraCategories].filter(Boolean),
+    [watchedPrimaryCategory, extraCategories],
+  );
+  const canOfferVideoConsult = useMemo(
+    () => anyVideoConsultCategory(selectedServiceIds),
+    [selectedServiceIds],
+  );
+  const effectiveVideoCoverageCountry = canOfferVideoConsult && videoCoverageCountry;
 
   // On a failed submit, jump to the first field with an error.
   function scrollToFirstError() {
@@ -642,7 +653,7 @@ export default function RegisterProfessionalPage() {
       return;
     }
     // At least one work zone (provincia/cantón) is required — it drives /buscar.
-    if (workplaces.length === 0) {
+    if (workplaces.length === 0 && !effectiveVideoCoverageCountry) {
       setLocationError(t("errWorkplace"));
       return;
     }
@@ -733,11 +744,14 @@ export default function RegisterProfessionalPage() {
         : step1Data!.fullName.trim(), NAME_MAX_LENGTH);
 
       const effWorkplaces = workplaces;
+      const selectedProfessions = [step2Data.category, ...extraCategories].filter(Boolean);
+      const submitVideoCoverageCountry = anyVideoConsultCategory(selectedProfessions) && videoCoverageCountry;
+      const onlineCoverage = submitVideoCoverageCountry ? [{ level: "country" as const }] : [];
       const hasExactWorkplace = effWorkplaces.some((w) => w.lat != null && w.lng != null);
-      const hasCoverageZone = effWorkplaces.some((w) => w.lat == null || w.lng == null);
+      const hasCoverageZone = effWorkplaces.some((w) => w.lat == null || w.lng == null) || submitVideoCoverageCountry;
       const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
-      const { provincias, cantones } = computeSearchAreas(effWorkplaces, []);
-      const primary = primaryArea(effWorkplaces, []);
+      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effWorkplaces, onlineCoverage);
+      const primary = primaryArea(effWorkplaces, onlineCoverage);
 
       // ── 4. Create/upsert profile + professional record ─────────────────────
       const proRes = await fetch("/api/register/professional", {
@@ -756,17 +770,17 @@ export default function RegisterProfessionalPage() {
           idDocNote: identityMismatch ? "El usuario indicó que la información del padrón no es suya." : null,
           photoUrl,
           category: step2Data.category,
-          professions: [step2Data.category, ...extraCategories],
+          professions: selectedProfessions,
           serviceType,
           province: primary.provinciaId ?? null,
           canton: primary.cantonId ?? null,
           // Work zones (provincia/cantón + optional pin) + denormalized search arrays.
           workplaces: effWorkplaces,
-          coverageAreas: [],
+          coverageAreas: onlineCoverage,
           searchProvincias: provincias,
           searchCantones: cantones,
-          coverageProvincias: [],
-          coverageCountry: false,
+          coverageProvincias,
+          coverageCountry,
           address: workplaces[0]?.address || step2Data.address || null,
           lat: workplaces[0]?.lat ?? null,
           lng: workplaces[0]?.lng ?? null,
@@ -1123,11 +1137,55 @@ export default function RegisterProfessionalPage() {
               </section>
               <section className="flex flex-col gap-3 border-t border-[#f3f4f6] pt-4">
                   <h3 className="text-sm font-extrabold text-[#162543]">{t("workplacesSectionTitle")}</h3>
+                  {canOfferVideoConsult && (
+                    <div className="flex flex-col gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-[#162543]">{t("videoSectionTitle")}</p>
+                        <p className="text-xs leading-5 text-[#64748b]">{t("videoSectionHint")}</p>
+                      </div>
+                      {effectiveVideoCoverageCountry ? (
+                        <div className="flex items-center gap-2 rounded-xl bg-[#EBF5FB] px-3 py-2">
+                          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-[#009FD9]">
+                            <Video className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-[#0089bb]">{t("videoCountryPlace")}</p>
+                            <p className="truncate text-xs text-[#64748b]">{t("videoConsultOption")}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setVideoCoverageCountry(false)}
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                            aria-label={t("videoCountryRemove")}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVideoCoverageCountry(true);
+                            setLocationError(null);
+                          }}
+                          className="inline-flex w-fit max-w-full items-center gap-2 rounded-full border border-[#bfeeff] bg-white px-3 py-2 text-sm font-semibold text-[#009FD9] shadow-sm transition hover:border-[#009FD9] hover:bg-[#f0fbff]"
+                        >
+                          <Plus className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{t("videoCountryAdd")}</span>
+                          <span className="shrink-0 text-xs font-semibold text-[#64748b]">({t("videoConsultOption")})</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
                   <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-[#374151]">
-                    {t("workplacesLabel")} <span className="text-red-500">*</span>
+                    {canOfferVideoConsult ? t("inPersonSectionTitle") : t("workplacesLabel")}
+                    {!canOfferVideoConsult && <span className="text-red-500"> *</span>}
                   </label>
-                  <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
+                  <WorkplacesPicker
+                    value={workplaces}
+                    onChange={(n) => { setWorkplaces(n); setLocationError(null); }}
+                  />
                 </div>
 
                   {locationError && <p className="text-xs text-red-500">{locationError}</p>}
