@@ -103,7 +103,7 @@ export default function DashboardPage() {
   const t = useTranslations("proPanel");
   const tc = useTranslations("clientActivity");
   const locale = useLocale();
-  const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
+  const requestedTab = searchParams.get("tab") as Tab | null;
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
 
@@ -139,8 +139,9 @@ export default function DashboardPage() {
   // A non-provider has no offer world → always "use".
   const { mode: globalMode, setMode } = useMode(isProvider);
   const urlForcedMode: Mode | null =
-    OFFER_ONLY.has(activeTab) ? "offer" : USE_ONLY.has(activeTab) ? "use" : urlModeParam;
+    requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
+  const activeTab: Tab = requestedTab ?? (mode === "offer" ? "bookings" : "sent_bookings");
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
   useEffect(() => {
