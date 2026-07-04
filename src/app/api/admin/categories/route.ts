@@ -45,6 +45,24 @@ type SuggestionProfessional = {
   business_name?: string | null;
 };
 
+type ProfessionalServiceRow = {
+  id?: string;
+  name?: string;
+  category?: string;
+  categoryId?: string;
+  active?: boolean;
+  priceType?: string;
+  price?: string;
+  [key: string]: unknown;
+};
+
+type ProfessionalCatalogRow = {
+  id: string;
+  category_id?: string | null;
+  professions?: unknown;
+  services?: unknown;
+};
+
 // GET /api/admin/categories?status=pending|approved|rejected|catalog
 export async function GET(req: Request) {
   const admin = await getApiAdmin();
@@ -215,7 +233,7 @@ export async function PATCH(req: Request) {
   if (status === "approved") {
     const { data: row } = await db
       .from("category_suggestions")
-      .select("label, suggested_name")
+      .select("label, suggested_name, suggested_by")
       .eq("id", id)
       .single();
     const rawName = cleanLabel || row?.label || row?.suggested_name || labelFromId(id);
@@ -223,7 +241,7 @@ export async function PATCH(req: Request) {
     const finalName = normalizeServiceDisplayName(rawName);
     const finalNameEn = rawNameEn ? await suggestEnglishServiceLabel(rawNameEn) : await suggestEnglishServiceLabel(finalName);
     const review = classifySuggestedCategory(finalName);
-    await upsertCategory(db, {
+    const upsertResult = await upsertCategory(db, {
       id,
       name: finalName,
       name_en: finalNameEn,
@@ -232,6 +250,8 @@ export async function PATCH(req: Request) {
       es_salud: typeof esSalud === "boolean" ? esSalud : review.healthLikely,
       supports_videoconsulta: typeof supportsVideoconsulta === "boolean" ? supportsVideoconsulta : review.videoConsultLikely,
     });
+    if (upsertResult.error) return NextResponse.json({ error: upsertResult.error.message }, { status: 500 });
+    await attachApprovedServiceToSuggestedProfessional(db, row?.suggested_by, id, finalName);
   }
 
   return NextResponse.json({ ok: true });
@@ -407,6 +427,73 @@ async function upsertCategory(db: ReturnType<typeof createAdminClient>, row: Rec
     return result;
   }
   return db.from("categories").upsert(current, { onConflict: "id", ignoreDuplicates: false });
+}
+
+function professionalStringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+}
+
+function professionalServiceRows(value: unknown): ProfessionalServiceRow[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is ProfessionalServiceRow => !!item && typeof item === "object")
+    : [];
+}
+
+function serviceCategoryId(service: ProfessionalServiceRow): string {
+  return typeof service.category === "string"
+    ? service.category
+    : typeof service.categoryId === "string"
+      ? service.categoryId
+      : "";
+}
+
+function seedServiceForApprovedSuggestion(categoryId: string, name: string): ProfessionalServiceRow {
+  return {
+    id: `svc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    name,
+    category: categoryId,
+    active: true,
+    priceType: "a_convenir",
+    price: "Consultar precio",
+  };
+}
+
+async function attachApprovedServiceToSuggestedProfessional(
+  db: ReturnType<typeof createAdminClient>,
+  suggestedBy: unknown,
+  categoryId: string,
+  serviceName: string
+) {
+  if (typeof suggestedBy !== "string" || !suggestedBy || !categoryId) return;
+
+  const { data, error } = await db
+    .from("professionals")
+    .select("id, category_id, professions, services")
+    .eq("profile_id", suggestedBy)
+    .maybeSingle();
+
+  if (error || !data?.id) {
+    if (error) console.error("[admin/categories] approved service attach lookup failed:", error);
+    return;
+  }
+
+  const professional = data as ProfessionalCatalogRow;
+  const primary = typeof professional.category_id === "string" ? professional.category_id : "";
+  const professions = professionalStringList(professional.professions);
+  const nextProfessions = [...new Set([...(professions.length ? professions : primary ? [primary] : []), categoryId])];
+  const services = professionalServiceRows(professional.services);
+  const hasService = services.some((service) => serviceCategoryId(service) === categoryId);
+  const nextServices = hasService ? services : [...services, seedServiceForApprovedSuggestion(categoryId, serviceName)];
+  const update: Record<string, unknown> = {
+    professions: nextProfessions,
+    services: nextServices,
+  };
+  if (!primary) update.category_id = categoryId;
+
+  const { error: updateError } = await db.from("professionals").update(update).eq("id", professional.id);
+  if (updateError) console.error("[admin/categories] approved service attach update failed:", updateError);
 }
 
 async function getAdminGroups(db: ReturnType<typeof createAdminClient>): Promise<Array<{ id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number }>> {
