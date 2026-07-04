@@ -49,6 +49,8 @@ interface ProfessionalScheduleProps {
 // How many day-columns are shown at once, and how far ahead the arrows page.
 const COLS = 3;
 const WINDOW_DAYS = 21;
+const locationNavButtonClass =
+  "relative z-20 -my-1 flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-full text-[#6b7280] transition-colors hover:bg-[#f3f8fc] hover:text-[#009FD9] active:bg-[#EBF5FB] active:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30";
 
 function toKey(d: Date): string {
   const y = d.getFullYear();
@@ -256,9 +258,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     return () => { ro?.disconnect(); if (typeof window !== "undefined") window.removeEventListener("resize", measure); };
   }, [locTabs.length, effectiveId]);
   const showLocNav = locOverflow;
-  const scrollLocs = (dir: number) => locScrollRef.current?.scrollBy({ left: dir * 140, behavior: "smooth" });
+  const scrollLocs = (dir: number) => locScrollRef.current?.scrollBy({ left: dir * 180, behavior: "smooth" });
   const locationControl = locTabs.length > 0 ? (
-    <div className="relative z-10 min-w-0">
+    <div
+      className="relative z-10 min-w-0"
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
       {/* TABS (Doctoralia-style): pin + name; the selected tab is brand-blue with an
           underline, the rest muted. The row SCROLLS sideways and NEVER wraps
           (`shrink-0` + `whitespace-nowrap`). `.hide-scrollbar` hides the chrome; when
@@ -268,10 +274,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <button
             type="button"
             aria-label={t("prevLocations")}
-            onClick={(e) => { e.stopPropagation(); scrollLocs(-1); }}
-            className="relative z-10 shrink-0 flex h-5 w-5 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(-1); }}
+            className={locationNavButtonClass}
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
         )}
         {/* `overflow-y-hidden` is REQUIRED: `overflow-x-auto` alone leaves overflow-y as
@@ -307,10 +313,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <button
             type="button"
             aria-label={t("nextLocations")}
-            onClick={(e) => { e.stopPropagation(); scrollLocs(1); }}
-            className="relative z-10 shrink-0 flex h-5 w-5 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(1); }}
+            className={locationNavButtonClass}
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         )}
       </div>
