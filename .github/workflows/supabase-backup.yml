@@ -1,0 +1,137 @@
+name: Supabase backup
+
+on:
+  schedule:
+    - cron: "10 8 * * *" # Daily production backup at 2:10 AM Costa Rica time.
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Environment to back up."
+        required: true
+        type: choice
+        options:
+          - test
+          - production
+
+concurrency:
+  group: supabase-backup-${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Back up Supabase ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    permissions:
+      contents: read
+    env:
+      TARGET: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+      PGSSLMODE: require
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate target and secrets
+        run: |
+          set -euo pipefail
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Missing SUPABASE_DB_URL in the $TARGET GitHub Environment."
+            exit 1
+          fi
+          if [ -z "$BACKUP_ENCRYPTION_PASSPHRASE" ]; then
+            echo "::error::Missing BACKUP_ENCRYPTION_PASSPHRASE in the $TARGET GitHub Environment."
+            exit 1
+          fi
+          if echo "$SUPABASE_DB_URL" | grep -q ":6543/"; then
+            echo "::error::SUPABASE_DB_URL is using the transaction pooler port 6543. Backups need a direct connection or the shared pooler in session mode, usually port 5432."
+            exit 1
+          fi
+          if [ "$TARGET" = "production" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "::error::Production backups must run from main."
+            exit 1
+          fi
+          if [ "$TARGET" = "test" ] && [ "${{ github.ref }}" != "refs/heads/test" ]; then
+            echo "::error::Test backups must run from test."
+            exit 1
+          fi
+
+      - name: Install Postgres client and GPG
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client gnupg
+
+      - name: Create encrypted logical backup
+        run: |
+          set -euo pipefail
+          timestamp="$(date -u +'%Y%m%dT%H%M%SZ')"
+          mkdir -p backup
+
+          base="contratacr-${TARGET}-supabase-${timestamp}"
+          dump_file="backup/${base}.dump"
+          list_file="backup/${base}.pg_restore_list.txt"
+          manifest_file="backup/${base}.manifest.txt"
+
+          pg_dump "$SUPABASE_DB_URL" \
+            --format=custom \
+            --compress=9 \
+            --no-owner \
+            --no-acl \
+            --exclude-table-data=public.padron \
+            --exclude-table-data=public.padron_staging \
+            --file="$dump_file"
+
+          test -s "$dump_file"
+          pg_restore --list "$dump_file" > "$list_file"
+          test -s "$list_file"
+
+          dump_bytes="$(wc -c < "$dump_file" | tr -d ' ')"
+          restore_entries="$(wc -l < "$list_file" | tr -d ' ')"
+          table_data_entries="$(grep -c ' TABLE DATA ' "$list_file" || true)"
+
+          (cd backup && sha256sum "${base}.dump" > "${base}.dump.sha256")
+
+          {
+            echo "ContrataCR Supabase logical backup"
+            echo "Target: $TARGET"
+            echo "Created UTC: $timestamp"
+            echo "Commit: $GITHUB_SHA"
+            echo "Dump format: pg_dump custom"
+            echo "Encryption: GPG AES256 symmetric"
+            echo "Excluded table data: public.padron, public.padron_staging"
+            echo "Dump bytes before encryption: $dump_bytes"
+            echo "pg_restore entries: $restore_entries"
+            echo "Table data entries: $table_data_entries"
+            echo
+            echo "The raw dump is not uploaded. Download the .gpg file and decrypt it before restore."
+          } > "$manifest_file"
+
+          gpg --batch --yes --symmetric \
+            --cipher-algo AES256 \
+            --pinentry-mode loopback \
+            --passphrase "$BACKUP_ENCRYPTION_PASSPHRASE" \
+            --output "${dump_file}.gpg" \
+            "$dump_file"
+
+          gpg --batch --yes --symmetric \
+            --cipher-algo AES256 \
+            --pinentry-mode loopback \
+            --passphrase "$BACKUP_ENCRYPTION_PASSPHRASE" \
+            --output "${list_file}.gpg" \
+            "$list_file"
+
+          (cd backup && sha256sum "${base}.dump.gpg" > "${base}.dump.gpg.sha256")
+          rm "$dump_file" "$list_file"
+
+          echo "ARTIFACT_NAME=${base}" >> "$GITHUB_ENV"
+
+      - name: Upload encrypted backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: |
+            backup/*.gpg
+            backup/*.sha256
+            backup/*.manifest.txt
+          if-no-files-found: error
+          retention-days: 30

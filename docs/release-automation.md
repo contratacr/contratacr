@@ -5,7 +5,7 @@ ContrataCR uses two deploy environments:
 - **test**: preview/test Supabase, Cloudinary and Vercel deployment.
 - **production**: real production services.
 
-The app code still deploys through Vercel. Supabase database changes and padron refreshes are managed from GitHub Actions so changes are repeatable and reviewable.
+The app code still deploys through Vercel. Supabase database changes, padron refreshes and encrypted database backups are managed from GitHub Actions so changes are repeatable and reviewable.
 
 ## GitHub Environments
 
@@ -25,6 +25,7 @@ Each environment needs these secrets:
 | `NEXT_PUBLIC_SUPABASE_URL` | Regression Tests | Optional if `SUPABASE_URL` already exists in the same GitHub Environment; the workflow accepts either one. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Padron refresh | Server-only service role key. Never expose it in Vercel public variables. |
 | `VERCEL_AUTOMATION_BYPASS_SECRET` | Regression Tests | Required in the `test` environment so Playwright can access protected Vercel preview deployments. |
+| `BACKUP_ENCRYPTION_PASSPHRASE` | Supabase backup | Long random passphrase used to encrypt backup artifacts. Store a copy in a password manager. |
 
 Do not put these in repository variables. Use environment secrets only.
 
@@ -79,6 +80,23 @@ Local load, only when needed:
 ```bash
 SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run padron:load -- ./padron_completo.txt
 ```
+
+## Supabase backups
+
+Use **Actions -> Supabase backup**.
+
+Production backups run daily at 2:10 AM Costa Rica time and upload an encrypted artifact retained for 30 days. The workflow uses `pg_dump` custom format, encrypts the dump with GPG AES256, and does not upload the raw database dump.
+
+The backup excludes `public.padron` and `public.padron_staging` data because those tables are large and can be rebuilt with **Padron refresh**.
+
+Manual backup flow:
+
+1. Confirm `SUPABASE_DB_URL` and `BACKUP_ENCRYPTION_PASSPHRASE` exist in the chosen GitHub Environment.
+2. Run **Supabase backup** from `test` with `target=test`, or from `main` with `target=production`.
+3. Download the artifact only when needed and decrypt it with the passphrase stored outside GitHub.
+4. Restore to a clean recovery Supabase project first, then run **Padron refresh**.
+
+Detailed restore steps are in `docs/backups.md`.
 
 ## Regression and security checks
 
