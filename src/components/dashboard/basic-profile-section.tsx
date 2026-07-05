@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Lock, Camera, X, Info, Briefcase } from "lucide-react";
+import { Lock, Camera, X, Info, Briefcase, ChevronDown } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
 import { Button } from "@/components/ui/button";
@@ -19,14 +19,54 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
+type ExtraProfileSection = {
+  id: string;
+  title: string;
+  desc?: string;
+  children: React.ReactNode;
+};
+
+function ProfileSection({
+  id,
+  title,
+  desc,
+  open,
+  onToggle,
+  children,
+}: ExtraProfileSection & { open: boolean; onToggle: (id: string) => void }) {
+  return (
+    <div id={`sec-${id}`} className="scroll-mt-24">
+      <button
+        type="button"
+        onClick={() => onToggle(id)}
+        className={cn("w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-4 text-left transition-colors", open ? "bg-[#fafafa]" : "hover:bg-[#fafafa]")}
+        aria-expanded={open}
+      >
+        <div className="min-w-0">
+          <p className="text-[15px] font-semibold text-[#111827] leading-tight">{title}</p>
+          {desc && <p className="text-xs text-[#6b7280] mt-1">{desc}</p>}
+        </div>
+        <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="px-4 sm:px-5 pb-5 pt-4 flex flex-col gap-4 border-t border-[#f3f4f6]">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // The SEEKER's "Mi perfil" — basic identity every account has (photo + name +
 // phone), with the same reliable autosave standard as the rest of the app. Used
 // by the unified panel's "Usar servicios" mode. The "Ofrecer servicios" invitation
 // lives in the panel sidebar, so it is not repeated here.
 export function BasicProfileSection({
   supportTab = "/dashboard/profesional?tab=soporte",
+  extraSections = [],
 }: {
   supportTab?: string;
+  extraSections?: ExtraProfileSection[];
 }) {
   const { user } = useAuth();
   const router = useRouter();
@@ -50,6 +90,13 @@ export function BasicProfileSection({
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(["basic"]));
+  const toggleSection = (id: string) =>
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   function touchProfile() {
     setProfileSaved(false);
     setProfileDirty(true);
@@ -186,6 +233,8 @@ export function BasicProfileSection({
         </div>
       </div>
 
+      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#eef0f2]">
+      <ProfileSection id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
       {/* Foto */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB]">
@@ -279,6 +328,21 @@ export function BasicProfileSection({
           </Button>
         </div>
       )}
+      </ProfileSection>
+
+      {extraSections.map((section) => (
+        <ProfileSection
+          key={section.id}
+          id={section.id}
+          title={section.title}
+          desc={section.desc}
+          open={openSections.has(section.id)}
+          onToggle={toggleSection}
+        >
+          {section.children}
+        </ProfileSection>
+      ))}
+      </div>
 
       <UnsavedChangesGuard dirty={profileDirty} onSave={saveProfile} />
       {dialogNode}

@@ -83,11 +83,11 @@ const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
-  "profile", "services", "photos", "availability", "bookings", "proposals", "verificacion",
+  "bookings", "proposals", "profile", "services", "photos", "availability",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
-const USE_TABS: Tab[] = ["profile", "sent_bookings", "sent_projects", "saved"];
-const SHARED_TABS: Tab[] = ["notifications", "soporte", "cuenta"];
+const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved"];
+const SHARED_TABS: Tab[] = ["notifications", "soporte"];
 
 // MOBILE bottom-nav: a horizontally scrollable rail with every mode tab.
 const MOBILE_PRIORITY: Record<Mode, Tab[]> = {
@@ -396,7 +396,7 @@ export default function DashboardPage() {
   const showOfferGate = !loading && mode === "offer" && !pro && !canOffer(user);
 
   // Mobile bottom-nav split: the mode's primary tabs in the bar (incl. the shared
-  // "notifications" tab, which now has a dedicated slot), the rest under "Más".
+  // "notifications" tab, which now has a dedicated slot), then the rest scrolls after.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = [...modeTabs, ...SHARED_TABS];
   const barTabs = [...modeTabs, ...SHARED_TABS];
@@ -450,7 +450,7 @@ export default function DashboardPage() {
   }
 
   const bottomNavItemClass =
-    "relative flex w-[94px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
+    "relative flex w-[22vw] min-w-[78px] max-w-[94px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
 
   function modeBottomNavButton() {
     const next: Mode = mode === "offer" ? "use" : "offer";
@@ -638,10 +638,51 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                             focusField={profileFocus?.field ?? null}
                             focusKey={profileFocus?.key}
+                            extraSections={[
+                              {
+                                id: "verificacion",
+                                title: t("tabs.verificacion"),
+                                desc: t("profileSections.verificationDesc"),
+                                children: (
+                                  <VerificationPanel
+                                    professionalId={pro.id}
+                                    status={pro.verification_status ?? "pending"}
+                                    reason={pro.verification_reason}
+                                    noCrId={pro.no_cr_id ?? false}
+                                    onSaved={handleSaved}
+                                  />
+                                ),
+                              },
+                              {
+                                id: "cuenta",
+                                title: t("tabs.cuenta"),
+                                desc: t("profileSections.accountDesc"),
+                                children: (
+                                  <div className="space-y-6">
+                                    <AccountSecuritySection showHeading={false} />
+                                    <CloseAccountSection />
+                                  </div>
+                                ),
+                              },
+                            ]}
                           />
                         )}
                         {activeTab === "profile" && mode === "use" && (
-                          <BasicProfileSection />
+                          <BasicProfileSection
+                            extraSections={[
+                              {
+                                id: "cuenta",
+                                title: t("tabs.cuenta"),
+                                desc: t("profileSections.accountDesc"),
+                                children: (
+                                  <div className="space-y-6">
+                                    <AccountSecuritySection showHeading={false} />
+                                    <CloseAccountSection />
+                                  </div>
+                                ),
+                              },
+                            ]}
+                          />
                         )}
 
                         {activeTab === "services" && pro && (
@@ -738,6 +779,7 @@ export default function DashboardPage() {
           >
             {isProvider && modeBottomNavButton()}
             {mobileBarTabs.map((tab) => {
+              const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
               const active = activeTab === tab;
               return (
                 <button
@@ -752,9 +794,8 @@ export default function DashboardPage() {
                 >
                   <span className="relative [&>svg]:!h-[22px] [&>svg]:!w-[22px]">
                     {TAB_ICONS[tab]}
-                    {/* Dedicated, mode-scoped unread badge on the Notificaciones tab. */}
-                    {tab === "notifications" && unreadCount > 0 && (
-                      <span className="absolute -right-2 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                    {badge > 0 && (
+                      <span className="absolute -right-2 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">{badge > 9 ? "9+" : badge}</span>
                     )}
                   </span>
                   <span className="text-[10px] font-semibold leading-none max-w-full truncate">{t(`bottomNav.${tab}`)}</span>
