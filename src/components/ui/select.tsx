@@ -15,12 +15,13 @@ const SelectTrigger = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
+    data-ui="select-trigger"
     className={cn(
       "flex h-10 w-full items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-[#111827]",
       // focus-VISIBLE only: a mouse click that returns focus to the trigger (Radix
       // does this after picking an option) must NOT leave a stuck ring; keyboard
       // users still get a clear brand-blue ring.
-      "transition-all duration-150 outline-none hover:border-[#009FD9]/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20 focus-visible:border-[#009FD9] data-[state=open]:border-[#009FD9] data-[state=open]:ring-2 data-[state=open]:ring-[#009FD9]/20",
+      "transition-all duration-150 outline-none hover:border-[#8ccfe8] hover:bg-[#fbfdff] focus:outline-none focus-visible:border-[#009FD9] data-[state=open]:border-[#009FD9]",
       "disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
       "data-[placeholder]:text-[#9ca3af]",
       "[&>span:first-child]:min-w-0 [&>span:first-child]:truncate",
@@ -66,11 +67,12 @@ const SelectItem = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Item
     ref={ref}
+    data-ui="select-item"
     className={cn(
       "relative flex w-full cursor-pointer select-none items-center rounded-lg px-3 py-2 text-sm text-[#111827]",
-      "outline-none focus:bg-[#EBF5FB] focus:text-[#0089bb] data-[highlighted]:bg-[#EBF5FB] data-[highlighted]:text-[#0089bb]",
+      "outline-none focus:bg-[#f3fbff] focus:text-[#007fad] focus-visible:outline-none data-[highlighted]:bg-[#f3fbff] data-[highlighted]:text-[#007fad]",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      "data-[state=checked]:bg-[#EBF5FB] data-[state=checked]:text-[#0089bb] data-[state=checked]:font-semibold",
+      "data-[state=checked]:bg-[#eaf7fc] data-[state=checked]:text-[#007fad] data-[state=checked]:font-semibold",
       className
     )}
     {...props}

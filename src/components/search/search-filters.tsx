@@ -18,7 +18,7 @@ import { loadGoogleMaps } from "@/lib/maps/loader";
 
 // Filter Select triggers stay on the ContrataCR blue system for focus/hover so
 // the fields read the same whether a service filter is active or not.
-const FILTER_TRIGGER = "text-sm focus-visible:border-[#009FD9] focus-visible:ring-[#009FD9]/20";
+const FILTER_TRIGGER = "text-sm";
 // Open menu = EXACTLY the trigger's width, flush-aligned (left+right edges line up with
 // the field) â€” like the "Servicio" autocomplete. By default Radix popper content sizes to
 // its OPTIONS (with a min-w), so a short list (e.g. Aseguradora) opens narrower than its
