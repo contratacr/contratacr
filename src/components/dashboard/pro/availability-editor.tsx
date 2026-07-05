@@ -5,13 +5,14 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, MoreVertical } from "lucide-react";
+import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, MoreVertical, Video } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { FormLoadingState } from "@/components/ui/loading-state";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
+import { Link } from "@/i18n/navigation";
 
 // How far ahead the weekly template + exceptions are MATERIALIZED into concrete
 // `availability_slots` (the booking-critical table everything downstream reads). The
@@ -97,19 +98,29 @@ interface AvailabilityEditorProps {
   initialPublic?: boolean;
   initialContactPreference?: ContactPreference;
   workplaces?: Place[];
+  videoConsultationAllowed?: boolean;
+  initialVideoConsultation?: boolean;
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({
+  professionalId,
+  initialPublic = true,
+  workplaces = [],
+  videoConsultationAllowed = false,
+  initialVideoConsultation = false,
+  onSaved,
+}: AvailabilityEditorProps) {
   const locale = useLocale();
   const t = useTranslations("availabilityEditor");
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
-  const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
 
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [savingVisibility, setSavingVisibility] = useState(false);
+  const [savingVideoConsultation, setSavingVideoConsultation] = useState(false);
+  const [isVideoConsultation, setIsVideoConsultation] = useState(initialVideoConsultation);
   const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
   const [showClosedDays, setShowClosedDays] = useState(false);
   // Cross/same-location overlap block — a pro can't be in two places at once.
@@ -586,6 +597,24 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     pulseSaved();
     onSaved?.();
   }
+  async function toggleVideoConsultation() {
+    const next = !isVideoConsultation;
+    setIsVideoConsultation(next);
+    setSavingVideoConsultation(true);
+    const supabase = createClient();
+    const update = next
+      ? { videoconsulta: true, coverage_country: true, coverage_areas: [{ level: "country" }] }
+      : { videoconsulta: false, coverage_country: false, coverage_areas: [] };
+    const { error } = await supabase.from("professionals").update(update).eq("id", professionalId);
+    if (error) {
+      console.error("[availability] video consultation update failed:", error);
+      setIsVideoConsultation(!next);
+    } else {
+      pulseSaved();
+      onSaved?.();
+    }
+    setSavingVideoConsultation(false);
+  }
   useEffect(() => {
     if (!showPrivateConfirm) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowPrivateConfirm(false); };
@@ -605,15 +634,17 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
   const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
+  const hasWorkplaceForSchedule = locationOptions.length > 0;
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
-  useReportSaveStatus(savingVisibility || busy, justSaved);
+  useReportSaveStatus(savingVisibility || savingVideoConsultation || busy, justSaved);
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
 
       {/* ── Disponibilidad privada ─────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
+      <div className="p-4 sm:p-5">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             {/* Blue padlock — signals this controls PRIVATE availability. */}
@@ -622,7 +653,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             </span>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
-              <p className="mt-0.5 text-xs text-[#6b7280]">{isPublic ? t("privateSubPublic") : t("privateSubPrivate")}</p>
+              <p className="mt-0.5 text-xs text-[#6b7280]">
+                {isPublic && !hasWorkplaceForSchedule ? t("privateSubNeedsWorkplace") : isPublic ? t("privateSubPublic") : t("privateSubPrivate")}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -631,7 +664,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               type="button"
               onClick={toggleVisibility}
               disabled={savingVisibility}
-              className={cn("relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer", !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]")}
+              className={cn("relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer", !isPublic ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
               aria-label={isPublic ? t("makePrivate") : t("makePublic")}
             >
               <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
@@ -640,15 +673,78 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         </div>
       </div>
 
-      {loading ? (
-        <FormLoadingState minHeight="min-h-[300px]" />
-      ) : !isPublic ? null : locationOptions.length === 0 ? (
-        <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
-          {t.rich("needLocation", rich)}
+      {videoConsultationAllowed && (
+        <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
+                <Video className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#111827]">{t("videoLabel")}</p>
+                <p className="mt-0.5 text-xs text-[#6b7280]">{t("videoDesc")}</p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {savingVideoConsultation && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
+              <button
+                type="button"
+                onClick={toggleVideoConsultation}
+                disabled={savingVideoConsultation}
+                className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200", isVideoConsultation ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+                aria-label={t("videoLabel")}
+              >
+                <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", isVideoConsultation ? "left-5" : "left-0.5")} />
+              </button>
+            </div>
+          </div>
         </div>
+      )}
+
+      <div className="border-t border-[#f3f4f6]">
+      {loading ? (
+        <div className="p-4 sm:p-5">
+          <FormLoadingState minHeight="min-h-[300px]" />
+        </div>
+      ) : !isPublic ? null : locationOptions.length === 0 ? (
+        isVideoConsultation ? (
+        <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+          <div className="rounded-xl bg-[#f8fbfe] px-3.5 py-3">
+            <p className="text-sm leading-5 text-[#526071]">{t("inPersonSchedulePendingBody")}</p>
+            <Link
+              href="/dashboard/profesional?tab=profile&mode=offer&focus=location"
+              className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:ring-offset-2"
+            >
+              <MapPin className="h-4 w-4" />
+              {t("addInPersonWorkplace")}
+            </Link>
+          </div>
+        </div>
+        ) : (
+        <div className="m-4 rounded-2xl border border-[#bfe3f5] bg-[#f8fbfe] p-4 sm:m-5 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
+                {isVideoConsultation ? <Video className="h-5 w-5" /> : <MapPin className="h-5 w-5" />}
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#162543]">{isVideoConsultation ? t("videoActiveTitle") : t("needLocationTitle")}</p>
+                <p className="mt-1 max-w-2xl text-sm leading-5 text-[#526071]">{isVideoConsultation ? t("videoActiveBody") : t("needLocationBody")}</p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/profesional?tab=profile&mode=offer&focus=location"
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:ring-offset-2"
+            >
+              <MapPin className="h-4 w-4" />
+              {t("needLocationAction")}
+            </Link>
+          </div>
+        </div>
+        )
       ) : (
         <>
-          <div className="overflow-hidden rounded-2xl border border-[#e5e7eb]">
+          <div>
             <div className="grid gap-5 border-b border-[#f3f4f6] p-4 sm:grid-cols-2 sm:p-5">
               <div>
                 <label className="mb-2 block text-xs font-semibold text-[#6b7280]">{t("apptDuration")}</label>
@@ -796,7 +892,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           </div>
 
           {/* ── ¿Un día distinto? — date exceptions ──────────────────────── */}
-          <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
+          <div className="border-t border-[#f3f4f6] p-4 sm:p-5">
             <div className="mb-6">
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-[#111827]">{t("diffDayTitle")}</h3>
@@ -860,6 +956,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           </div>
         </>
       )}
+      </div>
+      </div>
 
       {/* "Aplicar a otros días" modal */}
       {applyModal && (

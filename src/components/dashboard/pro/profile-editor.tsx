@@ -707,22 +707,37 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             value={workplaces}
             onChange={(next) => { setWorkplaces(next); touch(); }}
             mapHeight={168}
-            extraPlaces={videoConsult && videoCoverageCountry ? [{
-              id: "video_country",
-              label: t("videoCountryPlace"),
-              description: t("videoConsultOption"),
-              icon: <Video className="h-4 w-4" />,
-              onRemove: () => { setVideoCoverageCountry(false); setVideoConsult(false); touch(); },
-              removeLabel: t("videoCountryRemove"),
-            }] : []}
-            extraActions={canOfferVideoConsult && !videoCoverageCountry ? (
-              <button
-                type="button"
-                onClick={() => { setVideoConsult(true); setVideoCoverageCountry(true); touch(); }}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#bfe3f5] bg-white px-3 py-2 text-sm font-semibold text-[#009FD9] shadow-sm transition-colors hover:bg-[#f8fbfe]"
-              >
-                <Plus className="h-4 w-4" /> {t("videoCountryAdd")} <span className="font-medium text-[#6b7280]">({t("videoConsultOption")})</span>
-              </button>
+            extraActions={canOfferVideoConsult ? (
+              <div className="flex w-full items-center justify-between gap-3 py-1">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
+                    <Video className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#111827]">{t("videoConsultOption")}</p>
+                    <p className="mt-0.5 text-xs text-[#6b7280]">{t("videoCountryHelp")}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !(videoConsult && videoCoverageCountry);
+                    setVideoConsult(next);
+                    setVideoCoverageCountry(next);
+                    touch();
+                  }}
+                  className={cn(
+                    "relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200",
+                    videoConsult && videoCoverageCountry ? "bg-[#009FD9]" : "bg-[#d1d5db]"
+                  )}
+                  aria-label={t("videoConsultOption")}
+                >
+                  <span className={cn(
+                    "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200",
+                    videoConsult && videoCoverageCountry ? "left-5" : "left-0.5"
+                  )} />
+                </button>
+              </div>
             ) : null}
           />
         </div>
