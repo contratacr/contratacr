@@ -115,17 +115,14 @@ export function BasicProfileSection({
     supabase.rpc("get_my_profile").then(async ({ data }) => {
       if (!data) return;
       let phone = data.phone ?? "";
-      // ONE account, ONE phone (shared across both modes): if the account has no
-      // phone on file yet, fall back to the offering profile's WhatsApp — the number
-      // entered at "Ofrezco servicios" registration lives on professionals.whatsapp —
-      // so it pre-fills here too, then backfill it to profiles.phone so it's truly
-      // shared and asked only once.
+      // Account phone and professional WhatsApp can be different. If the account
+      // phone is empty, prefill from the pro WhatsApp for convenience, but do not
+      // silently persist it; save only when the user saves this client/account form.
       if (!hasPhoneNumber(phone)) {
         const { data: pro } = await supabase.from("professionals").select("whatsapp").eq("profile_id", user.id).maybeSingle();
         const wa = (pro?.whatsapp as string | undefined) ?? "";
         if (hasPhoneNumber(wa)) {
           phone = wa;
-          void supabase.from("profiles").update({ phone: wa }).eq("id", user.id);
         }
       }
       setProfileData({ ...data, phone });

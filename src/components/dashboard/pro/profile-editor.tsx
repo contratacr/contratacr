@@ -753,6 +753,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             value={whatsapp}
             onChange={(digits) => { setWhatsapp(digits); touch(); }}
           />
+          <p className="mt-1.5 text-xs text-[#6b7280]">{t("whatsappHelp")}</p>
         </div>
 
         {/* Progressive disclosure: turning on "Permitir contacto por llamada"
@@ -784,6 +785,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               value={callPhone}
               onChange={(digits) => { setCallPhone(digits); touch(); }}
             />
+            <p className="mt-1.5 text-xs text-[#6b7280]">{t("callNumberHelp")}</p>
           </div>
         )}
 
