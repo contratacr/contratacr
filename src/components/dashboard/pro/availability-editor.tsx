@@ -708,12 +708,12 @@ export function AvailabilityEditor({
         </div>
       ) : !isPublic ? null : locationOptions.length === 0 ? (
         isVideoConsultation ? (
-        <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-          <div className="rounded-xl bg-[#f8fbfe] px-3.5 py-3">
+        <div className="px-4 py-3 sm:px-5 sm:py-4">
+          <div className="space-y-2">
             <p className="text-sm leading-5 text-[#526071]">{t("inPersonSchedulePendingBody")}</p>
             <Link
               href="/dashboard/profesional?tab=profile&mode=offer&focus=location"
-              className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:ring-offset-2"
             >
               <MapPin className="h-4 w-4" />
               {t("addInPersonWorkplace")}

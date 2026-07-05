@@ -489,7 +489,7 @@ export default function DashboardPage() {
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
       <main className="flex-1">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 lg:pb-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-8">
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
               ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
               the content by a single hairline divider. No gradient/decoration. */}
