@@ -138,14 +138,15 @@ export function AvailabilityEditor({
       ? String((error as { message?: unknown }).message ?? "")
       : "";
     const title = locale === "en" ? "Could not save this schedule" : "No se pudo guardar este horario";
-    const body = /overlap|conflict|availability/i.test(rawMessage)
+    const isOverlapError = /overlap|conflict|availability/i.test(rawMessage);
+    const body = isOverlapError
       ? locale === "en"
-        ? "That time overlaps another in-person place. Video consultation can share hours, but physical places cannot overlap."
-        : "Ese horario se cruza con otro lugar presencial. La videoconsulta puede compartir horario, pero dos lugares presenciales no pueden traslaparse."
+        ? "That time is already used in another in-person location. Check your other locations and choose a different time. Video consultation can share hours with one in-person location."
+        : "Ese horario ya está ocupado en otro lugar presencial. Revisa los horarios de tus otros lugares y elige otra hora. La videoconsulta sí puede compartir horario con un lugar presencial."
       : locale === "en"
         ? "The schedule was not saved. Try again in a moment."
         : "El horario no se guardó. Intenta de nuevo en un momento.";
-    setConflict({ title, body });
+    setConflict({ title, body, kind: isOverlapError ? "location" : "time" });
   }, [locale]);
 
   // The recurring template + date exceptions are the source of truth (the editor
