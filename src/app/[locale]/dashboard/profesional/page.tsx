@@ -444,7 +444,7 @@ export default function DashboardPage() {
   }
 
   const bottomNavItemClass =
-    "relative flex w-[clamp(68px,calc((100vw-48px)/4),96px)] min-w-[clamp(68px,calc((100vw-48px)/4),96px)] max-w-[96px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 py-2 transition-colors [&>*]:translate-y-0.5";
+    "relative flex w-[clamp(67px,calc((100vw-60px)/4),94px)] min-w-[clamp(67px,calc((100vw-60px)/4),94px)] max-w-[94px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 py-1.5 transition-colors";
 
   function modeBottomNavButton() {
     const next: Mode = mode === "offer" ? "use" : "offer";
@@ -765,13 +765,13 @@ export default function DashboardPage() {
           The rail scrolls horizontally and intentionally peeks the next item, so users can
           tell there are more actions without opening a separate discovery affordance first. */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#e5e7eb] bg-white shadow-[0_-14px_34px_-18px_rgba(15,23,42,0.45)] pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#e5e7eb] bg-white shadow-[0_-14px_34px_-18px_rgba(15,23,42,0.45)] pb-[max(6px,calc(env(safe-area-inset-bottom)-18px))]"
         aria-label={t("title")}
       >
         <div className="relative">
           <div
             ref={setBottomNavRail}
-            className="flex min-h-[60px] items-stretch gap-0 overflow-x-auto overscroll-x-contain scroll-smooth hide-scrollbar"
+            className="flex min-h-[56px] items-stretch gap-0 overflow-x-auto overscroll-x-contain scroll-smooth hide-scrollbar"
           >
             {isProvider && modeBottomNavButton()}
             {mobileBarTabs.map((tab) => {
@@ -801,14 +801,14 @@ export default function DashboardPage() {
           </div>
           <span
             className={cn(
-              "pointer-events-none absolute bottom-0 left-0 top-0 w-[13vw] min-w-10 max-w-14 bg-gradient-to-r from-white/70 via-white/35 to-transparent backdrop-blur-[1.5px] transition-opacity duration-150",
+              "pointer-events-none absolute bottom-0 left-0 top-0 w-[12vw] min-w-9 max-w-12 bg-gradient-to-r from-white/60 via-white/25 to-transparent backdrop-blur-[1px] transition-opacity duration-150",
               bottomNavOverflow.left ? "opacity-100" : "opacity-0"
             )}
             aria-hidden
           />
           <span
             className={cn(
-              "pointer-events-none absolute bottom-0 right-0 top-0 w-[13vw] min-w-10 max-w-14 bg-gradient-to-l from-white/70 via-white/35 to-transparent backdrop-blur-[1.5px] transition-opacity duration-150",
+              "pointer-events-none absolute bottom-0 right-0 top-0 w-[12vw] min-w-9 max-w-12 bg-gradient-to-l from-white/60 via-white/25 to-transparent backdrop-blur-[1px] transition-opacity duration-150",
               bottomNavOverflow.right ? "opacity-100" : "opacity-0"
             )}
             aria-hidden
