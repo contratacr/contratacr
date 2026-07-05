@@ -49,14 +49,20 @@ function toMins(t: string): number {
 function rangesOverlap(aS: number, aE: number, bS: number, bE: number): boolean {
   return aS < bE && bS < aE;
 }
+function isVideoLocationId(id: string | null | undefined): boolean {
+  return ["videoconsulta", "video_consultation", "video-consultation"].includes(String(id ?? "").toLowerCase());
+}
 function sharesTimeWithVideo(a: string, b: string): boolean {
-  return a !== b && (a === VIDEO_LOCATION_ID || b === VIDEO_LOCATION_ID);
+  return a !== b && (isVideoLocationId(a) || isVideoLocationId(b));
 }
 // A franja is COMPLETE (savable) only when BOTH ends are set and end > start. Newly
 // enabled days start as INCOMPLETE drafts (empty fields) — kept in the UI so the pro
 // can pick freely, but never validated/persisted/materialized until complete.
 function isCompleteFranja(f: { start: string; end: string }): boolean {
   return !!f.start && !!f.end && toMins(f.end) > toMins(f.start);
+}
+function hasCompleteBlocks(blocks: { start: string; end: string }[]): boolean {
+  return blocks.some(isCompleteFranja);
 }
 // Merge overlapping/touching ranges into the fewest contiguous ranges (sorted) — for a
 // clean "already occupied" read (08:00–12:00 + 12:00–15:00 → 08:00–15:00).
@@ -449,9 +455,9 @@ export function AvailabilityEditor({
   // every block of the weekday: on each future date of that weekday, NO two effective
   // open ranges (any location, exception-aware via `rangesForLocOnDate`) may overlap.
   // Touching/consecutive ranges are allowed (half-open `rangesOverlap`).
-  function validateDayBlocks(weekday: number, complete: Block[], loc: string = activeLocationId): { title: string; body: string; kind?: "location" | "time" } | null {
+  function validateDayBlocks(weekday: number, complete: Block[], targetLocationId: string = activeLocationId): { title: string; body: string; kind?: "location" | "time" } | null {
     const hypo: WeeklyRow[] = [
-      ...weekly.filter((r) => !(r.weekday === weekday && r.location_id === loc)),
+      ...weekly.filter((r) => !(r.weekday === weekday && r.location_id === targetLocationId)),
       ...complete.map((b) => ({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref })),
     ];
     const start = todayISO();
@@ -460,11 +466,15 @@ export function AvailabilityEditor({
       if (weekdayOf(date) !== weekday) continue;
       const locs = [...new Set([...hypo, ...exceptions].map((r) => r.location_id))].filter(Boolean);
       const flat: { loc: string; r: [number, number] }[] = [];
-      for (const loc of locs) for (const r of rangesForLocOnDate(loc, date, hypo, exceptions)) flat.push({ loc, r });
+      for (const currentLocationId of locs) {
+        for (const r of rangesForLocOnDate(currentLocationId, date, hypo, exceptions)) {
+          flat.push({ loc: currentLocationId, r });
+        }
+      }
       for (let a = 0; a < flat.length; a++) for (let b = a + 1; b < flat.length; b++) {
         if (sharesTimeWithVideo(flat[a].loc, flat[b].loc)) continue;
         if (rangesOverlap(flat[a].r[0], flat[a].r[1], flat[b].r[0], flat[b].r[1])) {
-          const occupied = flat[a].loc === loc ? flat[b] : flat[a];
+          const occupied = flat[a].loc === targetLocationId ? flat[b] : flat[b].loc === targetLocationId ? flat[a] : flat[a];
           return flat[a].loc === flat[b].loc
             ? { title: t("conflictTitle"), body: t("conflictSelf"), kind: "time" }
             : {
@@ -485,7 +495,7 @@ export function AvailabilityEditor({
   // A new block's SMART default: 8 AM–5 PM when it wouldn't conflict with the day's
   // other blocks, else EMPTY (so the pro freely picks a non-conflicting time).
   function smartDefaultBlock(weekday: number, existing: Block[], loc: string): Block {
-    const probe = validateDayBlocks(weekday, [...existing.filter(isCompleteFranja), { id: "_probe", locationId: loc, start: "08:00", end: "17:00" }]);
+    const probe = validateDayBlocks(weekday, [...existing.filter(isCompleteFranja), { id: "_probe", locationId: loc, start: "08:00", end: "17:00" }], loc);
     return probe ? { id: genId(), locationId: loc, start: "", end: "" } : { id: genId(), locationId: loc, start: "08:00", end: "17:00" };
   }
 
@@ -519,7 +529,7 @@ export function AvailabilityEditor({
 
   function toggleDay(weekday: number) {
     const cur = blocksFor(weekday);
-    if (cur.length > 0) { persistDay(weekday, [], activeLocationId); return; }
+    if (hasCompleteBlocks(cur)) { persistDay(weekday, [], activeLocationId); return; }
     persistDay(weekday, [smartDefaultBlock(weekday, [], activeLocationId)], activeLocationId);
   }
   function addBlock(weekday: number) {
@@ -872,7 +882,7 @@ export function AvailabilityEditor({
             <div className="flex flex-col divide-y divide-[#f3f4f6] lg:divide-y">
               {openWeekdays.map((wd) => {
                 const blocks = blocksFor(wd);
-                const on = blocks.length > 0;
+                const on = hasCompleteBlocks(blocks);
                 const canApply = blocks.some(isCompleteFranja);
                 const dayActions = (
                   <div className="flex min-h-9 min-w-0 flex-row flex-wrap items-center justify-start gap-x-3 gap-y-1 lg:shrink-0 lg:flex-nowrap">
@@ -888,11 +898,11 @@ export function AvailabilityEditor({
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
-                        className="relative h-6 w-11 shrink-0 cursor-pointer rounded-full bg-[#009FD9] transition-all duration-200 lg:hidden"
+                        className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200 lg:hidden", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
-                        <span className="absolute left-5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200" />
+                        <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", on ? "left-5" : "left-0.5")} />
                       </button>
                     </div>
 
@@ -900,11 +910,11 @@ export function AvailabilityEditor({
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
-                        className="relative h-6 w-11 shrink-0 cursor-pointer rounded-full bg-[#009FD9] transition-all duration-200"
+                        className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
-                        <span className="absolute left-5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200" />
+                        <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", on ? "left-5" : "left-0.5")} />
                       </button>
                     </div>
 
