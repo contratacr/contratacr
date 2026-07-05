@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, MoreVertical, Video } from "lucide-react";
+import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, CalendarClock, Pencil, Trash2, MoreVertical, Video } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -129,7 +129,7 @@ export function AvailabilityEditor({
   const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
   const [showClosedDays, setShowClosedDays] = useState(false);
   // Cross/same-location overlap block — a pro can't be in two places at once.
-  const [conflict, setConflict] = useState<{ title: string; body: string } | null>(null);
+  const [conflict, setConflict] = useState<{ title: string; body: string; kind?: "location" | "time" } | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   function pulseSaved() { setJustSaved(true); setTimeout(() => setJustSaved(false), 2500); }
   const reportSaveFailure = useCallback((context: string, error: unknown) => {
@@ -218,24 +218,24 @@ export function AvailabilityEditor({
   // also clear (e.g. the weekly hours when adding `extra` on the same location/day) —
   // `ownBaseBody` is the message to show when the proposal overlaps that base (defaults
   // to the generic self-overlap copy; `extra` passes a "overlaps your usual hours" one).
-  // Returns a localized conflict {title, body} to block with, or null when it's safe.
+  // Returns a localized conflict {title, body, kind} to block with, or null when it's safe.
   function findOverlapConflict(
     loc: string,
     proposed: [number, number][],
     scope: { weekday: number } | { date: string },
     ownBase: [number, number][] = [],
     ownBaseBody: string = t("conflictSelf")
-  ): { title: string; body: string } | null {
+  ): { title: string; body: string; kind?: "location" | "time" } | null {
     // 1) SAME-LOCATION: proposed franjas must not overlap each other or the own base.
     for (let i = 0; i < proposed.length; i++) {
       for (let j = i + 1; j < proposed.length; j++) {
         if (rangesOverlap(proposed[i][0], proposed[i][1], proposed[j][0], proposed[j][1])) {
-          return { title: t("conflictTitle"), body: t("conflictSelf") };
+          return { title: t("conflictTitle"), body: t("conflictSelf"), kind: "time" };
         }
       }
       for (const b of ownBase) {
         if (rangesOverlap(proposed[i][0], proposed[i][1], b[0], b[1])) {
-          return { title: t("conflictTitle"), body: ownBaseBody };
+          return { title: t("conflictTitle"), body: ownBaseBody, kind: "time" };
         }
       }
     }
@@ -259,7 +259,8 @@ export function AvailabilityEditor({
               // Name the EXACT occupied range + place, and suggest a start AFTER it so
               // the pro knows how to adjust (consecutive is allowed).
               return {
-                title: t("conflictTitle"),
+                title: t("conflictCrossTitle"),
+                kind: "location",
                 body: t("conflictCross", {
                   place: locationLabel(other),
                   start: to12h(hhmm(r[0])),
@@ -447,7 +448,7 @@ export function AvailabilityEditor({
   // every block of the weekday: on each future date of that weekday, NO two effective
   // open ranges (any location, exception-aware via `rangesForLocOnDate`) may overlap.
   // Touching/consecutive ranges are allowed (half-open `rangesOverlap`).
-  function validateDayBlocks(weekday: number, complete: Block[], loc: string = activeLocationId): { title: string; body: string } | null {
+  function validateDayBlocks(weekday: number, complete: Block[], loc: string = activeLocationId): { title: string; body: string; kind?: "location" | "time" } | null {
     const hypo: WeeklyRow[] = [
       ...weekly.filter((r) => !(r.weekday === weekday && r.location_id === loc)),
       ...complete.map((b) => ({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref })),
@@ -463,8 +464,16 @@ export function AvailabilityEditor({
         if (sharesTimeWithVideo(flat[a].loc, flat[b].loc)) continue;
         if (rangesOverlap(flat[a].r[0], flat[a].r[1], flat[b].r[0], flat[b].r[1])) {
           return flat[a].loc === flat[b].loc
-            ? { title: t("conflictTitle"), body: t("conflictSelf") }
-            : { title: t("conflictTitle"), body: t("conflictCross", { place: locationLabel(flat[b].loc), start: to12h(hhmm(flat[b].r[0])), end: to12h(hhmm(flat[b].r[1])) }) };
+            ? { title: t("conflictTitle"), body: t("conflictSelf"), kind: "time" }
+            : {
+              title: t("conflictCrossTitle"),
+              body: t("conflictCross", {
+                place: locationLabel(flat[b].loc),
+                start: to12h(hhmm(flat[b].r[0])),
+                end: to12h(hhmm(flat[b].r[1])),
+              }),
+              kind: "location",
+            };
         }
       }
     }
@@ -1080,8 +1089,18 @@ export function AvailabilityEditor({
         <div className="fixed inset-0 z-[210] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConflict(null)} />
           <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#fef3c7]">
-              <Calendar className="h-6 w-6 text-[#b45309]" />
+            <div className={cn(
+              "mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full",
+              conflict.kind === "location" ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#fff7ed] text-[#b45309]",
+            )}>
+              {conflict.kind === "location" ? (
+                <span className="relative flex h-7 w-7 items-center justify-center">
+                  <CalendarClock className="h-7 w-7" />
+                  <MapPin className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#EBF5FB]" />
+                </span>
+              ) : (
+                <Calendar className="h-6 w-6" />
+              )}
             </div>
             <h3 className="text-lg font-bold text-[#111827] mb-1.5">{conflict.title}</h3>
             <p className="text-sm text-[#6b7280] mb-5 leading-relaxed">{conflict.body}</p>
