@@ -359,7 +359,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           publicar-proyecto layout exactly (`grid grid-cols-2 gap-3`). The SelectMenu's
           OPTIONS popup grows to its content + scrolls past `max-h-72` (sprint 301/321), so
           a long cantÃ³n name is never cut off in the open list even in a half-width cell. */}
-      <div className="grid grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] gap-3">
+      <div className="grid grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] gap-2.5">
         <SelectMenu
           value={province}
           onChange={(v) => { setProvince(v); setCanton(""); }}
@@ -371,6 +371,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           onChange={setCanton}
           disabled={!province}
           placeholder={t("cantonPlaceholder")}
+          className="[&>button]:pl-3 [&>button]:pr-8 [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
           options={[
             { value: "", label: t("cantonUnselected") },
             ...cantons.map((c) => ({ value: c.id, label: c.name })),
