@@ -26,6 +26,7 @@ import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
 import { NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { normalizeWorkplaceId } from "@/lib/workplaces";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -88,7 +89,7 @@ function Section({ id, title, desc, open, onToggle, children }: { id: string; ti
 // search presence. (Whole-province / whole-country legacy coverage isn't a zone, so
 // it isn't seeded — the pro re-picks their cantón.)
 function seedZones(init: ProData): Workplace[] {
-  if (Array.isArray(init.workplaces) && init.workplaces.length > 0) return init.workplaces;
+  if (Array.isArray(init.workplaces) && init.workplaces.length > 0) return init.workplaces.map((wp, index) => normalizeWorkplaceId(wp, index));
   const out: Workplace[] = [];
   const cov = Array.isArray(init.coverage_areas) ? init.coverage_areas : [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -360,7 +361,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // mean fixed workplaces; zones without a pin mean client-location coverage.
       // provincia_id/canton_id keep the PRIMARY area for back-compat display;
       // search_* arrays drive location-aware /buscar.
-      const effectiveWorkplaces = workplaces;
+      const effectiveWorkplaces = workplaces.map((wp, index) => normalizeWorkplaceId(wp, index));
       const effectiveVideoConsult = canOfferVideoConsult && videoConsult;
       const onlineCoverage = effectiveVideoConsult && videoCoverageCountry ? [{ level: "country" as const }] : [];
       const hasExactWorkplace = effectiveWorkplaces.some((w) => w.lat != null && w.lng != null);
