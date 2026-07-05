@@ -74,4 +74,26 @@ test.describe("@smoke services catalog", () => {
     expect(fashionIcon).not.toBe(tourismIcon);
     await expectHealthyPage(page);
   });
+
+  test("selected service groups do not create a large empty gap before the service list", async ({ page }) => {
+    await gotoOK(page, "/es/servicios");
+    await waitForInteractivePage(page);
+
+    const target = page.getByTestId("services-group-option").filter({ hasText: /Eventos|Seguridad|Technology|Events/i }).first();
+    await target.scrollIntoViewIfNeeded();
+    await target.click();
+
+    const groupBox = await target.boundingBox();
+    const title = page.getByRole("heading", { name: /Eventos|Seguridad|Technology|Events/i }).last();
+    await expect(title).toBeVisible();
+    const titleBox = await title.boundingBox();
+
+    expect(groupBox, "Selected group should have a bounding box").not.toBeNull();
+    expect(titleBox, "Selected group title should have a bounding box").not.toBeNull();
+    expect(
+      titleBox!.y - (groupBox!.y + groupBox!.height),
+      "The service list should start close to the selected group, especially on mobile.",
+    ).toBeLessThan(180);
+    await expectHealthyPage(page);
+  });
 });

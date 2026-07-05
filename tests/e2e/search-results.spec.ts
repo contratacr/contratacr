@@ -1,6 +1,24 @@
-import { expect, test } from "playwright/test";
+import { expect, test, type Page, type TestInfo } from "playwright/test";
 import { expectHealthyPage, expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
+
+async function openFiltersIfNeeded(page: Page, testInfo: TestInfo) {
+  if (!isMobileProject(testInfo)) return;
+
+  const closeMenu = page.getByRole("button", { name: /Cerrar men|Close menu/i }).first();
+  const closeBox = await closeMenu.boundingBox().catch(() => null);
+  const viewport = page.viewportSize();
+  const closeIsOnScreen =
+    closeBox && viewport &&
+    closeBox.x < viewport.width &&
+    closeBox.x + closeBox.width > 0 &&
+    closeBox.y < viewport.height &&
+    closeBox.y + closeBox.height > 0;
+  if (closeIsOnScreen) await closeMenu.click();
+
+  const filtersButton = page.locator("button:visible").filter({ hasText: /^Filtros$|^Filters$/i }).first();
+  if (await filtersButton.isVisible().catch(() => false)) await filtersButton.click();
+}
 
 test.describe("@seeded search results", () => {
   test.beforeAll(async () => {
@@ -55,19 +73,7 @@ test.describe("@seeded search results", () => {
     await gotoOK(page, "/es/buscar");
     await waitForInteractivePage(page);
 
-    if (isMobileProject(testInfo)) {
-      const closeMenu = page.getByRole("button", { name: /Cerrar men|Close menu/i }).first();
-      const closeBox = await closeMenu.boundingBox().catch(() => null);
-      const viewport = page.viewportSize();
-      const closeIsOnScreen =
-        closeBox && viewport &&
-        closeBox.x < viewport.width &&
-        closeBox.x + closeBox.width > 0 &&
-        closeBox.y < viewport.height &&
-        closeBox.y + closeBox.height > 0;
-      if (closeIsOnScreen) await closeMenu.click();
-      await page.locator("button:visible").filter({ hasText: /^Filtros$|^Filters$/i }).first().click();
-    }
+    await openFiltersIfNeeded(page, testInfo);
 
     const location = page.locator('input[placeholder*="ubicaci"]:visible, input[placeholder*="location" i]:visible').first();
     await expect(location).toBeVisible();
@@ -77,6 +83,22 @@ test.describe("@seeded search results", () => {
 
     await expect(page).toHaveURL(/provincia=gu/);
     await expect(page).toHaveURL(/canton=gu-li/);
+    await expectHealthyPage(page);
+  });
+
+  test("filters expose the current search controls and retired controls stay gone", async ({ page }, testInfo) => {
+    await gotoOK(page, "/es/buscar?categoria=desarrollo_web");
+    await waitForInteractivePage(page);
+    await openFiltersIfNeeded(page, testInfo);
+
+    const body = page.locator("body");
+    await expect(page.getByText(/Ubicaci[oó]n|Location/i).first()).toBeVisible();
+    await expect(page.getByText(/Idioma|Language/i).first()).toBeVisible();
+    await expect(page.getByText(/Selecciona un idioma|Select a language|Any language/i).first()).toBeVisible();
+    await expect(body).not.toContainText(/Solo verificados|Only verified/i);
+    await expect(body).not.toContainText(/Buscar profesionales cerca de m[ií]|Find professionals near me/i);
+    await expect(body).not.toContainText(/Cercan[ií]a|Nearest/i);
+    await expect(body).not.toContainText(/Anterior|Siguiente|P[aá]gina \d+ de|Previous|Next|Page \d+ of/i);
     await expectHealthyPage(page);
   });
 
