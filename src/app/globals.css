@@ -87,6 +87,12 @@ select:focus-visible {
   outline-offset: 0;
 }
 
+[data-ui="select-trigger"]:focus-visible,
+[data-ui="select-item"]:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
+
 /* Mobile keyboard + zoom resilience.
    - app-bottom-sheet: bottom sheets sit above the virtual keyboard and scroll internally.
    - app-centered-modal: fixed centered dialogs stay centered in the visual viewport.

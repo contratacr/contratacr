@@ -307,8 +307,9 @@ export async function searchProfessionals(
             query = query.order("created_at", { ascending: false });
             break;
           default:
-            // No filters / "Mejor calificados": best-rated â†’ most reviews â†’ most
-            // recently active, applied by default and reflected in the control.
+            // No filters / "Mejor calificados": reviewed pros first (best-rated,
+            // most reviews), then recently active. JS below keeps unrated pros from
+            // being treated like real 0.0 ratings.
             query = query
               .order("rating_avg", { ascending: false })
               .order("review_count", { ascending: false })
@@ -377,6 +378,19 @@ export async function searchProfessionals(
       if (filters.languageId && filters.languageId !== "todos") {
         const wanted = new Set(languageSearchValues(filters.languageId).map((value) => normalizeText(value)));
         mapped = mapped.filter((p) => (p.languages ?? []).some((language) => wanted.has(normalizeText(language))));
+      }
+
+      if (!filters.sortBy || filters.sortBy === "rating") {
+        mapped.sort((a, b) => {
+          const aHasReviews = a.reviewCount > 0;
+          const bHasReviews = b.reviewCount > 0;
+          if (aHasReviews && !bHasReviews) return -1;
+          if (!aHasReviews && bHasReviews) return 1;
+          if (aHasReviews && bHasReviews) {
+            return (b.ratingAvg - a.ratingAvg) || (b.reviewCount - a.reviewCount);
+          }
+          return 0;
+        });
       }
 
       if (filters.sortBy === "priceAsc" || filters.sortBy === "priceDesc") {
