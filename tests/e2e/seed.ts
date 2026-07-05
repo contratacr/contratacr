@@ -215,6 +215,9 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
     videoCategoryId: "desarrollo_web",
     slotDate: futureDate(8),
     slotTime: "10:00",
+    videoSlotDate: futureDate(9),
+    videoSharedSlotTime: "10:00",
+    videoSecondSlotTime: "11:00",
   };
 }
 
