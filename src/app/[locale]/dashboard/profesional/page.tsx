@@ -455,7 +455,7 @@ export default function DashboardPage() {
         className={cn(bottomNavItemClass, "text-[#374151] hover:text-[#111827]")}
       >
         <Repeat2 className="h-[22px] w-[22px]" />
-        <span className="max-w-full truncate text-[10px] font-semibold leading-none">
+        <span className="max-w-full whitespace-normal text-center text-[10px] font-semibold leading-[1.05]">
           {next === "offer" ? t("panelProfessional") : t("panelClient")}
         </span>
       </button>
