@@ -116,7 +116,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
   }, [open, pos]);
 
   return (
-    <div ref={rootRef} className={cn("flex flex-col gap-1", className)}>
+    <div ref={rootRef} className={cn("flex w-full min-w-0 flex-col gap-1", className)}>
       {label && <label htmlFor={id} className="text-xs font-medium text-[#6b7280]">{label}</label>}
       <button
         ref={triggerRef}
@@ -126,9 +126,8 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-invalid={!!error}
         className={cn(
-          "flex items-center h-11 rounded-xl border bg-white pl-3.5 pr-10 text-sm font-medium relative text-left transition-all",
+          "relative flex h-11 w-full items-center rounded-xl border bg-white pl-3.5 pr-10 text-left text-sm font-medium transition-all",
           "focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent",
           // Mutually-exclusive states: open → ring + transparent border; error → red;
           // otherwise a neutral border that DARKENS on hover (#cbd5e1, the Input hover spec).

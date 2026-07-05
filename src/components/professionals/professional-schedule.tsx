@@ -157,6 +157,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (id.startsWith("cov_")) return t("atHome");
     return professional.workplaces?.find((w) => w.id === id)?.name ?? t("location");
   }
+  function locTabLabel(label: string): string {
+    return label
+      .replace(/^Toda la provincia de\s+/i, "Provincia de ")
+      .replace(/^All of (.+) province$/i, "$1 province");
+  }
   // Street address for the detail line shown UNDER the location tabs. Only physical
   // workplaces have one — coverage zones (cov_*) / videoconsulta / general don't.
   function locAddress(id: string | null): string {
@@ -246,19 +251,50 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // makes /buscar and the profile consistent (the old `locTabs.length > 3` showed them too late on
   // the narrower profile card). Measured on mount, on resize (ResizeObserver), and when the tabs
   // change. Monotonic (adding the chevrons only narrows the row further), so it never oscillates.
-  const [locOverflow, setLocOverflow] = useState(false);
+  const [locScrollState, setLocScrollState] = useState({ overflow: false, left: false, right: false });
   useEffect(() => {
     const el = locScrollRef.current;
     if (!el) return;
-    const measure = () => setLocOverflow(el.scrollWidth - el.clientWidth > 1);
+    let frame = 0;
+    const measure = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+        const next = {
+          overflow: maxScroll > 1,
+          left: el.scrollLeft > 2,
+          right: el.scrollLeft < maxScroll - 2,
+        };
+        setLocScrollState((prev) => (
+          prev.overflow === next.overflow && prev.left === next.left && prev.right === next.right ? prev : next
+        ));
+      });
+    };
     measure();
     let ro: ResizeObserver | undefined;
     if (typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(measure); ro.observe(el); }
+    el.addEventListener("scroll", measure, { passive: true });
     if (typeof window !== "undefined") window.addEventListener("resize", measure);
-    return () => { ro?.disconnect(); if (typeof window !== "undefined") window.removeEventListener("resize", measure); };
+    return () => {
+      window.cancelAnimationFrame(frame);
+      ro?.disconnect();
+      el.removeEventListener("scroll", measure);
+      if (typeof window !== "undefined") window.removeEventListener("resize", measure);
+    };
   }, [locTabs.length, effectiveId]);
-  const showLocNav = locOverflow;
-  const scrollLocs = (dir: number) => locScrollRef.current?.scrollBy({ left: dir * 180, behavior: "smooth" });
+  useEffect(() => {
+    const el = locScrollRef.current;
+    if (!el) return;
+    if (locTabs.length <= 1) el.scrollTo({ left: 0 });
+  }, [locTabs.length, effectiveId]);
+  const showLocNav = locTabs.length > 1 && locScrollState.overflow;
+  const scrollLocs = (dir: number) => {
+    const el = locScrollRef.current;
+    if (!el) return;
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    const next = Math.min(maxScroll, Math.max(0, el.scrollLeft + dir * Math.min(180, Math.max(96, el.clientWidth * 0.65))));
+    el.scrollTo({ left: next, behavior: "smooth" });
+  };
   const locationControl = locTabs.length > 0 ? (
     <div
       className="relative z-10 min-w-0"
@@ -274,8 +310,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <button
             type="button"
             aria-label={t("prevLocations")}
+            disabled={!locScrollState.left}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(-1); }}
-            className={locationNavButtonClass}
+            className={`${locationNavButtonClass} ${!locScrollState.left ? "invisible pointer-events-none" : ""}`}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -285,12 +322,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             scrollable (it could be dragged up/down even with ONE location). Pinning overflow-y
             to hidden makes it strictly a HORIZONTAL tab scroll; vertical touch-drags then bubble
             to the page/sheet scroll (default touch-action). */}
-        <div ref={locScrollRef} className="-mx-1 flex min-w-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden hide-scrollbar border-b border-[#e5e7eb] px-1" role="tablist" aria-label={t("location")}>
+        <div ref={locScrollRef} className={`-mx-1 flex min-w-0 flex-1 gap-3 ${showLocNav ? "overflow-x-auto" : "overflow-x-hidden"} overflow-y-hidden hide-scrollbar border-b border-[#e5e7eb] px-1`} role="tablist" aria-label={t("location")}>
           {locTabs.map((o) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
             return (
               <button
                 key={o.id}
+                data-location-tab=""
                 type="button"
                 role="tab"
                 aria-selected={active}
@@ -304,7 +342,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                 }`}
               >
                 <MapPin className="h-3 w-3 shrink-0" />
-                {o.label}
+                {locTabLabel(o.label)}
               </button>
             );
           })}
@@ -313,8 +351,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <button
             type="button"
             aria-label={t("nextLocations")}
+            disabled={!locScrollState.right}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(1); }}
-            className={locationNavButtonClass}
+            className={`${locationNavButtonClass} ${!locScrollState.right ? "invisible pointer-events-none" : ""}`}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
