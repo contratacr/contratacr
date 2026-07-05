@@ -57,6 +57,9 @@ export type RegressionSeedState = {
   videoCategoryId: string;
   slotDate: string;
   slotTime: string;
+  videoSlotDate: string;
+  videoSharedSlotTime: string;
+  videoSecondSlotTime: string;
 };
 
 type AdminClient = SupabaseClient;
@@ -416,7 +419,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
         verification_provider: "e2e_seed",
         verified_at: now,
         is_available: true,
-        availability_public: false,
+        availability_public: true,
         contact_preference: "ambas",
         workplaces: videoWorkplaces,
         lat: 9.97856,
@@ -456,6 +459,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   await admin.from("availability_slots").delete().eq("professional_id", videoProfessional.id);
 
   const slotDate = futureDate(8);
+  const videoSlotDate = futureDate(9);
   const { error: slotError } = await admin.from("availability_slots").insert([
     {
       professional_id: professional.id,
@@ -470,6 +474,34 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
       slot_time: "11:00",
       category_id: "plomeria",
       location_id: "e2e-main",
+    },
+    {
+      professional_id: videoProfessional.id,
+      slot_date: videoSlotDate,
+      slot_time: "10:00",
+      category_id: "desarrollo_web",
+      location_id: "videoconsulta",
+    },
+    {
+      professional_id: videoProfessional.id,
+      slot_date: videoSlotDate,
+      slot_time: "10:00",
+      category_id: "desarrollo_web",
+      location_id: "e2e-video-office",
+    },
+    {
+      professional_id: videoProfessional.id,
+      slot_date: videoSlotDate,
+      slot_time: "11:00",
+      category_id: "desarrollo_web",
+      location_id: "videoconsulta",
+    },
+    {
+      professional_id: videoProfessional.id,
+      slot_date: videoSlotDate,
+      slot_time: "11:00",
+      category_id: "desarrollo_web",
+      location_id: "e2e-video-office",
     },
   ]);
   if (slotError) throw slotError;
@@ -486,5 +518,8 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
     videoCategoryId: "desarrollo_web",
     slotDate,
     slotTime: "10:00",
+    videoSlotDate,
+    videoSharedSlotTime: "10:00",
+    videoSecondSlotTime: "11:00",
   };
 }

@@ -321,7 +321,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
-  const { id, status, cancelReason, scheduledDate, scheduledTime, action } = body;
+  const { id, status, cancelReason, scheduledDate, scheduledTime, action, slotLocationId, slotLocationLabel } = body;
   // A reschedule carries a new slot (the pro proposes a different time); the booking
   // stays active ("confirmed") at the new time and the client is notified.
   const isReschedule = !!scheduledDate && !!scheduledTime;
@@ -379,6 +379,12 @@ export async function PATCH(req: NextRequest) {
   if (isReschedule) {
     update.scheduled_date = scheduledDate;
     update.scheduled_time = scheduledTime;
+    if ("slotLocationId" in body) update.slot_location_id = slotLocationId ?? null;
+    if ("slotLocationLabel" in body) {
+      update.slot_location_label = typeof slotLocationLabel === "string"
+        ? limitTrimmedText(slotLocationLabel, SHORT_TEXT_MAX_LENGTH)
+        : null;
+    }
   }
 
   let { error } = await admin.from("bookings").update(update).eq("id", id);
@@ -389,7 +395,16 @@ export async function PATCH(req: NextRequest) {
   // Retry without the new lifecycle columns if not migrated yet.
   if (error && /work_done_at|completed_at|cancelled_by|cancel_reason|column|schema cache|PGRST204/i.test(error.message)) {
     const fallback: Record<string, unknown> = { status, updated_at: now };
-    if (isReschedule) { fallback.scheduled_date = scheduledDate; fallback.scheduled_time = scheduledTime; }
+    if (isReschedule) {
+      fallback.scheduled_date = scheduledDate;
+      fallback.scheduled_time = scheduledTime;
+      if ("slotLocationId" in body) fallback.slot_location_id = slotLocationId ?? null;
+      if ("slotLocationLabel" in body) {
+        fallback.slot_location_label = typeof slotLocationLabel === "string"
+          ? limitTrimmedText(slotLocationLabel, SHORT_TEXT_MAX_LENGTH)
+          : null;
+      }
+    }
     ({ error } = await admin.from("bookings").update(fallback).eq("id", id));
   }
 

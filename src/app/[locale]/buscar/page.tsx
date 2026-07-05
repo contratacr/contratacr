@@ -142,7 +142,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // skipped — their slots must not appear.
   const slotsByPro: Record<string, ScheduleSlot[]> = {};
   const videoMode = params.modalidad === "video";
-  const publicIds = videoMode ? [] : results.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
+  const publicIds = results.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
   if (publicIds.length > 0) {
     try {
       const supabase = createAdminClient();
@@ -264,8 +264,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       workplaces.some((w) => w.provinciaId === activeProvince?.id || w.provinceId === activeProvince?.id || w.name?.includes(selectedProvinceName) || w.address?.includes(selectedProvinceName));
   }
 
-  function shouldShowContactOnly(pro: (typeof results)[number]) {
+  function shouldPreferVideoLocation(pro: (typeof results)[number]) {
+    if (params.modalidad === "in_person") return false;
+    if (!videoCompatibleSearch || (!pro.videoconsulta && !pro.coverage?.country)) return false;
     if (videoMode) return true;
+    if (!activeProvince && !activeCanton && !exactLocationActive) return false;
+    return !matchesSelectedPhysicalLocation(pro);
+  }
+
+  function shouldShowContactOnly(pro: (typeof results)[number]) {
+    const preferVideo = shouldPreferVideoLocation(pro);
+    if (preferVideo) return !(slotsByPro[pro.id] ?? []).some((slot) => slot.locationId === "videoconsulta");
     if (params.modalidad === "in_person") return false;
     if (!videoCompatibleSearch || (!pro.videoconsulta && !pro.coverage?.country)) return false;
     if (!activeProvince && !activeCanton && !exactLocationActive) return false;
@@ -348,7 +357,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       // card on pin hover; the number badge matches the map pin.
                       <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative w-full max-w-[520px] lg:max-w-none scroll-mt-24 rounded-2xl transition-shadow">
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
-                          <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} viewerProfileId={viewerProfileId} rank={i + 1} forceContactOnly={shouldShowContactOnly(pro)} />
+                          <ProfessionalCard
+                            professional={pro}
+                            slots={slotsByPro[pro.id] ?? []}
+                            activeCategory={activeCategoryId}
+                            viewerProfileId={viewerProfileId}
+                            rank={i + 1}
+                            forceContactOnly={shouldShowContactOnly(pro)}
+                            preferredLocationId={shouldPreferVideoLocation(pro) ? "videoconsulta" : undefined}
+                            restrictToPreferredLocation={shouldPreferVideoLocation(pro)}
+                          />
                         </SaveableCard>
                       </div>
                     )))}

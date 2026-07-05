@@ -118,10 +118,10 @@ test.describe("@seeded search results", () => {
       await expect(card).toContainText(/Videoconsulta|Video consultation/i);
       await expect(card).toContainText(/I\.V\.A\.I\.|VAT included/i);
       await expect(card).not.toContainText(/Atenas|Alajuela/i);
+      await expect(card).toContainText(new RegExp(`\\b${seed.videoSecondSlotTime}\\b`));
       await expect(
         card.getByRole("link", { name: /WhatsApp/i }).or(card.getByRole("button", { name: /WhatsApp/i })).first(),
       ).toBeVisible();
-      await expect(card).not.toContainText(/\b10:00\b|\b11:00\b/);
       await expectHealthyPage(page);
     }
   });

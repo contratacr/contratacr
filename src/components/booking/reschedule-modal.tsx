@@ -75,11 +75,26 @@ interface RescheduleModalProps {
   professionalId: string;
   bookingId: string;
   currentWhen?: string | null;
+  slotLocationId?: string | null;
+  slotLocationLabel?: string | null;
   onClose: () => void;
   onDone: () => void;
 }
 
-export function RescheduleModal({ professionalId, bookingId, currentWhen, onClose, onDone }: RescheduleModalProps) {
+function slotMatchesTargetLocation(slotLocationId: string | null | undefined, targetLocationId: string | null | undefined): boolean {
+  if (!targetLocationId || targetLocationId === "general") return true;
+  const normalized = slotLocationId ?? "general";
+  return normalized === targetLocationId || normalized === "general";
+}
+
+function addDateSlot(map: Record<string, string[]>, date: string, time: string) {
+  const normalizedTime = time.slice(0, 5);
+  const list = map[date] ?? [];
+  if (!list.includes(normalizedTime)) list.push(normalizedTime);
+  map[date] = list;
+}
+
+export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLocationId, slotLocationLabel, onClose, onDone }: RescheduleModalProps) {
   const t = useTranslations("reschedule");
   const locale = useLocale();
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
@@ -103,7 +118,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, onClos
     Promise.all([
       supabase.from("professionals").select("availability, availability_public").eq("id", professionalId).single(),
       supabase.from("blocked_dates").select("blocked_date").eq("professional_id", professionalId),
-      supabase.from("availability_slots").select("slot_date, slot_time").eq("professional_id", professionalId).gte("slot_date", formatDateISO(today)),
+      supabase.from("availability_slots").select("slot_date, slot_time, location_id").eq("professional_id", professionalId).gte("slot_date", formatDateISO(today)),
       fetch(`/api/bookings?takenFor=${professionalId}`).then((r) => r.json()).catch(() => ({ taken: [] })),
     ]).then(([{ data: proData }, { data: bdData }, { data: slotData }, takenRes]) => {
       const priv = proData?.availability_public === false;
@@ -112,8 +127,8 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, onClos
       const map: Record<string, string[]> = {};
       if (!priv) {
         for (const s of slotData ?? []) {
-          const time = String(s.slot_time).slice(0, 5);
-          (map[s.slot_date] ??= []).push(time);
+          if (!slotMatchesTargetLocation(s.location_id, slotLocationId)) continue;
+          addDateSlot(map, s.slot_date, String(s.slot_time));
         }
         for (const k of Object.keys(map)) map[k].sort();
       }
@@ -122,7 +137,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, onClos
       setTakenSlots(new Set<string>((takenRes?.taken as string[]) ?? []));
       setLoaded(true);
     });
-  }, [professionalId, today]);
+  }, [professionalId, today, slotLocationId]);
 
   const usesExplicitSlots = Object.keys(dateSlots).length > 0;
 
@@ -174,7 +189,14 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, onClos
     const res = await fetch("/api/bookings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: bookingId, status: "confirmed", scheduledDate: selectedDate, scheduledTime: selectedTime }),
+      body: JSON.stringify({
+        id: bookingId,
+        status: "confirmed",
+        scheduledDate: selectedDate,
+        scheduledTime: selectedTime,
+        slotLocationId: slotLocationId ?? null,
+        slotLocationLabel: slotLocationLabel ?? null,
+      }),
     });
     if (res.ok) {
       setSubmitting(false);
