@@ -452,10 +452,10 @@ export default function DashboardPage() {
       <button
         type="button"
         onClick={() => { handleSwitchMode(next); }}
-        className={cn(bottomNavItemClass, "text-[#374151] hover:text-[#111827]")}
+        className={cn(bottomNavItemClass, "w-[92px] min-w-[92px] max-w-[92px] text-[#374151] hover:text-[#111827]")}
       >
         <Repeat2 className="h-[22px] w-[22px]" />
-        <span className="max-w-full whitespace-normal text-center text-[10px] font-semibold leading-[1.05]">
+        <span className="whitespace-nowrap text-center text-[10px] font-semibold leading-none">
           {next === "offer" ? t("panelProfessional") : t("panelClient")}
         </span>
       </button>
