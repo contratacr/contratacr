@@ -1050,6 +1050,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
     }
     queueMicrotask(() => refreshNotifUnread());
   }, [pathname, refreshNotifUnread, router, setMode]);
+  const switchDrawerMode = useCallback((next: Mode) => {
+    setMode(next);
+    queueMicrotask(() => refreshNotifUnread());
+  }, [refreshNotifUnread, setMode]);
   const switchMenuModeHref = useCallback((next: Mode) => {
     if (!pathname.startsWith("/dashboard/profesional")) return undefined;
     const params = new URLSearchParams(searchParams.toString());
@@ -1673,7 +1677,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <div className="flex flex-col gap-0.5">
                     {isPro && (
                       <div className="px-2 pb-2 pt-1">
-                        <ModeSwitcher mode={mode} onSwitch={switchMenuMode} getHref={switchMenuModeHref} block />
+                        <ModeSwitcher mode={mode} onSwitch={switchDrawerMode} block />
                       </div>
                     )}
                     <div className="mt-1 flex flex-col gap-0.5 border-t border-[#edf2f7] pt-1">
