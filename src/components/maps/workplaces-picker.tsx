@@ -359,11 +359,12 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           publicar-proyecto layout exactly (`grid grid-cols-2 gap-3`). The SelectMenu's
           OPTIONS popup grows to its content + scrolls past `max-h-72` (sprint 301/321), so
           a long cantÃ³n name is never cut off in the open list even in a half-width cell. */}
-      <div className="grid grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] gap-2.5">
+      <div className="grid grid-cols-[minmax(7.75rem,0.9fr)_minmax(0,1.1fr)] gap-2.5">
         <SelectMenu
           value={province}
           onChange={(v) => { setProvince(v); setCanton(""); }}
           placeholder={t("provincePlaceholder")}
+          className="[&>button]:pl-3 [&>button]:pr-8 [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
           options={PROVINCES.map((p) => ({ value: p.id, label: p.name }))}
         />
         <SelectMenu
