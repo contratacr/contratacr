@@ -16,11 +16,13 @@ import type { Mode } from "@/hooks/use-mode";
 export function ModeSwitcher({
   mode,
   onSwitch,
+  getHref,
   block = false,
   className,
 }: {
   mode: Mode;
   onSwitch: (m: Mode) => void;
+  getHref?: (m: Mode) => string | undefined;
   block?: boolean;
   className?: string;
 }) {
@@ -46,6 +48,28 @@ export function ModeSwitcher({
     >
       {segments.map((seg) => {
         const active = mode === seg.value;
+        const href = !active ? getHref?.(seg.value) : undefined;
+        const segmentClassName = cn(
+          "relative inline-flex items-center justify-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-all duration-200",
+          block && "flex-1",
+          active
+            ? "bg-[#008ce0] text-white shadow-[0_1px_3px_rgba(0,0,0,0.15)]"
+            : "text-[#6b7280] hover:text-[#162543]",
+        );
+        if (href) {
+          return (
+            <a
+              key={seg.value}
+              role="tab"
+              aria-selected={active}
+              href={href}
+              onClick={() => onSwitch(seg.value)}
+              className={segmentClassName}
+            >
+              {seg.label}
+            </a>
+          );
+        }
         return (
           <button
             key={seg.value}
@@ -54,13 +78,7 @@ export function ModeSwitcher({
             aria-selected={active}
             tabIndex={active ? 0 : -1}
             onClick={() => onSwitch(seg.value)}
-            className={cn(
-              "relative inline-flex items-center justify-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-all duration-200",
-              block && "flex-1",
-              active
-                ? "bg-[#008ce0] text-white shadow-[0_1px_3px_rgba(0,0,0,0.15)]"
-                : "text-[#6b7280] hover:text-[#162543]",
-            )}
+            className={segmentClassName}
           >
             {seg.label}
           </button>
