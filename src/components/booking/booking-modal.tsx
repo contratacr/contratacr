@@ -45,6 +45,7 @@ type DaySchedule = { enabled: boolean; ranges: { start: string; end: string }[] 
 type WeeklyAvailability = Record<string, DaySchedule>;
 
 const DAY_KEYS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
+const phoneDigits = (value: string) => value.replace(/\D/g, "");
 
 function formatDateISO(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -213,6 +214,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [needsProfile, setNeedsProfile] = useState(false);
   const [profileCedula, setProfileCedula] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
+  const [profilePhoneInitial, setProfilePhoneInitial] = useState("");
   // Whether the logged-in user's profile (cédula/phone) has loaded. The cédula
   // input must NEVER render before this is known, or it flashes for registered
   // clients who already have a cédula on file.
@@ -290,7 +292,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       setSelfDobInput(""); setDobEditing(false); setSelfDob(null); setSubmitError(null); setNoCedula(false);
       // Reset the on-file identity so the DB is the authoritative source each open —
       // a social-login account with no cédula must always be (re)prompted.
-      setProfileCedula(""); setProfilePhone(""); setProfileLoaded(false); setHasStoredCedula(false);
+      setProfileCedula(""); setProfilePhone(""); setProfilePhoneInitial(""); setProfileLoaded(false); setHasStoredCedula(false);
     });
 
     const supabase = createClient();
@@ -340,10 +342,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             setHasStoredCedula(hasCedula);
             if (hasCedula) setProfileCedula(String(data!.cedula));
             if (data?.phone && hasPhoneNumber(String(data.phone))) {
-              setProfilePhone(String(data.phone));
+              const accountPhone = String(data.phone);
+              setProfilePhone(accountPhone);
+              setProfilePhoneInitial(accountPhone);
             } else {
-              // A professional's number lives in professionals.whatsapp — prefill
-              // the booking phone from it so a pro booking someone never re-enters it.
+              // Legacy/professional-first accounts may have the number only on the
+              // professional profile; prefill it and sync when the user confirms.
               supabase.from("professionals").select("whatsapp").eq("profile_id", user.id).maybeSingle()
                 .then(({ data: pro }) => { if (pro?.whatsapp) setProfilePhone(String(pro.whatsapp)); });
             }
@@ -578,13 +582,44 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     router.push(`/dashboard/profesional?${params.toString()}`);
   }
 
-  async function handleSubmit(overrideCedula?: string, overridePhone?: string, overrideName?: string) {
+  async function handleSubmit(overrideCedula?: string, overridePhone?: string, overrideName?: string, options?: { skipProfilePhoneSave?: boolean }) {
     setSubmitting(true);
     setSubmitError(null);
     // The official padrón name (for "myself") prevails as the booking name.
     const submitName = (overrideName ?? (selfOfficialName || clientName)) || "Cliente";
     const serviceDescription = description;
+    const effectivePhone = overridePhone ?? profilePhone;
+    const cleanPhone = phoneDigits(effectivePhone);
+    if (isLoggedIn && cleanPhone.length < 8) {
+      setSubmitting(false);
+      setSubmitError(locale === "en" ? "Enter a valid contact phone." : "Ingresa un teléfono de contacto válido.");
+      return;
+    }
     try {
+      if (!options?.skipProfilePhoneSave && isLoggedIn) {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const phoneChanged = cleanPhone !== phoneDigits(profilePhoneInitial);
+          if (phoneChanged) {
+            const { error: profilePhoneError } = await supabase.from("profiles").update({ phone: cleanPhone }).eq("id", user.id);
+            if (profilePhoneError) {
+              setSubmitting(false);
+              setSubmitError(locale === "en" ? "Couldn't save your contact phone. Try again." : "No se pudo guardar tu teléfono de contacto. Intenta de nuevo.");
+              return;
+            }
+          }
+          const { error: professionalPhoneError } = await supabase.from("professionals").update({ whatsapp: cleanPhone }).eq("profile_id", user.id);
+          if (professionalPhoneError) {
+            setSubmitting(false);
+            setSubmitError(locale === "en" ? "Couldn't save your contact phone. Try again." : "No se pudo guardar tu teléfono de contacto. Intenta de nuevo.");
+            return;
+          }
+          setProfilePhoneInitial(cleanPhone);
+          setProfilePhone(cleanPhone);
+          window.dispatchEvent(new Event("ccr:profile-updated"));
+        }
+      }
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -593,7 +628,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           clientName: submitName,
           clientEmail: clientEmail || null,
           clientCedula: (overrideCedula ?? profileCedula) || null,
-          clientPhone: (overridePhone ?? profilePhone) || null,
+          clientPhone: effectivePhone || null,
           serviceDescription,
           scheduledDate: selectedDate || null,
           scheduledTime: selectedTime || null,
@@ -699,15 +734,22 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         );
         return;
       }
+      const { error: professionalPhoneError } = await supabase.from("professionals").update({ whatsapp: cleanPhone }).eq("profile_id", user.id);
+      if (professionalPhoneError) {
+        setSavingProfile(false);
+        setProfileError(locale === "en" ? "Couldn't save your contact phone. Try again." : "No se pudo guardar tu teléfono de contacto. Intenta de nuevo.");
+        return;
+      }
       await supabase.auth.updateUser({ data: { full_name: finalName, profile_completed: true } });
       window.dispatchEvent(new Event("ccr:profile-updated"));
     }
     if (officialName) setClientName(limitText(officialName, NAME_MAX_LENGTH));
     setProfileCedula(cleanCedula);
     setProfilePhone(cleanPhone);
+    setProfilePhoneInitial(cleanPhone);
     setNeedsProfile(false);
     setSavingProfile(false);
-    await handleSubmit(cleanCedula, cleanPhone, officialName || undefined);
+    await handleSubmit(cleanCedula, cleanPhone, officialName || undefined, { skipProfilePhoneSave: true });
   }
 
   // Universal calendar export (.ics) — works with Google/Apple/Outlook.
@@ -746,7 +788,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // The REQUESTER is always the coordination contact (incl. for a dependent booking,
   // since we no longer collect a beneficiary phone) — so require a phone on file
   // regardless of who the service is for.
-  const needsPhone = isLoggedIn && !profilePhone;
+  const needsPhone = isLoggedIn && !hasPhoneNumber(profilePhone);
 
   // Foreign / migratory ID (DIMEX/NITE): a VALID id that is NOT in the TSE padrón, so the
   // identity can't be padrón-verified. The request still goes through, but the pro sees it
@@ -768,6 +810,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // don't also show the name-mismatch warning (it's moot; they can't use it).
   const nameWillChange = !cedulaTaken && !!selfOfficialName && !sameName(selfOfficialName, clientName);
   const needsCompleteStep = needsProfile || needsCedula || needsPhone;
+  const showDetailsPhone = isLoggedIn && profileLoaded && !needsCompleteStep;
+  const detailsPhoneInvalid = showDetailsPhone && phoneDigits(profilePhone).length < 8;
   const totalSteps = isLoggedIn ? (needsCompleteStep ? 3 : 2) : 3;
   const stepIndex = { calendar: 0, details: 1, contact: 2, complete: 2, success: 3 };
 
@@ -1397,6 +1441,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 300 })}</p>
                     )}
                   </div>
+                  {showDetailsPhone && (
+                    <div>
+                      <PhoneInput
+                        label={t("contact.phone")}
+                        required
+                        value={profilePhone}
+                        onChange={setProfilePhone}
+                      />
+                      <p className="text-xs text-[#9ca3af] mt-1">{t("contact.phoneHint")}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1614,6 +1669,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       !description.trim()
                       || (forSomeoneElse && (!benName.trim() || !benDob))
                       || (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob)
+                      || detailsPhoneInvalid
                     }
                     loading={submitting}
                     onClick={async () => {
