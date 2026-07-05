@@ -258,11 +258,11 @@ export function BasicProfileSection({
           )}
         </div>
         {profileAvatar ? (
-          <div className="min-w-0 flex-1 basis-[180px] flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
+          <div className="min-w-[13rem] flex-1 basis-[13rem] flex flex-nowrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading} className="px-3">
               <Camera className="h-4 w-4" /> {t("changePhoto")}
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} disabled={photoUploading} className="shrink-0 text-red-500 hover:text-red-600">
+            <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} disabled={photoUploading} className="shrink-0 px-2.5 text-red-500 hover:text-red-600">
               <X className="h-4 w-4" /> {t("removePhoto")}
             </Button>
           </div>
