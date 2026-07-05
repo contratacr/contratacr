@@ -463,14 +463,15 @@ export function AvailabilityEditor({
       for (let a = 0; a < flat.length; a++) for (let b = a + 1; b < flat.length; b++) {
         if (sharesTimeWithVideo(flat[a].loc, flat[b].loc)) continue;
         if (rangesOverlap(flat[a].r[0], flat[a].r[1], flat[b].r[0], flat[b].r[1])) {
+          const occupied = flat[a].loc === loc ? flat[b] : flat[a];
           return flat[a].loc === flat[b].loc
             ? { title: t("conflictTitle"), body: t("conflictSelf"), kind: "time" }
             : {
               title: t("conflictCrossTitle"),
               body: t("conflictCross", {
-                place: locationLabel(flat[b].loc),
-                start: to12h(hhmm(flat[b].r[0])),
-                end: to12h(hhmm(flat[b].r[1])),
+                place: locationLabel(occupied.loc),
+                start: to12h(hhmm(occupied.r[0])),
+                end: to12h(hhmm(occupied.r[1])),
               }),
               kind: "location",
             };
