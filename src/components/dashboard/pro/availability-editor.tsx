@@ -13,6 +13,7 @@ import { SelectMenu } from "@/components/ui/select-menu";
 import { FormLoadingState } from "@/components/ui/loading-state";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { Link } from "@/i18n/navigation";
+import { stableWorkplaceId } from "@/lib/workplaces";
 
 // How far ahead the weekly template + exceptions are MATERIALIZED into concrete
 // `availability_slots` (the booking-critical table everything downstream reads). The
@@ -95,7 +96,7 @@ function nextFranja(existing: Franja[]): Franja {
   return { id: genId(), start: hhmm(Math.min(start, 23 * 60)), end: hhmm(end > start ? end : Math.min(start + 30, 23 * 60 + 30)) };
 }
 
-type Place = { id?: string; name: string };
+type Place = { id?: string | null; name?: string | null; address?: string | null; provinciaId?: string | null; cantonId?: string | null };
 
 interface AvailabilityEditorProps {
   professionalId: string;
@@ -131,6 +132,21 @@ export function AvailabilityEditor({
   const [conflict, setConflict] = useState<{ title: string; body: string } | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   function pulseSaved() { setJustSaved(true); setTimeout(() => setJustSaved(false), 2500); }
+  const reportSaveFailure = useCallback((context: string, error: unknown) => {
+    console.error(`[availability] ${context}`, error);
+    const rawMessage = typeof error === "object" && error && "message" in error
+      ? String((error as { message?: unknown }).message ?? "")
+      : "";
+    const title = locale === "en" ? "Could not save this schedule" : "No se pudo guardar este horario";
+    const body = /overlap|conflict|availability/i.test(rawMessage)
+      ? locale === "en"
+        ? "That time overlaps another in-person place. Video consultation can share hours, but physical places cannot overlap."
+        : "Ese horario se cruza con otro lugar presencial. La videoconsulta puede compartir horario, pero dos lugares presenciales no pueden traslaparse."
+      : locale === "en"
+        ? "The schedule was not saved. Try again in a moment."
+        : "El horario no se guardó. Intenta de nuevo en un momento.";
+    setConflict({ title, body });
+  }, [locale]);
 
   // The recurring template + date exceptions are the source of truth (the editor
   // edits these); they MATERIALIZE into availability_slots.
@@ -142,7 +158,11 @@ export function AvailabilityEditor({
   // ── Location tabs ("HORARIO PARA") — fixed/base workplaces + videoconsulta ──
   const locationOptions = useMemo(() => {
     const opts: { id: string; label: string }[] = [];
-    for (const w of workplaces) if (w.id) opts.push({ id: w.id, label: w.name });
+    for (let i = 0; i < workplaces.length; i += 1) {
+      const w = workplaces[i];
+      const id = stableWorkplaceId(w, i);
+      opts.push({ id, label: w.name?.trim() || t("locationFallback") });
+    }
     if (isVideoConsultation) opts.push({ id: VIDEO_LOCATION_ID, label: t("videoconsulta") });
     return opts;
   }, [isVideoConsultation, t, workplaces]);
@@ -331,27 +351,35 @@ export function AvailabilityEditor({
     return out;
   }, [schedulableLocationIds]);
 
-  const regenerate = useCallback(async (wk: WeeklyRow[], exc: ExcRow[]) => {
+  const regenerate = useCallback(async (wk: WeeklyRow[], exc: ExcRow[]): Promise<boolean> => {
     setBusy(true);
-    const supabase = createClient();
-    const desired = computeDesiredSlots(wk, exc);
-    // Rewrite the rolling window: drop future slots, insert the freshly materialized set.
-    // (Bookings reference scheduled_date/time, not slot ids, so this never breaks one.)
-    await supabase.from("availability_slots").delete().eq("professional_id", professionalId).gte("slot_date", todayISO());
-    if (desired.length > 0) {
-      const rows = desired.map((d) => ({ professional_id: professionalId, slot_date: d.date, slot_time: d.time, location_id: d.location_id, category_id: d.category_id }));
-      for (let i = 0; i < rows.length; i += 500) {
-        let { error } = await supabase.from("availability_slots").insert(rows.slice(i, i + 500));
-        if (error && /location_id|category_id|column/i.test(error.message)) {
-          ({ error } = await supabase.from("availability_slots").insert(rows.slice(i, i + 500).map((r) => ({ professional_id: r.professional_id, slot_date: r.slot_date, slot_time: r.slot_time }))));
+    try {
+      const supabase = createClient();
+      const desired = computeDesiredSlots(wk, exc);
+      // Rewrite the rolling window: drop future slots, insert the freshly materialized set.
+      // (Bookings reference scheduled_date/time, not slot ids, so this never breaks one.)
+      const { error: deleteError } = await supabase.from("availability_slots").delete().eq("professional_id", professionalId).gte("slot_date", todayISO());
+      if (deleteError) throw deleteError;
+      if (desired.length > 0) {
+        const rows = desired.map((d) => ({ professional_id: professionalId, slot_date: d.date, slot_time: d.time, location_id: d.location_id, category_id: d.category_id }));
+        for (let i = 0; i < rows.length; i += 500) {
+          let { error } = await supabase.from("availability_slots").insert(rows.slice(i, i + 500));
+          if (error && /location_id|category_id|column/i.test(error.message)) {
+            ({ error } = await supabase.from("availability_slots").insert(rows.slice(i, i + 500).map((r) => ({ professional_id: r.professional_id, slot_date: r.slot_date, slot_time: r.slot_time }))));
+          }
+          if (error) throw error;
         }
-        if (error) console.error("[availability] materialize", error);
       }
+      pulseSaved();
+      onSaved?.();
+      return true;
+    } catch (error) {
+      reportSaveFailure("materialize failed", error);
+      return false;
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
-    pulseSaved();
-    onSaved?.();
-  }, [professionalId, computeDesiredSlots, onSaved]);
+  }, [professionalId, computeDesiredSlots, onSaved, reportSaveFailure]);
 
   // ── Initial load: read the template + exceptions; top up the slot window once. ──
   useEffect(() => {
@@ -376,7 +404,7 @@ export function AvailabilityEditor({
       // Refresh the materialized window from the template (keeps the rolling 70-day
       // horizon current). Skip when there is NO template at all, so a legacy pro's
       // manually-created slots are preserved until they adopt the weekly editor.
-      if (isPublic && (wkRows.length > 0 || excRows.length > 0)) regenerate(wkRows, excRows);
+      if (isPublic && (wkRows.length > 0 || excRows.length > 0)) void regenerate(wkRows, excRows);
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -461,14 +489,21 @@ export function AvailabilityEditor({
 
     const next = weekly.filter((r) => !(r.weekday === weekday && r.location_id === loc));
     for (const b of blocks) next.push({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref });
-    setWeekly(next);
-
     const supabase = createClient();
-    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("weekday", weekday).eq("location_id", loc);
-    if (complete.length > 0) {
-      await supabase.from("availability_weekly").insert(complete.map((b) => ({ professional_id: professionalId, location_id: b.locationId, category_id: null, weekday, start_time: b.start, end_time: b.end, slot_minutes: durationPref })));
+    setBusy(true);
+    try {
+      const { error: deleteError } = await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("weekday", weekday).eq("location_id", loc);
+      if (deleteError) throw deleteError;
+      if (complete.length > 0) {
+        const { error: insertError } = await supabase.from("availability_weekly").insert(complete.map((b) => ({ professional_id: professionalId, location_id: b.locationId, category_id: null, weekday, start_time: b.start, end_time: b.end, slot_minutes: durationPref })));
+        if (insertError) throw insertError;
+      }
+      setWeekly(next);
+      await regenerate(next, exceptions); // skips incomplete drafts
+    } catch (error) {
+      reportSaveFailure("weekly save failed", error);
+      setBusy(false);
     }
-    await regenerate(next, exceptions); // skips incomplete drafts
   }
 
   function toggleDay(weekday: number) {
@@ -505,33 +540,48 @@ export function AvailabilityEditor({
       }
     }
 
-    setWeekly(next);
     const supabase = createClient();
-    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).in("weekday", targets).eq("location_id", activeLocationId);
-    await supabase.from("availability_weekly").insert(
-      targets.flatMap((wd) =>
-        template.map((s) => ({
-          professional_id: professionalId,
-          location_id: s.locationId,
-          category_id: null,
-          weekday: wd,
-          start_time: s.start,
-          end_time: s.end,
-          slot_minutes: durationPref,
-        }))
-      )
-    );
-    await regenerate(next, exceptions);
-    setApplyModal(null);
+    setBusy(true);
+    try {
+      const { error: deleteError } = await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).in("weekday", targets).eq("location_id", activeLocationId);
+      if (deleteError) throw deleteError;
+      const { error: insertError } = await supabase.from("availability_weekly").insert(
+        targets.flatMap((wd) =>
+          template.map((s) => ({
+            professional_id: professionalId,
+            location_id: s.locationId,
+            category_id: null,
+            weekday: wd,
+            start_time: s.start,
+            end_time: s.end,
+            slot_minutes: durationPref,
+          }))
+        )
+      );
+      if (insertError) throw insertError;
+      setWeekly(next);
+      const ok = await regenerate(next, exceptions);
+      if (ok) setApplyModal(null);
+    } catch (error) {
+      reportSaveFailure("copy day failed", error);
+      setBusy(false);
+    }
   }
 
   async function setDuration(dur: number) {
-    setDurationPref(dur);
     const next = weekly.map((r) => ({ ...r, slot_minutes: dur }));
-    setWeekly(next);
     const supabase = createClient();
-    await supabase.from("availability_weekly").update({ slot_minutes: dur }).eq("professional_id", professionalId);
-    await regenerate(next, exceptions);
+    setBusy(true);
+    try {
+      const { error } = await supabase.from("availability_weekly").update({ slot_minutes: dur }).eq("professional_id", professionalId);
+      if (error) throw error;
+      setDurationPref(dur);
+      setWeekly(next);
+      await regenerate(next, exceptions);
+    } catch (error) {
+      reportSaveFailure("duration save failed", error);
+      setBusy(false);
+    }
   }
 
   // ── Exceptions ("¿Un día distinto?") ──────────────────────────────────────
@@ -558,25 +608,42 @@ export function AvailabilityEditor({
     } else {
       for (const f of franjas) next.push({ location_id: activeLocationId, category_id: null, date, mode, start: f.start, end: f.end, slot_minutes: dur });
     }
-    setExceptions(next);
-
     const supabase = createClient();
-    await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", activeLocationId).eq("exception_date", date);
-    const rows: { professional_id: string; location_id: string; category_id: string | null; exception_date: string; mode: ExcMode; start_time: string | null; end_time: string | null; slot_minutes: number }[] =
-      mode === "closed"
-        ? [{ professional_id: professionalId, location_id: activeLocationId, category_id: null, exception_date: date, mode, start_time: null, end_time: null, slot_minutes: dur }]
-        : franjas.map((f) => ({ professional_id: professionalId, location_id: activeLocationId, category_id: null, exception_date: date, mode, start_time: f.start, end_time: f.end, slot_minutes: dur }));
-    if (rows.length > 0) await supabase.from("availability_exceptions").insert(rows);
-    await regenerate(weekly, next);
-    return true;
+    setBusy(true);
+    try {
+      const { error: deleteError } = await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", activeLocationId).eq("exception_date", date);
+      if (deleteError) throw deleteError;
+      const rows: { professional_id: string; location_id: string; category_id: string | null; exception_date: string; mode: ExcMode; start_time: string | null; end_time: string | null; slot_minutes: number }[] =
+        mode === "closed"
+          ? [{ professional_id: professionalId, location_id: activeLocationId, category_id: null, exception_date: date, mode, start_time: null, end_time: null, slot_minutes: dur }]
+          : franjas.map((f) => ({ professional_id: professionalId, location_id: activeLocationId, category_id: null, exception_date: date, mode, start_time: f.start, end_time: f.end, slot_minutes: dur }));
+      if (rows.length > 0) {
+        const { error: insertError } = await supabase.from("availability_exceptions").insert(rows);
+        if (insertError) throw insertError;
+      }
+      setExceptions(next);
+      const ok = await regenerate(weekly, next);
+      return ok;
+    } catch (error) {
+      reportSaveFailure("exception save failed", error);
+      setBusy(false);
+      return false;
+    }
   }
 
   async function removeException(date: string) {
     const next = exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date));
-    setExceptions(next);
     const supabase = createClient();
-    await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", activeLocationId).eq("exception_date", date);
-    await regenerate(weekly, next);
+    setBusy(true);
+    try {
+      const { error } = await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", activeLocationId).eq("exception_date", date);
+      if (error) throw error;
+      setExceptions(next);
+      await regenerate(weekly, next);
+    } catch (error) {
+      reportSaveFailure("exception remove failed", error);
+      setBusy(false);
+    }
   }
 
   // ── Visibility (privada) ──────────────────────────────────────────────────
