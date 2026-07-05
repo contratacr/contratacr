@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, Menu, X, Repeat2, Plus, AlertCircle,
+  ArrowRight, Sparkles, Repeat2, Plus, AlertCircle,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -89,9 +89,8 @@ const OFFER_TABS: Tab[] = [
 const USE_TABS: Tab[] = ["profile", "sent_bookings", "sent_projects", "saved"];
 const SHARED_TABS: Tab[] = ["notifications", "soporte", "cuenta"];
 
-// MOBILE bottom-nav: daily operational sections only. Profile/setup/shared options
-// live behind "Más"; the mode switch is a visible first slot.
-const MOBILE_PRIMARY: Record<Mode, Tab[]> = {
+// MOBILE bottom-nav: a horizontally scrollable rail with every mode tab.
+const MOBILE_PRIORITY: Record<Mode, Tab[]> = {
   offer: ["bookings", "proposals", "notifications"],
   use: ["sent_bookings", "sent_projects", "notifications"],
 };
@@ -116,9 +115,9 @@ export default function DashboardPage() {
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
-  // Mobile "Más" bottom-sheet (the overflow of the bottom nav bar).
-  const [moreOpen, setMoreOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [bottomNavRail, setBottomNavRail] = useState<HTMLDivElement | null>(null);
+  const [bottomNavOverflow, setBottomNavOverflow] = useState({ left: false, right: true });
   const [noProTries, setNoProTries] = useState(0);
   const focusKeyRef = useRef(0);
   const nextFocusKey = useCallback(() => {
@@ -288,7 +287,6 @@ export default function DashboardPage() {
   }, [authLoading, loading, pro, user, router, noProTries, fetchPro, proLoadError]);
 
   function setTab(tab: Tab) {
-    setMoreOpen(false);
     if (tab === activeTab) return;
     if (OFFER_ONLY.has(tab)) setMode("offer");
     if (USE_ONLY.has(tab)) setMode("use");
@@ -318,14 +316,38 @@ export default function DashboardPage() {
     setRefreshKey((k) => k + 1);
   }
 
-  // Lock the page behind the mobile "Más" sheet while it's open.
   useEffect(() => {
-    if (!moreOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [moreOpen]);
-
+    if (!bottomNavRail) return;
+    let frame = 0;
+    const apply = () => {
+      const maxScroll = Math.max(0, bottomNavRail.scrollWidth - bottomNavRail.clientWidth);
+      const next = {
+        left: bottomNavRail.scrollLeft > 2,
+        right: bottomNavRail.scrollLeft < maxScroll - 2,
+      };
+      setBottomNavOverflow((prev) => (
+        prev.left === next.left && prev.right === next.right ? prev : next
+      ));
+    };
+    const update = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(apply);
+    };
+    update();
+    const timeout = window.setTimeout(update, 250);
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    resizeObserver?.observe(bottomNavRail);
+    Array.from(bottomNavRail.children).forEach((child) => resizeObserver?.observe(child));
+    bottomNavRail.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+      resizeObserver?.disconnect();
+      bottomNavRail.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [bottomNavRail, mode, isProvider]);
 
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro)) {
     return (
@@ -378,9 +400,8 @@ export default function DashboardPage() {
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = [...modeTabs, ...SHARED_TABS];
   const barTabs = [...modeTabs, ...SHARED_TABS];
-  const primaryTabs = MOBILE_PRIMARY[mode].filter((tab) => barTabs.includes(tab));
-  const moreTabs = barTabs.filter((tab) => !primaryTabs.includes(tab));
-  const activeInMore = moreTabs.includes(activeTab);
+  const mobilePriorityTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
+  const mobileBarTabs = [...mobilePriorityTabs, ...barTabs.filter((tab) => !mobilePriorityTabs.includes(tab))];
   const showProfileCompletion =
     mode === "offer" &&
     !!proForCompletion &&
@@ -415,7 +436,7 @@ export default function DashboardPage() {
     return (
       <button
         type="button"
-        onClick={() => { if (mobile) setMoreOpen(false); handleSwitchMode(next); }}
+        onClick={() => { handleSwitchMode(next); }}
         className={cn(
           "w-full flex items-center gap-3 rounded-xl text-left text-sm font-medium transition-colors",
           mobile ? "px-3 py-3" : "px-3 py-2.5",
@@ -428,13 +449,16 @@ export default function DashboardPage() {
     );
   }
 
+  const bottomNavItemClass =
+    "relative flex w-[94px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
+
   function modeBottomNavButton() {
     const next: Mode = mode === "offer" ? "use" : "offer";
     return (
       <button
         type="button"
-        onClick={() => { setMoreOpen(false); handleSwitchMode(next); }}
-        className="relative flex flex-1 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 text-[#374151] transition-colors hover:text-[#111827]"
+        onClick={() => { handleSwitchMode(next); }}
+        className={cn(bottomNavItemClass, "text-[#374151] hover:text-[#111827]")}
       >
         <Repeat2 className="h-[22px] w-[22px]" />
         <span className="max-w-full truncate text-[10px] font-semibold leading-none">
@@ -701,91 +725,59 @@ export default function DashboardPage() {
 
       {/* MOBILE bottom nav bar — a native-app tab bar (icon + label, Instagram-style). Fixed,
           thumb-reachable, always visible while in the panel; replaces the sidebar on phones.
-          A capped item set per mode (+ "Más") means it ALWAYS fits — never a horizontal scroll. */}
+          The rail scrolls horizontally and intentionally peeks the next item, so users can
+          tell there are more actions without opening a separate discovery affordance first. */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch border-t border-[#e5e7eb] bg-white shadow-[0_-14px_34px_-18px_rgba(15,23,42,0.45)] pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#e5e7eb] bg-white shadow-[0_-14px_34px_-18px_rgba(15,23,42,0.45)] pb-[env(safe-area-inset-bottom)]"
         aria-label={t("title")}
       >
-        {isProvider && modeBottomNavButton()}
-        {primaryTabs.map((tab) => {
-          const active = activeTab === tab && !moreOpen;
-          return (
-            <button
-              key={tab}
-              onClick={() => { setMoreOpen(false); setTab(tab); }}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "relative flex-1 flex flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors before:absolute before:left-1/2 before:top-0 before:h-0.5 before:w-8 before:-translate-x-1/2 before:rounded-b-full before:bg-[#009FD9] before:transition-opacity",
-                active ? "text-[#009FD9] before:opacity-100" : "text-[#6b7280] before:opacity-0 hover:text-[#374151]"
-              )}
-            >
-              <span className="relative [&>svg]:!h-[22px] [&>svg]:!w-[22px]">
-                {TAB_ICONS[tab]}
-                {/* Dedicated, mode-scoped unread badge on the Notificaciones tab. */}
-                {tab === "notifications" && unreadCount > 0 && (
-                  <span className="absolute -right-2 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
-                )}
-              </span>
-              <span className="text-[10px] font-semibold leading-none max-w-full truncate">{t(`bottomNav.${tab}`)}</span>
-            </button>
-          );
-        })}
-        <button
-          onClick={() => setMoreOpen(true)}
-          aria-current={activeInMore ? "page" : undefined}
-          className={cn(
-            "relative flex-1 flex flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors before:absolute before:left-1/2 before:top-0 before:h-0.5 before:w-8 before:-translate-x-1/2 before:rounded-b-full before:bg-[#009FD9] before:transition-opacity",
-            (moreOpen || activeInMore) ? "text-[#009FD9] before:opacity-100" : "text-[#6b7280] before:opacity-0 hover:text-[#374151]"
-          )}
-        >
-          {/* "Más" no longer carries a notification dot — notifications now have their own
-              dedicated bottom-bar slot (sprint 432). */}
-          <Menu className="h-[22px] w-[22px]" />
-          <span className="text-[10px] font-semibold leading-none">{t("bottomNav.more")}</span>
-        </button>
-      </nav>
-
-      {/* "Más" bottom sheet — the overflow sections (setup + shared), reachable from the bar. */}
-      {moreOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/40 animate-in fade-in-0" onClick={() => setMoreOpen(false)} aria-hidden />
-          <div className="absolute inset-x-0 bottom-0 max-h-[78vh] overflow-y-auto rounded-t-2xl bg-white shadow-[0_-24px_60px_-18px_rgba(15,23,42,0.45)] pb-[env(safe-area-inset-bottom)] animate-in slide-in-from-bottom duration-200">
-            <div className="sticky top-0 bg-white pt-2">
-              {/* Drag handle (tap to close too) + a clear X — standard bottom-sheet dismissal. */}
-              <button onClick={() => setMoreOpen(false)} aria-label={t("bottomNav.close")} className="mx-auto block h-1 w-10 rounded-full bg-[#d1d5db]" />
-              <div className="flex items-center justify-between px-4 pt-2 pb-2">
-                {/* NOT the bare "Más" (that's just the button label) — a clearer sheet title. */}
-                <p className="text-sm font-semibold text-[#111827]">{t("bottomNav.moreTitle")}</p>
-                <button onClick={() => setMoreOpen(false)} aria-label={t("bottomNav.close")} className="-mr-1.5 p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] transition-colors">
-                  <X className="h-5 w-5" />
+        <div className="relative">
+          <div
+            ref={setBottomNavRail}
+            className="flex min-h-[56px] items-stretch gap-0 overflow-x-auto overscroll-x-contain scroll-smooth hide-scrollbar"
+          >
+            {isProvider && modeBottomNavButton()}
+            {mobileBarTabs.map((tab) => {
+              const active = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => { setTab(tab); }}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    bottomNavItemClass,
+                    "before:absolute before:left-1/2 before:top-0 before:h-0.5 before:w-8 before:-translate-x-1/2 before:rounded-b-full before:bg-[#009FD9] before:transition-opacity",
+                    active ? "text-[#009FD9] before:opacity-100" : "text-[#6b7280] before:opacity-0 hover:text-[#374151]"
+                  )}
+                >
+                  <span className="relative [&>svg]:!h-[22px] [&>svg]:!w-[22px]">
+                    {TAB_ICONS[tab]}
+                    {/* Dedicated, mode-scoped unread badge on the Notificaciones tab. */}
+                    {tab === "notifications" && unreadCount > 0 && (
+                      <span className="absolute -right-2 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                    )}
+                  </span>
+                  <span className="text-[10px] font-semibold leading-none max-w-full truncate">{t(`bottomNav.${tab}`)}</span>
                 </button>
-              </div>
-            </div>
-            <div className="p-2 pt-0">
-              {moreTabs.map((tab) => {
-                const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
-                const active = activeTab === tab;
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => { setMoreOpen(false); setTab(tab); }}
-                    className={cn(
-                      "relative w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
-                      active ? "bg-[#EBF5FB] text-[#009FD9] before:opacity-100" : "text-[#374151] before:opacity-0 hover:bg-[#f3f4f6]"
-                    )}
-                  >
-                    <span className={cn("shrink-0", active ? "text-[#009FD9]" : "text-[#9ca3af]")}>{TAB_ICONS[tab]}</span>
-                    <span className="flex-1">{tab === "services" ? t("servicesHeading") : t(`tabs.${tab}`)}</span>
-                    {badge > 0 && (
-                      <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1.5 text-center text-[11px] font-bold leading-none text-white">{badge > 9 ? "9+" : badge}</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+              );
+            })}
           </div>
+          <span
+            className={cn(
+              "pointer-events-none absolute bottom-0 left-0 top-0 w-8 bg-gradient-to-r from-white via-white/90 to-transparent transition-opacity duration-150",
+              bottomNavOverflow.left ? "opacity-100" : "opacity-0"
+            )}
+            aria-hidden
+          />
+          <span
+            className={cn(
+              "pointer-events-none absolute bottom-0 right-0 top-0 w-14 bg-gradient-to-l from-white via-white/90 to-transparent transition-opacity duration-150",
+              bottomNavOverflow.right ? "opacity-100" : "opacity-0"
+            )}
+            aria-hidden
+          />
         </div>
-      )}
+      </nav>
     </div>
   );
 }
