@@ -315,10 +315,9 @@ export default function DashboardPage() {
     const apply = () => {
       const maxScroll = Math.max(0, bottomNavRail.scrollWidth - bottomNavRail.clientWidth);
       const remainingRight = maxScroll - bottomNavRail.scrollLeft;
-      const usefulRightPeek = Math.min(56, Math.max(36, bottomNavRail.clientWidth * 0.08));
       const next = {
         left: bottomNavRail.scrollLeft > 2,
-        right: remainingRight > usefulRightPeek,
+        right: remainingRight > 4,
       };
       setBottomNavOverflow((prev) => (
         prev.left === next.left && prev.right === next.right ? prev : next
@@ -445,7 +444,7 @@ export default function DashboardPage() {
   }
 
   const bottomNavItemClass =
-    "relative flex w-[22vw] min-w-[78px] max-w-[112px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
+    "relative flex w-[clamp(66px,calc((100vw-56px)/4),92px)] min-w-[clamp(66px,calc((100vw-56px)/4),92px)] max-w-[92px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
 
   function modeBottomNavButton() {
     const next: Mode = mode === "offer" ? "use" : "offer";
@@ -809,7 +808,7 @@ export default function DashboardPage() {
           />
           <span
             className={cn(
-              "pointer-events-none absolute bottom-0 right-0 top-0 w-[11vw] min-w-10 max-w-14 bg-gradient-to-l from-white via-white/75 to-transparent backdrop-blur-[2px] transition-opacity duration-150",
+              "pointer-events-none absolute bottom-0 right-0 top-0 w-[15vw] min-w-12 max-w-16 bg-gradient-to-l from-white/80 via-white/45 to-transparent backdrop-blur-[2px] transition-opacity duration-150",
               bottomNavOverflow.right ? "opacity-100" : "opacity-0"
             )}
             aria-hidden
