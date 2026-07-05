@@ -36,6 +36,7 @@ import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
+import { anyVideoConsultCategory } from "@/lib/data/categories";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { notificationContext } from "@/lib/notification-link";
 import { useRouter } from "@/i18n/navigation";
@@ -313,9 +314,11 @@ export default function DashboardPage() {
     let frame = 0;
     const apply = () => {
       const maxScroll = Math.max(0, bottomNavRail.scrollWidth - bottomNavRail.clientWidth);
+      const remainingRight = maxScroll - bottomNavRail.scrollLeft;
+      const usefulRightPeek = Math.min(56, Math.max(36, bottomNavRail.clientWidth * 0.08));
       const next = {
         left: bottomNavRail.scrollLeft > 2,
-        right: bottomNavRail.scrollLeft < maxScroll - 2,
+        right: remainingRight > usefulRightPeek,
       };
       setBottomNavOverflow((prev) => (
         prev.left === next.left && prev.right === next.right ? prev : next
@@ -442,7 +445,7 @@ export default function DashboardPage() {
   }
 
   const bottomNavItemClass =
-    "relative flex w-[20vw] min-w-[20vw] max-w-[20vw] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
+    "relative flex w-[22vw] min-w-[78px] max-w-[112px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
 
   function modeBottomNavButton() {
     const next: Mode = mode === "offer" ? "use" : "offer";
@@ -704,6 +707,8 @@ export default function DashboardPage() {
                             initialPublic={pro.availability_public ?? true}
                             initialContactPreference={pro.contact_preference ?? "ambas"}
                             workplaces={pro.workplaces ?? []}
+                            videoConsultationAllowed={anyVideoConsultCategory((pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : []))}
+                            initialVideoConsultation={!!pro.videoconsulta}
                             onSaved={handleSaved}
                           />
                         )}
@@ -797,14 +802,14 @@ export default function DashboardPage() {
           </div>
           <span
             className={cn(
-              "pointer-events-none absolute bottom-0 left-0 top-0 w-8 bg-gradient-to-r from-white via-white/90 to-transparent transition-opacity duration-150",
+              "pointer-events-none absolute bottom-0 left-0 top-0 w-10 bg-gradient-to-r from-white via-white/85 to-transparent backdrop-blur-[1.5px] transition-opacity duration-150",
               bottomNavOverflow.left ? "opacity-100" : "opacity-0"
             )}
             aria-hidden
           />
           <span
             className={cn(
-              "pointer-events-none absolute bottom-0 right-0 top-0 w-[20vw] max-w-[96px] bg-gradient-to-l from-white/95 via-white/65 to-transparent backdrop-blur-[1.5px] transition-opacity duration-150",
+              "pointer-events-none absolute bottom-0 right-0 top-0 w-[11vw] min-w-10 max-w-14 bg-gradient-to-l from-white via-white/75 to-transparent backdrop-blur-[2px] transition-opacity duration-150",
               bottomNavOverflow.right ? "opacity-100" : "opacity-0"
             )}
             aria-hidden

@@ -83,7 +83,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const [showMap, setShowMap] = useState(false);
   // The draft form is shown while adding; once a zone is committed it collapses
   // behind an explicit "+ Agregar otra ubicaciÃ³n" action so the flow is clear.
-  const [adding, setAdding] = useState(value.length === 0);
+  const [adding, setAdding] = useState(value.length + extraPlaces.length === 0);
   const [draftPin, setDraftPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const draftPinRef = useRef<typeof draftPin>(null);
   const [locating, setLocating] = useState(false);
@@ -91,6 +91,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const cantons = getCantonsByProvince(province);
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
   const addedCount = value.length + extraPlaces.length;
+  const showAddForm = adding || addedCount === 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getMaps(): any {
@@ -143,7 +144,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   }
 
   function removeWorkplace(id: string) {
-    onChange(valueRef.current.filter((w) => w.id !== id));
+    const next = valueRef.current.filter((w) => w.id !== id);
+    onChange(next);
+    if (next.length + extraPlaces.length === 0) setAdding(true);
   }
 
   function toggleMap() {
@@ -299,7 +302,6 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       {/* Added zones â€” listed FIRST, above the add-another-location form. */}
       {addedCount > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-medium text-[#374151]">{t("addedPlaces", { count: addedCount })}</p>
           {value.map((wp) => (
             <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
               <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
@@ -346,12 +348,10 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       )}
 
 
-      {extraActions && <div className="flex flex-wrap items-center gap-3">{extraActions}</div>}
-
       {/* Add-another-location form â€” the COMPLETE group BELOW the list, in order:
           provincia â†’ cantÃ³n â†’ optional map pin â†’ "Agregar esta ubicaciÃ³n". Shown
           while adding; collapses behind "Agregar otra ubicaciÃ³n" after a commit. */}
-      {adding && (
+      {showAddForm && (
       <div className="flex flex-col gap-2.5">
       {/* 1 â€” Structured field FIRST: provincia â†’ cantÃ³n (authoritative for search).
           Polished popover dropdowns (shared SelectMenu) â€” same look/behavior as the
@@ -371,25 +371,25 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           onChange={setCanton}
           disabled={!province}
           placeholder={t("cantonPlaceholder")}
-          options={cantons.map((c) => ({ value: c.id, label: c.name }))}
+          options={[
+            { value: "", label: t("cantonUnselected") },
+            ...cantons.map((c) => ({ value: c.id, label: c.name })),
+          ]}
         />
       </div>
 
       {/* 2 â€” OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
              link reveals the address search + map only when the pro chooses to pin. */}
-      {province && !canton && <p className="text-xs leading-5 text-[#6b7280]">{t("wholeProvinceHint")}</p>}
-
       {effectiveKey && canton ? (
         <div className="flex flex-col gap-2">
           <button
             type="button"
             onClick={toggleMap}
             aria-expanded={showMap}
-            className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
+            className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline cursor-pointer"
           >
             <MapPin className="h-4 w-4" />
-            <span>{t("markOnMap")}</span>
-            {/* When collapsed, a check confirms a pin is already set. */}
+            <span>{t("mapPointTitle")}</span>
             {draftPin && !showMap && <Check className="h-3.5 w-3.5 text-[#16a34a]" />}
             <ChevronDown className={cn("h-4 w-4 transition-transform", showMap && "rotate-180")} />
           </button>
@@ -471,7 +471,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       )}
 
       {/* Separate, explicit way to add ANOTHER zone (only when the draft is closed). */}
-      {!adding && (
+      {!showAddForm && (
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
@@ -482,6 +482,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           </button>
         </div>
       )}
+
+      {extraActions && <div className="flex flex-wrap items-center gap-3 pt-1">{extraActions}</div>}
     </div>
   );
 }
