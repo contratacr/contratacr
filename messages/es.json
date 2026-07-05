@@ -791,7 +791,7 @@
       "videoSectionTitle": "Videoconsultas",
       "videoSectionHint": "Atiende en línea en todo el país.",
       "videoCountryPlace": "Todo Costa Rica",
-      "videoCountryAdd": "Todo Costa Rica",
+      "videoCountryAdd": "Agregar todo Costa Rica",
       "videoCountryRemove": "Quitar Todo Costa Rica",
       "inPersonSectionTitle": "Atención presencial",
       "skipCedulaNote": "Aparecerás sin la insignia Verificado. Podrás verificar tu identidad luego desde tu panel."
@@ -1775,7 +1775,7 @@
     "videoCoverageTitle": "Cobertura en línea",
     "videoCoverageDesc": "Disponible solo para servicios que pueden atenderse por videoconsulta.",
     "videoCountryPlace": "Todo Costa Rica",
-    "videoCountryAdd": "Todo Costa Rica",
+    "videoCountryAdd": "Agregar todo Costa Rica",
     "videoCountryRemove": "Quitar Todo Costa Rica",
     "videoCountryLabel": "Mostrarme en todo Costa Rica",
     "videoCountryHelp": "Disponible en todo Costa Rica.",

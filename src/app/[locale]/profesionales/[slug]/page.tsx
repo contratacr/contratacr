@@ -228,14 +228,18 @@ export default function ProfilePage() {
   // A pro viewing their OWN public profile cannot request a service from themselves.
   const isOwn = !!viewerId && viewerId === professional.profileId;
 
-  // "Solicitar servicio" routing — mirrors the contact card's logic: a bookable pro
-  // (public availability + not WhatsApp-only) opens the booking flow (registration-gated
-  // for guests); otherwise it falls back to WhatsApp, exactly as the app handles it.
-  const canBookService = (professional.availabilityPublic ?? true) && (professional.contactPreference ?? "ambas") !== "solo_whatsapp";
+  // "Solicitar servicio" routing — mirrors the contact card's logic: only open the
+  // booking flow when the pro has public availability AND real published slots.
+  // If there are no hours yet, the service CTA coordinates directly by WhatsApp.
+  const hasBookableSlots = profileSlots.some((slot) => !slot.locationId?.startsWith("cov_"));
+  const canBookService =
+    (professional.availabilityPublic ?? true) &&
+    (professional.contactPreference ?? "ambas") !== "solo_whatsapp" &&
+    hasBookableSlots;
   function requestService(cat: string) {
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
+    if (!canBookService) { if (waLink) window.open(waLink, "_blank", "noopener,noreferrer"); return; }
     setBookingCat(cat);
-    if (!canBookService) { if (waLink) window.open(waLink, "_blank"); return; }
     if (isAuthenticated) setBookingOpen(true);
     else setBookingReg(true);
   }

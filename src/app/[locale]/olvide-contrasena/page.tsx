@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
@@ -31,6 +31,11 @@ export default function OlvideContrasenaPage() {
   const [success, setSuccess] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
   const resendState = useResendCooldown();
+
+  useEffect(() => {
+    if (!success) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [success]);
 
   const {
     register,
