@@ -765,7 +765,7 @@ export default function DashboardPage() {
           The rail scrolls horizontally and intentionally peeks the next item, so users can
           tell there are more actions without opening a separate discovery affordance first. */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#e5e7eb] bg-white shadow-[0_-14px_34px_-18px_rgba(15,23,42,0.45)] pb-[max(6px,calc(env(safe-area-inset-bottom)-18px))]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#e5e7eb] bg-white shadow-[0_-14px_34px_-18px_rgba(15,23,42,0.45)] pb-[env(safe-area-inset-bottom)]"
         aria-label={t("title")}
       >
         <div className="relative">
