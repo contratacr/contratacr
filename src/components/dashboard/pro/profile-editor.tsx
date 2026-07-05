@@ -39,6 +39,7 @@ interface ProfileEditorProps {
    *  and scrolls to the field. `focusKey` changes on every click so repeats fire. */
   focusField?: string | null;
   focusKey?: number;
+  extraSections?: Array<{ id: string; title: string; desc?: string; children: React.ReactNode }>;
 }
 
 // "Completa tu perfil" field → which collapsible section holds it.
@@ -111,7 +112,7 @@ function seedZones(init: ProData): Workplace[] {
   return out;
 }
 
-export function ProfileEditor({ professionalId, profileId, initial, onSaved, focusField, focusKey }: ProfileEditorProps) {
+export function ProfileEditor({ professionalId, profileId, initial, onSaved, focusField, focusKey, extraSections = [] }: ProfileEditorProps) {
   const locale = useLocale();
   const t = useTranslations("profileEditor");
   const initialProfile = Array.isArray(initial.profiles) ? initial.profiles[0] : initial.profiles;
@@ -890,6 +891,19 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           </div>
         )}
       </Section>
+
+      {extraSections.map((section) => (
+        <Section
+          key={section.id}
+          id={section.id}
+          title={section.title}
+          desc={section.desc}
+          open={openSections.has(section.id)}
+          onToggle={toggleSection}
+        >
+          {section.children}
+        </Section>
+      ))}
       </div>
 
       {/* Contact preference lives in the Disponibilidad tab now. */}

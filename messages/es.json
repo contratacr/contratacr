@@ -1196,6 +1196,10 @@
       "sent_projects": "Solicitudes que publicaste para recibir propuestas.",
       "saved": "Perfiles que guardaste para contratar más adelante."
     },
+    "profileSections": {
+      "verificationDesc": "Identidad y estado de verificación.",
+      "accountDesc": "Correo, contraseña y seguridad de la cuenta."
+    },
     "completion": {
       "completeTitle": "¡Tu perfil está completo!",
       "title": "Completa tu perfil",
@@ -1961,6 +1965,8 @@
     "projectsSubtitle": "Solicitudes que publicaste para recibir propuestas.",
     "notificationsHeading": "Notificaciones",
     "supportHeading": "Soporte",
+    "secBasic": "Datos básicos",
+    "secBasicDesc": "Foto, nombre y teléfono",
     "changePhoto": "Cambiar",
     "addPhoto": "Agregar foto",
     "removePhoto": "Eliminar",
