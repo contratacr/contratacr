@@ -22,6 +22,8 @@ import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 
+const phoneDigits = (value: string) => value.replace(/\D/g, "");
+
 // "Publicar proyecto" as a MODAL (was a standalone page). Same fields, validation
 // and submit logic as the old publish-form — only the container changed to a modal:
 // dimmed backdrop, centered white rounded dialog, PINNED header + footer with a
@@ -66,13 +68,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const [submitting, setSubmitting] = useState(false);
   const { user, loading: authLoading } = useAuth();
 
-  // Same rule as "Solicitar servicio": projects need a contact phone. If the client
-  // already has one on file we don't ask; otherwise we prompt for it here and save it
-  // to their profile so we never ask again.
+  // Same rule as "Solicitar servicio": the contact phone is shared by the client
+  // and professional panels. The user can keep it or edit it before publishing.
   const [phone, setPhone] = useState("");
-  const [needsPhone, setNeedsPhone] = useState(false);
-  // Whether a real phone is ALREADY on profiles.phone — if so we never re-save it.
-  const [phoneOnProfile, setPhoneOnProfile] = useState(false);
+  const [profilePhoneInitial, setProfilePhoneInitial] = useState("");
   useEffect(() => {
     if (!user?.id) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -93,11 +92,9 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       const fullName = ((data as any)?.full_name as string | undefined) ?? "";
       // A bare dial code / empty value is NOT a phone (legacy clears stored "506").
       let p = hasPhoneNumber(raw) ? raw : "";
-      const onProfile = !!p;
-      // A PROFESSIONAL's contact number lives in professionals.whatsapp, NOT
-      // profiles.phone — fall back to it so a pro who already has a number on file is
-      // never asked again (mirrors the booking modal's prefill). It's backfilled to
-      // profiles.phone on submit so the published solicitud has a reachable contact.
+      const accountPhone = p;
+      // If this user became a professional before the account phone was filled,
+      // use the professional number as the visible prefill and sync on submit.
       if (!p) {
         const { data: pro } = await supabase.from("professionals").select("whatsapp").eq("profile_id", user.id).maybeSingle();
         const wa = (pro?.whatsapp as string | undefined) ?? "";
@@ -105,13 +102,12 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       }
       if (!active) return;
       setPhone(p);
+      setProfilePhoneInitial(accountPhone);
       if (fullName) setClientName(limitText(fullName, NAME_MAX_LENGTH));
       if (cedula) {
         setSavedCedula(cedula);
         setForm((f) => (f.cedula ? f : { ...f, cedula }));
       }
-      setPhoneOnProfile(onProfile);
-      setNeedsPhone(!p);
       setProfileLoaded(true);
       setProfileLoadedFor(user.id);
     })().catch(() => {
@@ -216,15 +212,24 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     const sendingWithoutCedula = noCedula && !savedCedula;
     const cedulaForSubmit = savedCedula || (sendingWithoutCedula ? "" : form.cedula);
     if (!savedCedula && !sendingWithoutCedula && !isValidId(cedulaForSubmit)) { setError(t("errCedula")); return; }
-    if (needsPhone && phone.replace(/\D/g, "").length < 8) { setError(t("errPhone")); return; }
+    const cleanPhone = phoneDigits(phone);
+    if (cleanPhone.length < 8) { setError(t("errPhone")); return; }
 
     setSubmitting(true);
     try {
-      // Persist the phone to profiles.phone when it isn't already there, so the
-      // solicitud has a reachable contact and we never ask again.
-      if (user?.id && phone && !phoneOnProfile) {
+      // Keep the shared contact phone aligned when the user confirms the request.
+      if (user?.id) {
         const supabase = createClient();
-        await supabase.from("profiles").update({ phone }).eq("id", user.id);
+        const phoneChanged = cleanPhone !== phoneDigits(profilePhoneInitial);
+        if (phoneChanged) {
+          const { error: phoneError } = await supabase.from("profiles").update({ phone: cleanPhone }).eq("id", user.id);
+          if (phoneError) { setError(t("errPhoneSave")); setSubmitting(false); return; }
+        }
+        const { error: professionalPhoneError } = await supabase.from("professionals").update({ whatsapp: cleanPhone }).eq("profile_id", user.id);
+        if (professionalPhoneError) { setError(t("errPhoneSave")); setSubmitting(false); return; }
+        setProfilePhoneInitial(cleanPhone);
+        setPhone(cleanPhone);
+        window.dispatchEvent(new Event("ccr:profile-updated"));
       }
       const res = await fetch("/api/projects", {
         method: "POST",
@@ -510,18 +515,16 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               />
             </div>
 
-            {/* Contact phone — only when the client has none on file. */}
-            {needsPhone && (
-              <div>
-                <PhoneInput
-                  label={t("phoneLabel")}
-                  required
-                  value={phone}
-                  onChange={setPhone}
-                />
-                <p className="text-xs text-[#9ca3af] mt-1">{t("phoneHelp")}</p>
-              </div>
-            )}
+            {/* Contact phone: always visible so the client can confirm or update it before publishing. */}
+            <div>
+              <PhoneInput
+                label={t("phoneLabel")}
+                required
+                value={phone}
+                onChange={setPhone}
+              />
+              <p className="text-xs text-[#9ca3af] mt-1">{t("phoneHelp")}</p>
+            </div>
 
             {error && (
               <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">

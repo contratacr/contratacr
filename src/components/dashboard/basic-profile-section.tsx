@@ -115,9 +115,8 @@ export function BasicProfileSection({
     supabase.rpc("get_my_profile").then(async ({ data }) => {
       if (!data) return;
       let phone = data.phone ?? "";
-      // Account phone and professional WhatsApp can be different. If the account
-      // phone is empty, prefill from the pro WhatsApp for convenience, but do not
-      // silently persist it; save only when the user saves this client/account form.
+      // Legacy/professional-first accounts may have the number only on the
+      // professional profile; prefill it here and sync on the next valid save.
       if (!hasPhoneNumber(phone)) {
         const { data: pro } = await supabase.from("professionals").select("whatsapp").eq("profile_id", user.id).maybeSingle();
         const wa = (pro?.whatsapp as string | undefined) ?? "";
@@ -144,20 +143,34 @@ export function BasicProfileSection({
     const supabase = createClient();
     // Never overwrite a verified official name (locked; corrections go through admin).
     const verified = profileData?.client_identity_status === "verified";
-    const update: Record<string, string | null> = { phone: isPhoneComplete(currentForm.phone) ? currentForm.phone : null };
+    const cleanPhone = isPhoneComplete(currentForm.phone) ? currentForm.phone : null;
+    const update: Record<string, string | null> = { phone: cleanPhone };
     const cleanName = limitText(currentForm.full_name.trim(), NAME_MAX_LENGTH);
     if (!verified) update.full_name = cleanName;
-    await supabase.from("profiles").update(update).eq("id", user.id);
+    const { error: profileError } = await supabase.from("profiles").update(update).eq("id", user.id);
+    if (profileError) {
+      setProfileSaving(false);
+      void showMessage({ title: errorTitle, description: locale === "en" ? "We couldn't save your profile. Try again." : "No pudimos guardar tu perfil. Intenta de nuevo.", tone: "danger" });
+      return;
+    }
+    if (cleanPhone) {
+      const { error: professionalPhoneError } = await supabase.from("professionals").update({ whatsapp: cleanPhone }).eq("profile_id", user.id);
+      if (professionalPhoneError) {
+        setProfileSaving(false);
+        void showMessage({ title: errorTitle, description: locale === "en" ? "We couldn't sync your contact number. Try again." : "No pudimos sincronizar tu número de contacto. Intenta de nuevo.", tone: "danger" });
+        return;
+      }
+    }
     if (!verified && cleanName) {
       await supabase.auth.updateUser({ data: { full_name: cleanName } });
-      setProfileData((prev) => (prev ? { ...prev, full_name: cleanName } : prev));
-      window.dispatchEvent(new Event("ccr:profile-updated"));
     }
+    setProfileData((prev) => (prev ? { ...prev, phone: cleanPhone ?? "", ...(!verified && cleanName ? { full_name: cleanName } : {}) } : prev));
+    window.dispatchEvent(new Event("ccr:profile-updated"));
     setProfileSaving(false);
     setProfileSaved(true);
     profileDirtyRef.current = false;
     setTimeout(() => setProfileSaved(false), 3000);
-  }, [profileData?.client_identity_status, user]);
+  }, [errorTitle, locale, profileData?.client_identity_status, showMessage, user]);
   useEffect(() => {
     profileFormRef.current = profileForm;
     saveProfileRef.current = saveProfile;

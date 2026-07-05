@@ -231,11 +231,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: friendly, ...(dupEmail ? { code: "email_taken" } : {}) }, { status: dupEmail ? 409 : 500 });
     }
 
-    // Account phone and professional WhatsApp can differ. During professional
-    // registration, backfill the account phone only when it is empty so the user
-    // does not re-enter the same number, but never clobber a saved client number.
+    // The contact phone is shared by the client and professional panels. During
+    // professional registration, keep the account phone aligned with WhatsApp.
     if (whatsapp) {
-      await supabase.from("profiles").update({ phone: whatsapp }).eq("id", userId).is("phone", null);
+      await supabase.from("profiles").update({ phone: whatsapp }).eq("id", userId);
     }
 
     // ── 4. Check if professional already exists ───────────────────────────────

@@ -404,6 +404,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         .eq("id", professionalId);
       if (baseError) throw baseError;
 
+      const cleanWhatsapp = whatsapp.trim();
+      if (cleanWhatsapp) {
+        const { error: accountPhoneError } = await supabase
+          .from("profiles")
+          .update({ phone: cleanWhatsapp })
+          .eq("id", profileId);
+        if (accountPhoneError) throw accountPhoneError;
+      }
+
       // 2) LOCATIONS — saved in their OWN update so an unrelated, possibly-unmigrated
       // optional column (contact_email, coverage_*, …) can NEVER drop them. This was
       // the persistence bug: `workplaces` was bundled with those columns and the
