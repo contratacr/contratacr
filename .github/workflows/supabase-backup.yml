@@ -30,6 +30,7 @@ jobs:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
       PGSSLMODE: require
+      PG_BIN: /usr/lib/postgresql/17/bin
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -69,7 +70,8 @@ jobs:
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
-          pg_dump --version
+          "$PG_BIN/pg_dump" --version
+          "$PG_BIN/pg_restore" --version
 
       - name: Create encrypted logical backup
         run: |
@@ -82,7 +84,7 @@ jobs:
           list_file="backup/${base}.pg_restore_list.txt"
           manifest_file="backup/${base}.manifest.txt"
 
-          pg_dump "$SUPABASE_DB_URL" \
+          "$PG_BIN/pg_dump" "$SUPABASE_DB_URL" \
             --format=custom \
             --compress=9 \
             --no-owner \
@@ -92,7 +94,7 @@ jobs:
             --file="$dump_file"
 
           test -s "$dump_file"
-          pg_restore --list "$dump_file" > "$list_file"
+          "$PG_BIN/pg_restore" --list "$dump_file" > "$list_file"
           test -s "$list_file"
 
           dump_bytes="$(wc -c < "$dump_file" | tr -d ' ')"
