@@ -139,7 +139,7 @@ export function AvailabilityEditor({
   // Appointment length is ONE global value (applies to every block/location).
   const [durationPref, setDurationPref] = useState(60);
 
-  // ── Location tabs ("HORARIO PARA") — fixed/base workplaces only ──
+  // ── Location tabs ("HORARIO PARA") — fixed/base workplaces + videoconsulta ──
   const locationOptions = useMemo(() => {
     const opts: { id: string; label: string }[] = [];
     for (const w of workplaces) if (w.id) opts.push({ id: w.id, label: w.name });
@@ -148,8 +148,8 @@ export function AvailabilityEditor({
   }, [isVideoConsultation, t, workplaces]);
   const schedulableLocationIds = useMemo(() => new Set(locationOptions.map((o) => o.id)), [locationOptions]);
 
-  // Weekly schedules are edited one fixed/base workplace at a time. "A domicilio" is
-  // profile coverage, not a separate schedule; clients request it within normal hours.
+  // Weekly schedules are edited one schedulable location at a time. "A domicilio" is
+  // profile coverage, not a separate schedule; videoconsulta is a real schedule tab.
   const isMultiLocation = locationOptions.length > 1;
   const defaultLocationId = locationOptions[0]?.id ?? "";
 
@@ -652,7 +652,7 @@ export function AvailabilityEditor({
 
   const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
   const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
-  const hasWorkplaceForSchedule = locationOptions.length > 0;
+  const hasSchedulableLocation = locationOptions.length > 0;
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
   useReportSaveStatus(savingVisibility || savingVideoConsultation || busy, justSaved);
@@ -672,7 +672,7 @@ export function AvailabilityEditor({
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
               <p className="mt-0.5 text-xs text-[#6b7280]">
-                {isPublic && !hasWorkplaceForSchedule ? t("privateSubNeedsWorkplace") : isPublic ? t("privateSubPublic") : t("privateSubPrivate")}
+                {isPublic && !hasSchedulableLocation ? t("privateSubNeedsWorkplace") : isPublic ? t("privateSubPublic") : t("privateSubPrivate")}
               </p>
             </div>
           </div>
@@ -724,30 +724,16 @@ export function AvailabilityEditor({
         <div className="p-4 sm:p-5">
           <FormLoadingState minHeight="min-h-[300px]" />
         </div>
-      ) : !isPublic ? null : locationOptions.length === 0 ? (
-        isVideoConsultation ? (
-        <div className="px-4 py-3 sm:px-5 sm:py-4">
-          <div className="space-y-2">
-            <p className="text-sm leading-5 text-[#526071]">{t("inPersonSchedulePendingBody")}</p>
-            <Link
-              href="/dashboard/profesional?tab=profile&mode=offer&focus=location"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:ring-offset-2"
-            >
-              <MapPin className="h-4 w-4" />
-              {t("addInPersonWorkplace")}
-            </Link>
-          </div>
-        </div>
-        ) : (
+      ) : !isPublic ? null : !hasSchedulableLocation ? (
         <div className="m-4 rounded-2xl border border-[#bfe3f5] bg-[#f8fbfe] p-4 sm:m-5 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
-                {isVideoConsultation ? <Video className="h-5 w-5" /> : <MapPin className="h-5 w-5" />}
+                <MapPin className="h-5 w-5" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#162543]">{isVideoConsultation ? t("videoActiveTitle") : t("needLocationTitle")}</p>
-                <p className="mt-1 max-w-2xl text-sm leading-5 text-[#526071]">{isVideoConsultation ? t("videoActiveBody") : t("needLocationBody")}</p>
+                <p className="text-sm font-semibold text-[#162543]">{t("needLocationTitle")}</p>
+                <p className="mt-1 max-w-2xl text-sm leading-5 text-[#526071]">{t("needLocationBody")}</p>
               </div>
             </div>
             <Link
@@ -759,7 +745,6 @@ export function AvailabilityEditor({
             </Link>
           </div>
         </div>
-        )
       ) : (
         <>
           <div>
