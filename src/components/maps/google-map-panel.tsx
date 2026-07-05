@@ -629,7 +629,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           <button
             type="button"
             onClick={searchThisArea}
-            className="absolute left-1/2 top-3 z-[5] -translate-x-1/2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-semibold text-[#162543] shadow-lg transition hover:bg-[#f9fafb] active:scale-95"
+            className="absolute left-3 top-[3.75rem] z-[5] inline-flex translate-x-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-semibold text-[#162543] shadow-lg transition hover:bg-[#f9fafb] active:scale-95 min-[480px]:left-1/2 min-[480px]:top-3 min-[480px]:-translate-x-1/2"
           >
             <Search className="h-4 w-4 text-[#008ce0]" /> {locale === "en" ? "Search this area" : "Buscar en esta área"}
           </button>
