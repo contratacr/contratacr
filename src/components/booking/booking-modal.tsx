@@ -133,6 +133,19 @@ function keepSelectMenuOpen(e: { detail?: { originalEvent?: Event }; target?: Ev
   if (node?.closest?.("[data-selectmenu-list]")) e.preventDefault();
 }
 
+function slotMatchesInitialLocation(slotLocationId: string | null | undefined, initialLocationId: string | null | undefined): boolean {
+  if (!initialLocationId || initialLocationId === "general") return true;
+  const normalized = slotLocationId ?? "general";
+  return normalized === initialLocationId || normalized === "general";
+}
+
+function addDateSlot(map: Record<string, string[]>, date: string, time: string) {
+  const normalizedTime = time.slice(0, 5);
+  const list = map[date] ?? [];
+  if (!list.includes(normalizedTime)) list.push(normalizedTime);
+  map[date] = list;
+}
+
 export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime, initialCategoryId, initialLocationId, initialLocationLabel }: BookingModalProps) {
   const t = useTranslations("booking");
   const locale = useLocale();
@@ -300,7 +313,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     Promise.all([
       supabase.from("professionals").select("availability, availability_public").eq("id", professional.id).single(),
       supabase.from("blocked_dates").select("blocked_date").eq("professional_id", professional.id),
-      supabase.from("availability_slots").select("slot_date, slot_time").eq("professional_id", professional.id).gte("slot_date", formatDateISO(today)),
+      supabase.from("availability_slots").select("slot_date, slot_time, location_id").eq("professional_id", professional.id).gte("slot_date", formatDateISO(today)),
       supabase.auth.getUser(),
       fetch(`/api/bookings?takenFor=${professional.id}`).then((r) => r.json()).catch(() => ({ taken: [] })),
     ]).then(([{ data: proData }, { data: bdData }, { data: slotData }, { data: { user } }, takenRes]) => {
@@ -313,8 +326,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       const map: Record<string, string[]> = {};
       if (!isPrivate) {
         for (const s of slotData ?? []) {
-          const time = String(s.slot_time).slice(0, 5);
-          (map[s.slot_date] ??= []).push(time);
+          if (!slotMatchesInitialLocation(s.location_id, initialLocationId)) continue;
+          addDateSlot(map, s.slot_date, String(s.slot_time));
         }
         for (const k of Object.keys(map)) map[k].sort();
       }
@@ -370,7 +383,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         setProfileLoaded(true);
       }
     });
-  }, [open, professional.id, initialDate, initialTime]);
+  }, [open, professional.id, initialDate, initialTime, initialLocationId]);
 
   useEffect(() => {
     if (!open) return;
@@ -389,8 +402,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         const publishedSlots = Array.isArray(json.allSlots) ? json.allSlots : json.slots;
         if (Array.isArray(publishedSlots)) {
           const map: Record<string, string[]> = {};
-          for (const slot of publishedSlots as Array<{ date: string; time: string }>) {
-            (map[slot.date] ??= []).push(slot.time);
+          for (const slot of publishedSlots as Array<{ date: string; time: string; locationId?: string | null }>) {
+            if (!slotMatchesInitialLocation(slot.locationId, initialLocationId)) continue;
+            addDateSlot(map, slot.date, slot.time);
           }
           for (const key of Object.keys(map)) map[key].sort();
           setDateSlots(map);
@@ -400,8 +414,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         setTakenSlots(new Set(taken));
         if (selectedDate && selectedTime) {
           const selectedKey = `${selectedDate} ${selectedTime}`;
-          const slotStillOpen = (json.slots as Array<{ date: string; time: string }> | undefined)
-            ?.some((slot) => slot.date === selectedDate && slot.time === selectedTime);
+          const slotStillOpen = (json.slots as Array<{ date: string; time: string; locationId?: string | null }> | undefined)
+            ?.some((slot) =>
+              slot.date === selectedDate &&
+              slot.time === selectedTime &&
+              slotMatchesInitialLocation(slot.locationId, initialLocationId)
+            );
           if (taken.includes(selectedKey) || slotStillOpen === false) {
             setSelectedTime("");
             setSubmitError(locale === "en"
@@ -424,7 +442,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       window.removeEventListener("focus", refreshPublicAvailability);
       window.removeEventListener("ccr:availability-changed", refreshPublicAvailability);
     };
-  }, [open, professional.id, selectedDate, selectedTime, locale]);
+  }, [open, professional.id, selectedDate, selectedTime, locale, initialLocationId]);
 
   // "Para otra persona" only exists for HEALTH services — if the (effective) category is
   // not health, force it back to "para mí" so a multi-profession pro who switches to a

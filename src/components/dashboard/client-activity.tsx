@@ -53,6 +53,8 @@ type Booking = {
   archived_by_client?: boolean;
   // The specific service the request is for + who it's for (a dependent/"otra persona").
   category_id?: string | null;
+  slot_location_id?: string | null;
+  slot_location_label?: string | null;
   for_someone_else?: boolean;
   beneficiary_name?: string | null;
   beneficiary_dob?: string | null;
@@ -168,7 +170,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   // CLIENT reschedule: the client (owner of the appointment) picks another available
   // slot for the same pro → old slot freed, new slot taken (atomic). The pro does NOT
   // reschedule (they cancel + coordinate via WhatsApp) — see sprint 433.
-  const [reschedule, setReschedule] = useState<{ id: string; professionalId: string; when: string | null } | null>(null);
+  const [reschedule, setReschedule] = useState<{
+    id: string;
+    professionalId: string;
+    when: string | null;
+    locationId?: string | null;
+    locationLabel?: string | null;
+  } | null>(null);
   // CLIENT cancel inline panel (optional note).
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [cancelNote, setCancelNote] = useState("");
@@ -734,7 +742,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                         size="sm"
                                         className="flex-1 rounded-lg border-[#bfdbfe] px-4 text-[#0089bb] hover:bg-[#f8fcff] sm:flex-none"
                                         onClick={() => {
-                                          setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) });
+                                          setReschedule({
+                                            id: b.id,
+                                            professionalId: b.professional_id,
+                                            when: formatBookingDate(b, dateLocale),
+                                            locationId: b.slot_location_id ?? null,
+                                            locationLabel: b.slot_location_label ?? null,
+                                          });
                                           setCancelTarget(null);
                                           setCancelNote("");
                                         }}
@@ -1157,6 +1171,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           professionalId={reschedule.professionalId}
           bookingId={reschedule.id}
           currentWhen={reschedule.when}
+          slotLocationId={reschedule.locationId}
+          slotLocationLabel={reschedule.locationLabel}
           onClose={() => setReschedule(null)}
           onDone={fetchSection}
         />

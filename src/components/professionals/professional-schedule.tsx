@@ -44,6 +44,8 @@ interface ProfessionalScheduleProps {
   forceContactOnly?: boolean;
   /** Preferred tab when search context should open a specific location/modality. */
   preferredLocationId?: string;
+  /** Restrict the selector to the preferred location when the current search matched only that modality. */
+  restrictToPreferredLocation?: boolean;
 }
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
@@ -77,7 +79,7 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   const [liveData, setLiveData] = useState<{
@@ -198,12 +200,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   }, [professional.coverage?.country, professional.workplaces, professional.videoconsulta, slots, t]);
 
   const visibleLocationOptions = useMemo(() => {
-    if (forceContactOnly && preferredLocationId) {
+    if ((forceContactOnly || restrictToPreferredLocation) && preferredLocationId) {
       const preferred = locationOptions.find((o) => o.id === preferredLocationId);
       if (preferred) return [preferred];
     }
     return locationOptions;
-  }, [forceContactOnly, locationOptions, preferredLocationId]);
+  }, [forceContactOnly, locationOptions, preferredLocationId, restrictToPreferredLocation]);
 
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
   // Default to the first location that ACTUALLY has slots (so the card doesn't open on an

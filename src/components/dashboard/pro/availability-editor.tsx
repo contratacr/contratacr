@@ -18,6 +18,7 @@ import { Link } from "@/i18n/navigation";
 // `availability_slots` (the booking-critical table everything downstream reads). The
 // window is regenerated on every edit AND when the editor mounts, so it stays fresh.
 const HORIZON_DAYS = 70;
+const VIDEO_LOCATION_ID = "videoconsulta";
 
 // Monday-first display order (JS getDay: 0=Sun … 6=Sat).
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -46,6 +47,9 @@ function toMins(t: string): number {
 // fine), not being in two places at once. No minimum gap/travel time is enforced.
 function rangesOverlap(aS: number, aE: number, bS: number, bE: number): boolean {
   return aS < bE && bS < aE;
+}
+function sharesTimeWithVideo(a: string, b: string): boolean {
+  return a !== b && (a === VIDEO_LOCATION_ID || b === VIDEO_LOCATION_ID);
 }
 // A franja is COMPLETE (savable) only when BOTH ends are set and end > start. Newly
 // enabled days start as INCOMPLETE drafts (empty fields) — kept in the UI so the pro
@@ -139,8 +143,9 @@ export function AvailabilityEditor({
   const locationOptions = useMemo(() => {
     const opts: { id: string; label: string }[] = [];
     for (const w of workplaces) if (w.id) opts.push({ id: w.id, label: w.name });
+    if (isVideoConsultation) opts.push({ id: VIDEO_LOCATION_ID, label: t("videoconsulta") });
     return opts;
-  }, [workplaces]);
+  }, [isVideoConsultation, t, workplaces]);
   const schedulableLocationIds = useMemo(() => new Set(locationOptions.map((o) => o.id)), [locationOptions]);
 
   // Weekly schedules are edited one fixed/base workplace at a time. "A domicilio" is
@@ -166,6 +171,7 @@ export function AvailabilityEditor({
   const sameLoc = useCallback((loc: string) => loc === activeLocationId, [activeLocationId]);
 
   function locationLabel(id: string): string {
+    if (id === VIDEO_LOCATION_ID) return t("videoconsulta");
     return locationOptions.find((o) => o.id === id)?.label ?? t("locationFallback");
   }
 
@@ -214,7 +220,8 @@ export function AvailabilityEditor({
       }
     }
     // 2) CROSS-LOCATION: proposed must not overlap any OTHER location on the same day.
-    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))].filter((l) => l && l !== loc);
+    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))]
+      .filter((l) => l && l !== loc && !sharesTimeWithVideo(l, loc));
     const dates: string[] = "date" in scope
       ? [scope.date]
       : (() => {
@@ -252,7 +259,8 @@ export function AvailabilityEditor({
   // closed/custom/extra precedence via rangesForLocOnDate. (The weekly view no longer
   // needs a per-weekday hint — every location's blocks are shown together.)
   function otherOccupiedForDate(date: string): { label: string; ranges: [number, number][] }[] {
-    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))].filter((l) => l && l !== activeLocationId);
+    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))]
+      .filter((l) => l && l !== activeLocationId && !sharesTimeWithVideo(l, activeLocationId));
     return otherLocs
       .map((loc) => ({ label: locationLabel(loc), ranges: mergeRanges(rangesForLocOnDate(loc, date, weekly, exceptions)) }))
       .filter((o) => o.ranges.length > 0);
@@ -264,9 +272,9 @@ export function AvailabilityEditor({
   }
 
   // ── MATERIALIZE the template + exceptions into concrete slots ──────────────
-  // Keyed by LOCATION (not profession): availability_slots is UNIQUE per pro+date+time
-  // (a pro can't be in two places at once), so we dedupe by (date,time) across all
-  // locations — first writer wins. Slots are written with category_id = null.
+  // Keyed by LOCATION (not profession): availability_slots can publish the same
+  // pro+date+time for videoconsulta + one physical place. Bookings remain unique by
+  // pro+date+time, so one reservation blocks both visible options.
   const computeDesiredSlots = useCallback((wk: WeeklyRow[], exc: ExcRow[]) => {
     const start = todayISO();
     const locs = new Set<string>();
@@ -293,7 +301,7 @@ export function AvailabilityEditor({
       excByKey.set(k, cur);
     }
 
-    const seen = new Set<string>(); // date|time
+    const seen = new Set<string>(); // date|time|location
     const out: { date: string; time: string; location_id: string; category_id: string | null }[] = [];
     for (let i = 0; i <= HORIZON_DAYS; i++) {
       const date = addDaysISO(start, i);
@@ -312,7 +320,7 @@ export function AvailabilityEditor({
           if (times.length === 0) times.push(hhmm(s)); // a configured franja always yields ≥1 time
           for (const time of times) {
             if (isTooSoonCR(date, time)) continue;
-            const key = `${date}|${time}`;
+            const key = `${date}|${time}|${loc}`;
             if (seen.has(key)) continue;
             seen.add(key);
             out.push({ date, time, location_id: loc, category_id: null });
@@ -424,6 +432,7 @@ export function AvailabilityEditor({
       const flat: { loc: string; r: [number, number] }[] = [];
       for (const loc of locs) for (const r of rangesForLocOnDate(loc, date, hypo, exceptions)) flat.push({ loc, r });
       for (let a = 0; a < flat.length; a++) for (let b = a + 1; b < flat.length; b++) {
+        if (sharesTimeWithVideo(flat[a].loc, flat[b].loc)) continue;
         if (rangesOverlap(flat[a].r[0], flat[a].r[1], flat[b].r[0], flat[b].r[1])) {
           return flat[a].loc === flat[b].loc
             ? { title: t("conflictTitle"), body: t("conflictSelf") }
@@ -610,6 +619,15 @@ export function AvailabilityEditor({
       console.error("[availability] video consultation update failed:", error);
       setIsVideoConsultation(!next);
     } else {
+      if (!next) {
+        const nextWeekly = weekly.filter((r) => r.location_id !== VIDEO_LOCATION_ID);
+        const nextExceptions = exceptions.filter((r) => r.location_id !== VIDEO_LOCATION_ID);
+        setWeekly(nextWeekly);
+        setExceptions(nextExceptions);
+        await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", VIDEO_LOCATION_ID);
+        await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", VIDEO_LOCATION_ID);
+        await supabase.from("availability_slots").delete().eq("professional_id", professionalId).eq("location_id", VIDEO_LOCATION_ID);
+      }
       pulseSaved();
       onSaved?.();
     }

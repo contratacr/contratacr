@@ -8,6 +8,12 @@ type BookingRow = { id: string; status: string; service_description?: string };
 type ProjectRow = { id: string; title: string; status: string };
 type ProposalRow = { id: string; status: string; project_id?: string; message?: string };
 type NotificationData = { booking_id?: string | null; project_id?: string | null };
+type PublicAvailabilityResponse = {
+  slots?: Array<{ date: string; time: string; locationId?: string | null }>;
+  allSlots?: Array<{ date: string; time: string; locationId?: string | null }>;
+  taken?: string[];
+  error?: string;
+};
 
 async function expectNotification(
   userId: string,
@@ -194,6 +200,68 @@ test.describe("@seeded core regression", () => {
     });
     expect(completed.status).toBe(200);
     await expectNotification(seed.professionalUserId, "booking_completed_by_client", { booking_id: created.body.id });
+  });
+
+  test("video consultation and in-person slots can share schedule but one booking blocks both", async ({ page }) => {
+    const marker = `E2E Regression video shared availability ${Date.now()}`;
+
+    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    const videoBooking = await apiJson<IdResponse>(page, "/api/bookings", {
+      method: "POST",
+      body: {
+        professionalId: seed.videoProfessionalId,
+        clientName: E2E_USERS.client.fullName,
+        clientEmail: E2E_USERS.client.email,
+        clientPhone: E2E_USERS.client.phone,
+        serviceDescription: marker,
+        scheduledDate: seed.videoSlotDate,
+        scheduledTime: seed.videoSharedSlotTime,
+        categoryId: seed.videoCategoryId,
+        slotLocationId: "videoconsulta",
+        slotLocationLabel: "Videoconsulta",
+      },
+    });
+    expect(videoBooking.status).toBe(200);
+    expect(videoBooking.body.id).toBeTruthy();
+    await expectNotification(seed.videoProfessionalUserId, "booking_received", { booking_id: videoBooking.body.id });
+
+    const availability = await apiJson<PublicAvailabilityResponse>(
+      page,
+      `/api/public-availability?professionalId=${seed.videoProfessionalId}`,
+    );
+    expect(availability.status).toBe(200);
+    expect(
+      (availability.body.allSlots ?? []).filter(
+        (slot) => slot.date === seed.videoSlotDate && slot.time === seed.videoSharedSlotTime,
+      ).map((slot) => slot.locationId).sort(),
+    ).toEqual(["e2e-video-office", "videoconsulta"]);
+    expect(
+      (availability.body.slots ?? []).filter(
+        (slot) => slot.date === seed.videoSlotDate && slot.time === seed.videoSharedSlotTime,
+      ),
+    ).toHaveLength(0);
+    expect(
+      (availability.body.slots ?? []).some(
+        (slot) => slot.date === seed.videoSlotDate && slot.time === seed.videoSecondSlotTime && slot.locationId === "videoconsulta",
+      ),
+    ).toBe(true);
+
+    const physicalDuplicate = await apiJson<IdResponse>(page, "/api/bookings", {
+      method: "POST",
+      body: {
+        professionalId: seed.videoProfessionalId,
+        clientName: E2E_USERS.client.fullName,
+        clientEmail: E2E_USERS.client.email,
+        clientPhone: E2E_USERS.client.phone,
+        serviceDescription: `${marker} duplicate physical`,
+        scheduledDate: seed.videoSlotDate,
+        scheduledTime: seed.videoSharedSlotTime,
+        categoryId: seed.videoCategoryId,
+        slotLocationId: "e2e-video-office",
+        slotLocationLabel: "Atenas, Alajuela",
+      },
+    });
+    expect(physicalDuplicate.status).toBe(409);
   });
 
   test("project and proposal flow enforces ownership, decision, notifications state, and completion", async ({ page }) => {

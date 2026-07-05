@@ -100,9 +100,13 @@ interface ProfessionalCardProps {
   rank?: number;
   /** Search is explicitly for video consultation: show contact actions, not schedules. */
   forceContactOnly?: boolean;
+  /** Search context should open a specific schedule tab, usually videoconsulta. */
+  preferredLocationId?: string;
+  /** Hide other location tabs when the search matched a specific modality/location only. */
+  restrictToPreferredLocation?: boolean;
 }
 
-export async function ProfessionalCard({ professional, className, slots = [], activeCategory, viewerProfileId, rank, forceContactOnly = false }: ProfessionalCardProps) {
+export async function ProfessionalCard({ professional, className, slots = [], activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false }: ProfessionalCardProps) {
   const tCard = await getTranslations("card");
   const tSchedule = await getTranslations("schedule");
   const locale = await getLocale();
@@ -313,7 +317,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         placeAddress={placeAddress}
         businessName={businessName ?? ""}
         forceContactOnly={forceContactOnly}
-        preferredLocationId={forceContactOnly ? "videoconsulta" : undefined}
+        preferredLocationId={preferredLocationId ?? (forceContactOnly ? "videoconsulta" : undefined)}
+        restrictToPreferredLocation={restrictToPreferredLocation}
       />
 
       {/* Whole card → the professional's profile (stretched low-z overlay). The interactive
