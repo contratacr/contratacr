@@ -548,7 +548,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
       <Section id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
         {/* Photo — explicit buttons, no hover-to-change */}
-        <div data-field="photo" className="flex flex-wrap items-center gap-4">
+        <div data-field="photo" className="flex items-center gap-4">
           <div className="relative h-20 w-20 shrink-0 rounded-full">
             <ImagePreviewDialog
               src={avatarPreview}
@@ -575,11 +575,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               </div>
             )}
           </div>
-          <div className="min-w-[13rem] flex-1 basis-[13rem] flex flex-col gap-2">
+          <div className="min-w-0 flex-1 flex flex-col gap-2">
             <p className="text-sm font-medium text-[#374151]">{t("profilePhoto")}</p>
             {avatarPreview ? (
-              <div className="flex flex-nowrap items-center gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} className="px-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} className="shrink-0 px-3">
                   <Camera className="h-4 w-4" /> {t("changePhoto")}
                 </Button>
                 <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} className="shrink-0 px-2.5 text-red-500 hover:text-red-600">
