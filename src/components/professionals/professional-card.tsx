@@ -128,11 +128,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     : [professional.categoryId]
   ).filter(Boolean);
   // When the user searched a specific category, show only that matching badge.
-  // Fewer, cleaner chips — cap at 2 (the rest collapse to "+N").
-  const professionList =
+  // Fewer, cleaner chips: mobile caps at 2, desktop at 3, and the rest
+  // collapses to "+N" so the row never becomes two lines.
+  const displayProfessions =
     activeCategory && allProfessions.includes(activeCategory)
       ? [activeCategory]
-      : allProfessions.slice(0, 3);
+      : allProfessions;
+  const mobileProfessionList = displayProfessions.slice(0, 2);
+  const desktopProfessionList = displayProfessions.slice(0, 3);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
@@ -140,7 +143,10 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix, isColones: priceIsColones } = splitPricingLabel(priceLabel);
   const priceBoxClass = priceUnit || priceTaxSuffix ? "max-w-[38%] sm:max-w-[40%]" : "w-[74px] sm:w-[86px]";
   const isVerified = professional.verificationStatus === "verified";
-  const extraProfessions = allProfessions.length - professionList.length;
+  const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
+  const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
+  const serviceChipClass = "min-w-0 max-w-[10.5rem] shrink items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280] lg:max-w-[9.5rem]";
+  const moreProfessionsClass = "relative z-10 shrink-0 items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
@@ -221,30 +227,45 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             )}
           </div>
 
-          {/* Service tags — DIRECTLY under the name; wrap to multiple lines, cap + "+N". */}
-          {(professionList.length > 0 || professional.isFeatured) && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {professionList.map((cat) => (
-                <span key={cat} className="inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">
-                  {catLabel(cat)}
+          {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
+          {(displayProfessions.length > 0 || professional.isFeatured) && (
+            <div className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden">
+              {mobileProfessionList.map((cat) => (
+                <span key={`mobile-${cat}`} className={`inline-flex ${serviceChipClass} lg:hidden`} title={catLabel(cat)}>
+                  <span className="min-w-0 truncate">{catLabel(cat)}</span>
+                </span>
+              ))}
+              {desktopProfessionList.map((cat) => (
+                <span key={`desktop-${cat}`} className={`hidden ${serviceChipClass} lg:inline-flex`} title={catLabel(cat)}>
+                  <span className="min-w-0 truncate">{catLabel(cat)}</span>
                 </span>
               ))}
               {/* "+N" → the profile (where ALL professions are listed). A LINK (not a span) so
                   it's tappable; `relative z-10` lifts it above the whole-card overlay; the pill
                   + hover (brand-blue bg/text + pointer) signals it's interactive without
                   cluttering the row — consistent with the other card→profile links. */}
-              {extraProfessions > 0 && (
+              {mobileExtraProfessions > 0 && (
                 <Link
                   href={`/profesionales/${professional.slug}`}
                   title={tCard("moreProfessions")}
                   aria-label={tCard("moreProfessions")}
-                  className="relative z-10 inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]"
+                  className={`inline-flex ${moreProfessionsClass} lg:hidden`}
                 >
-                  +{extraProfessions}
+                  +{mobileExtraProfessions}
+                </Link>
+              )}
+              {desktopExtraProfessions > 0 && (
+                <Link
+                  href={`/profesionales/${professional.slug}`}
+                  title={tCard("moreProfessions")}
+                  aria-label={tCard("moreProfessions")}
+                  className={`hidden ${moreProfessionsClass} lg:inline-flex`}
+                >
+                  +{desktopExtraProfessions}
                 </Link>
               )}
               {professional.isFeatured && (
-                <span className="inline-flex items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
                   {tCard("featured")}
                 </span>
               )}
