@@ -7,6 +7,7 @@ import {
   HelpCircle, Lightbulb, Headset, ListChecks, UserRound, Wrench, Award, CreditCard,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -731,6 +732,7 @@ interface AccountMenuProps {
   accountHref: string;
   notifUnread: number;
   onSwitchMode: (mode: Mode) => void;
+  switchModeHref?: (mode: Mode) => string | undefined;
   onSignOut: () => void;
   onOpen?: () => void;
 }
@@ -740,7 +742,7 @@ function AccountMenu({
   professionalPanelHref, clientPanelHref, clientProfileHref, professionalProfileHref, servicesHref, photosHref, availabilityHref, bookingsHref, proposalsHref,
   subscriptionHref, sentBookingsHref, sentProjectsHref, savedHref, notificationsHref, supportPanelHref,
   accountHref, notifUnread,
-  onSwitchMode, onSignOut, onOpen,
+  onSwitchMode, switchModeHref, onSignOut, onOpen,
 }: AccountMenuProps) {
   const t = useTranslations("header");
   const td = useTranslations("proPanel");
@@ -798,7 +800,7 @@ function AccountMenu({
           <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
           {isPro && (
             <div className="px-3 pb-2">
-              <ModeSwitcher mode={mode} onSwitch={onSwitchMode} block />
+              <ModeSwitcher mode={mode} onSwitch={onSwitchMode} getHref={switchModeHref} block />
             </div>
           )}
 
@@ -953,6 +955,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const td = useTranslations("proPanel");
   const locale = useLocale();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, avatarUrl, avatarReady } = useAuth();
   const compactSearchExamples = useMemo(() => {
     const raw = t.raw(isSmallScreen ? "searchExamples" : "searchExamplesDesktop");
@@ -1047,6 +1050,15 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
     }
     queueMicrotask(() => refreshNotifUnread());
   }, [pathname, refreshNotifUnread, router, setMode]);
+  const switchMenuModeHref = useCallback((next: Mode) => {
+    if (!pathname.startsWith("/dashboard/profesional")) return undefined;
+    const params = new URLSearchParams(searchParams.toString());
+    const tab = params.get("tab");
+    if (next === "offer" && tab && DASHBOARD_USE_ONLY_TABS.has(tab)) params.set("tab", "bookings");
+    if (next === "use" && tab && DASHBOARD_OFFER_ONLY_TABS.has(tab)) params.set("tab", "sent_bookings");
+    params.set("mode", next);
+    return `/${locale}/dashboard/profesional?${params.toString()}`;
+  }, [locale, pathname, searchParams]);
   useEffect(() => {
     queueMicrotask(() => refreshNotifUnread());
     const id = window.setInterval(refreshNotifUnread, 3000);
@@ -1386,6 +1398,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       accountHref={accountHref}
                       notifUnread={activeUnread}
                       onSwitchMode={switchMenuMode}
+                      switchModeHref={switchMenuModeHref}
                       onSignOut={handleSignOut}
                       onOpen={refreshNotifUnread}
                     />
@@ -1569,6 +1582,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     accountHref={accountHref}
                     notifUnread={activeUnread}
                     onSwitchMode={switchMenuMode}
+                    switchModeHref={switchMenuModeHref}
                     onSignOut={handleSignOut}
                     onOpen={refreshNotifUnread}
                   />
@@ -1659,7 +1673,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <div className="flex flex-col gap-0.5">
                     {isPro && (
                       <div className="px-2 pb-2 pt-1">
-                        <ModeSwitcher mode={mode} onSwitch={switchMenuMode} block />
+                        <ModeSwitcher mode={mode} onSwitch={switchMenuMode} getHref={switchMenuModeHref} block />
                       </div>
                     )}
                     <div className="mt-1 flex flex-col gap-0.5 border-t border-[#edf2f7] pt-1">
