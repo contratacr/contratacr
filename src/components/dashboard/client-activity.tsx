@@ -575,7 +575,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       {section === "bookings" && (
         <div className="space-y-4">
           {bookings.length === 0 ? (
-            <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
+            <div className="text-center py-16">
               <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-semibold text-[#374151]">{t("bEmpty")}</p>
               <p className="text-sm text-[#6b7280] mt-1">{t("bEmptySub")}</p>
@@ -805,7 +805,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       {section === "projects" && (
         <div>
           {projects.length === 0 ? (
-            <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
+            <div className="text-center py-16">
               <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-semibold text-[#374151]">{t("pEmpty")}</p>
               <p className="text-sm text-[#6b7280] mt-1">
