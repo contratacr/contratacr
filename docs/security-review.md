@@ -27,6 +27,7 @@ This is the launch-readiness security checklist for ContrataCR.
   - image uploads
 - Facebook login is hidden to avoid Meta production/review friction before launch.
 - Supabase migrations and padron refreshes are deployable from GitHub Actions with environment scoping.
+- Encrypted daily Supabase logical backups are automated from GitHub Actions. Backup artifacts are encrypted before upload and exclude the rebuildable TSE padron data.
 - High/critical dependency audit, build, template validation, and secret smoke checks are automated in GitHub Actions.
 
 ## Launch blockers to resolve before public traffic
@@ -48,7 +49,7 @@ This is the launch-readiness security checklist for ContrataCR.
 - Move rate limiting from in-memory to a shared store before paid traffic or heavy launch campaigns. Upstash Redis is a good fit on Vercel.
 - Add CAPTCHA or invisible bot protection to password reset, support/contact, and public suggestion endpoints if spam starts.
 - Add a stricter full CSP after launch testing. Current CSP intentionally only locks framing to avoid breaking maps, Cloudinary, Supabase, and inline email-safe UI.
-- Add backup automation for Supabase database dumps after production has real customer data.
+- Enable Cloudinary automatic backup or define a periodic media export plan once production portfolios/support images become business-critical. Database backups store Cloudinary URLs, not the original media binaries.
 - Review Supabase RLS after every migration that adds a table, especially admin/support/payment tables.
 - Keep production Supabase service-role key out of local `.env.local` unless actively needed.
 - Clean existing full-project ESLint debt and then make `npm run lint` blocking in CI. It currently reports pre-existing React/Next lint errors unrelated to the release automation work.
