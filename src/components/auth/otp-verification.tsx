@@ -23,10 +23,15 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
   const [resending, setResending] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    inputRefs.current[0]?.focus();
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    containerRef.current?.scrollIntoView({ block: "start", inline: "nearest" });
+    window.requestAnimationFrame(() => {
+      inputRefs.current[0]?.focus({ preventScroll: true });
+    });
   }, []);
 
   useEffect(() => {
@@ -49,7 +54,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     if (otpError) {
       setError(isEn ? "Incorrect or expired code. Request a new one." : "Codigo incorrecto o expirado. Solicita uno nuevo.");
       setDigits(["", "", "", "", "", ""]);
-      setTimeout(() => inputRefs.current[0]?.focus(), 50);
+      setTimeout(() => inputRefs.current[0]?.focus({ preventScroll: true }), 50);
       return;
     }
 
@@ -70,7 +75,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
       const next = [...digits];
       for (let i = 0; i < 6; i++) next[i] = pasted[i] ?? "";
       setDigits(next);
-      inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+      inputRefs.current[Math.min(pasted.length, 5)]?.focus({ preventScroll: true });
       if (pasted.length === 6) verify(pasted);
       return;
     }
@@ -79,13 +84,13 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     const next = [...digits];
     next[index] = digit;
     setDigits(next);
-    if (digit && index < 5) inputRefs.current[index + 1]?.focus();
+    if (digit && index < 5) inputRefs.current[index + 1]?.focus({ preventScroll: true });
     if (next.every((d) => d !== "")) verify(next.join(""));
   }
 
   function handleKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Backspace" && !digits[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+      inputRefs.current[index - 1]?.focus({ preventScroll: true });
     }
   }
 
@@ -97,11 +102,11 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     setResending(false);
     setCountdown(60);
     setDigits(["", "", "", "", "", ""]);
-    setTimeout(() => inputRefs.current[0]?.focus(), 50);
+    setTimeout(() => inputRefs.current[0]?.focus({ preventScroll: true }), 50);
   }
 
   return (
-    <div className="text-center">
+    <div ref={containerRef} className="scroll-mt-24 text-center">
       <h1 className="text-xl font-bold text-[#111827]">{isEn ? "Verify your email" : "Verifica tu correo"}</h1>
       <p className="text-sm text-[#6b7280] mt-1.5 mb-6">
         {isEn ? "Enter the 6-digit code we sent to" : "Ingresa el codigo de 6 digitos que enviamos a"}{" "}

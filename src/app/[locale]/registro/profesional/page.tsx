@@ -1231,11 +1231,15 @@ export default function RegisterProfessionalPage() {
                             setVideoCoverageCountry(true);
                             setLocationError(null);
                           }}
-                          className="inline-flex w-fit max-w-full items-center gap-2 rounded-full border border-[#bfeeff] bg-white px-3 py-2 text-sm font-semibold text-[#009FD9] shadow-sm transition hover:border-[#009FD9] hover:bg-[#f0fbff]"
+                          className="inline-flex w-full max-w-full items-center gap-2 rounded-full border border-[#bfeeff] bg-white px-3 py-2 text-sm font-semibold text-[#009FD9] shadow-sm transition hover:border-[#009FD9] hover:bg-[#f0fbff] sm:w-fit"
                         >
                           <Plus className="h-4 w-4 shrink-0" />
-                          <span className="truncate">{t("videoCountryAdd")}</span>
-                          <span className="shrink-0 text-xs font-semibold text-[#64748b]">({t("videoConsultOption")})</span>
+                          <span className="min-w-0 flex-1 text-left leading-tight sm:flex sm:flex-none sm:items-center sm:gap-1.5">
+                            <span className="block truncate">{t("videoCountryAdd")}</span>
+                            <span className="block truncate text-xs font-semibold text-[#64748b] sm:inline">
+                              ({t("videoConsultOption")})
+                            </span>
+                          </span>
                         </button>
                       )}
                     </div>

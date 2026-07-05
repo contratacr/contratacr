@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -22,6 +22,11 @@ export default function SoportePage() {
 
   const [success, setSuccess] = useState(false);
   const [successEmail, setSuccessEmail] = useState("");
+
+  useEffect(() => {
+    if (!success) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [success]);
 
   if (success) {
     return (

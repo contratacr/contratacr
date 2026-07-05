@@ -215,6 +215,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [profileCedula, setProfileCedula] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
   const [profilePhoneInitial, setProfilePhoneInitial] = useState("");
+  const [profilePhoneWasPrefilled, setProfilePhoneWasPrefilled] = useState(false);
   // Whether the logged-in user's profile (cédula/phone) has loaded. The cédula
   // input must NEVER render before this is known, or it flashes for registered
   // clients who already have a cédula on file.
@@ -292,7 +293,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       setSelfDobInput(""); setDobEditing(false); setSelfDob(null); setSubmitError(null); setNoCedula(false);
       // Reset the on-file identity so the DB is the authoritative source each open —
       // a social-login account with no cédula must always be (re)prompted.
-      setProfileCedula(""); setProfilePhone(""); setProfilePhoneInitial(""); setProfileLoaded(false); setHasStoredCedula(false);
+      setProfileCedula(""); setProfilePhone(""); setProfilePhoneInitial(""); setProfilePhoneWasPrefilled(false); setProfileLoaded(false); setHasStoredCedula(false);
     });
 
     const supabase = createClient();
@@ -345,11 +346,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               const accountPhone = String(data.phone);
               setProfilePhone(accountPhone);
               setProfilePhoneInitial(accountPhone);
+              setProfilePhoneWasPrefilled(true);
             } else {
               // Legacy/professional-first accounts may have the number only on the
               // professional profile; prefill it and sync when the user confirms.
               supabase.from("professionals").select("whatsapp").eq("profile_id", user.id).maybeSingle()
-                .then(({ data: pro }) => { if (pro?.whatsapp) setProfilePhone(String(pro.whatsapp)); });
+                .then(({ data: pro }) => {
+                  if (pro?.whatsapp && hasPhoneNumber(String(pro.whatsapp))) {
+                    setProfilePhone(String(pro.whatsapp));
+                    setProfilePhoneWasPrefilled(true);
+                  }
+                });
             }
             if (data?.full_name) setClientName((prev) => prev || limitText(String(data.full_name), NAME_MAX_LENGTH));
             // Saved DOB (backend-only) → auto-fills future MEDICAL requests. The padrón
@@ -810,7 +817,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // don't also show the name-mismatch warning (it's moot; they can't use it).
   const nameWillChange = !cedulaTaken && !!selfOfficialName && !sameName(selfOfficialName, clientName);
   const needsCompleteStep = needsProfile || needsCedula || needsPhone;
-  const showDetailsPhone = isLoggedIn && profileLoaded && !needsCompleteStep;
+  const canShowDetailsPhone = isLoggedIn && profileLoaded && !needsProfile && !needsCedula;
+  const showDetailsPhone = canShowDetailsPhone && (!needsPhone || profilePhoneWasPrefilled);
   const detailsPhoneInvalid = showDetailsPhone && phoneDigits(profilePhone).length < 8;
   const totalSteps = isLoggedIn ? (needsCompleteStep ? 3 : 2) : 3;
   const stepIndex = { calendar: 0, details: 1, contact: 2, complete: 2, success: 3 };

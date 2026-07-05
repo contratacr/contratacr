@@ -792,7 +792,7 @@
       "videoSectionTitle": "Video consultations",
       "videoSectionHint": "Attend online across the country.",
       "videoCountryPlace": "All Costa Rica",
-      "videoCountryAdd": "All Costa Rica",
+      "videoCountryAdd": "Add all Costa Rica",
       "videoCountryRemove": "Remove All Costa Rica",
       "inPersonSectionTitle": "In-person care",
       "skipCedulaNote": "You will appear without the Verified badge. You can verify your identity later from your panel."
@@ -1776,7 +1776,7 @@
     "videoCoverageTitle": "Online coverage",
     "videoCoverageDesc": "Available only for services that can be handled by video consultation.",
     "videoCountryPlace": "All Costa Rica",
-    "videoCountryAdd": "All Costa Rica",
+    "videoCountryAdd": "Add all Costa Rica",
     "videoCountryRemove": "Remove All Costa Rica",
     "videoCountryLabel": "Show me across Costa Rica",
     "videoCountryHelp": "Available across Costa Rica.",

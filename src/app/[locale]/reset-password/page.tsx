@@ -54,6 +54,11 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  useEffect(() => {
+    if (!done) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [done]);
+
   // Built inside the component so validation messages localize (and reuse the
   // same rule labels shown in the live checklist).
   const schema = useMemo(
