@@ -66,6 +66,73 @@ test.describe("@seeded core regression", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("support tickets keep the automatic first acknowledgement in the user panel", async ({ page }) => {
+    const admin = regressionAdminClient();
+    const subject = `E2E Regression support ${Date.now()}`;
+    const firstMessage = "Necesito ayuda con una prueba automatizada de soporte.";
+    const autoMessage = "Gracias, recibimos su tiquete de soporte. Nuestro equipo lo revisará y le responderá lo antes posible.";
+
+    const { data: staleTickets, error: staleError } = await admin
+      .from("support_tickets")
+      .select("id")
+      .eq("user_id", seed.clientId)
+      .ilike("subject", "E2E Regression support%");
+    if (staleError) throw staleError;
+    const staleIds = (staleTickets ?? []).map((ticket) => ticket.id).filter(Boolean);
+    if (staleIds.length > 0) {
+      await admin.from("support_ticket_messages").delete().in("ticket_id", staleIds);
+      await admin.from("support_tickets").delete().in("id", staleIds);
+    }
+
+    const now = new Date().toISOString();
+    const { data: ticket, error: ticketError } = await admin
+      .from("support_tickets")
+      .insert({
+        user_id: seed.clientId,
+        name: E2E_USERS.client.fullName,
+        email: E2E_USERS.client.email,
+        subject,
+        message: firstMessage,
+        topic: "subject1",
+        status: "open",
+        last_reply_at: now,
+        last_reply_role: "user",
+      })
+      .select("id")
+      .single();
+    if (ticketError || !ticket?.id) throw ticketError ?? new Error("Could not seed support ticket.");
+
+    try {
+      const { error: messagesError } = await admin.from("support_ticket_messages").insert([
+        {
+          ticket_id: ticket.id,
+          sender_role: "user",
+          sender_id: seed.clientId,
+          sender_name: E2E_USERS.client.fullName,
+          body: firstMessage,
+        },
+        {
+          ticket_id: ticket.id,
+          sender_role: "admin",
+          sender_name: "Soporte ContrataCR",
+          body: autoMessage,
+        },
+      ]);
+      if (messagesError) throw messagesError;
+
+      await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+      await gotoOK(page, `/es/dashboard/profesional?tab=soporte&mode=use&ticket=${ticket.id}`);
+      await expect(page.getByText(/SUP-/).first()).toBeVisible();
+      await expect(page.getByText(/Cuenta, inicio de sesi[oó]n o datos|Account, login/i).first()).toBeVisible();
+      await expect(page.getByText(firstMessage).first()).toBeVisible();
+      await expect(page.getByText(autoMessage).first()).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    } finally {
+      await admin.from("support_ticket_messages").delete().eq("ticket_id", ticket.id);
+      await admin.from("support_tickets").delete().eq("id", ticket.id);
+    }
+  });
+
   test("client booking flow creates a request, blocks double booking, and supports completion", async ({ page }) => {
     const marker = `E2E Regression booking ${Date.now()}`;
 
