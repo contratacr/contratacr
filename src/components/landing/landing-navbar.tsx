@@ -1663,11 +1663,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       </div>
                     )}
                     <div className="mt-1 flex flex-col gap-0.5 border-t border-[#edf2f7] pt-1">
-                      <a href={isPro && mode === "offer" ? professionalPanelHref : clientPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
-                        <LayoutDashboard className={mobileIconClass(false)} />
-                        <span className="min-w-0 flex-1">{t("myPanel")}</span>
-                        <ChevronRight className={mobileChevronClass(false)} />
-                      </a>
                       {isPro && mode === "offer" ? (
                         <>
                           <a href={professionalProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
@@ -1830,11 +1825,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               </div>
 
               {/* Idioma */}
-              <div className="border-t border-[#edf2f7] px-3 py-3">
-                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#9ca3af]">
-                  <Globe className="h-3.5 w-3.5" />
-                  <span>{t("language")}</span>
-                </div>
+              <div className="px-3 pb-3 pt-1.5">
                 <LanguageInline />
               </div>
             </div>
