@@ -1157,6 +1157,7 @@
     }
   },
   "proPanel": {
+    "title": "Mi panel",
     "viewAsClient": "Ver cómo me ven los clientes",
     "publicPreview": "Vista pública",
     "viewPublicProfile": "Ver perfil público",

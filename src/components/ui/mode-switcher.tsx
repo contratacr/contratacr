@@ -63,7 +63,10 @@ export function ModeSwitcher({
               role="tab"
               aria-selected={active}
               href={href}
-              onClick={() => onSwitch(seg.value)}
+              onClick={(event) => {
+                event.preventDefault();
+                onSwitch(seg.value);
+              }}
               className={segmentClassName}
             >
               {seg.label}
