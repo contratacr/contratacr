@@ -3,11 +3,10 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
-  LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, Handshake, Briefcase, Compass, Settings, Bell, Globe, Check,
+  LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, Handshake, Briefcase, Compass, Bell, Globe, Check,
   HelpCircle, Lightbulb, Headset, ListChecks, UserRound, Wrench, Award, CreditCard,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
-import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -74,9 +73,6 @@ const LANGS = [
   { code: "es", label: "Español" },
   { code: "en", label: "English" },
 ] as const;
-const DASHBOARD_OFFER_ONLY_TABS = new Set(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion"]);
-const DASHBOARD_USE_ONLY_TABS = new Set(["sent_bookings", "sent_projects", "saved"]);
-
 function useTypedPlaceholder(examples: string[], active: boolean) {
   const [text, setText] = useState(examples[0] ?? "");
 
@@ -727,12 +723,9 @@ interface AccountMenuProps {
   sentBookingsHref: string;
   sentProjectsHref: string;
   savedHref: string;
-  notificationsHref: string;
+  notificationsHrefByMode: Record<Mode, string>;
   supportPanelHref: string;
-  accountHref: string;
-  notifUnread: number;
-  onSwitchMode: (mode: Mode) => void;
-  switchModeHref?: (mode: Mode) => string | undefined;
+  notifUnreadByMode: Record<Mode, number>;
   onSignOut: () => void;
   onOpen?: () => void;
 }
@@ -740,16 +733,18 @@ interface AccountMenuProps {
 function AccountMenu({
   user, isPro, mode, displayName, avatarUrl, avatarReady, initials,
   professionalPanelHref, clientPanelHref, clientProfileHref, professionalProfileHref, servicesHref, photosHref, availabilityHref, bookingsHref, proposalsHref,
-  subscriptionHref, sentBookingsHref, sentProjectsHref, savedHref, notificationsHref, supportPanelHref,
-  accountHref, notifUnread,
-  onSwitchMode, switchModeHref, onSignOut, onOpen,
+  subscriptionHref, sentBookingsHref, sentProjectsHref, savedHref, notificationsHrefByMode, supportPanelHref,
+  notifUnreadByMode, onSignOut, onOpen,
 }: AccountMenuProps) {
   const t = useTranslations("header");
   const td = useTranslations("proPanel");
   const [open, setOpen] = useState(false);
+  const [menuMode, setMenuMode] = useState<Mode>(mode);
   const ref = useRef<HTMLDivElement>(null);
   const menuItemClass = "flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors";
   const menuDividerClass = "mt-1 border-t border-gray-50 pt-1";
+  const selectedMenuMode = isPro ? menuMode : "use";
+  const notifUnread = notifUnreadByMode[selectedMenuMode] ?? 0;
 
   useEffect(() => {
     function onClickOutside(e: Event) {
@@ -765,7 +760,10 @@ function AccountMenu({
 
   function toggle() {
     setOpen((o) => {
-      if (!o) onOpen?.();
+      if (!o) {
+        setMenuMode(mode);
+        onOpen?.();
+      }
       return !o;
     });
   }
@@ -800,21 +798,29 @@ function AccountMenu({
           <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
           {isPro && (
             <div className="px-3 pb-2">
-              <ModeSwitcher mode={mode} onSwitch={onSwitchMode} getHref={switchModeHref} block />
+              <ModeSwitcher mode={menuMode} onSwitch={setMenuMode} block />
             </div>
           )}
 
           <div className={menuDividerClass}>
             <a
-              href={isPro && mode === "offer" ? professionalPanelHref : clientPanelHref}
+              href={isPro && selectedMenuMode === "offer" ? professionalPanelHref : clientPanelHref}
               onClick={() => setOpen(false)}
               className={menuItemClass}
             >
               <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
               {t("myPanel")}
             </a>
-            {isPro && mode === "offer" ? (
+            {isPro && selectedMenuMode === "offer" ? (
               <>
+                <a href={bookingsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <CalendarCheck className="h-4 w-4 text-gray-400" />
+                  {td("tabs.bookings")}
+                </a>
+                <a href={proposalsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <Handshake className="h-4 w-4 text-gray-400" />
+                  {td("tabs.proposals")}
+                </a>
                 <a href={professionalProfileHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <UserRound className="h-4 w-4 text-gray-400" />
                   {td("tabs.profile")}
@@ -831,14 +837,6 @@ function AccountMenu({
                   <CalendarDays className="h-4 w-4 text-gray-400" />
                   {td("tabs.availability")}
                 </a>
-                <a href={bookingsHref} onClick={() => setOpen(false)} className={menuItemClass}>
-                  <CalendarCheck className="h-4 w-4 text-gray-400" />
-                  {td("tabs.bookings")}
-                </a>
-                <a href={proposalsHref} onClick={() => setOpen(false)} className={menuItemClass}>
-                  <Handshake className="h-4 w-4 text-gray-400" />
-                  {td("tabs.proposals")}
-                </a>
                 {PAYMENTS_ENABLED && (
                   <a href={subscriptionHref} onClick={() => setOpen(false)} className={menuItemClass}>
                     <CreditCard className="h-4 w-4 text-gray-400" />
@@ -848,10 +846,6 @@ function AccountMenu({
               </>
             ) : (
               <>
-                <a href={clientProfileHref} onClick={() => setOpen(false)} className={menuItemClass}>
-                  <UserRound className="h-4 w-4 text-gray-400" />
-                  {td("tabs.profile")}
-                </a>
                 <a href={sentBookingsHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <CalendarClock className="h-4 w-4 text-gray-400" />
                   {td("tabs.sent_bookings")}
@@ -859,6 +853,10 @@ function AccountMenu({
                 <a href={sentProjectsHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <ClipboardList className="h-4 w-4 text-gray-400" />
                   {td("tabs.sent_projects")}
+                </a>
+                <a href={clientProfileHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <UserRound className="h-4 w-4 text-gray-400" />
+                  {td("tabs.profile")}
                 </a>
                 <a href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <Bookmark className="h-4 w-4 text-gray-400" />
@@ -870,7 +868,7 @@ function AccountMenu({
 
           <div>
             <a
-              href={notificationsHref}
+              href={notificationsHrefByMode[selectedMenuMode]}
               onClick={() => setOpen(false)}
               className={menuItemClass}
             >
@@ -887,14 +885,6 @@ function AccountMenu({
             >
               <Headset className="h-4 w-4 text-gray-400" />
               {t("supportTickets")}
-            </a>
-            <a
-              href={accountHref}
-              onClick={() => setOpen(false)}
-              className={menuItemClass}
-            >
-              <Settings className="h-4 w-4 text-gray-400" />
-              {t("accountSecurity")}
             </a>
           </div>
 
@@ -955,7 +945,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const td = useTranslations("proPanel");
   const locale = useLocale();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user, avatarUrl, avatarReady } = useAuth();
   const compactSearchExamples = useMemo(() => {
     const raw = t.raw(isSmallScreen ? "searchExamples" : "searchExamplesDesktop");
@@ -977,7 +966,8 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const isPro = canOffer(user);
   const initials = getInitials(user?.user_metadata?.full_name ?? user?.email ?? "?");
   const displayName = (user?.user_metadata?.full_name as string) || (user?.user_metadata?.name as string) || user?.email?.split("@")[0] || "";
-  const { mode, setMode } = useMode(isPro);
+  const { mode } = useMode(isPro);
+  const [drawerMode, setDrawerMode] = useState<Mode>(mode);
 
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
   // by itself. The "Usar servicios" sections live under their own tabs there.
@@ -998,8 +988,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const sentProjectsHref = panelTabHref("sent_projects", "use");
   const savedHref = panelTabHref("saved", "use");
   const supportPanelHref = `${panelHref}?tab=soporte`;
-  const accountHref = panelTabHref("cuenta");
-  const notificationsHref = panelTabHref("notifications");
+  const notificationsHrefByMode: Record<Mode, string> = {
+    offer: panelTabHref("notifications", "offer"),
+    use: panelTabHref("notifications", "use"),
+  };
   const visibleResourceLinks = useMemo(
     () => RESOURCES_LINKS.filter((link) => link.key !== "proTips" || !user || isPro),
     [isPro, user],
@@ -1038,31 +1030,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
         setProUnread(pro); setClientUnread(cli); setNeutralUnread(neu);
       });
   }, [user]);
-  const switchMenuMode = useCallback((next: Mode) => {
-    setMode(next);
-    if (pathname.startsWith("/dashboard/profesional")) {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab");
-      if (next === "offer" && tab && DASHBOARD_USE_ONLY_TABS.has(tab)) params.set("tab", "bookings");
-      if (next === "use" && tab && DASHBOARD_OFFER_ONLY_TABS.has(tab)) params.set("tab", "sent_bookings");
-      params.set("mode", next);
-      router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
-    }
-    queueMicrotask(() => refreshNotifUnread());
-  }, [pathname, refreshNotifUnread, router, setMode]);
-  const switchDrawerMode = useCallback((next: Mode) => {
-    setMode(next);
-    queueMicrotask(() => refreshNotifUnread());
-  }, [refreshNotifUnread, setMode]);
-  const switchMenuModeHref = useCallback((next: Mode) => {
-    if (!pathname.startsWith("/dashboard/profesional")) return undefined;
-    const params = new URLSearchParams(searchParams.toString());
-    const tab = params.get("tab");
-    if (next === "offer" && tab && DASHBOARD_USE_ONLY_TABS.has(tab)) params.set("tab", "bookings");
-    if (next === "use" && tab && DASHBOARD_OFFER_ONLY_TABS.has(tab)) params.set("tab", "sent_bookings");
-    params.set("mode", next);
-    return `/${locale}/dashboard/profesional?${params.toString()}`;
-  }, [locale, pathname, searchParams]);
   useEffect(() => {
     queueMicrotask(() => refreshNotifUnread());
     const id = window.setInterval(refreshNotifUnread, 3000);
@@ -1072,13 +1039,20 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
       window.removeEventListener("notificationsChanged", refreshNotifUnread);
     };
   }, [refreshNotifUnread, mobileOpen]);
-  // The active mode's unread (its own + account-level) → the bell + the menu's
-  // Notificaciones badge. The mode switch itself stays clean (no badge).
-  const activeUnread = notificationScope === "offer"
-    ? proUnread + neutralUnread
-    : notificationScope === "use"
-      ? clientUnread + neutralUnread
-      : proUnread + clientUnread + neutralUnread;
+  // Switching Cliente/Profesional inside a menu only swaps menu options/counts;
+  // it does not change the panel beneath it.
+  const notifUnreadByMode: Record<Mode, number> = {
+    offer: proUnread + neutralUnread,
+    use: clientUnread + neutralUnread,
+  };
+  const selectedDrawerMode: Mode = isPro ? drawerMode : "use";
+  const drawerNotificationsHref = notificationsHrefByMode[selectedDrawerMode];
+  const drawerUnread = notifUnreadByMode[selectedDrawerMode] ?? 0;
+  const openMobileMenu = useCallback(() => {
+    setDrawerMode(mode);
+    setMobileOpen(true);
+    queueMicrotask(() => refreshNotifUnread());
+  }, [mode, refreshNotifUnread]);
   const mobileRowBase = "relative flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors before:absolute before:left-0 before:top-3 before:bottom-3 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity";
   const mobileRowClass = (active: boolean, strong = false) => cn(
     mobileRowBase,
@@ -1397,12 +1371,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       sentBookingsHref={sentBookingsHref}
                       sentProjectsHref={sentProjectsHref}
                       savedHref={savedHref}
-                      notificationsHref={notificationsHref}
+                      notificationsHrefByMode={notificationsHrefByMode}
                       supportPanelHref={supportPanelHref}
-                      accountHref={accountHref}
-                      notifUnread={activeUnread}
-                      onSwitchMode={switchMenuMode}
-                      switchModeHref={switchMenuModeHref}
+                      notifUnreadByMode={notifUnreadByMode}
                       onSignOut={handleSignOut}
                       onOpen={refreshNotifUnread}
                     />
@@ -1431,7 +1402,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               {/* Mobile toggle — only OPENS the drawer; the drawer has the single X. */}
               <button
                 type="button"
-                onClick={() => setMobileOpen(true)}
+                onClick={openMobileMenu}
                 className="lg:hidden ml-auto p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
                 aria-label={t("openMenu")}
               >
@@ -1468,6 +1439,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         role="combobox"
                         aria-expanded={searchFocused && searchQuery.trim().length > 0}
                         aria-autocomplete="list"
+                        aria-controls="navbar-service-suggestions"
                       />
                     </div>
                     <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
@@ -1485,12 +1457,13 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         role="combobox"
                         aria-expanded={navLocOpen}
                         aria-autocomplete="list"
+                        aria-controls="navbar-location-suggestions"
                       />
                     </div>
                     <button
                       type="submit"
                       aria-label={t("search")}
-                      className="ml-1.5 sm:ml-2 h-9 px-3 sm:px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm sm:text-base font-bold rounded-[4px] transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
+                      className="ml-1.5 sm:ml-2 h-9 sm:h-10 px-3.5 sm:px-6 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm sm:text-[15px] font-bold rounded-md transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5 shadow-sm"
                     >
                       <Search className="h-4 w-4 sm:hidden" />
                       <span className="hidden sm:inline">{t("search")}</span>
@@ -1500,7 +1473,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   {/* Service autocomplete — selecting FILLS the field; search
                       runs only on Buscar/Enter. */}
                   <AnchoredDropdown anchorRef={compactSvcRef} open={searchFocused && searchQuery.trim().length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
-                    <div className="py-1.5">
+                    <div id="navbar-service-suggestions" role="listbox" className="py-1.5">
                       {compactSuggestions.length === 0 ? (
                         <button
                           type="button"
@@ -1530,7 +1503,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
                   {/* Location autocomplete (desktop) — selecting FILLS the field. */}
                   <AnchoredDropdown anchorRef={compactLocRef} open={navLocOpen && navLocSug.length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
-                    <div className="py-1.5">
+                    <div id="navbar-location-suggestions" role="listbox" className="py-1.5">
                       {navLocSug.map((s, i) => (
                         <button
                           key={`${s.type}-${s.id}`}
@@ -1581,12 +1554,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     sentBookingsHref={sentBookingsHref}
                     sentProjectsHref={sentProjectsHref}
                     savedHref={savedHref}
-                    notificationsHref={notificationsHref}
+                    notificationsHrefByMode={notificationsHrefByMode}
                     supportPanelHref={supportPanelHref}
-                    accountHref={accountHref}
-                    notifUnread={activeUnread}
-                    onSwitchMode={switchMenuMode}
-                    switchModeHref={switchMenuModeHref}
+                    notifUnreadByMode={notifUnreadByMode}
                     onSignOut={handleSignOut}
                     onOpen={refreshNotifUnread}
                   />
@@ -1594,7 +1564,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               )}
               <button
                 type="button"
-                onClick={() => setMobileOpen(true)}
+                onClick={openMobileMenu}
                 className="lg:hidden ml-1 shrink-0 p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
                 aria-label={t("openMenu")}
               >
@@ -1677,12 +1647,22 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <div className="flex flex-col gap-0.5">
                     {isPro && (
                       <div className="px-2 pb-2 pt-1">
-                        <ModeSwitcher mode={mode} onSwitch={switchDrawerMode} block />
+                        <ModeSwitcher mode={drawerMode} onSwitch={setDrawerMode} block />
                       </div>
                     )}
                     <div className="mt-1 flex flex-col gap-0.5 border-t border-[#edf2f7] pt-1">
-                      {isPro && mode === "offer" ? (
+                      {isPro && selectedDrawerMode === "offer" ? (
                         <>
+                          <a href={bookingsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <CalendarCheck className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.bookings")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={proposalsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <Handshake className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.proposals")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
                           <a href={professionalProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <UserRound className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.profile")}</span>
@@ -1703,16 +1683,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                             <span className="min-w-0 flex-1">{td("tabs.availability")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
                           </a>
-                          <a href={bookingsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
-                            <CalendarCheck className={mobileIconClass(false)} />
-                            <span className="min-w-0 flex-1">{td("tabs.bookings")}</span>
-                            <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
-                          <a href={proposalsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
-                            <Handshake className={mobileIconClass(false)} />
-                            <span className="min-w-0 flex-1">{td("tabs.proposals")}</span>
-                            <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
                           {PAYMENTS_ENABLED && (
                             <a href={subscriptionHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                               <CreditCard className={mobileIconClass(false)} />
@@ -1723,11 +1693,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         </>
                       ) : (
                         <>
-                          <a href={clientProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
-                            <UserRound className={mobileIconClass(false)} />
-                            <span className="min-w-0 flex-1">{td("tabs.profile")}</span>
-                            <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
                           <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <CalendarClock className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.sent_bookings")}</span>
@@ -1736,6 +1701,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                           <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <ClipboardList className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.sent_projects")}</span>
+                            <ChevronRight className={mobileChevronClass(false)} />
+                          </a>
+                          <a href={clientProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <UserRound className={mobileIconClass(false)} />
+                            <span className="min-w-0 flex-1">{td("tabs.profile")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
                           </a>
                           <a href={savedHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
@@ -1747,22 +1717,17 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       )}
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                      <a href={drawerNotificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                         <Bell className={mobileIconClass(false)} />
                         <span className="min-w-0 flex-1">{t("notifications")}</span>
-                        {activeUnread > 0 && (
-                          <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{activeUnread > 9 ? "9+" : activeUnread}</span>
+                        {drawerUnread > 0 && (
+                          <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{drawerUnread > 9 ? "9+" : drawerUnread}</span>
                         )}
                         <ChevronRight className={mobileChevronClass(false)} />
                       </a>
                       <a href={supportPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                         <Headset className={mobileIconClass(false)} />
                         <span className="min-w-0 flex-1">{t("supportTickets")}</span>
-                        <ChevronRight className={mobileChevronClass(false)} />
-                      </a>
-                      <a href={accountHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
-                        <Settings className={mobileIconClass(false)} />
-                        <span className="min-w-0 flex-1">{t("accountSecurity")}</span>
                         <ChevronRight className={mobileChevronClass(false)} />
                       </a>
                     </div>

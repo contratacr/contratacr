@@ -177,31 +177,23 @@ export default function DashboardPage() {
     setProLoadError(false);
     const { data, error } = await supabase
       .from("professionals")
-      .select("*, profiles(full_name, email, avatar_url), provincia_id, canton_id, address, service_type, category_id, services")
+      .select("*")
       .eq("profile_id", user.id)
       .maybeSingle();
-    let resolved = data;
-    let resolvedError = error;
 
-    if (error) {
-      console.error("[dashboard] professional full load failed:", error);
-      const fallback = await supabase
-        .from("professionals")
-        .select("*")
-        .eq("profile_id", user.id)
-        .maybeSingle();
-      resolved = fallback.data;
-      resolvedError = fallback.error;
-    }
-
-    setPro(resolved);
-    if (resolved) {
+    setPro(data);
+    if (data) {
       setNoProTries(0);
     }
-    if (resolvedError) {
-      console.error("[dashboard] professional fallback load failed:", resolvedError);
+    if (error) {
+      console.error("[dashboard] professional load failed:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
       setProLoadError(true);
-    } else if (!resolved) {
+    } else if (!data) {
       setNoProTries((n) => n + 1);
     }
     setLoading(false);
@@ -450,7 +442,7 @@ export default function DashboardPage() {
   }
 
   const bottomNavItemClass =
-    "relative flex w-[22vw] min-w-[78px] max-w-[94px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
+    "relative flex w-[20vw] min-w-[20vw] max-w-[20vw] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
 
   function modeBottomNavButton() {
     const next: Mode = mode === "offer" ? "use" : "offer";
@@ -812,7 +804,7 @@ export default function DashboardPage() {
           />
           <span
             className={cn(
-              "pointer-events-none absolute bottom-0 right-0 top-0 w-14 bg-gradient-to-l from-white via-white/90 to-transparent transition-opacity duration-150",
+              "pointer-events-none absolute bottom-0 right-0 top-0 w-[20vw] max-w-[96px] bg-gradient-to-l from-white/95 via-white/65 to-transparent backdrop-blur-[1.5px] transition-opacity duration-150",
               bottomNavOverflow.right ? "opacity-100" : "opacity-0"
             )}
             aria-hidden
