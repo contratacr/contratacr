@@ -444,7 +444,7 @@ export default function DashboardPage() {
   }
 
   const bottomNavItemClass =
-    "relative flex w-[clamp(66px,calc((100vw-56px)/4),92px)] min-w-[clamp(66px,calc((100vw-56px)/4),92px)] max-w-[92px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
+    "relative flex w-[clamp(65px,calc((100vw-68px)/4),90px)] min-w-[clamp(65px,calc((100vw-68px)/4),90px)] max-w-[90px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
 
   function modeBottomNavButton() {
     const next: Mode = mode === "offer" ? "use" : "offer";
@@ -808,7 +808,7 @@ export default function DashboardPage() {
           />
           <span
             className={cn(
-              "pointer-events-none absolute bottom-0 right-0 top-0 w-[15vw] min-w-12 max-w-16 bg-gradient-to-l from-white/80 via-white/45 to-transparent backdrop-blur-[2px] transition-opacity duration-150",
+              "pointer-events-none absolute bottom-0 right-0 top-0 w-[13vw] min-w-10 max-w-14 bg-gradient-to-l from-white/70 via-white/35 to-transparent backdrop-blur-[1.5px] transition-opacity duration-150",
               bottomNavOverflow.right ? "opacity-100" : "opacity-0"
             )}
             aria-hidden
