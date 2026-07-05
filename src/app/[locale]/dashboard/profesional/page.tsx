@@ -444,7 +444,7 @@ export default function DashboardPage() {
   }
 
   const bottomNavItemClass =
-    "relative flex w-[clamp(65px,calc((100vw-68px)/4),90px)] min-w-[clamp(65px,calc((100vw-68px)/4),90px)] max-w-[90px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors";
+    "relative flex w-[clamp(68px,calc((100vw-48px)/4),96px)] min-w-[clamp(68px,calc((100vw-48px)/4),96px)] max-w-[96px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 py-2 transition-colors [&>*]:translate-y-0.5";
 
   function modeBottomNavButton() {
     const next: Mode = mode === "offer" ? "use" : "offer";
@@ -771,7 +771,7 @@ export default function DashboardPage() {
         <div className="relative">
           <div
             ref={setBottomNavRail}
-            className="flex min-h-[56px] items-stretch gap-0 overflow-x-auto overscroll-x-contain scroll-smooth hide-scrollbar"
+            className="flex min-h-[60px] items-stretch gap-0 overflow-x-auto overscroll-x-contain scroll-smooth hide-scrollbar"
           >
             {isProvider && modeBottomNavButton()}
             {mobileBarTabs.map((tab) => {
@@ -801,7 +801,7 @@ export default function DashboardPage() {
           </div>
           <span
             className={cn(
-              "pointer-events-none absolute bottom-0 left-0 top-0 w-10 bg-gradient-to-r from-white via-white/85 to-transparent backdrop-blur-[1.5px] transition-opacity duration-150",
+              "pointer-events-none absolute bottom-0 left-0 top-0 w-[13vw] min-w-10 max-w-14 bg-gradient-to-r from-white/70 via-white/35 to-transparent backdrop-blur-[1.5px] transition-opacity duration-150",
               bottomNavOverflow.left ? "opacity-100" : "opacity-0"
             )}
             aria-hidden
