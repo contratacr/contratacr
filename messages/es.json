@@ -938,10 +938,6 @@
       "title": "¿Qué servicio necesitas?",
       "body": "Elige el servicio que buscas para continuar."
     },
-    "modality": {
-      "videoTitle": "Videoconsulta disponible",
-      "videoHelp": "Puedes coordinar por WhatsApp si esta solicitud aplica para atención virtual."
-    },
     "next": {
       "title": "Qué sigue",
       "step1": "Eliges fecha y hora y envías tu solicitud.",
