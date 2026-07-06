@@ -46,6 +46,13 @@ export async function GET(req: Request) {
       .eq("profile_id", profileId)
       .maybeSingle();
 
+    const { data: authUser } = await db.auth.admin.getUserById(profileId);
+    const userMetadata = authUser?.user?.user_metadata ?? {};
+    const professionalSignupIncomplete =
+      userMetadata.professional_signup_started === true &&
+      userMetadata.is_provider !== true &&
+      !professional;
+
     const { data: tickets } = await db
       .from("support_tickets")
       .select("*")
@@ -82,6 +89,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       profile,
       professional: professional ?? null,
+      professionalSignupIncomplete,
       tickets: tickets ?? [],
       projects: projects ?? [],
       bookings: bookings ?? [],
@@ -121,6 +129,19 @@ export async function GET(req: Request) {
     .or(ors.join(","))
     .limit(50);
 
+  const authStatusById = new Map<string, { professionalSignupIncomplete: boolean }>();
+  await Promise.all(
+    (data ?? []).map(async (u) => {
+      const { data: authUser } = await db.auth.admin.getUserById(u.id);
+      const userMetadata = authUser?.user?.user_metadata ?? {};
+      authStatusById.set(u.id, {
+        professionalSignupIncomplete:
+          userMetadata.professional_signup_started === true &&
+          userMetadata.is_provider !== true,
+      });
+    }),
+  );
+
   // Rank in JS (accent-insensitive): full-string + word-start matches score higher.
   const norm = (s: string | null) => (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const nq = norm(q);
@@ -153,6 +174,7 @@ export async function GET(req: Request) {
         avatar_url: u.avatar_url,
         is_disabled: u.is_disabled,
         isPro: !!pro,
+        professionalSignupIncomplete: !pro && authStatusById.get(u.id)?.professionalSignupIncomplete === true,
         verification_status: pro?.verification_status ?? null,
         is_banned: pro?.is_banned ?? false,
       };

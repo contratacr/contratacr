@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft, Loader2, ExternalLink, ShieldCheck, Headset, Flag, FolderOpen,
   CalendarDays, Ban, ShieldOff, Mail, Phone, IdCard, BadgeCheck, History,
-  CheckCircle2, RotateCcw, XCircle,
+  CheckCircle2, RotateCcw, XCircle, Clock3,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getInitials } from "@/lib/utils";
@@ -37,6 +37,7 @@ type ActionState = "verify" | "reject" | "revert_pending";
 type Data = {
   profile: Profile;
   professional: Professional | null;
+  professionalSignupIncomplete?: boolean;
   tickets: Ticket[];
   projects: Project[];
   bookings: Booking[];
@@ -107,7 +108,7 @@ export function AdminUserProfile({
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
+    queueMicrotask(() => { if (alive) setLoading(true); });
     fetch(`/api/admin/users?id=${userId}`)
       .then((r) => r.json())
       .then((d) => { if (!alive) return; if (d.error) setError(d.error); else { setError(null); setData(d); } })
@@ -155,11 +156,12 @@ export function AdminUserProfile({
     );
   }
 
-  const { profile, professional: pro, tickets, projects, bookings, verificationLog, appeals, reports } = data;
+  const { profile, professional: pro, professionalSignupIncomplete, tickets, projects, bookings, verificationLog, appeals, reports } = data;
   const identityStatus = accountVerificationStatus(profile, pro);
   const isIdentityVerified = identityStatus === "verified";
   const isIdentityPending = identityStatus === "pending";
   const isIdentityRejected = identityStatus === "rejected";
+  const accountTypeLabel = pro ? "Profesional" : professionalSignupIncomplete ? "Profesional incompleto" : "Cliente";
 
   return (
     <div className="flex flex-col gap-5">
@@ -177,7 +179,9 @@ export function AdminUserProfile({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-[#111827]">{profile.full_name ?? "Sin nombre"}</h1>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{pro ? "Profesional" : "Cliente"}</span>
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${professionalSignupIncomplete ? "bg-[#fff7ed] text-[#c2410c]" : "bg-gray-100 text-gray-600"}`}>
+                {accountTypeLabel}
+              </span>
               <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${verificationPillClasses(identityStatus)}`}>
                 {verificationLabel(identityStatus)}
               </span>
@@ -215,6 +219,14 @@ export function AdminUserProfile({
                 {pro?.is_banned && <p><strong>Baneado:</strong> {pro.banned_reason ?? "Sin motivo"}</p>}
               </div>
             )}
+            {professionalSignupIncomplete && (
+              <div className="mt-3 rounded-xl border border-[#fed7aa] bg-[#fff7ed] px-3 py-2 text-xs text-[#9a3412]">
+                <p className="inline-flex items-start gap-2">
+                  <Clock3 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>Esta cuenta inició el registro profesional, pero todavía no creó el perfil. Al iniciar sesión debe continuar el registro.</span>
+                </p>
+              </div>
+            )}
             {pro && (
               <div className="mt-3 flex items-center gap-3 flex-wrap">
                 <Link href={`/admin/proveedores/${pro.id}`} className="inline-flex items-center gap-1.5 rounded-lg bg-[#0f172a] text-white text-xs font-semibold px-3 py-2 hover:bg-[#1e293b]">
@@ -243,12 +255,18 @@ export function AdminUserProfile({
                     {verificationLabel(identityStatus)}
                   </span>
                   <span className="text-xs text-[#6b7280]">
-                    {pro ? "Cuenta con panel profesional y cliente" : "Cuenta cliente"}
+                    {pro ? "Cuenta con panel profesional y cliente" : professionalSignupIncomplete ? "Registro profesional incompleto" : "Cuenta cliente"}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-[#374151]">
-                  La verificación pertenece a la persona. Si se quita, se elimina la identificación guardada y se pedirá de nuevo cuando use una función que la requiera.
-                </p>
+                {professionalSignupIncomplete ? (
+                  <p className="mt-2 text-sm text-[#374151]">
+                    Esta persona ya inició el registro profesional. No se marca como profesional activo hasta que termine el formulario y se cree su perfil.
+                  </p>
+                ) : (
+                  <p className="mt-2 text-sm text-[#374151]">
+                    La verificación pertenece a la persona. Si se quita, se elimina la identificación guardada y se pedirá de nuevo cuando use una función que la requiera.
+                  </p>
+                )}
                 <div className="mt-3 grid gap-2 text-xs text-[#6b7280] sm:grid-cols-2">
                   <span><strong className="text-[#374151]">Identificación:</strong> {profile.cedula ?? "Sin guardar"}</span>
                   <span><strong className="text-[#374151]">Verificada:</strong> {fmt(profile.client_identity_verified_at) || "—"}</span>
@@ -260,7 +278,12 @@ export function AdminUserProfile({
                 )}
               </div>
               <div className="w-full space-y-2 lg:w-64">
-                {!isIdentityVerified && !isIdentityRejected && (
+                {professionalSignupIncomplete && (
+                  <div className="rounded-xl border border-[#fed7aa] bg-white px-3 py-2 text-xs font-medium text-[#9a3412]">
+                    Pendiente de completar registro.
+                  </div>
+                )}
+                {!professionalSignupIncomplete && !isIdentityVerified && !isIdentityRejected && (
                   <button
                     type="button"
                     onClick={() => updateIdentity("verify")}
@@ -271,7 +294,7 @@ export function AdminUserProfile({
                     Marcar verificado
                   </button>
                 )}
-                {isIdentityRejected && (
+                {!professionalSignupIncomplete && isIdentityRejected && (
                   <button
                     type="button"
                     onClick={() => updateIdentity("revert_pending")}
@@ -282,7 +305,7 @@ export function AdminUserProfile({
                     Volver a pendiente
                   </button>
                 )}
-                {!isIdentityRejected && (
+                {!professionalSignupIncomplete && !isIdentityRejected && (
                   <button
                     type="button"
                     onClick={() => setConfirmRevoke(true)}
