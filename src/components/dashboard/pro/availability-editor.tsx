@@ -1087,7 +1087,7 @@ export function AvailabilityEditor({
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPrivateConfirm(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 mb-4">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
               <Lock className="h-5 w-5 text-[#b45309]" />
             </div>
             <h3 className="text-lg font-bold text-[#111827] mb-1">{t("confirmTitle")}</h3>
