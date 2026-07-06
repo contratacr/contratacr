@@ -13,6 +13,7 @@ const POINTS = [
   { Icon: Search, key: "point0" },
   { Icon: CalendarDays, key: "point1" },
   { Icon: WhatsAppIcon, key: "point2" },
+  { Icon: BadgeCheck, key: "point3" },
 ];
 
 const leadIconClass = "absolute -left-[18px] top-0 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_18px_-14px_rgba(0,159,217,0.9)]";
@@ -80,19 +81,6 @@ export async function WhyContratacr() {
                 </li>
               ))}
             </ol>
-
-            <div className="mt-8 rounded-2xl border border-[#d7edf7] bg-[#f8fcff] p-5">
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#009FD9] shadow-sm">
-                  <BadgeCheck className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="font-bold text-[#1a2744]">{t("pitchTitle")}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-gray-500">{t("pitchDesc")}</p>
-                </div>
-              </div>
-            </div>
-
           </FadeInUp>
 
           {/* One phone — floats cleanly on the section, just a soft shadow */}
