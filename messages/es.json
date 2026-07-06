@@ -1658,7 +1658,7 @@
     "profession": "Servicio",
     "alwaysTitle": "Mis horarios de siempre",
     "alwaysSub": "En {place} · se repite automáticamente cada semana.",
-    "alwaysSubAll": "Se repite automáticamente cada semana.",
+    "alwaysSubAll": "Este horario se usará cada semana.",
     "schedulePlacesTitle": "Edita un lugar a la vez",
     "schedulePlacesHelp": "Los días y horas de abajo aplican solo a la opción seleccionada.",
     "presetTypical": "Aplicar Lunes a viernes, 8:00AM – 5:00PM",

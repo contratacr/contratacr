@@ -1659,7 +1659,7 @@
     "profession": "Service",
     "alwaysTitle": "My usual hours",
     "alwaysSub": "At {place} · repeats automatically every week.",
-    "alwaysSubAll": "Repeats automatically every week.",
+    "alwaysSubAll": "This schedule will be used every week.",
     "schedulePlacesTitle": "Edit one place at a time",
     "schedulePlacesHelp": "The days and hours below apply only to the selected option.",
     "presetTypical": "Apply Monday to Friday, 8:00AM – 5:00PM",

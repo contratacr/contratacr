@@ -841,7 +841,7 @@ export function AvailabilityEditor({
       ) : (
         <>
           <div>
-            <div className="grid gap-5 border-b border-[#f3f4f6] p-4 sm:grid-cols-2 sm:p-5">
+            <div className="grid gap-5 p-4 sm:grid-cols-2 sm:p-5">
               <div>
                 <label className="mb-2 block text-xs font-semibold text-[#6b7280]">{t("apptDuration")}</label>
                 <div className="w-full sm:max-w-[12rem]">
@@ -874,7 +874,7 @@ export function AvailabilityEditor({
 
             <div className="border-b border-[#f3f4f6] px-4 py-3 sm:px-5">
               <p className="text-xs leading-5 text-[#6b7280]">
-                {isMultiLocation ? t("alwaysSub", { place: locationLabel(activeLocationId) }) : t("alwaysSubAll")}
+                {t("alwaysSubAll")}
               </p>
             </div>
 
