@@ -28,10 +28,14 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "No se pudo cargar la cola." }, { status: 500 });
   }
 
+  // Client-only accounts belong in this queue only when identity review actually
+  // exists. A saved ID with client_identity_status="unverified" can happen when
+  // someone starts a request flow and does not finish it; that is not actionable
+  // for admin verification and should not pollute "Todos".
   const { data: profiles, error: profilesError } = await db
     .from("profiles")
     .select("id, full_name, email, cedula, avatar_url, client_identity_status, client_identity_verified_at, created_at")
-    .or("cedula.not.is.null,client_identity_status.in.(pending,verified)")
+    .in("client_identity_status", ["pending", "verified"])
     .order("client_identity_verified_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(300);
