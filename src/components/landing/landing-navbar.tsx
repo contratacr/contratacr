@@ -1425,7 +1425,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               </Link>
               <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
                 <div className="relative w-full max-w-5xl">
-                  <div className="flex w-full items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 pr-1.5 sm:pr-2 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
+                  <div className="flex w-full items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
                     <div ref={compactSvcRef} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
                       <Search className="hidden h-5 w-5 shrink-0 text-gray-300 sm:block" />
                       <input
@@ -1464,7 +1464,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <button
                       type="submit"
                       aria-label={t("search")}
-                      className="ml-1.5 sm:ml-2 h-9 sm:h-10 px-3.5 sm:px-6 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm sm:text-[15px] font-bold rounded-md transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5 shadow-sm"
+                      className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-8 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
                     >
                       <Search className="h-4 w-4 sm:hidden" />
                       <span className="hidden sm:inline">{t("search")}</span>
