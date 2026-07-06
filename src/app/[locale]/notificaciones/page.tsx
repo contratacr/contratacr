@@ -9,9 +9,10 @@ import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "@/i18n/navigation";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { notificationHref } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
+import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
 
 type Notification = {
   id: string;
@@ -20,7 +21,7 @@ type Notification = {
   message: string;
   read: boolean;
   created_at: string;
-  data?: { link?: string } | null;
+  data?: { link?: string; project_id?: string | null; project_created_at?: string | null } | null;
 };
 
 // Dedicated notifications center — reachable from the bell ("Ver todas") for
@@ -32,6 +33,7 @@ export default function NotificationsPage() {
   const router = useRouter();
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
+  const projectTimes = useNotificationProjectTimes(items);
 
   useEffect(() => {
     if (!loading && !user && !isSigningOut()) router.push("/login");
@@ -52,6 +54,12 @@ export default function NotificationsPage() {
   const unread = items.filter((n) => !n.read).length;
   const notificationTitle = (n: Notification) =>
     TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? t(`types.${n.type}`) : n.title;
+  const notificationTime = (n: Notification) => {
+    const projectCreatedAt = getNotificationProjectCreatedAt(n, projectTimes);
+    return projectCreatedAt
+      ? t("publishedAt", { time: formatRelativeOrDate(projectCreatedAt, locale) })
+      : formatRelativeOrDate(n.created_at, locale);
+  };
 
   async function markAllRead() {
     if (!user) return;
@@ -107,7 +115,7 @@ export default function NotificationsPage() {
                         <div className={cn(!n.read ? "" : "ml-4")}>
                           <p className="text-sm font-medium text-[#111827]">{notificationTitle(n)}</p>
                           <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
-                          <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at)}</p>
+                          <p className="text-xs text-[#9ca3af] mt-1">{notificationTime(n)}</p>
                         </div>
                       </div>
                     </button>

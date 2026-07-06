@@ -200,11 +200,11 @@ export async function POST(req: NextRequest) {
         }
       : {};
 
-    let { data, error } = await supabase.from("projects").insert({ ...baseProject, ...patientFields }).select("id").single();
+    let { data, error } = await supabase.from("projects").insert({ ...baseProject, ...patientFields }).select("id, created_at").single();
     if (error && /for_someone_else|beneficiary_|column|schema cache|PGRST204|could not find/i.test(error.message)) {
       // Keep project publishing working if production schema has not received the
       // migration yet. Once migration 083 is applied, the patient fields persist.
-      ({ data, error } = await supabase.from("projects").insert(baseProject).select("id").single());
+      ({ data, error } = await supabase.from("projects").insert(baseProject).select("id, created_at").single());
     }
 
     if (error) {
@@ -215,6 +215,7 @@ export async function POST(req: NextRequest) {
     if (!projectId) {
       return NextResponse.json({ error: "No se pudo crear la solicitud." }, { status: 500 });
     }
+    const projectCreatedAt = data?.created_at ?? null;
 
     // Notify every professional whose profession matches the project category.
     // "Otro" is a FREEFORM catch-all: its custom text is not reliably comparable, so it
@@ -237,7 +238,7 @@ export async function POST(req: NextRequest) {
             type: "new_project",
             title: "Nueva oportunidad en tu categoria",
             message: `Un cliente publico "${cleanTitle}" en ${label}.`,
-            data: { link: "/es/dashboard/profesional?tab=proposals", project_id: projectId },
+            data: { link: "/es/dashboard/profesional?tab=proposals", project_id: projectId, project_created_at: projectCreatedAt },
           }));
           await admin.from("notifications").insert(rows);
         }
