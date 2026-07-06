@@ -1649,7 +1649,7 @@
     "removeDay": "Remove day",
     "remove": "Remove",
     "confirmTitle": "Hide your schedule?",
-    "confirmBody": "Clients will no longer see your hours and will have to message you on WhatsApp. Your weekly schedule is kept.",
+    "confirmBody": "Clients will no longer see your hours and will have to message you on WhatsApp.",
     "cancel": "Cancel",
     "confirmPrivate": "Yes, hide schedule",
     "privateSubPublic": "Clients can book appointments in your available hours.",

@@ -738,8 +738,8 @@ export function AvailabilityEditor({
   const [applyModal, setApplyModal] = useState<{ weekday: number } | null>(null);
   const [dayModal, setDayModal] = useState<{ date: string } | null>(null);
 
-  const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
-  const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
+  const openWeekdays = WEEKDAY_ORDER.filter((wd) => hasCompleteBlocks(blocksFor(wd)));
+  const closedWeekdays = WEEKDAY_ORDER.filter((wd) => !hasCompleteBlocks(blocksFor(wd)));
   const hasSchedulableLocation = locationOptions.length > 0;
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
