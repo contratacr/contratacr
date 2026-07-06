@@ -1114,10 +1114,17 @@ export function AvailabilityEditor({
               {conflict.kind === "location" ? (
                 <span className="relative flex h-7 w-7 items-center justify-center">
                   <CalendarClock className="h-7 w-7" />
-                  <MapPin className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#EBF5FB]" />
+                  <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#EBF5FB] bg-red-500 text-white">
+                    <X className="h-2.5 w-2.5 stroke-[3]" />
+                  </span>
                 </span>
               ) : (
-                <Calendar className="h-6 w-6" />
+                <span className="relative flex h-6 w-6 items-center justify-center">
+                  <Calendar className="h-6 w-6" />
+                  <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-[#fff7ed] bg-red-500 text-white">
+                    <X className="h-2 w-2 stroke-[3]" />
+                  </span>
+                </span>
               )}
             </div>
             <h3 className="text-lg font-bold text-[#111827] mb-1.5">{conflict.title}</h3>
