@@ -399,12 +399,20 @@ export function AvailabilityEditor({
         supabase.from("availability_exceptions").select("id, location_id, category_id, exception_date, mode, start_time, end_time, slot_minutes").eq("professional_id", professionalId),
       ]);
       if (cancelled) return;
-      const wkRows: WeeklyRow[] = (wk ?? [])
-        .map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, weekday: r.weekday, start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5), slot_minutes: r.slot_minutes ?? 60 }))
-        .filter((r) => schedulableLocationIds.has(r.location_id));
-      const excRows: ExcRow[] = (exc ?? [])
-        .map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, date: r.exception_date, mode: r.mode as ExcMode, start: r.start_time ? String(r.start_time).slice(0, 5) : null, end: r.end_time ? String(r.end_time).slice(0, 5) : null, slot_minutes: r.slot_minutes ?? 60 }))
-        .filter((r) => schedulableLocationIds.has(r.location_id));
+      const allWeeklyRows: WeeklyRow[] = (wk ?? [])
+        .map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, weekday: r.weekday, start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5), slot_minutes: r.slot_minutes ?? 60 }));
+      const allExceptionRows: ExcRow[] = (exc ?? [])
+        .map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, date: r.exception_date, mode: r.mode as ExcMode, start: r.start_time ? String(r.start_time).slice(0, 5) : null, end: r.end_time ? String(r.end_time).slice(0, 5) : null, slot_minutes: r.slot_minutes ?? 60 }));
+      const wkRows = allWeeklyRows.filter((r) => schedulableLocationIds.has(r.location_id));
+      const excRows = allExceptionRows.filter((r) => schedulableLocationIds.has(r.location_id));
+      const staleWeeklyIds = allWeeklyRows.filter((r) => r.id && !schedulableLocationIds.has(r.location_id)).map((r) => r.id!);
+      const staleExceptionIds = allExceptionRows.filter((r) => r.id && !schedulableLocationIds.has(r.location_id)).map((r) => r.id!);
+      if (staleWeeklyIds.length > 0 || staleExceptionIds.length > 0) {
+        await Promise.all([
+          staleWeeklyIds.length > 0 ? supabase.from("availability_weekly").delete().in("id", staleWeeklyIds) : Promise.resolve({ error: null }),
+          staleExceptionIds.length > 0 ? supabase.from("availability_exceptions").delete().in("id", staleExceptionIds) : Promise.resolve({ error: null }),
+        ]);
+      }
       setWeekly(wkRows);
       setExceptions(excRows);
       setDurationPref(wkRows[0]?.slot_minutes ?? excRows[0]?.slot_minutes ?? 60);
@@ -412,7 +420,7 @@ export function AvailabilityEditor({
       // Refresh the materialized window from the template (keeps the rolling 70-day
       // horizon current). Skip when there is NO template at all, so a legacy pro's
       // manually-created slots are preserved until they adopt the weekly editor.
-      if (isPublic && (wkRows.length > 0 || excRows.length > 0)) void regenerate(wkRows, excRows);
+      if (isPublic && (wkRows.length > 0 || excRows.length > 0 || staleWeeklyIds.length > 0 || staleExceptionIds.length > 0)) void regenerate(wkRows, excRows);
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
