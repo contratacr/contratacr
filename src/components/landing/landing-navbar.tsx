@@ -253,7 +253,6 @@ function LanguageInline({ className }: { className?: string }) {
 
 // `key` resolves to header.resourceLinks.<key> for the translated label.
 const RESOURCES_LINKS: { key: string; href: string }[] = [
-  { key: "howItWorks", href: "/como-funciona" },
   { key: "helpCenter", href: "/ayuda" },
   { key: "proTips",    href: "/atraer-clientes" },
   { key: "support",    href: "/soporte" },
@@ -1273,9 +1272,12 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   )}
                 </div>
 
-                {/* "Cómo funciona" lives ONLY inside Recursos now (was also a
-                    standalone item here — redundant). Recursos shows it on desktop
-                    + mobile, so it stays accessible in one place. */}
+                <Link
+                  href="/como-funciona"
+                  className="relative text-sm font-medium px-3 py-2 text-[#374151] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#1a2744]"
+                >
+                  {t("resourceLinks.howItWorks")}
+                </Link>
 
                 {/* Recursos — simple dropdown */}
                 <div
