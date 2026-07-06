@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { ArrowRight } from "lucide-react";
 import { CategoryCarousel } from "@/components/landing/category-carousel";
 
 /* "Profesionales para cada proyecto" — heading + ONE staggered category
@@ -27,7 +26,7 @@ export async function ProsSection() {
             href="/servicios"
             className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] hover:underline"
           >
-            {t("viewAll")} <ArrowRight className="h-4 w-4" />
+            {t("viewAll")}
           </Link>
         </div>
       </div>
