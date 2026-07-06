@@ -1745,11 +1745,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <Link
                       href="/registro/profesional"
                       onClick={() => setMobileOpen(false)}
-                      className="relative flex min-h-[48px] items-center gap-3 rounded-xl bg-[#009FD9] px-3 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_-18px_rgba(0,159,217,0.9)] transition-colors hover:bg-[#0089bb]"
+                      className="inline-flex w-fit px-3 py-2 text-sm font-medium text-[#009FD9] transition-colors hover:text-[#007fae]"
                     >
-                      <Briefcase className="h-4 w-4 shrink-0" />
-                      <span className="min-w-0 flex-1">{t("registerPro")}</span>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-white/70" />
+                      {t("registerPro")}
                     </Link>
                     <Link
                       href={loginHref}
