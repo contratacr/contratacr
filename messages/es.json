@@ -2957,7 +2957,6 @@
       "search": "Buscar",
       "popular": "Popular:",
       "installLink": "Agregar app al celular",
-      "proPrompt": "¿Ofreces servicios?",
       "proCta": "Ofrecer mis servicios"
     },
     "pros": {
@@ -2967,8 +2966,7 @@
     "carousel": {
       "titlePre": "Explora",
       "titleHighlight": "servicios",
-      "viewAll": "Ver todos los servicios",
-      "offerCta": "Ofrecer mis servicios"
+      "viewAll": "Ver todos los servicios"
     },
     "zones": {
       "eyebrow": "Cobertura local",

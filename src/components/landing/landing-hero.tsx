@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, Briefcase, Loader2, LocateFixed, Search, MapPin, User } from "lucide-react";
+import { Loader2, LocateFixed, Search, MapPin, User } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
@@ -765,12 +765,9 @@ export function LandingHero() {
           <p className="mt-2 text-center text-xs font-medium text-red-600">{geoError}</p>
         )}
 
-        <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
-          <span className="text-sm font-medium text-[#64748b]">{t("proPrompt")}</span>
-          <SmartRegisterLink className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[6px] border border-[#bfe3f5] bg-[#EBF5FB] px-4 text-sm font-bold text-[#0089bb] shadow-[0_12px_32px_-24px_rgba(0,159,217,0.9)] transition-all hover:border-[#009FD9] hover:bg-white hover:text-[#007da8] active:scale-[0.98] sm:w-auto">
-            <Briefcase className="h-4 w-4" />
+        <div className="mt-3 flex justify-center">
+          <SmartRegisterLink className="text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline">
             {t("proCta")}
-            <ArrowRight className="h-4 w-4" />
           </SmartRegisterLink>
         </div>
 

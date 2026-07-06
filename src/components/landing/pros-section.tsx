@@ -1,8 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { ArrowRight, Briefcase } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { CategoryCarousel } from "@/components/landing/category-carousel";
-import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 
 /* "Profesionales para cada proyecto" — heading + ONE staggered category
    carousel (see category-carousel.tsx). Card visuals use the shared ServiceImage
@@ -30,10 +29,6 @@ export async function ProsSection() {
           >
             {t("viewAll")} <ArrowRight className="h-4 w-4" />
           </Link>
-          <SmartRegisterLink className="inline-flex h-10 items-center justify-center gap-2 rounded-[6px] border border-[#dbe7ef] bg-white px-4 text-sm font-bold text-[#162543] shadow-sm transition-all hover:border-[#009FD9] hover:text-[#0089bb]">
-            <Briefcase className="h-4 w-4 text-[#009FD9]" />
-            {t("offerCta")}
-          </SmartRegisterLink>
         </div>
       </div>
     </section>
