@@ -7,7 +7,6 @@ import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import { cloudinaryAssetUrl } from "@/lib/cloudinary";
 import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
@@ -764,12 +763,6 @@ export function LandingHero() {
         {geoError && (
           <p className="mt-2 text-center text-xs font-medium text-red-600">{geoError}</p>
         )}
-
-        <div className="mt-3 flex justify-center">
-          <SmartRegisterLink className="text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline">
-            {t("proCta")}
-          </SmartRegisterLink>
-        </div>
 
       </div>
 

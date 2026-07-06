@@ -1,12 +1,14 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CategoryCarousel } from "@/components/landing/category-carousel";
+import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 
 /* "Profesionales para cada proyecto" — heading + ONE staggered category
    carousel (see category-carousel.tsx). Card visuals use the shared ServiceImage
    system (real photo or branded gradient fallback); each card → /buscar?categoria=<id>. */
 export async function ProsSection() {
   const t = await getTranslations("landing.carousel");
+  const heroT = await getTranslations("landing.hero");
   return (
     <section className="py-16 sm:py-24 bg-[#f4f7fa] overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -28,6 +30,10 @@ export async function ProsSection() {
           >
             {t("viewAll")}
           </Link>
+          <span className="hidden h-1 w-1 rounded-full bg-[#cbd5e1] sm:block" aria-hidden />
+          <SmartRegisterLink className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline">
+            {heroT("proCta")}
+          </SmartRegisterLink>
         </div>
       </div>
     </section>
