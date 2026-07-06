@@ -229,6 +229,7 @@ export default function DashboardPage() {
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const opportunityWelcomeCheckedRef = useRef(false);
+  const opportunityWelcomeDismissedRef = useRef(false);
   const [bottomNavRail, setBottomNavRail] = useState<HTMLDivElement | null>(null);
   const [bottomNavOverflow, setBottomNavOverflow] = useState({ left: false, right: true });
   const [noProTries, setNoProTries] = useState(0);
@@ -361,7 +362,13 @@ export default function DashboardPage() {
   // arrive through the explicit post-login redirect.
   // Unread support replies → badge on the Soporte sidebar item.
   useEffect(() => {
-    if (authLoading || !user || !isProvider || opportunityWelcomeCount !== null) return;
+    if (
+      authLoading ||
+      !user ||
+      !isProvider ||
+      opportunityWelcomeCount !== null ||
+      opportunityWelcomeDismissedRef.current
+    ) return;
 
     let mounted = true;
 
@@ -432,6 +439,15 @@ export default function DashboardPage() {
     window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
   }, []);
 
+  const clearOpportunityWelcomeParam = useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("welcomeOpportunities")) return;
+
+    params.delete("welcomeOpportunities");
+    const qs = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
+  }, []);
+
   useEffect(() => {
     if (
       !shouldCheckPostLoginActivity ||
@@ -493,13 +509,6 @@ export default function DashboardPage() {
     opportunityWelcomeCheckedRef.current = true;
     let mounted = true;
 
-    const clearWelcomeParam = () => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("welcomeOpportunities");
-      const qs = params.toString();
-      router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
-    };
-
     fetch("/api/projects?role=professional", { cache: "no-store" })
       .then(async (res) => (res.ok ? res.json() : { projects: [] }))
       .then((data) => {
@@ -512,13 +521,13 @@ export default function DashboardPage() {
       })
       .finally(() => {
         if (!mounted) return;
-        clearWelcomeParam();
+        clearOpportunityWelcomeParam();
       });
 
     return () => {
       mounted = false;
     };
-  }, [authLoading, loading, pro, router, searchParams, shouldCheckOpportunityWelcome, user]);
+  }, [authLoading, clearOpportunityWelcomeParam, loading, pro, shouldCheckOpportunityWelcome, user]);
 
   function setTab(tab: Tab) {
     if (tab === activeTab) return;
@@ -578,12 +587,18 @@ export default function DashboardPage() {
     setTab(activity.targetTab);
   }
 
-  function closeOpportunityWelcome() {
+  function dismissOpportunityWelcome() {
+    opportunityWelcomeDismissedRef.current = true;
     setOpportunityWelcomeCount(null);
+    clearOpportunityWelcomeParam();
+  }
+
+  function closeOpportunityWelcome() {
+    dismissOpportunityWelcome();
   }
 
   function viewOpportunityWelcome() {
-    setOpportunityWelcomeCount(null);
+    dismissOpportunityWelcome();
     if (mode !== "offer") setMode("offer");
     setTab("proposals");
   }
@@ -776,7 +791,7 @@ export default function DashboardPage() {
             aria-modal="true"
             aria-labelledby="opportunity-welcome-title"
             aria-describedby="opportunity-welcome-body"
-            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:p-6"
+            className="relative w-full max-w-md rounded-2xl bg-white px-5 pb-5 pt-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:px-6 sm:pb-6"
           >
             <button
               type="button"
@@ -787,23 +802,22 @@ export default function DashboardPage() {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
-              <Handshake className="h-6 w-6" />
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
+              <Handshake className="h-7 w-7" />
             </div>
-            <h2 id="opportunity-welcome-title" className="pr-8 text-xl font-bold leading-tight text-[#111827]">
+            <h2 id="opportunity-welcome-title" className="mx-auto max-w-[22rem] text-xl font-bold leading-tight text-[#111827] sm:text-[22px]">
               {t("opportunityWelcome.title", { count: opportunityWelcomeCount })}
             </h2>
-            <p id="opportunity-welcome-body" className="mt-3 text-sm leading-relaxed text-[#6b7280]">
+            <p id="opportunity-welcome-body" className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#6b7280]">
               {t("opportunityWelcome.body")}
             </p>
 
-            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={closeOpportunityWelcome} className="w-full sm:w-auto">
+            <div className="mt-6 flex flex-col-reverse items-stretch justify-center gap-2 sm:flex-row sm:items-center">
+              <Button type="button" variant="outline" onClick={closeOpportunityWelcome} className="w-full sm:w-auto sm:min-w-[96px]">
                 {t("opportunityWelcome.later")}
               </Button>
-              <Button type="button" onClick={viewOpportunityWelcome} className="w-full sm:w-auto">
+              <Button type="button" onClick={viewOpportunityWelcome} className="w-full sm:w-auto sm:min-w-[170px]">
                 {t("opportunityWelcome.view")}
-                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
