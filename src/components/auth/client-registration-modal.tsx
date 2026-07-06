@@ -28,6 +28,7 @@ type ModalView = "register" | "login";
 const STEP_NUM: Record<RegisterStep, number> = {
   identity: 1, email: 2, password: 3, otp: 4,
 };
+const PENDING_BOOKING_IDENTITY_KEY = "ccr:pending-booking-identity";
 
 export interface ClientRegistrationModalProps {
   open: boolean;
@@ -236,7 +237,7 @@ export function ClientRegistrationModal({
   }
 
   // Resolved identity: a national/DIMEX cédula auto-fills `fullName` from the padrón; the
-  // "No tengo cédula" path types `manualName`. The cédula is stored ONLY when present + valid.
+  // "No tengo cédula" path types `manualName`. The cédula stays temporary until booking submit.
   const resolvedName = limitText((noCedula ? manualName : fullName).trim(), NAME_MAX_LENGTH);
   const cedulaClean = !noCedula ? cleanId(cedula) : "";
   const identityReady = noCedula
@@ -277,8 +278,8 @@ export function ClientRegistrationModal({
     const resolved = resolvedName;
     const supabase = createClient();
 
-    // The cédula is captured cédula-FIRST in this flow (the official name auto-filled from
-    // it), so we store it on the new account — the booking then won't ask for it again.
+    // The ID is captured first so the booking can continue prefilled, but it is not
+    // saved to the account until a real booking is created.
     const { data: signUpData, error: e } = await supabase.auth.signUp({
       email,
       password,
@@ -310,14 +311,14 @@ export function ClientRegistrationModal({
       return;
     }
 
-    // Save name + cédula to profiles via API (also handles the profiles trigger gap). The
-    // cédula is sent ONLY when present + valid; a "cédula ya registrada" rolls the signup back.
+    // Save the client account shell only. The ID is kept in sessionStorage for the
+    // booking modal and persisted later by /api/bookings if the request is sent.
     if (signUpData?.user?.id) {
       try {
         const res = await fetch("/api/register/client", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: signUpData.user.id, fullName: resolved, cedula: cedulaClean || undefined }),
+          body: JSON.stringify({ userId: signUpData.user.id, fullName: resolved }),
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok && json?.code === "cedula_taken") {
@@ -325,6 +326,15 @@ export function ClientRegistrationModal({
           setError(locale === "en" ? "That ID is already registered. Sign in." : "Esta identificacion ya esta registrada. Inicia sesion.");
           setView("login");
           return;
+        }
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(PENDING_BOOKING_IDENTITY_KEY, JSON.stringify({
+            userId: signUpData.user.id,
+            fullName: resolved,
+            cedula: cedulaClean || "",
+            noCedula,
+            createdAt: Date.now(),
+          }));
         }
       } catch {
         // Non-fatal — name will be saved when the session is established.
