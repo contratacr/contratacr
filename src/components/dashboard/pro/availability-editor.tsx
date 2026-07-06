@@ -61,9 +61,6 @@ function sharesTimeWithVideo(a: string, b: string): boolean {
 function isCompleteFranja(f: { start: string; end: string }): boolean {
   return !!f.start && !!f.end && toMins(f.end) > toMins(f.start);
 }
-function hasCompleteBlocks(blocks: { start: string; end: string }[]): boolean {
-  return blocks.some(isCompleteFranja);
-}
 // Merge overlapping/touching ranges into the fewest contiguous ranges (sorted) — for a
 // clean "already occupied" read (08:00–12:00 + 12:00–15:00 → 08:00–15:00).
 function mergeRanges(ranges: [number, number][]): [number, number][] {
@@ -537,7 +534,7 @@ export function AvailabilityEditor({
 
   function toggleDay(weekday: number) {
     const cur = blocksFor(weekday);
-    if (hasCompleteBlocks(cur)) { persistDay(weekday, [], activeLocationId); return; }
+    if (cur.length > 0) { persistDay(weekday, [], activeLocationId); return; }
     persistDay(weekday, [smartDefaultBlock(weekday, [], activeLocationId)], activeLocationId);
   }
   function addBlock(weekday: number) {
@@ -746,8 +743,8 @@ export function AvailabilityEditor({
   const [applyModal, setApplyModal] = useState<{ weekday: number } | null>(null);
   const [dayModal, setDayModal] = useState<{ date: string } | null>(null);
 
-  const openWeekdays = WEEKDAY_ORDER.filter((wd) => hasCompleteBlocks(blocksFor(wd)));
-  const closedWeekdays = WEEKDAY_ORDER.filter((wd) => !hasCompleteBlocks(blocksFor(wd)));
+  const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
+  const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
   const hasSchedulableLocation = locationOptions.length > 0;
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
@@ -890,7 +887,7 @@ export function AvailabilityEditor({
             <div className="flex flex-col divide-y divide-[#f3f4f6] lg:divide-y">
               {openWeekdays.map((wd) => {
                 const blocks = blocksFor(wd);
-                const on = hasCompleteBlocks(blocks);
+                const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
                 const dayActions = (
                   <div className="flex min-h-9 min-w-0 flex-row flex-wrap items-center justify-start gap-x-3 gap-y-1 lg:shrink-0 lg:flex-nowrap">
