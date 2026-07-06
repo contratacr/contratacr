@@ -939,10 +939,6 @@
       "title": "What service do you need?",
       "body": "Choose the service you want to continue."
     },
-    "modality": {
-      "videoTitle": "Video consultation available",
-      "videoHelp": "You can coordinate on WhatsApp if this request works for virtual service."
-    },
     "next": {
       "title": "What happens next",
       "step1": "You choose a date and time and send your request.",

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
-  Check, Sun, Sunset, Moon, CalendarCheck, Video,
+  Check, Sun, Sunset, Moon, CalendarCheck,
 } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -19,10 +19,8 @@ import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
 import {
   anyHealthCategory,
-  anyVideoConsultCategory,
   isCareCategory,
   getCategoryLabel,
-  supportsVideoConsultCategory,
 } from "@/lib/data/categories";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs, proDisplayName } from "@/lib/utils";
@@ -199,11 +197,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   );
   const effectiveCategory = initialCategoryId ?? pickedCategory ?? null;
   const needsProfessionPick = !effectiveCategory && proProfessions.length > 1;
-  const categoryAllowsVideoConsult = effectiveCategory
-    ? supportsVideoConsultCategory(effectiveCategory)
-    : anyVideoConsultCategory(proProfessions);
-  const offersVideoConsult = categoryAllowsVideoConsult
-    && (!!professional.videoconsulta || professional.services?.some((service) => service.modalities?.includes("video")));
 
   // Profession shown UNDER the name: the RELEVANT one for the current context —
   //  • filtered (initialCategoryId) or selected (pickedCategory) → that profession;
@@ -1053,24 +1046,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     );
   }
 
-  const videoConsultNotice = offersVideoConsult ? (
-    <div className="rounded-xl border border-[#d8eef8] bg-[#f5fbfe] px-3.5 py-3">
-      <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#009FD9] shadow-sm ring-1 ring-[#ccecf8]">
-          <Video className="h-4 w-4" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-bold leading-snug text-[#162543]">
-            {t("modality.videoTitle")}
-          </p>
-          <p className="mt-1 text-xs font-medium leading-relaxed text-[#5f6b7a]">
-            {t("modality.videoHelp")}
-          </p>
-        </div>
-      </div>
-    </div>
-  ) : null;
-
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && resetAndClose()}>
       <Dialog.Portal>
@@ -1202,12 +1177,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {/* STEP: calendar */}
               {step === "calendar" && (
                 <div>
-                  {videoConsultNotice && (
-                    <div className="mb-4">
-                      {videoConsultNotice}
-                    </div>
-                  )}
-
                   {/* Multi-profession pro + no category context → pick the service FIRST
                       (so we know whether it's health → date of birth). */}
                   {needsProfessionPick && (
@@ -1458,8 +1427,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       When there's no cédula yet, the DOB is collected WITH the cédula at the
                       next step (so typing it auto-fills name + DOB together). */}
                   {proIsHealth && !forSomeoneElse && hasStoredCedula && renderSelfDobField()}
-
-                  {videoConsultNotice}
 
                   {/* Beneficiary (a HEALTH dependent) — NAME + DATE OF BIRTH only. The pro
                       attends THIS person and the age drives triage + the minor/adulto-mayor
