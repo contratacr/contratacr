@@ -97,12 +97,33 @@ export type ProService = {
 };
 
 function hasActiveService(services: unknown): boolean {
-  if (!Array.isArray(services)) return false;
-  return services.some((service) => {
+  return activeServices(services).length > 0;
+}
+
+function activeServices(services: unknown): ProService[] {
+  if (!Array.isArray(services)) return [];
+  return services.filter((service): service is ProService => {
     if (!service || typeof service !== "object") return false;
     const item = service as { active?: boolean; category?: string; name?: string };
     return item.active !== false && Boolean(item.category || item.name);
   });
+}
+
+function uniqueIds(ids: string[]): string[] {
+  return [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+}
+
+function hasCategorizedServices(services: unknown): boolean {
+  return Array.isArray(services)
+    && services.some((service) => !!(service && typeof service === "object" && (service as { category?: string }).category?.trim()));
+}
+
+function publicProfessionsFromServices(services: unknown, fallbackProfessions: string[]): string[] {
+  const activeCategories = uniqueIds(activeServices(services).map((service) => service.category ?? ""));
+  if (activeCategories.length > 0) return activeCategories;
+  // Legacy records may have services without category ids; keep their old professions.
+  // When categorized services exist, do not fall back or inactive categories reappear.
+  return hasCategorizedServices(services) ? [] : uniqueIds(fallbackProfessions);
 }
 
 function serviceCategoryContains(categoryId: string): string {
@@ -334,17 +355,21 @@ export async function searchProfessionals(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((row: any) => hasActiveService(row.services))
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((row: any) => ({
+        .map((row: any) => {
+          const rowActiveServices = activeServices(row.services);
+          const legacyProfessions = (row.professions as string[]) ?? (row.category_id ? [row.category_id] : []);
+          const publicProfessions = publicProfessionsFromServices(row.services, legacyProfessions);
+          return ({
         id: row.id,
         slug: row.slug,
         fullName: row.profiles?.full_name ?? "Profesional",
         avatarUrl: row.profiles?.avatar_url ?? null,
-        categoryId: row.category_id ?? "",
+        categoryId: publicProfessions[0] ?? row.category_id ?? "",
         categoryIcon: "",
-        professions: (row.professions as string[]) ?? (row.category_id ? [row.category_id] : []),
+        professions: publicProfessions,
         // Price now lives ONLY in Servicios â€” derive the card "Desde" from the
         // services (legacy profile-level pricing/hourly_rate kept as fallback).
-        pricing: deriveDisplayPricing(row.services, row.pricing as ProfessionalCardData["pricing"], row.hourly_rate),
+        pricing: deriveDisplayPricing(rowActiveServices, row.pricing as ProfessionalCardData["pricing"], row.hourly_rate),
         bio: row.bio,
         whatsapp: row.whatsapp,
         provinceName: row.provincias?.name ?? "",
@@ -373,7 +398,18 @@ export async function searchProfessionals(
         allowPhoneCall: row.allow_phone_call ?? false,
         profileId: row.profile_id ?? undefined,
         callPhone: row.call_phone ?? undefined,
-      }));
+        services: rowActiveServices,
+          });
+        });
+
+      const requestedCategoryIds = new Set<string>();
+      if (filters.categoryId && filters.categoryId !== "todas") requestedCategoryIds.add(filters.categoryId);
+      if (filters.query) {
+        for (const id of getMatchingCategoryIds(filters.query.trim())) requestedCategoryIds.add(id);
+      }
+      if (requestedCategoryIds.size > 0) {
+        mapped = mapped.filter((p) => (p.professions ?? []).some((id) => requestedCategoryIds.has(id)));
+      }
 
       if (filters.languageId && filters.languageId !== "todos") {
         const wanted = new Set(languageSearchValues(filters.languageId).map((value) => normalizeText(value)));
@@ -656,6 +692,10 @@ export async function getProfessionalBySlug(
         comment: r.comment,
         createdAt: r.created_at,
       }));
+      const rawServices = (pro as any).services as ProService[] | undefined;
+      const visibleServices = activeServices(rawServices);
+      const legacyProfessions = ((pro as any).professions as string[]) ?? ((pro as any).category_id ? [(pro as any).category_id] : []);
+      const publicProfessions = publicProfessionsFromServices(rawServices, legacyProfessions);
 
       return {
         id: pro.id,
@@ -663,13 +703,12 @@ export async function getProfessionalBySlug(
         fullName: (pro.profiles as any)?.full_name ?? "Profesional",
         avatarUrl: (pro.profiles as any)?.avatar_url ?? null,
         // category_id is a plain text column â€” no join needed
-        categoryId: (pro as any).category_id ?? "",
+        categoryId: publicProfessions[0] ?? (pro as any).category_id ?? "",
         categoryIcon: "",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        professions: ((pro as any).professions as string[]) ?? ((pro as any).category_id ? [(pro as any).category_id] : []),
+        professions: publicProfessions,
         // Price derived from Servicios (single source), legacy fields as fallback.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        pricing: deriveDisplayPricing((pro as any).services, (pro as any).pricing as ProfessionalCardData["pricing"], (pro as any).hourly_rate),
+        pricing: deriveDisplayPricing(visibleServices, (pro as any).pricing as ProfessionalCardData["pricing"], (pro as any).hourly_rate),
         bio: pro.bio,
         whatsapp: pro.whatsapp,
         provinceName: (pro.provincias as any)?.name ?? "",
@@ -690,7 +729,7 @@ export async function getProfessionalBySlug(
         allowPhoneCall,
         coverage,
         reviews,
-        services: ((pro as any).services as ProService[]) ?? [],
+        services: visibleServices,
         availabilityPublic: (pro as any).availability_public ?? true,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         contactPreference: ((pro as any).contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
