@@ -870,7 +870,7 @@ export default function RegisterProfessionalPage() {
       // flashes back. Hard navigation so the refreshed session (new role) is read.
       setRedirecting(true);
       writeStoredMode("offer");
-      window.location.href = `/${locale}/dashboard/profesional?mode=offer`;
+      window.location.href = `/${locale}/dashboard/profesional?mode=offer&welcomeOpportunities=1`;
       return;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t("errTitle");
