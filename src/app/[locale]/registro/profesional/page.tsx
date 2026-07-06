@@ -468,9 +468,7 @@ export default function RegisterProfessionalPage() {
   const [showExtraProf, setShowExtraProf] = useState(false);
   const [primaryServicePickerOpen, setPrimaryServicePickerOpen] = useState(false);
   const [extraServicePickerOpen, setExtraServicePickerOpen] = useState(false);
-  // Optional brand/business name is now collected in the panel (not registration);
-  // kept empty here so the create payload still sends a (null) value cleanly.
-  const businessName = "";
+  const [businessName, setBusinessName] = useState("");
 
   const form1 = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -933,6 +931,15 @@ export default function RegisterProfessionalPage() {
 
   const stepLabels = [t("steps.identity"), t("steps.service"), t("steps.profile")];
   const indicatorStep = step;
+  const businessNameField = (
+    <Input
+      label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optionalParen")}</span></>}
+      placeholder={t("businessPlaceholder")}
+      value={businessName}
+      maxLength={NAME_MAX_LENGTH}
+      onChange={(e) => setBusinessName(limitText(e.target.value, NAME_MAX_LENGTH))}
+    />
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -1014,6 +1021,8 @@ export default function RegisterProfessionalPage() {
                   under it, not a floating checkbox at the end of the form. */}
               <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
 
+              {businessNameField}
+
               <div className="border-t border-[#f3f4f6] pt-4">
                 <Input
                   label={<>{t("email")} <span className="text-red-500">*</span></>}
@@ -1092,6 +1101,8 @@ export default function RegisterProfessionalPage() {
               {accountCedula === "" && (
                 <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
               )}
+
+              {accountCedula !== null && businessNameField}
 
               <Button
                 type="button"

@@ -185,7 +185,6 @@ export function IdentityField({
           <Input
             label={<>{t("fullName")} <span className="text-red-500">*</span></>}
             placeholder={t("namePlaceholder")}
-            hint={t("nameHint")}
             value={fullName}
             maxLength={NAME_MAX_LENGTH}
             onChange={(e) => onFullNameChange(limitText(e.target.value, NAME_MAX_LENGTH))}
