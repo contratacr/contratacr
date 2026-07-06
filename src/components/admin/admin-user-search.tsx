@@ -15,6 +15,7 @@ type Result = {
   avatar_url: string | null;
   is_disabled: boolean;
   isPro: boolean;
+  professionalSignupIncomplete?: boolean;
   verification_status: string | null;
   is_banned: boolean;
 };
@@ -42,8 +43,14 @@ export function AdminUserSearch({
   // Debounced search
   useEffect(() => {
     const term = q.trim();
-    if (term.length < 2) { setResults([]); setLoading(false); return; }
-    setLoading(true);
+    if (term.length < 2) {
+      queueMicrotask(() => {
+        setResults([]);
+        setLoading(false);
+      });
+      return;
+    }
+    queueMicrotask(() => setLoading(true));
     const id = setTimeout(async () => {
       try {
         const res = await fetch(`/api/admin/users?q=${encodeURIComponent(term)}`);
@@ -109,7 +116,9 @@ export function AdminUserSearch({
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-[10px] uppercase tracking-wide text-gray-400">{u.isPro ? "Pro" : "Cliente"}</span>
+                  <span className={`text-[10px] uppercase tracking-wide ${u.professionalSignupIncomplete ? "text-[#c2410c]" : "text-gray-400"}`}>
+                    {u.isPro ? "Pro" : u.professionalSignupIncomplete ? "Pro incompleto" : "Cliente"}
+                  </span>
                   {u.isPro && u.verification_status === "verified" && <BadgeCheck className="h-4 w-4 text-emerald-500" />}
                   {u.is_banned && <Ban className="h-4 w-4 text-red-500" />}
                   {u.is_disabled && <ShieldOff className="h-4 w-4 text-amber-500" />}
