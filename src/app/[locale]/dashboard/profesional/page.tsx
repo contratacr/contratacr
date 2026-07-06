@@ -135,6 +135,7 @@ type PostLoginActivity = {
 };
 
 type UnreadNotificationSummary = { type: string };
+type UnreadOpportunityNotification = { id: string; type: string };
 
 function buildPostLoginActivity(items: UnreadNotificationSummary[], currentMode: Mode): PostLoginActivity | null {
   if (items.length === 0) return null;
@@ -225,6 +226,7 @@ export default function DashboardPage() {
   const [proLoadError, setProLoadError] = useState(false);
   const [postLoginActivity, setPostLoginActivity] = useState<PostLoginActivity | null>(null);
   const postLoginActivityCheckedRef = useRef(false);
+  const unreadOpportunityModalCheckedRef = useRef(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const opportunityWelcomeCheckedRef = useRef(false);
@@ -356,7 +358,47 @@ export default function DashboardPage() {
     };
   }, [user, activeTab, refreshKey, mode]);
 
+  // Unread opportunities deserve a front-door modal even when the user did not
+  // arrive through the explicit post-login redirect.
   // Unread support replies → badge on the Soporte sidebar item.
+  useEffect(() => {
+    if (authLoading || !user || !isProvider || unreadOpportunityModalCheckedRef.current) return;
+
+    unreadOpportunityModalCheckedRef.current = true;
+    let mounted = true;
+
+    void (async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("id, type")
+          .eq("user_id", user.id)
+          .eq("read", false)
+          .eq("type", "new_project")
+          .order("created_at", { ascending: false })
+          .limit(10);
+        if (error) throw error;
+        if (!mounted || !data || data.length === 0) return;
+
+        const opportunityNotifications = data as UnreadOpportunityNotification[];
+        const signature = opportunityNotifications.map((item) => item.id).join(":");
+        const storageKey = `ccr:post-login-opportunities:${user.id}`;
+        if (window.sessionStorage.getItem(storageKey) === signature) return;
+        window.sessionStorage.setItem(storageKey, signature);
+
+        const activity = buildPostLoginActivity(opportunityNotifications, mode);
+        if (activity?.opportunities) setPostLoginActivity(activity);
+      } catch (error) {
+        console.error("[dashboard] unread opportunity modal load failed:", error);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [authLoading, isProvider, mode, user]);
+
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
