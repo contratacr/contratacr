@@ -225,6 +225,7 @@ export default function DashboardPage() {
   const [proLoadError, setProLoadError] = useState(false);
   const [postLoginActivity, setPostLoginActivity] = useState<PostLoginActivity | null>(null);
   const postLoginActivityCheckedRef = useRef(false);
+  const postLoginActivityDismissedRef = useRef(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const opportunityWelcomeCheckedRef = useRef(false);
@@ -422,18 +423,26 @@ export default function DashboardPage() {
     router.replace("/registro/profesional");
   }, [authLoading, loading, pro, user, router, noProTries, fetchPro, proLoadError]);
 
+  const clearPostLoginParam = useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("postLogin")) return;
+
+    params.delete("postLogin");
+    const qs = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
+  }, []);
+
   useEffect(() => {
-    if (!shouldCheckPostLoginActivity || authLoading || !user || postLoginActivityCheckedRef.current) return;
+    if (
+      !shouldCheckPostLoginActivity ||
+      authLoading ||
+      !user ||
+      postLoginActivityCheckedRef.current ||
+      postLoginActivityDismissedRef.current
+    ) return;
 
     postLoginActivityCheckedRef.current = true;
     let mounted = true;
-
-    const clearPostLoginParam = () => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("postLogin");
-      const qs = params.toString();
-      router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
-    };
 
     void (async () => {
       try {
@@ -467,7 +476,7 @@ export default function DashboardPage() {
     return () => {
       mounted = false;
     };
-  }, [authLoading, mode, router, searchParams, shouldCheckPostLoginActivity, user]);
+  }, [authLoading, clearPostLoginParam, mode, shouldCheckPostLoginActivity, user]);
 
   useEffect(() => {
     if (
@@ -551,15 +560,22 @@ export default function DashboardPage() {
     ].filter(Boolean).join(", ");
   }
 
-  function closePostLoginActivity() {
+  function dismissPostLoginActivity() {
+    postLoginActivityDismissedRef.current = true;
     setPostLoginActivity(null);
+    clearPostLoginParam();
+  }
+
+  function closePostLoginActivity() {
+    dismissPostLoginActivity();
   }
 
   function viewPostLoginActivity() {
-    if (!postLoginActivity) return;
-    setPostLoginActivity(null);
-    if (mode !== postLoginActivity.targetMode) setMode(postLoginActivity.targetMode);
-    setTab(postLoginActivity.targetTab);
+    const activity = postLoginActivity;
+    if (!activity) return;
+    dismissPostLoginActivity();
+    if (mode !== activity.targetMode) setMode(activity.targetMode);
+    setTab(activity.targetTab);
   }
 
   function closeOpportunityWelcome() {
@@ -793,14 +809,14 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      {postLoginOpportunityActivity && (
+      {postLoginOpportunityActivity && opportunityWelcomeCount === null && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 px-4 py-6 backdrop-blur-sm">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="post-login-opportunity-title"
             aria-describedby="post-login-opportunity-body"
-            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:p-6"
+            className="relative w-full max-w-md rounded-2xl bg-white px-5 pb-5 pt-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:px-6 sm:pb-6"
           >
             <button
               type="button"
@@ -811,23 +827,22 @@ export default function DashboardPage() {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
-              <Handshake className="h-6 w-6" />
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
+              <Handshake className="h-7 w-7" />
             </div>
-            <h2 id="post-login-opportunity-title" className="pr-8 text-xl font-bold leading-tight text-[#111827]">
+            <h2 id="post-login-opportunity-title" className="mx-auto max-w-[22rem] text-xl font-bold leading-tight text-[#111827] sm:text-[22px]">
               {t("opportunityWelcome.title", { count: postLoginOpportunityActivity.opportunities })}
             </h2>
-            <p id="post-login-opportunity-body" className="mt-3 text-sm leading-relaxed text-[#6b7280]">
+            <p id="post-login-opportunity-body" className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#6b7280]">
               {t("postLoginActivity.body", { summary: postLoginActivitySummary(postLoginOpportunityActivity) })}
             </p>
 
-            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={closePostLoginActivity} className="w-full sm:w-auto">
+            <div className="mt-6 flex flex-col-reverse items-stretch justify-center gap-2 sm:flex-row sm:items-center">
+              <Button type="button" variant="outline" onClick={closePostLoginActivity} className="w-full sm:w-auto sm:min-w-[96px]">
                 {t("opportunityWelcome.later")}
               </Button>
-              <Button type="button" onClick={viewPostLoginActivity} className="w-full sm:w-auto">
+              <Button type="button" onClick={viewPostLoginActivity} className="w-full sm:w-auto sm:min-w-[170px]">
                 {t("postLoginActivity.cta.opportunities")}
-                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
