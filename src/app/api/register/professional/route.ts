@@ -5,7 +5,9 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
-import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getCategoryLabel, OTHER_CATEGORY } from "@/lib/data/categories";
+
+const INITIAL_OPPORTUNITY_NOTIFICATION_LIMIT = 10;
 
 type SeedService = {
   id: string;
@@ -42,6 +44,12 @@ function hasStoredServices(services: unknown): boolean {
   return Array.isArray(services) && services.length > 0;
 }
 
+function notificationProjectId(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const projectId = (data as { project_id?: unknown }).project_id;
+  return typeof projectId === "string" ? projectId : null;
+}
+
 async function rollbackFreshSignup(supabase: ReturnType<typeof createAdminClient>, userId: string, freshSignup: boolean) {
   if (!freshSignup) return;
   try {
@@ -49,6 +57,53 @@ async function rollbackFreshSignup(supabase: ReturnType<typeof createAdminClient
   } catch {
     // Best effort: the user can still be recovered by signing in and completing the flow.
   }
+}
+
+async function notifyMatchingOpenProjectsForProfessional(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+  professions: string[],
+) {
+  const matchable = [...new Set(professions.filter((id) => id && id !== OTHER_CATEGORY.id))];
+  if (matchable.length === 0) return;
+
+  const { data: projects, error: projectsError } = await supabase
+    .from("projects")
+    .select("id, title, category_id")
+    .eq("status", "open")
+    .neq("client_id", userId)
+    .in("category_id", matchable)
+    .order("created_at", { ascending: false })
+    .limit(INITIAL_OPPORTUNITY_NOTIFICATION_LIMIT);
+
+  if (projectsError) throw projectsError;
+  if (!projects || projects.length === 0) return;
+
+  const { data: existing, error: existingError } = await supabase
+    .from("notifications")
+    .select("data")
+    .eq("user_id", userId)
+    .eq("type", "new_project");
+
+  if (existingError) throw existingError;
+
+  const alreadyNotified = new Set(
+    (existing ?? [])
+      .map((row) => notificationProjectId(row.data))
+      .filter((id): id is string => !!id)
+  );
+
+  const rows = projects
+    .filter((project) => !alreadyNotified.has(project.id))
+    .map((project) => ({
+      user_id: userId,
+      type: "new_project",
+      title: "Nueva oportunidad en tus servicios",
+      message: `Un cliente publicó "${project.title || "una solicitud"}" en ${getCategoryLabel(project.category_id)}.`,
+      data: { link: "/es/dashboard/profesional?tab=proposals", project_id: project.id },
+    }));
+
+  if (rows.length > 0) await supabase.from("notifications").insert(rows);
 }
 
 export async function POST(req: Request) {
@@ -273,6 +328,12 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "No pudimos actualizar tu perfil. Intenta de nuevo." }, { status: 500 });
       }
 
+      try {
+        await notifyMatchingOpenProjectsForProfessional(supabase, userId, professions);
+      } catch (e) {
+        console.error("[register/professional] open opportunity notify:", e);
+      }
+
       // Fire automatic identity verification (best-effort; never blocks).
       // Registration → in-app notification only (no email); re-saves notify only
       // when the status actually changes (no duplicate "identidad verificada").
@@ -326,6 +387,12 @@ export async function POST(req: Request) {
           ? "Ya existe un perfil profesional para esta cuenta."
           : "No pudimos crear tu perfil profesional. Revisa tus datos e intenta de nuevo.";
       return NextResponse.json({ error: friendly }, { status: 500 });
+    }
+
+    try {
+      await notifyMatchingOpenProjectsForProfessional(supabase, userId, professions);
+    } catch (e) {
+      console.error("[register/professional] open opportunity notify:", e);
     }
 
     // Fire automatic identity verification against the padrón (best-effort).
