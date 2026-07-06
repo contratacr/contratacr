@@ -6,69 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
-
-const BUSINESS_NAME_HINTS = new Set([
-  "barberia",
-  "peluqueria",
-  "salon",
-  "spa",
-  "taller",
-  "constructora",
-  "construccion",
-  "ferreteria",
-  "clinica",
-  "consultorio",
-  "estudio",
-  "servicio",
-  "servicios",
-  "soluciones",
-  "empresa",
-  "grupo",
-  "agencia",
-  "tienda",
-  "academia",
-]);
-
-function normalizeDisplayName(value?: string) {
-  return (value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9&+]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function looksLikeBusinessName(name?: string) {
-  const normalized = normalizeDisplayName(name);
-  if (!normalized) return false;
-  const words = normalized.split(" ").filter(Boolean);
-  if (words.some((word) => BUSINESS_NAME_HINTS.has(word))) return true;
-  if (words.includes("y") && words.length >= 3) return true;
-  return /[&+]/.test(name ?? "");
-}
-
-function samePublicIdentity(personName?: string, businessName?: string) {
-  const person = normalizeDisplayName(personName);
-  const business = normalizeDisplayName(businessName);
-  if (!person || !business) return false;
-  return person === business || person.includes(business) || business.includes(person);
-}
-
-// Card-only person formatting:
-// - desktop: first given name + both surnames when available.
-// - mobile: first given name + first surname.
-// Business/brand-looking strings are kept intact instead of being treated as a
-// Costa Rican legal name, avoiding cases like "YUBEARD y".
-function cardPersonName(name?: string, mode: "desktop" | "mobile" = "desktop"): string {
-  if (looksLikeBusinessName(name)) return (name ?? "").trim();
-  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length <= 2) return parts.join(" ");
-  if (mode === "mobile") return [parts[0], parts[parts.length - 2]].join(" ");
-  if (parts.length <= 3) return parts.join(" ");
-  return [parts[0], parts[parts.length - 2], parts[parts.length - 1]].join(" ");
-}
+import { getProfessionalDisplayName } from "@/lib/display-name";
 
 // A certification is a plain TEXT entry (no images): the certificate name, and
 // optionally the issuing institution + year. It belongs to a specific PROFESSION
@@ -172,14 +110,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // Brand hierarchy: company name leads (clients recognize the brand), personal
   // name becomes the muted subtitle. No company → personal name leads, no subtitle.
   const businessName = professional.businessName?.trim();
-  const personNameMobile = cardPersonName(professional.fullName, "mobile");
-  const personNameDesktop = cardPersonName(professional.fullName, "desktop");
-  const showPersonalSubtitle =
-    !!businessName &&
-    !samePublicIdentity(professional.fullName, businessName) &&
-    !looksLikeBusinessName(professional.fullName);
-  const brandPrimaryMobile = businessName || personNameMobile;
-  const brandPrimaryDesktop = businessName || personNameDesktop;
+  const displayName = getProfessionalDisplayName(professional.fullName, businessName);
   const categoryName = catLabel(professional.categoryId);
   const allProfessions = (professional.professions && professional.professions.length > 0
     ? professional.professions
@@ -264,15 +195,15 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   Verificado, then the personal name = first name + first surname. */}
               <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
                 <h3 title={businessName ? businessName : professional.fullName} className="line-clamp-2 font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
-                  <span className="lg:hidden">{brandPrimaryMobile}</span>
-                  <span className="hidden lg:inline">{brandPrimaryDesktop}</span>
+                  <span className="lg:hidden">{displayName.primaryMobile}</span>
+                  <span className="hidden lg:inline">{displayName.primaryDesktop}</span>
                 </h3>
               </Link>
               {verifiedMark}
-              {showPersonalSubtitle && (
+              {displayName.hasSecondary && (
                 <p title={professional.fullName} className="text-[12px] font-medium leading-snug text-[#6b7280] lg:line-clamp-1">
-                  <span className="lg:hidden">{personNameMobile}</span>
-                  <span className="hidden lg:inline">{personNameDesktop}</span>
+                  <span className="lg:hidden">{displayName.secondaryMobile}</span>
+                  <span className="hidden lg:inline">{displayName.secondaryDesktop}</span>
                 </p>
               )}
             </div>
