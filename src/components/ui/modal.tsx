@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
 // Shared modal/dialog primitive — the single source of truth for the app's modal
 // chrome (used by "Nuevo servicio", "Agregar profesión", "Publicar proyecto",
@@ -38,9 +39,8 @@ export function Modal({ open = true, onClose, title, subtitle, size = "md", chil
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prevOverflow; };
+    const releaseBodyScroll = lockBodyScroll();
+    return () => { document.removeEventListener("keydown", onKey); releaseBodyScroll(); };
   }, [open, onClose]);
 
   if (!open) return null;
