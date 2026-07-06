@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -126,6 +126,7 @@ export function AvailabilityEditor({
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const scheduleSaveInFlightRef = useRef(false);
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [savingVideoConsultation, setSavingVideoConsultation] = useState(false);
   const [isVideoConsultation, setIsVideoConsultation] = useState(initialVideoConsultation);
@@ -141,7 +142,7 @@ export function AvailabilityEditor({
       ? String((error as { message?: unknown }).message ?? "")
       : "";
     const title = locale === "en" ? "Could not save this schedule" : "No se pudo guardar este horario";
-    const isOverlapError = /overlap|conflict|availability/i.test(rawMessage);
+    const isOverlapError = /availability_overlap|overlap|conflict/i.test(rawMessage);
     const body = isOverlapError
       ? locale === "en"
         ? "That time is already used in another in-person location. Check your other locations and choose a different time. Video consultation can share hours with one in-person location."
@@ -512,6 +513,8 @@ export function AvailabilityEditor({
     const complete = blocks.filter(isCompleteFranja);
     const c = validateDayBlocks(weekday, complete, loc);
     if (c) { setConflict(c); return; }
+    if (scheduleSaveInFlightRef.current) return;
+    scheduleSaveInFlightRef.current = true;
 
     const next = weekly.filter((r) => !(r.weekday === weekday && r.location_id === loc));
     for (const b of blocks) next.push({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref });
@@ -531,6 +534,8 @@ export function AvailabilityEditor({
       setWeekly(previousWeekly);
       reportSaveFailure("weekly save failed", error);
       setBusy(false);
+    } finally {
+      scheduleSaveInFlightRef.current = false;
     }
   }
 
@@ -548,6 +553,7 @@ export function AvailabilityEditor({
   }
   // Copy one configured day's complete ranges to selected destination days.
   async function applyDayToTargets(sourceWeekday: number, targetWeekdays: number[]) {
+    if (scheduleSaveInFlightRef.current) return;
     const targets = targetWeekdays.filter((wd) => wd !== sourceWeekday);
     if (targets.length === 0) return;
 
@@ -569,6 +575,7 @@ export function AvailabilityEditor({
     }
 
     const supabase = createClient();
+    scheduleSaveInFlightRef.current = true;
     setBusy(true);
     try {
       const { error: deleteError } = await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).in("weekday", targets).eq("location_id", activeLocationId);
@@ -593,10 +600,14 @@ export function AvailabilityEditor({
     } catch (error) {
       reportSaveFailure("copy day failed", error);
       setBusy(false);
+    } finally {
+      scheduleSaveInFlightRef.current = false;
     }
   }
 
   async function setDuration(dur: number) {
+    if (scheduleSaveInFlightRef.current) return;
+    scheduleSaveInFlightRef.current = true;
     const next = weekly.map((r) => ({ ...r, slot_minutes: dur }));
     const supabase = createClient();
     setBusy(true);
@@ -609,6 +620,8 @@ export function AvailabilityEditor({
     } catch (error) {
       reportSaveFailure("duration save failed", error);
       setBusy(false);
+    } finally {
+      scheduleSaveInFlightRef.current = false;
     }
   }
 
@@ -616,6 +629,7 @@ export function AvailabilityEditor({
   // Returns false (without writing) when the proposed hours overlap another location
   // — or this location's own weekly hours when ADDING extra — on that date.
   async function saveException(date: string, mode: ExcMode, franjas: Franja[], dur: number): Promise<boolean> {
+    if (scheduleSaveInFlightRef.current) return false;
     if (mode !== "closed") {
       const proposed = franjas.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]).filter(([s, e]) => e > s);
       // `extra` ADDS to the weekly hours (they still apply that date), so the extra
@@ -637,6 +651,7 @@ export function AvailabilityEditor({
       for (const f of franjas) next.push({ location_id: activeLocationId, category_id: null, date, mode, start: f.start, end: f.end, slot_minutes: dur });
     }
     const supabase = createClient();
+    scheduleSaveInFlightRef.current = true;
     setBusy(true);
     try {
       const { error: deleteError } = await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", activeLocationId).eq("exception_date", date);
@@ -656,10 +671,14 @@ export function AvailabilityEditor({
       reportSaveFailure("exception save failed", error);
       setBusy(false);
       return false;
+    } finally {
+      scheduleSaveInFlightRef.current = false;
     }
   }
 
   async function removeException(date: string) {
+    if (scheduleSaveInFlightRef.current) return;
+    scheduleSaveInFlightRef.current = true;
     const next = exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date));
     const supabase = createClient();
     setBusy(true);
@@ -671,6 +690,8 @@ export function AvailabilityEditor({
     } catch (error) {
       reportSaveFailure("exception remove failed", error);
       setBusy(false);
+    } finally {
+      scheduleSaveInFlightRef.current = false;
     }
   }
 
@@ -748,6 +769,7 @@ export function AvailabilityEditor({
   const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
   const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
   const hasSchedulableLocation = locationOptions.length > 0;
+  const scheduleControlsDisabled = busy || savingVisibility || savingVideoConsultation;
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
   useReportSaveStatus(savingVisibility || savingVideoConsultation || busy, justSaved);
@@ -851,6 +873,7 @@ export function AvailabilityEditor({
                     value={String(activeDuration)}
                     onChange={(v) => setDuration(Number(v))}
                     options={DURATION_OPTIONS.map((d) => ({ value: String(d), label: t(`dur${d}` as `dur${number}`) }))}
+                    disabled={scheduleControlsDisabled}
                     className="[&>button]:h-10 [&>button]:rounded-xl [&>button]:pl-3 [&>button]:text-sm"
                   />
                 </div>
@@ -863,6 +886,7 @@ export function AvailabilityEditor({
                       value={activeLocationId}
                       onChange={setGenLocation}
                       options={locationOptions.map((option) => ({ value: option.id, label: option.label }))}
+                      disabled={scheduleControlsDisabled}
                       className="[&>button]:h-10 [&>button]:rounded-xl [&>button]:pl-3 [&>button]:text-sm"
                     />
                 ) : (
@@ -894,7 +918,7 @@ export function AvailabilityEditor({
                 const canApply = blocks.some(isCompleteFranja);
                 const dayActions = (
                   <div className="flex min-h-9 min-w-0 flex-row flex-wrap items-center justify-start gap-x-3 gap-y-1 lg:shrink-0 lg:flex-nowrap">
-                    <button type="button" onClick={() => addBlock(wd)} className="inline-flex h-9 min-w-0 shrink-0 items-center whitespace-nowrap text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
+                    <button type="button" onClick={() => addBlock(wd)} disabled={scheduleControlsDisabled} className="inline-flex h-9 min-w-0 shrink-0 items-center whitespace-nowrap text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:no-underline">
                       {t("addFranja")}
                     </button>
                   </div>
@@ -906,7 +930,8 @@ export function AvailabilityEditor({
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
-                        className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200 lg:hidden", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+                        disabled={scheduleControlsDisabled}
+                        className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55 lg:hidden", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
@@ -918,7 +943,8 @@ export function AvailabilityEditor({
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
-                        className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+                        disabled={scheduleControlsDisabled}
+                        className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
@@ -931,19 +957,19 @@ export function AvailabilityEditor({
                         <div className="flex min-w-0 flex-col gap-2">
                           {blocks.map((b) => (
                             <div key={b.id} className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 md:w-[19rem] md:shrink-0 lg:w-[13.75rem] lg:grid-cols-[minmax(5.875rem,1fr)_auto_minmax(5.875rem,1fr)]">
-                              <TimeSelect value={b.start} step={activeDuration} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + activeDuration, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" />
+                              <TimeSelect value={b.start} step={activeDuration} disabled={scheduleControlsDisabled} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + activeDuration, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" />
                               <span className="mt-1.5 shrink-0 text-xs text-[#9ca3af] sm:mt-2 sm:text-sm">-</span>
-                              <TimeSelect value={b.end} step={activeDuration} min={b.start ? hhmm(Math.min(toMins(b.start) + activeDuration, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                              <TimeSelect value={b.end} step={activeDuration} min={b.start ? hhmm(Math.min(toMins(b.start) + activeDuration, 23 * 60 + 30)) : undefined} disabled={scheduleControlsDisabled} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                             </div>
                           ))}
                         </div>
                       </div>
 
                       <div className="flex min-w-0 items-start justify-end gap-1 lg:hidden">
-                        <button type="button" onClick={() => addBlock(wd)} className="inline-flex h-8 min-w-0 shrink-0 items-center whitespace-nowrap text-xs font-semibold leading-none text-[#009FD9] hover:underline cursor-pointer">
+                        <button type="button" onClick={() => addBlock(wd)} disabled={scheduleControlsDisabled} className="inline-flex h-8 min-w-0 shrink-0 items-center whitespace-nowrap text-xs font-semibold leading-none text-[#009FD9] hover:underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:no-underline">
                           {t("addFranja")}
                         </button>
-                        <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
+                        <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply || scheduleControlsDisabled} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
                           <MoreVertical className="h-4 w-4" />
                         </button>
                       </div>
@@ -951,7 +977,7 @@ export function AvailabilityEditor({
 
                     <div className="hidden min-w-0 items-center justify-center gap-2 lg:flex">
                       {dayActions}
-                      <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
+                      <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply || scheduleControlsDisabled} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
                         <MoreVertical className="h-4 w-4" />
                       </button>
                     </div>
@@ -975,7 +1001,8 @@ export function AvailabilityEditor({
                           <button
                             type="button"
                             onClick={() => toggleDay(wd)}
-                            className="relative h-6 w-11 shrink-0 cursor-pointer rounded-full bg-[#d1d5db] transition-all duration-200"
+                            disabled={scheduleControlsDisabled}
+                            className="relative h-6 w-11 shrink-0 cursor-pointer rounded-full bg-[#d1d5db] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55"
                             aria-label={t(`weekday${wd}` as `weekday${number}`)}
                             aria-pressed={false}
                           >
