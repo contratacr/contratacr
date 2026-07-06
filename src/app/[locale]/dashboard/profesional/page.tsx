@@ -417,6 +417,13 @@ export default function DashboardPage() {
         if (!mounted) return;
         const activity = buildPostLoginActivity((data ?? []) as UnreadNotificationSummary[], mode);
         if (activity) setPostLoginActivity(activity);
+        if (!activity || activity.opportunities === 0) {
+          const res = await fetch("/api/projects?role=professional", { cache: "no-store" });
+          const projectsData = res.ok ? await res.json() : { projects: [] };
+          if (!mounted) return;
+          const count = Array.isArray(projectsData?.projects) ? projectsData.projects.length : 0;
+          if (count > 0) setOpportunityWelcomeCount(count);
+        }
       } catch (error) {
         console.error("[dashboard] post-login activity load failed:", error);
       } finally {
