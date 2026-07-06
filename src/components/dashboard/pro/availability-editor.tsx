@@ -516,6 +516,8 @@ export function AvailabilityEditor({
     const next = weekly.filter((r) => !(r.weekday === weekday && r.location_id === loc));
     for (const b of blocks) next.push({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref });
     const supabase = createClient();
+    const previousWeekly = weekly;
+    setWeekly(next);
     setBusy(true);
     try {
       const { error: deleteError } = await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("weekday", weekday).eq("location_id", loc);
@@ -524,9 +526,9 @@ export function AvailabilityEditor({
         const { error: insertError } = await supabase.from("availability_weekly").insert(complete.map((b) => ({ professional_id: professionalId, location_id: b.locationId, category_id: null, weekday, start_time: b.start, end_time: b.end, slot_minutes: durationPref })));
         if (insertError) throw insertError;
       }
-      setWeekly(next);
       await regenerate(next, exceptions); // skips incomplete drafts
     } catch (error) {
+      setWeekly(previousWeekly);
       reportSaveFailure("weekly save failed", error);
       setBusy(false);
     }
