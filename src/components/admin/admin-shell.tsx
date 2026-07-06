@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, Headset, Users, CreditCard, LayoutGrid, BarChart3, Activity } from "lucide-react";
+import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, Headset, Users, CreditCard, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
-  | "resumen" | "verificacion" | "usuarios" | "reportes" | "aseguradoras"
+  | "resumen" | "verificacion" | "usuarios" | "solicitudes" | "publicaciones" | "reportes" | "aseguradoras"
   | "categorias" | "cuentas" | "suscripciones" | "soporte" | "analitica" | "actividad";
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
@@ -65,6 +65,8 @@ export function AdminShell({
     { id: "resumen", label: "Resumen", icon: LayoutGrid, href: "/admin", badge: 0 },
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: counts.verificacion ?? 0 },
     { id: "usuarios", label: "Usuarios", icon: Users, href: "/admin/usuarios", badge: 0 },
+    { id: "solicitudes", label: "Solicitudes", icon: CalendarCheck, href: "/admin/solicitudes", badge: 0 },
+    { id: "publicaciones", label: "Publicaciones", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },
