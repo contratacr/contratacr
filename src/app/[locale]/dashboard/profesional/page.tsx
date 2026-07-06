@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, Repeat2, Plus, AlertCircle,
+  ArrowRight, Sparkles, Repeat2, Plus, AlertCircle, X,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -96,6 +96,111 @@ const MOBILE_PRIORITY: Record<Mode, Tab[]> = {
   use: ["sent_bookings", "sent_projects", "notifications"],
 };
 
+const POST_LOGIN_OPPORTUNITY_TYPES = new Set(["new_project"]);
+const POST_LOGIN_PRO_REQUEST_TYPES = new Set([
+  "booking_received",
+  "booking_cancelled_by_client",
+  "booking_completed_by_client",
+  "booking_rescheduled",
+]);
+const POST_LOGIN_CLIENT_REQUEST_TYPES = new Set([
+  "booking_confirmed",
+  "booking_cancelled",
+  "booking_completed",
+  "booking_update",
+  "review_request",
+]);
+const POST_LOGIN_PRO_PROPOSAL_TYPES = new Set([
+  "proposal_accepted",
+  "project_proposal_accepted",
+  "project_proposal_declined",
+]);
+const POST_LOGIN_CLIENT_PROPOSAL_TYPES = new Set([
+  "proposal_received",
+  "proposal_updated",
+  "proposal_withdrawn",
+]);
+const POST_LOGIN_SUPPORT_TYPES = new Set(["support_reply"]);
+
+type PostLoginActivity = {
+  total: number;
+  opportunities: number;
+  requests: number;
+  proposals: number;
+  support: number;
+  other: number;
+  targetTab: Tab;
+  targetMode: Mode;
+  cta: "opportunities" | "requests" | "proposals" | "support" | "notifications";
+};
+
+type UnreadNotificationSummary = { type: string };
+
+function buildPostLoginActivity(items: UnreadNotificationSummary[], currentMode: Mode): PostLoginActivity | null {
+  if (items.length === 0) return null;
+
+  let opportunities = 0;
+  let proRequests = 0;
+  let clientRequests = 0;
+  let proProposals = 0;
+  let clientProposals = 0;
+  let support = 0;
+  let other = 0;
+
+  for (const item of items) {
+    if (POST_LOGIN_OPPORTUNITY_TYPES.has(item.type)) opportunities++;
+    else if (POST_LOGIN_PRO_REQUEST_TYPES.has(item.type)) proRequests++;
+    else if (POST_LOGIN_CLIENT_REQUEST_TYPES.has(item.type)) clientRequests++;
+    else if (POST_LOGIN_PRO_PROPOSAL_TYPES.has(item.type)) proProposals++;
+    else if (POST_LOGIN_CLIENT_PROPOSAL_TYPES.has(item.type)) clientProposals++;
+    else if (POST_LOGIN_SUPPORT_TYPES.has(item.type)) support++;
+    else other++;
+  }
+
+  const requests = proRequests + clientRequests;
+  const proposals = proProposals + clientProposals;
+  let targetTab: Tab = "notifications";
+  let targetMode: Mode = currentMode;
+  let cta: PostLoginActivity["cta"] = "notifications";
+
+  if (opportunities > 0) {
+    targetTab = "proposals";
+    targetMode = "offer";
+    cta = "opportunities";
+  } else if (proRequests > 0) {
+    targetTab = "bookings";
+    targetMode = "offer";
+    cta = "requests";
+  } else if (clientRequests > 0) {
+    targetTab = "sent_bookings";
+    targetMode = "use";
+    cta = "requests";
+  } else if (proProposals > 0) {
+    targetTab = "proposals";
+    targetMode = "offer";
+    cta = "proposals";
+  } else if (clientProposals > 0) {
+    targetTab = "sent_projects";
+    targetMode = "use";
+    cta = "proposals";
+  } else if (support > 0) {
+    targetTab = "soporte";
+    cta = "support";
+  }
+
+  return {
+    total: items.length,
+    opportunities,
+    requests,
+    proposals,
+    support,
+    other,
+    targetTab,
+    targetMode,
+    cta,
+  };
+}
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -106,6 +211,7 @@ export default function DashboardPage() {
   const requestedTab = searchParams.get("tab") as Tab | null;
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
+  const shouldCheckPostLoginActivity = searchParams.get("postLogin") === "1";
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(null);
@@ -116,7 +222,9 @@ export default function DashboardPage() {
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
+  const [postLoginActivity, setPostLoginActivity] = useState<PostLoginActivity | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const postLoginActivityCheckedRef = useRef(false);
   const [bottomNavRail, setBottomNavRail] = useState<HTMLDivElement | null>(null);
   const [bottomNavOverflow, setBottomNavOverflow] = useState({ left: false, right: true });
   const [noProTries, setNoProTries] = useState(0);
@@ -279,6 +387,46 @@ export default function DashboardPage() {
     router.replace("/registro/profesional");
   }, [authLoading, loading, pro, user, router, noProTries, fetchPro, proLoadError]);
 
+  useEffect(() => {
+    if (!shouldCheckPostLoginActivity || authLoading || !user || postLoginActivityCheckedRef.current) return;
+
+    postLoginActivityCheckedRef.current = true;
+    let mounted = true;
+
+    const clearPostLoginParam = () => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("postLogin");
+      const qs = params.toString();
+      router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
+    };
+
+    void (async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("type")
+          .eq("user_id", user.id)
+          .eq("read", false)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (error) throw error;
+        if (!mounted) return;
+        const activity = buildPostLoginActivity((data ?? []) as UnreadNotificationSummary[], mode);
+        if (activity) setPostLoginActivity(activity);
+      } catch (error) {
+        console.error("[dashboard] post-login activity load failed:", error);
+      } finally {
+        if (!mounted) return;
+        clearPostLoginParam();
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [authLoading, mode, router, searchParams, shouldCheckPostLoginActivity, user]);
+
   function setTab(tab: Tab) {
     if (tab === activeTab) return;
     if (OFFER_ONLY.has(tab)) setMode("offer");
@@ -307,6 +455,27 @@ export default function DashboardPage() {
 
   function handleSaved() {
     setRefreshKey((k) => k + 1);
+  }
+
+  function postLoginActivitySummary(activity: PostLoginActivity) {
+    return [
+      activity.opportunities > 0 ? t("postLoginActivity.parts.opportunities", { count: activity.opportunities }) : null,
+      activity.requests > 0 ? t("postLoginActivity.parts.requests", { count: activity.requests }) : null,
+      activity.proposals > 0 ? t("postLoginActivity.parts.proposals", { count: activity.proposals }) : null,
+      activity.support > 0 ? t("postLoginActivity.parts.support", { count: activity.support }) : null,
+      activity.other > 0 ? t("postLoginActivity.parts.notifications", { count: activity.other }) : null,
+    ].filter(Boolean).join(", ");
+  }
+
+  function closePostLoginActivity() {
+    setPostLoginActivity(null);
+  }
+
+  function viewPostLoginActivity() {
+    if (!postLoginActivity) return;
+    setPostLoginActivity(null);
+    if (mode !== postLoginActivity.targetMode) setMode(postLoginActivity.targetMode);
+    setTab(postLoginActivity.targetTab);
   }
 
   useEffect(() => {
@@ -516,6 +685,38 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {postLoginActivity && (
+            <div className="mb-6 rounded-2xl border border-[#bae6fd] bg-[#f0f9ff] p-4 shadow-sm">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#009FD9] ring-1 ring-inset ring-[#bae6fd]">
+                    <Bell className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-[#0f172a]">{t("postLoginActivity.title")}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-[#075985]">
+                      {t("postLoginActivity.body", { summary: postLoginActivitySummary(postLoginActivity) })}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Button type="button" size="sm" onClick={viewPostLoginActivity} className="flex-1 sm:flex-none">
+                    {t(`postLoginActivity.cta.${postLoginActivity.cta}`)}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={closePostLoginActivity}
+                    aria-label={t("postLoginActivity.close")}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#64748b] transition-colors hover:bg-white hover:text-[#0f172a]"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
           {proLoadError ? (

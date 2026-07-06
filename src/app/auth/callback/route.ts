@@ -4,6 +4,18 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+function withPostLoginActivity(path: string): string {
+  const normalized = path.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
+  if (!normalized.startsWith("/dashboard")) return path;
+
+  const [pathAndQuery, hash = ""] = path.split("#");
+  const [pathname, query = ""] = pathAndQuery.split("?");
+  const params = new URLSearchParams(query);
+  params.set("postLogin", "1");
+  const qs = params.toString();
+  return `${pathname}${qs ? `?${qs}` : ""}${hash ? `#${hash}` : ""}`;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -121,7 +133,7 @@ export async function GET(request: NextRequest) {
       // open-redirect. The "projects" alias is NOT a path — it falls through to the
       // role-aware resolution below.
       if (safeNext) {
-        return NextResponse.redirect(`${origin}${safeNext}`);
+        return NextResponse.redirect(`${origin}${withPostLoginActivity(safeNext)}`);
       }
 
       // ── Onboarding decision ──
@@ -158,7 +170,7 @@ export async function GET(request: NextRequest) {
       // the moment they book/request a service (see the booking flow). So we no
       // longer force clients to a profile-completion screen here. Professionals
       // provide their cédula during professional registration.
-      return NextResponse.redirect(`${origin}${destPath}`);
+      return NextResponse.redirect(`${origin}${withPostLoginActivity(destPath)}`);
     }
   }
 

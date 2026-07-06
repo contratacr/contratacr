@@ -1239,6 +1239,25 @@
     "offerGateCta": "Complete my profile",
     "offerInviteTitle": "Do you offer services?",
     "offerInviteCta": "Offer my services",
+    "postLoginActivity": {
+      "title": "You have new activity",
+      "body": "While you were away, you received: {summary}.",
+      "parts": {
+        "opportunities": "{count, plural, one {# opportunity} other {# opportunities}}",
+        "requests": "{count, plural, one {# request} other {# requests}}",
+        "proposals": "{count, plural, one {# proposal} other {# proposals}}",
+        "support": "{count, plural, one {# support reply} other {# support replies}}",
+        "notifications": "{count, plural, one {# notification} other {# notifications}}"
+      },
+      "cta": {
+        "opportunities": "View opportunities",
+        "requests": "View requests",
+        "proposals": "View proposals",
+        "support": "View support",
+        "notifications": "View notifications"
+      },
+      "close": "Close"
+    },
     "bottomNav": {
       "profile": "Profile",
       "services": "Services",

@@ -52,6 +52,18 @@ function meaningfulRedirect(raw: string | null): string | null {
   return path.startsWith("/dashboard") ? raw : null;
 }
 
+function withPostLoginActivity(path: string): string {
+  const normalized = path.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
+  if (!normalized.startsWith("/dashboard")) return path;
+
+  const [pathAndQuery, hash = ""] = path.split("#");
+  const [pathname, query = ""] = pathAndQuery.split("?");
+  const params = new URLSearchParams(query);
+  params.set("postLogin", "1");
+  const qs = params.toString();
+  return `${pathname}${qs ? `?${qs}` : ""}${hash ? `#${hash}` : ""}`;
+}
+
 export default function LoginPage() {
   const t = useTranslations("auth.login");
   const locale = useLocale();
@@ -108,7 +120,7 @@ export default function LoginPage() {
 
     if (redirect && redirect !== "projects") {
       const dest = /^\/(es|en)(\/|$)/.test(redirect) ? redirect : `/${locale}${redirect}`;
-      window.location.assign(dest);
+      window.location.assign(withPostLoginActivity(dest));
       return;
     }
 
@@ -116,7 +128,7 @@ export default function LoginPage() {
       redirect === "projects"
         ? "/dashboard/profesional?tab=sent_projects"
         : "/dashboard/profesional";
-    window.location.assign(`/${locale}${dest}`);
+    window.location.assign(withPostLoginActivity(`/${locale}${dest}`));
   }
 
   async function onSubmit(data: FormData) {

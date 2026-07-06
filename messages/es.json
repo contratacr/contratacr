@@ -1238,6 +1238,25 @@
     "offerGateCta": "Completar mi perfil",
     "offerInviteTitle": "¿Ofreces servicios?",
     "offerInviteCta": "Ofrecer mis servicios",
+    "postLoginActivity": {
+      "title": "Tienes actividad nueva",
+      "body": "Mientras no estabas en la app llegó: {summary}.",
+      "parts": {
+        "opportunities": "{count, plural, one {# oportunidad} other {# oportunidades}}",
+        "requests": "{count, plural, one {# solicitud} other {# solicitudes}}",
+        "proposals": "{count, plural, one {# propuesta} other {# propuestas}}",
+        "support": "{count, plural, one {# respuesta de soporte} other {# respuestas de soporte}}",
+        "notifications": "{count, plural, one {# notificación} other {# notificaciones}}"
+      },
+      "cta": {
+        "opportunities": "Ver oportunidades",
+        "requests": "Ver solicitudes",
+        "proposals": "Ver propuestas",
+        "support": "Ver soporte",
+        "notifications": "Ver notificaciones"
+      },
+      "close": "Cerrar"
+    },
     "bottomNav": {
       "profile": "Perfil",
       "services": "Servicios",
