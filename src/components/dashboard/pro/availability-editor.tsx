@@ -857,17 +857,12 @@ export function AvailabilityEditor({
               <div>
                 <label className="mb-2 block text-xs font-semibold text-[#6b7280]">{t("scheduleForLabel")}</label>
                 {isMultiLocation ? (
-                  <div className="relative">
-                    <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#009FD9]" />
-                    <select
+                  <SelectMenu
                       value={activeLocationId}
-                      onChange={(e) => setGenLocation(e.target.value)}
-                      className="h-11 w-full appearance-none rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-9 text-sm font-medium text-[#111827] transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
-                    >
-                      {locationOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
-                  </div>
+                      onChange={setGenLocation}
+                      options={locationOptions.map((option) => ({ value: option.id, label: option.label }))}
+                      className="[&>button]:h-10 [&>button]:rounded-xl [&>button]:pl-3 [&>button]:text-sm"
+                    />
                 ) : (
                   <div className="flex h-11 items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827]">
                     <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
