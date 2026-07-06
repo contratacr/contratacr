@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { isMinorFromDob } from "@/lib/age";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -192,9 +193,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prevOverflow; };
+    const releaseBodyScroll = lockBodyScroll();
+    return () => { document.removeEventListener("keydown", onKey); releaseBodyScroll(); };
   }, [onClose]);
 
   async function handleSubmit(e: React.FormEvent) {

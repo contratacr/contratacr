@@ -27,6 +27,7 @@ import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCa
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
 export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
@@ -1080,9 +1081,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   // Lock body scroll while the mobile drawer is open (no scrolling behind it).
   useEffect(() => {
     if (!mobileOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return lockBodyScroll();
   }, [mobileOpen]);
 
   async function handleSignOut() {
