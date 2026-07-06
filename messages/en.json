@@ -1239,6 +1239,13 @@
     "offerGateCta": "Complete my profile",
     "offerInviteTitle": "Do you offer services?",
     "offerInviteCta": "Offer my services",
+    "opportunityWelcome": {
+      "title": "We found {count, plural, one {# open opportunity for your services} other {# open opportunities for your services}}",
+      "body": "These are client requests that match the services you just added.",
+      "view": "View opportunities",
+      "later": "Later",
+      "close": "Close"
+    },
     "postLoginActivity": {
       "title": "You have new activity",
       "body": "While you were away, you received: {summary}.",

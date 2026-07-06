@@ -212,6 +212,7 @@ export default function DashboardPage() {
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const shouldCheckPostLoginActivity = searchParams.get("postLogin") === "1";
+  const shouldCheckOpportunityWelcome = searchParams.get("welcomeOpportunities") === "1";
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(null);
@@ -223,8 +224,10 @@ export default function DashboardPage() {
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [postLoginActivity, setPostLoginActivity] = useState<PostLoginActivity | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const postLoginActivityCheckedRef = useRef(false);
+  const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const opportunityWelcomeCheckedRef = useRef(false);
   const [bottomNavRail, setBottomNavRail] = useState<HTMLDivElement | null>(null);
   const [bottomNavOverflow, setBottomNavOverflow] = useState({ left: false, right: true });
   const [noProTries, setNoProTries] = useState(0);
@@ -427,6 +430,48 @@ export default function DashboardPage() {
     };
   }, [authLoading, mode, router, searchParams, shouldCheckPostLoginActivity, user]);
 
+  useEffect(() => {
+    if (
+      !shouldCheckOpportunityWelcome ||
+      authLoading ||
+      loading ||
+      !user ||
+      !pro ||
+      opportunityWelcomeCheckedRef.current
+    ) {
+      return;
+    }
+
+    opportunityWelcomeCheckedRef.current = true;
+    let mounted = true;
+
+    const clearWelcomeParam = () => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("welcomeOpportunities");
+      const qs = params.toString();
+      router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
+    };
+
+    fetch("/api/projects?role=professional", { cache: "no-store" })
+      .then(async (res) => (res.ok ? res.json() : { projects: [] }))
+      .then((data) => {
+        if (!mounted) return;
+        const count = Array.isArray(data?.projects) ? data.projects.length : 0;
+        if (count > 0) setOpportunityWelcomeCount(count);
+      })
+      .catch((error) => {
+        console.error("[dashboard] opportunity welcome load failed:", error);
+      })
+      .finally(() => {
+        if (!mounted) return;
+        clearWelcomeParam();
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [authLoading, loading, pro, router, searchParams, shouldCheckOpportunityWelcome, user]);
+
   function setTab(tab: Tab) {
     if (tab === activeTab) return;
     if (OFFER_ONLY.has(tab)) setMode("offer");
@@ -476,6 +521,16 @@ export default function DashboardPage() {
     setPostLoginActivity(null);
     if (mode !== postLoginActivity.targetMode) setMode(postLoginActivity.targetMode);
     setTab(postLoginActivity.targetTab);
+  }
+
+  function closeOpportunityWelcome() {
+    setOpportunityWelcomeCount(null);
+  }
+
+  function viewOpportunityWelcome() {
+    setOpportunityWelcomeCount(null);
+    if (mode !== "offer") setMode("offer");
+    setTab("proposals");
   }
 
   useEffect(() => {
@@ -657,6 +712,46 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
+      {opportunityWelcomeCount !== null && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 px-4 py-6 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="opportunity-welcome-title"
+            aria-describedby="opportunity-welcome-body"
+            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:p-6"
+          >
+            <button
+              type="button"
+              onClick={closeOpportunityWelcome}
+              aria-label={t("opportunityWelcome.close")}
+              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
+              <Handshake className="h-6 w-6" />
+            </div>
+            <h2 id="opportunity-welcome-title" className="pr-8 text-xl font-bold leading-tight text-[#111827]">
+              {t("opportunityWelcome.title", { count: opportunityWelcomeCount })}
+            </h2>
+            <p id="opportunity-welcome-body" className="mt-3 text-sm leading-relaxed text-[#6b7280]">
+              {t("opportunityWelcome.body")}
+            </p>
+
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={closeOpportunityWelcome} className="w-full sm:w-auto">
+                {t("opportunityWelcome.later")}
+              </Button>
+              <Button type="button" onClick={viewOpportunityWelcome} className="w-full sm:w-auto">
+                {t("opportunityWelcome.view")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-8">
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline

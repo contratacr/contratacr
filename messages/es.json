@@ -1238,6 +1238,13 @@
     "offerGateCta": "Completar mi perfil",
     "offerInviteTitle": "¿Ofreces servicios?",
     "offerInviteCta": "Ofrecer mis servicios",
+    "opportunityWelcome": {
+      "title": "Encontramos {count, plural, one {# oportunidad abierta para tus servicios} other {# oportunidades abiertas para tus servicios}}",
+      "body": "Son solicitudes publicadas por clientes que coinciden con los servicios que acabas de agregar.",
+      "view": "Ver oportunidades",
+      "later": "Luego",
+      "close": "Cerrar"
+    },
     "postLoginActivity": {
       "title": "Tienes actividad nueva",
       "body": "Mientras no estabas en la app llegó: {summary}.",
