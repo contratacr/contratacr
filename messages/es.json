@@ -133,11 +133,11 @@
     },
     "categories": {
       "title": "¿Qué servicio necesitas?",
-      "subtitle": "Explora todas las categorías disponibles"
+      "subtitle": "Explora todos los servicios disponibles"
     },
     "featured": {
       "title": "Servicios destacados",
-      "subtitle": "Los mejor calificados en su categoría",
+      "subtitle": "Los mejor calificados en su servicio",
       "viewAll": "Ver todos"
     },
     "howItWorks": {
@@ -145,7 +145,7 @@
       "subtitle": "Simple, rápido y sin complicaciones",
       "step1": {
         "title": "Busca el servicio",
-        "desc": "Filtra por categoría y cantón para encontrar al profesional más cercano a ti."
+        "desc": "Filtra por servicio y cantón para encontrar al profesional más cercano a ti."
       },
       "step2": {
         "title": "Revisa perfiles",
@@ -195,7 +195,7 @@
     "close": "Cerrar",
     "noResults": {
       "title": "No encontramos resultados",
-      "desc": "Intenta con otra categoría o amplía la zona de búsqueda."
+      "desc": "Intenta con otro servicio o amplía la zona de búsqueda."
     },
     "pagination": {
       "prev": "Anterior",
@@ -206,8 +206,8 @@
       "title": "Filtros",
       "clear": "Limpiar",
       "clearAll": "Limpiar filtros",
-      "category": "Categoría",
-      "allCategories": "Todas las categorías",
+      "category": "Servicio",
+      "allCategories": "Todos los servicios",
       "location": "Ubicación",
       "costaRica": "Costa Rica",
       "locationPlaceholder": "Busca una ubicación",
@@ -669,7 +669,7 @@
       "valNameRequired": "El nombre completo es requerido",
       "valEmailRequired": "El correo es requerido",
       "valEmailInvalid": "Ingresa un correo válido",
-      "valCategoryRequired": "Selecciona una categoría",
+      "valCategoryRequired": "Selecciona un servicio",
       "valWhatsappRequired": "El número de WhatsApp es requerido",
       "valWhatsappInvalid": "Número inválido",
       "steps": {
@@ -832,7 +832,7 @@
     "clients": {
       "title": "Para clientes",
       "search": "Buscar servicios",
-      "categories": "Categorías",
+      "categories": "Servicios",
       "howItWorks": "Cómo funciona",
       "publish": "Publicar una solicitud"
     },
@@ -1079,7 +1079,7 @@
       "proposals": {
         "title": "Oportunidades",
         "empty": "No hay oportunidades disponibles en tu zona",
-        "emptyHint": "Las solicitudes de clientes en tu categoría aparecerán aquí.",
+        "emptyHint": "Las solicitudes de clientes que coincidan con tus servicios aparecerán aquí.",
         "myProposals": "Mis propuestas",
         "browse": "Oportunidades",
         "send": "Enviar propuesta",
@@ -2321,7 +2321,7 @@
     "tlFlexible": "Soy flexible",
     "tlPlanning": "Estoy planificando",
     "tlAny": "Sin preferencia",
-    "errCategory": "Elige una categoría para que tu solicitud llegue a los profesionales que ofrecen ese servicio.",
+    "errCategory": "Elige un servicio para que tu solicitud llegue a los profesionales que lo ofrecen.",
     "errTitle": "El título es requerido.",
     "errDescription": "La descripción es requerida.",
     "errCedula": "Ingresa un número de identificación válido.",
@@ -2340,9 +2340,9 @@
     "goToPanel": "Ir a mi panel",
     "title": "Publicar una solicitud",
     "subtitle": "Describe lo que necesitas y recibe propuestas de tu zona.",
-    "category": "Categoría",
+    "category": "Servicio",
     "categoryHelp": "Así dirigimos tu solicitud a los profesionales que ofrecen ese servicio.",
-    "categoryPlaceholder": "Escribe o elige una categoría",
+    "categoryPlaceholder": "Escribe o elige un servicio",
     "projectTitle": "Título de la solicitud",
     "titlePlaceholder": "Ejemplo: Pintura de sala y comedor, 50m²",
     "description": "Descripción",
@@ -2422,8 +2422,8 @@
   "projects": {
     "title": "Publicar una solicitud",
     "subtitle": "Describe lo que necesitas y recibe propuestas.",
-    "category": "Categoría",
-    "categoryPlaceholder": "Selecciona una categoría",
+    "category": "Servicio",
+    "categoryPlaceholder": "Selecciona un servicio",
     "projectTitle": "Título de la solicitud",
     "titlePlaceholder": "Ejemplo: Pintura de sala y comedor, 50m²",
     "description": "Descripción",
@@ -2684,7 +2684,7 @@
     "clientPathTitle": "Busca un servicio",
     "clientPathDesc": "Encuentra profesionales por servicio, ubicación, disponibilidad, reseñas y perfil. Ideal cuando quieres comparar y contactar rápido.",
     "clientStep0Title": "Escribe lo que necesitas",
-    "clientStep0Body": "Puedes buscar por servicio, categoría, provincia, cantón o frases como “necesito limpiar mi casa”.",
+    "clientStep0Body": "Puedes buscar por servicio, provincia, cantón o frases como “necesito limpiar mi casa”.",
     "clientStep1Title": "Compara perfiles",
     "clientStep1Body": "Revisa identidad verificada, trabajos anteriores, reseñas, precios de referencia, zonas de trabajo y disponibilidad.",
     "clientStep2Title": "Contacta o agenda",
@@ -2705,7 +2705,7 @@
     "clientsTitle": "Menos vueltas, más claridad",
     "clientsSubtitle": "La app está pensada para que cualquier persona pueda encontrar ayuda sin entender tecnología ni perseguir contactos.",
     "clientBenefit0Title": "Búsqueda inteligente",
-    "clientBenefit0Body": "El buscador entiende servicios, categorías, cantones y frases comunes para ayudarte a llegar al profesional correcto.",
+    "clientBenefit0Body": "El buscador entiende servicios, cantones y frases comunes para ayudarte a llegar al profesional correcto.",
     "clientBenefit1Title": "Más confianza",
     "clientBenefit1Body": "Ves perfiles, identificación verificada cuando exista, reseñas, fotos de trabajos y datos relevantes antes de contactar.",
     "clientBenefit2Title": "Horarios claros",
@@ -2956,7 +2956,9 @@
       "geoFailed": "No pudimos obtener tu ubicación. Puedes buscar por provincia o cantón.",
       "search": "Buscar",
       "popular": "Popular:",
-      "installLink": "Agregar app al celular"
+      "installLink": "Agregar app al celular",
+      "proPrompt": "¿Ofreces servicios?",
+      "proCta": "Ofrecer mis servicios"
     },
     "pros": {
       "headingPre": "Servicios para lo que necesitas en",
@@ -2964,8 +2966,9 @@
     },
     "carousel": {
       "titlePre": "Explora",
-      "titleHighlight": "por categoría",
-      "viewAll": "Ver todas las categorías"
+      "titleHighlight": "servicios",
+      "viewAll": "Ver todos los servicios",
+      "offerCta": "Ofrecer mis servicios"
     },
     "zones": {
       "eyebrow": "Cobertura local",
@@ -3019,7 +3022,7 @@
     },
     "explore": {
       "heading": "Explora más servicios.",
-      "subtitle": "Servicios en cada categoría, en tu cantón.",
+    "subtitle": "Servicios para distintas necesidades, en tu cantón.",
       "tab0": "Mantenimiento del hogar",
       "tab1": "Remodelación",
       "tab2": "Exterior y jardín",

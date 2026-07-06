@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
+import { isMaintenanceMode } from "./lib/status/runtime-status";
 
 const handleI18n = createIntlMiddleware(routing);
 
@@ -23,7 +24,12 @@ const PUBLIC_PREFIXES = [
   "/como-funciona",
   "/terminos",
   "/privacidad",
+  "/mantenimiento",
+  "/servicio-no-disponible",
 ];
+
+// Pages that remain reachable even while maintenance mode is active.
+const MAINTENANCE_BYPASS_PREFIXES = ["/mantenimiento", "/terminos", "/privacidad"];
 
 // Next.js 16 renamed the `middleware` file convention to `proxy`. For a `src/`
 // project the file must live at `src/proxy.ts` (same level as `src/app`) — the
@@ -32,6 +38,17 @@ const PUBLIC_PREFIXES = [
 // before every matched route: i18n locale routing + the Supabase auth gate.
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const maintenanceActive = isMaintenanceMode();
+
+  if (pathname.startsWith("/api/")) {
+    if (maintenanceActive) {
+      return NextResponse.json(
+        { error: "maintenance", message: "Servicio temporalmente en mantenimiento." },
+        { status: 503, headers: { "Retry-After": "300" } }
+      );
+    }
+    return NextResponse.next();
+  }
 
   // EVERY unprefixed path redirects to its locale-prefixed canonical URL. This
   // single redirect makes the `[locale]` routes the source of truth, so old
@@ -48,12 +65,19 @@ export async function proxy(request: NextRequest) {
     const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;
     const target = cookieLocale === "en" ? "en" : "es";
     const url = request.nextUrl.clone();
-    url.pathname = `/${target}${pathname === "/" ? "" : pathname}`;
+    const basePath = pathname === "/" ? "/" : pathname;
+    url.pathname = maintenanceActive && !isMaintenanceBypassPath(basePath)
+      ? `/${target}/mantenimiento`
+      : `/${target}${pathname === "/" ? "" : pathname}`;
     return NextResponse.redirect(url);
   }
 
   // Strip locale prefix to get the base path for matching
   const withoutLocale = pathname.replace(/^\/(?:es|en)/, "") || "/";
+  if (maintenanceActive && !isMaintenanceBypassPath(withoutLocale)) {
+    const locale = pathname.split("/")[1] || "es";
+    return NextResponse.redirect(new URL(`/${locale}/mantenimiento`, request.url));
+  }
 
   const isProtected = PROTECTED_PREFIXES.some(
     (p) => withoutLocale === p || withoutLocale.startsWith(p + "/")
@@ -154,9 +178,16 @@ function redirectKeepingCookies(path: string, request: NextRequest, response: Ne
   return redirectRes;
 }
 
+function isMaintenanceBypassPath(path: string) {
+  return MAINTENANCE_BYPASS_PREFIXES.some(
+    (p) => path === p || path.startsWith(p + "/")
+  );
+}
+
 export const config = {
-  // Skip API routes, Next internals, static files, and /auth/* (OAuth callbacks must
+  // Skip Next internals, static files, and /auth/* (OAuth callbacks must
   // reach the route handler directly — the i18n proxy would redirect /auth/callback
   // to /es/auth/callback, losing the PKCE code before it can be exchanged).
-  matcher: ["/((?!api|_next|_vercel|auth|.*\\..*).*)"],
+  // API routes pass through normally, except when maintenance mode returns 503.
+  matcher: ["/((?!_next|_vercel|auth|.*\\..*).*)"],
 };

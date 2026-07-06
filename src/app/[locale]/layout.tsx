@@ -9,6 +9,8 @@ import { NotificationLiveToast } from "@/components/notifications/notification-l
 import { CustomCategoriesLoader } from "@/lib/data/use-custom-categories";
 import { ViewportEnvironment } from "@/components/util/viewport-environment";
 import { DocumentLocale } from "@/components/util/document-locale";
+import { OperationalStatusBanner } from "@/components/status/operational-status-banner";
+import { getOperationalStatusBanner } from "@/lib/status/runtime-status";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -21,7 +23,7 @@ function buildMetadata(locale: string): Metadata {
     : "ContrataCR: Profesionales de servicios en Costa Rica";
   const description = isEn
     ? "Find electricians, plumbers, painters, tutors and more verified professionals in your canton."
-    : "Encuentra electricistas, plomeros, pintores, tutores y mas profesionales verificados en tu canton.";
+    : "Encuentra electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.";
   const socialDescription = isEn
     ? "Find and hire professionals in Costa Rica"
     : "Encuentra y contrata profesionales en Costa Rica";
@@ -92,6 +94,7 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
+  const operationalStatus = getOperationalStatusBanner(locale);
 
   return (
     <NextIntlClientProvider messages={messages}>
@@ -100,6 +103,7 @@ export default async function LocaleLayout({
       <ViewportEnvironment />
       <CustomCategoriesLoader />
       <NotificationLiveToast scope="all" />
+      <OperationalStatusBanner locale={locale} status={operationalStatus} />
       {children}
       <BackToTop />
     </NextIntlClientProvider>

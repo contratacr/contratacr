@@ -73,14 +73,14 @@ export async function POST(req: NextRequest) {
     const requestedBeneficiaryDob = typeof body.beneficiaryDob === "string" ? body.beneficiaryDob : "";
 
     if (!cleanTitle || !cleanDescription) {
-      return NextResponse.json({ error: "Titulo y descripcion son requeridos" }, { status: 400 });
+      return NextResponse.json({ error: "Título y descripción son requeridos" }, { status: 400 });
     }
     // Category is required: it routes the project to matching professionals.
     if (!categoryId) {
-      return NextResponse.json({ error: "Elige una categoria para tu solicitud." }, { status: 400 });
+      return NextResponse.json({ error: "Elige un servicio para tu solicitud." }, { status: 400 });
     }
     if (cedula && !isValidId(cedula)) {
-      return NextResponse.json({ error: "Ingresa un numero de identificacion valido." }, { status: 400 });
+      return NextResponse.json({ error: "Ingresa un número de identificación válido." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -235,8 +235,8 @@ export async function POST(req: NextRequest) {
           const rows = recipients.map((profileId) => ({
             user_id: profileId,
             type: "new_project",
-            title: "Nueva oportunidad en tu categoria",
-            message: `Un cliente publico "${cleanTitle}" en ${label}.`,
+            title: "Nueva oportunidad en tus servicios",
+            message: `Un cliente publicó "${cleanTitle}" en ${label}.`,
             data: { link: "/es/dashboard/profesional?tab=proposals", project_id: projectId },
           }));
           await admin.from("notifications").insert(rows);

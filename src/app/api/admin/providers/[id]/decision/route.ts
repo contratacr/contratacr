@@ -84,12 +84,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   if (profileErr) {
     console.error("[admin/decision] profile identity sync error:", profileErr);
-    return NextResponse.json({ error: "Se actualizo el profesional, pero no se pudo sincronizar la verificacion de la cuenta." }, { status: 500 });
+    return NextResponse.json({ error: "Se actualizó el profesional, pero no se pudo sincronizar la verificación de la cuenta." }, { status: 500 });
   }
 
   if (toStatus !== "verified" && syncedProfile?.cedula) {
     console.error("[admin/decision] profile cedula cleanup did not persist:", { profileId: pro.profile_id });
-    return NextResponse.json({ error: "Se actualizo el profesional, pero la identificacion guardada no se limpio. Intenta de nuevo." }, { status: 500 });
+    return NextResponse.json({ error: "Se actualizó el profesional, pero la identificación guardada no se limpió. Intenta de nuevo." }, { status: 500 });
   }
 
   if (toStatus !== "verified") {
