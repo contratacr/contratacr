@@ -996,27 +996,22 @@ export function AvailabilityEditor({
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-[#111827]">{t("diffDayTitle")}</h3>
                 <p className="mt-0.5 text-xs text-[#6b7280]">{t("diffDaySub")}</p>
+                <p className="mt-1 text-xs font-medium text-[#6b7280]">{t("appliesTo", { place: locationLabel(activeLocationId) })}</p>
               </div>
             </div>
 
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="mb-5">
               <button
                 type="button"
                 onClick={() => setDayModal({ date: todayISO() })}
-                className="flex h-11 min-w-0 items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm font-medium text-[#6b7280] transition-all hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] sm:w-[18rem]"
+                className="flex h-11 w-full min-w-0 items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm font-semibold text-[#111827] transition-all hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] sm:w-[18rem]"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <Calendar className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                  <span className="truncate">{t("selectDate")}</span>
+                  <span className="truncate">{t("changeDay")}</span>
                 </span>
                 <ChevronDown className="h-4 w-4 shrink-0 text-[#9ca3af]" />
               </button>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Button type="button" variant="secondary" size="sm" className="h-11 rounded-xl px-4" onClick={() => setDayModal({ date: todayISO() })}>
-                  <Calendar className="h-4 w-4" /> {t("changeSchedule")}
-                </Button>
-                {isMultiLocation && <span className="max-w-full truncate text-xs font-medium text-[#6b7280] sm:max-w-[14rem]">{locationLabel(activeLocationId)}</span>}
-              </div>
             </div>
 
             {activeExceptions.length === 0 ? (
