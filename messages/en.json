@@ -443,8 +443,7 @@
     "unavailableTitle": "Registry unavailable",
     "unavailableNotice": "We couldn't check the registry right now. Please try again in a few minutes.",
     "fullName": "Full name",
-    "namePlaceholder": "John Doe Smith",
-    "nameHint": "exactly as it appears on your document"
+    "namePlaceholder": "John Doe Smith"
   },
   "clientRegModal": {
     "otpError": "Incorrect or expired code. Request a new one.",
@@ -760,6 +759,8 @@
       "identityAlreadyRegistered": "ID saved to your account",
       "usesAccountId": "{name}",
       "yourAccount": "Your account",
+      "businessName": "Business or company name",
+      "businessPlaceholder": "Example: SG Solutions",
       "servicesSectionTitle": "Services",
       "professionPrincipal": "Your main service",
       "searchProfession": "Search your service",

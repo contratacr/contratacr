@@ -442,8 +442,7 @@
     "unavailableTitle": "Padrón no disponible",
     "unavailableNotice": "No pudimos consultar el padrón en este momento. Intenta de nuevo en unos minutos.",
     "fullName": "Nombre completo",
-    "namePlaceholder": "Juan Pérez González",
-    "nameHint": "tal como aparece en tu documento"
+    "namePlaceholder": "Juan Pérez González"
   },
   "clientRegModal": {
     "otpError": "Código incorrecto o expirado. Solicita uno nuevo.",
@@ -759,6 +758,8 @@
       "identityAlreadyRegistered": "Identificación guardada en tu cuenta",
       "usesAccountId": "{name}",
       "yourAccount": "Tu cuenta",
+      "businessName": "Nombre comercial o de tu empresa",
+      "businessPlaceholder": "Ejemplo: SG Solutions",
       "servicesSectionTitle": "Servicios",
       "professionPrincipal": "Tu servicio principal",
       "searchProfession": "Busca tu servicio",
