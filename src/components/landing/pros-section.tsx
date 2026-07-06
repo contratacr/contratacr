@@ -16,6 +16,11 @@ export async function ProsSection() {
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744] leading-tight">
             {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>
           </h2>
+          <div className="mt-4">
+            <SmartRegisterLink className="inline-flex items-center justify-center text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline">
+              {heroT("proCta")}
+            </SmartRegisterLink>
+          </div>
         </div>
       </div>
 
@@ -23,17 +28,13 @@ export async function ProsSection() {
       <CategoryCarousel />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-10 flex justify-center">
           <Link
             href="/servicios"
             className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] hover:underline"
           >
             {t("viewAll")}
           </Link>
-          <span className="hidden h-1 w-1 rounded-full bg-[#cbd5e1] sm:block" aria-hidden />
-          <SmartRegisterLink className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline">
-            {heroT("proCta")}
-          </SmartRegisterLink>
         </div>
       </div>
     </section>
