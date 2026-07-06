@@ -877,6 +877,12 @@ export function AvailabilityEditor({
               </div>
             </div>
 
+            <div className="border-b border-[#f3f4f6] px-4 py-3 sm:px-5">
+              <p className="text-xs leading-5 text-[#6b7280]">
+                {isMultiLocation ? t("alwaysSub", { place: locationLabel(activeLocationId) }) : t("alwaysSubAll")}
+              </p>
+            </div>
+
             <div className="hidden grid-cols-[6.25rem_5.75rem_minmax(12rem,1fr)_6.75rem] border-b border-[#f3f4f6] px-5 py-3 text-xs font-semibold text-[#6b7280] lg:grid">
               <span>{t("date")}</span>
               <span>{t("availableColumn")}</span>
@@ -928,9 +934,9 @@ export function AvailabilityEditor({
                         <div className="flex min-w-0 flex-col gap-2">
                           {blocks.map((b) => (
                             <div key={b.id} className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 md:w-[19rem] md:shrink-0 lg:w-[13.75rem] lg:grid-cols-[minmax(5.875rem,1fr)_auto_minmax(5.875rem,1fr)]">
-                              <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" />
+                              <TimeSelect value={b.start} step={activeDuration} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + activeDuration, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" />
                               <span className="mt-1.5 shrink-0 text-xs text-[#9ca3af] sm:mt-2 sm:text-sm">-</span>
-                              <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                              <TimeSelect value={b.end} step={activeDuration} min={b.start ? hhmm(Math.min(toMins(b.start) + activeDuration, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                             </div>
                           ))}
                         </div>
