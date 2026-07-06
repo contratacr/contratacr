@@ -2958,7 +2958,8 @@
       "geoFailed": "We couldn't get your location. You can search by province or canton.",
       "search": "Search",
       "popular": "Popular:",
-      "installLink": "Add app to phone"
+      "installLink": "Add app to phone",
+      "proCta": "Offer my services"
     },
     "pros": {
       "headingPre": "Services for whatever you need in",
@@ -2966,8 +2967,8 @@
     },
     "carousel": {
       "titlePre": "Explore",
-      "titleHighlight": "by category",
-      "viewAll": "View all categories"
+      "titleHighlight": "services",
+      "viewAll": "View all services"
     },
     "zones": {
       "eyebrow": "Local coverage",

@@ -1,5 +1,5 @@
 import { getTranslations, getLocale } from "next-intl/server";
-import { Search, CalendarDays, BadgeCheck, ArrowRight, Smartphone } from "lucide-react";
+import { Search, CalendarDays, BadgeCheck } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { PhoneFrame, ResultsScreen, buildLandingResultsCopy } from "@/components/landing/phone-screens";
 import { Link } from "@/i18n/navigation";
@@ -36,18 +36,17 @@ export async function WhyContratacr() {
           <p className="text-gray-500 mt-3 max-w-xl mx-auto">
             {t("subtitle")}
           </p>
-          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2">
             <Link
               href="/como-funciona"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_26px_rgba(0,159,217,0.22)] transition-colors hover:bg-[#0089bb]"
+              className="text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline"
             >
-              {t("guideCta")} <ArrowRight className="h-4 w-4" />
+              {t("guideCta")}
             </Link>
             <Link
               href="/como-funciona#agregar-a-inicio"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ccecf8] bg-white px-5 py-3 text-sm font-bold text-[#009FD9] transition-colors hover:bg-[#f1faff]"
+              className="text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline"
             >
-              <Smartphone className="h-4 w-4" />
               {t("installLink")}
             </Link>
           </div>

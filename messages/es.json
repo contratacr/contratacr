@@ -2956,7 +2956,8 @@
       "geoFailed": "No pudimos obtener tu ubicación. Puedes buscar por provincia o cantón.",
       "search": "Buscar",
       "popular": "Popular:",
-      "installLink": "Agregar app al celular"
+      "installLink": "Agregar app al celular",
+      "proCta": "Ofrecer mis servicios"
     },
     "pros": {
       "headingPre": "Servicios para lo que necesitas en",
@@ -2964,8 +2965,8 @@
     },
     "carousel": {
       "titlePre": "Explora",
-      "titleHighlight": "por categoría",
-      "viewAll": "Ver todas las categorías"
+      "titleHighlight": "servicios",
+      "viewAll": "Ver todos los servicios"
     },
     "zones": {
       "eyebrow": "Cobertura local",
