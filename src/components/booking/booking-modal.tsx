@@ -46,6 +46,37 @@ type WeeklyAvailability = Record<string, DaySchedule>;
 
 const DAY_KEYS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
 const phoneDigits = (value: string) => value.replace(/\D/g, "");
+const PENDING_BOOKING_IDENTITY_KEY = "ccr:pending-booking-identity";
+const PENDING_BOOKING_IDENTITY_MAX_AGE_MS = 30 * 60 * 1000;
+
+type PendingBookingIdentity = {
+  userId?: string;
+  fullName?: string;
+  cedula?: string;
+  noCedula?: boolean;
+  createdAt?: number;
+};
+
+function readPendingBookingIdentity(userId: string): PendingBookingIdentity | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(PENDING_BOOKING_IDENTITY_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PendingBookingIdentity;
+    if (parsed.userId !== userId || !parsed.createdAt || Date.now() - parsed.createdAt > PENDING_BOOKING_IDENTITY_MAX_AGE_MS) {
+      window.sessionStorage.removeItem(PENDING_BOOKING_IDENTITY_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    window.sessionStorage.removeItem(PENDING_BOOKING_IDENTITY_KEY);
+    return null;
+  }
+}
+
+function clearPendingBookingIdentity() {
+  if (typeof window !== "undefined") window.sessionStorage.removeItem(PENDING_BOOKING_IDENTITY_KEY);
+}
 
 function formatDateISO(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -355,6 +386,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             const hasCedula = !!data?.cedula && String(data.cedula).trim() !== "";
             setHasStoredCedula(hasCedula);
             if (hasCedula) setProfileCedula(String(data!.cedula));
+            if (!hasCedula) {
+              const pendingIdentity = readPendingBookingIdentity(user.id);
+              if (pendingIdentity) {
+                if (pendingIdentity.fullName) setClientName(limitText(pendingIdentity.fullName, NAME_MAX_LENGTH));
+                if (pendingIdentity.noCedula) setNoCedula(true);
+                else if (pendingIdentity.cedula) setProfileCedula(cleanId(pendingIdentity.cedula));
+              }
+            }
             if (data?.phone && hasPhoneNumber(String(data.phone))) {
               const accountPhone = String(data.phone);
               setProfilePhone(accountPhone);
@@ -708,6 +747,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
       setWaLink(getWhatsAppLink(professional.whatsapp, message));
       bookedRef.current = true;
+      clearPendingBookingIdentity();
       setStep("success");
       window.dispatchEvent(new Event("ccr:availability-changed"));
     } finally {
