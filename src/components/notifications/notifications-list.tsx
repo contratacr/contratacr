@@ -12,6 +12,7 @@ import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
+import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
 
 type Notification = {
   id: string;
@@ -20,7 +21,7 @@ type Notification = {
   message: string;
   read: boolean;
   created_at: string;
-  data?: { link?: string } | null;
+  data?: { link?: string; project_id?: string | null; project_created_at?: string | null } | null;
 };
 
 function uniqueNotifications(items: Notification[]): Notification[] {
@@ -49,10 +50,10 @@ export function NotificationsList() {
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const projectTimes = useNotificationProjectTimes(items);
 
-  const loadNotifications = useCallback((showLoading = false) => {
+  const loadNotifications = useCallback(() => {
     if (!user) return;
-    if (showLoading) setBusy(true);
     const supabase = createClient();
     supabase
       .from("notifications")
@@ -68,12 +69,12 @@ export function NotificationsList() {
 
   useEffect(() => {
     if (!user) return;
-    loadNotifications(true);
+    loadNotifications();
   }, [user, loadNotifications]);
 
   useEffect(() => {
     if (!user) return;
-    function onChanged() { loadNotifications(false); }
+    function onChanged() { loadNotifications(); }
     window.addEventListener("notificationsChanged", onChanged);
     const id = window.setInterval(onChanged, 5000);
     return () => {
@@ -87,6 +88,12 @@ export function NotificationsList() {
   const unread = visible.filter((n) => !n.read).length;
   const notificationTitle = (n: Notification) =>
     TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? t(`types.${n.type}`) : n.title;
+  const notificationTime = (n: Notification) => {
+    const projectCreatedAt = getNotificationProjectCreatedAt(n, projectTimes);
+    return projectCreatedAt
+      ? t("publishedAt", { time: formatRelativeOrDate(projectCreatedAt, locale) })
+      : formatRelativeOrDate(n.created_at, locale);
+  };
   // NO "todas / no leídas" filter (sprint 516): it added a tab row of clutter without
   // real value — unread is already conveyed by the row highlight + dot + "Marcar todas
   // como leídas", the list is mode-scoped + short, and each title makes its type obvious.
@@ -195,7 +202,7 @@ export function NotificationsList() {
                           every row a uniform, compact height (full text on open). */}
                       <p className={cn("text-sm [overflow-wrap:anywhere] line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{notificationTitle(n)}</p>
                       <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] line-clamp-2">{n.message}</p>
-                      <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeOrDate(n.created_at, locale)}</p>
+                      <p className="text-xs text-[#9ca3af] mt-1">{notificationTime(n)}</p>
                     </div>
                   </div>
                 </button>

@@ -2397,6 +2397,7 @@
     "filterAll": "All",
     "filterUnread": "Unread",
     "noUnread": "You have no unread notifications.",
+    "publishedAt": "Published {time}",
     "types": {
       "booking_received": "New request",
       "booking_confirmed": "Request confirmed",
