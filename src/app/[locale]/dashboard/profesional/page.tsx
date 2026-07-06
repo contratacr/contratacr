@@ -708,6 +708,8 @@ export default function DashboardPage() {
 
   // Mode switching is now a compact navigation action ("Panel cliente/profesional")
   // instead of a large header control, so the identity header stays clean.
+  const postLoginOpportunityActivity =
+    postLoginActivity && postLoginActivity.opportunities > 0 ? postLoginActivity : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -752,6 +754,46 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+      {postLoginOpportunityActivity && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 px-4 py-6 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="post-login-opportunity-title"
+            aria-describedby="post-login-opportunity-body"
+            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:p-6"
+          >
+            <button
+              type="button"
+              onClick={closePostLoginActivity}
+              aria-label={t("postLoginActivity.close")}
+              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
+              <Handshake className="h-6 w-6" />
+            </div>
+            <h2 id="post-login-opportunity-title" className="pr-8 text-xl font-bold leading-tight text-[#111827]">
+              {t("opportunityWelcome.title", { count: postLoginOpportunityActivity.opportunities })}
+            </h2>
+            <p id="post-login-opportunity-body" className="mt-3 text-sm leading-relaxed text-[#6b7280]">
+              {t("postLoginActivity.body", { summary: postLoginActivitySummary(postLoginOpportunityActivity) })}
+            </p>
+
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={closePostLoginActivity} className="w-full sm:w-auto">
+                {t("opportunityWelcome.later")}
+              </Button>
+              <Button type="button" onClick={viewPostLoginActivity} className="w-full sm:w-auto">
+                {t("postLoginActivity.cta.opportunities")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-8">
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
@@ -781,7 +823,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {postLoginActivity && (
+          {postLoginActivity && !postLoginOpportunityActivity && (
             <div className="mb-6 rounded-2xl border border-[#bae6fd] bg-[#f0f9ff] p-4 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
