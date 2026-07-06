@@ -3,7 +3,21 @@ import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { cleanId } from "@/lib/cedula";
 
+type ListedProfile = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  cedula: string | null;
+  role: string | null;
+  avatar_url: string | null;
+  is_disabled: boolean | null;
+  client_identity_status: string | null;
+  created_at: string;
+  professionals?: unknown;
+};
+
 // GET /api/admin/users?q=…  — search users by name / cédula / email (admin-only).
+// GET /api/admin/users?mode=list — paginated admin directory of all accounts.
 // GET /api/admin/users?id=… — consolidated case file for ONE user: account,
 //   professional record, support tickets, verification history + appeals,
 //   reports, projects (as client) and requests (bookings). `id` may be a
@@ -15,6 +29,125 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const db = createAdminClient();
   const id = url.searchParams.get("id");
+  const mode = url.searchParams.get("mode");
+
+  async function getIncompleteProfessionalSignupIds() {
+    const ids = new Set<string>();
+    for (let page = 1; page <= 20; page += 1) {
+      const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) {
+        console.error("[admin/users] auth list error:", error);
+        break;
+      }
+      const users = data.users ?? [];
+      for (const user of users) {
+        const metadata = user.user_metadata ?? {};
+        if (metadata.professional_signup_started === true && metadata.is_provider !== true) {
+          ids.add(user.id);
+        }
+      }
+      if (users.length < 1000) break;
+    }
+    return ids;
+  }
+
+  function firstProfessional(profile: ListedProfile) {
+    const relation = profile.professionals;
+    return Array.isArray(relation) ? relation[0] : relation;
+  }
+
+  function norm(value: string | null | undefined) {
+    return (value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  if (mode === "list") {
+    const filter = url.searchParams.get("filter") ?? "all";
+    const q = (url.searchParams.get("q") ?? "").trim();
+    const page = Math.max(1, Number(url.searchParams.get("page") ?? "1") || 1);
+    const pageSize = Math.min(100, Math.max(10, Number(url.searchParams.get("pageSize") ?? "25") || 25));
+
+    const allProfiles: ListedProfile[] = [];
+    const batchSize = 1000;
+    for (let from = 0; from < 10000; from += batchSize) {
+      const { data, error } = await db
+        .from("profiles")
+        .select("id, full_name, email, cedula, role, avatar_url, is_disabled, client_identity_status, created_at, professionals(id, verification_status, is_banned)")
+        .order("created_at", { ascending: false })
+        .range(from, from + batchSize - 1);
+      if (error) {
+        console.error("[admin/users] list error:", error);
+        return NextResponse.json({ error: "No se pudo cargar usuarios." }, { status: 500 });
+      }
+      allProfiles.push(...((data ?? []) as ListedProfile[]));
+      if ((data ?? []).length < batchSize) break;
+    }
+
+    const incompleteIds = await getIncompleteProfessionalSignupIds();
+    const rows = allProfiles.map((profile) => {
+      const pro = firstProfessional(profile) as { id?: string; verification_status?: string | null; is_banned?: boolean | null } | undefined;
+      const isPro = !!pro?.id;
+      const professionalSignupIncomplete = !isPro && incompleteIds.has(profile.id);
+      const kind = isPro
+        ? "professional"
+        : professionalSignupIncomplete
+          ? "incomplete"
+          : profile.role === "admin"
+            ? "admin"
+            : "client";
+      const verificationStatus = isPro
+        ? pro?.verification_status ?? null
+        : profile.client_identity_status === "verified" || profile.client_identity_status === "pending"
+          ? profile.client_identity_status
+          : "rejected";
+      return {
+        id: profile.id,
+        full_name: profile.full_name,
+        email: profile.email,
+        cedula: profile.cedula,
+        role: profile.role,
+        avatar_url: profile.avatar_url,
+        created_at: profile.created_at,
+        is_disabled: profile.is_disabled === true,
+        isPro,
+        professionalSignupIncomplete,
+        kind,
+        verification_status: verificationStatus,
+        is_banned: pro?.is_banned === true,
+      };
+    });
+
+    const counts = {
+      all: rows.length,
+      professional: rows.filter((row) => row.kind === "professional").length,
+      incomplete: rows.filter((row) => row.kind === "incomplete").length,
+      client: rows.filter((row) => row.kind === "client").length,
+      disabled: rows.filter((row) => row.is_disabled).length,
+    };
+
+    const queryTokens = norm(q).split(/\s+/).filter(Boolean);
+    const filtered = rows.filter((row) => {
+      if (filter === "professional" && row.kind !== "professional") return false;
+      if (filter === "incomplete" && row.kind !== "incomplete") return false;
+      if (filter === "client" && row.kind !== "client") return false;
+      if (filter === "disabled" && !row.is_disabled) return false;
+      if (queryTokens.length === 0) return true;
+      const haystack = norm(`${row.full_name ?? ""} ${row.email ?? ""} ${row.cedula ?? ""}`);
+      return queryTokens.every((token) => haystack.includes(token));
+    });
+
+    const total = filtered.length;
+    const start = (page - 1) * pageSize;
+    return NextResponse.json({
+      users: filtered.slice(start, start + pageSize),
+      counts,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        pages: Math.max(1, Math.ceil(total / pageSize)),
+      },
+    });
+  }
 
   // ── Detail ──────────────────────────────────────────────────────────────
   if (id) {
@@ -143,7 +276,6 @@ export async function GET(req: Request) {
   );
 
   // Rank in JS (accent-insensitive): full-string + word-start matches score higher.
-  const norm = (s: string | null) => (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const nq = norm(q);
   const nTokens = tokens.map(norm);
   const score = (u: { full_name: string | null; email: string | null }) => {
