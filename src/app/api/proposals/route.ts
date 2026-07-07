@@ -20,16 +20,22 @@ export async function POST(req: NextRequest) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-    const { data: pro } = await supabase
+    const admin = createAdminClient();
+    const { data: pro, error: proError } = await admin
       .from("professionals")
-      .select("id, profiles(full_name, email)")
+      .select("id, profiles:profile_id(full_name, email)")
       .eq("profile_id", session.user.id)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
+    if (proError) {
+      console.error("[POST /api/proposals] professional lookup failed:", proError);
+      return NextResponse.json({ error: "No se pudo validar tu perfil profesional." }, { status: 500 });
+    }
     if (!pro) return NextResponse.json({ error: "Solo profesionales pueden enviar propuestas" }, { status: 403 });
 
     // No self-service: a professional cannot send a proposal to their OWN project.
-    const { data: project } = await createAdminClient()
+    const { data: project } = await admin
       .from("projects").select("client_id").eq("id", projectId).maybeSingle();
     if (project?.client_id === session.user.id) {
       return NextResponse.json({ error: "No puedes enviar una propuesta a tu propia solicitud." }, { status: 400 });
@@ -47,7 +53,6 @@ export async function POST(req: NextRequest) {
       status: "pending",
       ...writeSourceColumns(req),
     };
-    const admin = createAdminClient();
     let { data, error } = await admin.from("proposals").insert(proposalInsert).select("id").single();
     if (error && /professional_.*snapshot|created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(error.message)) {
       ({ data, error } = await admin.from("proposals").insert({
