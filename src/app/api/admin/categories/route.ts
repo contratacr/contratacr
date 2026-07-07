@@ -521,7 +521,7 @@ async function notifySuggestionDecision(
     title,
     message,
     data: {
-      link: "/notificaciones",
+      link: "/dashboard/profesional?tab=notifications",
     },
   };
 

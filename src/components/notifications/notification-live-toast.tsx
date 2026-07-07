@@ -6,7 +6,7 @@ import { Bell, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationHref, notificationInMode } from "@/lib/notification-link";
+import { notificationHref, notificationInMode, notificationsCenterHref } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
@@ -224,7 +224,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
 
   const toastTargetHref = toast
     ? toast.count > 1
-      ? `/${locale}/notificaciones`
+      ? notificationsCenterHref(locale)
       : notificationHref(toast.latest, undefined, locale)
     : null;
 
@@ -236,7 +236,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   if (postLoginUnreadCount !== null) {
     const unreadCount = postLoginUnreadCount;
     const title = locale === "en" ? `${unreadCount} new notifications` : `${unreadCount} notificaciones nuevas`;
-    const targetHref = `/${locale}/notificaciones`;
+    const targetHref = notificationsCenterHref(locale);
     return (
       <div className="fixed bottom-24 left-3 right-3 z-[180] sm:bottom-auto sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
         <div className="rounded-2xl border border-[#d8e8f1] bg-white shadow-[0_18px_45px_-20px_rgba(15,23,42,0.35)]">
@@ -280,7 +280,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   const detailLabel = grouped
     ? locale === "en" ? "View notifications" : "Ver notificaciones"
     : locale === "en" ? "View details" : "Ver detalles";
-  const targetHref = toastTargetHref ?? `/${locale}/notificaciones`;
+  const targetHref = toastTargetHref ?? notificationsCenterHref(locale);
 
   async function openToast() {
     if (!toast) return;

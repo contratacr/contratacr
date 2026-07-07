@@ -107,22 +107,34 @@ export async function POST(req: NextRequest) {
         console.error("[categories/suggest] create failed", error);
         return NextResponse.json({ error: "No se pudo enviar la sugerencia" }, { status: 500 });
       }
-    } else if (authenticatedUserId) {
+    } else {
       const wasPending = isPendingSuggestion(existingSuggestion);
       const wasRejected = isRejectedSuggestion(existingSuggestion);
+      const wasApproved = isApprovedSuggestion(existingSuggestion);
+      if (wasApproved) {
+        return NextResponse.json({ ok: true, alreadyApproved: true });
+      }
       if (wasPending) {
-        // Re-suggested row created by an anonymous flow: capture the logged user so
-        // admin notifications can be delivered to the correct account later.
-        if (!existingSuggestion.suggested_by) {
-          const { error: updateError } = await admin
-            .from("category_suggestions")
-            .update({ suggested_by: authenticatedUserId })
-            .eq("id", id);
-          if (updateError) {
-            console.error("[categories/suggest] couldn't bind suggestion to user", updateError);
-          } else {
-            auditAction = "category_suggestion.bind_user";
-          }
+        // Re-suggested row: keep it pending and refresh its public labels. If the
+        // first suggestion was anonymous, attach the user only when we have one.
+        const pendingUpdate: Record<string, unknown> = {
+          status: "pending",
+          approved: false,
+          label: labelEs,
+          suggested_name: labelEs,
+          created_at: new Date().toISOString(),
+        };
+        if (authenticatedUserId && !existingSuggestion.suggested_by) {
+          pendingUpdate.suggested_by = authenticatedUserId;
+          auditAction = "category_suggestion.bind_user";
+        }
+        const { error: updateError } = await admin
+          .from("category_suggestions")
+          .update(pendingUpdate)
+          .eq("id", id);
+        if (updateError) {
+          console.error("[categories/suggest] couldn't refresh pending suggestion", updateError);
+          return NextResponse.json({ error: "No se pudo enviar la sugerencia" }, { status: 500 });
         }
       } else if (wasRejected) {
         auditAction = "category_suggestion.reopen";
@@ -130,18 +142,19 @@ export async function POST(req: NextRequest) {
           ? String(existingSuggestion.review_reason)
           : null;
         // If it was rejected before, reopen it so a new review request is created.
+        const reopenUpdate: Record<string, unknown> = {
+          status: "pending",
+          approved: false,
+          label: labelEs,
+          suggested_name: labelEs,
+          review_reason: reopenReviewReason,
+          reviewed_at: null,
+          created_at: new Date().toISOString(),
+        };
+        if (authenticatedUserId) reopenUpdate.suggested_by = authenticatedUserId;
         const { error: reopenError } = await admin
           .from("category_suggestions")
-          .update({
-            status: "pending",
-            approved: false,
-            suggested_by: authenticatedUserId,
-            label: labelEs,
-            suggested_name: labelEs,
-            review_reason: reopenReviewReason,
-            reviewed_at: null,
-            created_at: new Date().toISOString(),
-          })
+          .update(reopenUpdate)
           .eq("id", id);
         if (reopenError) {
           console.error("[categories/suggest] couldn't reopen rejected suggestion", reopenError);
@@ -219,4 +232,11 @@ function isRejectedSuggestion(suggestion: Record<string, unknown> | null | undef
   const status = typeof suggestion.status === "string" ? suggestion.status : null;
   if (status) return status === "rejected";
   return false;
+}
+
+function isApprovedSuggestion(suggestion: Record<string, unknown> | null | undefined): boolean {
+  if (!suggestion) return false;
+  const status = typeof suggestion.status === "string" ? suggestion.status : null;
+  if (status) return status === "approved";
+  return suggestion.approved === true;
 }

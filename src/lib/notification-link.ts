@@ -133,3 +133,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
 
   return withLocale(withTargetParams(href, n.data), locale);
 }
+
+export function notificationsCenterHref(locale = "es"): string {
+  return withLocale("/dashboard/profesional?tab=notifications", locale);
+}
