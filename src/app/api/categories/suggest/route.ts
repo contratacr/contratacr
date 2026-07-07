@@ -68,31 +68,54 @@ export async function POST(req: NextRequest) {
     const authenticatedUserId = resolvedUserId ?? null;
     const suggestionPayload = { id, label: labelEs, suggested_name: labelEs, approved: false, status: "pending" };
 
-    const { data: existingSuggestion } = await admin
-      .from("category_suggestions")
-      .select("suggested_by, status")
-      .eq("id", id)
-      .maybeSingle();
+    let existingSuggestion: Record<string, unknown> | null = null;
+    let existingError: { message?: string } | null = null;
+    {
+      const { data, error } = await admin
+        .from("category_suggestions")
+        .select("suggested_by, status")
+        .eq("id", id)
+        .maybeSingle();
+      existingSuggestion = data as Record<string, unknown> | null;
+      existingError = error;
+    }
+
+    if (!existingSuggestion && isMissingColumnError(existingError, "status")) {
+      const fallback = await admin
+        .from("category_suggestions")
+        .select("id, suggested_by, approved")
+        .eq("id", id)
+        .maybeSingle();
+      existingSuggestion = (fallback.data as Record<string, unknown> | null) ?? null;
+      existingError = fallback.error as { message?: string } | null;
+    }
+
+    if (existingError) {
+      console.error("[categories/suggest] failed to check existing suggestion", existingError);
+    }
 
     if (!existingSuggestion) {
       // New suggestion: create it immediately.
-      const { error } = await admin.from("category_suggestions").upsert(
-        { ...suggestionPayload, suggested_by: authenticatedUserId },
-        { onConflict: "id", ignoreDuplicates: false }
-      );
+      const { error } = await upsertSuggestion(admin, {
+        ...suggestionPayload,
+        suggested_by: authenticatedUserId,
+      });
       if (error) {
         console.error("[categories/suggest] create failed", error);
         return NextResponse.json({ error: "No se pudo enviar la sugerencia" }, { status: 500 });
       }
-    } else if (authenticatedUserId && !existingSuggestion.suggested_by && existingSuggestion.status === "pending") {
-      // Re-suggested row created by an anonymous flow: capture the logged user so
-      // admin notifications can be delivered to the correct account later.
-      const { error: updateError } = await admin
-        .from("category_suggestions")
-        .update({ suggested_by: authenticatedUserId })
-        .eq("id", id);
-      if (updateError) {
-        console.error("[categories/suggest] couldn't bind suggestion to user", updateError);
+    } else if (authenticatedUserId) {
+      const wasPending = isPendingSuggestion(existingSuggestion);
+      if (!existingSuggestion.suggested_by && wasPending) {
+        // Re-suggested row created by an anonymous flow: capture the logged user so
+        // admin notifications can be delivered to the correct account later.
+        const { error: updateError } = await admin
+          .from("category_suggestions")
+          .update({ suggested_by: authenticatedUserId })
+          .eq("id", id);
+        if (updateError) {
+          console.error("[categories/suggest] couldn't bind suggestion to user", updateError);
+        }
       }
     }
 
@@ -111,4 +134,40 @@ export async function POST(req: NextRequest) {
     console.error("[categories/suggest] unexpected:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+type SuggestionError = { message?: string } | null;
+
+async function upsertSuggestion(
+  admin: ReturnType<typeof createAdminClient>,
+  row: Record<string, unknown>
+) {
+  const current = { ...row };
+  const { error } = await admin.from("category_suggestions").upsert(
+    current,
+    { onConflict: "id", ignoreDuplicates: false }
+  );
+  if (!error || !isMissingColumnError(error, "status")) return { error };
+
+  const fallback = { ...current };
+  delete (fallback as { status?: string }).status;
+  return admin.from("category_suggestions").upsert(
+    fallback,
+    { onConflict: "id", ignoreDuplicates: false }
+  );
+}
+
+function isMissingColumnError(error: SuggestionError, column: string): boolean {
+  if (!error?.message) return false;
+  return new RegExp(`Could not find the '${column}' column|column \\\"${column}\\\" does not exist|column .*${column}`, "i").test(
+    error.message
+  );
+}
+
+function isPendingSuggestion(suggestion: Record<string, unknown> | null | undefined): boolean {
+  if (!suggestion) return false;
+  const status = typeof suggestion.status === "string" ? suggestion.status : null;
+  if (status) return status === "pending";
+  if (typeof suggestion.approved === "boolean") return !suggestion.approved;
+  return true;
 }

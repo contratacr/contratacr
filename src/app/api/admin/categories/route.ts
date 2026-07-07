@@ -117,8 +117,24 @@ export async function GET(req: Request) {
 
   let q = db.from("category_suggestions").select("*").order("created_at", { ascending: false });
   if (status === "pending" || status === "approved" || status === "rejected") q = q.eq("status", status);
-  const { data } = await q;
-  const suggestionRows = data ?? [];
+  let { data, error: qError } = await q;
+  if (qError && isMissingColumnError(qError, "status")) {
+    const fallback = await db.from("category_suggestions").select("*").order("created_at", { ascending: false });
+    data = fallback.data;
+    if (fallback.error) {
+      console.error("[admin/categories] failed to fetch suggestions", fallback.error);
+      data = [];
+    }
+  } else if (qError) {
+    console.error("[admin/categories] failed to fetch suggestions", qError);
+    data = [];
+  }
+
+  let suggestionRows = (data ?? []) as Array<Record<string, unknown>>;
+  if ((status === "pending" || status === "approved" || status === "rejected") && qError && isMissingColumnError(qError, "status")) {
+    suggestionRows = suggestionRows.filter((row) => mapLegacySuggestionStatus(row) === status);
+  }
+
   const ids = suggestionRows.map((row) => row.id).filter(Boolean);
   const suggestedByIds = [...new Set(suggestionRows.map((row) => row.suggested_by).filter(Boolean) as string[])];
   let englishById = new Map<string, string>();
@@ -145,20 +161,26 @@ export async function GET(req: Request) {
     .from("category_suggestions")
     .select("id", { count: "exact", head: true })
     .eq("status", "pending");
+  const legacyPendingCount = qError && isMissingColumnError(qError, "status")
+    ? await db
+        .from("category_suggestions")
+        .select("id", { count: "exact", head: true })
+        .eq("approved", false)
+    : null;
 
   return NextResponse.json({
     categories: suggestionRows.map((row) => {
-      const author = row.suggested_by ? authorById.get(row.suggested_by) : null;
-      const professional = row.suggested_by ? professionalById.get(row.suggested_by) : null;
+      const author = typeof row.suggested_by === "string" ? authorById.get(row.suggested_by) : null;
+      const professional = typeof row.suggested_by === "string" ? professionalById.get(row.suggested_by) : null;
       return {
         ...row,
-        labelEn: englishById.get(row.id) ?? null,
+        labelEn: englishById.get(String(row.id)) ?? null,
         suggestedByName: author?.full_name ?? null,
         suggestedByEmail: author?.email ?? null,
         suggestedByBusinessName: professional?.business_name ?? null,
       };
     }),
-    pendingCount: pendingCount ?? 0,
+    pendingCount: (legacyPendingCount?.count ?? pendingCount ?? 0) as number,
   });
 }
 
@@ -577,6 +599,17 @@ async function getAdminGroups(db: ReturnType<typeof createAdminClient>): Promise
 
 function groupLabel(groupId: string, groups: Array<{ id: string; label: string }>) {
   return groups.find((group) => group.id === groupId)?.label || getCategoryGroupLabel(groupId);
+}
+
+function mapLegacySuggestionStatus(row: Record<string, unknown>): "pending" | "approved" | "rejected" {
+  if (typeof row.status === "string") return (row.status as "pending" | "approved" | "rejected");
+  if (row.approved === true) return "approved";
+  if (row.approved === false) return "pending";
+  return "rejected";
+}
+
+function isMissingColumnError(error: { message?: string }, column: string): boolean {
+  return !!error?.message && new RegExp(`Could not find the '${column}' column|column \\\"${column}\\\" does not exist|column .*${column}`, "i").test(error.message);
 }
 
 
