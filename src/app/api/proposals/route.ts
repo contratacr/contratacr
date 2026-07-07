@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const { data: pro } = await supabase
       .from("professionals")
-      .select("id")
+      .select("id, profiles(full_name, email)")
       .eq("profile_id", session.user.id)
       .single();
 
@@ -33,13 +35,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No puedes enviar una propuesta a tu propia solicitud." }, { status: 400 });
     }
 
-    const { data, error } = await supabase.from("proposals").insert({
+    const profile = pro.profiles as { full_name?: string | null; email?: string | null } | null;
+    const proposalInsert = {
       project_id: projectId,
       professional_id: pro.id,
+      professional_user_id_snapshot: session.user.id,
+      professional_name_snapshot: profile?.full_name ?? null,
+      professional_email_snapshot: profile?.email ?? session.user.email ?? null,
       price: parseMoneyAmount(price),
       message: safeMessage,
       status: "pending",
-    }).select("id").single();
+      ...writeSourceColumns(req),
+    };
+    let { data, error } = await supabase.from("proposals").insert(proposalInsert).select("id").single();
+    if (error && /professional_.*snapshot|created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+      ({ data, error } = await supabase.from("proposals").insert({
+        project_id: projectId,
+        professional_id: pro.id,
+        price: parseMoneyAmount(price),
+        message: safeMessage,
+        status: "pending",
+      }).select("id").single());
+    }
 
     if (error) {
       if (error.code === "23505") {
@@ -47,6 +64,25 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+    if (!data?.id) {
+      return NextResponse.json({ error: "No se pudo crear la propuesta." }, { status: 500 });
+    }
+
+    await auditUserAction(createAdminClient(), req, {
+      actorUserId: session.user.id,
+      actorRole: "professional",
+      action: "proposal.create",
+      entityTable: "proposals",
+      entityId: data.id,
+      entityOwnerUserId: session.user.id,
+      afterData: {
+        project_id: projectId,
+        professional_id: pro.id,
+        price: parseMoneyAmount(price),
+        message: safeMessage,
+        status: "pending",
+      },
+    });
 
     return NextResponse.json({ id: data.id, success: true });
   } catch (err) {
@@ -183,6 +219,16 @@ export async function PATCH(req: NextRequest) {
       const admin = createAdminClient();
       const { error: e } = await admin.from("proposals").update(patch).eq("id", id);
       if (e) return NextResponse.json({ error: e.message }, { status: 500 });
+      await auditUserAction(admin, req, {
+        actorUserId: session.user.id,
+        actorRole: "professional",
+        action: "proposal.edit",
+        entityTable: "proposals",
+        entityId: id,
+        entityOwnerUserId: session.user.id,
+        afterData: patch,
+        metadata: { professional_id: pro.id },
+      });
       try {
         const { data: updated } = await admin
           .from("proposals")
@@ -227,6 +273,19 @@ export async function PATCH(req: NextRequest) {
       .eq("id", id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await auditUserAction(adminStatus, req, {
+      actorUserId: session.user.id,
+      actorRole: "client",
+      action: `proposal.status.${status}`,
+      entityTable: "proposals",
+      entityId: id,
+      entityOwnerUserId: projectOwnerId,
+      afterData: { status },
+      metadata: {
+        project_id: statusProposal.project_id,
+        professional_id: statusProposal.professional_id,
+      },
+    });
 
     // Reverting an accepted decision (→ pending/declined): reopen the project and
     // clear the accepted professional so the client can choose again.
@@ -358,6 +417,16 @@ export async function DELETE(req: NextRequest) {
   const admin = createAdminClient();
   const { error } = await admin.from("proposals").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await auditUserAction(admin, req, {
+    actorUserId: session.user.id,
+    actorRole: "professional",
+    action: "proposal.delete",
+    entityTable: "proposals",
+    entityId: id,
+    entityOwnerUserId: session.user.id,
+    beforeData: { status: prop.status, project_id: prop.project_id, professional_id: prop.professional_id },
+    afterData: { deleted: true },
+  });
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const project = (prop as any).projects;

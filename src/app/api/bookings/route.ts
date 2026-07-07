@@ -7,6 +7,8 @@ import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 // Lazy auto-confirm: a booking the pro marked "trabajo realizado" auto-completes
 // after AUTO_CONFIRM_DAYS if the client never confirmed. Best-effort.
@@ -173,8 +175,8 @@ export async function POST(req: NextRequest) {
     // (or null for a guest). This makes the save resilient to any INSERT
     // row-policy regression on `bookings` (core flow must never silently fail).
     const adminInsert = createAdminClient();
-    let { data, error } = await adminInsert.from("bookings").insert({ ...baseBooking, ...beneficiaryFields }).select("id").single();
-    if (error && /for_someone_else|beneficiary_|client_dob|category_id|slot_location|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+    let { data, error } = await adminInsert.from("bookings").insert({ ...baseBooking, ...writeSourceColumns(req), ...beneficiaryFields }).select("id").single();
+    if (error && /created_source|created_app|created_supabase|for_someone_else|beneficiary_|client_dob|category_id|slot_location|column|schema cache|PGRST204|could not find/i.test(error.message)) {
       ({ data, error } = await adminInsert.from("bookings").insert(baseBooking).select("id").single());
     }
 
@@ -213,6 +215,26 @@ export async function POST(req: NextRequest) {
         }
       } catch { /* best-effort — never fail the booking over the DOB cache */ }
     }
+
+    // Notify the professional (in-app + optional WhatsApp). Best-effort.
+    await auditUserAction(adminInsert, req, {
+      actorUserId: session?.user?.id ?? null,
+      actorRole: session?.user ? "client" : "guest",
+      action: "booking.create",
+      entityTable: "bookings",
+      entityId: data.id,
+      entityOwnerUserId: session?.user?.id ?? null,
+      afterData: {
+        professional_id: professionalId,
+        client_id: session?.user?.id ?? null,
+        service_description: limitTrimmedText(serviceDescription, LONG_TEXT_MAX_LENGTH),
+        scheduled_date: scheduledDate ?? null,
+        scheduled_time: scheduledTime ?? null,
+        preferred_date_text: preferredDateText ? limitTrimmedText(preferredDateText, SHORT_TEXT_MAX_LENGTH) : null,
+        status: "confirmed",
+      },
+      metadata: { slot_location_id: slotLocationId ?? null, category_id: categoryId ?? null },
+    });
 
     // Notify the professional (in-app + optional WhatsApp). Best-effort.
     await notifyNewBooking({
@@ -362,6 +384,17 @@ export async function PATCH(req: NextRequest) {
     const archivePatch = isOwnerPro ? { archived_by_professional: true } : { archived_by_client: true };
     const { error: archiveError } = await admin.from("bookings").update(archivePatch).eq("id", id);
     if (archiveError) return NextResponse.json({ error: archiveError.message }, { status: 500 });
+    await auditUserAction(admin, req, {
+      actorUserId: session.user.id,
+      actorRole: isOwnerPro ? "professional" : "client",
+      action: "booking.archive",
+      entityTable: "bookings",
+      entityId: id,
+      entityOwnerUserId: bookingRow.client_id,
+      beforeData: { status: bookingRow.status, ...archivePatch },
+      afterData: { status: bookingRow.status, ...archivePatch },
+      metadata: { professional_id: bookingRow.professional_id },
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -409,6 +442,21 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await auditUserAction(admin, req, {
+    actorUserId: session.user.id,
+    actorRole: isOwnerPro ? "professional" : "client",
+    action: isReschedule ? "booking.reschedule" : `booking.status.${status}`,
+    entityTable: "bookings",
+    entityId: id,
+    entityOwnerUserId: bookingRow.client_id,
+    beforeData: { status: bookingRow.status },
+    afterData: update,
+    metadata: {
+      professional_id: bookingRow.professional_id,
+      cancelled_by: status === "cancelled" ? update.cancelled_by : null,
+    },
+  });
 
   // Notify the OTHER party on every state change (best-effort, never blocks).
   // `notifyBookingStatusChange` always notifies the CLIENT, so only fire it for a

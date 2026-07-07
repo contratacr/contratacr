@@ -3,6 +3,8 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrevoEmail } from "@/lib/email/send";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 const SUPPORT_TO = "soporte@contratacr.com";
 
@@ -22,15 +24,40 @@ export async function POST(req: NextRequest) {
 
     // Persist the report so the admin moderation queue can action it (best-effort;
     // resolve the professional_id from the slug). Never blocks the email path.
+    let reportId: string | null = null;
     try {
       const admin = createAdminClient();
       const { data: pro } = await admin.from("professionals").select("id").eq("slug", professionalSlug).maybeSingle();
-      await admin.from("reports").insert({
+      let { data: reportRow, error: reportError } = await admin.from("reports").insert({
         professional_id: pro?.id ?? null,
         professional_slug: professionalSlug,
         professional_name: professionalName ?? null,
         reason: storedReason,
         reporter_email: reporterEmail ?? null,
+        ...writeSourceColumns(req),
+      }).select("id").single();
+      if (reportError && /created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(reportError.message)) {
+        ({ data: reportRow, error: reportError } = await admin.from("reports").insert({
+          professional_id: pro?.id ?? null,
+          professional_slug: professionalSlug,
+          professional_name: professionalName ?? null,
+          reason: storedReason,
+          reporter_email: reporterEmail ?? null,
+        }).select("id").single());
+      }
+      if (reportError) throw reportError;
+      reportId = reportRow?.id ?? null;
+      await auditUserAction(admin, req, {
+        action: "report.professional_profile",
+        entityTable: "reports",
+        entityId: reportId,
+        afterData: {
+          professional_id: pro?.id ?? null,
+          professional_slug: professionalSlug,
+          professional_name: professionalName ?? null,
+          reporter_email: reporterEmail ?? null,
+          high_priority: isImpersonation,
+        },
       });
     } catch (e) {
       console.error("[report] persist failed (continuing to email):", e);

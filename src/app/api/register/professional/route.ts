@@ -6,6 +6,8 @@ import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { anyVideoConsultCategory, getCategoryLabel, OTHER_CATEGORY } from "@/lib/data/categories";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 const INITIAL_OPPORTUNITY_NOTIFICATION_LIMIT = 10;
 
@@ -260,9 +262,15 @@ export async function POST(req: Request) {
       onboarding_completed: true,
       ...(photoUrl ? { avatar_url: photoUrl } : {}),
       ...(cedula ? { cedula } : {}),
+      ...writeSourceColumns(req),
     };
 
     let { error: profileError } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" });
+    if (profileError && /created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(profileError.message)) {
+      const { created_source_host: _host, created_app_environment: _env, created_supabase_project_ref: _ref, ...legacyProfileRow } = profileRow;
+      void _host; void _env; void _ref;
+      ({ error: profileError } = await supabase.from("profiles").upsert(legacyProfileRow, { onConflict: "id" }));
+    }
 
     // SELF-HEAL a STALE email collision: the email is free in Auth but a leftover profiles
     // row still holds it from a past email change. Reconcile that row against Auth and RETRY
@@ -310,6 +318,7 @@ export async function POST(req: Request) {
         hourly_rate: parseMoneyAmount(hourlyRate),
         service_type: serviceType ?? "mobile",
         address: address ?? null,
+        ...writeSourceColumns(req),
         ...(province ? { provincia_id: province } : {}),
         ...(canton ? { canton_id: canton } : {}),
         ...(lat != null ? { lat: Number(lat) } : {}),
@@ -320,7 +329,9 @@ export async function POST(req: Request) {
         .update({ ...baseUpdate, ...optionalProFields })
         .eq("id", existingPro.id);
       if (updErr && isUnknownColumn(updErr.message)) {
-        ({ error: updErr } = await supabase.from("professionals").update(baseUpdate).eq("id", existingPro.id));
+        const { created_source_host: _host, created_app_environment: _env, created_supabase_project_ref: _ref, ...legacyBaseUpdate } = baseUpdate;
+        void _host; void _env; void _ref;
+        ({ error: updErr } = await supabase.from("professionals").update(legacyBaseUpdate).eq("id", existingPro.id));
       }
       if (updErr) {
         console.error("[register/professional] update error:", updErr);
@@ -338,6 +349,22 @@ export async function POST(req: Request) {
       // Registration → in-app notification only (no email); re-saves notify only
       // when the status actually changes (no duplicate "identidad verificada").
       try { await runIdentityVerification(existingPro.id, { notifyChannel: "in_app" }); } catch (e) { console.error("[register] auto-verify:", e); }
+
+      await auditUserAction(supabase, req, {
+        actorUserId: userId,
+        actorRole: "professional",
+        action: "professional.update",
+        entityTable: "professionals",
+        entityId: existingPro.id,
+        entityOwnerUserId: userId,
+        afterData: {
+          category_id: category,
+          professions,
+          service_type: serviceType ?? "mobile",
+          has_whatsapp: !!whatsapp,
+          has_cedula: !!cedula,
+        },
+      });
 
       return NextResponse.json({ ok: true, slug: existingPro.slug });
     }
@@ -368,6 +395,7 @@ export async function POST(req: Request) {
       service_type: serviceType ?? "mobile",
       address: address ?? null,
       slug,
+      ...writeSourceColumns(req),
       ...(province ? { provincia_id: province } : {}),
       ...(canton ? { canton_id: canton } : {}),
       ...(lat != null ? { lat: Number(lat) } : {}),
@@ -400,7 +428,25 @@ export async function POST(req: Request) {
     // and `isInitial` so the result still shows once even if status is unchanged.
     try {
       const { data: newPro } = await supabase.from("professionals").select("id").eq("profile_id", userId).maybeSingle();
-      if (newPro) await runIdentityVerification(newPro.id, { notifyChannel: "in_app", isInitial: true });
+      if (newPro) {
+        await auditUserAction(supabase, req, {
+          actorUserId: userId,
+          actorRole: "professional",
+          action: "professional.create",
+          entityTable: "professionals",
+          entityId: newPro.id,
+          entityOwnerUserId: userId,
+          afterData: {
+            category_id: category,
+            professions,
+            service_type: serviceType ?? "mobile",
+            slug,
+            has_whatsapp: !!whatsapp,
+            has_cedula: !!cedula,
+          },
+        });
+        await runIdentityVerification(newPro.id, { notifyChannel: "in_app", isInitial: true });
+      }
     } catch (e) {
       console.error("[register] auto-verify:", e);
     }

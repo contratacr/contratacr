@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 export async function POST(req: Request) {
   try {
@@ -45,9 +47,15 @@ export async function POST(req: Request) {
       onboarding_completed: true,
       ...(cedula ? { cedula: String(cedula).replace(/\D/g, "") } : {}),
       ...(phone ? { phone } : {}),
+      ...writeSourceColumns(req),
     };
 
     let { error: profileError } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" });
+    if (profileError && /created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(profileError.message)) {
+      const { created_source_host: _host, created_app_environment: _env, created_supabase_project_ref: _ref, ...legacyProfileRow } = profileRow;
+      void _host; void _env; void _ref;
+      ({ error: profileError } = await supabase.from("profiles").upsert(legacyProfileRow, { onConflict: "id" }));
+    }
 
     // Detect a genuine DUPLICATE by the UNIQUE constraint/index NAME only — never by the
     // bare word "cedula"/"email" (a NOT-NULL or other error mentioning the column would
@@ -89,6 +97,23 @@ export async function POST(req: Request) {
       }
       return NextResponse.json({ error: "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos." }, { status: 500 });
     }
+
+    await auditUserAction(supabase, req, {
+      actorUserId: userId,
+      actorRole: "client",
+      action: "account.register_client",
+      entityTable: "profiles",
+      entityId: userId,
+      entityOwnerUserId: userId,
+      afterData: {
+        email,
+        full_name: name,
+        role: "client",
+        onboarding_completed: true,
+        has_phone: !!phone,
+        has_cedula: !!cedula,
+      },
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {

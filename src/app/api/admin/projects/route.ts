@@ -23,6 +23,9 @@ type ProjectRow = {
   timeline: string | null;
   client_identity_status: string | null;
   client_id: string | null;
+  client_name_snapshot: string | null;
+  client_email_snapshot: string | null;
+  client_phone_snapshot: string | null;
   accepted_professional_id: string | null;
   created_at: string;
   updated_at: string | null;
@@ -96,6 +99,7 @@ export async function GET(req: Request) {
       .select(`
         id, title, description, status, category_id, provincia_id, canton_id,
         budget_min, budget_max, timeline, client_identity_status,
+        client_name_snapshot, client_email_snapshot, client_phone_snapshot,
         client_id, accepted_professional_id, created_at, updated_at,
         completed_at, work_done_at, archived_by_client,
         for_someone_else, beneficiary_name, beneficiary_dob,
@@ -143,6 +147,8 @@ export async function GET(req: Request) {
       loc,
       row.timeline,
       row.status,
+      row.client_name_snapshot,
+      row.client_email_snapshot,
       row.profiles?.full_name,
       row.profiles?.email,
       row.profiles?.cedula,
@@ -183,10 +189,11 @@ export async function GET(req: Request) {
       accepted_proposals_count: proposals.filter((proposal) => proposal.status === "accepted").length,
       client: {
         id: row.client_id,
-        name: row.profiles?.full_name ?? "Cliente",
-        email: row.profiles?.email ?? null,
+        name: row.client_name_snapshot ?? row.profiles?.full_name ?? "Cliente",
+        email: row.client_email_snapshot ?? row.profiles?.email ?? null,
         cedula: row.profiles?.cedula ?? null,
         avatar_url: row.profiles?.avatar_url ?? null,
+        phone: row.client_phone_snapshot ?? null,
       },
       accepted_professional: accepted
         ? {

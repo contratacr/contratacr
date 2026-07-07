@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 // POST /api/report-client — a professional reports a client (two-way reputation).
 // Records the report, bumps the client's flag_count, and flags the client when it
@@ -46,11 +48,36 @@ export async function POST(req: Request) {
     clientName = booking.client_name ?? null;
   }
 
-  await admin.from("reports").insert({
+  let { data: reportRow, error: reportError } = await admin.from("reports").insert({
     reported_client_id: targetClientId,
     reporter_professional_id: pro.id,
     professional_name: clientName ? `Cliente: ${clientName}` : "Cliente",
     reason,
+    ...writeSourceColumns(req),
+  }).select("id").single();
+  if (reportError && /created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(reportError.message)) {
+    ({ data: reportRow, error: reportError } = await admin.from("reports").insert({
+      reported_client_id: targetClientId,
+      reporter_professional_id: pro.id,
+      professional_name: clientName ? `Cliente: ${clientName}` : "Cliente",
+      reason,
+    }).select("id").single());
+  }
+  if (reportError) return NextResponse.json({ error: reportError.message }, { status: 500 });
+
+  await auditUserAction(admin, req, {
+    actorUserId: user.id,
+    actorRole: "professional",
+    action: "report.client",
+    entityTable: "reports",
+    entityId: reportRow?.id ?? null,
+    entityOwnerUserId: targetClientId,
+    afterData: {
+      reported_client_id: targetClientId,
+      reporter_professional_id: pro.id,
+      booking_id: bookingId ?? null,
+      reason,
+    },
   });
 
   // Bump the flag count and flag the client past the threshold.

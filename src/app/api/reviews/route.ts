@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 // Per-finished-job reviews: a review is tied to a specific completed booking
 // (solicitud) OR project (proyecto). A client can review EACH finished item with
@@ -19,6 +22,11 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", user.id)
+    .maybeSingle();
 
   // Self-interaction guard.
   const { data: targetPro } = await supabase
@@ -77,19 +85,45 @@ export async function POST(req: Request) {
       ({ error } = await supabase.from("reviews").update({ rating, comment }).eq("id", existing.id));
     }
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await auditUserAction(createAdminClient(), req, {
+      actorUserId: user.id,
+      actorRole: "client",
+      action: "review.edit",
+      entityTable: "reviews",
+      entityId: existing.id,
+      entityOwnerUserId: user.id,
+      afterData: { professional_id: professionalId, rating, comment, booking_id: bookingId ?? null, project_id: projectId ?? null },
+    });
     return NextResponse.json({ ok: true, edited: true });
   }
 
-  const row: Record<string, unknown> = { professional_id: professionalId, client_id: user.id, rating, comment };
+  const row: Record<string, unknown> = {
+    professional_id: professionalId,
+    client_id: user.id,
+    client_name_snapshot: profile?.full_name ?? (user.user_metadata?.full_name as string) ?? null,
+    client_email_snapshot: profile?.email ?? user.email ?? null,
+    rating,
+    comment,
+    ...writeSourceColumns(req),
+  };
   if (bookingId) row.booking_id = bookingId;
   if (projectId) row.project_id = projectId;
   if (jobTitle) row.job_title = jobTitle;
-  let { error } = await supabase.from("reviews").insert(row);
+  let { data: insertedReview, error } = await supabase.from("reviews").insert(row).select("id").single();
   // Retry without the new columns if not migrated yet (migrations 035/036).
-  if (error && /booking_id|project_id|job_title|column|schema cache|PGRST204/i.test(error.message)) {
-    ({ error } = await supabase.from("reviews").insert({ professional_id: professionalId, client_id: user.id, rating, comment }));
+  if (error && /client_.*snapshot|created_source|created_app|created_supabase|booking_id|project_id|job_title|column|schema cache|PGRST204/i.test(error.message)) {
+    ({ data: insertedReview, error } = await supabase.from("reviews").insert({ professional_id: professionalId, client_id: user.id, rating, comment }).select("id").single());
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await auditUserAction(createAdminClient(), req, {
+    actorUserId: user.id,
+    actorRole: "client",
+    action: "review.create",
+    entityTable: "reviews",
+    entityId: insertedReview?.id,
+    entityOwnerUserId: user.id,
+    afterData: { professional_id: professionalId, rating, comment, booking_id: bookingId ?? null, project_id: projectId ?? null, job_title: jobTitle },
+  });
   return NextResponse.json({ ok: true, edited: false });
 }
 

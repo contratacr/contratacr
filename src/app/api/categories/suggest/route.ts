@@ -7,6 +7,7 @@ import {
   suggestEnglishServiceLabel,
   suggestSpanishServiceLabel,
 } from "@/lib/translation/service-labels";
+import { auditUserAction } from "@/lib/audit/user-action";
 
 function isValidUuid(value: unknown): value is string {
   return (
@@ -67,13 +68,14 @@ export async function POST(req: NextRequest) {
     const id = slugifyCategory(labelEs || clean);
     const authenticatedUserId = resolvedUserId ?? null;
     const suggestionPayload = { id, label: labelEs, suggested_name: labelEs, approved: false, status: "pending" };
+    let auditAction = "category_suggestion.resubmit";
 
     let existingSuggestion: Record<string, unknown> | null = null;
     let existingError: { message?: string } | null = null;
     {
       const { data, error } = await admin
         .from("category_suggestions")
-        .select("suggested_by, status")
+        .select("id, suggested_by, status, review_reason, label, suggested_name")
         .eq("id", id)
         .maybeSingle();
       existingSuggestion = data as Record<string, unknown> | null;
@@ -95,6 +97,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!existingSuggestion) {
+      auditAction = "category_suggestion.create";
       // New suggestion: create it immediately.
       const { error } = await upsertSuggestion(admin, {
         ...suggestionPayload,
@@ -117,9 +120,15 @@ export async function POST(req: NextRequest) {
             .eq("id", id);
           if (updateError) {
             console.error("[categories/suggest] couldn't bind suggestion to user", updateError);
+          } else {
+            auditAction = "category_suggestion.bind_user";
           }
         }
       } else if (wasRejected) {
+        auditAction = "category_suggestion.reopen";
+        const reopenReviewReason = (existingSuggestion?.review_reason && String(existingSuggestion.review_reason).trim())
+          ? String(existingSuggestion.review_reason)
+          : null;
         // If it was rejected before, reopen it so a new review request is created.
         const { error: reopenError } = await admin
           .from("category_suggestions")
@@ -129,6 +138,7 @@ export async function POST(req: NextRequest) {
             suggested_by: authenticatedUserId,
             label: labelEs,
             suggested_name: labelEs,
+            review_reason: reopenReviewReason,
             reviewed_at: null,
             created_at: new Date().toISOString(),
           })
@@ -149,6 +159,17 @@ export async function POST(req: NextRequest) {
     } else if (existingCategory.data.is_hidden) {
       await admin.from("categories").update({ name: labelEs, name_en: labelEn }).eq("id", id);
     }
+
+    await auditUserAction(admin, req, {
+      actorUserId: authenticatedUserId,
+      actorRole: authenticatedUserId ? "user" : "guest",
+      action: auditAction,
+      entityTable: "category_suggestions",
+      entityId: id,
+      entityOwnerUserId: authenticatedUserId,
+      afterData: { id, label: labelEs, label_en: labelEn, status: "pending" },
+      metadata: { submitted_locale: locale ?? null },
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {

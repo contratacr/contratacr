@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
+import { isUnsafeLocalProductionWrite, unsafeLocalProductionWriteResponse } from "./lib/security/write-guard";
 
 const handleI18n = createIntlMiddleware(routing);
 
@@ -32,6 +33,11 @@ const PUBLIC_PREFIXES = [
 // before every matched route: i18n locale routing + the Supabase auth gate.
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith("/api/")) {
+    if (isUnsafeLocalProductionWrite(request)) return unsafeLocalProductionWriteResponse();
+    return NextResponse.next();
+  }
 
   // EVERY unprefixed path redirects to its locale-prefixed canonical URL. This
   // single redirect makes the `[locale]` routes the source of truth, so old
@@ -158,5 +164,5 @@ export const config = {
   // Skip API routes, Next internals, static files, and /auth/* (OAuth callbacks must
   // reach the route handler directly — the i18n proxy would redirect /auth/callback
   // to /es/auth/callback, losing the PKCE code before it can be exchanged).
-  matcher: ["/((?!api|_next|_vercel|auth|.*\\..*).*)"],
+  matcher: ["/api/:path*", "/((?!_next|_vercel|auth|.*\\..*).*)"],
 };

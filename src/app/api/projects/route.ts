@@ -10,6 +10,8 @@ import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { isMinorFromDob } from "@/lib/age";
 import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -115,7 +117,7 @@ export async function POST(req: NextRequest) {
 
     const { data: existingProfile } = await admin
       .from("profiles")
-      .select("full_name, role, cedula, client_identity_status, client_identity_verified_at, client_identity_provider")
+      .select("full_name, email, phone, role, cedula, client_identity_status, client_identity_verified_at, client_identity_provider")
       .eq("id", uid)
       .maybeSingle();
 
@@ -191,6 +193,19 @@ export async function POST(req: NextRequest) {
       client_identity_status: clientIdentityStatus,
       status: "open",
     };
+    const projectSnapshots = {
+      client_name_snapshot:
+        officialName ||
+        existingProfile?.full_name ||
+        requestedFullName ||
+        (session.user.user_metadata?.full_name as string) ||
+        (session.user.user_metadata?.name as string) ||
+        session.user.email?.split("@")[0] ||
+        "Cliente",
+      client_email_snapshot: existingProfile?.email || session.user.email || null,
+      client_phone_snapshot: existingProfile?.phone ?? null,
+      ...writeSourceColumns(req),
+    };
     const patientFields = categoryIsHealth
       ? {
           for_someone_else: forSomeoneElse,
@@ -200,10 +215,10 @@ export async function POST(req: NextRequest) {
         }
       : {};
 
-    let { data, error } = await supabase.from("projects").insert({ ...baseProject, ...patientFields }).select("id, created_at").single();
-    if (error && /for_someone_else|beneficiary_|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+    let { data, error } = await supabase.from("projects").insert({ ...baseProject, ...projectSnapshots, ...patientFields }).select("id, created_at").single();
+    if (error && /client_.*snapshot|created_source|created_app|created_supabase|for_someone_else|beneficiary_|column|schema cache|PGRST204|could not find/i.test(error.message)) {
       // Keep project publishing working if production schema has not received the
-      // migration yet. Once migration 083 is applied, the patient fields persist.
+      // latest migration yet. Once migrations are applied, snapshots persist.
       ({ data, error } = await supabase.from("projects").insert(baseProject).select("id, created_at").single());
     }
 
@@ -216,6 +231,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No se pudo crear la solicitud." }, { status: 500 });
     }
     const projectCreatedAt = data?.created_at ?? null;
+
+    await auditUserAction(admin, req, {
+      actorUserId: uid,
+      actorRole: existingProfile?.role ?? "client",
+      action: "project.create",
+      entityTable: "projects",
+      entityId: projectId,
+      entityOwnerUserId: uid,
+      afterData: {
+        title: cleanTitle,
+        category_id: categoryId ?? null,
+        provincia_id: provinciaId ?? null,
+        canton_id: cantonId ?? null,
+        budget_min: parseMoneyAmount(budgetMin),
+        budget_max: parseMoneyAmount(budgetMax),
+        timeline: timeline ?? null,
+        status: "open",
+      },
+      metadata: { client_identity_status: clientIdentityStatus },
+    });
 
     // Notify every professional whose profession matches the project category.
     // "Otro" is a FREEFORM catch-all: its custom text is not reliably comparable, so it
@@ -365,11 +400,21 @@ export async function PATCH(req: NextRequest) {
   const admin = createAdminClient();
 
   if (action === "archive") {
-    const { data: project } = await admin.from("projects").select("client_id, status").eq("id", id).maybeSingle();
+    const { data: project } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
     if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
     if (project.status !== "cancelled") return NextResponse.json({ error: "Solo puedes archivar solicitudes canceladas." }, { status: 409 });
     const { error } = await admin.from("projects").update({ archived_by_client: true }).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await auditUserAction(admin, req, {
+      actorUserId: uid,
+      actorRole: "client",
+      action: "project.archive",
+      entityTable: "projects",
+      entityId: id,
+      entityOwnerUserId: project.client_id,
+      beforeData: { status: project.status, archived_by_client: false, title: project.title },
+      afterData: { status: project.status, archived_by_client: true, title: project.title },
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -389,6 +434,16 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "La solicitud no está en progreso." }, { status: 409 });
     }
     await admin.from("projects").update({ status: "awaiting_confirmation", work_done_at: new Date().toISOString() }).eq("id", id);
+    await auditUserAction(admin, req, {
+      actorUserId: uid,
+      actorRole: "professional",
+      action: "project.mark_work_done",
+      entityTable: "projects",
+      entityId: id,
+      entityOwnerUserId: project.client_id,
+      beforeData: { status: project.status, accepted_professional_id: project.accepted_professional_id, title: project.title },
+      afterData: { status: "awaiting_confirmation", accepted_professional_id: project.accepted_professional_id, title: project.title },
+    });
     // Notify the client to confirm.
     await admin.from("notifications").insert({
       user_id: project.client_id,
@@ -411,6 +466,16 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado." }, { status: 403 });
     }
     await admin.from("projects").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
+    await auditUserAction(admin, req, {
+      actorUserId: uid,
+      actorRole: "client",
+      action: "project.confirm_completion",
+      entityTable: "projects",
+      entityId: id,
+      entityOwnerUserId: project.client_id,
+      beforeData: { status: project.status, accepted_professional_id: project.accepted_professional_id, title: project.title },
+      afterData: { status: "completed", accepted_professional_id: project.accepted_professional_id, title: project.title },
+    });
     // Notify the professional.
     if (project.accepted_professional_id) {
       const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", project.accepted_professional_id).maybeSingle();
@@ -434,7 +499,7 @@ export async function PATCH(req: NextRequest) {
   }
   // Authorize against the row, then persist with the service-role client (an
   // RLS-bound update could silently affect 0 rows, like the bookings bug).
-  const { data: ownRow } = await admin.from("projects").select("client_id, status").eq("id", id).maybeSingle();
+  const { data: ownRow } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
   if (!ownRow || ownRow.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   if (status === "open" && ownRow.status !== "cancelled") {
     return NextResponse.json({ error: "Solo puedes volver a publicar solicitudes canceladas." }, { status: 409 });
@@ -454,6 +519,16 @@ export async function PATCH(req: NextRequest) {
     .update(patch)
     .eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await auditUserAction(admin, req, {
+    actorUserId: uid,
+    actorRole: "client",
+    action: status === "open" ? "project.reopen" : "project.cancel",
+    entityTable: "projects",
+    entityId: id,
+    entityOwnerUserId: ownRow.client_id,
+    beforeData: { status: ownRow.status, title: ownRow.title },
+    afterData: { status, title: ownRow.title },
+  });
   if (status === "cancelled") {
     await notifyAssignedPro(admin, id, "cancelled");
   }
@@ -517,7 +592,7 @@ export async function DELETE(req: NextRequest) {
   const admin = createAdminClient();
   // Authorize against the row, then delete with the service-role client — the
   // RLS-bound delete could silently affect 0 rows (same class as the bookings bug).
-  const { data: ownRow } = await admin.from("projects").select("client_id, status").eq("id", id).maybeSingle();
+  const { data: ownRow } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
   if (!ownRow) return NextResponse.json({ success: true }); // already gone
   if (ownRow.client_id !== session.user.id) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   if (ownRow.status !== "cancelled") {
@@ -531,5 +606,15 @@ export async function DELETE(req: NextRequest) {
   await admin.from("proposals").delete().eq("project_id", id);
   const { error } = await admin.from("projects").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await auditUserAction(admin, req, {
+    actorUserId: session.user.id,
+    actorRole: "client",
+    action: "project.delete",
+    entityTable: "projects",
+    entityId: id,
+    entityOwnerUserId: ownRow.client_id,
+    beforeData: { status: ownRow.status, title: ownRow.title },
+    afterData: { deleted: true },
+  });
   return NextResponse.json({ success: true });
 }

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 // POST /api/report-professional — a client reports a professional (two-way
 // reputation): no-show, service not performed, etc. No monetary penalty (payments
@@ -44,12 +46,39 @@ export async function POST(req: Request) {
   }
   if (!targetProId) return NextResponse.json({ error: "Profesional no encontrado." }, { status: 404 });
 
-  await admin.from("reports").insert({
+  let { data: reportRow, error: reportError } = await admin.from("reports").insert({
     professional_id: targetProId,
     professional_name: proName,
     professional_slug: proSlug,
     reason,
     reporter_email: user.email ?? null,
+    ...writeSourceColumns(req),
+  }).select("id").single();
+  if (reportError && /created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(reportError.message)) {
+    ({ data: reportRow, error: reportError } = await admin.from("reports").insert({
+      professional_id: targetProId,
+      professional_name: proName,
+      professional_slug: proSlug,
+      reason,
+      reporter_email: user.email ?? null,
+    }).select("id").single());
+  }
+  if (reportError) return NextResponse.json({ error: reportError.message }, { status: 500 });
+
+  await auditUserAction(admin, req, {
+    actorUserId: user.id,
+    actorRole: "client",
+    action: "report.professional",
+    entityTable: "reports",
+    entityId: reportRow?.id ?? null,
+    entityOwnerUserId: user.id,
+    afterData: {
+      professional_id: targetProId,
+      professional_name: proName,
+      professional_slug: proSlug,
+      booking_id: bookingId ?? null,
+      reason,
+    },
   });
 
   const { data: pro } = await admin

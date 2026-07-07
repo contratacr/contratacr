@@ -9,6 +9,8 @@ import { sendBrevoEmail } from "@/lib/email/send";
 import { notifyUserTicketCreated, supportTicketCreatedAutoMessage } from "@/lib/support-notify";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { auditUserAction } from "@/lib/audit/user-action";
+import { writeSourceColumns } from "@/lib/security/write-guard";
 
 // ALL of the app's automated email goes through BREVO (the contratacr.com domain is
 // verified there → SPF/DKIM pass → good deliverability), via the shared
@@ -127,7 +129,7 @@ type SavedSupportTicket = {
   case_number?: number | string | null;
 };
 
-async function saveTicket(name: string, email: string, subject: string, message: string, topic: string | undefined, locale: SupportLocale): Promise<SavedSupportTicket | null> {
+async function saveTicket(req: NextRequest, name: string, email: string, subject: string, message: string, topic: string | undefined, locale: SupportLocale): Promise<SavedSupportTicket | null> {
   try {
     let userId: string | null = null;
     try {
@@ -137,11 +139,18 @@ async function saveTicket(name: string, email: string, subject: string, message:
     } catch { /* guest — no session */ }
     const admin = createAdminClient();
     const now = new Date().toISOString();
-    const { data: ticket, error } = await admin
+    let { data: ticket, error } = await admin
       .from("support_tickets")
-      .insert({ user_id: userId, name: name || null, email, subject, message, topic: topic || null, last_reply_at: now, last_reply_role: "user" })
+      .insert({ user_id: userId, name: name || null, email, subject, message, topic: topic || null, last_reply_at: now, last_reply_role: "user", ...writeSourceColumns(req) })
       .select("id, created_at, case_number")
       .single();
+    if (error && /created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+      ({ data: ticket, error } = await admin
+        .from("support_tickets")
+        .insert({ user_id: userId, name: name || null, email, subject, message, topic: topic || null, last_reply_at: now, last_reply_role: "user" })
+        .select("id, created_at, case_number")
+        .single());
+    }
     if (error) { console.error("[contact] ticket insert:", error.message); return null; }
     // Seed the conversation thread with the user's first message plus the one-time
     // support acknowledgement. Keep last_reply_role as "user" so admin queues still
@@ -163,6 +172,16 @@ async function saveTicket(name: string, email: string, subject: string, message:
         },
       ]);
       if (msgErr) console.error("[contact] ticket messages insert:", msgErr.message);
+      await auditUserAction(admin, req, {
+        actorUserId: userId,
+        actorRole: userId ? "user" : "guest",
+        action: "support.ticket_create",
+        entityTable: "support_tickets",
+        entityId: ticket.id,
+        entityOwnerUserId: userId,
+        afterData: { subject, topic: topic || null, email, has_account: !!userId },
+        metadata: { message_length: message.length, locale },
+      });
     }
     return ticket;
   } catch (e) {
@@ -224,7 +243,7 @@ export async function POST(req: NextRequest) {
     // Record the ticket in the admin panel (primary record), then notify the support
     // inbox by email — via Brevo. Even if the email can't be sent, the ticket is
     // already saved and shows in the admin panel.
-    const ticketSaved = await saveTicket(name, email, subject, message, topic, locale);
+    const ticketSaved = await saveTicket(req, name, email, subject, message, topic, locale);
     const sent = await sendInboxEmail(name, email, subject, message, fileAttachments);
     if (ticketSaved) {
       await notifyUserTicketCreated({

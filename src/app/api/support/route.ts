@@ -6,18 +6,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { notifySupportInbox } from "@/lib/support-notify";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { auditUserAction } from "@/lib/audit/user-action";
 
 // Guest→account linking: when a user with a VERIFIED email views/uses support,
 // attach any prior GUEST tickets (user_id null) with the same email to their
 // account so the history appears in-app. Only on verified email — never claim
 // someone else's tickets.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function claimGuestTickets(db: SupabaseClient<any>, user: User) {
+async function claimGuestTickets(db: SupabaseClient, user: User) {
   if (!user.email || !user.email_confirmed_at) return;
   await db.from("support_tickets").update({ user_id: user.id }).is("user_id", null).ilike("email", user.email);
 }
 
-async function getCanonicalProfileContact(db: SupabaseClient<any>, user: User) {
+async function getCanonicalProfileContact(db: SupabaseClient, user: User) {
   const { data: profile } = await db
     .from("profiles")
     .select("full_name, email")
@@ -29,7 +29,7 @@ async function getCanonicalProfileContact(db: SupabaseClient<any>, user: User) {
   };
 }
 
-async function syncUserTicketEmail(db: SupabaseClient<any>, user: User, email: string) {
+async function syncUserTicketEmail(db: SupabaseClient, user: User, email: string) {
   if (!email) return;
   await db.from("support_tickets").update({ email }).eq("user_id", user.id).neq("email", email);
 }
@@ -97,6 +97,16 @@ export async function POST(req: Request) {
   // CONFIRM — the user agrees the ticket is resolved (finalizes it).
   if (action === "confirm") {
     await db.from("support_tickets").update({ user_confirmed: true, status: "resolved" }).eq("id", ticketId);
+    await auditUserAction(db, req, {
+      actorUserId: user.id,
+      actorRole: "user",
+      action: "support.confirm_resolved",
+      entityTable: "support_tickets",
+      entityId: ticketId,
+      entityOwnerUserId: user.id,
+      beforeData: { status: ticket.status },
+      afterData: { status: "resolved", user_confirmed: true },
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -108,6 +118,16 @@ export async function POST(req: Request) {
       ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: safeBody || "El usuario solicitó reabrir el ticket: el problema continúa.",
     });
     await notifySupportInbox({ subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: "Solicitud de reapertura: el problema continúa.", isReply: true });
+    await auditUserAction(db, req, {
+      actorUserId: user.id,
+      actorRole: "user",
+      action: "support.reopen",
+      entityTable: "support_tickets",
+      entityId: ticketId,
+      entityOwnerUserId: user.id,
+      beforeData: { status: ticket.status },
+      afterData: { status: "in_progress", user_confirmed: false },
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -124,6 +144,18 @@ export async function POST(req: Request) {
 
   await notifySupportInbox({
     subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: safeBody, isReply: true,
+  });
+
+  await auditUserAction(db, req, {
+    actorUserId: user.id,
+    actorRole: "user",
+    action: "support.reply",
+    entityTable: "support_tickets",
+    entityId: ticketId,
+    entityOwnerUserId: user.id,
+    beforeData: { status: ticket.status },
+    afterData: { status: nextStatus, last_reply_role: "user" },
+    metadata: { message_length: safeBody.length },
   });
 
   return NextResponse.json({ ok: true });
