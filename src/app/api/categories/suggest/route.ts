@@ -106,15 +106,36 @@ export async function POST(req: NextRequest) {
       }
     } else if (authenticatedUserId) {
       const wasPending = isPendingSuggestion(existingSuggestion);
-      if (!existingSuggestion.suggested_by && wasPending) {
+      const wasRejected = isRejectedSuggestion(existingSuggestion);
+      if (wasPending) {
         // Re-suggested row created by an anonymous flow: capture the logged user so
         // admin notifications can be delivered to the correct account later.
-        const { error: updateError } = await admin
+        if (!existingSuggestion.suggested_by) {
+          const { error: updateError } = await admin
+            .from("category_suggestions")
+            .update({ suggested_by: authenticatedUserId })
+            .eq("id", id);
+          if (updateError) {
+            console.error("[categories/suggest] couldn't bind suggestion to user", updateError);
+          }
+        }
+      } else if (wasRejected) {
+        // If it was rejected before, reopen it so a new review request is created.
+        const { error: reopenError } = await admin
           .from("category_suggestions")
-          .update({ suggested_by: authenticatedUserId })
+          .update({
+            status: "pending",
+            approved: false,
+            suggested_by: authenticatedUserId,
+            label: labelEs,
+            suggested_name: labelEs,
+            reviewed_at: null,
+            created_at: new Date().toISOString(),
+          })
           .eq("id", id);
-        if (updateError) {
-          console.error("[categories/suggest] couldn't bind suggestion to user", updateError);
+        if (reopenError) {
+          console.error("[categories/suggest] couldn't reopen rejected suggestion", reopenError);
+          return NextResponse.json({ error: "No se pudo enviar la sugerencia" }, { status: 500 });
         }
       }
     }
@@ -170,4 +191,11 @@ function isPendingSuggestion(suggestion: Record<string, unknown> | null | undefi
   if (status) return status === "pending";
   if (typeof suggestion.approved === "boolean") return !suggestion.approved;
   return true;
+}
+
+function isRejectedSuggestion(suggestion: Record<string, unknown> | null | undefined): boolean {
+  if (!suggestion) return false;
+  const status = typeof suggestion.status === "string" ? suggestion.status : null;
+  if (status) return status === "rejected";
+  return false;
 }
