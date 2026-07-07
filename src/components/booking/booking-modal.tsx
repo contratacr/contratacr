@@ -46,6 +46,12 @@ const DAY_KEYS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
 const phoneDigits = (value: string) => value.replace(/\D/g, "");
 const PENDING_BOOKING_IDENTITY_KEY = "ccr:pending-booking-identity";
 const PENDING_BOOKING_IDENTITY_MAX_AGE_MS = 30 * 60 * 1000;
+const BOOKING_MAX_FUTURE_DAYS = Math.max(
+  1,
+  Number.isFinite(Number(process.env.NEXT_PUBLIC_BOOKING_MAX_FUTURE_DAYS))
+    ? Number(process.env.NEXT_PUBLIC_BOOKING_MAX_FUTURE_DAYS)
+    : 90,
+);
 
 type PendingBookingIdentity = {
   userId?: string;
@@ -604,7 +610,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   }
 
   const canGoPrev = !(currentYear === today.getFullYear() && currentMonth === today.getMonth());
-  const maxMonth = new Date(today.getFullYear(), today.getMonth() + 3, 1);
+  const maxDate = new Date(today);
+  maxDate.setDate(today.getDate() + BOOKING_MAX_FUTURE_DAYS);
+  const maxMonth = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 1);
   const canGoNext = new Date(currentYear, currentMonth + 1, 1) < maxMonth;
 
   function resetAndClose() {

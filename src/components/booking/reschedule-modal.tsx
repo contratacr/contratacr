@@ -23,6 +23,12 @@ type DaySchedule = { enabled: boolean; ranges: { start: string; end: string }[] 
 type WeeklyAvailability = Record<string, DaySchedule>;
 
 const DAY_KEYS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
+const BOOKING_MAX_FUTURE_DAYS = Math.max(
+  1,
+  Number.isFinite(Number(process.env.NEXT_PUBLIC_BOOKING_MAX_FUTURE_DAYS))
+    ? Number(process.env.NEXT_PUBLIC_BOOKING_MAX_FUTURE_DAYS)
+    : 90,
+);
 
 function formatDateISO(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -169,7 +175,9 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLo
   const slots = selectedDate ? getSlotsForDate(selectedDate) : [];
 
   const canGoPrev = !(currentYear === today.getFullYear() && currentMonth === today.getMonth());
-  const maxMonth = new Date(today.getFullYear(), today.getMonth() + 3, 1);
+  const maxDate = new Date(today);
+  maxDate.setDate(today.getDate() + BOOKING_MAX_FUTURE_DAYS);
+  const maxMonth = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 1);
   const canGoNext = new Date(currentYear, currentMonth + 1, 1) < maxMonth;
   function prevMonth() {
     if (!canGoPrev) return;
