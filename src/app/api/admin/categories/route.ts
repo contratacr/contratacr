@@ -288,10 +288,7 @@ export async function PATCH(req: Request) {
   }
 
   if (status === "rejected") {
-    const existingReason = typeof suggestionRow?.review_reason === "string" && suggestionRow.review_reason.trim().length > 0
-      ? suggestionRow.review_reason.trim()
-      : null;
-    update.review_reason = normalizedReviewReason ?? existingReason;
+    update.review_reason = normalizedReviewReason;
     const rawName = cleanLabel || suggestionRow!.label || suggestionRow!.suggested_name || labelFromId(id);
     const finalName = normalizeServiceDisplayName(rawName);
     const rejectedUpdateError = await updateSuggestionRow(db, id, update);

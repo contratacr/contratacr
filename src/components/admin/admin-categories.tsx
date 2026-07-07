@@ -100,6 +100,7 @@ type AdminDialogState = {
   cancelLabel?: string;
   tone?: "default" | "danger";
   onConfirm?: () => void | Promise<void>;
+  rejectSuggestionId?: string;
 };
 
 function AdminDialog({
@@ -199,7 +200,6 @@ export function AdminCategories() {
   const [busy, setBusy] = useState<string | null>(null);
   const [dialog, setDialog] = useState<AdminDialogState | null>(null);
   const [dialogBusy, setDialogBusy] = useState(false);
-  const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
   const rejectReasonRefs = useRef<Record<string, string>>({});
   const translatedSuggestionIds = useRef<Set<string>>(new Set());
 
@@ -217,10 +217,23 @@ export function AdminCategories() {
     setDialogBusy(true);
     try {
       await onConfirm();
-      setDialog((latest) => latest === currentDialog ? null : latest);
+      setDialog((latest) => {
+        if (latest !== currentDialog) return latest;
+        if (currentDialog?.rejectSuggestionId) {
+          delete rejectReasonRefs.current[currentDialog.rejectSuggestionId];
+        }
+        return null;
+      });
     } finally {
       setDialogBusy(false);
     }
+  }
+
+  function closeDialog() {
+    if (dialog?.rejectSuggestionId) {
+      delete rejectReasonRefs.current[dialog.rejectSuggestionId];
+    }
+    setDialog(null);
   }
 
   async function loadCatalog() {
@@ -520,7 +533,7 @@ export function AdminCategories() {
     }
 
     if (next === "rejected") {
-      const existing = rejectReasons[i.id] ?? i.review_reason ?? "";
+      const existing = rejectReasonRefs.current[i.id] ?? i.review_reason ?? "";
       rejectReasonRefs.current[i.id] = existing;
       setDialog({
         title: "Rechazar sugerencia",
@@ -529,6 +542,7 @@ export function AdminCategories() {
         confirmLabel: "Rechazar",
         cancelLabel: "Cancelar",
         tone: "danger",
+        rejectSuggestionId: i.id,
         input: {
           label: "Motivo (opcional)",
           placeholder: "Ej. Servicio duplicado",
@@ -536,7 +550,6 @@ export function AdminCategories() {
           value: existing,
           onChange: (value) => {
             rejectReasonRefs.current[i.id] = value;
-            setRejectReasons((prev) => ({ ...prev, [i.id]: value }));
             setDialog((prev) => {
               if (!prev?.input) return prev;
               return {
@@ -900,6 +913,11 @@ export function AdminCategories() {
                         <span>Sugerida el {new Date(i.created_at).toLocaleDateString("es-CR")}</span>
                         {sender && <span className="text-[#64748b]">Sugerida por {sender}</span>}
                       </div>
+                      {status === "rejected" && i.review_reason && (
+                        <p className="mt-2 text-xs text-[#c2410c] [overflow-wrap:anywhere] break-words">
+                          Motivo anterior: {i.review_reason}
+                        </p>
+                      )}
                     </div>
                     {status === "pending" && (
                       <>
@@ -1152,14 +1170,16 @@ export function AdminCategories() {
         </section>
       )}
     </div>
-    <AdminDialog
-      dialog={dialog}
-      busy={dialogBusy}
-      onClose={() => {
-        if (!dialogBusy) setDialog(null);
-      }}
-      onConfirm={confirmDialogAction}
-    />
+      <AdminDialog
+        dialog={dialog}
+        busy={dialogBusy}
+        onClose={() => {
+          if (!dialogBusy) {
+            closeDialog();
+          }
+        }}
+        onConfirm={confirmDialogAction}
+      />
     </>
   );
 }
