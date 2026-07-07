@@ -1470,6 +1470,7 @@
     "alreadyProposedNote": "You already sent a proposal for this opportunity.",
     "dismiss": "Not interested",
     "sendProposal": "Send proposal",
+    "sendProposalError": "Couldn't send the proposal. Try again.",
     "emptyMine": "You haven't sent any proposals yet",
     "emptyMineSub": "Browse available opportunities and send your first proposal.",
     "myProposal": "My proposal",

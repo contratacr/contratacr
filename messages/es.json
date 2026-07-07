@@ -1469,6 +1469,7 @@
     "alreadyProposedNote": "Ya enviaste una propuesta para esta oportunidad.",
     "dismiss": "No me interesa",
     "sendProposal": "Enviar propuesta",
+    "sendProposalError": "No se pudo enviar la propuesta. Intenta de nuevo.",
     "emptyMine": "No enviaste propuestas todavía",
     "emptyMineSub": "Explora las oportunidades disponibles y envía tu primera propuesta.",
     "myProposal": "Mi propuesta",

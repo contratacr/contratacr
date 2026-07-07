@@ -47,9 +47,10 @@ export async function POST(req: NextRequest) {
       status: "pending",
       ...writeSourceColumns(req),
     };
-    let { data, error } = await supabase.from("proposals").insert(proposalInsert).select("id").single();
+    const admin = createAdminClient();
+    let { data, error } = await admin.from("proposals").insert(proposalInsert).select("id").single();
     if (error && /professional_.*snapshot|created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(error.message)) {
-      ({ data, error } = await supabase.from("proposals").insert({
+      ({ data, error } = await admin.from("proposals").insert({
         project_id: projectId,
         professional_id: pro.id,
         price: parseMoneyAmount(price),
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No se pudo crear la propuesta." }, { status: 500 });
     }
 
-    await auditUserAction(createAdminClient(), req, {
+    await auditUserAction(admin, req, {
       actorUserId: session.user.id,
       actorRole: "professional",
       action: "proposal.create",

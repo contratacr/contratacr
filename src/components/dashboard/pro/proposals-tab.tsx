@@ -308,22 +308,35 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (!form?.message?.trim()) return;
 
     setSubmitting(projectId);
-    const res = await fetch("/api/proposals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        projectId,
-        price: form.price || null,
-        message: form.message,
-      }),
-    });
-
-    // 409 = a proposal already exists for this project → treat as submitted.
-    if (res.ok || res.status === 409) {
-      setSubmitted((prev) => new Set([...prev, projectId]));
-      setExpandedProject(null);
+    try {
+      const res = await fetch("/api/proposals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          price: form.price || null,
+          message: form.message,
+        }),
+      });
+      // 409 = a proposal already exists for this project, so treat it as sent.
+      if (res.ok || res.status === 409) {
+        setSubmitted((prev) => new Set([...prev, projectId]));
+        setExpandedProject(null);
+        setProposalForms((prev) => {
+          const next = { ...prev };
+          delete next[projectId];
+          return next;
+        });
+        void Promise.all([fetchOpenProjects(true), fetchMyProposals(true)]);
+        return;
+      }
+      const j = await res.json().catch(() => ({}));
+      void showMessage({ title: errorTitle, description: j.error ?? t("sendProposalError"), tone: "danger" });
+    } catch {
+      void showMessage({ title: errorTitle, description: t("sendProposalError"), tone: "danger" });
+    } finally {
+      setSubmitting(null);
     }
-    setSubmitting(null);
   }
 
   // Mis propuestas is a collapsible accordion (sprint 449) — same card language as the
