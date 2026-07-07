@@ -50,7 +50,12 @@ interface ProfessionalScheduleProps {
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
 const COLS = 3;
-const WINDOW_DAYS = 21;
+const BOOKING_MAX_FUTURE_DAYS = Math.max(
+  1,
+  Number.isFinite(Number(process.env.NEXT_PUBLIC_BOOKING_MAX_FUTURE_DAYS))
+    ? Number(process.env.NEXT_PUBLIC_BOOKING_MAX_FUTURE_DAYS)
+    : 90,
+);
 const locationNavButtonClass =
   "relative z-20 -my-1 flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-full text-[#6b7280] transition-colors hover:bg-[#f3f8fc] hover:text-[#009FD9] active:bg-[#EBF5FB] active:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30";
 
@@ -380,7 +385,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return Array.from({ length: WINDOW_DAYS }, (_, i) => {
+    return Array.from({ length: BOOKING_MAX_FUTURE_DAYS }, (_, i) => {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const key = toKey(d);
@@ -400,7 +405,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const hasUpcomingAnywhere = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    for (let i = 0; i < WINDOW_DAYS; i++) {
+    for (let i = 0; i < BOOKING_MAX_FUTURE_DAYS; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const key = toKey(d);
