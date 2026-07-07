@@ -24,6 +24,7 @@ interface CategorySearchProps {
   placeholder?: string;
   error?: string;
   className?: string;
+  clearable?: boolean;
   /** Open the picker immediately on mount (e.g. when revealed by an "add" action). */
   autoFocus?: boolean;
 }
@@ -34,6 +35,7 @@ export function CategorySearch({
   placeholder,
   error,
   className,
+  clearable = true,
   autoFocus = false,
 }: CategorySearchProps) {
   const t = useTranslations("categorySearch");
@@ -155,7 +157,7 @@ export function CategorySearch({
           )}
         </span>
         <div className="flex items-center gap-1 shrink-0 ml-2">
-          {value && (
+          {clearable && value && (
             <button
               type="button"
               onClick={handleClear}

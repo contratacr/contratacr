@@ -487,6 +487,7 @@ export function ServicesEditor({
                 value={editCategory}
                 onChange={changeEditingService}
                 placeholder={t("pickerSearch")}
+                clearable={false}
               />
             </div>
 
