@@ -85,7 +85,6 @@ export function BasicProfileSection({
   const [profileDirty, setProfileDirty] = useState(false);
   const profileTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const profileDirtyRef = useRef(false);
-  const discardEditRef = useRef(false);
   const profileFormRef = useRef(profileForm);
   const saveProfileRef = useRef<() => Promise<void>>(async () => {});
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -99,7 +98,6 @@ export function BasicProfileSection({
       return next;
     });
   function touchProfile() {
-    discardEditRef.current = false;
     setProfileSaved(false);
     setProfileDirty(true);
     profileDirtyRef.current = true;
@@ -138,12 +136,6 @@ export function BasicProfileSection({
   useEffect(() => { loadProfile(); }, [loadProfile]);
 
   const saveProfile = useCallback(async () => {
-    if (discardEditRef.current) {
-      profileDirtyRef.current = false;
-      setProfileDirty(false);
-      setProfileSaved(false);
-      return;
-    }
     if (!user) return;
     const currentForm = profileFormRef.current;
     setProfileDirty(false);
@@ -189,17 +181,6 @@ export function BasicProfileSection({
     if (profileTimer.current) clearTimeout(profileTimer.current);
     if (profileDirtyRef.current) void saveProfileRef.current?.();
   }, []);
-
-  function discardPendingChanges() {
-    discardEditRef.current = true;
-    if (profileTimer.current) {
-      clearTimeout(profileTimer.current);
-      profileTimer.current = null;
-    }
-    profileDirtyRef.current = false;
-    setProfileDirty(false);
-    setProfileSaved(false);
-  }
 
   async function handlePhotoRemove() {
     if (!user) return;
@@ -373,12 +354,7 @@ export function BasicProfileSection({
       ))}
       </div>
 
-      <UnsavedChangesGuard
-        dirty={profileDirty}
-        onSave={saveProfile}
-        onDiscard={discardPendingChanges}
-        isBusy={profileSaving}
-      />
+      <UnsavedChangesGuard dirty={profileDirty} onSave={saveProfile} />
       {dialogNode}
     </div>
   );

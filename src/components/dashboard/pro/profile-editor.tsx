@@ -231,7 +231,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const [autoSaving, setAutoSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const shouldDiscardChangesRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   // ── App-wide RELIABLE autosave (the "Save standard"; see contratacr-context.md) ──
@@ -255,7 +254,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   }, [initialFullName, fullName]);
 
   function touch() {
-    shouldDiscardChangesRef.current = false;
     setSaved(false);
     setDirty(true);
     dirtyRef.current = true;
@@ -281,19 +279,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     if (autoTimer.current) clearTimeout(autoTimer.current);
     if (dirtyRef.current) void saveRef.current?.(true);
   }, []);
-
-  function discardPendingChanges() {
-    shouldDiscardChangesRef.current = true;
-    if (autoTimer.current) {
-      clearTimeout(autoTimer.current);
-      autoTimer.current = null;
-    }
-    dirtyRef.current = false;
-    setDirty(false);
-    setAutoSaving(false);
-    setSaving(false);
-    setError(null);
-  }
 
   function openCertForm(profession?: string) {
     setCertError(null);
@@ -363,11 +348,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   }
 
   async function handleSave(auto = false) {
-    if (shouldDiscardChangesRef.current) {
-      dirtyRef.current = false;
-      setDirty(false);
-      return;
-    }
     if (auto) setAutoSaving(true); else setSaving(true);
     setError(null);
     const supabase = createClient();
@@ -959,12 +939,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           top reflects the state. The guard still flushes pending edits on nav. */}
 
       {/* Designed unsaved-changes dialog (replaces the browser default) */}
-      <UnsavedChangesGuard
-        dirty={dirty}
-        onSave={() => handleSave(false)}
-        onDiscard={discardPendingChanges}
-        isBusy={saving || autoSaving}
-      />
+      <UnsavedChangesGuard dirty={dirty} onSave={() => handleSave(false)} />
     </div>
   );
 }

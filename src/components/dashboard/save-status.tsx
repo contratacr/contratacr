@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
  */
 export function SaveStatus({
   saving,
-  saved: _saved,
+  saved,
   dirty = false,
   className,
 }: {
@@ -31,8 +31,7 @@ export function SaveStatus({
   className?: string;
 }) {
   const t = useTranslations("saveStatus");
-  void _saved; // Keep the prop for compatibility; saved state is now represented transiently via guarding logic.
-  const show = saving || dirty;
+  const show = saving || saved || dirty;
 
   return (
     <div
@@ -46,6 +45,10 @@ export function SaveStatus({
       {saving ? (
         <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#6b7280]">
           <Loader2 className="h-4 w-4 animate-spin" /> {t("saving")}
+        </span>
+      ) : saved ? (
+        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600">
+          <Check className="h-4 w-4" /> {t("saved")}
         </span>
       ) : dirty ? (
         <span className="text-sm font-medium text-amber-600">{t("unsaved")}</span>
