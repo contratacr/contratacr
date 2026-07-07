@@ -117,7 +117,7 @@ export async function GET(req: Request) {
 
   let q = db.from("category_suggestions").select("*").order("created_at", { ascending: false });
   if (status === "pending" || status === "approved" || status === "rejected") q = q.eq("status", status);
-  const { data, error: qError } = await q;
+  let { data, error: qError } = await q;
   if (qError && isMissingColumnError(qError, "status")) {
     const fallback = await db.from("category_suggestions").select("*").order("created_at", { ascending: false });
     data = fallback.data;
@@ -217,11 +217,12 @@ export async function PATCH(req: Request) {
     label?: string | null;
     suggested_name?: string | null;
     suggested_by?: string | null;
+    review_reason?: string | null;
   } | null = null;
   if (status) {
     const { data } = await db
       .from("category_suggestions")
-      .select("id, label, suggested_name, suggested_by")
+      .select("id, label, suggested_name, suggested_by, review_reason")
       .eq("id", id)
       .maybeSingle();
     suggestionRow = data;
@@ -287,7 +288,10 @@ export async function PATCH(req: Request) {
   }
 
   if (status === "rejected") {
-    update.review_reason = normalizedReviewReason ?? null;
+    const existingReason = typeof suggestionRow?.review_reason === "string" && suggestionRow.review_reason.trim().length > 0
+      ? suggestionRow.review_reason.trim()
+      : null;
+    update.review_reason = normalizedReviewReason ?? existingReason;
     const rawName = cleanLabel || suggestionRow!.label || suggestionRow!.suggested_name || labelFromId(id);
     const finalName = normalizeServiceDisplayName(rawName);
     const rejectedUpdateError = await updateSuggestionRow(db, id, update);
