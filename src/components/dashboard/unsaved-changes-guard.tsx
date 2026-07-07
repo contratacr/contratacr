@@ -16,9 +16,11 @@ import { Button } from "@/components/ui/button";
 export function UnsavedChangesGuard({
   dirty,
   onSave,
+  onDiscard,
 }: {
   dirty: boolean;
   onSave?: () => Promise<void> | void;
+  onDiscard?: () => void;
 }) {
   const t = useTranslations("unsavedGuard");
   const [open, setOpen] = useState(false);
@@ -92,6 +94,11 @@ export function UnsavedChangesGuard({
     proceed();
   }
 
+  function discardChanges() {
+    onDiscard?.();
+    proceed();
+  }
+
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && setOpen(false)}>
       <Dialog.Portal>
@@ -130,7 +137,7 @@ export function UnsavedChangesGuard({
               )}
               <button
                 type="button"
-                onClick={proceed}
+                onClick={discardChanges}
                 disabled={saving}
                 className="w-full h-10 rounded-xl border border-[#e5e7eb] text-sm font-semibold text-[#b91c1c] hover:bg-red-50 transition-colors disabled:opacity-50"
               >
