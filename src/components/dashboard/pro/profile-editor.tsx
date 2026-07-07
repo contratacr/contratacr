@@ -963,6 +963,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         dirty={dirty}
         onSave={() => handleSave(false)}
         onDiscard={discardPendingChanges}
+        isBusy={saving || autoSaving}
       />
     </div>
   );

@@ -373,7 +373,12 @@ export function BasicProfileSection({
       ))}
       </div>
 
-      <UnsavedChangesGuard dirty={profileDirty} onSave={saveProfile} onDiscard={discardPendingChanges} />
+      <UnsavedChangesGuard
+        dirty={profileDirty}
+        onSave={saveProfile}
+        onDiscard={discardPendingChanges}
+        isBusy={profileSaving}
+      />
       {dialogNode}
     </div>
   );

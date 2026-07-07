@@ -17,16 +17,19 @@ export function UnsavedChangesGuard({
   dirty,
   onSave,
   onDiscard,
+  isBusy = false,
 }: {
   dirty: boolean;
   onSave?: () => Promise<void> | void;
   onDiscard?: () => void;
+  isBusy?: boolean;
 }) {
   const t = useTranslations("unsavedGuard");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const pendingAnchor = useRef<HTMLAnchorElement | null>(null);
   const bypass = useRef(false);
+  const shouldGuard = dirty || isBusy;
   const isTestFlow = (() => {
     const rawAppUrl = (process.env.NEXT_PUBLIC_APP_URL || "").toLowerCase();
     const envFlag = process.env.NEXT_PUBLIC_TEST_EXIT_GUARD === "true" || process.env.NEXT_PUBLIC_TEST_EXIT_GUARD === "1";
@@ -37,7 +40,7 @@ export function UnsavedChangesGuard({
   })();
 
   useEffect(() => {
-    if (!dirty) return;
+    if (!shouldGuard) return;
 
     function onBeforeUnload(e: BeforeUnloadEvent) {
       e.preventDefault();
@@ -70,7 +73,7 @@ export function UnsavedChangesGuard({
       window.removeEventListener("beforeunload", onBeforeUnload);
       document.removeEventListener("click", onClickCapture, true);
     };
-  }, [dirty]);
+  }, [dirty, isBusy, shouldGuard]);
 
   function proceed() {
     const anchor = pendingAnchor.current;
