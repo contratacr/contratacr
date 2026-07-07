@@ -62,14 +62,15 @@ function toKey(d: Date): string {
 }
 
 // Prototype-matching column label (relative): today → "Hoy"/"Today", tomorrow →
-// "Mañana"/"Tomorrow", any other day → capitalized short weekday + day number
-// ("Jue 18" / "Thu 18"). `i` is the day's offset (in days) from today.
+// "Mañana"/"Tomorrow", any other day → day number + short month.
+// Example: "7 jul" / "Jul 7". `i` is the day's offset (in days) from today.
 function dayColumnLabel(d: Date, i: number, locale: string): string {
   if (i === 0) return locale === "en" ? "Today" : "Hoy";
   if (i === 1) return locale === "en" ? "Tomorrow" : "Mañana";
   const loc = locale === "en" ? "en-US" : "es-CR";
-  const wd = d.toLocaleDateString(loc, { weekday: "short" }).replace(".", "");
-  return `${wd.charAt(0).toUpperCase()}${wd.slice(1)} ${d.getDate()}`;
+  const month = d.toLocaleDateString(loc, { month: "short" }).replace(".", "");
+  if (locale === "en") return `${month} ${d.getDate()}`;
+  return `${d.getDate()} ${month}`;
 }
 
 /**
