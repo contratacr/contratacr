@@ -95,6 +95,38 @@ const MOBILE_PRIORITY: Record<Mode, Tab[]> = {
   offer: ["bookings", "proposals", "notifications"],
   use: ["sent_bookings", "sent_projects", "notifications"],
 };
+const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
+
+type OpportunityProjectSummary = { id?: string | null };
+
+function opportunitySeenStorageKey(userId: string) {
+  return `${OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX}:${userId}`;
+}
+
+function opportunityProjectKey(project: OpportunityProjectSummary) {
+  return project.id ? `project:${project.id}` : null;
+}
+
+function readSeenOpportunityKeys(userId: string): Set<string> {
+  try {
+    const raw = window.localStorage.getItem(opportunitySeenStorageKey(userId));
+    const parsed = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function rememberSeenOpportunityKeys(userId: string, keys: string[]) {
+  if (keys.length === 0) return;
+  try {
+    const current = readSeenOpportunityKeys(userId);
+    for (const key of keys) current.add(key);
+    window.localStorage.setItem(opportunitySeenStorageKey(userId), JSON.stringify([...current].slice(-200)));
+  } catch {
+    // If storage is unavailable, the notification list still works; the modal may show again.
+  }
+}
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -118,6 +150,7 @@ export default function DashboardPage() {
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
+  const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
   const opportunityWelcomeCheckedRef = useRef(false);
   const [bottomNavRail, setBottomNavRail] = useState<HTMLDivElement | null>(null);
@@ -308,8 +341,14 @@ export default function DashboardPage() {
       .then(async (res) => (res.ok ? res.json() : { projects: [] }))
       .then((data) => {
         if (!mounted) return;
-        const count = Array.isArray(data?.projects) ? data.projects.length : 0;
-        if (count > 0) setOpportunityWelcomeCount(count);
+        const projects: OpportunityProjectSummary[] = Array.isArray(data?.projects) ? data.projects : [];
+        const seen = readSeenOpportunityKeys(user.id);
+        const keys = projects.map(opportunityProjectKey).filter((key): key is string => !!key && !seen.has(key));
+        if (keys.length > 0) {
+          rememberSeenOpportunityKeys(user.id, keys);
+          setOpportunityWelcomeKeys(keys);
+          setOpportunityWelcomeCount(keys.length);
+        }
       })
       .catch((error) => {
         console.error("[dashboard] opportunity welcome load failed:", error);
@@ -355,11 +394,15 @@ export default function DashboardPage() {
   }
 
   function closeOpportunityWelcome() {
+    if (user) rememberSeenOpportunityKeys(user.id, opportunityWelcomeKeys);
     setOpportunityWelcomeCount(null);
+    setOpportunityWelcomeKeys([]);
   }
 
   function viewOpportunityWelcome() {
+    if (user) rememberSeenOpportunityKeys(user.id, opportunityWelcomeKeys);
     setOpportunityWelcomeCount(null);
+    setOpportunityWelcomeKeys([]);
     if (mode !== "offer") setMode("offer");
     setTab("proposals");
   }
