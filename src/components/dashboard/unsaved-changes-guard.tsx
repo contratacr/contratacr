@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 
 // Custom, designed replacement for the browser's "Changes you may not be saved"
 // prompt. Intercepts in-app link navigations while there are unsaved edits and
-// shows a Spanish dialog with "Guardar y salir" / "Salir sin guardar" / "Seguir
-// editando". Hard unloads (tab close / refresh) still use the native prompt —
+// shows either:
+// - non-test flow: "Guardar y salir" / "Salir sin guardar" / "Seguir editando"
+// - test flow:    "Guardar y salir" / "Salir sin guardar" only.
+// Hard unloads (tab close / refresh) still use the native prompt —
 // browsers don't allow a custom UI there — but in-app nav is fully styled.
 export function UnsavedChangesGuard({
   dirty,
@@ -23,6 +25,11 @@ export function UnsavedChangesGuard({
   const [saving, setSaving] = useState(false);
   const pendingAnchor = useRef<HTMLAnchorElement | null>(null);
   const bypass = useRef(false);
+  const isTestFlow =
+    process.env.NEXT_PUBLIC_TEST_EXIT_GUARD === "true" ||
+    process.env.NEXT_PUBLIC_TEST_EXIT_GUARD === "1" ||
+    (process.env.NEXT_PUBLIC_APP_URL || "").toLowerCase().includes("test") ||
+    (process.env.NEXT_PUBLIC_APP_URL === undefined && process.env.NODE_ENV === "development");
 
   useEffect(() => {
     if (!dirty) return;
@@ -108,6 +115,16 @@ export function UnsavedChangesGuard({
                   {saving ? t("saving") : <><Save className="h-4 w-4" /> {t("saveAndLeave")}</>}
                 </Button>
               )}
+              {!isTestFlow && (
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  disabled={saving}
+                  className="w-full h-10 rounded-xl text-sm font-medium text-[#6b7280] hover:bg-[#f9fafb] transition-colors disabled:opacity-50"
+                >
+                  {t("keepEditing")}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={proceed}
@@ -115,14 +132,6 @@ export function UnsavedChangesGuard({
                 className="w-full h-10 rounded-xl border border-[#e5e7eb] text-sm font-semibold text-[#b91c1c] hover:bg-red-50 transition-colors disabled:opacity-50"
               >
                 {t("leaveWithout")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                disabled={saving}
-                className="w-full h-10 rounded-xl text-sm font-medium text-[#6b7280] hover:bg-[#f9fafb] transition-colors disabled:opacity-50"
-              >
-                {t("keepEditing")}
               </button>
             </div>
           </div>
