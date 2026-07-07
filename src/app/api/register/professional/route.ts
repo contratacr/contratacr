@@ -67,7 +67,7 @@ async function notifyMatchingOpenProjectsForProfessional(
   professions: string[],
 ) {
   const matchable = [...new Set(professions.filter((id) => id && id !== OTHER_CATEGORY.id))];
-  if (matchable.length === 0) return;
+  if (matchable.length === 0) return 0;
 
   const { data: projects, error: projectsError } = await supabase
     .from("projects")
@@ -79,7 +79,8 @@ async function notifyMatchingOpenProjectsForProfessional(
     .limit(INITIAL_OPPORTUNITY_NOTIFICATION_LIMIT);
 
   if (projectsError) throw projectsError;
-  if (!projects || projects.length === 0) return;
+  if (!projects || projects.length === 0) return 0;
+  const opportunityCount = projects.length;
 
   const { data: existing, error: existingError } = await supabase
     .from("notifications")
@@ -103,9 +104,10 @@ async function notifyMatchingOpenProjectsForProfessional(
       title: "Nueva oportunidad en tus servicios",
       message: `Un cliente publicó "${project.title || "una solicitud"}" en ${getCategoryLabel(project.category_id)}.`,
       data: { link: "/es/dashboard/profesional?tab=proposals", project_id: project.id },
-    }));
+  }));
 
   if (rows.length > 0) await supabase.from("notifications").insert(rows);
+  return opportunityCount;
 }
 
 export async function POST(req: Request) {
@@ -339,8 +341,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "No pudimos actualizar tu perfil. Intenta de nuevo." }, { status: 500 });
       }
 
+      let opportunityCount = 0;
       try {
-        await notifyMatchingOpenProjectsForProfessional(supabase, userId, professions);
+        opportunityCount = await notifyMatchingOpenProjectsForProfessional(supabase, userId, professions);
       } catch (e) {
         console.error("[register/professional] open opportunity notify:", e);
       }
@@ -366,7 +369,7 @@ export async function POST(req: Request) {
         },
       });
 
-      return NextResponse.json({ ok: true, slug: existingPro.slug });
+      return NextResponse.json({ ok: true, slug: existingPro.slug, opportunityCount });
     }
 
     // ── 5. Build slug ─────────────────────────────────────────────────────────
@@ -417,8 +420,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: friendly }, { status: 500 });
     }
 
+    let opportunityCount = 0;
     try {
-      await notifyMatchingOpenProjectsForProfessional(supabase, userId, professions);
+      opportunityCount = await notifyMatchingOpenProjectsForProfessional(supabase, userId, professions);
     } catch (e) {
       console.error("[register/professional] open opportunity notify:", e);
     }
@@ -451,7 +455,7 @@ export async function POST(req: Request) {
       console.error("[register] auto-verify:", e);
     }
 
-    return NextResponse.json({ ok: true, slug });
+    return NextResponse.json({ ok: true, slug, opportunityCount });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error interno del servidor";
     return NextResponse.json({ error: message }, { status: 500 });

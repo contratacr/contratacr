@@ -258,6 +258,7 @@ export default function DashboardPage() {
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const shouldCheckPostLoginActivity = searchParams.get("postLogin") === "1";
   const shouldCheckOpportunityWelcome = searchParams.get("welcomeOpportunities") === "1";
+  const opportunityWelcomeParamCount = Math.max(0, Number.parseInt(searchParams.get("welcomeOpportunityCount") ?? "0", 10) || 0);
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(null);
@@ -451,9 +452,10 @@ export default function DashboardPage() {
 
   const clearOpportunityWelcomeParam = useCallback(() => {
     const params = new URLSearchParams(window.location.search);
-    if (!params.has("welcomeOpportunities")) return;
+    if (!params.has("welcomeOpportunities") && !params.has("welcomeOpportunityCount")) return;
 
     params.delete("welcomeOpportunities");
+    params.delete("welcomeOpportunityCount");
     const qs = params.toString();
     window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
   }, []);
@@ -516,6 +518,13 @@ export default function DashboardPage() {
     opportunityWelcomeCheckedRef.current = true;
     let mounted = true;
 
+    if (opportunityWelcomeParamCount > 0) {
+      setOpportunityWelcomeKeys([]);
+      setOpportunityWelcomeCount(opportunityWelcomeParamCount);
+      clearOpportunityWelcomeParam();
+      return;
+    }
+
     fetch("/api/projects?role=professional", { cache: "no-store" })
       .then(async (res) => (res.ok ? res.json() : { projects: [] }))
       .then((data) => {
@@ -538,7 +547,7 @@ export default function DashboardPage() {
     return () => {
       mounted = false;
     };
-  }, [authLoading, clearOpportunityWelcomeParam, loading, pro, shouldCheckOpportunityWelcome, user]);
+  }, [authLoading, clearOpportunityWelcomeParam, loading, opportunityWelcomeParamCount, pro, shouldCheckOpportunityWelcome, user]);
 
   function setTab(tab: Tab) {
     if (tab === activeTab) return;

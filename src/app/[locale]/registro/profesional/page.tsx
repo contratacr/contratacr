@@ -849,6 +849,8 @@ export default function RegisterProfessionalPage() {
         const { error: proErr } = await proRes.json();
         throw new Error(proErr ?? t("errCreateProfile"));
       }
+      const proResult = await proRes.json().catch(() => ({}));
+      const opportunityCount = Number(proResult?.opportunityCount ?? 0);
 
       // Persist the professional role in auth metadata too, so navigating away
       // and back never reverts to the role-selection screen (and a converted
@@ -870,7 +872,8 @@ export default function RegisterProfessionalPage() {
       // flashes back. Hard navigation so the refreshed session (new role) is read.
       setRedirecting(true);
       writeStoredMode("offer");
-      window.location.href = `/${locale}/dashboard/profesional?mode=offer&welcomeOpportunities=1`;
+      const welcomeParams = opportunityCount > 0 ? `&welcomeOpportunities=1&welcomeOpportunityCount=${opportunityCount}` : "";
+      window.location.href = `/${locale}/dashboard/profesional?mode=offer${welcomeParams}`;
       return;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t("errTitle");
