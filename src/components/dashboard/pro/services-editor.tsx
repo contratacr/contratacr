@@ -6,6 +6,7 @@ import { Plus, Trash2, Pencil, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
+import { CategorySearch } from "@/components/ui/category-search";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
 import { cn } from "@/lib/utils";
@@ -482,23 +483,11 @@ export function ServicesEditor({
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("serviceLabel")}</label>
-              <div className="flex flex-col gap-2 rounded-xl border border-[#e5e7eb] bg-[#fbfcfe] p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(editCategory, locale)}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPickerMode("change");
-                    setPickerQuery("");
-                    setActivePickerGroupId(null);
-                  }}
-                  className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#bfe3f5] bg-white px-3 text-sm font-semibold text-[#0089bb] transition-colors hover:bg-[#EBF5FB]"
-                >
-                  <Search className="h-3.5 w-3.5" />
-                  {t("changeService")}
-                </button>
-              </div>
+              <CategorySearch
+                value={editCategory}
+                onChange={changeEditingService}
+                placeholder={t("pickerSearch")}
+              />
             </div>
 
             <div>

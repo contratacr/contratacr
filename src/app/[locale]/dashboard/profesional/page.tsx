@@ -408,46 +408,6 @@ export default function DashboardPage() {
   // arrive through the explicit post-login redirect.
   // Unread support replies → badge on the Soporte sidebar item.
   useEffect(() => {
-    if (
-      authLoading ||
-      !user ||
-      !isProvider ||
-      opportunityWelcomeCount !== null ||
-      opportunityWelcomeDismissedRef.current
-    ) return;
-
-    let mounted = true;
-
-    void (async () => {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("notifications")
-          .select("id, data")
-          .eq("user_id", user.id)
-          .eq("read", false)
-          .eq("type", "new_project")
-          .order("created_at", { ascending: false })
-          .limit(10);
-        if (error) throw error;
-        if (!mounted || !data || data.length === 0) return;
-
-        const keys = unseenOpportunityKeys(user.id, data);
-        if (keys.length === 0) return;
-        rememberSeenOpportunityKeys(user.id, keys);
-        setOpportunityWelcomeKeys(keys);
-        setOpportunityWelcomeCount(keys.length);
-      } catch (error) {
-        console.error("[dashboard] unread opportunity modal load failed:", error);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [authLoading, isProvider, opportunityWelcomeCount, user]);
-
-  useEffect(() => {
     if (!user) return;
     const supabase = createClient();
     const loadSupportUnread = () => supabase
@@ -528,19 +488,6 @@ export default function DashboardPage() {
         const activity = buildPostLoginActivity(filtered, mode);
         if (activity?.opportunities) rememberSeenOpportunityKeys(user.id, opportunityKeys);
         if (activity) setPostLoginActivity(activity);
-        if (!activity || activity.opportunities === 0) {
-          const res = await fetch("/api/projects?role=professional", { cache: "no-store" });
-          const projectsData = res.ok ? await res.json() : { projects: [] };
-          if (!mounted) return;
-          const projects: OpportunityProjectSummary[] = Array.isArray(projectsData?.projects) ? projectsData.projects : [];
-          const seen = readSeenOpportunityKeys(user.id);
-          const keys = projects.map(opportunityProjectKey).filter((key): key is string => !!key && !seen.has(key));
-          if (keys.length > 0) {
-            rememberSeenOpportunityKeys(user.id, keys);
-            setOpportunityWelcomeKeys(keys);
-            setOpportunityWelcomeCount(keys.length);
-          }
-        }
       } catch (error) {
         console.error("[dashboard] post-login activity load failed:", error);
       } finally {
@@ -844,11 +791,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Mode switching is now a compact navigation action ("Panel cliente/profesional")
-  // instead of a large header control, so the identity header stays clean.
-  const postLoginOpportunityActivity =
-    postLoginActivity && postLoginActivity.opportunities > 0 ? postLoginActivity : null;
-
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
@@ -891,45 +833,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      {postLoginOpportunityActivity && opportunityWelcomeCount === null && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 px-4 py-6 backdrop-blur-sm">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="post-login-opportunity-title"
-            aria-describedby="post-login-opportunity-body"
-            className="relative w-full max-w-md rounded-2xl bg-white px-5 pb-5 pt-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:px-6 sm:pb-6"
-          >
-            <button
-              type="button"
-              onClick={closePostLoginActivity}
-              aria-label={t("postLoginActivity.close")}
-              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
-              <Handshake className="h-7 w-7" />
-            </div>
-            <h2 id="post-login-opportunity-title" className="mx-auto max-w-[22rem] text-xl font-bold leading-tight text-[#111827] sm:text-[22px]">
-              {t("opportunityWelcome.title", { count: postLoginOpportunityActivity.opportunities })}
-            </h2>
-            <p id="post-login-opportunity-body" className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#6b7280]">
-              {t("postLoginActivity.body", { summary: postLoginActivitySummary(postLoginOpportunityActivity) })}
-            </p>
-
-            <div className="mt-6 flex flex-col-reverse items-stretch justify-center gap-2 sm:flex-row sm:items-center">
-              <Button type="button" variant="outline" onClick={closePostLoginActivity} className="w-full sm:w-auto sm:min-w-[96px]">
-                {t("opportunityWelcome.later")}
-              </Button>
-              <Button type="button" onClick={viewPostLoginActivity} className="w-full sm:w-auto sm:min-w-[170px]">
-                {t("postLoginActivity.cta.opportunities")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-8">
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
@@ -959,7 +862,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {postLoginActivity && !postLoginOpportunityActivity && (
+          {postLoginActivity && (
             <div className="mb-6 rounded-2xl border border-[#bae6fd] bg-[#f0f9ff] p-4 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
