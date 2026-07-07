@@ -24,8 +24,29 @@ type Notification = {
 type NotificationScope = "all" | "use" | "offer";
 type ToastState = { latest: Notification; count: number };
 const POST_LOGIN_PROMPT_KEY = "contratacr:post-login-prompt";
+const POST_LOGIN_NOTIFICATIONS_SEEN_KEY = "contratacr:post-login-notifications-seen";
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+function postLoginSeenStorageKey(userId: string) {
+  return `${POST_LOGIN_NOTIFICATIONS_SEEN_KEY}:${userId}`;
+}
+
+function readPostLoginSeenAt(userId: string) {
+  if (typeof window === "undefined") return 0;
+  const value = window.localStorage.getItem(postLoginSeenStorageKey(userId));
+  const parsed = value ? Date.parse(value) : 0;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function rememberPostLoginSeenAt(userId: string, createdAt?: string | null) {
+  if (typeof window === "undefined" || !createdAt) return;
+  try {
+    window.localStorage.setItem(postLoginSeenStorageKey(userId), createdAt);
+  } catch {
+    /* ignore */
+  }
+}
 
 export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationScope }) {
   const { user } = useAuth();
@@ -150,27 +171,40 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     async function checkUnread() {
       try {
         const supabase = createClient();
-        const { count, error } = await supabase
+        const { data, error } = await supabase
           .from("notifications")
-          .select("id", { count: "exact", head: true })
+          .select("id, created_at")
           .eq("user_id", userId)
-          .eq("read", false);
+          .eq("read", false)
+          .order("created_at", { ascending: false })
+          .limit(50);
         if (canceled) return;
         if (error) {
           console.error("[notification-login-summary] failed to load unread count:", error);
           const fallback = await supabase
             .from("notifications")
-            .select("id")
+            .select("id, created_at")
             .eq("user_id", userId)
-            .eq("read", false);
+            .eq("read", false)
+            .order("created_at", { ascending: false })
+            .limit(50);
           if (!canceled) {
-            const fallbackCount = (fallback.data?.length ?? 0) as number;
-            if (fallbackCount > 0) setPostLoginUnreadCount(fallbackCount);
+            const unread = fallback.data ?? [];
+            const seenAt = readPostLoginSeenAt(userId);
+            const fresh = unread.filter((item) => Date.parse(item.created_at) > seenAt);
+            if (fresh.length > 0) {
+              rememberPostLoginSeenAt(userId, unread[0]?.created_at);
+              setPostLoginUnreadCount(fresh.length);
+            }
           }
           return;
         }
-        if ((count ?? 0) > 0) {
-          setPostLoginUnreadCount(count ?? 0);
+        const unread = data ?? [];
+        const seenAt = readPostLoginSeenAt(userId);
+        const fresh = unread.filter((item) => Date.parse(item.created_at) > seenAt);
+        if (fresh.length > 0) {
+          rememberPostLoginSeenAt(userId, unread[0]?.created_at);
+          setPostLoginUnreadCount(fresh.length);
         }
       } finally {
         if (!canceled) {
