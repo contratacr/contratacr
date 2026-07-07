@@ -2440,7 +2440,9 @@
       "project_deleted": "Request deleted",
       "support_reply": "Support reply",
       "verification": "Verification update",
-      "verification_appeal_received": "Verification appeal received"
+      "verification_appeal_received": "Verification appeal received",
+      "suggestion_approved": "Suggestion approved",
+      "suggestion_rejected": "Suggestion rejected"
     },
     "viewAll": "View all"
   },

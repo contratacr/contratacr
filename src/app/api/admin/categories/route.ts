@@ -471,22 +471,65 @@ async function notifySuggestionDecision(
   serviceName: string,
   reviewReason?: string | null
 ) {
-  if (!suggestionRow.suggested_by) return;
+  if (!suggestionRow.suggested_by) {
+    console.warn("[admin/categories] suggestion has no suggested_by; cannot send decision notification", {
+      id: suggestionRow.id,
+      decision,
+    });
+    return;
+  }
 
   const { title, message } = suggestionNotificationMessage(serviceName, decision, reviewReason);
-  try {
-    await db.from("notifications").insert({
-      user_id: suggestionRow.suggested_by,
-      type: decision === "approved" ? "suggestion_approved" : "suggestion_rejected",
-      title,
-      message,
-      data: {
-        link: "/notificaciones",
-      },
-    });
-  } catch (error) {
-    console.error("[admin/categories] failed to insert suggestion decision notification:", error);
+  const notificationType = decision === "approved" ? "suggestion_approved" : "suggestion_rejected";
+  const payload = {
+    user_id: suggestionRow.suggested_by,
+    title,
+    message,
+    data: {
+      link: "/notificaciones",
+    },
+  };
+
+  const primary = await db.from("notifications").insert({
+    ...payload,
+    type: notificationType,
+  });
+
+  if (!primary.error) {
+    return;
   }
+
+  if (!isNotificationsTypeConstraintError(primary.error)) {
+    console.error("[admin/categories] failed to insert suggestion decision notification:", {
+      decision,
+      notificationType,
+      error: primary.error,
+    });
+    return;
+  }
+
+  const fallback = await db.from("notifications").insert({
+    ...payload,
+    type: "support_reply",
+  });
+  if (fallback.error) {
+    console.error("[admin/categories] failed to insert suggestion decision fallback notification:", {
+      decision,
+      notificationType,
+      error: fallback.error,
+    });
+  }
+}
+
+type NotificationInsertError = {
+  message?: string;
+  code?: string;
+};
+
+function isNotificationsTypeConstraintError(error: NotificationInsertError | null): boolean {
+  if (!error) return false;
+  if (error.code === "23514") return true;
+  return /notifications_type_check|constraint .*notifications_type_check|violates check constraint/i.test(error.message ?? "");
 }
 
 async function getAdminGroups(db: ReturnType<typeof createAdminClient>): Promise<Array<{ id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number }>> {

@@ -22,4 +22,6 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   "support_reply",
   "verification",
   "verification_appeal_received",
+  "suggestion_approved",
+  "suggestion_rejected",
 ]);

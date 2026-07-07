@@ -22,20 +22,45 @@ export async function POST(req: NextRequest) {
     // Suggestions are allowed even pre-account (category selection happens during
     // registration before the session exists). Attach the user id when present.
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const [{ data: { session } }, { data: { user }, error: userError }] = await Promise.all([
+      supabase.auth.getSession(),
+      supabase.auth.getUser(),
+    ]);
+
+    const resolvedUserId = session?.user?.id || (!userError ? user?.id : null);
 
     const admin = createAdminClient();
     const id = slugifyCategory(labelEs || clean);
 
-    // `ignoreDuplicates` = re-suggesting the SAME name reuses its existing ticket
-    // (the slug is the primary key) instead of creating a duplicate or erroring.
-    const { error } = await admin.from("category_suggestions").upsert(
-      { id, label: labelEs, suggested_name: labelEs, suggested_by: session?.user?.id ?? null, approved: false, status: "pending" },
-      { onConflict: "id", ignoreDuplicates: true }
-    );
-    if (error && !/duplicate|conflict/i.test(error.message)) {
-      console.error("[categories/suggest]", error);
-      return NextResponse.json({ error: "No se pudo enviar la sugerencia" }, { status: 500 });
+    const authenticatedUserId = resolvedUserId ?? null;
+    const suggestionPayload = { id, label: labelEs, suggested_name: labelEs, approved: false, status: "pending" };
+
+    const { data: existingSuggestion } = await admin
+      .from("category_suggestions")
+      .select("suggested_by, status")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (!existingSuggestion) {
+      // New suggestion: create it immediately.
+      const { error } = await admin.from("category_suggestions").upsert(
+        { ...suggestionPayload, suggested_by: authenticatedUserId, },
+        { onConflict: "id", ignoreDuplicates: false }
+      );
+      if (error) {
+        console.error("[categories/suggest] create failed", error);
+        return NextResponse.json({ error: "No se pudo enviar la sugerencia" }, { status: 500 });
+      }
+    } else if (authenticatedUserId && !existingSuggestion.suggested_by && existingSuggestion.status === "pending") {
+      // Re-suggested row created by an anonymous flow: capture the logged user so
+      // admin notifications can be delivered to the correct account later.
+      const { error: updateError } = await admin
+        .from("category_suggestions")
+        .update({ suggested_by: authenticatedUserId })
+        .eq("id", id);
+      if (updateError) {
+        console.error("[categories/suggest] couldn't bind suggestion to user", updateError);
+      }
     }
     const existingCategory = await admin.from("categories").select("id, is_hidden").eq("id", id).maybeSingle();
     if (!existingCategory.data) {

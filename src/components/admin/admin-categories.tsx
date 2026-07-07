@@ -462,7 +462,7 @@ export function AdminCategories() {
   ) {
     setBusy(i.id);
     try {
-      await fetch("/api/admin/categories", {
+      const res = await fetch("/api/admin/categories", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -475,6 +475,16 @@ export function AdminCategories() {
           ...(flags ?? flagsOf(i)),
         }),
       });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({} as { error?: string }));
+        showNotice(
+          next === "approved" ? "No se pudo aprobar la sugerencia" : "No se pudo rechazar la sugerencia",
+          data.error || "Intenta de nuevo."
+        );
+        return;
+      }
+
       setItems((prev) => prev.filter((x) => x.id !== i.id));
       if (next === "approved" || next === "rejected") setPendingCount((count) => Math.max(0, count - 1));
       window.dispatchEvent(new Event("focus"));

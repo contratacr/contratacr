@@ -155,7 +155,9 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     ? locale === "en"
       ? `${toast.count} new notifications`
       : `${toast.count} notificaciones nuevas`
-    : TRANSLATED_NOTIFICATION_TYPES.has(latest.type) ? t(`types.${latest.type}`) : latest.title;
+    : latest.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(latest.type)
+      ? latest.title
+      : t(`types.${latest.type}`);
   const detailLabel = grouped
     ? locale === "en" ? "View notifications" : "Ver notificaciones"
     : locale === "en" ? "View details" : "Ver detalles";

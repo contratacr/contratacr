@@ -55,7 +55,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   const visible = scope === "all" ? notifications : notifications.filter((n) => notificationInMode(n.type, scope));
   const unreadCount = visible.filter((n) => !n.read).length;
   const notificationTitle = (n: Notification) =>
-    TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? t(`types.${n.type}`) : n.title;
+    n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
 
   // Re-pullable so the badge can refresh whenever notifications change anywhere
   // (the in-panel list marks read / deletes, another tab, etc.).

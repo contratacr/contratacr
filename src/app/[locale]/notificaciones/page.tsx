@@ -53,7 +53,7 @@ export default function NotificationsPage() {
 
   const unread = items.filter((n) => !n.read).length;
   const notificationTitle = (n: Notification) =>
-    TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? t(`types.${n.type}`) : n.title;
+    n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
   const notificationTime = (n: Notification) => {
     const projectCreatedAt = getNotificationProjectCreatedAt(n, projectTimes);
     return projectCreatedAt

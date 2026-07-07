@@ -2438,7 +2438,9 @@
       "project_deleted": "Solicitud eliminada",
       "support_reply": "Respuesta de soporte",
       "verification": "Actualización de verificación",
-      "verification_appeal_received": "Apelación de verificación recibida"
+      "verification_appeal_received": "Apelación de verificación recibida",
+      "suggestion_approved": "Sugerencia aprobada",
+      "suggestion_rejected": "Sugerencia rechazada"
     },
     "viewAll": "Ver todas"
   },
