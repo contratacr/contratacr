@@ -16,6 +16,7 @@ ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check
     'proposal_received',
     'proposal_withdrawn',
     'proposal_accepted',
+    'project_proposal_declined',
     'proposal_updated',
     'new_project',
     'project_proposal_accepted',
