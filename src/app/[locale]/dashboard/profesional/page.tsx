@@ -121,6 +121,7 @@ const POST_LOGIN_CLIENT_PROPOSAL_TYPES = new Set([
   "proposal_withdrawn",
 ]);
 const POST_LOGIN_SUPPORT_TYPES = new Set(["support_reply"]);
+const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 type PostLoginActivity = {
   total: number;
@@ -134,7 +135,51 @@ type PostLoginActivity = {
   cta: "opportunities" | "requests" | "proposals" | "support" | "notifications";
 };
 
-type UnreadNotificationSummary = { type: string };
+type UnreadNotificationSummary = {
+  id?: string;
+  type: string;
+  data?: { project_id?: string | null } | null;
+};
+type OpportunityProjectSummary = { id?: string | null };
+
+function opportunitySeenStorageKey(userId: string) {
+  return `${OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX}:${userId}`;
+}
+
+function opportunityItemKey(item: { id?: string; data?: { project_id?: string | null } | null }) {
+  const projectId = item.data?.project_id;
+  return projectId ? `project:${projectId}` : item.id ? `notification:${item.id}` : null;
+}
+
+function opportunityProjectKey(project: { id?: string | null }) {
+  return project.id ? `project:${project.id}` : null;
+}
+
+function readSeenOpportunityKeys(userId: string): Set<string> {
+  try {
+    const raw = window.localStorage.getItem(opportunitySeenStorageKey(userId));
+    const parsed = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function rememberSeenOpportunityKeys(userId: string, keys: string[]) {
+  if (keys.length === 0) return;
+  try {
+    const current = readSeenOpportunityKeys(userId);
+    for (const key of keys) current.add(key);
+    window.localStorage.setItem(opportunitySeenStorageKey(userId), JSON.stringify([...current].slice(-200)));
+  } catch {
+    // If storage is unavailable, the notification list still works; the modal may show again.
+  }
+}
+
+function unseenOpportunityKeys(userId: string, items: Array<{ id?: string; data?: { project_id?: string | null } | null }>) {
+  const seen = readSeenOpportunityKeys(userId);
+  return items.map(opportunityItemKey).filter((key): key is string => !!key && !seen.has(key));
+}
 
 function buildPostLoginActivity(items: UnreadNotificationSummary[], currentMode: Mode): PostLoginActivity | null {
   if (items.length === 0) return null;
@@ -227,6 +272,7 @@ export default function DashboardPage() {
   const postLoginActivityCheckedRef = useRef(false);
   const postLoginActivityDismissedRef = useRef(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
+  const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
   const opportunityWelcomeCheckedRef = useRef(false);
   const opportunityWelcomeDismissedRef = useRef(false);
@@ -377,7 +423,7 @@ export default function DashboardPage() {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("notifications")
-          .select("id")
+          .select("id, data")
           .eq("user_id", user.id)
           .eq("read", false)
           .eq("type", "new_project")
@@ -386,7 +432,11 @@ export default function DashboardPage() {
         if (error) throw error;
         if (!mounted || !data || data.length === 0) return;
 
-        setOpportunityWelcomeCount(data.length);
+        const keys = unseenOpportunityKeys(user.id, data);
+        if (keys.length === 0) return;
+        rememberSeenOpportunityKeys(user.id, keys);
+        setOpportunityWelcomeKeys(keys);
+        setOpportunityWelcomeCount(keys.length);
       } catch (error) {
         console.error("[dashboard] unread opportunity modal load failed:", error);
       }
@@ -465,21 +515,31 @@ export default function DashboardPage() {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("notifications")
-          .select("type")
+          .select("id, type, data")
           .eq("user_id", user.id)
           .eq("read", false)
           .order("created_at", { ascending: false })
           .limit(50);
         if (error) throw error;
         if (!mounted) return;
-        const activity = buildPostLoginActivity((data ?? []) as UnreadNotificationSummary[], mode);
+        const unread = (data ?? []) as UnreadNotificationSummary[];
+        const opportunityKeys = unseenOpportunityKeys(user.id, unread.filter((item) => item.type === "new_project"));
+        const filtered = unread.filter((item) => item.type !== "new_project" || opportunityKeys.includes(opportunityItemKey(item) ?? ""));
+        const activity = buildPostLoginActivity(filtered, mode);
+        if (activity?.opportunities) rememberSeenOpportunityKeys(user.id, opportunityKeys);
         if (activity) setPostLoginActivity(activity);
         if (!activity || activity.opportunities === 0) {
           const res = await fetch("/api/projects?role=professional", { cache: "no-store" });
           const projectsData = res.ok ? await res.json() : { projects: [] };
           if (!mounted) return;
-          const count = Array.isArray(projectsData?.projects) ? projectsData.projects.length : 0;
-          if (count > 0) setOpportunityWelcomeCount(count);
+          const projects: OpportunityProjectSummary[] = Array.isArray(projectsData?.projects) ? projectsData.projects : [];
+          const seen = readSeenOpportunityKeys(user.id);
+          const keys = projects.map(opportunityProjectKey).filter((key): key is string => !!key && !seen.has(key));
+          if (keys.length > 0) {
+            rememberSeenOpportunityKeys(user.id, keys);
+            setOpportunityWelcomeKeys(keys);
+            setOpportunityWelcomeCount(keys.length);
+          }
         }
       } catch (error) {
         console.error("[dashboard] post-login activity load failed:", error);
@@ -513,8 +573,14 @@ export default function DashboardPage() {
       .then(async (res) => (res.ok ? res.json() : { projects: [] }))
       .then((data) => {
         if (!mounted) return;
-        const count = Array.isArray(data?.projects) ? data.projects.length : 0;
-        if (count > 0) setOpportunityWelcomeCount(count);
+        const projects: OpportunityProjectSummary[] = Array.isArray(data?.projects) ? data.projects : [];
+        const seen = readSeenOpportunityKeys(user.id);
+        const keys = projects.map(opportunityProjectKey).filter((key): key is string => !!key && !seen.has(key));
+        if (keys.length > 0) {
+          rememberSeenOpportunityKeys(user.id, keys);
+          setOpportunityWelcomeKeys(keys);
+          setOpportunityWelcomeCount(keys.length);
+        }
       })
       .catch((error) => {
         console.error("[dashboard] opportunity welcome load failed:", error);
@@ -589,7 +655,9 @@ export default function DashboardPage() {
 
   function dismissOpportunityWelcome() {
     opportunityWelcomeDismissedRef.current = true;
+    if (user) rememberSeenOpportunityKeys(user.id, opportunityWelcomeKeys);
     setOpportunityWelcomeCount(null);
+    setOpportunityWelcomeKeys([]);
     clearOpportunityWelcomeParam();
   }
 
