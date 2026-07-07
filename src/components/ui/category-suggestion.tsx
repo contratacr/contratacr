@@ -7,14 +7,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
 // Shared "¿No ves tu categoría? / ¿No ves tu profesión?" suggestion box.
-// ONE implementation so publicar-proyecto (CategorySearch) and agregar-profesión
-// (services-editor) have IDENTICAL design + behavior:
-//   link → type the name → submit → POST /api/categories/suggest (admin ticket)
-//   → "Gracias. Enviamos tu sugerencia al equipo para revisión."
-// The submitted name lands in `category_suggestions` (pending) where the admin
-// reviews it and, on approval, it becomes a real selectable/searchable category.
-// There is NO "otro" auto-matching: a suggestion never creates a usable category
-// on its own, so two unrelated custom entries can never match each other.
+// Used by category search and services editors so the UX and behavior stay identical.
 export function CategorySuggestionBox({
   notListedLabel,
   placeholder,
@@ -34,19 +27,17 @@ export function CategorySuggestionBox({
   cancelLabel: string;
   thanksLabel: string;
   className?: string;
-  /** Prominent = no loose top divider + the trigger is a pill CTA (for the /servicios
-   *  contained card). Default (compact) keeps the inline text-link style used in forms. */
+  /** Prominent = no loose top divider + pill CTA style for contained cards. */
   prominent?: boolean;
   defaultName?: string;
-  /** Fires when the box is "active" (the inline input is open or a suggestion was just
-   *  sent). Lets a host like the navbar dropdown keep itself open while the user types
-   *  the suggestion, instead of closing on the search input's blur. */
+  /** Lets hosts (like dropdowns) keep open while suggestion input is focused. */
   onActiveChange?: (active: boolean) => void;
 }) {
   const [suggesting, setSuggesting] = useState(false);
   const [name, setName] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const locale = useLocale();
   const { user } = useAuth();
@@ -55,10 +46,6 @@ export function CategorySuggestionBox({
     onActiveChange?.(suggesting || sent);
   }, [suggesting, sent, onActiveChange]);
 
-  // When the box EXPANDS (the inline name input opens) it usually sits at the bottom of
-  // a scroll area (the category dropdown / the publish form body), so the revealed input
-  // + Enviar button land below the fold. Smooth-scroll the box into view so the user sees
-  // everything without scrolling by hand (rAF lets the expanded content lay out first).
   useEffect(() => {
     if (!suggesting) return;
     const id = requestAnimationFrame(() => {
@@ -71,24 +58,42 @@ export function CategorySuggestionBox({
     const clean = name.trim();
     if (!clean) return;
     setSending(true);
+    setError("");
+
     try {
-      await fetch("/api/categories/suggest", {
+      const response = await fetch("/api/categories/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: clean, locale, userId: user?.id }),
       });
+      const payload = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !payload?.ok) {
+        setError(payload?.error ?? "No se pudo enviar la sugerencia. Inténtalo de nuevo.");
+        return;
+      }
+
       setSent(true);
       setName("");
       setSuggesting(false);
     } catch {
-      /* best-effort — the thank-you only shows on a resolved request */
+      setError("No se pudo enviar la sugerencia. Inténtalo de nuevo.");
     } finally {
       setSending(false);
     }
   }
 
   return (
-    <div ref={rootRef} className={cn(prominent ? (suggesting ? "w-full sm:w-auto sm:min-w-[360px]" : "") : "border-t border-[#f3f4f6] px-3 py-2.5", className)}>
+    <div
+      ref={rootRef}
+      className={cn(
+        prominent ? (suggesting ? "w-full sm:w-auto sm:min-w-[360px]" : "") : "border-t border-[#f3f4f6] px-3 py-2.5",
+        className,
+      )}
+    >
       {sent ? (
         <p className="inline-flex items-center gap-1.5 text-sm text-[#15803d]">
           <Check className="h-3.5 w-3.5" /> {thanksLabel}
@@ -118,23 +123,28 @@ export function CategorySuggestionBox({
           </button>
           <button
             type="button"
-            onClick={() => setSuggesting(false)}
+            onClick={() => {
+              setSuggesting(false);
+              setError("");
+            }}
             className="h-9 shrink-0 px-2 text-sm text-[#9ca3af] hover:text-[#374151]"
           >
             {cancelLabel}
           </button>
+          {error && <p className="w-full text-xs font-medium text-[#dc2626] sm:col-span-3">{error}</p>}
         </div>
       ) : (
         <button
           type="button"
           onClick={() => {
+            setError("");
             setName(defaultName.trim());
             setSuggesting(true);
           }}
           className={cn(
             prominent
               ? "inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
-              : "text-xs font-medium text-[#009FD9] hover:underline"
+              : "text-xs font-medium text-[#009FD9] hover:underline",
           )}
         >
           {notListedLabel}

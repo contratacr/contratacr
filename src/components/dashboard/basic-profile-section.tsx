@@ -12,8 +12,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { canOffer } from "@/lib/auth/capabilities";
 import { cn, getInitials } from "@/lib/utils";
 import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/phone-input";
-import { SaveStatus } from "@/components/dashboard/save-status";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
+import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
@@ -182,6 +182,8 @@ export function BasicProfileSection({
     if (profileDirtyRef.current) void saveProfileRef.current?.();
   }, []);
 
+  useReportSaveStatus(profileSaving, profileSaved, profileDirty);
+
   async function handlePhotoRemove() {
     if (!user) return;
     const supabase = createClient();
@@ -236,13 +238,6 @@ export function BasicProfileSection({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Autosave status pinned top-right of the section. */}
-      <div className="relative">
-        <div className="pointer-events-none absolute right-0 -top-1">
-          <SaveStatus saving={profileSaving} saved={profileSaved} dirty={profileDirty} />
-        </div>
-      </div>
-
       <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#eef0f2]">
       <ProfileSection id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
       {/* Foto */}

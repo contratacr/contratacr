@@ -536,6 +536,16 @@ export function AdminCategories() {
           onChange: (value) => {
             rejectReasonRefs.current[i.id] = value;
             setRejectReasons((prev) => ({ ...prev, [i.id]: value }));
+            setDialog((prev) => {
+              if (!prev?.input) return prev;
+              return {
+                ...prev,
+                input: {
+                  ...prev.input,
+                  value,
+                },
+              };
+            });
           },
         },
         onConfirm: () => applySuggestionDecision(i, next, label, labelEn, groupId, flags, (rejectReasonRefs.current[i.id] ?? "").trim()),

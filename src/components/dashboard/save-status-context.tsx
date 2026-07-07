@@ -4,16 +4,11 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { SaveStatus } from "@/components/dashboard/save-status";
 import { cn } from "@/lib/utils";
 
-// ── Inline-with-title autosave status ────────────────────────────────────────
-// The autosave "Guardado/Guardando…" indicator must live ON THE SECTION TITLE LINE
-// (right of the heading), NOT in the content flow — otherwise toggling it null↔shown
-// pushed the content down and back up (a layout jump). Editors REPORT their save
-// state up through this context; the dashboard's section-title row renders it via
-// <HeaderSaveStatus/>. The title line always exists, so the content never moves.
+// Shared autosave status for panel editors.
 //
-// Setter + value are split into two contexts so an editor that only reports never
-// re-renders when the value changes (and the report effect's deps stay stable —
-// React's useState setter is referentially stable).
+// Editors REPORT their save state up through this context; the dashboard renders a
+// globally fixed status row via <HeaderSaveStatus/> so the autosave state stays
+// visible while scrolling.
 
 type Status = { saving: boolean; saved: boolean; dirty: boolean };
 const IDLE: Status = { saving: false, saved: false, dirty: false };
@@ -30,8 +25,8 @@ export function SaveStatusProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// An editor calls this to surface its autosave state in the section title. Resets to
-// idle on unmount (tab switch) so a stale "Guardado" never lingers on another tab.
+// Editors call this to surface autosave state in the panel-level status row.
+// Resets to idle on unmount (tab switch) so a stale "Guardado" never lingers on another tab.
 export function useReportSaveStatus(saving: boolean, saved: boolean, dirty = false) {
   const set = useContext(SetterCtx);
   useEffect(() => {
@@ -40,16 +35,47 @@ export function useReportSaveStatus(saving: boolean, saved: boolean, dirty = fal
   useEffect(() => () => set?.(IDLE), [set]);
 }
 
-// Rendered as an ABSOLUTE OVERLAY pinned to the section-title's top-right (the title row
-// is `relative` and reserves `pr-28`), so the autosave state sits RIGHT BESIDE the heading
-// the user is looking at — much more visible than the old bottom-right floating pill, while
-// still OUT of the document flow so it can never push/reflow content (no layout jump). This
-// matches the CLIENT dashboard's inline placement, so every autosave panel is consistent.
+// Rendered as a fixed global row anchored to the dashboard content width, so it stays
+// visible while the user scrolls this panel. Non-interactive and out of flow.
 export function HeaderSaveStatus({ className }: { className?: string }) {
   const s = useContext(ValueCtx);
+  const [inputFocus, setInputFocus] = useState(false);
+  const visible = (s.saving || s.saved || s.dirty) && !inputFocus;
+
+  useEffect(() => {
+    function onFocusIn(e: FocusEvent) {
+      const target = e.target;
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+        setInputFocus(true);
+      }
+    }
+
+    function onFocusOut() {
+      const next = document.activeElement;
+      if (next instanceof HTMLInputElement || next instanceof HTMLTextAreaElement) return;
+      setInputFocus(false);
+    }
+
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+    return () => {
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+    };
+  }, []);
+
   return (
-    <div className={cn("pointer-events-none absolute right-0 top-1", className)}>
-      <SaveStatus saving={s.saving} saved={s.saved} dirty={s.dirty} />
+    <div className={cn("pointer-events-none fixed inset-x-0 top-[72px] z-50", className)}>
+      <div className="mx-auto flex w-full max-w-5xl justify-end px-4 sm:px-6">
+        <div
+          className={cn(
+            "rounded-full border border-[#e5e7eb] bg-white/95 px-2.5 py-1 shadow-sm shadow-[#0f172a]/6 backdrop-blur transition-all duration-200",
+            visible ? "scale-100 opacity-100" : "scale-95 opacity-0",
+          )}
+        >
+          <SaveStatus saving={s.saving} saved={s.saved} dirty={s.dirty} />
+        </div>
+      </div>
     </div>
   );
 }

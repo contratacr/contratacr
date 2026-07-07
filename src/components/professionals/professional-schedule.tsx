@@ -50,12 +50,7 @@ interface ProfessionalScheduleProps {
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
 const COLS = 3;
-const BOOKING_MAX_FUTURE_DAYS = Math.max(
-  1,
-  Number.isFinite(Number(process.env.NEXT_PUBLIC_BOOKING_MAX_FUTURE_DAYS))
-    ? Number(process.env.NEXT_PUBLIC_BOOKING_MAX_FUTURE_DAYS)
-    : 90,
-);
+const BOOKING_MAX_FUTURE_DAYS = 90;
 const locationNavButtonClass =
   "relative z-20 -my-1 flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-full text-[#6b7280] transition-colors hover:bg-[#f3f8fc] hover:text-[#009FD9] active:bg-[#EBF5FB] active:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30";
 
