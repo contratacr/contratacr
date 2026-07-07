@@ -200,8 +200,8 @@ export function NotificationsList() {
                     <div className="min-w-0 flex-1">
                       {/* overflow-wrap:anywhere breaks long unbroken strings; line-clamp keeps
                           every row a uniform, compact height (full text on open). */}
-                      <p className={cn("text-sm [overflow-wrap:anywhere] line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{notificationTitle(n)}</p>
-                      <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] line-clamp-2">{n.message}</p>
+                      <p className={cn("text-sm [overflow-wrap:anywhere] break-words line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{notificationTitle(n)}</p>
+                      <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">{n.message}</p>
                       <p className="text-xs text-[#9ca3af] mt-1">{notificationTime(n)}</p>
                     </div>
                   </div>

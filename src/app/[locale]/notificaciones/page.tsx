@@ -112,9 +112,9 @@ export default function NotificationsPage() {
                     <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-10 hover:bg-[#f9fafb] transition-colors">
                       <div className="flex items-start gap-2">
                         {!n.read && <span className="mt-1.5 h-2 w-2 rounded-full bg-[#319278] shrink-0" />}
-                        <div className={cn(!n.read ? "" : "ml-4")}>
-                          <p className="text-sm font-medium text-[#111827]">{notificationTitle(n)}</p>
-                          <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
+                        <div className={cn(!n.read ? "min-w-0" : "ml-4 min-w-0")}>
+                          <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] break-words">{notificationTitle(n)}</p>
+                          <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">{n.message}</p>
                           <p className="text-xs text-[#9ca3af] mt-1">{notificationTime(n)}</p>
                         </div>
                       </div>

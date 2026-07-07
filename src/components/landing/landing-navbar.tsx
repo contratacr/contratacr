@@ -999,11 +999,16 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
   // Airbnb FULL mode switch: providers can change Cliente/Profesional from the
   // panel header or account menus, and the navbar reads that mode for quick links.
+  // Keep notifications in and out of the panel aligned: outside the panel, we
+  // show the same mode-scoped feed as the active navbar mode (or client mode for
+  // accounts without offer capability). This avoids confusing cross-mode mixes.
   const notificationScope: "all" | Mode = pathname.startsWith("/dashboard/profesional")
     ? mode
     : pathname.startsWith("/dashboard/cliente")
       ? "use"
-      : "all";
+      : isPro
+        ? mode
+        : "use";
 
   // Unread counts, split by mode (the bell handles its own live updates; this refreshes
   // when the menu/drawer opens). Professional + client notifications drive the active-mode

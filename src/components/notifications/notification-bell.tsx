@@ -240,12 +240,12 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                           {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#319278] ring-2 ring-white" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          {/* No role tag — the title/message already make the
-                              context clear; clicking still routes correctly.
-                              overflow-wrap:anywhere + line-clamp keep long/unbroken
-                              text inside the row (full text on open). */}
-                          <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] line-clamp-2">{notificationTitle(n)}</p>
-                          <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] line-clamp-2">{n.message}</p>
+                          {/* No role tag — title + message already make the
+                              context clear; clicking still routes correctly. */}
+                          <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] break-words line-clamp-2">{notificationTitle(n)}</p>
+                          <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+                            {n.message}
+                          </p>
                           <p className="text-xs text-[#9ca3af] mt-1">
                             {formatRelativeTime(n.created_at, locale)}
                           </p>
