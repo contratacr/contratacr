@@ -117,7 +117,7 @@ export async function GET(req: Request) {
 
   let q = db.from("category_suggestions").select("*").order("created_at", { ascending: false });
   if (status === "pending" || status === "approved" || status === "rejected") q = q.eq("status", status);
-  let { data, error: qError } = await q;
+  const { data, error: qError } = await q;
   if (qError && isMissingColumnError(qError, "status")) {
     const fallback = await db.from("category_suggestions").select("*").order("created_at", { ascending: false });
     data = fallback.data;
@@ -259,14 +259,12 @@ export async function PATCH(req: Request) {
     update.suggested_name = cleanLabel;
   }
 
-  const { error } = await db.from("category_suggestions").update(update).eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
   if ((status === "approved" || status === "rejected") && !suggestionRow) {
     return NextResponse.json({ error: "Sugerencia no encontrada" }, { status: 404 });
   }
 
   if (status === "approved") {
+    update.review_reason = null;
     const rawName = cleanLabel || suggestionRow!.label || suggestionRow!.suggested_name || labelFromId(id);
     const rawNameEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
     const finalName = normalizeServiceDisplayName(rawName);
@@ -282,15 +280,24 @@ export async function PATCH(req: Request) {
       supports_videoconsulta: typeof supportsVideoconsulta === "boolean" ? supportsVideoconsulta : review.videoConsultLikely,
     });
     if (upsertResult.error) return NextResponse.json({ error: upsertResult.error.message }, { status: 500 });
+    const approvedUpdateError = await updateSuggestionRow(db, id, update);
+    if (approvedUpdateError) return NextResponse.json({ error: approvedUpdateError.message }, { status: 500 });
     await notifySuggestionDecision(db, suggestionRow!, "approved", finalName);
+    return NextResponse.json({ ok: true });
   }
 
   if (status === "rejected") {
+    update.review_reason = normalizedReviewReason ?? null;
     const rawName = cleanLabel || suggestionRow!.label || suggestionRow!.suggested_name || labelFromId(id);
     const finalName = normalizeServiceDisplayName(rawName);
+    const rejectedUpdateError = await updateSuggestionRow(db, id, update);
+    if (rejectedUpdateError) return NextResponse.json({ error: rejectedUpdateError.message }, { status: 500 });
     await notifySuggestionDecision(db, suggestionRow!, "rejected", finalName, normalizedReviewReason);
+    return NextResponse.json({ ok: true });
   }
 
+  const updateError = await updateSuggestionRow(db, id, update);
+  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
 
@@ -610,6 +617,18 @@ function mapLegacySuggestionStatus(row: Record<string, unknown>): "pending" | "a
 
 function isMissingColumnError(error: { message?: string }, column: string): boolean {
   return !!error?.message && new RegExp(`Could not find the '${column}' column|column \\\"${column}\\\" does not exist|column .*${column}`, "i").test(error.message);
+}
+
+async function updateSuggestionRow(
+  db: ReturnType<typeof createAdminClient>,
+  id: string,
+  update: Record<string, unknown>
+) {
+  const { error } = await db.from("category_suggestions").update(update).eq("id", id);
+  if (!error || !isMissingColumnError(error, "review_reason")) return error;
+  const fallback = { ...update };
+  delete (fallback as { review_reason?: string | null }).review_reason;
+  return (await db.from("category_suggestions").update(fallback).eq("id", id)).error;
 }
 
 

@@ -20,6 +20,7 @@ type Suggestion = {
   suggestedByName?: string | null;
   suggestedByEmail?: string | null;
   suggestedByBusinessName?: string | null;
+  review_reason?: string | null;
   status: string;
   created_at: string;
 };
@@ -519,7 +520,7 @@ export function AdminCategories() {
     }
 
     if (next === "rejected") {
-      const existing = rejectReasons[i.id] ?? "";
+      const existing = rejectReasons[i.id] ?? i.review_reason ?? "";
       rejectReasonRefs.current[i.id] = existing;
       setDialog({
         title: "Rechazar sugerencia",
