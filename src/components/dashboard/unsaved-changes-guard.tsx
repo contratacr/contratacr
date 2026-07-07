@@ -25,11 +25,14 @@ export function UnsavedChangesGuard({
   const [saving, setSaving] = useState(false);
   const pendingAnchor = useRef<HTMLAnchorElement | null>(null);
   const bypass = useRef(false);
-  const isTestFlow =
-    process.env.NEXT_PUBLIC_TEST_EXIT_GUARD === "true" ||
-    process.env.NEXT_PUBLIC_TEST_EXIT_GUARD === "1" ||
-    (process.env.NEXT_PUBLIC_APP_URL || "").toLowerCase().includes("test") ||
-    (process.env.NEXT_PUBLIC_APP_URL === undefined && process.env.NODE_ENV === "development");
+  const isTestFlow = (() => {
+    const rawAppUrl = (process.env.NEXT_PUBLIC_APP_URL || "").toLowerCase();
+    const envFlag = process.env.NEXT_PUBLIC_TEST_EXIT_GUARD === "true" || process.env.NEXT_PUBLIC_TEST_EXIT_GUARD === "1";
+    const envLooksTest = rawAppUrl.includes("test") && rawAppUrl.includes("contratacr");
+    const hasTestHost = typeof window !== "undefined" &&
+      window.location.hostname.toLowerCase().includes("test");
+    return envFlag || envLooksTest || hasTestHost || (process.env.NEXT_PUBLIC_APP_URL === undefined && process.env.NODE_ENV === "development");
+  })();
 
   useEffect(() => {
     if (!dirty) return;
