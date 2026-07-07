@@ -320,7 +320,8 @@ export async function GET(req: NextRequest) {
   // Filtering is enforced SERVER-SIDE from the pro's own record (never trusting a
   // client-supplied category) so a project is only ever visible to professionals
   // in that profession. Uncategorized projects stay visible to everyone.
-  const { data: proRow } = await supabase
+  const admin = createAdminClient();
+  const { data: proRow } = await admin
     .from("professionals")
     .select("category_id, professions")
     .eq("profile_id", session.user.id)
@@ -336,7 +337,7 @@ export async function GET(req: NextRequest) {
   // auto-matched to (unrelated) "Otro" projects. Their real professions still match.
   const matchable = professions.filter((p) => p && p !== OTHER_CATEGORY.id);
 
-  let query = supabase
+  let query = admin
     .from("projects")
     .select(`*, profiles:client_id(full_name, avatar_url), proposals(id)`)
     .eq("status", "open")

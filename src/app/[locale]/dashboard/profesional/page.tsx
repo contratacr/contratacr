@@ -521,10 +521,8 @@ export default function DashboardPage() {
       .then((data) => {
         if (!mounted) return;
         const projects: OpportunityProjectSummary[] = Array.isArray(data?.projects) ? data.projects : [];
-        const seen = readSeenOpportunityKeys(user.id);
-        const keys = projects.map(opportunityProjectKey).filter((key): key is string => !!key && !seen.has(key));
+        const keys = projects.map(opportunityProjectKey).filter((key): key is string => !!key);
         if (keys.length > 0) {
-          rememberSeenOpportunityKeys(user.id, keys);
           setOpportunityWelcomeKeys(keys);
           setOpportunityWelcomeCount(keys.length);
         }
