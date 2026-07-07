@@ -64,6 +64,20 @@ function withPostLoginActivity(path: string): string {
   return `${pathname}${qs ? `?${qs}` : ""}${hash ? `#${hash}` : ""}`;
 }
 
+const POST_LOGIN_PROMPT_KEY = "contratacr:post-login-prompt";
+
+function setPostLoginPrompt(userId = "") {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      POST_LOGIN_PROMPT_KEY,
+      JSON.stringify({ ts: Date.now(), userId }),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
 export default function LoginPage() {
   const t = useTranslations("auth.login");
   const locale = useLocale();
@@ -112,6 +126,7 @@ export default function LoginPage() {
     await waitForAuthCookie();
 
     const { data: userData } = await supabase.auth.getUser();
+    setPostLoginPrompt(userData.user?.id);
     const metadata = userData.user?.user_metadata ?? {};
     if (metadata.professional_signup_started === true && metadata.is_provider !== true) {
       window.location.assign(`/${locale}/registro/profesional`);
