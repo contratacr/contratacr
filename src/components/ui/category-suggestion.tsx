@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 // Shared "¿No ves tu categoría? / ¿No ves tu profesión?" suggestion box.
 // ONE implementation so publicar-proyecto (CategorySearch) and agregar-profesión
@@ -48,6 +49,7 @@ export function CategorySuggestionBox({
   const [sending, setSending] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const locale = useLocale();
+  const { user } = useAuth();
 
   useEffect(() => {
     onActiveChange?.(suggesting || sent);
@@ -73,7 +75,7 @@ export function CategorySuggestionBox({
       await fetch("/api/categories/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: clean, locale }),
+        body: JSON.stringify({ name: clean, locale, userId: user?.id }),
       });
       setSent(true);
       setName("");

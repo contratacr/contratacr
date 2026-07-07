@@ -190,7 +190,12 @@ export async function PATCH(req: Request) {
   const db = createAdminClient();
   const groups = await getAdminGroups(db);
   const normalizedReviewReason = normalizeReviewReason(reviewReason);
-  let suggestionRow: { id: string; label?: string | null; suggested_name?: string | null; suggested_by?: string | null } | null = null;
+  let suggestionRow: {
+    id: string;
+    label?: string | null;
+    suggested_name?: string | null;
+    suggested_by?: string | null;
+  } | null = null;
   if (status) {
     const { data } = await db
       .from("category_suggestions")
@@ -466,7 +471,7 @@ function suggestionNotificationMessage(
 
 async function notifySuggestionDecision(
   db: ReturnType<typeof createAdminClient>,
-  suggestionRow: { suggested_by?: string | null },
+  suggestionRow: { id: string; suggested_by?: string | null },
   decision: "approved" | "rejected",
   serviceName: string,
   reviewReason?: string | null
@@ -499,13 +504,19 @@ async function notifySuggestionDecision(
     return;
   }
 
+  console.warn("[admin/categories] suggestion decision notification insert failed, trying fallback", {
+    suggestionId: suggestionRow.id,
+    decision,
+    notificationType,
+    error: primary.error,
+  });
+
   if (!isNotificationsTypeConstraintError(primary.error)) {
     console.error("[admin/categories] failed to insert suggestion decision notification:", {
       decision,
       notificationType,
       error: primary.error,
     });
-    return;
   }
 
   const fallback = await db.from("notifications").insert({
