@@ -7,7 +7,8 @@ import { useTranslations } from "next-intl";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { Button } from "@/components/ui/button";
 import { PROVINCES } from "@/lib/data/cr-geography";
-import { ALL_CATEGORIES, searchCategories } from "@/lib/data/categories";
+import { getAllCategories, searchCategories } from "@/lib/data/categories";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
 
 // Flat location index: provinces + every canton (with its province).
 type LocationItem = { label: string; provinceId: string; cantonId?: string };
@@ -23,6 +24,8 @@ function normalize(s: string): string {
 export function HeroSearch() {
   const router = useRouter();
   const t = useTranslations();
+  const customCategories = useCustomCategories();
+  void customCategories;
 
   // Free text for both fields. The service text is sent literally (as q) and
   // also resolved to a category when it matches. Location resolves to
@@ -37,7 +40,7 @@ export function HeroSearch() {
   const svcRef = useRef<HTMLDivElement>(null);
   const locRef = useRef<HTMLDivElement>(null);
 
-  const svcSuggestions = useMemo(() => (service.trim() ? searchCategories(service).slice(0, 6) : ALL_CATEGORIES.slice(0, 6)), [service]);
+  const svcSuggestions = useMemo(() => (service.trim() ? searchCategories(service).slice(0, 6) : getAllCategories().slice(0, 6)), [service, customCategories]);
   const locSuggestions = useMemo(() => {
     const q = normalize(location);
     return (q ? LOCATIONS.filter((l) => normalize(l.label).includes(q)) : LOCATIONS).slice(0, 8);
@@ -59,7 +62,7 @@ export function HeroSearch() {
     const svc = service.trim();
     if (serviceCat) params.set("categoria", serviceCat);
     else if (svc) {
-      const exact = ALL_CATEGORIES.find((c) => normalize(c.label) === normalize(svc));
+      const exact = getAllCategories().find((c) => normalize(c.label) === normalize(svc));
       if (exact) params.set("categoria", exact.id);
       else params.set("q", svc);
     }

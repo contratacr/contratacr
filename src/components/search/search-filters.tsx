@@ -15,6 +15,7 @@ import { INSURERS } from "@/lib/data/insurers";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 import { createClient } from "@/lib/supabase/client";
 import { loadGoogleMaps } from "@/lib/maps/loader";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
 
 // Filter Select triggers stay on the ContrataCR blue system for focus/hover so
 // the fields read the same whether a service filter is active or not.
@@ -110,6 +111,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const params = useSearchParams();
   const t = useTranslations("search");
   const locale = useLocale();
+  const customCategories = useCustomCategories();
+  void customCategories;
 
   // ONE unified service control: the search field IS the category picker. Free text and a
   // picked category are MUTUALLY EXCLUSIVE (`q` XOR `categoria`), so on load we seed the
@@ -123,7 +126,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [searchActive, setSearchActive] = useState(-1);
   const searchBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchFieldRef = useRef<HTMLDivElement>(null);
-  const searchSug = useMemo(() => (query.trim().length >= 2 ? searchCategories(query).slice(0, 6) : []), [query]);
+  const searchSug = useMemo(() => (query.trim().length >= 2 ? searchCategories(query).slice(0, 6) : []), [query, customCategories]);
   const [category, setCategory] = useState(params.get("categoria") ?? "");
   const [province, setProvince] = useState(params.get("provincia") ?? "");
   const [canton, setCanton] = useState(params.get("canton") ?? "");
@@ -915,6 +918,8 @@ export function MobileServiceSearch() {
   const t = useTranslations("search");
   const tHeader = useTranslations("header");
   const locale = useLocale();
+  const customCategories = useCustomCategories();
+  void customCategories;
   const [q, setQ] = useState(params.get("q") ?? "");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -922,7 +927,7 @@ export function MobileServiceSearch() {
   const blurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
 
-  const suggestions = useMemo(() => (q.trim().length >= 2 ? searchCategories(q).slice(0, 6) : []), [q]);
+  const suggestions = useMemo(() => (q.trim().length >= 2 ? searchCategories(q).slice(0, 6) : []), [q, customCategories]);
   const searchExamples = useMemo(() => {
     const raw = tHeader.raw("searchExamples");
     return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];

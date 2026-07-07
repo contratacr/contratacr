@@ -327,6 +327,8 @@ function CategoryAutocomplete({
   const tp = useTranslations("categoriesPage");
   const locale = useLocale();
   const router = useRouter();
+  const customCategories = useCustomCategories();
+  void customCategories;
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const [focused, setFocused] = useState(false);
@@ -336,7 +338,7 @@ function CategoryAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const suggestions = useMemo(() => matchCategories(q, 8, locale), [q, locale]);
+  const suggestions = useMemo(() => matchCategories(q, 8, locale), [q, locale, customCategories]);
 
   useEffect(() => {
     if (autoFocus) {
@@ -466,7 +468,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
     iconKey: group.iconKey,
     items: menuCategories.filter((category) => category.groupId === group.id),
   }));
-  const matches = useMemo(() => matchCategories(q, 18, locale), [q, locale]);
+  const matches = useMemo(() => matchCategories(q, 18, locale), [q, locale, customCategories]);
   const filtering = q.trim().length > 0;
   const selectedGroup = menuGroups.find((group) => group.id === selectedGroupId) ?? menuGroups[0];
   const groupedMatches = menuGroups
@@ -923,6 +925,8 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const customCategories = useCustomCategories();
+  void customCategories;
   // A picked category (so a chosen suggestion filters by id, not free text).
   const [searchCategoryId, setSearchCategoryId] = useState<string | null>(null);
   const [searchActiveIdx, setSearchActiveIdx] = useState(-1);
@@ -1070,7 +1074,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const mobileIconClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#009FD9]" : "text-[#9ca3af]");
   const mobileChevronClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#009FD9]/60" : "text-gray-300");
 
-  const compactSuggestions = useMemo(() => matchCategories(searchQuery, 8, locale), [searchQuery, locale]);
+  const compactSuggestions = useMemo(() => matchCategories(searchQuery, 8, locale), [searchQuery, locale, customCategories]);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
 
   // Track small screens so the compact search placeholder can shorten to fit.

@@ -6,7 +6,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
-import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
+import { getAllCategories, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
 
 function editDistance(a: string, b: string): number {
   const m = a.length;
@@ -26,7 +27,7 @@ function editDistance(a: string, b: string): number {
   return dp[m][n];
 }
 
-type CatMatch = (typeof ALL_CATEGORIES)[number];
+type CatMatch = ReturnType<typeof getAllCategories>[number];
 
 function matchCategories(query: string, limit = 8): CatMatch[] {
   if (!query.trim()) return [];
@@ -34,7 +35,7 @@ function matchCategories(query: string, limit = 8): CatMatch[] {
   if (direct.length) return direct.slice(0, limit);
   const q = normalizeText(query.trim());
   const tol = q.length > 6 ? 2 : 1;
-  return ALL_CATEGORIES
+  return getAllCategories()
     .map((item) => {
       const words = normalizeText(item.label).split(/\s+/);
       const best = Math.min(...words.map((w) => editDistance(w, q)));
@@ -58,13 +59,15 @@ export function CategorySearchBox({
   const router = useRouter();
   const locale = useLocale();
   const tp = useTranslations("categoriesPage");
+  const customCategories = useCustomCategories();
+  void customCategories;
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const suggestions = useMemo(() => matchCategories(q), [q]);
+  const suggestions = useMemo(() => matchCategories(q), [q, customCategories]);
 
   useEffect(() => {
     if (autoFocus) requestAnimationFrame(() => inputRef.current?.focus());

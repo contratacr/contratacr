@@ -9,6 +9,7 @@ import {
   normalizeText,
   searchCategories,
 } from "@/lib/data/categories";
+import { notifyCategoryCatalogChanged } from "@/lib/data/use-custom-categories";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
 type Suggestion = {
@@ -501,7 +502,7 @@ export function AdminCategories() {
 
       setItems((prev) => prev.filter((x) => x.id !== i.id));
       if (next === "approved" || next === "rejected") setPendingCount((count) => Math.max(0, count - 1));
-      window.dispatchEvent(new Event("focus"));
+      if (next === "approved") notifyCategoryCatalogChanged();
     } finally {
       setBusy(null);
     }
@@ -607,6 +608,7 @@ export function AdminCategories() {
         delete next[item.id];
         return next;
       });
+      notifyCategoryCatalogChanged();
     } finally {
       setBusy(null);
     }
@@ -634,6 +636,7 @@ export function AdminCategories() {
         delete next[group.id];
         return next;
       });
+      notifyCategoryCatalogChanged();
     } finally {
       setBusy(null);
     }
@@ -657,6 +660,7 @@ export function AdminCategories() {
           supportsVideoconsulta: updated.supportsVideoconsulta,
         }),
       });
+      notifyCategoryCatalogChanged();
     } finally {
       setBusy(null);
     }
@@ -686,6 +690,7 @@ export function AdminCategories() {
       setNewServiceGroupId(groups[0]?.id || "profesional");
       setNewServiceFlags({ esSalud: false, supportsVideoconsulta: false });
       await loadCatalog();
+      notifyCategoryCatalogChanged();
     } finally {
       setBusy(null);
     }
@@ -713,6 +718,7 @@ export function AdminCategories() {
       setNewGroupNameManual(false);
       setNewGroupNameEnManual(false);
       await loadCatalog();
+      notifyCategoryCatalogChanged();
     } finally {
       setBusy(null);
     }
@@ -743,6 +749,7 @@ export function AdminCategories() {
         return;
       }
       setCatalog((prev) => prev.filter((row) => row.id !== item.id));
+      notifyCategoryCatalogChanged();
     } finally {
       setBusy(null);
     }
@@ -779,6 +786,7 @@ export function AdminCategories() {
         return;
       }
       await loadCatalog();
+      notifyCategoryCatalogChanged();
     } finally {
       setBusy(null);
     }

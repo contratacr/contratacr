@@ -22,7 +22,6 @@ export default function ServiciosPage() {
   const locale = useLocale();
   const router = useRouter();
   const customCategories = useCustomCategories();
-  void customCategories;
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
   const [searchGroupSelection, setSearchGroupSelection] = useState<{ query: string; key: string } | null>(null);
@@ -34,7 +33,7 @@ export default function ServiciosPage() {
       ids: getAllCategories().filter((category) => category.groupId === group.id).map((category) => category.id),
     };
   });
-  const categoriesById = useMemo(() => new Map(getAllCategories().map((category) => [category.id, category])), []);
+  const categoriesById = useMemo(() => new Map(getAllCategories().map((category) => [category.id, category])), [customCategories]);
   const normalizedQuery = normalizeText(query.trim());
   const matchedIds = useMemo(() => {
     if (!normalizedQuery) return null;
