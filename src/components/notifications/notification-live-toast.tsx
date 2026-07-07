@@ -236,7 +236,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   if (postLoginUnreadCount !== null) {
     const unreadCount = postLoginUnreadCount;
     const title = locale === "en" ? `${unreadCount} new notifications` : `${unreadCount} notificaciones nuevas`;
-    const targetHref = `/${locale}/dashboard/profesional?tab=notifications`;
+    const targetHref = `/${locale}/notificaciones`;
     return (
       <div className="fixed bottom-24 left-3 right-3 z-[180] sm:bottom-auto sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
         <div className="rounded-2xl border border-[#d8e8f1] bg-white shadow-[0_18px_45px_-20px_rgba(15,23,42,0.35)]">
