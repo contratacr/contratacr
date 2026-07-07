@@ -88,6 +88,13 @@ type AdminDialogState = {
   title: string;
   description: string;
   detail?: string;
+  input?: {
+    value: string;
+    placeholder?: string;
+    maxLength?: number;
+    onChange: (value: string) => void;
+    label?: string;
+  };
   confirmLabel: string;
   cancelLabel?: string;
   tone?: "default" | "danger";
@@ -124,6 +131,19 @@ function AdminDialog({
           {dialog.detail && (
             <div className={`mt-4 rounded-xl border px-3 py-2 text-sm leading-5 ${danger ? "border-[#fecaca] bg-[#fef2f2] text-[#991b1b]" : "border-[#bfdbfe] bg-[#eff6ff] text-[#1e3a8a]"}`}>
               {dialog.detail}
+            </div>
+          )}
+          {dialog.input && (
+            <div className="mt-4 space-y-1.5">
+              {dialog.input.label && <p className="text-xs font-semibold text-[#4b5563]">{dialog.input.label}</p>}
+              <textarea
+                value={dialog.input.value}
+                onChange={(e) => dialog.input?.onChange?.(e.target.value)}
+                maxLength={dialog.input.maxLength}
+                placeholder={dialog.input.placeholder}
+                rows={3}
+                className="h-24 w-full rounded-xl border border-[#dbeafe] bg-white px-3 py-2 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/20"
+              />
             </div>
           )}
         </div>
@@ -178,6 +198,8 @@ export function AdminCategories() {
   const [busy, setBusy] = useState<string | null>(null);
   const [dialog, setDialog] = useState<AdminDialogState | null>(null);
   const [dialogBusy, setDialogBusy] = useState(false);
+  const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
+  const rejectReasonRefs = useRef<Record<string, string>>({});
   const translatedSuggestionIds = useRef<Set<string>>(new Set());
 
   function showNotice(title: string, description: string, detail?: string, tone: AdminDialogState["tone"] = "default") {
@@ -435,7 +457,8 @@ export function AdminCategories() {
     label?: string,
     labelEn?: string,
     groupId?: string,
-    flags?: { esSalud: boolean; supportsVideoconsulta: boolean }
+    flags?: { esSalud: boolean; supportsVideoconsulta: boolean },
+    reviewReason?: string
   ) {
     setBusy(i.id);
     try {
@@ -448,6 +471,7 @@ export function AdminCategories() {
           label,
           labelEn,
           groupId: groupId ?? groupOfSuggestion(i),
+          reviewReason,
           ...(flags ?? flagsOf(i)),
         }),
       });
@@ -483,6 +507,32 @@ export function AdminCategories() {
         return;
       }
     }
+
+    if (next === "rejected") {
+      const existing = rejectReasons[i.id] ?? "";
+      rejectReasonRefs.current[i.id] = existing;
+      setDialog({
+        title: "Rechazar sugerencia",
+        description: `Si quieres, agrega un motivo corto para ayudar a quien sugirió el servicio.`,
+        detail: `Sugerencia: "${nameOf(i)}".`,
+        confirmLabel: "Rechazar",
+        cancelLabel: "Cancelar",
+        tone: "danger",
+        input: {
+          label: "Motivo (opcional)",
+          placeholder: "Ej. Servicio duplicado",
+          maxLength: 160,
+          value: existing,
+          onChange: (value) => {
+            rejectReasonRefs.current[i.id] = value;
+            setRejectReasons((prev) => ({ ...prev, [i.id]: value }));
+          },
+        },
+        onConfirm: () => applySuggestionDecision(i, next, label, labelEn, groupId, flags, (rejectReasonRefs.current[i.id] ?? "").trim()),
+      });
+      return;
+    }
+
     await applySuggestionDecision(i, next, label, labelEn, groupId, flags);
   }
 
