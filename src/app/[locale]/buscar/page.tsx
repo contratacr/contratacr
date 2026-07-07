@@ -203,6 +203,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       proId: pro.id,
       slug: pro.slug,
       fullName: pro.fullName,
+      businessName: pro.businessName,
       avatarUrl: pro.avatarUrl ?? null,
       ratingAvg: pro.ratingAvg,
       reviewCount: pro.reviewCount,

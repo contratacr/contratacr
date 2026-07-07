@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { MapPin, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
+import { getProfessionalDisplayName } from "@/lib/display-name";
 
 export interface MapProfessional {
   id: string;
@@ -13,6 +14,7 @@ export interface MapProfessional {
   proId?: string;
   slug: string;
   fullName: string;
+  businessName?: string;
   avatarUrl?: string | null;
   ratingAvg: number;
   reviewCount: number;
@@ -75,6 +77,7 @@ const MAP_CSS =
   ".ccr-pop-top{display:flex;gap:10px;align-items:flex-start;}" +
   ".ccr-av{width:42px;height:42px;border-radius:9999px;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}" +
   ".ccr-pop-name{font-weight:700;color:#111827;font-size:14px;line-height:1.25;padding-right:14px;}" +
+  ".ccr-pop-sub{color:#6b7280;font-size:11px;font-weight:600;line-height:1.25;margin-top:2px;}" +
   // "Verificado" pill — EXACTLY the /buscar card's badge: solid brand-blue #009FD9
   // rounded-full pill, white text, font-size 10px / weight 600, padding 2px 8px
   // (= card `rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white`).
@@ -93,6 +96,7 @@ const MAP_CSS =
   ".ccr-clrow:hover{background:#f4f7fa;}" +
   ".ccr-av-sm{width:32px;height:32px;font-size:12px;}" +
   ".ccr-clname{font-weight:700;color:#111827;font-size:12px;line-height:1.2;display:flex;align-items:center;flex-wrap:wrap;}" +
+  ".ccr-clsub{color:#6b7280;font-size:10.5px;line-height:1.2;margin-top:1px;}" +
   ".ccr-clmeta{color:#6b7280;font-size:11px;margin-top:1px;}" +
   ".ccr-clmeta b{color:#ff9b32;font-weight:700;}" +
   ".ccr-clmore{color:#9ca3af;font-size:11px;padding:5px 2px 0;}";
@@ -279,15 +283,19 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     popupKeyRef.current = pro.id;
     const href = `/${locale}/profesionales/${pro.slug}`;
     const profs = (pro.professions ?? []).filter(Boolean).slice(0, 2).join(" · ") || pro.categoryLabel || "";
+    const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName);
+    const primaryName = displayName.primaryDesktop;
+    const secondaryName = displayName.secondaryDesktop;
     const wrap = document.createElement("div");
     wrap.className = "ccr-popwrap";
     wrap.innerHTML =
       `<a class="ccr-pop" href="${href}">` +
         `<button class="ccr-pop-x" aria-label="Cerrar">×</button>` +
         `<div class="ccr-pop-top">` +
-          `<div class="ccr-av">${esc(initials(pro.fullName))}</div>` +
+          `<div class="ccr-av">${esc(initials(primaryName || pro.fullName))}</div>` +
           `<div style="min-width:0;">` +
-            `<div class="ccr-pop-name">${esc(pro.fullName)}${pro.verified ? `<span class="ccr-ver">${locale === "en" ? "Verified" : "Verificado"}</span>` : ""}</div>` +
+            `<div class="ccr-pop-name">${esc(primaryName)}${pro.verified ? `<span class="ccr-ver">${locale === "en" ? "Verified" : "Verificado"}</span>` : ""}</div>` +
+            (secondaryName ? `<div class="ccr-pop-sub">${esc(secondaryName)}</div>` : "") +
             (profs ? `<div class="ccr-pop-prof">${esc(profs)}</div>` : "") +
             `<div class="ccr-pop-rate">★ ${pro.ratingAvg.toFixed(1)} <span>(${pro.reviewCount})</span></div>` +
             (pro.priceLabel ? `<div class="ccr-pop-price">${esc(pro.priceLabel)}</div>` : "") +
@@ -318,11 +326,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       const href = `/${locale}/profesionales/${pro.slug}`;
       const ver = pro.verified ? `<span class="ccr-ver">${locale === "en" ? "Verified" : "Verificado"}</span>` : "";
       const price = pro.priceLabel ? ` · ${esc(pro.priceLabel)}` : "";
+      const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName);
+      const primaryName = displayName.primaryDesktop;
+      const secondaryName = displayName.secondaryDesktop;
       return (
         `<a class="ccr-clrow" href="${href}">` +
-          `<div class="ccr-av ccr-av-sm">${esc(initials(pro.fullName))}</div>` +
+          `<div class="ccr-av ccr-av-sm">${esc(initials(primaryName || pro.fullName))}</div>` +
           `<div style="min-width:0;flex:1;">` +
-            `<div class="ccr-clname">${esc(pro.fullName)}${ver}</div>` +
+            `<div class="ccr-clname">${esc(primaryName)}${ver}</div>` +
+            (secondaryName ? `<div class="ccr-clsub">${esc(secondaryName)}</div>` : "") +
             `<div class="ccr-clmeta"><b>★ ${pro.ratingAvg.toFixed(1)}</b> (${pro.reviewCount})${price}</div>` +
           `</div>` +
         `</a>`
@@ -465,7 +477,8 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       const el = teardropEl(num ?? "");
       el.dataset.basez = String(z);
 
-      const marker = new g.marker.AdvancedMarkerElement({ position: pos, content: el, zIndex: z, title: pro.fullName });
+      const titleName = getProfessionalDisplayName(pro.fullName, pro.businessName).primaryDesktop || pro.fullName;
+      const marker = new g.marker.AdvancedMarkerElement({ position: pos, content: el, zIndex: z, title: titleName });
       // Keep a back-ref so setPinActive can raise zIndex without a marker lookup.
       (el as unknown as { _marker: unknown })._marker = marker;
       // Carry the pro on the marker so the cluster renderer can list its members.

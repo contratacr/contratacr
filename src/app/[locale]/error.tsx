@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { RefreshCw, WifiOff, AlertTriangle } from "lucide-react";
 import { ErrorScreen, errorPrimaryBtn, errorSecondaryBtn } from "@/components/error/error-screen";
+import { ServiceUnavailableScreen } from "@/components/error/service-unavailable-screen";
+import { getRuntimeErrorKind } from "@/lib/errors/runtime-error-kind";
 
 // On-brand boundary for unexpected errors. Detects an offline/connection issue
 // and shows a calmer, specific message; otherwise a friendly generic error with
@@ -34,9 +36,11 @@ const COPY = {
 export default function LocaleError({
   error,
   reset,
+  unstable_retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  reset?: () => void;
+  unstable_retry?: () => void;
 }) {
   const [offline, setOffline] = useState(false);
   const [lang, setLang] = useState<"es" | "en">("es");
@@ -48,19 +52,32 @@ export default function LocaleError({
   }, [error]);
 
   const t = COPY[lang];
+  const retry = unstable_retry ?? reset ?? (() => window.location.reload());
+  const errorKind = getRuntimeErrorKind(error, offline);
 
-  if (offline) {
+  if (errorKind === "offline") {
     return (
       <ErrorScreen
         icon={<WifiOff className="h-7 w-7" />}
         title={t.offlineTitle}
         message={t.offlineMessage}
       >
-        <button onClick={reset} className={errorPrimaryBtn}>
+        <button onClick={retry} className={errorPrimaryBtn}>
           <RefreshCw className="h-4 w-4" /> {t.retry}
         </button>
         <a href="/" className={errorSecondaryBtn}>{t.home}</a>
       </ErrorScreen>
+    );
+  }
+
+  if (errorKind === "unavailable") {
+    return (
+      <ServiceUnavailableScreen locale={lang}>
+        <button onClick={retry} className={errorPrimaryBtn}>
+          <RefreshCw className="h-4 w-4" /> {t.retry}
+        </button>
+        <a href="/" className={errorSecondaryBtn}>{t.home}</a>
+      </ServiceUnavailableScreen>
     );
   }
 
@@ -70,7 +87,7 @@ export default function LocaleError({
       title={t.errorTitle}
       message={t.errorMessage}
     >
-      <button onClick={reset} className={errorPrimaryBtn}>
+      <button onClick={retry} className={errorPrimaryBtn}>
         <RefreshCw className="h-4 w-4" /> {t.retry}
       </button>
       <a href="/" className={errorSecondaryBtn}>{t.home}</a>

@@ -6,18 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
-
-// CARD-ONLY: shorten a PERSON's name to first name + both surnames, dropping any
-// middle name(s) — e.g. "Isaac Alberto Sanchez Monge" → "Isaac Sanchez Monge".
-// Saves space and avoids truncation on the card. Names with 3 or fewer parts
-// (one given name + up to two surnames) are left as-is. The FULL official name is
-// still shown on the professional's profile page; this never touches a company
-// /brand name (only the person's name).
-function cardPersonName(name?: string): string {
-  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length <= 2) return parts.join(" ");
-  return [parts[0], parts[parts.length - 2]].join(" ");
-}
+import { getProfessionalDisplayName } from "@/lib/display-name";
 
 // A certification is a plain TEXT entry (no images): the certificate name, and
 // optionally the issuing institution + year. It belongs to a specific PROFESSION
@@ -121,11 +110,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // Brand hierarchy: company name leads (clients recognize the brand), personal
   // name becomes the muted subtitle. No company → personal name leads, no subtitle.
   const businessName = professional.businessName?.trim();
-  // The PERSON's name is shortened for the card (first name + first surname); a
-  // company/brand name is shown verbatim. The full official name stays on the profile.
-  const personName = cardPersonName(professional.fullName);
-  const brandPrimary = businessName || personName;
-  const brandSecondary = businessName ? personName : "";
+  const displayName = getProfessionalDisplayName(professional.fullName, businessName);
   const categoryName = catLabel(professional.categoryId);
   const allProfessions = (professional.professions && professional.professions.length > 0
     ? professional.professions
@@ -210,13 +195,15 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   Verificado, then the personal name = first name + first surname. */}
               <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
                 <h3 title={businessName ? businessName : professional.fullName} className="line-clamp-2 font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
-                  {brandPrimary}
+                  <span className="lg:hidden">{displayName.primaryMobile}</span>
+                  <span className="hidden lg:inline">{displayName.primaryDesktop}</span>
                 </h3>
               </Link>
               {verifiedMark}
-              {brandSecondary && (
+              {displayName.hasSecondary && (
                 <p title={professional.fullName} className="text-[12px] font-medium leading-snug text-[#6b7280] lg:line-clamp-1">
-                  {brandSecondary}
+                  <span className="lg:hidden">{displayName.secondaryMobile}</span>
+                  <span className="hidden lg:inline">{displayName.secondaryDesktop}</span>
                 </p>
               )}
             </div>
