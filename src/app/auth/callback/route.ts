@@ -3,6 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isLocalRequest, isProductionSupabaseTarget } from "@/lib/security/write-guard";
+import { isUnsafeProductionSupabaseRuntime } from "@/lib/security/supabase-target";
 
 function withPostLoginActivity(path: string): string {
   const normalized = path.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
@@ -25,6 +27,10 @@ export async function GET(request: NextRequest) {
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
 
   if (code || tokenHash) {
+    if (isUnsafeProductionSupabaseRuntime() || (isLocalRequest(request) && isProductionSupabaseTarget())) {
+      return NextResponse.redirect(`${origin}/es?auth=unsafe_prod_env_blocked`);
+    }
+
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { assertSafeSupabaseRuntime } from "@/lib/security/supabase-target";
 
 export async function createClient() {
+  assertSafeSupabaseRuntime("Supabase server");
+
   const cookieStore = await cookies();
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

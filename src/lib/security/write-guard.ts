@@ -1,17 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  getSupabaseProjectRef,
+  isProductionSupabaseTarget,
+  isUnsafeProductionSupabaseRuntime,
+} from "@/lib/security/supabase-target";
 
-const PROD_SUPABASE_REF = "kskueodxaksxvjrysouw";
+export { getSupabaseProjectRef, isProductionSupabaseTarget } from "@/lib/security/supabase-target";
 
 type RequestLike = Request | NextRequest;
-
-export function getSupabaseProjectRef() {
-  try {
-    const host = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname;
-    return host.split(".")[0] || "unknown";
-  } catch {
-    return "unknown";
-  }
-}
 
 export function requestHost(req: RequestLike) {
   const forwardedHost = req.headers.get("x-forwarded-host");
@@ -34,10 +30,6 @@ export function isLocalRequest(req: RequestLike) {
   );
 }
 
-export function isProductionSupabaseTarget() {
-  return getSupabaseProjectRef() === PROD_SUPABASE_REF;
-}
-
 export function appEnvironment(req?: RequestLike) {
   if (req && isLocalRequest(req)) return "local";
   if (process.env.VERCEL_ENV) return process.env.VERCEL_ENV;
@@ -54,14 +46,14 @@ export function writeSourceColumns(req: RequestLike) {
 
 export function isUnsafeLocalProductionWrite(req: RequestLike) {
   if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method.toUpperCase())) return false;
-  return isLocalRequest(req) && isProductionSupabaseTarget();
+  return isUnsafeProductionSupabaseRuntime() || (isLocalRequest(req) && isProductionSupabaseTarget());
 }
 
 export function unsafeLocalProductionWriteResponse() {
   return NextResponse.json(
     {
       error:
-        "Escritura bloqueada: localhost esta apuntando a la base de produccion. Reinicia el servidor local con .env.test.",
+        "Escritura bloqueada: este entorno esta apuntando a la base de produccion. Usa .env.test para desarrollo/test.",
     },
     { status: 403 }
   );
