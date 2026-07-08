@@ -952,9 +952,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               menu.push({ label: t("archive"), onClick: () => archiveProject(project.id) });
                             }
                             let primary: ReactNode = null;
-                            if (st === "awaiting_confirmation") {
-                              primary = <Button size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>;
-                            } else if (st === "completed") {
+                            if (st === "completed") {
                               const rev = projectReview(project.id);
                               primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => reviewProjectPro(project.id)}>{rev ? t("editReview") : t("leaveReview")}</Button>;
                             } else if (st === "cancelled") {
@@ -1093,6 +1091,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     )}
                                     {!locked && (proposal.status === "accepted" || proposal.status === "declined") && (
                                       <Button size="sm" variant="outline" className="min-w-[132px] flex-1 px-3 sm:flex-none" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
+                                    )}
+                                    {project.status === "awaiting_confirmation" && isAccepted && (
+                                      <Button size="sm" className="min-w-[150px] flex-1 px-3 sm:flex-none" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>
                                     )}
                                     {proposal.professionals?.whatsapp && (
                                       <Button size="sm" variant="whatsapp" className="min-w-[104px] flex-1 px-3 sm:flex-none" asChild>
