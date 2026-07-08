@@ -242,7 +242,7 @@ export type ResultsCopy = {
 // "Así funciona" section passes locale-aware copy from why-contratacr.tsx.
 const DEFAULT_RESULTS_COPY: ResultsCopy = {
   title: "Tecnología",
-  categories: ["Soporte Técnico", "Redes e Internet"],
+  categories: ["Redes e Internet"],
   results: "3 profesionales en Costa Rica",
   search: "Soporte técnico en Costa Rica",
   verified: "Verificado",
@@ -253,12 +253,12 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
   priceOnRequest: "Consultar precio",
   secondaryProfession: "Desarrollo web",
   primaryPlace: "Atenas, Alajuela",
-  secondaryPlace: "Grecia, Alajuela",
+  secondaryPlace: "Videoconsulta",
   reviews: (n) => `${n} reseñas`,
   days: [
     { label: "Hoy", times: ["9:00", "14:00"] },
     { label: "Mañana", times: ["8:30", "15:00"] },
-    { label: "Jue 18", times: ["10:00"] },
+    { label: "Jue 18", times: ["10:00", "14:00"] },
   ],
 };
 
@@ -283,13 +283,13 @@ export function buildLandingResultsCopy({
     const month = d.toLocaleDateString(loc, { month: "short" }).replace(".", "");
     return {
       label: isEnglish ? `${month} ${day}` : `${day} ${month}`,
-      times: i === 3 ? ["10:00"] : ["9:00", "14:00"],
+      times: i === 3 ? ["10:00", "14:00"] : ["9:00", "14:00"],
     };
   });
 
   return {
     title: isEnglish ? "Technology" : "Tecnología",
-    categories: isEnglish ? ["Technical Support", "Networks & Internet"] : ["Soporte Técnico", "Redes e Internet"],
+    categories: isEnglish ? ["Networks & Internet"] : ["Redes e Internet"],
     results: tLanding("mockResults"),
     search: tLanding("mockSearch"),
     verified: tCard("verifiedShort"),
@@ -300,7 +300,7 @@ export function buildLandingResultsCopy({
     priceOnRequest: isEnglish ? "Ask price" : "Consultar precio",
     secondaryProfession: isEnglish ? "Web development" : "Desarrollo web",
     primaryPlace: "Atenas, Alajuela",
-    secondaryPlace: "Grecia, Alajuela",
+    secondaryPlace: isEnglish ? "Video consultation" : "Videoconsulta",
     reviews: (n: number) => tCard("reviewsCount", { count: n }),
     days,
   };
@@ -322,13 +322,13 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
           one WITHOUT (the WhatsApp contact path), mirroring the real mixed /buscar list. */}
       <div className="flex-1 space-y-2 overflow-hidden p-3">
         <ProCard
-          rank={1} initials="SG" image={cloudinaryAssetUrl("sgimage_psyvpn_hyyp4c.jpg", "f_auto,q_auto")} company="SG Solutions" person="Luis Sánchez" profession={copy.title} categories={copy.categories}
+          rank={1} initials="SG" image={cloudinaryAssetUrl("sgimage_psyvpn_hyyp4c.jpg", "f_auto,q_auto")} company="SG Solutions" person="Luis Sanchez" profession={copy.title} categories={copy.categories}
           place={copy.primaryPlace} address={copy.primaryAddress} rating="4.9" reviews={copy.reviews(48)}
           price={copy.priceOnRequest} verified={copy.verified} schedule={copy.days}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
         />
         <ProCard
-          rank={2} initials="CR" image="/logo-mark-transparent.png" company="ContrataCR" profession={copy.secondaryProfession}
+          rank={2} initials="CR" image="/logo-mark-transparent.png" company="ContrataCR" person="Isaac Sanchez" profession={copy.secondaryProfession}
           place={copy.secondaryPlace} address={copy.secondaryAddress} rating="4.8" reviews={copy.reviews(31)}
           price={copy.priceOnRequest} verified={copy.verified}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp} noScheduleNote={copy.noScheduleNote}
