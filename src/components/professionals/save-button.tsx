@@ -128,6 +128,7 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
     <>
       {withLabel ? (
         <button
+          data-save-button
           onClick={toggle}
           aria-label={saved ? t("unsave") : t("save")}
           aria-pressed={saved}
@@ -144,6 +145,7 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
         </button>
       ) : (
         <button
+          data-save-button
           onClick={toggle}
           aria-label={saved ? t("unsave") : t("save")}
           aria-pressed={saved}

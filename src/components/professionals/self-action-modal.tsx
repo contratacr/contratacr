@@ -39,9 +39,13 @@ export function SelfActionModal({
   // Dismiss on Escape (the scrim already closes on tap) — per the dismiss standard.
   useEffect(() => {
     if (!open) return;
+    document.documentElement.dataset.selfActionModalOpen = "true";
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      delete document.documentElement.dataset.selfActionModalOpen;
+    };
   }, [open, onClose]);
 
   if (!open) return null;

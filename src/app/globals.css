@@ -93,6 +93,11 @@ select:focus-visible {
   outline-offset: 0;
 }
 
+html[data-self-action-modal-open="true"] [data-save-button] {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
 /* Mobile keyboard + zoom resilience.
    - app-bottom-sheet: bottom sheets sit above the virtual keyboard and scroll internally.
    - app-centered-modal: fixed centered dialogs stay centered in the visual viewport.
