@@ -1849,6 +1849,7 @@
     "rejectedNoCrBody": "Tu cuenta sigue activa, pero no apareces en los resultados de búsqueda hasta ser aprobado.",
     "underAppealTitle": "Caso en revisión manual",
     "underAppealNoCrBody": "Un agente revisará tu documento y te avisaremos el resultado.",
+    "pendingTitle": "Verificación pendiente",
     "unverifiedTitle": "Identidad sin verificar",
     "noCrUnverifiedBody": "Como no tienes identificación costarricense, un agente revisará tu documento. Mientras tanto <strong>ya apareces en los resultados</strong>, debajo de los verificados. Tu cuenta está activa.",
     "resultTitle": "Resultado",

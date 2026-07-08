@@ -50,6 +50,7 @@ export function VerificationPanel({
   const [cedulaError, setCedulaError] = useState<string | null>(null);
 
   const ref = caseRef(professionalId);
+  const wasMovedToReview = status === "pending" && !!reason;
   const summaryTone =
     status === "verified"
       ? "verified"
@@ -272,7 +273,9 @@ export function VerificationPanel({
               ? t("rejectedTitle")
               : status === "under_appeal"
                 ? t("underAppealTitle")
-                : t("unverifiedTitle")
+                : wasMovedToReview
+                  ? t("pendingTitle")
+                  : t("unverifiedTitle")
           }
           tone={summaryTone}
         >
@@ -351,7 +354,9 @@ export function VerificationPanel({
               ? t("underAppealTitle")
               : status === "rejected"
                 ? t("rejectedTitle")
-                : t("unverifiedTitle")
+                : wasMovedToReview
+                  ? t("pendingTitle")
+                  : t("unverifiedTitle")
         }
         tone={summaryTone}
         badge={status === "verified" ? t("verifiedChip") : undefined}

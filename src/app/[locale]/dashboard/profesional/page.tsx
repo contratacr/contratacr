@@ -343,7 +343,7 @@ export default function DashboardPage() {
     });
   }, [searchParams, router, nextFocusKey]);
 
-  const fetchPro = useCallback(async () => {
+  const fetchPro = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!user) return;
     const supabase = createClient();
     setProLoadError(false);
@@ -364,11 +364,18 @@ export default function DashboardPage() {
         details: error.details,
         hint: error.hint,
       });
-      setProLoadError(true);
-    } else if (!data) {
+      if (!silent) setProLoadError(true);
+    } else if (!data && !silent) {
       setNoProTries((n) => n + 1);
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
+  }, [user]);
+
+  const fetchProfile = useCallback(async () => {
+    if (!user) return;
+    const supabase = createClient();
+    const { data } = await supabase.rpc("get_my_profile");
+    if (data) setProfile(data);
   }, [user]);
 
   useEffect(() => {
@@ -379,12 +386,33 @@ export default function DashboardPage() {
   // Base profile (name/avatar) for the header — works for seekers with no pro row.
   useEffect(() => {
     if (!user) return;
-    const supabase = createClient();
-    const load = () => supabase.rpc("get_my_profile").then(({ data }) => { if (data) setProfile(data); });
-    load();
-    window.addEventListener("ccr:profile-updated", load);
-    return () => window.removeEventListener("ccr:profile-updated", load);
-  }, [user, refreshKey]);
+    queueMicrotask(() => fetchProfile());
+    window.addEventListener("ccr:profile-updated", fetchProfile);
+    return () => window.removeEventListener("ccr:profile-updated", fetchProfile);
+  }, [user, refreshKey, fetchProfile]);
+
+  useEffect(() => {
+    if (!user) return;
+    let stopped = false;
+    const refreshVerificationState = () => {
+      if (stopped || document.hidden) return;
+      void fetchPro({ silent: true });
+      void fetchProfile();
+    };
+    const onVisible = () => {
+      if (!document.hidden) refreshVerificationState();
+    };
+
+    window.addEventListener("focus", refreshVerificationState);
+    document.addEventListener("visibilitychange", onVisible);
+    const id = window.setInterval(refreshVerificationState, 15000);
+    return () => {
+      stopped = true;
+      window.removeEventListener("focus", refreshVerificationState);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(id);
+    };
+  }, [user, fetchPro, fetchProfile]);
 
   // Unread notifications, bucketed by mode (per-mode model): the sidebar Notificaciones
   // badge shows the ACTIVE mode's unread (its own + account-level), and the switch shows
