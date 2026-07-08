@@ -314,10 +314,8 @@ export default function ProfilePage() {
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
           <div className="relative bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-5 sm:p-6 mb-6">
-            {/* Save to favorites — pinned to the TOP-RIGHT of the header card, next to the
-                rating/identity (same favorites system + self-action block as the /buscar
-                cards). A subtle bordered icon so it's discoverable without crowding. */}
-            <SaveButton pro={savedPro} isOwn={isOwn} className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full border border-[#e5e7eb] bg-white !p-0 shadow-sm hover:border-[#009FD9] hover:text-[#009FD9]" />
+            {/* Same bare favorite bookmark used in /buscar: no circle, border or shadow. */}
+            <SaveButton pro={savedPro} isOwn={isOwn} className="absolute right-3 top-3 z-10" />
             <div className="flex flex-col gap-4 pr-10 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4 min-w-0">
                 <ImagePreviewDialog
