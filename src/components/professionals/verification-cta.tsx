@@ -7,8 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 
 // "Solicitar mi verificación" CTA. Resolves the destination from the session so
-// an EXISTING professional goes to their verification tab (not registration):
-//  - has a professional record → /dashboard/profesional?tab=verificacion
+// an EXISTING professional goes to the verification section inside Mi perfil:
+//  - has a professional record → /dashboard/profesional?tab=profile&mode=offer&focus=verification
 //  - logged-in client (no pro record) → unified panel in client mode
 //  - logged out → /login
 export function VerificationCta({ className }: { className?: string }) {
@@ -18,7 +18,10 @@ export function VerificationCta({ className }: { className?: string }) {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) { setHasPro(false); return; }
+    if (!user) {
+      queueMicrotask(() => setHasPro(false));
+      return;
+    }
     const supabase = createClient();
     supabase
       .from("professionals")
@@ -30,7 +33,7 @@ export function VerificationCta({ className }: { className?: string }) {
 
   function go() {
     if (!user) { router.push("/login"); return; }
-    if (hasPro) { router.push("/dashboard/profesional?tab=verificacion"); return; }
+    if (hasPro) { router.push("/dashboard/profesional?tab=profile&mode=offer&focus=verification"); return; }
     // Logged-in client without a pro record → they must become a professional first.
     router.push("/dashboard/profesional?tab=profile&mode=use");
   }

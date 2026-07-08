@@ -85,9 +85,9 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
     try { localStorage.setItem(`contratacr_verify_dismissed_${proId}`, "1"); } catch { /* noop */ }
   }
 
-  const optionalItems: { key: string; titleKey: string; benefitKey: string; tab: string; actionKey: string }[] = [];
+  const optionalItems: { key: string; titleKey: string; benefitKey: string; tab: string; field?: string; actionKey: string }[] = [];
   if (!verified && !dismissedVerify)
-    optionalItems.push({ key: "verify", titleKey: "verifyTitle", benefitKey: "verifyBenefit", tab: "verificacion", actionKey: "verifyAction" });
+    optionalItems.push({ key: "verify", titleKey: "verifyTitle", benefitKey: "verifyBenefit", tab: "profile", field: "verification", actionKey: "verifyAction" });
 
   // Nothing left to nudge: essentials complete AND verification done/dismissed.
   if (complete && optionalItems.length === 0) return null;
@@ -163,7 +163,7 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
             <li key={opt.key} className="border-b border-[#f3f4f6] last:border-b-0">
               <div className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 min-h-[56px] transition-colors hover:bg-[#f9fbfd]">
                 <span className="h-4 w-4 shrink-0 rounded-full border-2 border-[#d1d5db] transition-colors group-hover:border-[#009FD9]" />
-                <button type="button" onClick={() => onGo(opt.tab)} className="min-w-0 flex-1 text-left">
+                <button type="button" onClick={() => onGo(opt.tab, opt.field)} className="min-w-0 flex-1 text-left">
                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-sm font-medium text-[#111827] group-hover:text-[#009FD9] transition-colors">{t(opt.titleKey)}</span>
                     <span className="rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#009FD9]">
@@ -174,7 +174,7 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
                 </button>
                 <button
                   type="button"
-                  onClick={() => onGo(opt.tab)}
+                  onClick={() => onGo(opt.tab, opt.field)}
                   className="hidden sm:inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#009FD9]"
                 >
                   {t(opt.actionKey)}

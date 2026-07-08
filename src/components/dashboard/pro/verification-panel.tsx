@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Clock3, Headset, Info, RotateCcw, Send, ShieldCheck, XCircle } from "lucide-react";
+import { Clock3, Headset, Info, Loader2, RotateCcw, Send, ShieldCheck, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
@@ -21,8 +21,8 @@ interface Props {
 }
 
 type CedulaCheck =
-  | { status: "confirmed"; cedula: string; fullName: string; dob: string | null }
-  | { status: "review"; cedula: string; message: string };
+  | { status: "confirmed"; cedula: string; fullName: string; dob: string | null; taken: boolean }
+  | { status: "review"; cedula: string; message: string; taken: boolean };
 
 export function VerificationPanel({
   professionalId,
@@ -32,7 +32,9 @@ export function VerificationPanel({
   onSaved,
 }: Props) {
   const t = useTranslations("verificationPanel");
+  const ti = useTranslations("identity");
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
+  const cedulaReqId = useRef(0);
   const [appeal, setAppeal] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,49 +95,67 @@ export function VerificationPanel({
     }
   }
 
-  async function checkCedula() {
-    setError(null);
-    setCedulaError(null);
-    setNote(null);
-    setVerifiedName(null);
-    setVerifiedCedula(null);
-    setCedulaCheck(null);
+  useEffect(() => {
+    const reqId = ++cedulaReqId.current;
     const cedula = cleanId(newCedula);
     if (!isValidId(cedula)) {
-      setCedulaError(t("invalidCedula"));
-      return;
+      queueMicrotask(() => {
+        if (reqId !== cedulaReqId.current) return;
+        setCedulaBusy(false);
+        setCedulaCheck(null);
+        setCedulaError(null);
+      });
+      return undefined;
     }
-    setCedulaBusy(true);
-    try {
-      const availableRes = await fetch(`/api/cedula-available?cedula=${encodeURIComponent(cedula)}`);
-      const availableJson = await availableRes.json().catch(() => ({}));
-      if (availableJson.taken) {
-        setCedulaError(t("cedulaTaken"));
-        return;
-      }
 
-      const lookupRes = await fetch(`/api/cedula/${cedula}`);
-      const lookupJson = await lookupRes.json().catch(() => ({}));
-      if (lookupRes.ok && lookupJson.found && typeof lookupJson.fullName === "string") {
-        setCedulaCheck({
-          status: "confirmed",
-          cedula,
-          fullName: lookupJson.fullName,
-          dob: typeof lookupJson.dob === "string" ? lookupJson.dob : null,
-        });
-        return;
+    queueMicrotask(() => {
+      if (reqId !== cedulaReqId.current) return;
+      setCedulaBusy(true);
+      setCedulaCheck(null);
+      setCedulaError(null);
+      setNote(null);
+      setVerifiedName(null);
+      setVerifiedCedula(null);
+    });
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const [availableRes, lookupRes] = await Promise.all([
+          fetch(`/api/cedula-available?cedula=${encodeURIComponent(cedula)}`),
+          fetch(`/api/cedula/${cedula}`),
+        ]);
+        if (reqId !== cedulaReqId.current) return;
+
+        const availableJson = await availableRes.json().catch(() => ({}));
+        const lookupJson = await lookupRes.json().catch(() => ({}));
+        const taken = !!availableJson.taken;
+        setCedulaError(taken ? t("cedulaTaken") : null);
+
+        if (lookupRes.ok && lookupJson.found && typeof lookupJson.fullName === "string") {
+          setCedulaCheck({
+            status: "confirmed",
+            cedula,
+            fullName: lookupJson.fullName,
+            dob: typeof lookupJson.dob === "string" ? lookupJson.dob : null,
+            taken,
+          });
+          return;
+        }
+        if (lookupRes.status === 404) {
+          setCedulaCheck({ status: "review", cedula, message: t("cedulaReviewReady"), taken });
+          return;
+        }
+        setCedulaError(lookupJson.error ?? t("processError"));
+      } catch (e) {
+        if (reqId !== cedulaReqId.current) return;
+        setCedulaError(e instanceof Error ? e.message : t("processError"));
+      } finally {
+        if (reqId === cedulaReqId.current) setCedulaBusy(false);
       }
-      if (lookupRes.status === 404) {
-        setCedulaCheck({ status: "review", cedula, message: t("cedulaReviewReady") });
-        return;
-      }
-      setCedulaError(lookupJson.error ?? t("processError"));
-    } catch (e) {
-      setCedulaError(e instanceof Error ? e.message : t("processError"));
-    } finally {
-      setCedulaBusy(false);
-    }
-  }
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [newCedula, t]);
 
   async function addCedula() {
     setError(null);
@@ -192,26 +212,24 @@ export function VerificationPanel({
   function renderCedulaVerifier() {
     const cleanCedula = cleanId(newCedula);
     const currentCheck = cedulaCheck?.cedula === cleanCedula ? cedulaCheck : null;
-    const canVerify = isValidId(cleanCedula);
+    const canAddCedula = !!currentCheck && !currentCheck.taken && !cedulaBusy;
 
     return (
       <>
-        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div className="grid gap-3">
           <CedulaInput
             required
             value={newCedula}
             onChange={handleCedulaInput}
             error={cedulaError ?? undefined}
           />
-          <button
-            onClick={checkCedula}
-            disabled={cedulaBusy || cedulaSaving || !canVerify}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50"
-          >
-            <ShieldCheck className="h-4 w-4" />{" "}
-            {cedulaBusy ? t("checkingCedula") : t("verifyCedula")}
-          </button>
         </div>
+
+        {cedulaBusy && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-[#6b7280]">
+            <Loader2 className="h-4 w-4 animate-spin" /> {ti("searching")}
+          </div>
+        )}
 
         {currentCheck?.status === "confirmed" && (
           <div className="mt-3">
@@ -229,10 +247,10 @@ export function VerificationPanel({
           </Notice>
         )}
 
-        {currentCheck && (
+        {currentCheck && !currentCheck.taken && (
           <button
             onClick={addCedula}
-            disabled={cedulaSaving}
+            disabled={cedulaSaving || !canAddCedula}
             className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#009FD9] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50"
           >
             <ShieldCheck className="h-4 w-4" />{" "}

@@ -50,6 +50,7 @@ const FIELD_SECTION: Record<string, string> = {
   location: "location",
   whatsapp: "contact",
   insurers: "lang",
+  verification: "verificacion",
 };
 
 // Collapsible section — groups the long profile form into digestible blocks so
@@ -142,6 +143,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.classList.add("field-flash");
         setTimeout(() => el.classList.remove("field-flash"), 1600);
+      } else if (sec) {
+        const section = document.getElementById(`sec-${sec}`);
+        section?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }, 160);
     return () => {

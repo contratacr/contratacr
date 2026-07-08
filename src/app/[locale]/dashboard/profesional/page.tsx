@@ -253,7 +253,9 @@ export default function DashboardPage() {
   const t = useTranslations("proPanel");
   const tc = useTranslations("clientActivity");
   const locale = useLocale();
-  const requestedTab = searchParams.get("tab") as Tab | null;
+  const rawRequestedTab = searchParams.get("tab");
+  const legacyVerificationTab = rawRequestedTab === "verificacion";
+  const requestedTab = (legacyVerificationTab ? "profile" : rawRequestedTab) as Tab | null;
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const shouldCheckPostLoginActivity = searchParams.get("postLogin") === "1";
@@ -299,7 +301,7 @@ export default function DashboardPage() {
   // A non-provider has no offer world → always "use".
   const { mode: globalMode, setMode } = useMode(isProvider);
   const urlForcedMode: Mode | null =
-    requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
+    legacyVerificationTab ? "offer" : requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
   const activeTab: Tab = requestedTab ?? (mode === "offer" ? "bookings" : "sent_bookings");
 
@@ -307,6 +309,15 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isProvider && urlForcedMode && urlForcedMode !== globalMode) setMode(urlForcedMode);
   }, [isProvider, urlForcedMode, globalMode, setMode]);
+
+  useEffect(() => {
+    if (!legacyVerificationTab) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "profile");
+    params.set("mode", "offer");
+    params.set("focus", "verification");
+    router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
+  }, [legacyVerificationTab, searchParams, router]);
 
   // Suppress the login-redirect while signing out (from the navbar menu) → straight
   // to main, no /login flash. Logout lives only in the navbar profile menu now.
@@ -519,10 +530,15 @@ export default function DashboardPage() {
     let mounted = true;
 
     if (opportunityWelcomeParamCount > 0) {
-      setOpportunityWelcomeKeys([]);
-      setOpportunityWelcomeCount(opportunityWelcomeParamCount);
-      clearOpportunityWelcomeParam();
-      return;
+      queueMicrotask(() => {
+        if (!mounted) return;
+        setOpportunityWelcomeKeys([]);
+        setOpportunityWelcomeCount(opportunityWelcomeParamCount);
+        clearOpportunityWelcomeParam();
+      });
+      return () => {
+        mounted = false;
+      };
     }
 
     fetch("/api/projects?role=professional", { cache: "no-store" })
@@ -550,6 +566,10 @@ export default function DashboardPage() {
   }, [authLoading, clearOpportunityWelcomeParam, loading, opportunityWelcomeParamCount, pro, shouldCheckOpportunityWelcome, user]);
 
   function setTab(tab: Tab) {
+    if (tab === "verificacion") {
+      openProfileVerification();
+      return;
+    }
     if (tab === activeTab) return;
     if (OFFER_ONLY.has(tab)) setMode("offer");
     if (USE_ONLY.has(tab)) setMode("use");
@@ -559,6 +579,17 @@ export default function DashboardPage() {
     // Reset to the top of the new section INSTANTLY via the window. A smooth scrollIntoView
     // fought the fixed mobile bottom bar (its backdrop-blur made "Más" flicker / feel covered
     // during the animated scroll); an instant window scroll never interferes with it.
+    requestAnimationFrame(() => {
+      const mobile = window.matchMedia("(max-width: 1023px)").matches;
+      if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      else window.scrollTo({ top: 0, behavior: "auto" });
+    });
+  }
+
+  function openProfileVerification() {
+    if (isProvider && mode !== "offer") setMode("offer");
+    setProfileFocus({ field: "verification", key: nextFocusKey() });
+    router.push("/dashboard/profesional?tab=profile&mode=offer&focus=verification", { scroll: false });
     requestAnimationFrame(() => {
       const mobile = window.matchMedia("(max-width: 1023px)").matches;
       if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
@@ -787,8 +818,7 @@ export default function DashboardPage() {
       <button
         type="button"
         onClick={() => {
-          if (mode !== "offer") setMode("offer");
-          setTab("verificacion");
+          openProfileVerification();
         }}
         title={t("verifyInvite")}
         className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
@@ -942,6 +972,10 @@ export default function DashboardPage() {
                 <ProfileCompletion
                   pro={proForCompletion}
                   onGo={(tab, field) => {
+                    if (tab === "verificacion" || field === "verification") {
+                      openProfileVerification();
+                      return;
+                    }
                     setTab(tab as Tab);
                     if (field && tab === "services") setServiceFocus({ field, key: nextFocusKey() });
                     else if (field) setProfileFocus({ field, key: nextFocusKey() });
@@ -1105,17 +1139,6 @@ export default function DashboardPage() {
                             services={pro.services ?? []}
                           />
                         )}
-                        {activeTab === "verificacion" && pro && (
-                          <VerificationPanel
-                            professionalId={pro.id}
-                            status={pro.verification_status ?? "pending"}
-                            reason={pro.verification_reason}
-                            noCrId={pro.no_cr_id ?? false}
-                            onSaved={handleSaved}
-                          />
-                        )}
-
-
                         {/* "Usar servicios" — the seek capability. */}
                         {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}

@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrevoEmail } from "@/lib/email/send";
 
-const PRO_LINK = "/es/dashboard/profesional?tab=verificacion";
+const PRO_LINK = "/es/dashboard/profesional?tab=profile&mode=offer&focus=verification";
 
 type DecisionKind = "verified" | "pending" | "rejected" | "reverted";
 
