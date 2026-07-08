@@ -40,6 +40,22 @@ interface SearchPageProps {
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAX_CARD_SLOTS_PER_PRO = 24;
 
+type SearchWorkplace = {
+  id?: string;
+  name?: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+  provinciaId?: string;
+  provinceId?: string;
+  cantonId?: string;
+};
+
+function isExactWorkplacePin(workplace: SearchWorkplace | undefined): workplace is SearchWorkplace & { lat: number; lng: number } {
+  if (!workplace || typeof workplace.lat !== "number" || typeof workplace.lng !== "number") return false;
+  return typeof workplace.address === "string" && workplace.address.trim().length > 0;
+}
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const t = await getTranslations("search");
@@ -157,10 +173,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
   }
 
-  // Map pins for every matching professional (fixed-location → exact coords;
-  // mobile pros → province centroid).
-  // One pin per professional — or one pin per workplace when they have fixed
-  // locations (each workplace shows on the map geographically).
+  // Map pins only represent exact workplace pins marked on the map. Broad
+  // province/canton coverage and legacy professional coordinates stay card-only.
   // "Disponibilidad inmediata" sort: order by the soonest bookable slot, reusing
   // the same availability read that powers the card strips.
   if (sortBy === "availability") {
@@ -195,18 +209,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       priceLabel: primaryPricingLabel(pro.pricing, pro.hourlyRate, locale),
       provinceName: pro.provinceName,
     };
-    const places = (pro.workplaces ?? []).filter((w) => typeof w.lat === "number" && typeof w.lng === "number");
+    const places = ((pro.workplaces ?? []) as SearchWorkplace[]).filter(isExactWorkplacePin);
     if (places.length > 0) {
       return places.map((w, i) => ({ ...base, id: `${pro.id}-${w.id ?? i}`, lat: w.lat as number, lng: w.lng as number }));
     }
-    if ((pro.workplaces ?? []).length > 0) {
-      // The professional listed work zones but did not add an exact workplace pin.
-      // In that case, do not draw a map marker.
-      return [];
-    }
-    return typeof pro.lat === "number" && typeof pro.lng === "number"
-      ? [{ ...base, lat: pro.lat, lng: pro.lng }]
-      : [];
+    return [];
   });
 
   // Number the cards on THIS page (1..N top-to-bottom) and pass the same numbers
@@ -229,18 +236,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   function matchesSelectedPhysicalLocation(pro: (typeof results)[number]) {
     if (exactLocationActive) {
       const distances: number[] = [];
-      if (typeof pro.lat === "number" && typeof pro.lng === "number") {
-        distances.push(haversineKm(nearLat, nearLng, pro.lat, pro.lng));
-      }
-      for (const wp of pro.workplaces ?? []) {
-        if (typeof wp.lat === "number" && typeof wp.lng === "number") {
+      for (const wp of (pro.workplaces ?? []) as SearchWorkplace[]) {
+        if (isExactWorkplacePin(wp)) {
           distances.push(haversineKm(nearLat, nearLng, wp.lat as number, wp.lng as number));
         }
       }
       return distances.some((distance) => distance <= 25);
     }
     if (!activeProvince && !activeCanton) return true;
-    const workplaces = (pro.workplaces ?? []) as Array<{ provinciaId?: string; cantonId?: string; provinceId?: string; name?: string; address?: string }>;
+    const workplaces = (pro.workplaces ?? []) as SearchWorkplace[];
     if (activeCanton) {
       return pro.cantonName === selectedCantonName ||
         pro.coverage?.cantones?.includes(selectedCantonName) ||

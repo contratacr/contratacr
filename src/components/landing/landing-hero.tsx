@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, LocateFixed, Search, MapPin, User } from "lucide-react";
+import { Loader2, LocateFixed, Search, MapPin } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
@@ -176,7 +176,7 @@ function SuggestionsDropdown({
     >
       {suggestions.map((s, i) => (
         <button
-          key={s.type === "category" ? `c-${s.id}` : `p-${s.slug}`}
+          key={`c-${s.id}`}
           type="button"
           role="option"
           aria-selected={i === activeIdx}
@@ -188,19 +188,12 @@ function SuggestionsDropdown({
             i === activeIdx ? "bg-[#EBF5FB]" : "hover:bg-gray-50"
           )}
         >
-          {s.type === "category" ? (
-            <Search className="h-4 w-4 text-[#009FD9] shrink-0" />
-          ) : (
-            <User className="h-4 w-4 text-[#009FD9] shrink-0" />
-          )}
+          <Search className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
             <span className="block text-sm text-[#111827] truncate">{s.label}</span>
-            {s.type === "professional" && s.sublabel && (
-              <span className="block text-xs text-gray-400 truncate">{s.sublabel}</span>
-            )}
           </span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
-            {s.type === "category" ? "Servicio" : "Perfil"}
+            Servicio
           </span>
         </button>
       ))}
@@ -437,16 +430,15 @@ export function LandingHero() {
     | { kind: "nearMe"; lat: number; lng: number };
   function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride) {
     const params = new URLSearchParams();
-    // `serviceOverride` (from Enter) resolves a partial term to the best suggestion. A CATEGORY
-    // → filter by id (e.g. "electrici" → categoria=electricista); a professional → search their
-    // name; otherwise the literal typed text.
+    // `serviceOverride` (from Enter) resolves a partial term to the best service
+    // suggestion. Otherwise we infer the service from the typed text or send q.
     const chosen = serviceOverride ?? (serviceSel && serviceSel.label === service ? serviceSel : null);
-    if (chosen && chosen.type === "category") {
+    if (chosen) {
       params.set("categoria", chosen.id);
     } else {
-      const svc = (chosen?.type === "professional" ? chosen.label : service).trim();
+      const svc = service.trim();
       if (svc) {
-        const inferred = chosen?.type === "professional" ? null : resolveCategoryIntent(svc, locale);
+        const inferred = resolveCategoryIntent(svc, locale);
         if (inferred) params.set("categoria", inferred.id);
         else params.set("q", svc);
       }

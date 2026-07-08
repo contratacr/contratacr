@@ -137,6 +137,13 @@ function primaryPriceAmount(p: ProfessionalCardData): number | null {
   return null;
 }
 
+type ProfessionalWorkplace = NonNullable<ProfessionalCardData["workplaces"]>[number];
+
+function isExactWorkplacePin(workplace: ProfessionalWorkplace | undefined): workplace is ProfessionalWorkplace & { lat: number; lng: number } {
+  if (!workplace || typeof workplace.lat !== "number" || typeof workplace.lng !== "number") return false;
+  return typeof workplace.address === "string" && workplace.address.trim().length > 0;
+}
+
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
 export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
@@ -476,11 +483,8 @@ async function searchProfessionalsUncached(
             (!!filters.categoryId && filters.categoryId !== "todas" && supportsVideoConsultCategory(filters.categoryId)));
         const distOfExactPin = (p: ProfessionalCardData): number => {
           const distances: number[] = [];
-          if (typeof p.lat === "number" && typeof p.lng === "number") {
-            distances.push(haversineKm(nearLat, nearLng, p.lat, p.lng));
-          }
           for (const wp of p.workplaces ?? []) {
-            if (typeof wp.lat === "number" && typeof wp.lng === "number") {
+            if (isExactWorkplacePin(wp)) {
               distances.push(haversineKm(nearLat, nearLng, wp.lat as number, wp.lng as number));
             }
           }
@@ -518,8 +522,7 @@ async function searchProfessionalsUncached(
         const b = filters.bounds;
         const within = (lat: number, lng: number) => lat <= b.north && lat >= b.south && lng <= b.east && lng >= b.west;
         return mapped.filter((p) => {
-          if (typeof p.lat === "number" && typeof p.lng === "number" && within(p.lat, p.lng)) return true;
-          if ((p.workplaces ?? []).some((w) => typeof w.lat === "number" && typeof w.lng === "number" && within(w.lat as number, w.lng as number))) return true;
+          if ((p.workplaces ?? []).some((w) => isExactWorkplacePin(w) && within(w.lat as number, w.lng as number))) return true;
           return false;
         });
       }

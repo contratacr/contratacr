@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   searchCategories,
-  getMatchingCategoryIds,
   getCategoryLabel,
   normalizeText,
   resolveCategoryIntent,
@@ -11,11 +10,11 @@ const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export type SearchSuggestion =
-  | { type: "category"; id: string; label: string }
-  | { type: "professional"; slug: string; label: string; sublabel?: string };
+  | { type: "category"; id: string; label: string };
 
-// Autocomplete for the homepage search bar. Combines the service-category taxonomy
-// with actual professional specialties so suggestions always lead to results.
+// Autocomplete for public service search bars. Keep suggestions focused on
+// services: professional names would become long, incomplete and inconsistent as
+// the marketplace grows.
 //
 // IMPORTANT: the static `searchCategories()` taxonomy lives in code; the DYNAMIC
 // overlay of admin-approved custom categories is loaded CLIENT-SIDE (via
@@ -31,8 +30,8 @@ export async function GET(req: NextRequest) {
 
   const norm = normalizeText(q);
 
-  // Create the client once (RLS lets anyone read approved category_suggestions +
-  // professionals). Best-effort: static category matches always return regardless.
+  // Create the client once (RLS lets anyone read approved category_suggestions).
+  // Best-effort: static category matches always return regardless.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let supabase: any = null;
   if (SUPABASE_CONFIGURED) {
@@ -97,41 +96,7 @@ export async function GET(req: NextRequest) {
 
   const categorySuggestions: SearchSuggestion[] = [...staticCats, ...customCats].slice(0, 6);
 
-  // 2. Real professionals whose specialty matches the query — including those
-  //    registered under a newly-approved custom category (customIds).
-  let professionalSuggestions: SearchSuggestion[] = [];
-  if (supabase) {
-    try {
-      const catIds = [...new Set([...getMatchingCategoryIds(q), ...customIds])];
-      if (catIds.length > 0) {
-        const { data } = await supabase
-          .from("professionals")
-          .select("slug, category_id, rating_avg, profiles(full_name)")
-          .in("category_id", catIds)
-          .order("rating_avg", { ascending: false })
-          .limit(4);
-
-        professionalSuggestions = ((data ?? []) as unknown[])
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((p: any): SearchSuggestion => {
-            const cid = p.category_id as string;
-            const customLabel = customCats.find((c) => c.type === "category" && c.id === cid)?.label;
-            return {
-              type: "professional",
-              slug: p.slug as string,
-              label: (p.profiles?.full_name as string) ?? "Profesional",
-              sublabel: customLabel ?? getCategoryLabel(cid, locale),
-            };
-          })
-          .filter((s) => s.type === "professional" && !!s.slug);
-      }
-    } catch (err) {
-      // Best-effort — category suggestions still return.
-      console.error("[GET /api/search/suggestions] pro lookup failed:", err);
-    }
-  }
-
   return NextResponse.json({
-    suggestions: [...categorySuggestions, ...professionalSuggestions].slice(0, 8),
+    suggestions: categorySuggestions.slice(0, 8),
   });
 }

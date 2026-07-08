@@ -14,6 +14,7 @@ test.describe("@smoke public APIs", () => {
     const body = await expectJson(response);
     expect(Array.isArray(body.suggestions)).toBe(true);
     expect(JSON.stringify(body)).toMatch(/plomer/i);
+    expect(body.suggestions.every((item: { type?: string }) => item.type === "category")).toBe(true);
   });
 
   test("service suggestions keep current catalog labels and avoid raw fallbacks", async ({ request }) => {
