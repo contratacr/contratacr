@@ -249,14 +249,16 @@ export function VerificationPanel({
         )}
 
         {currentCheck && !currentCheck.taken && (
-          <button
-            onClick={addCedula}
-            disabled={cedulaSaving || !canAddCedula}
-            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#009FD9] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50"
-          >
-            <ShieldCheck className="h-4 w-4" />{" "}
-            {cedulaSaving ? t("savingCedula") : t("addCedula")}
-          </button>
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={addCedula}
+              disabled={cedulaSaving || !canAddCedula}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50 sm:w-auto sm:min-w-[132px]"
+            >
+              <ShieldCheck className="h-4 w-4" />{" "}
+              {cedulaSaving ? t("savingCedula") : t("addCedula")}
+            </button>
+          </div>
         )}
 
       </>
