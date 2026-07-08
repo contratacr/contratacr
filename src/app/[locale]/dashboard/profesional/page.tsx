@@ -974,7 +974,7 @@ export default function DashboardPage() {
                     ? "Try again. If it continues, contact support so we can review your professional profile."
                     : "Intenta de nuevo. Si continúa, contacta soporte para revisar tu perfil profesional."}
                 </p>
-                <Button onClick={fetchPro}>
+                <Button onClick={() => fetchPro()}>
                   {locale === "en" ? "Try again" : "Intentar de nuevo"}
                 </Button>
               </CardContent>
