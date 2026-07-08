@@ -142,7 +142,7 @@ function ProCard({
           {/* Company + price share the first row, like the real result card. The
               price is compact so "SG Solutions" keeps room in the miniature. */}
           <div className="flex min-w-0 items-start gap-1.5">
-            <span className="min-w-0 flex-1 text-[13px] font-bold leading-tight text-[#111827] [overflow-wrap:anywhere]">{company}</span>
+            <span className="min-w-0 flex-1 text-[13px] font-bold leading-none text-[#111827] [overflow-wrap:anywhere]">{company}</span>
             {price ? (
               <span className="shrink-0 whitespace-nowrap pt-px leading-tight text-right">
                 {/* A colones amount renders blue + grey unit; a text price renders blue,
@@ -159,7 +159,7 @@ function ProCard({
             ) : null}
           </div>
           {/* "Verificado" on its OWN line below. */}
-          <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
+          <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
           {person ? <p className="mt-0.5 truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
           {/* Profession chip + reviews sit DIRECTLY under the name (mirrors the real
               /buscar card: company → personal name → profession → reviews, all grouped
