@@ -159,7 +159,7 @@ function ProCard({
             ) : null}
           </div>
           {/* "Verificado" on its OWN line below. */}
-          <span className="mt-1 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
+          <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
           {person ? <p className="mt-0.5 truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
           {/* Profession chip + reviews sit DIRECTLY under the name (mirrors the real
               /buscar card: company → personal name → profession → reviews, all grouped
@@ -167,13 +167,13 @@ function ProCard({
           {/* A card with service categories shows THEM as the chips (same grey chip
               style) instead of a single profession chip; otherwise the profession chip. */}
           {categories && categories.length > 0 ? (
-            <div className="mt-1.5 flex flex-wrap gap-1">
+            <div className="mt-1 flex flex-wrap gap-1">
               {categories.map((c) => (
                 <span key={c} className="inline-block w-fit rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{c}</span>
               ))}
             </div>
           ) : (
-            <span className="mt-1.5 inline-block w-fit rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{profession}</span>
+            <span className="mt-1 inline-block w-fit rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{profession}</span>
           )}
           <div className="mt-1 flex items-center gap-1 text-[10px]">
             <Star className="h-2.5 w-2.5 fill-[#ff9b32] text-[#ff9b32]" />
@@ -232,7 +232,7 @@ export type ResultsCopyTranslation = (key: string, values?: Record<string, strin
 
 export type ResultsCopy = {
   title: string; categories: string[]; results: string; search: string; verified: string;
-  whatsapp: string; viewSchedule: string; noScheduleNote: string; priceUnit: string; priceOnRequest: string;
+  whatsapp: string; viewSchedule: string; noScheduleNote: string; priceUnit: string; priceOnRequest: string; secondaryProfession: string;
   primaryPlace: string; primaryAddress?: string; secondaryPlace: string; secondaryAddress?: string;
   reviews: (n: number) => string;
   days: { label: string; times: string[] }[];
@@ -251,6 +251,7 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
   noScheduleNote: "La disponibilidad de este perfil no es pública. Contáctanos y conoce sus horarios.",
   priceUnit: "/hora",
   priceOnRequest: "Consultar precio",
+  secondaryProfession: "Desarrollo web",
   primaryPlace: "Atenas, Alajuela",
   secondaryPlace: "Grecia, Alajuela",
   reviews: (n) => `${n} reseñas`,
@@ -297,6 +298,7 @@ export function buildLandingResultsCopy({
     noScheduleNote: tSchedule("availabilityHiddenNote"),
     priceUnit: tCard("perHour"),
     priceOnRequest: isEnglish ? "Ask price" : "Consultar precio",
+    secondaryProfession: isEnglish ? "Web development" : "Desarrollo web",
     primaryPlace: "Atenas, Alajuela",
     secondaryPlace: "Grecia, Alajuela",
     reviews: (n: number) => tCard("reviewsCount", { count: n }),
@@ -326,7 +328,7 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
         />
         <ProCard
-          rank={2} initials="AM" image="https://randomuser.me/api/portraits/women/68.jpg" company="Ana Mora" profession={copy.title}
+          rank={2} initials="CR" image="/logo-mark-transparent.png" company="ContrataCR" profession={copy.secondaryProfession}
           place={copy.secondaryPlace} address={copy.secondaryAddress} rating="4.8" reviews={copy.reviews(31)}
           price={copy.priceOnRequest} verified={copy.verified}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp} noScheduleNote={copy.noScheduleNote}
