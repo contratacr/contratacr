@@ -1,4 +1,6 @@
+import { unstable_cache } from "next/cache";
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { deriveDisplayPricing } from "@/lib/pricing";
 import { getMatchingCategoryIds, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { getProvinceById, PROVINCES, haversineKm } from "@/lib/data/cr-geography";
@@ -26,6 +28,8 @@ const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const NEAR_ME_RADIUS_KM = 25;
+const SEARCH_CACHE_SECONDS = 30;
+const ZONE_COVERAGE_CACHE_SECONDS = 300;
 
 
 type LocationQueryMatch =
@@ -168,13 +172,44 @@ export type Review = {
 // Search / list
 // ---------------------------------------------------------------------------
 
-export async function searchProfessionals(
+function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
+  const normalized: SearchFilters = {
+    categoryId: filters.categoryId || undefined,
+    provinceId: filters.provinceId || undefined,
+    cantonId: filters.cantonId || undefined,
+    sortBy: filters.sortBy || undefined,
+    query: filters.query?.trim() || undefined,
+    verifiedOnly: filters.verifiedOnly || undefined,
+    insurerId: filters.insurerId || undefined,
+    languageId: filters.languageId || undefined,
+    modality: filters.modality ?? "any",
+  };
+  if (typeof filters.nearLat === "number" && Number.isFinite(filters.nearLat)) normalized.nearLat = filters.nearLat;
+  if (typeof filters.nearLng === "number" && Number.isFinite(filters.nearLng)) normalized.nearLng = filters.nearLng;
+  if (filters.bounds && Object.values(filters.bounds).every(Number.isFinite)) normalized.bounds = { ...filters.bounds };
+  return normalized;
+}
+
+const searchProfessionalsCached = unstable_cache(
+  async (filters: SearchFilters) => searchProfessionalsUncached(filters),
+  ["search-professionals-v3"],
+  { revalidate: SEARCH_CACHE_SECONDS },
+);
+
+export async function searchProfessionals(filters: SearchFilters): Promise<ProfessionalCardData[]> {
+  const normalized = normalizeSearchFilters(filters);
+  if (normalized.bounds || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number")) {
+    return searchProfessionalsUncached(normalized);
+  }
+  return searchProfessionalsCached(normalized);
+}
+
+async function searchProfessionalsUncached(
   filters: SearchFilters
 ): Promise<ProfessionalCardData[]> {
   if (SUPABASE_CONFIGURED) {
     try {
-      const { createClient } = await import("@/lib/supabase/server");
-      const supabase = await createClient();
+      const supabase = createAdminClient();
 
       // Built as a closure so we can retry without the `is_banned` filter if that
       // column hasn't been migrated yet (migration 029) â€” search never breaks.
@@ -526,13 +561,21 @@ export type ZoneCoverage = {
   countryWide: boolean;
 };
 
+const getZoneCoverageCached = unstable_cache(
+  async () => getZoneCoverageUncached(),
+  ["zone-coverage-v2"],
+  { revalidate: ZONE_COVERAGE_CACHE_SECONDS },
+);
+
 export async function getZoneCoverage(): Promise<ZoneCoverage> {
+  return getZoneCoverageCached();
+}
+
+async function getZoneCoverageUncached(): Promise<ZoneCoverage> {
   const empty: ZoneCoverage = { byProvince: {}, countryWide: false };
   if (!SUPABASE_CONFIGURED) return empty;
   try {
-    const { createClient } = await import("@/lib/supabase/server");
-    const { getProvinceById } = await import("@/lib/data/cr-geography");
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const select = (modern: boolean) =>
       supabase
@@ -541,10 +584,8 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
           `provincia_id, canton_id${modern ? ", search_provincias, search_cantones, coverage_provincias, coverage_country, is_banned" : ""}, verification_status, profiles(is_disabled)`
         );
 
-    let modern = true;
     let res = await select(true).eq("is_banned", false).neq("verification_status", "rejected");
     if (res.error && /is_banned|search_|coverage_|column/i.test(res.error.message)) {
-      modern = false;
       res = await select(false).neq("verification_status", "rejected");
     }
     if (res.error || !res.data) return empty;

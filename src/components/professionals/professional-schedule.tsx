@@ -83,6 +83,8 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
 export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
+  const scheduleRootRef = useRef<HTMLDivElement>(null);
+  const [shouldAutoRefresh, setShouldAutoRefresh] = useState(stacked);
   const [liveData, setLiveData] = useState<{
     professionalId: string;
     availabilityPublic: boolean;
@@ -106,12 +108,31 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // instead of hiding the buttons (the card looks identical to a client's view).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (stacked) {
+      return;
+    }
+    const el = scheduleRootRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      queueMicrotask(() => setShouldAutoRefresh(true));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setShouldAutoRefresh(entry.isIntersecting),
+      { rootMargin: "360px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [stacked]);
+
   // What the professional accepts. Booking needs public availability AND a
   // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
   // appointments-only.
   const canBook = !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
 
   useEffect(() => {
+    if (!shouldAutoRefresh) return;
     let active = true;
     let debounce: number | null = null;
 
@@ -138,7 +159,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     }
 
     refreshSoon();
-    const interval = window.setInterval(refreshPublicAvailability, 10000);
+    const interval = window.setInterval(refreshPublicAvailability, 60000);
     window.addEventListener("focus", refreshSoon);
     window.addEventListener("notificationsChanged", refreshSoon);
     window.addEventListener("ccr:availability-changed", refreshSoon);
@@ -150,7 +171,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       window.removeEventListener("notificationsChanged", refreshSoon);
       window.removeEventListener("ccr:availability-changed", refreshSoon);
     };
-  }, [allSlots, availabilityPublic, professional.id]);
+  }, [allSlots, availabilityPublic, professional.id, shouldAutoRefresh]);
 
   // Distinct fixed/base locations present in the published slots. Chips let the
   // client choose WHICH physical place a slot is for before booking.
@@ -690,7 +711,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     // servicio" here (the WhatsApp/Llamar contact buttons replace it).
     return (
       <>
-        <div className="flex flex-col gap-3">
+        <div ref={scheduleRootRef} className="flex flex-col gap-3">
           {locationControl}
           {scheduleBody}
           <div className="flex flex-col gap-2">
@@ -712,7 +733,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           (schedule + buttons, 300px) separated by a VERTICAL divider, so more fit per screen.
           The grid (no `items-start`) lets the columns stretch to equal height so the divider
           runs full-height and the schedule centers against the taller left column. */}
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_292px] lg:gap-5 lg:min-h-[184px]">
+      <div ref={scheduleRootRef} className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_292px] lg:gap-5 lg:min-h-[184px]">
         {/* LEFT — professional info + location tabs/address (under the rating). */}
         <div className="flex min-w-0 flex-col gap-2.5">
           {info}

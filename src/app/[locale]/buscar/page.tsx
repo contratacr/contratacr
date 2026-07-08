@@ -38,6 +38,7 @@ interface SearchPageProps {
 }
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+const MAX_CARD_SLOTS_PER_PRO = 24;
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
@@ -88,85 +89,42 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // slot (those with no upcoming slots go last). Done here (not in the SQL query)
   // because slots live in a separate table; best-effort, falls back to default order.
   let orderedResults = allResults;
-  if (sortBy === "availability") {
-    try {
-      const supabase = createAdminClient();
-      const todayISO = new Date().toISOString().slice(0, 10);
-      const ids = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
-      const earliest: Record<string, string> = {};
-      if (ids.length > 0) {
-        const taken = new Set<string>();
-        const { data: takenRows } = await supabase
-          .from("bookings")
-          .select("professional_id, scheduled_date, scheduled_time")
-          .in("professional_id", ids)
-          .in("status", ["pending", "confirmed", "in_progress", "awaiting_confirmation"])
-          .not("scheduled_date", "is", null)
-          .not("scheduled_time", "is", null);
-        for (const b of takenRows ?? []) {
-          taken.add(`${b.professional_id}:${b.scheduled_date}:${String(b.scheduled_time).slice(0, 5)}`);
-        }
-        const { data } = await supabase
-          .from("availability_slots")
-          .select("professional_id, slot_date, slot_time")
-          .in("professional_id", ids)
-          .gte("slot_date", todayISO)
-          .order("slot_date")
-          .order("slot_time")
-          .limit(3000);
-        for (const r of data ?? []) {
-          const pid = r.professional_id as string;
-          const time = String(r.slot_time).slice(0, 5);
-          if (taken.has(`${pid}:${r.slot_date}:${time}`)) continue;
-          const key = `${r.slot_date}T${time}`;
-          if (!earliest[pid] || key < earliest[pid]) earliest[pid] = key;
-        }
-      }
-      orderedResults = [...allResults].sort((a, b) => {
-        const ea = earliest[a.id];
-        const eb = earliest[b.id];
-        if (ea && eb) return ea < eb ? -1 : ea > eb ? 1 : 0;
-        if (ea) return -1;
-        if (eb) return 1;
-        return 0;
-      });
-    } catch {
-      /* fall back to default order */
-    }
-  }
-
-  const results = orderedResults;
 
   // Fetch upcoming published slots for the professionals on THIS page so each
   // card can show inline availability (Hulihealth-style). Private pros are
   // skipped — their slots must not appear.
   const slotsByPro: Record<string, ScheduleSlot[]> = {};
+  const earliestByPro: Record<string, string> = {};
   const videoMode = params.modalidad === "video";
-  const publicIds = results.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
+  const publicIds = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
   if (publicIds.length > 0) {
     try {
       const supabase = createAdminClient();
       const todayISO = new Date().toISOString().slice(0, 10);
       const taken = new Set<string>();
-      const { data: takenRows } = await supabase
-        .from("bookings")
-        .select("professional_id, scheduled_date, scheduled_time")
-        .in("professional_id", publicIds)
-        .in("status", ["pending", "confirmed", "in_progress", "awaiting_confirmation"])
-        .not("scheduled_date", "is", null)
-        .not("scheduled_time", "is", null);
+      const slotLimit = sortBy === "availability" ? 3000 : 400;
+      const [takenResult, slotResult] = await Promise.all([
+        supabase
+          .from("bookings")
+          .select("professional_id, scheduled_date, scheduled_time")
+          .in("professional_id", publicIds)
+          .in("status", ["pending", "confirmed", "in_progress", "awaiting_confirmation"])
+          .not("scheduled_date", "is", null)
+          .not("scheduled_time", "is", null),
+        supabase
+          .from("availability_slots")
+          .select("professional_id, slot_date, slot_time, location_id, category_id")
+          .in("professional_id", publicIds)
+          .gte("slot_date", todayISO)
+          .order("slot_date")
+          .order("slot_time")
+          .limit(slotLimit),
+      ]);
+      const takenRows = takenResult.data;
       for (const b of takenRows ?? []) {
         taken.add(`${b.professional_id}:${b.scheduled_date}:${String(b.scheduled_time).slice(0, 5)}`);
       }
-      let slotRows: Record<string, unknown>[] | null = null;
-      ({ data: slotRows } = await supabase
-        .from("availability_slots")
-        .select("professional_id, slot_date, slot_time, location_id, category_id")
-        .in("professional_id", publicIds)
-        .gte("slot_date", todayISO)
-        .order("slot_date")
-        .order("slot_time")
-        .limit(400));
+      let slotRows = slotResult.data as Record<string, unknown>[] | null;
       if (!slotRows) {
         // Pre-migration fallback (no category_id column).
         ({ data: slotRows } = await supabase
@@ -176,13 +134,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           .gte("slot_date", todayISO)
           .order("slot_date")
           .order("slot_time")
-          .limit(400));
+          .limit(slotLimit));
       }
       for (const r of slotRows ?? []) {
+        const professionalId = r.professional_id as string;
+        const date = r.slot_date as string;
         const time = String(r.slot_time).slice(0, 5);
-        if (taken.has(`${r.professional_id}:${r.slot_date}:${time}`)) continue;
-        (slotsByPro[r.professional_id as string] ??= []).push({
-          date: r.slot_date as string,
+        if (taken.has(`${professionalId}:${date}:${time}`)) continue;
+        const key = `${date}T${time}`;
+        if (!earliestByPro[professionalId] || key < earliestByPro[professionalId]) earliestByPro[professionalId] = key;
+        const visibleSlots = (slotsByPro[professionalId] ??= []);
+        if (visibleSlots.length >= MAX_CARD_SLOTS_PER_PRO) continue;
+        visibleSlots.push({
+          date,
           time,
           locationId: (r as { location_id?: string }).location_id ?? null,
           categoryId: (r as { category_id?: string }).category_id ?? null,
@@ -197,6 +161,21 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // mobile pros → province centroid).
   // One pin per professional — or one pin per workplace when they have fixed
   // locations (each workplace shows on the map geographically).
+  // "Disponibilidad inmediata" sort: order by the soonest bookable slot, reusing
+  // the same availability read that powers the card strips.
+  if (sortBy === "availability") {
+    orderedResults = [...allResults].sort((a, b) => {
+      const ea = earliestByPro[a.id];
+      const eb = earliestByPro[b.id];
+      if (ea && eb) return ea < eb ? -1 : ea > eb ? 1 : 0;
+      if (ea) return -1;
+      if (eb) return 1;
+      return 0;
+    });
+  }
+
+  const results = orderedResults;
+
   const mapData = allResults.flatMap((pro) => {
     const base = {
       id: pro.id,
