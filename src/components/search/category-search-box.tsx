@@ -38,7 +38,8 @@ function matchCategories(query: string, limit = 8): CatMatch[] {
   return getAllCategories()
     .map((item) => {
       const words = normalizeText(item.label).split(/\s+/);
-      const best = Math.min(...words.map((w) => editDistance(w, q)));
+      const comparableWords = words.filter((w) => Math.abs(w.length - q.length) <= 1);
+      const best = comparableWords.length ? Math.min(...comparableWords.map((w) => editDistance(w, q))) : Number.POSITIVE_INFINITY;
       return { item, best };
     })
     .filter((x) => x.best <= tol)

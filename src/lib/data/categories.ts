@@ -858,11 +858,15 @@ export function resolveCategoryIntent(query: string, locale?: string): (Category
     let score = 0;
     for (const term of terms) {
       const normalizedTerm = normalizeText(term);
-      if (q.includes(normalizedTerm) || normalizedTerm.includes(q)) score += normalizedTerm === q ? 80 : 30;
+      const directScore = Math.max(
+        searchTextScore(term, q, 80, 30, 30),
+        searchTextScore(raw, normalizedTerm, 80, 30, 30),
+      );
+      if (directScore > 0) score += directScore;
       const termTokens = queryTokens(term);
       for (const token of tokens) {
         if (termTokens.includes(token)) score += 12;
-        else if (termTokens.some((t) => t.includes(token) || token.includes(t))) score += 7;
+        else if (termTokens.some((t) => t.startsWith(token))) score += 7;
       }
     }
     if (score > (best?.score ?? 0)) best = { item, score };
@@ -1128,9 +1132,11 @@ export function getMatchingCategoryIds(query: string): string[] {
   const embeddedMatches = ALL_CATEGORIES.filter((category) => {
     const terms = [category.label, ...(category.keywords ?? [])]
       .filter((term): term is string => !!term)
-      .map((term) => normalizeText(term))
       .filter((term) => term.length >= 3);
-    return terms.some((term) => normalizedQuery.includes(term) || term.includes(normalizedQuery));
+    return terms.some((term) =>
+      searchTextScore(term, normalizedQuery, 120, 90, 55) > 0 ||
+      searchTextScore(normalizedQuery, term, 120, 90, 55) > 0
+    );
   }).map((category) => category.id);
   return [...new Set([
     ...(inferred ? [inferred.id] : []),
