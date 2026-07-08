@@ -51,5 +51,17 @@ export async function POST(req: Request) {
     client_identity_status: outcome === "verified" ? "verified" : "pending",
     client_identity_verified_at: outcome === "verified" ? new Date().toISOString() : null,
   }).eq("id", user.id);
-  return NextResponse.json({ ok: true, outcome });
+
+  const { data: updatedProfile } = await db
+    .from("profiles")
+    .select("full_name, cedula")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return NextResponse.json({
+    ok: true,
+    outcome,
+    fullName: outcome === "verified" ? updatedProfile?.full_name ?? null : null,
+    cedula: outcome === "verified" ? updatedProfile?.cedula ?? cedula : null,
+  });
 }

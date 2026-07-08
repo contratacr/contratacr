@@ -104,7 +104,8 @@ export function AdminUserProfile({
   const [error, setError] = useState<string | null>(null);
   const [identityBusy, setIdentityBusy] = useState<ActionState | null>(null);
   const [identityError, setIdentityError] = useState<string | null>(null);
-  const [confirmRevoke, setConfirmRevoke] = useState(false);
+  const [identityReasonAction, setIdentityReasonAction] = useState<"reject" | "revert_pending" | null>(null);
+  const [identityReason, setIdentityReason] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -124,18 +125,19 @@ export function AdminUserProfile({
     setData(json);
   }
 
-  async function updateIdentity(action: ActionState) {
+  async function updateIdentity(action: ActionState, reason?: string) {
     setIdentityBusy(action);
     setIdentityError(null);
     try {
       const res = await fetch(`/api/admin/users/${userId}/identity`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, reason: reason ?? "" }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json.error) throw new Error(json.error ?? "No se pudo actualizar la verificación.");
-      setConfirmRevoke(false);
+      setIdentityReasonAction(null);
+      setIdentityReason("");
       await refreshUser();
     } catch (err) {
       setIdentityError(err instanceof Error ? err.message : "No se pudo actualizar la verificación.");
@@ -294,6 +296,17 @@ export function AdminUserProfile({
                     Marcar verificado
                   </button>
                 )}
+                {!professionalSignupIncomplete && !isIdentityVerified && !isIdentityRejected && (
+                  <button
+                    type="button"
+                    onClick={() => setIdentityReasonAction("reject")}
+                    disabled={identityBusy != null}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#dc2626] text-sm font-bold text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Rechazar verificación
+                  </button>
+                )}
                 {!professionalSignupIncomplete && isIdentityRejected && (
                   <button
                     type="button"
@@ -305,10 +318,10 @@ export function AdminUserProfile({
                     Volver a pendiente
                   </button>
                 )}
-                {!professionalSignupIncomplete && !isIdentityRejected && (
+                {!professionalSignupIncomplete && isIdentityVerified && (
                   <button
                     type="button"
-                    onClick={() => setConfirmRevoke(true)}
+                    onClick={() => setIdentityReasonAction("revert_pending")}
                     disabled={identityBusy != null}
                     className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#dc2626] text-sm font-bold text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -318,25 +331,40 @@ export function AdminUserProfile({
                 )}
               </div>
             </div>
-            {confirmRevoke && (
+            {identityReasonAction && (
               <div className="mt-4 rounded-xl border border-red-100 bg-white p-3">
-                <p className="text-sm font-semibold text-[#111827]">¿Quitar verificación?</p>
-                <p className="mt-1 text-xs text-[#6b7280]">
-                  Se borrará la identificación guardada y se sincronizará también con el panel profesional si existe.
+                <p className="text-sm font-semibold text-[#111827]">
+                  {identityReasonAction === "reject" ? "¿Rechazar verificación?" : "¿Quitar verificación?"}
                 </p>
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  {identityReasonAction === "reject"
+                    ? "El profesional verá este motivo y podrá corregir o apelar desde su panel."
+                    : "Se quitará la insignia Verificado, se borrará la identificación guardada y se notificará al profesional."}
+                </p>
+                <textarea
+                  value={identityReason}
+                  onChange={(event) => setIdentityReason(event.target.value)}
+                  rows={3}
+                  placeholder={
+                    identityReasonAction === "reject"
+                      ? "Explica por qué no se aprueba la verificación."
+                      : "Explica por qué se quita la verificación."
+                  }
+                  className="mt-3 w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#dc2626]"
+                />
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => updateIdentity("reject")}
-                    disabled={identityBusy != null}
+                    onClick={() => updateIdentity(identityReasonAction, identityReason)}
+                    disabled={identityBusy != null || identityReason.trim().length === 0}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {identityBusy === "reject" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    Sí, quitar
+                    {identityBusy === identityReasonAction && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    {identityReasonAction === "reject" ? "Confirmar rechazo" : "Quitar verificación"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setConfirmRevoke(false)}
+                    onClick={() => { setIdentityReasonAction(null); setIdentityReason(""); }}
                     disabled={identityBusy != null}
                     className="rounded-lg border border-[#d1d5db] bg-white px-3 py-2 text-xs font-semibold text-[#374151] transition hover:bg-[#f3f4f6]"
                   >

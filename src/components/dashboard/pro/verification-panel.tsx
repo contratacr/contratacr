@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Clock3, Info, Send, ShieldCheck, XCircle } from "lucide-react";
+import { Clock3, Headset, Info, RotateCcw, Send, ShieldCheck, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { Link } from "@/i18n/navigation";
-import { SUPPORT_WHATSAPP_NUMBER } from "@/lib/constants";
+import { SupportLink } from "@/components/support/support-link";
 import { caseRef, type VerificationStatus } from "@/lib/verification";
 
 interface Props {
@@ -31,6 +31,8 @@ export function VerificationPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [verifiedName, setVerifiedName] = useState<string | null>(null);
+  const [verifiedCedula, setVerifiedCedula] = useState<string | null>(null);
 
   // Add-cédula-later (no-ID pros who obtained a CR cédula).
   const [newCedula, setNewCedula] = useState("");
@@ -38,8 +40,6 @@ export function VerificationPanel({
   const [cedulaError, setCedulaError] = useState<string | null>(null);
 
   const ref = caseRef(professionalId);
-  const waMsg = encodeURIComponent(t("waHelp", { ref }));
-  const waUrl = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${waMsg}`;
   const summaryTone =
     status === "verified"
       ? "verified"
@@ -53,6 +53,8 @@ export function VerificationPanel({
   async function runCheck(appealMode: boolean) {
     setError(null);
     setNote(null);
+    setVerifiedName(null);
+    setVerifiedCedula(null);
     if (appealMode && appeal.trim().length < 10) {
       setError(t("appealMinError"));
       return;
@@ -86,6 +88,8 @@ export function VerificationPanel({
     setError(null);
     setCedulaError(null);
     setNote(null);
+    setVerifiedName(null);
+    setVerifiedCedula(null);
     setCedulaBusy(true);
     try {
       const res = await fetch("/api/add-cedula", {
@@ -98,8 +102,15 @@ export function VerificationPanel({
         setCedulaError(json.error ?? t("processError"));
         return;
       }
-      if (json.outcome === "verified") setNote(t("cedulaVerified"));
-      else setNote(t("cedulaSaved"));
+      if (json.outcome === "verified") {
+        const nextName = typeof json.fullName === "string" ? json.fullName.trim() : "";
+        const nextCedula = typeof json.cedula === "string" ? json.cedula.trim() : newCedula;
+        setVerifiedName(nextName || null);
+        setVerifiedCedula(nextCedula || null);
+        setNote(t("cedulaVerified"));
+      } else {
+        setNote(t("cedulaSaved"));
+      }
       setNewCedula("");
       onSaved?.();
     } catch (e) {
@@ -140,22 +151,21 @@ export function VerificationPanel({
         </VerificationSummary>
 
         {note && (
-          <Notice tone="info" title={t("resultTitle")}>
-            {note}
-          </Notice>
+          <VerificationResultNotice
+            note={note}
+            title={t("resultTitle")}
+            verifiedName={verifiedName}
+            verifiedCedula={verifiedCedula}
+          />
         )}
         {error && <Notice tone="error">{error}</Notice>}
 
-        {/* WhatsApp follow-up to track the case */}
-        <a
-          href={waUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
+        {/* In-app support follow-up to track the case. */}
+        <SupportLink
+          className="inline-flex items-center gap-2 rounded-lg border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
         >
-          <WhatsAppIcon className="h-4 w-4 shrink-0" />{" "}
-          {t("waFollowUp", { ref })}
-        </a>
+          <Headset className="h-4 w-4 shrink-0" /> {t("supportFollowUp", { ref })}
+        </SupportLink>
 
         {/* Appeal → straight to support (no padrón re-run for no-ID cases) */}
         {status !== "under_appeal" && (
@@ -229,7 +239,12 @@ export function VerificationPanel({
         badge={status === "verified" ? t("verifiedChip") : undefined}
       >
         {status === "verified" && t.rich("verifiedBody", rich)}
-        {status === "pending" && t.rich("pendingBody", rich)}
+        {status === "pending" && (
+          <>
+            {reason && <span className="block">{t("reason", { reason })}</span>}
+            <span className={reason ? "mt-1 block" : undefined}>{t.rich("pendingBody", rich)}</span>
+          </>
+        )}
         {status === "under_appeal" && t("underAppealBody")}
         {status === "rejected" && (
           <>
@@ -244,9 +259,12 @@ export function VerificationPanel({
       </VerificationSummary>
 
       {note && (
-        <Notice tone="info" title={t("resultTitle")}>
-          {note}
-        </Notice>
+        <VerificationResultNotice
+          note={note}
+          title={t("resultTitle")}
+          verifiedName={verifiedName}
+          verifiedCedula={verifiedCedula}
+        />
       )}
       {error && <Notice tone="error">{error}</Notice>}
 
@@ -273,32 +291,24 @@ export function VerificationPanel({
               disabled={busy}
               className="inline-flex items-center gap-2 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
             >
-              <Send className="h-4 w-4" />{" "}
+              <RotateCcw className="h-4 w-4" />{" "}
               {busy ? t("sending") : t("appealReverify")}
             </button>
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
+            <SupportLink
+              className="inline-flex items-center gap-2 rounded-lg border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
             >
-              <WhatsAppIcon className="h-4 w-4 shrink-0" />{" "}
-              {t("supportWhatsapp")}
-            </a>
+              <Headset className="h-4 w-4 shrink-0" /> {t("supportApp")}
+            </SupportLink>
           </div>
         </ActionPanel>
       )}
 
       {status === "under_appeal" && (
-        <a
-          href={waUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
+        <SupportLink
+          className="inline-flex items-center gap-2 rounded-lg border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
         >
-          <WhatsAppIcon className="h-4 w-4 shrink-0" />{" "}
-          {t("supportWhatsappCase", { ref })}
-        </a>
+          <Headset className="h-4 w-4 shrink-0" /> {t("supportAppCase", { ref })}
+        </SupportLink>
       )}
 
       {/* Enter (or replace) a cédula to verify — for ANY non-verified pro: a REVOKED
@@ -430,5 +440,28 @@ function Notice({
       {title && <p className="mb-0.5 font-bold text-[#162543]">{title}</p>}
       <div>{children}</div>
     </div>
+  );
+}
+
+function VerificationResultNotice({
+  note,
+  title,
+  verifiedName,
+  verifiedCedula,
+}: {
+  note: string;
+  title: string;
+  verifiedName: string | null;
+  verifiedCedula: string | null;
+}) {
+  return (
+    <Notice tone="info" title={title}>
+      <p>{note}</p>
+      {verifiedName && (
+        <div className="mt-3">
+          <IdentityInfoBlock fullName={verifiedName} cedula={verifiedCedula ?? undefined} />
+        </div>
+      )}
+    </Notice>
   );
 }

@@ -96,14 +96,16 @@ export async function notifyVerificationDecision({
       );
     } else {
       type = "verification_reverted";
-      title = "Tu verificación de identidad fue actualizada";
-      message =
-        "Tras una nueva revisión, el estado de tu verificación cambió. Revisa tu panel para ver el detalle.";
+      title = "Tu verificación fue actualizada";
+      const safeReason = reason?.trim() || "No se especificó un motivo.";
+      message = `Tu verificación fue quitada. Motivo: ${compactReason(safeReason)}. Revisa tu panel para ver el detalle.`;
       html = emailShell(
         firstName,
         "Tu verificación fue actualizada",
         "#b45309",
-        `Tras una nueva revisión, el estado de tu <strong>verificación de identidad</strong> cambió. Entra a tu panel para ver el detalle y los próximos pasos.`,
+        `Tras una nueva revisión, se quitó la insignia <strong>Verificado</strong> de tu perfil.
+         <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#92400e;"><strong>Motivo:</strong> ${escapeHtml(safeReason)}</div>
+         Entra a tu panel para ver el detalle y los próximos pasos.`,
         "Ver mi verificación"
       );
     }
@@ -174,6 +176,10 @@ async function sendEmail(to: string | undefined, subject: string, html: string):
 
 function escapeHtml(s: string): string {
   return s.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function compactReason(reason: string): string {
+  return reason.length > 120 ? `${reason.slice(0, 117).trimEnd()}...` : reason;
 }
 
 function emailShell(

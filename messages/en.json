@@ -1843,7 +1843,7 @@
     "processError": "Couldn't process it. Try again.",
     "cedulaVerified": "Done! We verified your ID. You now appear as Verified and rank higher in results.",
     "cedulaSaved": "We saved your ID. If it wasn't verified automatically, it's under review.",
-    "waHelp": "Hi, I need help with my identity verification on ContrataCR (Case #{ref}).",
+    "verifiedNameLabel": "Verified name",
     "rejectedTitle": "Your verification wasn't approved",
     "reason": "Reason: {reason}",
     "noReason": "No reason was given.",
@@ -1853,7 +1853,7 @@
     "unverifiedTitle": "Identity unverified",
     "noCrUnverifiedBody": "Since you don't have a Costa Rican ID, an agent will review your document. Meanwhile <strong>you already appear in results</strong>, below verified profiles. Your account is active.",
     "resultTitle": "Result",
-    "waFollowUp": "Follow up on WhatsApp (Case #{ref})",
+    "supportFollowUp": "Contact support (Case #{ref})",
     "manualReviewTitle": "Request manual review",
     "manualReviewBody": "Tell us about your document (passport, DIMEX in progress) and we'll review it manually.",
     "manualReviewPlaceholder": "example: I have a Nicaraguan passport No.…, or DIMEX in progress No.…",
@@ -1878,8 +1878,8 @@
     "appealBody": "We re-verify your identity automatically. If it still doesn't match, we open a support case.",
     "appealPlaceholder": "Explain what you corrected or why we should review again…",
     "appealReverify": "Appeal and re-verify",
-    "supportWhatsapp": "Support on WhatsApp",
-    "supportWhatsappCase": "Support on WhatsApp (Case #{ref})"
+    "supportApp": "Contact support",
+    "supportAppCase": "Contact support (Case #{ref})"
   },
   "clientActivity": {
     "bStatus": {

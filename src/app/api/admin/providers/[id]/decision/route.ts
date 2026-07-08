@@ -36,17 +36,28 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!pro) return NextResponse.json({ error: "Proveedor no encontrado." }, { status: 404 });
 
   const fromStatus = pro.verification_status as VerificationStatus;
+  if (action === "revert_pending" && fromStatus === "verified" && !reason) {
+    return NextResponse.json({ error: "Debes indicar el motivo para quitar la verificación." }, { status: 400 });
+  }
+
   const toStatus: VerificationStatus = action === "verify" ? "verified" : action === "reject" ? "rejected" : "pending";
   const accountIdentityStatus = toStatus === "verified" ? "verified" : action === "reject" ? "unverified" : "pending";
-  const notifyKind: "verified" | "rejected" | "reverted" =
-    action === "verify" ? "verified" : action === "reject" ? "rejected" : "reverted";
+  const notifyKind: "verified" | "pending" | "rejected" | "reverted" =
+    action === "verify"
+      ? "verified"
+      : action === "reject"
+        ? "rejected"
+        : fromStatus === "verified"
+          ? "reverted"
+          : "pending";
+  const decisionReason = action === "reject" || (action === "revert_pending" && fromStatus === "verified") ? reason : null;
   const now = new Date().toISOString();
 
   const { error: updErr } = await db
     .from("professionals")
     .update({
       verification_status: toStatus,
-      verification_reason: action === "reject" ? reason : null,
+      verification_reason: decisionReason,
       verification_method: "manual",
       verification_updated_at: now,
       verified_at: toStatus === "verified" ? now : null,
@@ -129,7 +140,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     action: action === "verify" ? "verified" : action === "reject" ? "rejected" : "reverted_pending",
     from_status: fromStatus,
     to_status: toStatus,
-    reason: action === "reject" ? reason : null,
+    reason: decisionReason,
   });
 
   await db
@@ -146,7 +157,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .eq("status", "open");
   }
 
-  await notifyVerificationDecision({ professionalId: id, kind: notifyKind, reason });
+  await notifyVerificationDecision({ professionalId: id, kind: notifyKind, reason: decisionReason });
 
   return NextResponse.json({ ok: true, status: toStatus });
 }

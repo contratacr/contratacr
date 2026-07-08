@@ -1842,7 +1842,7 @@
     "processError": "No se pudo procesar. Intenta de nuevo.",
     "cedulaVerified": "¡Listo! Verificamos tu identificación. Ahora apareces como Verificado y subes en los resultados.",
     "cedulaSaved": "Guardamos tu identificación. Si no se verificó automáticamente, quedó en revisión.",
-    "waHelp": "Hola, necesito ayuda con mi verificación de identidad en ContrataCR (Caso #{ref}).",
+    "verifiedNameLabel": "Nombre verificado",
     "rejectedTitle": "Tu verificación no fue aprobada",
     "reason": "Motivo: {reason}",
     "noReason": "No se especificó un motivo.",
@@ -1852,7 +1852,7 @@
     "unverifiedTitle": "Identidad sin verificar",
     "noCrUnverifiedBody": "Como no tienes identificación costarricense, un agente revisará tu documento. Mientras tanto <strong>ya apareces en los resultados</strong>, debajo de los verificados. Tu cuenta está activa.",
     "resultTitle": "Resultado",
-    "waFollowUp": "Dar seguimiento por WhatsApp (Caso #{ref})",
+    "supportFollowUp": "Contactar soporte (Caso #{ref})",
     "manualReviewTitle": "Solicitar revisión manual",
     "manualReviewBody": "Cuéntanos sobre tu documento (pasaporte, DIMEX en trámite) y lo revisamos manualmente.",
     "manualReviewPlaceholder": "Ejemplo: Tengo pasaporte de Nicaragua N°…, o DIMEX en trámite N°…",
@@ -1877,8 +1877,8 @@
     "appealBody": "Volvemos a verificar tu identidad automáticamente. Si aún no coincide, abrimos un caso de soporte.",
     "appealPlaceholder": "Explica qué corregiste o por qué deberíamos revisar de nuevo…",
     "appealReverify": "Apelar y reverificar",
-    "supportWhatsapp": "Soporte por WhatsApp",
-    "supportWhatsappCase": "Soporte por WhatsApp (Caso #{ref})"
+    "supportApp": "Contactar soporte",
+    "supportAppCase": "Contactar soporte (Caso #{ref})"
   },
   "clientActivity": {
     "bStatus": {

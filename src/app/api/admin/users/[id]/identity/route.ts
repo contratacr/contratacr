@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyVerificationDecision } from "@/lib/verification-notify";
 import type { VerificationStatus } from "@/lib/verification";
 
 type Action = "verify" | "reject" | "revert_pending";
@@ -31,17 +32,38 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   if (!profile) return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
 
+  const { data: professionals, error: professionalsErr } = await db
+    .from("professionals")
+    .select("id, verification_status")
+    .eq("profile_id", id);
+
+  if (professionalsErr) {
+    console.error("[admin/user-identity] professionals read error:", professionalsErr);
+    return NextResponse.json({ error: "No se pudieron cargar sus perfiles profesionales." }, { status: 500 });
+  }
+
+  const hasVerifiedProfessional = (professionals ?? []).some((pro) => pro.verification_status === "verified");
+  const removingVerifiedIdentity =
+    action === "revert_pending" && (profile.client_identity_status === "verified" || hasVerifiedProfessional);
+  if (action === "reject" && !reason) {
+    return NextResponse.json({ error: "Debes indicar el motivo del rechazo." }, { status: 400 });
+  }
+  if (removingVerifiedIdentity && !reason) {
+    return NextResponse.json({ error: "Debes indicar el motivo para quitar la verificación." }, { status: 400 });
+  }
+
   const now = new Date().toISOString();
   const accountIdentityStatus = action === "verify" ? "verified" : action === "reject" ? "unverified" : "pending";
   const professionalStatus: VerificationStatus =
     action === "verify" ? "verified" : action === "reject" ? "rejected" : "pending";
+  const decisionReason = action === "reject" || removingVerifiedIdentity ? reason : null;
 
   const profileUpdate: Record<string, unknown> = {
     client_identity_status: accountIdentityStatus,
     client_identity_verified_at: action === "verify" ? now : null,
     client_identity_provider: action === "verify" ? "manual" : null,
   };
-  if (action === "reject") profileUpdate.cedula = null;
+  if (action !== "verify") profileUpdate.cedula = null;
 
   const { data: updatedProfile, error: profileErr } = await db
     .from("profiles")
@@ -55,18 +77,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "No se pudo actualizar la verificación de la cuenta." }, { status: 500 });
   }
 
-  if (action === "reject" && updatedProfile?.cedula) {
+  if (action !== "verify" && updatedProfile?.cedula) {
     return NextResponse.json({ error: "La verificación cambió, pero la identificación guardada no se limpió. Intenta de nuevo." }, { status: 500 });
-  }
-
-  const { data: professionals, error: professionalsErr } = await db
-    .from("professionals")
-    .select("id, verification_status")
-    .eq("profile_id", id);
-
-  if (professionalsErr) {
-    console.error("[admin/user-identity] professionals read error:", professionalsErr);
-    return NextResponse.json({ error: "Se actualizó la cuenta, pero no se pudieron cargar sus perfiles profesionales." }, { status: 500 });
   }
 
   if ((professionals ?? []).length > 0) {
@@ -74,7 +86,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .from("professionals")
       .update({
         verification_status: professionalStatus,
-        verification_reason: action === "reject" ? reason || null : null,
+        verification_reason: decisionReason,
         verification_method: "manual",
         verification_updated_at: now,
         verified_at: professionalStatus === "verified" ? now : null,
@@ -95,12 +107,26 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         action: action === "verify" ? "verified" : action === "reject" ? "rejected" : "reverted_pending",
         from_status: pro.verification_status,
         to_status: professionalStatus,
-        reason: action === "reject" ? reason || null : null,
+        reason: decisionReason,
       })),
+    );
+
+    await Promise.all(
+      professionals!.map((pro) => {
+        const notifyKind: "verified" | "pending" | "rejected" | "reverted" =
+          action === "verify"
+            ? "verified"
+            : action === "reject"
+              ? "rejected"
+              : pro.verification_status === "verified" || removingVerifiedIdentity
+                ? "reverted"
+                : "pending";
+        return notifyVerificationDecision({ professionalId: pro.id, kind: notifyKind, reason: decisionReason });
+      }),
     );
   }
 
-  if (action === "reject") {
+  if (action !== "verify") {
     const { data: authUser } = await db.auth.admin.getUserById(id);
     const userMetadata = { ...(authUser.user?.user_metadata ?? {}) };
     delete userMetadata.cedula;

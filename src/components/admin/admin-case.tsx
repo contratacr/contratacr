@@ -22,7 +22,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rejectOpen, setRejectOpen] = useState(false);
+  const [reasonAction, setReasonAction] = useState<"reject" | "revert_pending" | null>(null);
   const [reason, setReason] = useState("");
   const { dialogNode, confirm } = useAppDialog();
 
@@ -54,7 +54,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error");
-      setRejectOpen(false);
+      setReasonAction(null);
       setReason("");
       await load();
     } catch (e) {
@@ -319,7 +319,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
               <ShieldCheck className="h-4 w-4 text-[#009FD9]" /> Decisión
             </h2>
 
-            {!rejectOpen ? (
+            {!reasonAction ? (
               <div className="space-y-2">
                 {status !== "verified" && (
                   <button
@@ -336,7 +336,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     se solapan. */}
                 {status !== "verified" && status !== "rejected" && (
                   <button
-                    onClick={() => setRejectOpen(true)}
+                    onClick={() => setReasonAction("reject")}
                     disabled={busy}
                     className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm font-bold disabled:opacity-60"
                   >
@@ -348,7 +348,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     botón de rechazo. */}
                 {status === "verified" && (
                   <button
-                    onClick={() => decide("revert_pending")}
+                    onClick={() => setReasonAction("revert_pending")}
                     disabled={busy}
                     className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm font-bold disabled:opacity-60"
                   >
@@ -372,24 +372,30 @@ export function AdminCase({ providerId }: { providerId: string }) {
               </div>
             ) : (
               <div className="space-y-2">
-                <label className="text-xs font-medium text-[#374151]">Motivo del rechazo (requerido)</label>
+                <label className="text-xs font-medium text-[#374151]">
+                  {reasonAction === "reject" ? "Motivo del rechazo (requerido)" : "Motivo para quitar la verificación (requerido)"}
+                </label>
                 <textarea
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={4}
-                  placeholder="Explica por qué no pasa la verificación. El proveedor verá este motivo y podrá apelar."
+                  placeholder={
+                    reasonAction === "reject"
+                      ? "Explica por qué no pasa la verificación. El proveedor verá este motivo y podrá apelar."
+                      : "Explica por qué se quita la verificación. El profesional verá este motivo en su panel."
+                  }
                   className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#dc2626]"
                 />
                 <div className="flex gap-2">
                   <button
-                    onClick={() => decide("reject", reason)}
+                    onClick={() => decide(reasonAction, reason)}
                     disabled={busy || reason.trim().length === 0}
                     className="flex-1 h-10 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm font-bold disabled:opacity-50"
                   >
-                    Confirmar rechazo
+                    {reasonAction === "reject" ? "Confirmar rechazo" : "Quitar verificación"}
                   </button>
                   <button
-                    onClick={() => { setRejectOpen(false); setReason(""); }}
+                    onClick={() => { setReasonAction(null); setReason(""); }}
                     className="px-3 h-10 rounded-xl border border-[#e5e7eb] text-sm text-[#374151]"
                   >
                     Cancelar
