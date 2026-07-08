@@ -439,6 +439,7 @@ export default function RegisterProfessionalPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const formTopRef = useRef<HTMLDivElement | null>(null);
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [videoCoverageCountry, setVideoCoverageCountry] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -498,6 +499,14 @@ export default function RegisterProfessionalPage() {
   const pendingProfessionalSignup =
     currentUser?.user_metadata?.professional_signup_started === true &&
     currentUser.user_metadata?.is_provider !== true;
+
+  useEffect(() => {
+    if (step < 0 || otpEmail || redirecting) return;
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      formTopRef.current?.scrollIntoView({ block: "start", inline: "nearest" });
+    });
+  }, [otpEmail, redirecting, step]);
 
   // On a failed submit, jump to the first field with an error.
   function scrollToFirstError() {
@@ -948,7 +957,7 @@ export default function RegisterProfessionalPage() {
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
+        <div ref={formTopRef} className="w-full max-w-md scroll-mt-24">
           {/* Same container treatment as the client registration ("Crear cuenta de
               cliente"): a clean white card (rounded-3xl, hairline border, soft shadow,
               p-8) on a #fafafa page, centered. The multi-step form lives inside it. */}
