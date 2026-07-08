@@ -703,6 +703,26 @@ export function slugifyCategory(name: string): string {
   return slug || "categoria";
 }
 
+export function searchTextScore(term: string, query: string, exact: number, starts: number, contains: number): number {
+  const q = normalizeText(query.trim());
+  if (!q) return 0;
+  const normalized = normalizeText(term);
+  if (!normalized) return 0;
+  if (normalized === q) return exact;
+  if (normalized.startsWith(q)) return starts;
+
+  const tokens = normalized.split(/\s+/).filter(Boolean);
+  if (tokens.some((token) => token === q || token.startsWith(q))) return starts;
+
+  const slashParts = normalized.split(/\s*[/-]\s*/).filter(Boolean);
+  if (slashParts.some((part) => part === q || part.startsWith(q))) return starts;
+
+  if (q.includes(" ") && normalized.includes(q)) return contains;
+  if (normalized.includes(` ${q} `) || normalized.endsWith(` ${q}`)) return contains;
+
+  return 0;
+}
+
 /* ─── Fuzzy search across all categories (fixed + custom) by label + keywords ─── */
 export function categorySearchScore(
   item: CategoryItem & { groupId: string; groupLabel: string },
@@ -713,16 +733,9 @@ export function categorySearchScore(
   if (!q) return 0;
   const serviceLabels = [getCategoryLabel(item.id, locale), item.label].filter(Boolean);
   const groupLabels = [item.groupLabel, getCategoryGroupLabel(item.groupId), getCategoryGroupLabel(item.groupId, locale)].filter(Boolean);
-  const scoreTerm = (term: string, exact: number, starts: number, contains: number) => {
-    const normalized = normalizeText(term);
-    if (normalized === q) return exact;
-    if (normalized.startsWith(q)) return starts;
-    if (normalized.includes(q)) return contains;
-    return 0;
-  };
-  const serviceScore = Math.max(0, ...serviceLabels.map((term) => scoreTerm(term, 120, 90, 55)));
-  const keywordScore = Math.max(0, ...item.keywords.map((term) => scoreTerm(term, 110, 45, 28)));
-  const groupScore = Math.max(0, ...groupLabels.map((term) => scoreTerm(term, 38, 28, 18)));
+  const serviceScore = Math.max(0, ...serviceLabels.map((term) => searchTextScore(term, q, 120, 90, 55)));
+  const keywordScore = Math.max(0, ...item.keywords.map((term) => searchTextScore(term, q, 110, 45, 28)));
+  const groupScore = Math.max(0, ...groupLabels.map((term) => searchTextScore(term, q, 38, 28, 18)));
   return Math.max(serviceScore, keywordScore, groupScore);
 }
 

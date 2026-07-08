@@ -4,6 +4,7 @@ import {
   getCategoryLabel,
   normalizeText,
   resolveCategoryIntent,
+  searchTextScore,
 } from "@/lib/data/categories";
 
 const SUPABASE_CONFIGURED =
@@ -81,10 +82,19 @@ export async function GET(req: NextRequest) {
   if (supabase) {
     try {
       const seen = new Set(staticCats.map((c) => (c.type === "category" ? c.id : "")));
+      const scoredCustoms: Array<{ id: string; label: string; score: number }> = [];
       for (const [id, labels] of dbCategoryLabels) {
         const label = locale === "en" && labels.labelEn ? labels.labelEn : labels.label;
         if (!id || !label || seen.has(id)) continue;
-        if (!normalizeText(label).includes(norm)) continue;
+        const score = Math.max(
+          searchTextScore(label, norm, 120, 90, 55),
+          labels.labelEn ? searchTextScore(labels.labelEn, norm, 120, 90, 55) : 0,
+        );
+        if (score <= 0) continue;
+        scoredCustoms.push({ id, label, score });
+      }
+      scoredCustoms.sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
+      for (const { id, label } of scoredCustoms) {
         seen.add(id);
         customIds.push(id);
         customCats.push({ type: "category", id, label });
