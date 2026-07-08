@@ -512,6 +512,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
       <div className="mb-4 flex h-11 shrink-0 items-center rounded-xl border border-gray-200 bg-gray-50/70 px-3.5 transition-all focus-within:border-[#009FD9] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20">
         <Search className="h-4 w-4 shrink-0 text-gray-400" />
         <input
+          data-testid="services-mega-menu-search"
           ref={inputRef}
           type="text"
           value={q}
@@ -1259,6 +1260,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   onMouseLeave={closeDropdown}
                 >
                   <button
+                    type="button"
+                    aria-expanded={openMenu === "categorias"}
+                    onClick={() => setOpenMenu(openMenu === "categorias" ? null : "categorias")}
                     className={cn(
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
                       openMenu === "categorias"
@@ -1272,6 +1276,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
                   {openMenu === "categorias" && (
                     <div
+                      data-testid="services-mega-menu"
                       className="absolute top-full left-0 z-50 mt-1.5 flex max-h-[calc(100vh-5rem)] w-[840px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]"
                       style={{ animation: "tab-cards-in 0.15s ease both" }}
                     >

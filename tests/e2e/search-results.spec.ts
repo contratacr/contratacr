@@ -118,9 +118,14 @@ test.describe("@seeded search results", () => {
       await expect(card).toContainText(/Videoconsulta|Video consultation/i);
       await expect(card).toContainText(/I\.V\.A\.I\.|VAT included/i);
       await expect(card).not.toContainText(/Atenas|Alajuela/i);
-      await expect(card).toContainText(new RegExp(`\\b${seed.videoSecondSlotTime}\\b`));
       await expect(
-        card.getByRole("link", { name: /WhatsApp/i }).or(card.getByRole("button", { name: /WhatsApp/i })).first(),
+        card.getByRole("button", { name: seed.videoSecondSlotTime }).first(),
+      ).toBeVisible();
+      await expect(
+        card
+          .getByRole("button", { name: /Ver horario completo|View schedule|View availability/i })
+          .or(card.getByRole("link", { name: /WhatsApp|Llamar|Call|Contact/i }))
+          .first(),
       ).toBeVisible();
       await expectHealthyPage(page);
     }

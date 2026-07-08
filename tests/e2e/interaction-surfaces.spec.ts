@@ -17,15 +17,16 @@ test.describe("@seeded interaction surfaces", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
 
-    const action = page
-      .getByRole("button", { name: /Ver horario completo|Solicitar servicio|Request service|View schedule|View availability/i })
-      .first();
+    const action = page.getByRole("button", { name: seed.slotTime }).first();
     await expect(action).toBeVisible();
     await action.click();
 
-    await expect(
-      page.getByText(/Que servicio necesitas|Qu. servicio necesitas|Elige fecha y hora|Describe lo que necesitas|Request service|Tu identificaci.n|Your identification/i).first(),
-    ).toBeVisible();
+    const dialog = page.getByRole("dialog").first();
+    await expect(dialog).toBeVisible();
+    await expectVisibleText(
+      dialog,
+      /Que servicio necesitas|Qu. servicio necesitas|Elige fecha y hora|Describe lo que necesitas|Request service|Tu identificaci.n|Your identification/i,
+    );
     await expectHealthyPage(page);
   });
 

@@ -14,6 +14,14 @@ type PublicAvailabilityResponse = {
   taken?: string[];
   error?: string;
 };
+type CategorySuggestionRow = {
+  id: string;
+  label?: string | null;
+  suggested_name?: string | null;
+  status?: string | null;
+  approved?: boolean | null;
+  suggested_by?: string | null;
+};
 
 async function expectNotification(
   userId: string,
@@ -136,6 +144,76 @@ test.describe("@seeded core regression", () => {
     } finally {
       await admin.from("support_ticket_messages").delete().eq("ticket_id", ticket.id);
       await admin.from("support_tickets").delete().eq("id", ticket.id);
+    }
+  });
+
+  test("guest service suggestions create a pending admin moderation row", async ({ page }) => {
+    const admin = regressionAdminClient();
+    const stamp = Date.now();
+    const submittedName = `rotulacion e2e ${stamp}`;
+    const expectedLabel = `Rotulacion e2e ${stamp}`;
+    let suggestionId: string | null = null;
+
+    try {
+      await resetAuth(page);
+      const response = await apiJson<{ ok?: boolean; error?: string }>(page, "/api/categories/suggest", {
+        method: "POST",
+        body: { name: submittedName, locale: "es" },
+      });
+      expect(response.status).toBe(200);
+      expect(response.body.ok).toBe(true);
+
+      await expect
+        .poll(
+          async () => {
+            const { data, error } = await admin
+              .from("category_suggestions")
+              .select("id, label, suggested_name, status, approved, suggested_by")
+              .eq("suggested_name", expectedLabel)
+              .maybeSingle();
+            if (error) throw error;
+            if (data?.id) suggestionId = data.id;
+            return data as CategorySuggestionRow | null;
+          },
+          { timeout: 8_000, message: "Expected guest service suggestion to reach admin moderation." },
+        )
+        .toEqual(expect.objectContaining({
+          label: expectedLabel,
+          suggested_name: expectedLabel,
+          status: "pending",
+          approved: false,
+          suggested_by: null,
+        }));
+
+      expect(suggestionId).toBeTruthy();
+      const { data: hiddenCategory, error: categoryError } = await admin
+        .from("categories")
+        .select("id, name, is_hidden")
+        .eq("id", suggestionId!)
+        .maybeSingle();
+      if (categoryError) throw categoryError;
+      expect(hiddenCategory).toEqual(expect.objectContaining({
+        id: suggestionId,
+        name: expectedLabel,
+        is_hidden: true,
+      }));
+    } finally {
+      if (suggestionId) {
+        await admin.from("user_action_audit").delete().eq("entity_table", "category_suggestions").eq("entity_id", suggestionId);
+        await admin.from("category_suggestions").delete().eq("id", suggestionId);
+        await admin.from("categories").delete().eq("id", suggestionId).eq("is_hidden", true);
+      } else {
+        const { data } = await admin
+          .from("category_suggestions")
+          .select("id")
+          .eq("suggested_name", expectedLabel)
+          .maybeSingle();
+        if (data?.id) {
+          await admin.from("user_action_audit").delete().eq("entity_table", "category_suggestions").eq("entity_id", data.id);
+          await admin.from("category_suggestions").delete().eq("id", data.id);
+          await admin.from("categories").delete().eq("id", data.id).eq("is_hidden", true);
+        }
+      }
     }
   });
 

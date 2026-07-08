@@ -99,6 +99,7 @@ test.describe("@smoke public routes", () => {
 
   test("services navigation keeps the matching section context", async ({ page }, testInfo) => {
     await gotoOK(page, "/es");
+    await waitForInteractivePage(page);
 
     if (isMobileProject(testInfo)) {
       await page.getByRole("button", { name: /Abrir menu|Abrir men/i }).first().click();
@@ -108,8 +109,10 @@ test.describe("@smoke public routes", () => {
       return;
     }
 
-    await page.getByRole("button", { name: /^Servicios$/i }).first().hover();
-    const menuSearch = page.locator('input[aria-label*="servicio" i], input[placeholder*="servicio" i]').first();
+    await page.getByRole("button", { name: /^Servicios$/i }).first().click();
+    const megaMenu = page.getByTestId("services-mega-menu");
+    await expect(megaMenu).toBeVisible();
+    const menuSearch = megaMenu.getByTestId("services-mega-menu-search");
     await expect(menuSearch).toBeVisible();
     await menuSearch.fill("Plomer");
 
@@ -132,8 +135,11 @@ test.describe("@smoke public routes", () => {
 
     if (!isMobileProject(testInfo)) {
       await gotoOK(page, "/es");
-      await page.getByRole("button", { name: /^Servicios$/i }).first().hover();
-      const menuSearch = page.locator('input[aria-label*="servicio" i], input[placeholder*="servicio" i]').first();
+      await waitForInteractivePage(page);
+      await page.getByRole("button", { name: /^Servicios$/i }).first().click();
+      const megaMenu = page.getByTestId("services-mega-menu");
+      await expect(megaMenu).toBeVisible();
+      const menuSearch = megaMenu.getByTestId("services-mega-menu-search");
       await expect(menuSearch).toBeVisible();
       await menuSearch.fill("diseño");
 

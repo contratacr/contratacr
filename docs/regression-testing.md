@@ -40,6 +40,7 @@ It covers:
 - Public routes in Spanish and English: home, services, legacy categories redirect, search, auth, registration, support, help, contact, how it works, atraer clientes, privacy and terms.
 - Public APIs for service search and the approved service catalog.
 - Services catalog behavior: known service search, empty enter behavior, unknown-service suggestion CTA, and untranslated-key guards.
+- Guest service suggestions: anonymous submissions create a pending admin moderation row and the test cleans up the temporary hidden service.
 - Navbar/public shell checks on desktop and responsive.
 - Search results and professional cards, including responsive favorite-button layout.
 - Public professional profile and professional Open Graph image generation.

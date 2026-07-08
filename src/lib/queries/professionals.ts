@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deriveDisplayPricing } from "@/lib/pricing";
@@ -28,8 +27,6 @@ const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const NEAR_ME_RADIUS_KM = 25;
-const SEARCH_CACHE_SECONDS = 30;
-const ZONE_COVERAGE_CACHE_SECONDS = 300;
 
 
 type LocationQueryMatch =
@@ -190,18 +187,9 @@ function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
   return normalized;
 }
 
-const searchProfessionalsCached = unstable_cache(
-  async (filters: SearchFilters) => searchProfessionalsUncached(filters),
-  ["search-professionals-v3"],
-  { revalidate: SEARCH_CACHE_SECONDS },
-);
-
 export async function searchProfessionals(filters: SearchFilters): Promise<ProfessionalCardData[]> {
   const normalized = normalizeSearchFilters(filters);
-  if (normalized.bounds || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number")) {
-    return searchProfessionalsUncached(normalized);
-  }
-  return searchProfessionalsCached(normalized);
+  return searchProfessionalsUncached(normalized);
 }
 
 async function searchProfessionalsUncached(
@@ -561,17 +549,7 @@ export type ZoneCoverage = {
   countryWide: boolean;
 };
 
-const getZoneCoverageCached = unstable_cache(
-  async () => getZoneCoverageUncached(),
-  ["zone-coverage-v2"],
-  { revalidate: ZONE_COVERAGE_CACHE_SECONDS },
-);
-
 export async function getZoneCoverage(): Promise<ZoneCoverage> {
-  return getZoneCoverageCached();
-}
-
-async function getZoneCoverageUncached(): Promise<ZoneCoverage> {
   const empty: ZoneCoverage = { byProvince: {}, countryWide: false };
   if (!SUPABASE_CONFIGURED) return empty;
   try {
@@ -748,7 +726,6 @@ export async function getProfessionalBySlug(
         categoryIcon: "",
         professions: publicProfessions,
         // Price derived from Servicios (single source), legacy fields as fallback.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         pricing: deriveDisplayPricing(visibleServices, (pro as any).pricing as ProfessionalCardData["pricing"], (pro as any).hourly_rate),
         bio: pro.bio,
         whatsapp: pro.whatsapp,
@@ -772,20 +749,13 @@ export async function getProfessionalBySlug(
         reviews,
         services: visibleServices,
         availabilityPublic: (pro as any).availability_public ?? true,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         contactPreference: ((pro as any).contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         languages: ((pro as any).languages as string[]) ?? [],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         businessName: ((pro as any).business_name as string) ?? undefined,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         workplaces: ((pro as any).workplaces as ProfessionalCardData["workplaces"]) ?? [],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         verificationStatus: ((pro as any).verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         insuranceNetworks: ((pro as any).insurance_networks as string[]) ?? [],
         certifications: certifications as Certification[],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         profileId: (pro as any).profile_id ?? undefined,
         callPhone,
         contactEmail,

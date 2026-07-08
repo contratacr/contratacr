@@ -159,7 +159,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     }
 
     refreshSoon();
-    const interval = window.setInterval(refreshPublicAvailability, 60000);
+    const interval = window.setInterval(refreshPublicAvailability, 15000);
     window.addEventListener("focus", refreshSoon);
     window.addEventListener("notificationsChanged", refreshSoon);
     window.addEventListener("ccr:availability-changed", refreshSoon);
