@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Clock3, Headset, Info, RotateCcw, Send, ShieldCheck, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CedulaInput } from "@/components/ui/cedula-input";
 import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { Link } from "@/i18n/navigation";
 import { SupportLink } from "@/components/support/support-link";
+import { cleanId, isValidId } from "@/lib/cedula";
 import { caseRef, type VerificationStatus } from "@/lib/verification";
 
 interface Props {
@@ -17,6 +19,10 @@ interface Props {
   noCrId?: boolean;
   onSaved?: () => void;
 }
+
+type CedulaCheck =
+  | { status: "confirmed"; cedula: string; fullName: string; dob: string | null }
+  | { status: "review"; cedula: string; message: string };
 
 export function VerificationPanel({
   professionalId,
@@ -36,7 +42,9 @@ export function VerificationPanel({
 
   // Add-cédula-later (no-ID pros who obtained a CR cédula).
   const [newCedula, setNewCedula] = useState("");
+  const [cedulaCheck, setCedulaCheck] = useState<CedulaCheck | null>(null);
   const [cedulaBusy, setCedulaBusy] = useState(false);
+  const [cedulaSaving, setCedulaSaving] = useState(false);
   const [cedulaError, setCedulaError] = useState<string | null>(null);
 
   const ref = caseRef(professionalId);
@@ -55,6 +63,7 @@ export function VerificationPanel({
     setNote(null);
     setVerifiedName(null);
     setVerifiedCedula(null);
+    setCedulaCheck(null);
     if (appealMode && appeal.trim().length < 10) {
       setError(t("appealMinError"));
       return;
@@ -84,18 +93,67 @@ export function VerificationPanel({
     }
   }
 
+  async function checkCedula() {
+    setError(null);
+    setCedulaError(null);
+    setNote(null);
+    setVerifiedName(null);
+    setVerifiedCedula(null);
+    setCedulaCheck(null);
+    const cedula = cleanId(newCedula);
+    if (!isValidId(cedula)) {
+      setCedulaError(t("invalidCedula"));
+      return;
+    }
+    setCedulaBusy(true);
+    try {
+      const availableRes = await fetch(`/api/cedula-available?cedula=${encodeURIComponent(cedula)}`);
+      const availableJson = await availableRes.json().catch(() => ({}));
+      if (availableJson.taken) {
+        setCedulaError(t("cedulaTaken"));
+        return;
+      }
+
+      const lookupRes = await fetch(`/api/cedula/${cedula}`);
+      const lookupJson = await lookupRes.json().catch(() => ({}));
+      if (lookupRes.ok && lookupJson.found && typeof lookupJson.fullName === "string") {
+        setCedulaCheck({
+          status: "confirmed",
+          cedula,
+          fullName: lookupJson.fullName,
+          dob: typeof lookupJson.dob === "string" ? lookupJson.dob : null,
+        });
+        return;
+      }
+      if (lookupRes.status === 404) {
+        setCedulaCheck({ status: "review", cedula, message: t("cedulaReviewReady") });
+        return;
+      }
+      setCedulaError(lookupJson.error ?? t("processError"));
+    } catch (e) {
+      setCedulaError(e instanceof Error ? e.message : t("processError"));
+    } finally {
+      setCedulaBusy(false);
+    }
+  }
+
   async function addCedula() {
     setError(null);
     setCedulaError(null);
     setNote(null);
     setVerifiedName(null);
     setVerifiedCedula(null);
-    setCedulaBusy(true);
+    const cedula = cleanId(newCedula);
+    if (!cedulaCheck || cedulaCheck.cedula !== cedula) {
+      setCedulaError(t("checkCedulaFirst"));
+      return;
+    }
+    setCedulaSaving(true);
     try {
       const res = await fetch("/api/add-cedula", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cedula: newCedula }),
+        body: JSON.stringify({ cedula }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -103,8 +161,9 @@ export function VerificationPanel({
         return;
       }
       if (json.outcome === "verified") {
-        const nextName = typeof json.fullName === "string" ? json.fullName.trim() : "";
-        const nextCedula = typeof json.cedula === "string" ? json.cedula.trim() : newCedula;
+        const fallbackName = cedulaCheck.status === "confirmed" ? cedulaCheck.fullName : "";
+        const nextName = typeof json.fullName === "string" ? json.fullName.trim() : fallbackName;
+        const nextCedula = typeof json.cedula === "string" ? json.cedula.trim() : cedula;
         setVerifiedName(nextName || null);
         setVerifiedCedula(nextCedula || null);
         setNote(t("cedulaVerified"));
@@ -112,12 +171,77 @@ export function VerificationPanel({
         setNote(t("cedulaSaved"));
       }
       setNewCedula("");
+      setCedulaCheck(null);
       onSaved?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("processError"));
     } finally {
-      setCedulaBusy(false);
+      setCedulaSaving(false);
     }
+  }
+
+  function handleCedulaInput(value: string) {
+    setNewCedula(value);
+    setCedulaError(null);
+    setCedulaCheck(null);
+    setNote(null);
+    setVerifiedName(null);
+    setVerifiedCedula(null);
+  }
+
+  function renderCedulaVerifier() {
+    const cleanCedula = cleanId(newCedula);
+    const currentCheck = cedulaCheck?.cedula === cleanCedula ? cedulaCheck : null;
+    const canVerify = isValidId(cleanCedula);
+
+    return (
+      <>
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <CedulaInput
+            required
+            value={newCedula}
+            onChange={handleCedulaInput}
+            error={cedulaError ?? undefined}
+          />
+          <button
+            onClick={checkCedula}
+            disabled={cedulaBusy || cedulaSaving || !canVerify}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50"
+          >
+            <ShieldCheck className="h-4 w-4" />{" "}
+            {cedulaBusy ? t("checkingCedula") : t("verifyCedula")}
+          </button>
+        </div>
+
+        {currentCheck?.status === "confirmed" && (
+          <div className="mt-3">
+            <IdentityInfoBlock
+              fullName={currentCheck.fullName}
+              cedula={currentCheck.cedula}
+              dob={currentCheck.dob}
+            />
+          </div>
+        )}
+
+        {currentCheck?.status === "review" && (
+          <Notice tone="info" className="mt-3">
+            {currentCheck.message}
+          </Notice>
+        )}
+
+        {currentCheck && (
+          <button
+            onClick={addCedula}
+            disabled={cedulaSaving}
+            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#009FD9] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50"
+          >
+            <ShieldCheck className="h-4 w-4" />{" "}
+            {cedulaSaving ? t("savingCedula") : t("addCedula")}
+          </button>
+        )}
+
+      </>
+    );
   }
 
   // ── No-CR-identification flow (manual review; no padrón check) ──────────────
@@ -193,31 +317,7 @@ export function VerificationPanel({
 
         {/* Add-cédula-later — runs the normal padrón verification automatically */}
         <ActionPanel title={t("hasCedulaTitle")} body={t("hasCedulaBody")}>
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              value={newCedula}
-              onChange={(e) => {
-                setNewCedula(e.target.value);
-                setCedulaError(null);
-              }}
-              placeholder={t("cedulaPlaceholder")}
-              aria-invalid={!!cedulaError}
-              className="flex-1 min-w-[200px] h-11 px-4 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all aria-[invalid=true]:border-red-300 aria-[invalid=true]:focus:ring-red-200"
-            />
-            <button
-              onClick={addCedula}
-              disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50"
-            >
-              <ShieldCheck className="h-4 w-4" />{" "}
-              {cedulaBusy ? t("verifying") : t("addAndVerify")}
-            </button>
-          </div>
-          {cedulaError && (
-            <Notice tone="error" className="mt-3">
-              {cedulaError}
-            </Notice>
-          )}
+          {renderCedulaVerifier()}
         </ActionPanel>
       </div>
     );
@@ -325,32 +425,7 @@ export function VerificationPanel({
           >
             {t.rich("howItWorks", { link: (c) => <>{c}</> })}
           </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              value={newCedula}
-              onChange={(e) => {
-                setNewCedula(e.target.value);
-                setCedulaError(null);
-              }}
-              inputMode="numeric"
-              placeholder={t("cedulaPlaceholder")}
-              aria-invalid={!!cedulaError}
-              className="flex-1 min-w-[200px] h-11 px-4 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all aria-[invalid=true]:border-red-300 aria-[invalid=true]:focus:ring-red-200"
-            />
-            <button
-              onClick={addCedula}
-              disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50"
-            >
-              <ShieldCheck className="h-4 w-4" />{" "}
-              {cedulaBusy ? t("verifying") : t("addAndVerify")}
-            </button>
-          </div>
-          {cedulaError && (
-            <Notice tone="error" className="mt-3">
-              {cedulaError}
-            </Notice>
-          )}
+          {renderCedulaVerifier()}
         </ActionPanel>
       )}
     </div>
