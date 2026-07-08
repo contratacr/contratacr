@@ -199,7 +199,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (places.length > 0) {
       return places.map((w, i) => ({ ...base, id: `${pro.id}-${w.id ?? i}`, lat: w.lat as number, lng: w.lng as number }));
     }
-    return [{ ...base, lat: pro.lat ?? null, lng: pro.lng ?? null }];
+    if ((pro.workplaces ?? []).length > 0) {
+      // The professional listed work zones but did not add an exact workplace pin.
+      // In that case, do not draw a map marker.
+      return [];
+    }
+    return typeof pro.lat === "number" && typeof pro.lng === "number"
+      ? [{ ...base, lat: pro.lat, lng: pro.lng }]
+      : [];
   });
 
   // Number the cards on THIS page (1..N top-to-bottom) and pass the same numbers

@@ -129,10 +129,7 @@ function jitter(seed: string): { dlat: number; dlng: number } {
 
 function positionFor(pro: MapProfessional): { lat: number; lng: number } | null {
   if (typeof pro.lat === "number" && typeof pro.lng === "number") return { lat: pro.lat, lng: pro.lng };
-  const centroid = pro.provinceName ? PROVINCE_CENTROIDS[pro.provinceName] : null;
-  if (!centroid) return null;
-  const { dlat, dlng } = jitter(pro.id);
-  return { lat: centroid.lat + dlat, lng: centroid.lng + dlng };
+  return null;
 }
 
 function initials(name: string): string {
