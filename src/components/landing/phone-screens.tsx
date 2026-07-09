@@ -159,8 +159,8 @@ function ProCard({
             ) : null}
           </div>
           {/* "Verificado" on its OWN line below. */}
-          <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
-          {person ? <p className="mt-0.5 truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
+          <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white -mt-1">{verified}</span>
+          {person ? <p className="mt-0 truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
           {/* Profession chip + reviews sit DIRECTLY under the name (mirrors the real
               /buscar card: company → personal name → profession → reviews, all grouped
               in the column beside the avatar — Sprint 175). */}
@@ -244,7 +244,7 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
   title: "Tecnología",
   categories: ["Redes e Internet"],
   results: "3 profesionales en Costa Rica",
-  search: "Soporte técnico en Costa Rica",
+  search: "Desarrollo web y Redes e Internet en Costa Rica",
   verified: "Verificado",
   whatsapp: "Contáctanos por WhatsApp",
   viewSchedule: "Ver horario completo",

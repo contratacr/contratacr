@@ -45,8 +45,8 @@ function ProfileScreen() {
         <div className="w-13 h-13 w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shrink-0">
           <span className="text-sm font-bold text-blue-700">CR</span>
         </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="min-w-0">
+          <div className="flex items-center gap-1 flex-wrap">
             <p className="text-xs font-bold text-gray-800">Carlos Ramírez</p>
             <span className="text-[9px] font-bold bg-[#009FD9]/10 text-[#009FD9] px-1.5 py-0.5 rounded-full">Verificado ✓</span>
           </div>
