@@ -310,7 +310,7 @@ export function buildLandingResultsCopy({
 export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsCopy }) {
   return (
     <div className="flex h-full flex-col bg-[#f4f7fa]">
-      <AppBar title={copy.title} />
+      <AppBar title="" />
       {/* Search context — mirrors the real /buscar top bar (search field + count). */}
       <div className="border-b border-[#eef1f5] bg-white px-3.5 pb-2.5 pt-2">
         <div className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2">
