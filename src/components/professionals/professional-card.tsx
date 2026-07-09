@@ -189,7 +189,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           {/* Company-name line + PRICE (right-aligned on THIS line only). */}
           <div className="flex items-start gap-2 pr-8 lg:pr-0">
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex min-w-0 flex-1 flex-col gap-0">
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
                   Verificado, then the personal name = first name + first surname. */}
