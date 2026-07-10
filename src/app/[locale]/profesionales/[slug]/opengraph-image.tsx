@@ -96,8 +96,8 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const logoSrc = await logoWordmarkDataUrl();
   const avatarDataUrl = await imageDataUrl(pro?.avatarUrl);
   const brandLine = isEn
-    ? "Hire professional services in Costa Rica"
-    : "Contrata servicios profesionales en Costa Rica";
+    ? { lead: "Offer", middle: " and find services in\u00a0", place: "Costa Rica." }
+    : { lead: "Ofrece", middle: " y encuentra servicios en\u00a0", place: "Costa Rica." };
 
   return new ImageResponse(
     (
@@ -111,7 +111,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
           background: "#eef5fa",
           color: "#162543",
           fontFamily: "Inter, Arial, sans-serif",
-          padding: 54,
+          padding: 42,
         }}
       >
         <div
@@ -131,35 +131,20 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              gap: 32,
-              padding: "44px 56px 20px",
+              justifyContent: "flex-start",
+              padding: "30px 48px 8px",
             }}
           >
-            <LogoWordmark src={logoSrc} />
-            <div
-              style={{
-                display: "flex",
-                color: "#607089",
-                fontSize: 20,
-                fontWeight: 750,
-                lineHeight: 1.2,
-                textAlign: "right",
-                whiteSpace: "nowrap",
-                maxWidth: 640,
-              }}
-            >
-              {brandLine}
-            </div>
+            <LogoWordmark src={logoSrc} width={278} height={62} />
           </div>
 
           <div
             style={{
               display: "flex",
               flex: 1,
-              padding: "14px 56px 52px",
+              padding: "8px 48px 22px",
               minWidth: 0,
-              gap: 46,
+              gap: 42,
             }}
           >
             <div
@@ -174,7 +159,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               <div
                 style={{
                   display: "flex",
-                  fontSize: displayName.length > 34 ? 54 : 64,
+                  fontSize: displayName.length > 34 ? 50 : 60,
                   lineHeight: 1.02,
                   fontWeight: 900,
                   color: "#162543",
@@ -193,8 +178,8 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               <div
                 style={{
                   display: "flex",
-                  marginTop: 30,
-                  fontSize: 30,
+                  marginTop: 24,
+                  fontSize: 28,
                   lineHeight: 1.2,
                   color: "#243654",
                   fontWeight: 850,
@@ -214,7 +199,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
             <div
               style={{
                 display: "flex",
-                width: 300,
+                width: 322,
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
@@ -224,8 +209,8 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               <div
                 style={{
                   display: "flex",
-                  width: 212,
-                  height: 212,
+                  width: 270,
+                  height: 270,
                   borderRadius: 999,
                   background: "#EBF5FB",
                   alignItems: "center",
@@ -237,8 +222,8 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={avatarDataUrl}
-                    width="212"
-                    height="212"
+                    width="270"
+                    height="270"
                     alt={displayName}
                     style={{
                       width: "100%",
@@ -256,7 +241,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
                       alignItems: "center",
                       justifyContent: "center",
                       color: "#009FD9",
-                      fontSize: 72,
+                      fontSize: 84,
                       fontWeight: 700,
                     }}
                   >
@@ -265,6 +250,28 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
                 )}
               </div>
             </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              minHeight: 82,
+              alignItems: "center",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              borderTop: "1px solid #dcecf5",
+              background: "#f3f9fd",
+              padding: "16px 36px 18px",
+              color: "#162543",
+              fontSize: 34,
+              lineHeight: 1.15,
+              fontWeight: 800,
+              textAlign: "center",
+            }}
+          >
+            <span style={{ color: "#009FD9", fontWeight: 900 }}>{brandLine.lead}</span>
+            <span>{brandLine.middle}</span>
+            <span style={{ color: "#009FD9", fontWeight: 900 }}>{brandLine.place}</span>
           </div>
         </div>
       </div>

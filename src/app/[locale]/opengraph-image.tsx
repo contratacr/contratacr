@@ -34,8 +34,8 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const wordmarkSrc = await logoWordmarkDataUrl();
   const markSrc = await logoMarkDataUrl();
   const subtitle = isEn
-    ? "Hire professional services in Costa Rica"
-    : "Contrata servicios profesionales en Costa Rica";
+    ? { lead: "Offer", middle: " and find services in\u00a0", place: "Costa Rica." }
+    : { lead: "Ofrece", middle: " y encuentra servicios en\u00a0", place: "Costa Rica." };
 
   return new ImageResponse(
     (
@@ -70,29 +70,29 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            padding: "58px 72px 72px",
+            padding: "46px 64px 54px",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={markSrc}
-            width="224"
-            height="224"
+            width="168"
+            height="168"
             alt="ContrataCR"
             style={{
               display: "block",
-              width: 224,
-              height: 224,
+              width: 168,
+              height: 168,
               objectFit: "contain",
-              marginBottom: 26,
+              marginBottom: 18,
             }}
           />
 
           <div
             style={{
               display: "flex",
-              width: 640,
-              height: 136,
+              width: 610,
+              height: 122,
               overflow: "hidden",
               alignItems: "center",
               justifyContent: "flex-start",
@@ -106,10 +106,10 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               alt="ContrataCR"
               style={{
                 display: "block",
-                width: 810,
-                height: 169,
+                width: 772,
+                height: 152,
                 objectFit: "contain",
-                marginLeft: -200,
+                marginLeft: -190,
               }}
             />
           </div>
@@ -117,27 +117,32 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
           <div
             style={{
               display: "flex",
-              width: 62,
-              height: 6,
+              width: 70,
+              height: 5,
               borderRadius: 999,
               background: "#009FD9",
-              marginTop: 14,
-              marginBottom: 28,
+              marginTop: 12,
+              marginBottom: 24,
             }}
           />
 
           <div
             style={{
               display: "flex",
-              maxWidth: 920,
+              maxWidth: 1040,
               textAlign: "center",
-              color: "#607089",
-              fontSize: 34,
-              lineHeight: 1.25,
-              fontWeight: 650,
+              alignItems: "center",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              color: "#162543",
+              fontSize: 46,
+              lineHeight: 1.16,
+              fontWeight: 800,
             }}
           >
-            {subtitle}
+            <span style={{ color: "#009FD9", fontWeight: 900 }}>{subtitle.lead}</span>
+            <span>{subtitle.middle}</span>
+            <span style={{ color: "#009FD9", fontWeight: 900 }}>{subtitle.place}</span>
           </div>
         </div>
       </div>
