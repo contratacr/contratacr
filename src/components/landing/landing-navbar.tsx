@@ -807,71 +807,71 @@ function AccountMenu({
           )}
 
           <div className={menuDividerClass}>
-            <a
+            <Link
               href={isPro && selectedMenuMode === "offer" ? professionalPanelHref : clientPanelHref}
               onClick={() => setOpen(false)}
               className={menuItemClass}
             >
               <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
               {t("myPanel")}
-            </a>
+            </Link>
             {isPro && selectedMenuMode === "offer" ? (
               <>
-                <a href={bookingsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                <Link href={bookingsHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <CalendarCheck className="h-4 w-4 text-gray-400" />
                   {td("tabs.bookings")}
-                </a>
-                <a href={proposalsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                </Link>
+                <Link href={proposalsHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <Handshake className="h-4 w-4 text-gray-400" />
                   {td("tabs.proposals")}
-                </a>
-                <a href={professionalProfileHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                </Link>
+                <Link href={professionalProfileHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <UserRound className="h-4 w-4 text-gray-400" />
                   {td("tabs.profile")}
-                </a>
-                <a href={servicesHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                </Link>
+                <Link href={servicesHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <Wrench className="h-4 w-4 text-gray-400" />
                   {td("tabs.services")}
-                </a>
-                <a href={photosHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                </Link>
+                <Link href={photosHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <Award className="h-4 w-4 text-gray-400" />
                   {td("tabs.photos")}
-                </a>
-                <a href={availabilityHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                </Link>
+                <Link href={availabilityHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <CalendarDays className="h-4 w-4 text-gray-400" />
                   {td("tabs.availability")}
-                </a>
+                </Link>
                 {PAYMENTS_ENABLED && (
-                  <a href={subscriptionHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                  <Link href={subscriptionHref} onClick={() => setOpen(false)} className={menuItemClass}>
                     <CreditCard className="h-4 w-4 text-gray-400" />
                     {td("tabs.suscripcion")}
-                  </a>
+                  </Link>
                 )}
               </>
             ) : (
               <>
-                <a href={sentBookingsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                <Link href={sentBookingsHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <CalendarClock className="h-4 w-4 text-gray-400" />
                   {td("tabs.sent_bookings")}
-                </a>
-                <a href={sentProjectsHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                </Link>
+                <Link href={sentProjectsHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <ClipboardList className="h-4 w-4 text-gray-400" />
                   {td("tabs.sent_projects")}
-                </a>
-                <a href={clientProfileHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                </Link>
+                <Link href={clientProfileHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <UserRound className="h-4 w-4 text-gray-400" />
                   {td("tabs.profile")}
-                </a>
-                <a href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
+                </Link>
+                <Link href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
                   <Bookmark className="h-4 w-4 text-gray-400" />
                   {td("tabs.saved")}
-                </a>
+                </Link>
               </>
             )}
           </div>
 
           <div>
-            <a
+            <Link
               href={notificationsHrefByMode[selectedMenuMode]}
               onClick={() => setOpen(false)}
               className={menuItemClass}
@@ -881,15 +881,15 @@ function AccountMenu({
               {notifUnread > 0 && (
                 <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{notifUnread > 9 ? "9+" : notifUnread}</span>
               )}
-            </a>
-            <a
+            </Link>
+            <Link
               href={supportPanelHref}
               onClick={() => setOpen(false)}
               className={menuItemClass}
             >
               <Headset className="h-4 w-4 text-gray-400" />
               {t("supportTickets")}
-            </a>
+            </Link>
           </div>
 
           {!isPro && (
@@ -977,7 +977,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
   // by itself. The "Usar servicios" sections live under their own tabs there.
-  const panelHref = `/${locale}/dashboard/profesional`;
+  const panelHref = "/dashboard/profesional";
   const panelTabHref = (tab: string, targetMode: Mode = mode) => `${panelHref}?tab=${tab}&mode=${targetMode}`;
   const professionalPanelHref = `${panelHref}?mode=offer`;
   const clientPanelHref = `${panelHref}?mode=use`;
@@ -998,6 +998,18 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
     offer: panelTabHref("notifications", "offer"),
     use: panelTabHref("notifications", "use"),
   };
+
+  // Warm the two most common destinations after the current page settles. This
+  // keeps the initial render light while making the first panel/search transition
+  // use Next's prefetched route payload instead of waiting after the click.
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (!pathname.startsWith("/buscar")) router.prefetch("/buscar");
+      if (user && !pathname.startsWith("/dashboard/profesional")) router.prefetch(primaryPanelHref);
+    }, 900);
+    return () => window.clearTimeout(timeout);
+  }, [pathname, primaryPanelHref, router, user]);
+
   const visibleResourceLinks = useMemo(
     () => RESOURCES_LINKS.filter((link) => link.key !== "proTips" || !user || isPro),
     [isPro, user],
@@ -1359,12 +1371,12 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       </Link>
                     )}
                     {/* The context switcher lives inside account menus/drawers, keeping this bar compact. */}
-                    <a
+                    <Link
                       href={primaryPanelHref}
                       className="relative text-sm font-medium px-3 py-2 text-[#374151] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#1a2744]"
                     >
                       {t("myPanel")}
-                    </a>
+                    </Link>
                     <NotificationBell scope={notificationScope} />
                     <AccountMenu
                       user={user}
@@ -1669,83 +1681,83 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <div className="mt-1 flex flex-col gap-0.5 border-t border-[#edf2f7] pt-1">
                       {isPro && selectedDrawerMode === "offer" ? (
                         <>
-                          <a href={bookingsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          <Link href={bookingsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <CalendarCheck className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.bookings")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
-                          <a href={proposalsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          </Link>
+                          <Link href={proposalsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <Handshake className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.proposals")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
-                          <a href={professionalProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          </Link>
+                          <Link href={professionalProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <UserRound className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.profile")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
-                          <a href={servicesHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          </Link>
+                          <Link href={servicesHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <Wrench className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.services")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
-                          <a href={photosHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          </Link>
+                          <Link href={photosHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <Award className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.photos")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
-                          <a href={availabilityHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          </Link>
+                          <Link href={availabilityHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <CalendarDays className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.availability")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
+                          </Link>
                           {PAYMENTS_ENABLED && (
-                            <a href={subscriptionHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                            <Link href={subscriptionHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                               <CreditCard className={mobileIconClass(false)} />
                               <span className="min-w-0 flex-1">{td("tabs.suscripcion")}</span>
                               <ChevronRight className={mobileChevronClass(false)} />
-                            </a>
+                            </Link>
                           )}
                         </>
                       ) : (
                         <>
-                          <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          <Link href={sentBookingsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <CalendarClock className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.sent_bookings")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
-                          <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          </Link>
+                          <Link href={sentProjectsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <ClipboardList className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.sent_projects")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
-                          <a href={clientProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          </Link>
+                          <Link href={clientProfileHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <UserRound className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.profile")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
-                          <a href={savedHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                          </Link>
+                          <Link href={savedHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                             <Bookmark className={mobileIconClass(false)} />
                             <span className="min-w-0 flex-1">{td("tabs.saved")}</span>
                             <ChevronRight className={mobileChevronClass(false)} />
-                          </a>
+                          </Link>
                         </>
                       )}
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <a href={drawerNotificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                      <Link href={drawerNotificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                         <Bell className={mobileIconClass(false)} />
                         <span className="min-w-0 flex-1">{t("notifications")}</span>
                         {drawerUnread > 0 && (
                           <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{drawerUnread > 9 ? "9+" : drawerUnread}</span>
                         )}
                         <ChevronRight className={mobileChevronClass(false)} />
-                      </a>
-                      <a href={supportPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                      </Link>
+                      <Link href={supportPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                         <Headset className={mobileIconClass(false)} />
                         <span className="min-w-0 flex-1">{t("supportTickets")}</span>
                         <ChevronRight className={mobileChevronClass(false)} />
-                      </a>
+                      </Link>
                     </div>
                     {!isPro && (
                       <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>

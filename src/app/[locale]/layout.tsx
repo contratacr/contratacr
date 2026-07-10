@@ -11,6 +11,7 @@ import { ViewportEnvironment } from "@/components/util/viewport-environment";
 import { DocumentLocale } from "@/components/util/document-locale";
 import { OperationalStatusBanner } from "@/components/status/operational-status-banner";
 import { getOperationalStatusBanner } from "@/lib/status/runtime-status";
+import { AuthProvider } from "@/hooks/use-auth";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -98,14 +99,16 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <DocumentLocale locale={locale} />
-      <EmojiBlocker />
-      <ViewportEnvironment />
-      <CustomCategoriesLoader />
-      <NotificationLiveToast scope="all" />
-      <OperationalStatusBanner locale={locale} status={operationalStatus} />
-      {children}
-      <BackToTop />
+      <AuthProvider>
+        <DocumentLocale locale={locale} />
+        <EmojiBlocker />
+        <ViewportEnvironment />
+        <CustomCategoriesLoader />
+        <NotificationLiveToast scope="all" />
+        <OperationalStatusBanner locale={locale} status={operationalStatus} />
+        {children}
+        <BackToTop />
+      </AuthProvider>
     </NextIntlClientProvider>
   );
 }

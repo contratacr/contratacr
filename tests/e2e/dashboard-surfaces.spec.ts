@@ -45,6 +45,29 @@ test.describe("@seeded dashboard surfaces", () => {
     }
   });
 
+  test("panel tabs navigate without reloading the document", async ({ page }) => {
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional?tab=bookings");
+
+    await page.evaluate(() => {
+      (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation = "active";
+    });
+
+    const servicesTab = page.getByTestId("panel-tab-services").filter({ visible: true });
+    await expect(servicesTab).toHaveCount(1);
+    await servicesTab.click();
+    await expect(page).toHaveURL(/tab=services/);
+    await expectVisibleText(page.locator("main"), /Servicios|Services/i);
+    expect(await page.evaluate(() => (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation)).toBe("active");
+
+    const availabilityTab = page.getByTestId("panel-tab-availability").filter({ visible: true });
+    await expect(availabilityTab).toHaveCount(1);
+    await availabilityTab.click();
+    await expect(page).toHaveURL(/tab=availability/);
+    await expectVisibleText(page.locator("main"), /Disponibilidad|Availability/i);
+    expect(await page.evaluate(() => (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation)).toBe("active");
+  });
+
   test("professional add-service picker keeps its scroll inside the modal", async ({ page }) => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);

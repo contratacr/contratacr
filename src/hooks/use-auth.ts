@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,7 +19,16 @@ function preloadImage(src: string): Promise<void> {
   });
 }
 
-export function useAuth() {
+type AuthState = {
+  user: User | null;
+  avatarUrl: string | null;
+  avatarReady: boolean;
+  loading: boolean;
+};
+
+const AuthContext = createContext<AuthState | null>(null);
+
+function useAuthState(): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   // Whether the avatar has been RESOLVED yet (a known photo URL, or a confirmed
@@ -140,4 +149,15 @@ export function useAuth() {
   }, []);
 
   return { user, avatarUrl, avatarReady, loading };
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const value = useAuthState();
+  return createElement(AuthContext.Provider, { value }, children);
+}
+
+export function useAuth(): AuthState {
+  const value = useContext(AuthContext);
+  if (!value) throw new Error("useAuth must be used within AuthProvider");
+  return value;
 }

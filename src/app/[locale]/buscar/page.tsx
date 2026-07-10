@@ -72,9 +72,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // Who is viewing — so we can hide self-service actions on a pro's OWN card.
   // safeGetUser never throws on a stale session (would otherwise crash this
   // public page for returning users with an expired token).
-  const supabaseViewer = await createClient();
-  const viewer = await safeGetUser(supabaseViewer);
-  const viewerProfileId = viewer?.id;
+  const viewerPromise = createClient().then((supabaseViewer) => safeGetUser(supabaseViewer));
 
   // "Buscar en esta área" → filter to the map's visible viewport (ADDS to the active
   // filters; the map sends N/S/E/W when the user searches the moved area).
@@ -87,19 +85,23 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const canFilterByInsurer = isHealthCategory(params.categoria);
 
-  const allResults = await searchProfessionals({
-    categoryId: selectedCategory,
-    provinceId: params.provincia,
-    cantonId: params.canton,
-    sortBy,
-    query: effectiveQuery,
-    insurerId: canFilterByInsurer ? params.aseguradora : undefined,
-    languageId: params.idioma,
-    modality: params.modalidad === "video" || params.modalidad === "in_person" ? params.modalidad : "any",
-    nearLat,
-    nearLng,
-    bounds: mapBounds,
-  });
+  const [viewer, allResults] = await Promise.all([
+    viewerPromise,
+    searchProfessionals({
+      categoryId: selectedCategory,
+      provinceId: params.provincia,
+      cantonId: params.canton,
+      sortBy,
+      query: effectiveQuery,
+      insurerId: canFilterByInsurer ? params.aseguradora : undefined,
+      languageId: params.idioma,
+      modality: params.modalidad === "video" || params.modalidad === "in_person" ? params.modalidad : "any",
+      nearLat,
+      nearLng,
+      bounds: mapBounds,
+    }),
+  ]);
+  const viewerProfileId = viewer?.id;
 
   // "Disponibilidad inmediata" sort — order pros by their SOONEST upcoming bookable
   // slot (those with no upcoming slots go last). Done here (not in the SQL query)

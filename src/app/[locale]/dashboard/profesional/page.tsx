@@ -381,7 +381,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user) return;
     queueMicrotask(() => fetchPro());
-  }, [user, activeTab, refreshKey, fetchPro]);
+  }, [user, refreshKey, fetchPro]);
 
   // Base profile (name/avatar) for the header — works for seekers with no pro row.
   useEffect(() => {
@@ -442,7 +442,7 @@ export default function DashboardPage() {
       window.removeEventListener("notificationsChanged", loadUnread);
       window.clearInterval(id);
     };
-  }, [user, activeTab, refreshKey, mode]);
+  }, [user, mode]);
 
   // Unread opportunities deserve a front-door modal even when the user did not
   // arrive through the explicit post-login redirect.
@@ -464,7 +464,7 @@ export default function DashboardPage() {
       window.removeEventListener("notificationsChanged", loadSupportUnread);
       window.clearInterval(id);
     };
-  }, [user, activeTab, refreshKey]);
+  }, [user]);
 
   // Inconsistent state ONLY: metadata says this account can offer, but no pro row
   // exists yet. A freshly-created pro account can lag (replication/RLS) — retry a
@@ -603,7 +603,9 @@ export default function DashboardPage() {
     if (USE_ONLY.has(tab)) setMode("use");
     // Mode is persisted globally now, so the tab alone is enough — a mode-specific tab
     // also re-asserts its mode via the effect above, keeping the navbar switch in sync.
-    router.push(`/dashboard/profesional?tab=${tab}`, { scroll: false });
+    // Query-only panel navigation should not request the same route again.
+    // Next integrates native history with useSearchParams, including Back/Forward.
+    window.history.pushState(null, "", `${window.location.pathname}?tab=${tab}`);
     // Reset to the top of the new section INSTANTLY via the window. A smooth scrollIntoView
     // fought the fixed mobile bottom bar (its backdrop-blur made "Más" flicker / feel covered
     // during the animated scroll); an instant window scroll never interferes with it.
@@ -617,7 +619,7 @@ export default function DashboardPage() {
   function openProfileVerification() {
     if (isProvider && mode !== "offer") setMode("offer");
     setProfileFocus({ field: "verification", key: nextFocusKey() });
-    router.push("/dashboard/profesional?tab=profile&mode=offer&focus=verification", { scroll: false });
+    window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
     requestAnimationFrame(() => {
       const mobile = window.matchMedia("(max-width: 1023px)").matches;
       if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
@@ -781,6 +783,7 @@ export default function DashboardPage() {
     return (
       <button
         key={tab}
+        data-testid={`panel-tab-${tab}`}
         onClick={() => setTab(tab)}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
@@ -1215,6 +1218,7 @@ export default function DashboardPage() {
               return (
                 <button
                   key={tab}
+                  data-testid={`panel-tab-${tab}`}
                   onClick={() => { setTab(tab); }}
                   aria-current={active ? "page" : undefined}
                   className={cn(
