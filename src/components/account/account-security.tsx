@@ -70,6 +70,8 @@ function OAuthGuide({
  */
 const inputClass =
   "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+const securitySummaryClass = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3";
+const securityActionClass = "whitespace-nowrap text-sm font-semibold text-[#009FD9] hover:underline";
 
 export function AccountSecuritySection({ showHeading = true }: { showHeading?: boolean }) {
   const { user } = useAuth();
@@ -322,9 +324,9 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             <p className="text-xs text-[#9ca3af]">{t("emailConfirmHelp")}</p>
           </div>
         ) : (
-          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-            <span className="min-w-0 break-all text-sm font-medium text-[#111827] sm:break-normal sm:truncate">{user?.email}</span>
-            <button onClick={() => setEmailMode(true)} className="self-start whitespace-nowrap text-sm font-semibold text-[#009FD9] hover:underline sm:self-auto">
+          <div className={securitySummaryClass}>
+            <span className="min-w-0 truncate text-sm font-medium text-[#111827]" title={user?.email ?? undefined}>{user?.email}</span>
+            <button onClick={() => setEmailMode(true)} className={securityActionClass}>
               {t("changeEmail")}
             </button>
           </div>
@@ -412,9 +414,9 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-3">
+          <div className={securitySummaryClass}>
             <span className="text-sm text-[#9ca3af]">••••••••</span>
-            <button onClick={() => setPwMode(true)} className="text-sm text-[#009FD9] hover:underline whitespace-nowrap">
+            <button onClick={() => setPwMode(true)} className={securityActionClass}>
               {t("changePassword")}
             </button>
           </div>
