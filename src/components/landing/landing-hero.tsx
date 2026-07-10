@@ -151,6 +151,58 @@ function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minW
   return pos;
 }
 
+function IconTooltip({
+  anchorRef,
+  open,
+  label,
+}: {
+  anchorRef: RefObject<HTMLElement | null>;
+  open: boolean;
+  label: string;
+}) {
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+
+  useEffect(() => {
+    if (!open || !anchorRef.current) {
+      setPos(null);
+      return;
+    }
+
+    const update = () => {
+      const rect = anchorRef.current?.getBoundingClientRect();
+      if (!rect || (rect.width === 0 && rect.height === 0)) {
+        setPos(null);
+        return;
+      }
+      setPos({
+        left: Math.min(Math.max(rect.left + rect.width / 2, 96), window.innerWidth - 96),
+        top: rect.bottom + 8,
+      });
+    };
+
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [anchorRef, open]);
+
+  if (!open || !pos || typeof document === "undefined") return null;
+
+  return createPortal(
+    <span
+      role="tooltip"
+      style={{ position: "fixed", left: pos.left, top: pos.top, transform: "translateX(-50%)", zIndex: 10000 }}
+      className="pointer-events-none whitespace-nowrap rounded-lg bg-[#0f2747] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg"
+    >
+      {label}
+    </span>,
+    document.body
+  );
+}
+
 /* ─── Autocomplete dropdown (service/profession) — PORTALED to <body> ─── */
 function SuggestionsDropdown({
   anchorRef,
@@ -289,6 +341,9 @@ export function LandingHero() {
   const svcMobileRef = useRef<HTMLDivElement>(null);
   const locDesktopRef = useRef<HTMLDivElement>(null);
   const locMobileRef = useRef<HTMLDivElement>(null);
+  const nearMeDesktopRef = useRef<HTMLButtonElement>(null);
+  const nearMeMobileRef = useRef<HTMLButtonElement>(null);
+  const [nearMeTooltip, setNearMeTooltip] = useState<"desktop" | "mobile" | null>(null);
 
   // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
   const [location, setLocation] = useState("");
@@ -663,18 +718,21 @@ export function LandingHero() {
                   aria-autocomplete="list"
                 />
                 <button
+                  ref={nearMeDesktopRef}
                   type="button"
                   data-testid="landing-near-me"
-                  onClick={requestNearMe}
+                  onClick={() => { setNearMeTooltip(null); requestNearMe(); }}
+                  onPointerEnter={() => setNearMeTooltip("desktop")}
+                  onPointerLeave={() => setNearMeTooltip(null)}
+                  onFocus={() => setNearMeTooltip("desktop")}
+                  onBlur={() => setNearMeTooltip(null)}
                   disabled={geoLoading}
                   aria-label={t("nearMe")}
-                  className="group relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] disabled:cursor-wait disabled:opacity-70"
+                  className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] disabled:cursor-wait disabled:opacity-70"
                 >
                   {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
-                  <span className="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-50 hidden whitespace-nowrap rounded-lg bg-[#0f2747] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg group-hover:block group-focus-visible:block">
-                    {t("nearMeActive")}
-                  </span>
                 </button>
+                <IconTooltip anchorRef={nearMeDesktopRef} open={nearMeTooltip === "desktop"} label={t("nearMe")} />
                 <LocationDropdown anchorRef={locDesktopRef} open={openLoc} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
               </div>
               {/* Buscar button */}
@@ -725,18 +783,21 @@ export function LandingHero() {
                   aria-autocomplete="list"
                 />
                 <button
+                  ref={nearMeMobileRef}
                   type="button"
                   data-testid="landing-near-me"
-                  onClick={requestNearMe}
+                  onClick={() => { setNearMeTooltip(null); requestNearMe(); }}
+                  onPointerEnter={() => setNearMeTooltip("mobile")}
+                  onPointerLeave={() => setNearMeTooltip(null)}
+                  onFocus={() => setNearMeTooltip("mobile")}
+                  onBlur={() => setNearMeTooltip(null)}
                   disabled={geoLoading}
                   aria-label={t("nearMe")}
-                  className="group relative ml-2 grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] disabled:cursor-wait disabled:opacity-70"
+                  className="relative ml-2 grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] disabled:cursor-wait disabled:opacity-70"
                 >
                   {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
-                  <span className="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-50 hidden whitespace-nowrap rounded-lg bg-[#0f2747] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg group-hover:block group-focus-visible:block">
-                    {t("nearMeActive")}
-                  </span>
                 </button>
+                <IconTooltip anchorRef={nearMeMobileRef} open={nearMeTooltip === "mobile"} label={t("nearMe")} />
               </div>
               <LocationDropdown anchorRef={locMobileRef} open={openLoc} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
             </div>
