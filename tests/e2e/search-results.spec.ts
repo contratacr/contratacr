@@ -67,7 +67,7 @@ test.describe("@seeded search results", () => {
       const chip = completeLabels.nth(index);
       await expect(chip).toBeVisible();
       const title = await chip.getAttribute("title");
-      expect((await chip.innerText()).trim()).toBe(title?.trim());
+      expect((await chip.innerText()).trim()).toContain(title?.trim());
       const row = chip.locator("xpath=parent::*");
       await expect(row.locator('[data-testid="professional-card-mobile-service"]')).toHaveCount(1);
       const extraCount = Number(await chip.getAttribute("data-extra-count"));

@@ -223,27 +223,27 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           {(displayProfessions.length > 0 || professional.isFeatured) && (
             <div className="flex w-full basis-full flex-nowrap items-start gap-1.5 lg:hidden">
               {mobileProfessionList.map((cat) => (
-                <span
+                <p
                   key={`mobile-full-${cat}`}
                   data-testid="professional-card-mobile-service"
                   data-full-label="true"
                   data-extra-count={mobileExtraProfessions}
-                  className={`min-w-0 items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium leading-tight text-[#6b7280] ${mobileExtraProfessions > 0 ? "inline-flex flex-1" : "inline-flex w-fit max-w-full"}`}
+                  className="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-[#6b7280] [overflow-wrap:anywhere]"
                   title={catLabel(cat)}
                 >
-                  <span className="min-w-0 whitespace-normal break-words">{catLabel(cat)}</span>
-                </span>
+                  {catLabel(cat)}
+                  {mobileExtraProfessions > 0 && (
+                    <Link
+                      href={`/profesionales/${professional.slug}`}
+                      title={tCard("moreProfessions")}
+                      aria-label={tCard("moreProfessions")}
+                      className="relative z-10 ml-1 inline-flex shrink-0 rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-bold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]"
+                    >
+                      +{mobileExtraProfessions}
+                    </Link>
+                  )}
+                </p>
               ))}
-              {mobileExtraProfessions > 0 && (
-                <Link
-                  href={`/profesionales/${professional.slug}`}
-                  title={tCard("moreProfessions")}
-                  aria-label={tCard("moreProfessions")}
-                  className={`inline-flex ${moreProfessionsClass}`}
-                >
-                  +{mobileExtraProfessions}
-                </Link>
-              )}
               {professional.isFeatured && (
                 <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
                   {tCard("featured")}
