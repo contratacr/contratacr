@@ -175,7 +175,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           be siblings of this row and got pushed BELOW the taller avatar, leaving a gap).
           PRICE is right-aligned on the company-name line only. The mobile `pr-8` keeps the
           price clear of the inside top-right bookmark (`lg:pr-0` on desktop). */}
-      <div className="flex items-start gap-3">
+      <div className="flex flex-wrap items-start gap-x-3 gap-y-1 lg:flex-nowrap">
         <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
           <Avatar className="h-14 w-14 rounded-full lg:h-16 lg:w-16">
             <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
@@ -187,9 +187,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </span>
           )}
         </Link>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-1">
           {/* Company-name line + PRICE (right-aligned on THIS line only). */}
-          <div className="flex items-start gap-2 pr-8 lg:pr-0">
+          <div className="flex min-w-0 flex-1 items-start gap-2 pr-8 lg:pr-0">
             <div className="flex min-w-0 flex-1 flex-col gap-0">
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
@@ -221,7 +221,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
           {(displayProfessions.length > 0 || professional.isFeatured) && (
-            <div className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden">
+            <div className="flex w-full basis-full flex-nowrap items-start gap-1.5 lg:basis-auto lg:items-center lg:overflow-hidden">
               {mobileProfessionList.map((cat) => (
                 <span
                   key={`mobile-${cat}`}
@@ -272,7 +272,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           )}
 
           {/* Rating + review count — DIRECTLY under the tags (only the count links out). */}
-          <div>
+          <div className="basis-full lg:basis-auto">
             {professional.reviewCount > 0 ? (
               <span className="inline-flex w-fit items-center gap-1.5">
                 <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
