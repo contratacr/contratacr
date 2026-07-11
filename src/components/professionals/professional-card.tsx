@@ -123,7 +123,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     activeCategory && allProfessions.includes(activeCategory)
       ? [activeCategory]
       : allProfessions;
-  const mobileProfessionList = displayProfessions.slice(0, 2);
+  const mobileLabels = displayProfessions.slice(0, 2).map(catLabel);
+  // Two long labels become two unreadable ellipses on narrow cards. In that case,
+  // keep the first service complete and use +N for the rest. Short labels still
+  // use the denser two-chip layout.
+  const useSingleMobileProfession =
+    displayProfessions.length > 1 &&
+    (mobileLabels.some((label) => label.length > 18) || mobileLabels.join(" ").length > 28);
+  const mobileProfessionList = displayProfessions.slice(0, useSingleMobileProfession ? 1 : 2);
   const desktopProfessionList = displayProfessions.slice(0, 3);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
@@ -222,8 +229,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           {(displayProfessions.length > 0 || professional.isFeatured) && (
             <div className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden">
               {mobileProfessionList.map((cat) => (
-                <span key={`mobile-${cat}`} className={`inline-flex ${serviceChipClass} lg:hidden`} title={catLabel(cat)}>
-                  <span className="min-w-0 truncate">{catLabel(cat)}</span>
+                <span
+                  key={`mobile-${cat}`}
+                  data-testid="professional-card-mobile-service"
+                  data-full-label={useSingleMobileProfession ? "true" : "false"}
+                  className={`lg:hidden ${useSingleMobileProfession ? "inline-flex min-w-0 max-w-[calc(100%-3rem)] items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium leading-tight text-[#6b7280]" : `inline-flex ${serviceChipClass}`}`}
+                  title={catLabel(cat)}
+                >
+                  <span className={useSingleMobileProfession ? "min-w-0 whitespace-normal" : "min-w-0 truncate"}>{catLabel(cat)}</span>
                 </span>
               ))}
               {desktopProfessionList.map((cat) => (

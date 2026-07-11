@@ -57,6 +57,24 @@ test.describe("@seeded search results", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("long mobile service labels stay readable instead of showing two truncated chips", async ({ page }, testInfo) => {
+    if (!isMobileProject(testInfo)) return;
+    await firstProfessionalHref(page);
+
+    const completeLabels = page.locator('[data-testid="professional-card-mobile-service"][data-full-label="true"]');
+    const count = await completeLabels.count();
+    for (let index = 0; index < count; index += 1) {
+      const chip = completeLabels.nth(index);
+      await expect(chip).toBeVisible();
+      const title = await chip.getAttribute("title");
+      expect((await chip.innerText()).trim()).toBe(title?.trim());
+      const row = chip.locator("xpath=parent::*");
+      await expect(row.locator('[data-testid="professional-card-mobile-service"]')).toHaveCount(1);
+      await expect(row.getByText(/^\+\d+$/)).toBeVisible();
+    }
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("search query can navigate from the header to filtered results", async ({ page }) => {
     await gotoOK(page, "/es");
     await waitForInteractivePage(page);
