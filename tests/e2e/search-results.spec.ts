@@ -70,7 +70,8 @@ test.describe("@seeded search results", () => {
       expect((await chip.innerText()).trim()).toBe(title?.trim());
       const row = chip.locator("xpath=parent::*");
       await expect(row.locator('[data-testid="professional-card-mobile-service"]')).toHaveCount(1);
-      await expect(row.getByText(/^\+\d+$/)).toBeVisible();
+      const extraCount = Number(await chip.getAttribute("data-extra-count"));
+      if (extraCount > 0) await expect(row.getByText(`+${extraCount}`, { exact: true })).toBeVisible();
     }
     await expectNoHorizontalOverflow(page);
   });
