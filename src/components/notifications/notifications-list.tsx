@@ -13,6 +13,7 @@ import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
+import { PanelSectionLoading } from "@/components/ui/content-loading";
 
 type Notification = {
   id: string;
@@ -177,7 +178,7 @@ export function NotificationsList() {
       )}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
         {busy ? (
-          <div className="py-16 flex justify-center"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
+          <PanelSectionLoading />
         ) : visible.length === 0 ? (
           <div className="text-center py-16">
             <Bell className="h-10 w-10 text-[#e5e7eb] mx-auto mb-3" />

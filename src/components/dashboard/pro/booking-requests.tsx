@@ -19,6 +19,7 @@ import { ReportModal } from "@/components/dashboard/report-modal";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
+import { PanelSectionLoading } from "@/components/ui/content-loading";
 
 type Booking = {
   id: string;
@@ -249,11 +250,7 @@ export function BookingRequests() {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
+    return <PanelSectionLoading />;
   }
 
   if (bookings.length === 0) {

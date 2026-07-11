@@ -42,6 +42,7 @@ import { notificationContext } from "@/lib/notification-link";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { DashboardRouteLoading } from "@/components/ui/route-loading";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
 // "Usar servicios" (the seek capability — always available) and "Ofrecer servicios"
@@ -721,11 +722,7 @@ export default function DashboardPage() {
   }, [bottomNavRail, mode, isProvider]);
 
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
+    return <DashboardRouteLoading />;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;

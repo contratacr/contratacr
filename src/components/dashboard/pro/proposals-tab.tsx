@@ -17,6 +17,7 @@ import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, propo
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { useAppDialog } from "@/hooks/use-app-dialog";
+import { PanelSectionLoading } from "@/components/ui/content-loading";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -577,11 +578,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
+    return <PanelSectionLoading />;
   }
 
   return (

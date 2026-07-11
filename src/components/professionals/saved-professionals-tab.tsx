@@ -8,6 +8,7 @@ import { getSavedPros, unsavePro, type SavedPro } from "./save-button";
 import { useLocale, useTranslations } from "next-intl";
 import { formatServicePrice } from "@/lib/pricing";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { PanelSectionLoading } from "@/components/ui/content-loading";
 
 function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string) => void }) {
   const tSaved = useTranslations("savedPros");
@@ -103,11 +104,7 @@ export function SavedProfessionalsTab() {
   }
 
   if (!mounted) {
-    return (
-      <div className="flex justify-center py-16">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
+    return <PanelSectionLoading />;
   }
 
   if (saved.length === 0) {

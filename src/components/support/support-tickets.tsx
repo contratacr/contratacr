@@ -10,6 +10,7 @@ import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAppDialog } from "@/hooks/use-app-dialog";
+import { PanelSectionLoading } from "@/components/ui/content-loading";
 
 type Ticket = {
   id: string;
@@ -241,7 +242,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
         </button>
 
         {threadLoading || !ticket ? (
-          <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
+          <PanelSectionLoading rows={2} />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
             <div className="px-4 py-4 border-b border-[#e5e7eb] sm:px-5">
@@ -356,7 +357,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
+        <PanelSectionLoading rows={2} />
       ) : loadError ? (
         <div className="rounded-2xl border border-[#e5e7eb] bg-white px-5 py-10 text-center">
           <Headset className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />

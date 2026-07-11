@@ -26,6 +26,7 @@ import { SavedProfessionalsTab } from "@/components/professionals/saved-professi
 import { useAuth } from "@/hooks/use-auth";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
+import { PanelSectionLoading } from "@/components/ui/content-loading";
 
 /**
  * Shared "acting as a client" activity views — the user's SENT solicitudes,
@@ -566,11 +567,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
+    return <PanelSectionLoading />;
   }
 
   const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));
