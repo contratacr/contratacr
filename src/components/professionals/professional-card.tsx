@@ -221,19 +221,38 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
           {(displayProfessions.length > 0 || professional.isFeatured) && (
-            <div className="flex w-full basis-full flex-nowrap items-start gap-1.5 lg:basis-auto lg:items-center lg:overflow-hidden">
+            <div className="flex w-full basis-full flex-nowrap items-start gap-1.5 lg:hidden">
               {mobileProfessionList.map((cat) => (
                 <span
-                  key={`mobile-${cat}`}
+                  key={`mobile-full-${cat}`}
                   data-testid="professional-card-mobile-service"
                   data-full-label="true"
                   data-extra-count={mobileExtraProfessions}
-                  className={`min-w-0 items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium leading-tight text-[#6b7280] lg:hidden ${mobileExtraProfessions > 0 ? "inline-flex flex-1" : "inline-flex w-fit max-w-full"}`}
+                  className={`min-w-0 items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium leading-tight text-[#6b7280] ${mobileExtraProfessions > 0 ? "inline-flex flex-1" : "inline-flex w-fit max-w-full"}`}
                   title={catLabel(cat)}
                 >
                   <span className="min-w-0 whitespace-normal break-words">{catLabel(cat)}</span>
                 </span>
               ))}
+              {mobileExtraProfessions > 0 && (
+                <Link
+                  href={`/profesionales/${professional.slug}`}
+                  title={tCard("moreProfessions")}
+                  aria-label={tCard("moreProfessions")}
+                  className={`inline-flex ${moreProfessionsClass}`}
+                >
+                  +{mobileExtraProfessions}
+                </Link>
+              )}
+              {professional.isFeatured && (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                  {tCard("featured")}
+                </span>
+              )}
+            </div>
+          )}
+          {(displayProfessions.length > 0 || professional.isFeatured) && (
+            <div className="hidden w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:flex">
               {desktopProfessionList.map((cat) => (
                 <span key={`desktop-${cat}`} className={`hidden ${serviceChipClass} lg:inline-flex`} title={catLabel(cat)}>
                   <span className="min-w-0 truncate">{catLabel(cat)}</span>
@@ -243,16 +262,6 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   it's tappable; `relative z-10` lifts it above the whole-card overlay; the pill
                   + hover (brand-blue bg/text + pointer) signals it's interactive without
                   cluttering the row — consistent with the other card→profile links. */}
-              {mobileExtraProfessions > 0 && (
-                <Link
-                  href={`/profesionales/${professional.slug}`}
-                  title={tCard("moreProfessions")}
-                  aria-label={tCard("moreProfessions")}
-                  className={`inline-flex ${moreProfessionsClass} lg:hidden`}
-                >
-                  +{mobileExtraProfessions}
-                </Link>
-              )}
               {desktopExtraProfessions > 0 && (
                 <Link
                   href={`/profesionales/${professional.slug}`}
