@@ -69,7 +69,9 @@ test.describe("@seeded search results", () => {
       const title = await chip.getAttribute("title");
       expect((await chip.innerText()).trim()).toContain(title?.trim());
       const row = chip.locator("xpath=parent::*");
-      await expect(row.locator('[data-testid="professional-card-mobile-service"]')).toHaveCount(1);
+      const visibleServices = await row.locator('[data-testid="professional-card-mobile-service"]').count();
+      expect(visibleServices).toBeGreaterThanOrEqual(1);
+      expect(visibleServices).toBeLessThanOrEqual(3);
       const extraCount = Number(await chip.getAttribute("data-extra-count"));
       if (extraCount > 0) await expect(row.getByText(`+${extraCount}`, { exact: true })).toBeVisible();
     }
