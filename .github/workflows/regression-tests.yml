@@ -72,6 +72,9 @@ jobs:
       - name: Ensure private env files are not tracked
         run: npm run security:env
 
+      - name: Typecheck regression and application contracts
+        run: npx tsc --noEmit
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 

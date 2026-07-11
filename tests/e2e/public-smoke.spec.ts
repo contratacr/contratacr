@@ -148,4 +148,24 @@ test.describe("@smoke public routes", () => {
       await expectHealthyPage(page);
     }
   });
+
+  test("footer keeps localized resources and safe external destinations", async ({ page }) => {
+    for (const locale of ["es", "en"] as const) {
+      await gotoOK(page, `/${locale}`);
+      const footer = page.locator("footer");
+      await expect(footer).toBeVisible();
+
+      const internalRoutes = ["servicios", "como-funciona", "ayuda", "soporte", "privacidad", "terminos"];
+      for (const route of internalRoutes) {
+        await expect(footer.locator(`a[href="/${locale}/${route}"]`).first(), `Missing /${locale}/${route} in footer`).toBeVisible();
+      }
+
+      const external = footer.locator('a[target="_blank"]');
+      const count = await external.count();
+      for (let index = 0; index < count; index += 1) {
+        await expect(external.nth(index)).toHaveAttribute("rel", /noopener|noreferrer/);
+      }
+      await expectHealthyPage(page);
+    }
+  });
 });

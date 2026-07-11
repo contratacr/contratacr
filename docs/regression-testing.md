@@ -28,6 +28,19 @@ Open the Playwright UI:
 npm run test:e2e:ui
 ```
 
+## Release gate
+
+A release candidate is accepted only when the test-environment workflow finishes with:
+
+- TypeScript contracts passing.
+- No committed `test.only`.
+- Every seeded account and test-environment secret available.
+- The complete desktop and mobile suite green after retries.
+- No unexpected skipped test in the Playwright report.
+- The external-provider checklist below reviewed when auth, email, maps, WhatsApp, or uploads changed.
+
+The detailed source of truth is [the regression coverage matrix](./regression-coverage-matrix.md).
+
 ## Coverage
 
 The suite runs in two Playwright projects:
@@ -51,9 +64,16 @@ It covers:
 - Dashboard surfaces for professional mode: profile, services, success cases, availability, requests received, opportunities, verification, notifications, support, account security.
 - Dashboard surfaces for client mode: profile, my requests, my posts, favorites, notifications, support, account security.
 - UI entry points for booking and publishing request modals without submitting.
-- Admin signed-out login surface always; authenticated admin sections if `E2E_ADMIN_EMAIL` and `E2E_ADMIN_PASSWORD` are configured.
+- Editable review lifecycle after completed work, including one-review-per-request persistence.
+- Signed-in and guest support ticket creation, automatic acknowledgement, reply, reopen, and confirmation.
+- Real password change and restored seeded credentials.
+- Real professional bio, service description, success-case upload, and availability privacy persistence.
+- Notification translation and destination contracts for every supported notification type.
+- Protected API boundaries for guest users and privacy-safe forgot-password behavior.
+- English professional and client panels, localized footer routes, and safe external links.
+- Admin signed-out boundary and all authenticated admin sections through the seeded test admin account.
 
-No regression suite can prove literally every possible user data combination, but this is the launch safety net for every major product surface and the flows most likely to regress.
+No regression suite can prove literally every possible user-data combination or guarantee external-provider uptime. This suite is the launch safety net for every major product surface and the flows most likely to regress.
 
 ## Test tags
 
@@ -77,3 +97,5 @@ If the bypass secret was rotated, redeploy the `test` branch before rerunning Re
 ## Notes
 
 When running locally, Google Maps can log `RefererNotAllowedMapError` if the local URL is not allowed in Google Cloud. That warning does not fail the suite; the test environment URL should be allowlisted.
+
+Playwright verifies that ContrataCR submits or renders the correct behavior around Google OAuth, Resend/Brevo, Cloudinary, Google Maps, and WhatsApp. It cannot guarantee that those independent providers deliver a message, keep their service online, or preserve a third-party UI. Use the short manual checklist in the coverage matrix whenever one of those integrations changes.

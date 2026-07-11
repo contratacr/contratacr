@@ -5,14 +5,14 @@ import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed"
 const professionalTabs = [
   { tab: "profile", marker: /Mi perfil|My profile/i },
   { tab: "services", marker: /Servicios|Services/i },
-  { tab: "photos", marker: /Casos de exito|Casos de .xito|Success cases/i },
+  { tab: "photos", marker: /Casos de exito|Casos de .xito|Success cases|Success stories/i },
   { tab: "availability", marker: /Disponibilidad|Availability/i },
   { tab: "bookings", marker: /Solicitudes recibidas|Requests received/i },
   { tab: "proposals", marker: /Oportunidades|Opportunities/i },
   { tab: "verificacion", marker: /Verificacion|Verificaci.n|Verification/i },
   { tab: "notifications", marker: /Notificaciones|Notifications/i },
   { tab: "soporte", marker: /Soporte|Support/i },
-  { tab: "cuenta", marker: /Cuenta y seguridad|Account and security/i },
+  { tab: "cuenta", marker: /Cuenta y seguridad|Account (?:and|&) security/i },
 ] as const;
 
 const clientTabs = [
@@ -22,7 +22,7 @@ const clientTabs = [
   { tab: "saved", marker: /Mis favoritos|My favorites/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
   { tab: "soporte&mode=use", marker: /Soporte|Support/i },
-  { tab: "cuenta&mode=use", marker: /Cuenta y seguridad|Account and security/i },
+  { tab: "cuenta&mode=use", marker: /Cuenta y seguridad|Account (?:and|&) security/i },
 ] as const;
 
 test.describe.configure({ mode: "serial" });
@@ -104,6 +104,25 @@ test.describe("@seeded dashboard surfaces", () => {
 
     for (const section of clientTabs) {
       await gotoOK(page, `/es/dashboard/profesional?tab=${section.tab}`);
+      await expectVisibleText(page.locator("main"), section.marker);
+      await expectHealthyPage(page);
+    }
+  });
+
+  test("English professional and client panels keep their sections translated", async ({ page }) => {
+    test.slow();
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+
+    for (const section of professionalTabs) {
+      await gotoOK(page, `/en/dashboard/profesional?tab=${section.tab}`);
+      await expectVisibleText(page.locator("main"), section.marker);
+      await expect(page.locator("main")).not.toContainText(/Notificaciones|Solicitudes recibidas|Disponibilidad|Cuenta y seguridad/i);
+      await expectHealthyPage(page);
+    }
+
+    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    for (const section of clientTabs) {
+      await gotoOK(page, `/en/dashboard/profesional?tab=${section.tab}`);
       await expectVisibleText(page.locator("main"), section.marker);
       await expectHealthyPage(page);
     }
