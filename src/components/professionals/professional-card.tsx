@@ -125,7 +125,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
       ? [activeCategory]
       : allProfessions;
   const mobileProfessionList = displayProfessions.slice(0, 1);
-  const desktopProfessionList = displayProfessions.slice(0, 3);
+  const desktopProfessionList = displayProfessions.slice(0, 1);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
@@ -135,8 +135,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
-  const serviceChipClass = "min-w-0 max-w-[10.5rem] shrink items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280] lg:max-w-[9.5rem]";
-  const moreProfessionsClass = "relative z-10 shrink-0 items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]";
+  const serviceChipClass = "";
+  const moreProfessionsClass = "relative z-10 ml-1 inline-flex shrink-0 rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-bold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
@@ -221,14 +221,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
           {(displayProfessions.length > 0 || professional.isFeatured) && (
-            <div className="flex w-full basis-full flex-nowrap items-start gap-1.5 lg:hidden">
+            <div className="flex w-full basis-full flex-nowrap items-start gap-1.5 lg:basis-auto">
               {mobileProfessionList.map((cat) => (
                 <p
-                  key={`mobile-full-${cat}`}
+                  key={`service-summary-${cat}`}
                   data-testid="professional-card-mobile-service"
                   data-full-label="true"
                   data-extra-count={mobileExtraProfessions}
-                  className="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-[#6b7280] [overflow-wrap:anywhere]"
+                  className="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-[#6b7280] [overflow-wrap:anywhere] lg:text-[12px]"
                   title={catLabel(cat)}
                 >
                   {catLabel(cat)}
@@ -237,7 +237,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                       href={`/profesionales/${professional.slug}`}
                       title={tCard("moreProfessions")}
                       aria-label={tCard("moreProfessions")}
-                      className="relative z-10 ml-1 inline-flex shrink-0 rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-bold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]"
+                      className={moreProfessionsClass}
                     >
                       +{mobileExtraProfessions}
                     </Link>
@@ -251,8 +251,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               )}
             </div>
           )}
-          {(displayProfessions.length > 0 || professional.isFeatured) && (
-            <div className="hidden w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:flex">
+          {false && (displayProfessions.length > 0 || professional.isFeatured) && (
+            <div className="hidden">
               {desktopProfessionList.map((cat) => (
                 <span key={`desktop-${cat}`} className={`hidden ${serviceChipClass} lg:inline-flex`} title={catLabel(cat)}>
                   <span className="min-w-0 truncate">{catLabel(cat)}</span>
