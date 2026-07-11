@@ -221,14 +221,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
           {(displayProfessions.length > 0 || professional.isFeatured) && (
-            <div className="flex w-full basis-full flex-nowrap items-start gap-1.5 lg:basis-auto">
+            <div className="block w-full max-w-full basis-full">
               {mobileProfessionList.map((cat) => (
                 <p
                   key={`service-summary-${cat}`}
                   data-testid="professional-card-mobile-service"
                   data-full-label="true"
                   data-extra-count={mobileExtraProfessions}
-                  className="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-[#6b7280] [overflow-wrap:anywhere] lg:text-[12px]"
+                  className="m-0 block w-full max-w-full whitespace-normal break-words text-[11px] font-semibold leading-snug text-[#6b7280] [overflow-wrap:anywhere] lg:text-[12px]"
                   title={catLabel(cat)}
                 >
                   {catLabel(cat)}
