@@ -142,7 +142,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const extraProfessions = allProfessions.length - visibleProfessionList.length;
   const desktopProfessionList: string[] = [];
   const desktopExtraProfessions = 0;
-  const serviceChipClass = "inline-flex max-w-full items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-snug text-[#6b7280]";
+  const serviceChipClass = "inline-flex w-fit max-w-full items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-snug text-[#6b7280]";
   const moreProfessionsClass = "relative z-10 inline-flex shrink-0 rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-bold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
@@ -194,7 +194,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </span>
           )}
         </Link>
-        <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           {/* Company-name line + PRICE (right-aligned on THIS line only). */}
           <div className="flex min-w-0 flex-1 items-start gap-2 pr-8 lg:pr-0">
             <div className="flex min-w-0 flex-1 flex-col gap-0">
@@ -228,7 +228,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
           {(displayProfessions.length > 0 || professional.isFeatured) && (
-            <div className="flex w-full max-w-full basis-full flex-wrap items-start gap-1.5">
+            <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-1.5" data-service-summary-version="full-labels-v2">
               {visibleProfessionList.map((cat) => (
                 <span
                   key={`service-summary-${cat}`}
