@@ -68,12 +68,19 @@ test.describe("@seeded search results", () => {
       await expect(chip).toBeVisible();
       const title = await chip.getAttribute("title");
       expect((await chip.innerText()).trim()).toContain(title?.trim());
-      const row = chip.locator("xpath=parent::*");
+      const row = chip.locator('xpath=ancestor::*[@data-testid="professional-card-service-summary"][1]');
       const visibleServices = await row.locator('[data-testid="professional-card-mobile-service"]').count();
       expect(visibleServices).toBeGreaterThanOrEqual(1);
       expect(visibleServices).toBeLessThanOrEqual(3);
       const extraCount = Number(await chip.getAttribute("data-extra-count"));
-      if (extraCount > 0) await expect(row.getByText(`+${extraCount}`, { exact: true })).toBeVisible();
+      if (extraCount > 0) {
+        const more = row.getByTestId("professional-card-more-services");
+        await expect(more).toHaveText(`+${extraCount}`);
+        const [chipBox, moreBox] = await Promise.all([chip.boundingBox(), more.boundingBox()]);
+        expect(chipBox).not.toBeNull();
+        expect(moreBox).not.toBeNull();
+        expect(Math.abs(chipBox!.y - moreBox!.y)).toBeLessThanOrEqual(2);
+      }
     }
     await expectNoHorizontalOverflow(page);
   });

@@ -226,24 +226,31 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
           {(displayProfessions.length > 0 || professional.isFeatured) && (
-            <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-1.5" data-service-summary-version="full-labels-v2">
-              {visibleProfessionList.map((cat) => (
-                <span
-                  key={`service-summary-${cat}`}
-                  data-testid="professional-card-mobile-service"
-                  data-full-label="true"
-                  data-extra-count={extraProfessions}
-                  className={serviceChipClass}
-                  title={catLabel(cat)}
-                >
-                  <span className="whitespace-normal break-words [overflow-wrap:anywhere]">{catLabel(cat)}</span>
-                </span>
-              ))}
+            <div
+              className="flex w-full min-w-0 max-w-full flex-nowrap items-start gap-1.5"
+              data-testid="professional-card-service-summary"
+              data-service-summary-version="full-labels-v3"
+            >
+              <div className="flex min-w-0 flex-1 flex-wrap items-start gap-1.5">
+                {visibleProfessionList.map((cat) => (
+                  <span
+                    key={`service-summary-${cat}`}
+                    data-testid="professional-card-mobile-service"
+                    data-full-label="true"
+                    data-extra-count={extraProfessions}
+                    className={serviceChipClass}
+                    title={catLabel(cat)}
+                  >
+                    <span className="whitespace-normal break-words [overflow-wrap:anywhere]">{catLabel(cat)}</span>
+                  </span>
+                ))}
+              </div>
               {extraProfessions > 0 && (
                 <Link
                   href={`/profesionales/${professional.slug}`}
                   title={tCard("moreProfessions")}
                   aria-label={tCard("moreProfessions")}
+                  data-testid="professional-card-more-services"
                   className={moreProfessionsClass}
                 >
                   +{extraProfessions}
