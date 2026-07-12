@@ -366,7 +366,10 @@ async function searchProfessionalsUncached(
               .order("review_count", { ascending: false })
               .order("created_at", { ascending: false });
         }
-        return query.limit(filters.bounds || filters.languageId || (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") ? 250 : 50);
+        // Public visibility checks happen below after PostgREST returns the rows.
+        // Keep enough candidates so an excluded row never consumes a visible
+        // professional's place in the ordered result.
+        return query.limit(500);
       };
 
       let { data, error } = await build(true);

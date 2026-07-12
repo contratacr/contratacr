@@ -140,8 +140,6 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const priceBoxClass = priceUnit || priceTaxSuffix ? "max-w-[38%] sm:max-w-[40%]" : "w-[74px] sm:w-[86px]";
   const isVerified = professional.verificationStatus === "verified";
   const extraProfessions = allProfessions.length - visibleProfessionList.length;
-  const desktopProfessionList: string[] = [];
-  const desktopExtraProfessions = 0;
   const serviceChipClass = "inline-flex w-fit max-w-full items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-snug text-[#6b7280]";
   const moreProfessionsClass = "relative z-10 inline-flex shrink-0 rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-bold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
@@ -258,35 +256,6 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               )}
             </div>
           )}
-          {false && (displayProfessions.length > 0 || professional.isFeatured) && (
-            <div className="hidden">
-              {desktopProfessionList.map((cat) => (
-                <span key={`desktop-${cat}`} className={`hidden ${serviceChipClass} lg:inline-flex`} title={catLabel(cat)}>
-                  <span className="min-w-0 truncate">{catLabel(cat)}</span>
-                </span>
-              ))}
-              {/* "+N" → the profile (where ALL professions are listed). A LINK (not a span) so
-                  it's tappable; `relative z-10` lifts it above the whole-card overlay; the pill
-                  + hover (brand-blue bg/text + pointer) signals it's interactive without
-                  cluttering the row — consistent with the other card→profile links. */}
-              {desktopExtraProfessions > 0 && (
-                <Link
-                  href={`/profesionales/${professional.slug}`}
-                  title={tCard("moreProfessions")}
-                  aria-label={tCard("moreProfessions")}
-                  className={`hidden ${moreProfessionsClass} lg:inline-flex`}
-                >
-                  +{desktopExtraProfessions}
-                </Link>
-              )}
-              {professional.isFeatured && (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                  {tCard("featured")}
-                </span>
-              )}
-            </div>
-          )}
-
           {/* Rating + review count — DIRECTLY under the tags (only the count links out). */}
           <div className="basis-full lg:basis-auto">
             {professional.reviewCount > 0 ? (
