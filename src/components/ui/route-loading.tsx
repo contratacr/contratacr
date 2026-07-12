@@ -86,7 +86,7 @@ export function SearchRouteLoading() {
       <LandingNavbar mobileInline={<Suspense fallback={null}><MobileServiceSearch /></Suspense>} />
       <div className="h-16" aria-hidden />
 
-      <div className="hidden lg:block">
+      <div className="ccr-delayed-loading hidden lg:block">
         <div className="mx-auto max-w-[1920px] px-8 py-4">
           <div className="flex items-start gap-2.5">
             <span className="h-11 w-1.5 rounded-full bg-[#009FD9]/45" />
@@ -98,7 +98,7 @@ export function SearchRouteLoading() {
         </div>
       </div>
 
-      <main className="relative h-[calc(100dvh-64px)] overflow-hidden lg:h-auto lg:px-8 lg:pb-5">
+      <main className="ccr-delayed-loading relative h-[calc(100dvh-64px)] overflow-hidden lg:h-auto lg:px-8 lg:pb-5">
         <div className="absolute inset-0 lg:static lg:mx-auto lg:flex lg:max-w-[1920px] lg:gap-5">
           <aside className="hidden w-64 shrink-0 xl:block"><FilterSkeleton /></aside>
 
@@ -125,7 +125,7 @@ export function DashboardRouteLoading() {
   return (
     <div className="min-h-screen bg-[#fafafa]" aria-busy="true">
       <Navbar />
-      <main>
+      <main className="ccr-delayed-loading">
         <div className="mx-auto max-w-5xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8 lg:pb-8">
           <div className="mb-6 flex items-center gap-4 border-b border-[#e5e7eb] pb-5">
             <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
@@ -159,7 +159,7 @@ export function DashboardRouteLoading() {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 flex h-[72px] items-center justify-around border-t border-[#e5e7eb] bg-white px-3 lg:hidden">
+      <div className="ccr-delayed-loading fixed inset-x-0 bottom-0 z-20 flex h-[72px] items-center justify-around border-t border-[#e5e7eb] bg-white px-3 lg:hidden">
         {[0, 1, 2, 3].map((item) => (
           <div key={item} className="flex w-16 flex-col items-center gap-2">
             <Skeleton className="h-5 w-5 rounded" />

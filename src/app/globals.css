@@ -70,6 +70,26 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Fast navigations should feel instant instead of flashing a skeleton for a
+   fraction of a second. Loading surfaces only fade in when work lasts long
+   enough to need feedback; persistent navigation remains visible throughout. */
+@keyframes ccr-loading-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ccr-delayed-loading {
+  opacity: 0;
+  animation: ccr-loading-reveal 140ms ease-out 180ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ccr-delayed-loading {
+    opacity: 1;
+    animation: none;
+  }
+}
+
 /* Focus visible ring */
 :focus-visible {
   outline: 2px solid #009FD9;

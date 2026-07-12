@@ -43,6 +43,12 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { DashboardRouteLoading } from "@/components/ui/route-loading";
+import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
+import {
+  dashboardBootstrapKey,
+  type DashboardBootstrap,
+  type DashboardProfileData,
+} from "@/lib/dashboard-bootstrap-cache";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
 // "Usar servicios" (the seek capability — always available) and "Ofrecer servicios"
@@ -264,7 +270,7 @@ export default function DashboardPage() {
   const opportunityWelcomeParamCount = Math.max(0, Number.parseInt(searchParams.get("welcomeOpportunityCount") ?? "0", 10) || 0);
 
   const [pro, setPro] = useState<ProData | null>(null);
-  const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(null);
+  const [profile, setProfile] = useState<DashboardProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -284,6 +290,7 @@ export default function DashboardPage() {
   const [bottomNavOverflow, setBottomNavOverflow] = useState({ left: false, right: true });
   const [noProTries, setNoProTries] = useState(0);
   const focusKeyRef = useRef(0);
+  const bootstrapHydratedForRef = useRef<string | null>(null);
   const nextFocusKey = useCallback(() => {
     focusKeyRef.current += 1;
     return focusKeyRef.current;
@@ -344,6 +351,13 @@ export default function DashboardPage() {
     });
   }, [searchParams, router, nextFocusKey]);
 
+  const cacheDashboardBootstrap = useCallback((next: Partial<DashboardBootstrap>) => {
+    if (!user) return;
+    const key = dashboardBootstrapKey(user.id);
+    const current = getDashboardCache<DashboardBootstrap>(key) ?? { pro: null, profile: null };
+    setDashboardCache(key, { ...current, ...next });
+  }, [user]);
+
   const fetchPro = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!user) return;
     const supabase = createClient();
@@ -355,6 +369,7 @@ export default function DashboardPage() {
       .maybeSingle();
 
     setPro(data);
+    cacheDashboardBootstrap({ pro: data });
     if (data) {
       setNoProTries(0);
     }
@@ -370,18 +385,35 @@ export default function DashboardPage() {
       setNoProTries((n) => n + 1);
     }
     if (!silent) setLoading(false);
-  }, [user]);
+  }, [cacheDashboardBootstrap, user]);
 
   const fetchProfile = useCallback(async () => {
     if (!user) return;
     const supabase = createClient();
     const { data } = await supabase.rpc("get_my_profile");
-    if (data) setProfile(data);
-  }, [user]);
+    if (data) {
+      setProfile(data);
+      cacheDashboardBootstrap({ profile: data });
+    }
+  }, [cacheDashboardBootstrap, user]);
 
   useEffect(() => {
     if (!user) return;
-    queueMicrotask(() => fetchPro());
+    const firstLoadForUser = bootstrapHydratedForRef.current !== user.id;
+    bootstrapHydratedForRef.current = user.id;
+    const cached = firstLoadForUser
+      ? getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id))
+      : null;
+    if (cached && firstLoadForUser) {
+      queueMicrotask(() => {
+        setPro(cached.pro as ProData | null);
+        setProfile(cached.profile);
+        setLoading(false);
+        void fetchPro({ silent: true });
+      });
+      return;
+    }
+    queueMicrotask(() => fetchPro({ silent: !firstLoadForUser }));
   }, [user, refreshKey, fetchPro]);
 
   // Base profile (name/avatar) for the header — works for seekers with no pro row.

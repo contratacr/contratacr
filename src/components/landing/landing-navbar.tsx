@@ -23,6 +23,7 @@ import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { ModeSwitcher } from "@/components/ui/mode-switcher";
 import { SupportLink } from "@/components/support/support-link";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
+import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
@@ -1005,7 +1006,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       if (!pathname.startsWith("/buscar")) router.prefetch("/buscar");
-      if (user && !pathname.startsWith("/dashboard/profesional")) router.prefetch(primaryPanelHref);
+      if (user && !pathname.startsWith("/dashboard/profesional")) {
+        router.prefetch(primaryPanelHref);
+        prefetchDashboardBootstrap(user.id);
+      }
     }, 900);
     return () => window.clearTimeout(timeout);
   }, [pathname, primaryPanelHref, router, user]);

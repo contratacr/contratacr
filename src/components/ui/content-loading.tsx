@@ -6,7 +6,7 @@ export function Skeleton({ className }: { className: string }) {
 
 export function PanelSectionLoading({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="space-y-3 py-1" aria-busy="true">
+    <div className="ccr-delayed-loading space-y-3 py-1" aria-busy="true">
       <div className="mb-4 flex gap-2">
         <Skeleton className="h-8 w-24 rounded-lg" />
         <Skeleton className="h-8 w-24 rounded-lg" />
