@@ -115,7 +115,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const earliestByPro: Record<string, string> = {};
   const videoMode = params.modalidad === "video";
   const publicIds = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
-  if (publicIds.length > 0) {
+  // Normal search renders professional data immediately; each visible card then
+  // refreshes its own availability. Only this sort must block on slots because
+  // their timestamps determine the result order.
+  if (publicIds.length > 0 && sortBy === "availability") {
     try {
       const supabase = createAdminClient();
       const todayISO = new Date().toISOString().slice(0, 10);
@@ -353,6 +356,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           <ProfessionalCard
                             professional={pro}
                             slots={slotsByPro[pro.id] ?? []}
+                            slotsInitiallyLoaded={sortBy === "availability"}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={i + 1}

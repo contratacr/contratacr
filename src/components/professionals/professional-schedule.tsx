@@ -11,6 +11,7 @@ import { getWhatsAppLink } from "@/lib/utils";
 import { isTooSoonCR } from "@/lib/time-cr";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
+import { Skeleton } from "@/components/ui/content-loading";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
 
@@ -20,6 +21,9 @@ interface ProfessionalScheduleProps {
   availabilityPublic: boolean;
   contactPreference?: "solo_whatsapp" | "solo_citas" | "ambas";
   slots: ScheduleSlot[];
+  /** Whether the initial slot list was already resolved on the server. Search
+   *  cards set this false so profile data can render before availability. */
+  slotsInitiallyLoaded?: boolean;
   /** When the client searched a specific profession, only show that one's slots. */
   activeCategory?: string;
   /** True when the viewer owns this profile — no self-service actions. */
@@ -80,7 +84,7 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   const scheduleRootRef = useRef<HTMLDivElement>(null);
@@ -130,6 +134,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
   // appointments-only.
   const canBook = !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
+  const scheduleLoading = canBook && !slotsInitiallyLoaded && liveData?.professionalId !== professional.id;
 
   useEffect(() => {
     if (!shouldAutoRefresh) return;
@@ -140,7 +145,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       if (document.visibilityState !== "visible") return;
       try {
         const res = await fetch(`/api/public-availability?professionalId=${professional.id}`, { cache: "no-store" });
-        if (!res.ok || !active) return;
+        if (!res.ok || !active) {
+          if (active) setLiveData({ professionalId: professional.id, availabilityPublic, slots: allSlots });
+          return;
+        }
         const json = await res.json();
         if (!active) return;
         setLiveData({
@@ -149,7 +157,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           slots: Array.isArray(json.slots) ? (json.slots as ScheduleSlot[]) : allSlots,
         });
       } catch {
-        // Keep the server-rendered schedule if the refresh fails.
+        // Resolve the loading state with the server fallback if live refresh fails.
+        if (active) setLiveData({ professionalId: professional.id, availabilityPublic, slots: allSlots });
       }
     }
 
@@ -532,7 +541,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   //  • NO schedules (contact-to-coordinate state): FILLED WhatsApp (green), plus FILLED
   //    "Llamar" (blue) ONLY when phone calls are enabled (showCall). No "Solicitar servicio".
   // All actions are blocked on the pro's OWN card.
-  const hasSchedule = canBook && hasUpcoming;
+  const hasSchedule = canBook && (scheduleLoading || hasUpcoming);
 
   const verHorarioButton = (
     <button
@@ -629,8 +638,23 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     </div>
   );
 
+  const scheduleLoadingBody = (
+    <div className="grid grid-cols-3 gap-2" aria-label={locale === "en" ? "Loading availability" : "Cargando horarios"} aria-busy="true">
+      {[0, 1, 2].map((day) => (
+        <div key={day} className="space-y-2">
+          <Skeleton className="mx-auto h-3 w-12 rounded-md" />
+          <Skeleton className="h-6 w-full rounded-md" />
+          <Skeleton className="h-6 w-full rounded-md" />
+          <Skeleton className="h-6 w-full rounded-md" />
+        </div>
+      ))}
+    </div>
+  );
+
   let scheduleBody: ReactNode;
-  if (!canBook) {
+  if (scheduleLoading) {
+    scheduleBody = scheduleLoadingBody;
+  } else if (!canBook) {
     // No public booking at all (private availability OR WhatsApp-only preference).
     scheduleBody = scheduleNote(forceContactOnly ? t("videoContactNote") : t("availabilityHiddenNote"));
   } else if (!hasUpcoming) {

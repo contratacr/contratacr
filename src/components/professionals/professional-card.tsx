@@ -81,6 +81,8 @@ interface ProfessionalCardProps {
   professional: ProfessionalCardData;
   className?: string;
   slots?: ScheduleSlot[];
+  /** False in search results when availability streams after profile data. */
+  slotsInitiallyLoaded?: boolean;
   /** Active category filter from the search query — narrows the badges shown. */
   activeCategory?: string;
   /** Viewer's auth id — when it matches this pro's owner, hide self-service actions. */
@@ -95,7 +97,7 @@ interface ProfessionalCardProps {
   restrictToPreferredLocation?: boolean;
 }
 
-export async function ProfessionalCard({ professional, className, slots = [], activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false }: ProfessionalCardProps) {
+export async function ProfessionalCard({ professional, className, slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false }: ProfessionalCardProps) {
   const tCard = await getTranslations("card");
   const tSchedule = await getTranslations("schedule");
   const locale = await getLocale();
@@ -322,6 +324,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         availabilityPublic={!isPrivate}
         contactPreference={professional.contactPreference ?? "ambas"}
         slots={slots}
+        slotsInitiallyLoaded={slotsInitiallyLoaded}
         activeCategory={activeCategory}
         isOwn={isOwn}
         placeFallback={placeFallback}
