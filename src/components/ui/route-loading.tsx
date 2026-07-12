@@ -8,51 +8,6 @@ import { GoogleMapPanel } from "@/components/maps/google-map-panel";
 import { useLocale } from "next-intl";
 import { PanelSectionLoading, Skeleton } from "@/components/ui/content-loading";
 
-function SearchCardSkeleton() {
-  return (
-    <div className="w-full overflow-hidden rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.06)] sm:p-5">
-      <div className="grid min-h-[190px] gap-5 lg:grid-cols-[minmax(0,1fr)_250px]">
-        <div className="min-w-0">
-          <div className="flex items-start gap-3">
-            <Skeleton className="h-14 w-14 shrink-0 rounded-full" />
-            <div className="min-w-0 flex-1 space-y-2 pt-0.5">
-              <Skeleton className="h-4 w-3/5 rounded-md" />
-              <Skeleton className="h-3 w-2/5 rounded-md" />
-              <div className="flex gap-2 pt-1">
-                <Skeleton className="h-5 w-20 rounded-full" />
-                <Skeleton className="h-5 w-24 rounded-full" />
-              </div>
-            </div>
-            <Skeleton className="h-7 w-20 shrink-0 rounded-md" />
-          </div>
-          <div className="mt-4 space-y-2.5">
-            <Skeleton className="h-3 w-11/12 rounded-md" />
-            <Skeleton className="h-3 w-3/4 rounded-md" />
-          </div>
-          <div className="mt-5 flex gap-2">
-            <Skeleton className="h-9 w-32 rounded-lg" />
-            <Skeleton className="h-9 w-24 rounded-lg" />
-          </div>
-        </div>
-
-        <div className="hidden border-l border-[#edf1f4] pl-5 lg:block">
-          <div className="grid grid-cols-3 gap-2 text-center">
-            {[0, 1, 2].map((day) => (
-              <div key={day} className="space-y-2">
-                <Skeleton className="mx-auto h-3 w-12 rounded-md" />
-                <Skeleton className="h-7 w-full rounded-md" />
-                <Skeleton className="h-7 w-full rounded-md" />
-                <Skeleton className="h-7 w-full rounded-md" />
-              </div>
-            ))}
-          </div>
-          <Skeleton className="mt-4 h-9 w-full rounded-lg" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function FilterSkeleton() {
   return (
     <div className="rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.05)]">
@@ -67,6 +22,31 @@ function FilterSkeleton() {
             <Skeleton className="h-10 w-full rounded-lg" />
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function SearchResultsLoadingNotice({ locale }: { locale: string }) {
+  const isEnglish = locale === "en";
+  return (
+    <div className="ccr-delayed-loading rounded-2xl border border-[#d9edf7] bg-white px-4 py-4 shadow-[0_2px_10px_rgba(15,23,42,0.05)] sm:px-5">
+      <div className="flex items-center gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eaf7fc]">
+          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#009FD9] motion-reduce:animate-none" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-[#162543]">
+            {isEnglish ? "Finding professionals" : "Buscando profesionales"}
+          </p>
+          <p className="mt-0.5 text-xs text-[#6b7280]">
+            {isEnglish ? "Loading the results for this search." : "Estamos cargando los resultados para esta busqueda."}
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 space-y-2">
+        <Skeleton className="h-2.5 w-11/12 rounded-full" />
+        <Skeleton className="h-2.5 w-8/12 rounded-full" />
       </div>
     </div>
   );
@@ -104,14 +84,12 @@ export function SearchRouteLoading() {
             </div>
           </section>
 
-          <section className="absolute inset-x-0 bottom-0 z-10 h-[34dvh] rounded-t-[20px] border-x border-t border-[#e2e8ee] bg-white px-4 pb-6 pt-3 shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.28)] lg:static lg:order-2 lg:h-auto lg:w-[640px] lg:shrink-0 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none xl:w-[700px] 2xl:w-[820px]">
+          <section className="absolute inset-x-0 bottom-0 z-10 rounded-t-[20px] border-x border-t border-[#e2e8ee] bg-white px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.28)] lg:static lg:order-2 lg:w-[640px] lg:shrink-0 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none xl:w-[700px] 2xl:w-[820px]">
             <div className="mb-3 lg:hidden">
               <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-[#d1d5db]" />
               <Skeleton className="h-3 w-44 rounded-md" />
             </div>
-            <div className="space-y-3">
-              {[0, 1, 2].map((item) => <SearchCardSkeleton key={item} />)}
-            </div>
+            <SearchResultsLoadingNotice locale={locale} />
           </section>
         </div>
       </main>
