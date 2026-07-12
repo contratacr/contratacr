@@ -6,7 +6,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { MobileServiceSearch, SearchFilters } from "@/components/search/search-filters";
 import { GoogleMapPanel } from "@/components/maps/google-map-panel";
 import { useLocale } from "next-intl";
-import { PanelSectionLoading, Skeleton } from "@/components/ui/content-loading";
+import { Skeleton } from "@/components/ui/content-loading";
 
 function FilterSkeleton() {
   return (
@@ -47,6 +47,36 @@ function SearchResultsLoadingNotice({ locale }: { locale: string }) {
       <div className="mt-4 space-y-2">
         <Skeleton className="h-2.5 w-11/12 rounded-full" />
         <Skeleton className="h-2.5 w-8/12 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
+function DashboardLoadingNotice({ locale }: { locale: string }) {
+  const isEnglish = locale === "en";
+  return (
+    <div className="ccr-delayed-loading rounded-2xl border border-[#d9edf7] bg-white px-4 py-4 shadow-[0_2px_10px_rgba(15,23,42,0.05)] sm:px-5">
+      <div className="flex items-center gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eaf7fc]">
+          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#009FD9] motion-reduce:animate-none" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-[#162543]">
+            {isEnglish ? "Loading your panel" : "Cargando tu panel"}
+          </p>
+          <p className="mt-0.5 text-xs text-[#6b7280]">
+            {isEnglish ? "We are preparing the latest information." : "Estamos preparando la informacion mas reciente."}
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Skeleton className="h-8 w-24 rounded-lg" />
+        <Skeleton className="h-8 w-24 rounded-lg" />
+        <Skeleton className="h-8 w-20 rounded-lg" />
+      </div>
+      <div className="mt-4 space-y-2">
+        <Skeleton className="h-2.5 w-11/12 rounded-full" />
+        <Skeleton className="h-2.5 w-7/12 rounded-full" />
       </div>
     </div>
   );
@@ -98,23 +128,15 @@ export function SearchRouteLoading() {
 }
 
 export function DashboardRouteLoading() {
+  const locale = useLocale();
   return (
     <div className="min-h-screen bg-[#fafafa]" aria-busy="true">
       <Navbar />
       <main>
         <div className="mx-auto max-w-5xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8 lg:pb-8">
-          <div className="mb-6 flex items-center gap-4 border-b border-[#e5e7eb] pb-5">
-            <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <Skeleton className="h-3 w-28 rounded-md" />
-              <Skeleton className="h-6 w-56 max-w-[70%] rounded-md" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </div>
-          </div>
-
           <div className="flex gap-6">
             <aside className="hidden w-60 shrink-0 lg:block">
-              <div className="space-y-2 rounded-2xl border border-[#e5e7eb] bg-white p-2 shadow-sm">
+              <div className="ccr-delayed-loading space-y-2 rounded-2xl border border-[#e5e7eb] bg-white p-2 shadow-sm">
                 {[0, 1, 2, 3, 4, 5, 6].map((item) => (
                   <div key={item} className="flex h-10 items-center gap-3 px-3">
                     <Skeleton className="h-4 w-4 rounded" />
@@ -124,12 +146,8 @@ export function DashboardRouteLoading() {
               </div>
             </aside>
 
-            <section className="min-w-0 flex-1 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
-              <div className="mb-5 space-y-2">
-                <Skeleton className="h-5 w-44 rounded-md" />
-                <Skeleton className="h-3 w-64 max-w-full rounded-md" />
-              </div>
-              <PanelSectionLoading />
+            <section className="min-w-0 flex-1">
+              <DashboardLoadingNotice locale={locale} />
             </section>
           </div>
         </div>
