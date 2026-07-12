@@ -76,10 +76,12 @@ test.describe("@seeded search results", () => {
       if (extraCount > 0) {
         const more = row.getByTestId("professional-card-more-services");
         await expect(more).toHaveText(`+${extraCount}`);
-        const [chipBox, moreBox] = await Promise.all([chip.boundingBox(), more.boundingBox()]);
+        const lastService = row.locator('[data-testid="professional-card-mobile-service"]').last();
+        const [chipBox, moreBox] = await Promise.all([lastService.boundingBox(), more.boundingBox()]);
         expect(chipBox).not.toBeNull();
         expect(moreBox).not.toBeNull();
         expect(Math.abs(chipBox!.y - moreBox!.y)).toBeLessThanOrEqual(2);
+        expect(moreBox!.x - (chipBox!.x + chipBox!.width)).toBeLessThanOrEqual(10);
       }
     }
     await expectNoHorizontalOverflow(page);
