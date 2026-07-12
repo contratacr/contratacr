@@ -1,12 +1,12 @@
 const pulse = "animate-pulse motion-reduce:animate-none";
 
 export function Skeleton({ className }: { className: string }) {
-  return <span aria-hidden className={`${pulse} block bg-[#e9eef3] ${className}`} />;
+  return <span aria-hidden className={`ccr-delayed-loading ${pulse} block bg-[#e9eef3] ${className}`} />;
 }
 
 export function PanelSectionLoading({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="ccr-delayed-loading space-y-3 py-1" aria-busy="true">
+    <div className="space-y-3 py-1" aria-busy="true">
       <div className="mb-4 flex gap-2">
         <Skeleton className="h-8 w-24 rounded-lg" />
         <Skeleton className="h-8 w-24 rounded-lg" />

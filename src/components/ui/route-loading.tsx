@@ -1,7 +1,11 @@
+"use client";
+
 import { Suspense } from "react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Navbar } from "@/components/layout/navbar";
-import { MobileServiceSearch } from "@/components/search/search-filters";
+import { MobileServiceSearch, SearchFilters } from "@/components/search/search-filters";
+import { GoogleMapPanel } from "@/components/maps/google-map-panel";
+import { useLocale } from "next-intl";
 import { PanelSectionLoading, Skeleton } from "@/components/ui/content-loading";
 
 function SearchCardSkeleton() {
@@ -68,25 +72,15 @@ function FilterSkeleton() {
   );
 }
 
-function MapSkeleton() {
-  return (
-    <div className="relative h-full min-h-[420px] overflow-hidden bg-[#e6f2ec] lg:min-h-[560px] lg:rounded-2xl lg:border lg:border-[#d9e5df]">
-      <span className="absolute left-[18%] top-0 h-full w-3 rotate-[18deg] bg-white/70" />
-      <span className="absolute left-0 top-[42%] h-3 w-full -rotate-[5deg] bg-white/75" />
-      <span className="absolute right-[22%] top-0 h-full w-2 -rotate-[12deg] bg-white/55" />
-      <Skeleton className="absolute left-4 top-4 h-10 w-28 rounded-full bg-white/90" />
-      <Skeleton className="absolute right-4 top-4 h-10 w-10 rounded-lg bg-white/90" />
-    </div>
-  );
-}
-
 export function SearchRouteLoading() {
+  const locale = useLocale();
+  const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
   return (
     <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true">
       <LandingNavbar mobileInline={<Suspense fallback={null}><MobileServiceSearch /></Suspense>} />
       <div className="h-16" aria-hidden />
 
-      <div className="ccr-delayed-loading hidden lg:block">
+      <div className="hidden lg:block">
         <div className="mx-auto max-w-[1920px] px-8 py-4">
           <div className="flex items-start gap-2.5">
             <span className="h-11 w-1.5 rounded-full bg-[#009FD9]/45" />
@@ -98,12 +92,16 @@ export function SearchRouteLoading() {
         </div>
       </div>
 
-      <main className="ccr-delayed-loading relative h-[calc(100dvh-64px)] overflow-hidden lg:h-auto lg:px-8 lg:pb-5">
+      <main className="relative h-[calc(100dvh-64px)] overflow-hidden lg:h-auto lg:px-8 lg:pb-5">
         <div className="absolute inset-0 lg:static lg:mx-auto lg:flex lg:max-w-[1920px] lg:gap-5">
-          <aside className="hidden w-64 shrink-0 xl:block"><FilterSkeleton /></aside>
+          <aside className="hidden w-64 shrink-0 xl:block">
+            <Suspense fallback={<FilterSkeleton />}><SearchFilters /></Suspense>
+          </aside>
 
           <section className="absolute inset-0 lg:static lg:order-3 lg:min-w-0 lg:flex-1">
-            <MapSkeleton />
+            <div className="h-full min-h-[420px] overflow-hidden bg-[#eef2f6] lg:min-h-[560px] lg:rounded-2xl lg:border lg:border-[#e5e7eb]">
+              <GoogleMapPanel apiKey={mapsApiKey} professionals={[]} locale={locale} />
+            </div>
           </section>
 
           <section className="absolute inset-x-0 bottom-0 z-10 h-[34dvh] rounded-t-[20px] border-x border-t border-[#e2e8ee] bg-white px-4 pb-6 pt-3 shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.28)] lg:static lg:order-2 lg:h-auto lg:w-[640px] lg:shrink-0 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none xl:w-[700px] 2xl:w-[820px]">
@@ -125,7 +123,7 @@ export function DashboardRouteLoading() {
   return (
     <div className="min-h-screen bg-[#fafafa]" aria-busy="true">
       <Navbar />
-      <main className="ccr-delayed-loading">
+      <main>
         <div className="mx-auto max-w-5xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8 lg:pb-8">
           <div className="mb-6 flex items-center gap-4 border-b border-[#e5e7eb] pb-5">
             <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
@@ -159,7 +157,7 @@ export function DashboardRouteLoading() {
         </div>
       </main>
 
-      <div className="ccr-delayed-loading fixed inset-x-0 bottom-0 z-20 flex h-[72px] items-center justify-around border-t border-[#e5e7eb] bg-white px-3 lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-20 flex h-[72px] items-center justify-around border-t border-[#e5e7eb] bg-white px-3 lg:hidden">
         {[0, 1, 2, 3].map((item) => (
           <div key={item} className="flex w-16 flex-col items-center gap-2">
             <Skeleton className="h-5 w-5 rounded" />
