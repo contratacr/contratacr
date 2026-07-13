@@ -14,6 +14,7 @@ import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeGetUser } from "@/lib/supabase/get-user";
+import { crTodayISO } from "@/lib/time-cr";
 import type { ScheduleSlot } from "@/components/professionals/professional-schedule";
 
 interface SearchPageProps {
@@ -121,9 +122,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   if (publicIds.length > 0) {
     try {
       const supabase = createAdminClient();
-      const todayISO = new Date().toISOString().slice(0, 10);
+      const todayISO = crTodayISO();
       const taken = new Set<string>();
-      const slotLimit = sortBy === "availability" ? 3000 : 400;
+      const slotLimit = 3000;
       const [takenResult, slotResult] = await Promise.all([
         supabase
           .from("bookings")
