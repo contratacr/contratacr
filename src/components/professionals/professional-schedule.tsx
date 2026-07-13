@@ -324,6 +324,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (locTabs.length <= 1) el.scrollTo({ left: 0 });
   }, [locTabs.length, effectiveId]);
   const showLocNav = locTabs.length > 1 && locScrollState.overflow;
+  const reserveLocNav = locTabs.length > 1;
   const scrollLocs = (dir: number) => {
     const el = locScrollRef.current;
     if (!el) return;
@@ -342,13 +343,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           (`shrink-0` + `whitespace-nowrap`). `.hide-scrollbar` hides the chrome; when
           there are >3 tabs the chevrons below scroll it. */}
       <div className="flex items-center gap-0.5">
-        {showLocNav && (
+        {reserveLocNav && (
           <button
             type="button"
             aria-label={t("prevLocations")}
-            disabled={!locScrollState.left}
+            disabled={!showLocNav || !locScrollState.left}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(-1); }}
-            className={`${locationNavButtonClass} ${!locScrollState.left ? "invisible pointer-events-none" : ""}`}
+            className={`${locationNavButtonClass} ${!showLocNav || !locScrollState.left ? "invisible pointer-events-none" : ""}`}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -358,7 +359,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             scrollable (it could be dragged up/down even with ONE location). Pinning overflow-y
             to hidden makes it strictly a HORIZONTAL tab scroll; vertical touch-drags then bubble
             to the page/sheet scroll (default touch-action). */}
-        <div ref={locScrollRef} className={`-mx-1 flex min-w-0 flex-1 gap-3 ${showLocNav ? "overflow-x-auto" : "overflow-x-hidden"} overflow-y-hidden hide-scrollbar border-b border-[#e5e7eb] px-1`} role="tablist" aria-label={t("location")}>
+        <div ref={locScrollRef} className={`-mx-1 flex min-w-0 flex-1 gap-3 ${reserveLocNav ? "overflow-x-auto" : "overflow-x-hidden"} overflow-y-hidden hide-scrollbar border-b border-[#e5e7eb] px-1`} role="tablist" aria-label={t("location")}>
           {locTabs.map((o) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
             return (
@@ -383,13 +384,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             );
           })}
         </div>
-        {showLocNav && (
+        {reserveLocNav && (
           <button
             type="button"
             aria-label={t("nextLocations")}
-            disabled={!locScrollState.right}
+            disabled={!showLocNav || !locScrollState.right}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(1); }}
-            className={`${locationNavButtonClass} ${!locScrollState.right ? "invisible pointer-events-none" : ""}`}
+            className={`${locationNavButtonClass} ${!showLocNav || !locScrollState.right ? "invisible pointer-events-none" : ""}`}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
