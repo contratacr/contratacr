@@ -545,7 +545,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   //  • NO schedules (contact-to-coordinate state): FILLED WhatsApp (green), plus FILLED
   //    "Llamar" (blue) ONLY when phone calls are enabled (showCall). No "Solicitar servicio".
   // All actions are blocked on the pro's OWN card.
-  const hasSchedule = canBook && (scheduleLoading || hasUpcoming);
+  const hasSchedule = canBook && hasUpcoming;
 
   const verHorarioButton = (
     <button
@@ -644,18 +644,18 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   const scheduleLoadingBody = (
     <div className="flex w-full items-start gap-1" aria-label={locale === "en" ? "Loading availability" : "Cargando horarios"} aria-busy="true">
-      <span className="flex w-4 shrink-0 self-center" aria-hidden />
-      <div className="grid flex-1 grid-cols-3 gap-2">
+      <span className="hidden w-4 shrink-0 self-center sm:flex" aria-hidden />
+      <div className="grid flex-1 grid-cols-3 gap-2 border-r border-[#eef2f6] pr-1.5">
         {days.slice(0, COLS).map((day) => (
-          <div key={day.key} className="flex min-w-0 flex-col gap-1.5">
-            <p className="truncate text-center text-[11px] font-semibold leading-tight text-[#6b7280]">{day.label}</p>
-            <Skeleton className="h-6 w-full rounded-md" />
-            <Skeleton className="h-6 w-full rounded-md" />
-            <Skeleton className="h-6 w-full rounded-md" />
+          <div key={day.key} className="flex min-w-0 flex-col gap-3">
+            <p className="truncate text-center text-[11px] font-semibold leading-tight text-[#374151]">{day.label}</p>
+            <Skeleton className="h-2.5 w-full rounded-sm" />
+            <Skeleton className="h-2.5 w-full rounded-sm" />
+            <Skeleton className="h-2.5 w-full rounded-sm" />
           </div>
         ))}
       </div>
-      <span className="flex w-4 shrink-0 self-center" aria-hidden />
+      <span className="hidden w-4 shrink-0 self-center sm:flex" aria-hidden />
     </div>
   );
 
@@ -746,10 +746,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         <div ref={scheduleRootRef} className="flex flex-col gap-3">
           {locationControl}
           {scheduleBody}
-          <div className="flex flex-col gap-2">
-            {hasSchedule && verHorarioButton}
-            {profileContactButtons}
-          </div>
+          {!scheduleLoading && (
+            <div className="flex flex-col gap-2">
+              {hasSchedule && verHorarioButton}
+              {profileContactButtons}
+            </div>
+          )}
         </div>
         {bookingModals}
         {selfModal}
@@ -782,12 +784,14 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               "Llamar" option on their /buscar card — even when a bookable schedule funnels
               into "Ver horario completo" (which otherwise replaced the contact buttons).
               The call sits as an outlined secondary action below the primary schedule CTA. */}
-          {hasSchedule ? (
-            <>
-              {verHorarioButton}
-              {showCall && renderCall(true)}
-            </>
-          ) : contactButtons}
+          {!scheduleLoading && (
+            hasSchedule ? (
+              <>
+                {verHorarioButton}
+                {showCall && renderCall(true)}
+              </>
+            ) : contactButtons
+          )}
         </div>
       </div>
 
