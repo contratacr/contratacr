@@ -302,12 +302,27 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     lng: params.lng,
   };
   const filtersFallback = (
-    <div className="rounded-2xl border border-[#d9edf7] bg-white p-3 shadow-sm">
-      <div className="space-y-1.5">
-        <span className="block text-xs font-semibold text-[#6b7280]">{t("filters.sortBy")}</span>
-        <div className="flex h-10 items-center rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827]">
-          {t("sort.rating")}
-        </div>
+    <div className="rounded-2xl border border-[#d9edf7] bg-white p-3 shadow-sm" aria-hidden="true">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-sm font-bold text-[#111827]">{t("filters.title")}</span>
+        <span className="text-xs font-semibold text-[#009FD9]">{t("filters.clear")}</span>
+      </div>
+      <div className="space-y-3">
+        {[
+          [t("filters.service"), t("filters.searchPlaceholder")],
+          [t("filters.location"), t("filters.locationPlaceholder")],
+          [t("filters.sortBy"), t("sort.rating")],
+          [t("filters.attention"), t("filters.attentionAny")],
+          [t("filters.language"), t("filters.allLanguages")],
+        ].map(([label, value]) => (
+          <div key={label} className="space-y-1.5">
+            <span className="block text-xs font-semibold text-[#6b7280]">{label}</span>
+            <div className="flex h-10 items-center rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827]">
+              {value}
+            </div>
+          </div>
+        ))}
+        <div className="h-10 rounded-full bg-[#009FD9]" />
       </div>
     </div>
   );
