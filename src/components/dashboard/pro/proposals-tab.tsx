@@ -131,6 +131,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const mineSnapshotRef = useRef("");
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
+  const loadedViewsRef = useRef({ browse: false, mine: false });
   const targetProjectRetryRef = useRef(0);
   const targetProjectRef = useRef<string | null>(null);
   const targetProjectHandledRef = useRef(false);
@@ -164,6 +165,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       setOpenProjects(nextProjects);
       setMyProposals(nextProposals);
       setSubmitted(new Set<string>(nextProposals.map((p) => p.project_id)));
+      loadedViewsRef.current.browse = true;
+      loadedViewsRef.current.mine = true;
     } catch (error) {
       console.error("[proposals-tab] opportunities load failed:", error);
     } finally {
@@ -180,6 +183,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       const snapshot = JSON.stringify(nextProposals.map((p: MyProposal) => `${p.id}:${p.status}:${p.projects?.status ?? ""}`));
       mineSnapshotRef.current = snapshot;
       setMyProposals(nextProposals);
+      loadedViewsRef.current.mine = true;
     } catch (error) {
       console.error("[proposals-tab] my proposals load failed:", error);
     } finally {
@@ -204,8 +208,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
   useEffect(() => {
     queueMicrotask(() => {
-      if (view === "browse") fetchOpenProjects();
-      else fetchMyProposals();
+      if (view === "browse") fetchOpenProjects(loadedViewsRef.current.browse);
+      else fetchMyProposals(loadedViewsRef.current.mine);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, categoryId]);

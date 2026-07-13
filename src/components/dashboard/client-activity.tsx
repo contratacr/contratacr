@@ -199,6 +199,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const targetProjectHandledRef = useRef(false);
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
+  const loadedSectionsRef = useRef({ bookings: false, projects: false });
 
   const fetchSection = useCallback(async (showLoading = true) => {
     if (!user) return;
@@ -208,11 +209,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
         const res = await fetch("/api/bookings?role=client", { cache: "no-store" });
         const { bookings } = await res.json();
         setBookings(bookings ?? []);
+        loadedSectionsRef.current.bookings = true;
       } else if (section === "projects") {
         if (showLoading) setLoading(true);
         const res = await fetch("/api/projects?role=client", { cache: "no-store" });
         const { projects } = await res.json();
         setProjects(projects ?? []);
+        loadedSectionsRef.current.projects = true;
       }
     } catch (error) {
       console.error("[client-activity] load failed:", error);
@@ -244,7 +247,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     }, delay);
   }, [fetchSection, reloadLoadedProjectProposals, section]);
 
-  useEffect(() => { queueMicrotask(() => fetchSection(true)); }, [fetchSection]);
+  useEffect(() => {
+    const needsInitialLoading = section === "bookings"
+      ? !loadedSectionsRef.current.bookings
+      : section === "projects"
+        ? !loadedSectionsRef.current.projects
+        : false;
+    queueMicrotask(() => fetchSection(needsInitialLoading));
+  }, [fetchSection, section]);
 
   useEffect(() => {
     if (!user || section === "saved" || loading) return;

@@ -80,7 +80,7 @@ body {
 
 .ccr-delayed-loading {
   opacity: 0;
-  animation: ccr-loading-reveal 140ms ease-out 180ms forwards;
+  animation: ccr-loading-reveal 140ms ease-out 260ms forwards;
 }
 
 .ccr-skeleton-shimmer {
