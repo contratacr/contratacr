@@ -11,7 +11,6 @@ import { getWhatsAppLink } from "@/lib/utils";
 import { isTooSoonCR } from "@/lib/time-cr";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
-import { Skeleton } from "@/components/ui/content-loading";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
 
@@ -639,19 +638,15 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   );
 
   const scheduleLoadingBody = (
-    <div className="flex w-full items-start gap-1" aria-label={locale === "en" ? "Loading availability" : "Cargando horarios"} aria-busy="true">
-      <span className="flex w-4 shrink-0 self-center" aria-hidden />
-      <div className="grid flex-1 grid-cols-3 gap-2">
-        {days.slice(0, COLS).map((day) => (
-          <div key={day.key} className="flex min-w-0 flex-col gap-1.5">
-            <p className="truncate text-center text-[11px] font-semibold leading-tight text-[#6b7280]">{day.label}</p>
-            <Skeleton className="h-6 w-full rounded-md" />
-            <Skeleton className="h-6 w-full rounded-md" />
-            <Skeleton className="h-6 w-full rounded-md" />
-          </div>
-        ))}
-      </div>
-      <span className="flex w-4 shrink-0 self-center" aria-hidden />
+    <div
+      className="flex items-start gap-2 rounded-lg border border-[#e5e7eb] bg-white px-2.5 py-2"
+      aria-label={locale === "en" ? "Updating availability" : "Actualizando horarios"}
+      aria-busy="true"
+    >
+      <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" aria-hidden />
+      <p className="text-[11px] leading-snug text-[#6b7280]">
+        {locale === "en" ? "Updating available times..." : "Actualizando horarios disponibles..."}
+      </p>
     </div>
   );
 
