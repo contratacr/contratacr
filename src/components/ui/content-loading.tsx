@@ -1,9 +1,7 @@
 "use client";
 
-const pulse = "animate-pulse motion-reduce:animate-none";
-
 export function Skeleton({ className }: { className: string }) {
-  return <span aria-hidden className={`ccr-delayed-loading ${pulse} block bg-[#e9eef3] ${className}`} />;
+  return <span aria-hidden className={`ccr-delayed-loading ccr-skeleton-shimmer block ${className}`} />;
 }
 
 export function PanelSectionLoading(_props: { rows?: number } = {}) {
