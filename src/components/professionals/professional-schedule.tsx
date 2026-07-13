@@ -250,7 +250,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // pro has no named workplaces at all, there's nothing to select (handled by the fallback).
   const defaultLoc = visibleLocationOptions.length > 0
     ? (visibleLocationOptions.find((o) => preferredLocationId && o.id === preferredLocationId)?.id
-      ?? visibleLocationOptions.find((o) => slots.some((s) => (s.locationId ?? "general") === o.id))?.id
       ?? visibleLocationOptions[0].id)
     : null;
   const effectiveId = selectedLoc && visibleLocationOptions.some((o) => o.id === selectedLoc) ? selectedLoc : defaultLoc;
