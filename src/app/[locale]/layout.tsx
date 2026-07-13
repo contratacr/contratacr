@@ -12,6 +12,9 @@ import { DocumentLocale } from "@/components/util/document-locale";
 import { OperationalStatusBanner } from "@/components/status/operational-status-banner";
 import { getOperationalStatusBanner } from "@/lib/status/runtime-status";
 import { AuthProvider } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/server";
+import { safeGetUser } from "@/lib/supabase/get-user";
+import { notificationContext } from "@/lib/notification-link";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -96,10 +99,35 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
   const operationalStatus = getOperationalStatusBanner(locale);
+  const supabase = await createClient();
+  const initialUser = await safeGetUser(supabase);
+  let initialAvatarUrl: string | null | undefined;
+  const initialNotificationUnread = { offer: 0, use: 0, neutral: 0 };
+  if (initialUser) {
+    const [{ data }, { data: unreadNotifications }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", initialUser.id)
+        .maybeSingle(),
+      supabase
+        .from("notifications")
+        .select("type")
+        .eq("user_id", initialUser.id)
+        .eq("read", false),
+    ]);
+    initialAvatarUrl = (data?.avatar_url as string | null | undefined) ?? null;
+    for (const notification of unreadNotifications ?? []) {
+      const context = notificationContext(notification.type as string);
+      if (context === "professional") initialNotificationUnread.offer++;
+      else if (context === "client") initialNotificationUnread.use++;
+      else initialNotificationUnread.neutral++;
+    }
+  }
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <AuthProvider>
+      <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialNotificationUnread={initialNotificationUnread}>
         <DocumentLocale locale={locale} />
         <EmojiBlocker />
         <ViewportEnvironment />

@@ -50,6 +50,8 @@ interface ProfessionalScheduleProps {
   preferredLocationId?: string;
   /** Restrict the selector to the preferred location when the current search matched only that modality. */
   restrictToPreferredLocation?: boolean;
+  /** Search page: keep the schedule skeleton visible until the first map/filter shell is ready. */
+  syncWithSearchLoading?: boolean;
 }
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
@@ -84,7 +86,7 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   const scheduleRootRef = useRef<HTMLDivElement>(null);
@@ -111,6 +113,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // When the pro acts on their OWN card we block the action with a friendly modal
   // instead of hiding the buttons (the card looks identical to a client's view).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
+  const [searchShellLoading, setSearchShellLoading] = useState(false);
 
   useEffect(() => {
     if (!slotsInitiallyLoaded) {
@@ -139,6 +142,71 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // appointments-only.
   const canBook = !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
   const scheduleLoading = canBook && !slotsInitiallyLoaded && liveData?.professionalId !== professional.id;
+  const visualScheduleLoading = canBook && (scheduleLoading || searchShellLoading);
+
+  useEffect(() => {
+    if (!syncWithSearchLoading) {
+      setSearchShellLoading(false);
+      return;
+    }
+    const mapState = window as typeof window & {
+      __ccrSearchMapLoading?: boolean;
+      __ccrSearchMapReady?: boolean;
+    };
+    setSearchShellLoading(true);
+    let active = true;
+    let mapReady = mapState.__ccrSearchMapReady === true && mapState.__ccrSearchMapLoading !== true;
+    let minimumPaintDone = false;
+    let minimumTimer: number | null = null;
+    let fallbackTimer: number | null = null;
+    const clearTimers = () => {
+      if (minimumTimer) window.clearTimeout(minimumTimer);
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+      minimumTimer = null;
+      fallbackTimer = null;
+    };
+    const tryFinish = () => {
+      if (!active || !mapReady || !minimumPaintDone) return;
+      setSearchShellLoading(false);
+    };
+    const beginCycle = () => {
+      clearTimers();
+      mapReady = false;
+      minimumPaintDone = false;
+      setSearchShellLoading(true);
+      minimumTimer = window.setTimeout(() => {
+        minimumPaintDone = true;
+        tryFinish();
+      }, 900);
+      fallbackTimer = window.setTimeout(() => {
+        mapReady = true;
+        minimumPaintDone = true;
+        tryFinish();
+      }, 3000);
+    };
+    const start = () => {
+      if (!active) return;
+      beginCycle();
+    };
+    const finish = () => {
+      if (!active) return;
+      mapReady = true;
+      tryFinish();
+    };
+    const markReady = () => finish();
+    beginCycle();
+    window.addEventListener("ccr:search-map-loading", start);
+    window.addEventListener("ccr:search-map-ready", markReady);
+    if (mapState.__ccrSearchMapReady) {
+      queueMicrotask(finish);
+    }
+    return () => {
+      active = false;
+      window.removeEventListener("ccr:search-map-loading", start);
+      window.removeEventListener("ccr:search-map-ready", markReady);
+      clearTimers();
+    };
+  }, [syncWithSearchLoading, professional.id]);
 
   useEffect(() => {
     if (!shouldAutoRefresh) return;
@@ -653,7 +721,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               <Skeleton className="h-6 w-full rounded-md" />
               <Skeleton className="h-6 w-full rounded-md" />
               <Skeleton className="h-6 w-full rounded-md" />
-              <Skeleton className="h-6 w-full rounded-md border border-dashed border-[#bfdbfe] bg-transparent" />
             </div>
           ))}
         </div>
@@ -664,7 +731,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   );
 
   let scheduleBody: ReactNode;
-  if (scheduleLoading) {
+  if (visualScheduleLoading) {
     scheduleBody = scheduleLoadingBody;
   } else if (!canBook) {
     // No public booking at all (private availability OR WhatsApp-only preference).
@@ -750,7 +817,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         <div ref={scheduleRootRef} className="flex flex-col gap-3">
           {locationControl}
           {scheduleBody}
-          {!scheduleLoading && (
+          {!visualScheduleLoading && (
             <div className="flex flex-col gap-2">
               {hasSchedule && verHorarioButton}
               {profileContactButtons}
@@ -788,7 +855,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               "Llamar" option on their /buscar card — even when a bookable schedule funnels
               into "Ver horario completo" (which otherwise replaced the contact buttons).
               The call sits as an outlined secondary action below the primary schedule CTA. */}
-          {!scheduleLoading && (hasSchedule ? (
+          {!visualScheduleLoading && (hasSchedule ? (
             verHorarioButton
           ) : contactButtons)}
         </div>

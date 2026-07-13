@@ -52,6 +52,7 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
   -webkit-tap-highlight-color: transparent;
   --app-visual-viewport-height: 100dvh;
   --app-visual-viewport-width: 100vw;

@@ -95,9 +95,11 @@ interface ProfessionalCardProps {
   preferredLocationId?: string;
   /** Hide other location tabs when the search matched a specific modality/location only. */
   restrictToPreferredLocation?: boolean;
+  /** Search page: align the schedule skeleton with the initial map/filter hydration. */
+  syncScheduleWithSearchLoading?: boolean;
 }
 
-export async function ProfessionalCard({ professional, className, slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false }: ProfessionalCardProps) {
+export async function ProfessionalCard({ professional, className, slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false }: ProfessionalCardProps) {
   const tCard = await getTranslations("card");
   const tSchedule = await getTranslations("schedule");
   const locale = await getLocale();
@@ -333,6 +335,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
         forceContactOnly={forceContactOnly}
         preferredLocationId={preferredLocationId ?? (forceContactOnly ? "videoconsulta" : undefined)}
         restrictToPreferredLocation={restrictToPreferredLocation}
+        syncWithSearchLoading={syncScheduleWithSearchLoading}
       />
 
       {/* Whole card → the professional's profile (stretched low-z overlay). The interactive

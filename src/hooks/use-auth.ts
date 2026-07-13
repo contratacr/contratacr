@@ -24,18 +24,60 @@ type AuthState = {
   avatarUrl: string | null;
   avatarReady: boolean;
   loading: boolean;
+  notificationUnread: { offer: number; use: number; neutral: number };
 };
 
 const AuthContext = createContext<AuthState | null>(null);
 
-function useAuthState(): AuthState {
-  const [user, setUser] = useState<User | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+const LAST_AUTH_USER_KEY = "ccr:last-auth-user";
+
+function readCachedUser(): User | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LAST_AUTH_USER_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheUser(u: User | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (u) localStorage.setItem(LAST_AUTH_USER_KEY, JSON.stringify(u));
+    else localStorage.removeItem(LAST_AUTH_USER_KEY);
+  } catch { /* ignore */ }
+}
+
+function useAuthState(
+  initialUser: User | null = null,
+  initialAvatarUrl: string | null | undefined = undefined,
+  initialNotificationUnread: { offer: number; use: number; neutral: number } = { offer: 0, use: 0, neutral: 0 },
+): AuthState {
+  const initialResolvedUser = initialUser ?? readCachedUser();
+  const [user, setUser] = useState<User | null>(() => initialResolvedUser);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
+    if (!initialResolvedUser) return null;
+    if (typeof window === "undefined") return initialAvatarUrl ?? null;
+    try {
+      return localStorage.getItem(`ccr:avatar:${initialResolvedUser.id}`) ?? initialAvatarUrl ?? null;
+    } catch {
+      return initialAvatarUrl ?? null;
+    }
+  });
   // Whether the avatar has been RESOLVED yet (a known photo URL, or a confirmed
   // no-photo). Until then the header shows a NEUTRAL skeleton — never the explicit
   // initials/"no-photo" circle — so an account WITH a photo can't flash empty before
   // the photo URL is known (the ~1s `profiles` fetch on a fresh login with no cache).
-  const [avatarReady, setAvatarReady] = useState(false);
+  const [avatarReady, setAvatarReady] = useState(() => {
+    if (initialResolvedUser && initialAvatarUrl !== undefined) return true;
+    if (!initialResolvedUser || typeof window === "undefined") return false;
+    try {
+      return Boolean(localStorage.getItem(`ccr:avatar:${initialResolvedUser.id}`));
+    } catch {
+      return false;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   async function syncAvatar(u: User) {
@@ -85,6 +127,7 @@ function useAuthState(): AuthState {
     const sessionTimeout = window.setTimeout(() => {
       if (!mounted || sessionSettled) return;
       setUser(null);
+      cacheUser(null);
       setAvatarUrl(null);
       setAvatarReady(true);
       setLoading(false);
@@ -98,6 +141,7 @@ function useAuthState(): AuthState {
         window.clearTimeout(sessionTimeout);
         const u = data.session?.user ?? null;
         setUser(u);
+        cacheUser(u);
         if (u) syncAvatar(u);
         else setAvatarReady(true); // logged out → nothing to load, render immediately
       })
@@ -109,6 +153,7 @@ function useAuthState(): AuthState {
         // out instead of letting the error surface as a broken UI.
         supabase.auth.signOut().catch(() => undefined);
         setUser(null);
+        cacheUser(null);
         setAvatarReady(true);
       })
       .finally(() => {
@@ -120,6 +165,7 @@ function useAuthState(): AuthState {
     } = supabase.auth.onAuthStateChange((_, session) => {
       const u = session?.user ?? null;
       setUser(u);
+      cacheUser(u);
       if (u) {
         syncAvatar(u);
       } else {
@@ -148,11 +194,11 @@ function useAuthState(): AuthState {
     };
   }, []);
 
-  return { user, avatarUrl, avatarReady, loading };
+  return { user, avatarUrl, avatarReady, loading, notificationUnread: initialNotificationUnread };
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const value = useAuthState();
+export function AuthProvider({ children, initialUser = null, initialAvatarUrl, initialNotificationUnread }: { children: ReactNode; initialUser?: User | null; initialAvatarUrl?: string | null; initialNotificationUnread?: { offer: number; use: number; neutral: number } }) {
+  const value = useAuthState(initialUser, initialAvatarUrl, initialNotificationUnread);
   return createElement(AuthContext.Provider, { value }, children);
 }
 

@@ -288,6 +288,39 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const subtitle = areaName
     ? t("resultsIn", { count: allResults.length, location: areaName })
     : t("resultsInCR", { count: allResults.length });
+  const filterInitialValues = {
+    q: params.q,
+    categoria: params.categoria,
+    provincia: params.provincia,
+    canton: params.canton,
+    sortBy: params.sortBy,
+    modalidad: params.modalidad,
+    aseguradora: params.aseguradora,
+    idioma: params.idioma,
+    ubicacion: params.ubicacion,
+    lat: params.lat,
+    lng: params.lng,
+  };
+  const filtersFallback = (
+    <div className="rounded-2xl border border-[#d9edf7] bg-white p-3 shadow-sm">
+      <div className="space-y-1.5">
+        <span className="block text-xs font-semibold text-[#6b7280]">{t("filters.sortBy")}</span>
+        <div className="flex h-10 items-center rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827]">
+          {t("sort.rating")}
+        </div>
+      </div>
+    </div>
+  );
+  const hasActiveFilters =
+    !!selectedCategory ||
+    !!activeProvince ||
+    !!activeCanton ||
+    !!mapBounds ||
+    !!params.idioma ||
+    !!nearLat ||
+    (!!params.aseguradora && canFilterByInsurer) ||
+    (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
+    (!!params.modalidad && params.modalidad !== "any");
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
@@ -324,8 +357,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             locale={locale}
             numbering={numbering}
             countLabel={subtitle}
-            filters={<Suspense fallback={null}><SearchFilters /></Suspense>}
-            drawerFilters={<Suspense fallback={null}><SearchFilters closable /></Suspense>}
+            hasActiveFilters={hasActiveFilters}
+            filters={<Suspense fallback={filtersFallback}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
+            drawerFilters={<Suspense fallback={filtersFallback}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
           >
 
             {/* ── Results list ── */}
@@ -364,6 +398,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             forceContactOnly={shouldShowContactOnly(pro)}
                             preferredLocationId={shouldPreferVideoLocation(pro) ? "videoconsulta" : undefined}
                             restrictToPreferredLocation={shouldPreferVideoLocation(pro)}
+                            syncScheduleWithSearchLoading
                           />
                         </SaveableCard>
                       </div>

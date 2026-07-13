@@ -42,15 +42,15 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const db = createAdminClient();
-  await claimGuestTickets(db, user);
-  const contact = await getCanonicalProfileContact(db, user);
-  if (contact.email && contact.email !== user.email) {
-    await db.from("support_tickets").update({ user_id: user.id }).is("user_id", null).ilike("email", contact.email);
-  }
-  await syncUserTicketEmail(db, user, contact.email);
   const id = new URL(req.url).searchParams.get("id");
 
   if (id) {
+    await claimGuestTickets(db, user);
+    const contact = await getCanonicalProfileContact(db, user);
+    if (contact.email && contact.email !== user.email) {
+      await db.from("support_tickets").update({ user_id: user.id }).is("user_id", null).ilike("email", contact.email);
+    }
+    await syncUserTicketEmail(db, user, contact.email);
     const { data: ticket } = await db.from("support_tickets").select("*").eq("id", id).eq("user_id", user.id).single();
     if (!ticket) return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 });
     const { data: messages } = await db
@@ -61,12 +61,26 @@ export async function GET(req: Request) {
     return NextResponse.json({ ticket, messages: messages ?? [] });
   }
 
-  const { data } = await db
+  const selectUserTickets = () => db
     .from("support_tickets")
     .select("*")
     .eq("user_id", user.id)
     .order("last_reply_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
+
+  const { data: existingTickets } = await selectUserTickets();
+  if ((existingTickets?.length ?? 0) > 0) {
+    return NextResponse.json({ tickets: existingTickets ?? [] });
+  }
+
+  await claimGuestTickets(db, user);
+  const contact = await getCanonicalProfileContact(db, user);
+  if (contact.email && contact.email !== user.email) {
+    await db.from("support_tickets").update({ user_id: user.id }).is("user_id", null).ilike("email", contact.email);
+  }
+  await syncUserTicketEmail(db, user, contact.email);
+
+  const { data } = await selectUserTickets();
   return NextResponse.json({ tickets: data ?? [] });
 }
 

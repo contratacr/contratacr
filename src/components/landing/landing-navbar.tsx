@@ -16,7 +16,6 @@ import { canOffer } from "@/lib/auth/capabilities";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { notificationContext } from "@/lib/notification-link";
 import { getInitials } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
@@ -158,7 +157,7 @@ function LanguageMenu() {
         aria-expanded={open}
         aria-label="Cambiar idioma / Change language"
         className={cn(
-          "inline-flex h-10 items-center gap-2 rounded-full border px-3 text-[12px] font-bold transition-all",
+          "inline-flex h-10 w-[82px] items-center justify-center gap-2 rounded-full border px-3 text-[12px] font-bold transition-all",
           open
             ? "border-[#bfe3f5] bg-[#EBF5FB] text-[#0089bb] shadow-[0_10px_26px_-20px_rgba(0,159,217,0.85)]"
             : "border-[#e8eef5] bg-white text-[#374151] shadow-[0_8px_24px_-22px_rgba(15,23,42,0.6)] hover:border-[#ccecf8] hover:bg-[#f8fbfd] hover:text-[#162543]"
@@ -270,6 +269,30 @@ const RESOURCE_ICONS = {
    labels + keywords; if that yields nothing we fall back to a small edit-
    distance match so minor typos ("plomeria"→"plomeira", "electicidad") still
    resolve. ALL_CATEGORIES is ~90 items, so this stays cheap. */
+const NAV_UNREAD_CACHE_PREFIX = "ccr:nav-unread:";
+
+function readCachedNavUnread(userId: string | undefined): { pro: number; client: number; neutral: number } {
+  if (!userId || typeof window === "undefined") return { pro: 0, client: 0, neutral: 0 };
+  try {
+    const raw = localStorage.getItem(`${NAV_UNREAD_CACHE_PREFIX}${userId}`);
+    const value = raw ? (JSON.parse(raw) as Partial<{ pro: number; client: number; neutral: number }>) : {};
+    return {
+      pro: Number(value.pro) || 0,
+      client: Number(value.client) || 0,
+      neutral: Number(value.neutral) || 0,
+    };
+  } catch {
+    return { pro: 0, client: 0, neutral: 0 };
+  }
+}
+
+function cacheNavUnread(userId: string | undefined, counts: { pro: number; client: number; neutral: number }) {
+  if (!userId || typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`${NAV_UNREAD_CACHE_PREFIX}${userId}`, JSON.stringify(counts));
+  } catch { /* ignore */ }
+}
+
 function editDistance(a: string, b: string): number {
   const m = a.length, n = b.length;
   const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
@@ -785,12 +808,15 @@ function AccountMenu({
           // circle, so an account WITH a photo never flashes the no-photo state.
           <span className="block h-8 w-8 animate-pulse rounded-full bg-gray-200" />
         ) : (
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={avatarUrl ?? undefined} />
-            <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          <span
+            className={cn(
+              "grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-[#009FD9] bg-cover bg-center text-[13px] font-bold text-white",
+              avatarUrl && "text-transparent",
+            )}
+            style={avatarUrl ? { backgroundImage: `url("${avatarUrl}")` } : undefined}
+          >
+            <span aria-hidden>{initials}</span>
+          </span>
         )}
       </button>
       {open && (
@@ -952,12 +978,14 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const td = useTranslations("proPanel");
   const locale = useLocale();
   const pathname = usePathname();
-  const { user, avatarUrl, avatarReady } = useAuth();
+  const { user, avatarUrl, avatarReady, loading: authLoading, notificationUnread } = useAuth();
+  const compactEnabled = !pathname.startsWith("/dashboard");
+  const effectiveCompact = compactEnabled && compact;
   const compactSearchExamples = useMemo(() => {
     const raw = t.raw(isSmallScreen ? "searchExamples" : "searchExamplesDesktop");
     return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
   }, [isSmallScreen, t]);
-  const compactPlaceholder = useTypedPlaceholder(compactSearchExamples, compact && !searchFocused && !searchQuery.trim());
+  const compactPlaceholder = useTypedPlaceholder(compactSearchExamples, effectiveCompact && !searchFocused && !searchQuery.trim());
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
   // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
@@ -1035,11 +1063,24 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   // Unread counts, split by mode (the bell handles its own live updates; this refreshes
   // when the menu/drawer opens). Professional + client notifications drive the active-mode
   // badge and the OTHER-mode awareness badge on the switch; support/unknown show in both.
-  const [proUnread, setProUnread] = useState(0);
-  const [clientUnread, setClientUnread] = useState(0);
-  const [neutralUnread, setNeutralUnread] = useState(0);
+  const cachedNavUnread = user
+    ? {
+      pro: notificationUnread.offer || readCachedNavUnread(user.id).pro,
+      client: notificationUnread.use || readCachedNavUnread(user.id).client,
+      neutral: notificationUnread.neutral || readCachedNavUnread(user.id).neutral,
+    }
+    : readCachedNavUnread(undefined);
+  const [navUnreadState, setNavUnreadState] = useState(() => ({
+    userId: user?.id,
+    pro: cachedNavUnread.pro,
+    client: cachedNavUnread.client,
+    neutral: cachedNavUnread.neutral,
+  }));
+  const proUnread = navUnreadState.userId === user?.id ? navUnreadState.pro : cachedNavUnread.pro;
+  const clientUnread = navUnreadState.userId === user?.id ? navUnreadState.client : cachedNavUnread.client;
+  const neutralUnread = navUnreadState.userId === user?.id ? navUnreadState.neutral : cachedNavUnread.neutral;
   const refreshNotifUnread = useCallback(() => {
-    if (!user) { setProUnread(0); setClientUnread(0); setNeutralUnread(0); return; }
+    if (!user) return;
     const supabase = createClient();
     supabase
       .from("notifications")
@@ -1054,18 +1095,20 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
           else if (ctx === "client") cli++;
           else neu++;
         }
-        setProUnread(pro); setClientUnread(cli); setNeutralUnread(neu);
+        setNavUnreadState({ userId: user.id, pro, client: cli, neutral: neu });
+        cacheNavUnread(user.id, { pro, client: cli, neutral: neu });
       });
   }, [user]);
   useEffect(() => {
-    queueMicrotask(() => refreshNotifUnread());
-    const id = window.setInterval(refreshNotifUnread, 3000);
+    const cached = readCachedNavUnread(user?.id);
+    setNavUnreadState({ userId: user?.id, pro: cached.pro, client: cached.client, neutral: cached.neutral });
+  }, [user?.id]);
+  useEffect(() => {
     window.addEventListener("notificationsChanged", refreshNotifUnread);
     return () => {
-      window.clearInterval(id);
       window.removeEventListener("notificationsChanged", refreshNotifUnread);
     };
-  }, [refreshNotifUnread, mobileOpen]);
+  }, [refreshNotifUnread]);
   // Switching Cliente/Profesional inside a menu only swaps menu options/counts;
   // it does not change the panel beneath it.
   const notifUnreadByMode: Record<Mode, number> = {
@@ -1117,6 +1160,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   }
 
   useEffect(() => {
+    if (!compactEnabled) {
+      setCompact(false);
+      return;
+    }
     const sentinel = document.getElementById("hero-search-sentinel");
     if (!sentinel) {
       const handler = () => setCompact(window.scrollY > 300);
@@ -1130,7 +1177,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, []);
+  }, [compactEnabled]);
 
   function openDropdown(id: string) {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -1239,7 +1286,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80"
+        className="fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80"
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="relative h-16">
@@ -1247,7 +1294,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             {/* ── Default row ── */}
             <div
               className="absolute inset-0 flex items-center gap-4 transition-opacity duration-300"
-              style={{ opacity: compact ? 0 : 1, pointerEvents: compact ? "none" : "auto" }}
+              style={{ opacity: effectiveCompact ? 0 : 1, pointerEvents: effectiveCompact ? "none" : "auto" }}
             >
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
                 {mobileInline ? (
@@ -1362,9 +1409,14 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               <div className={cn("flex-1", mobileInline && "hidden lg:block")} />
 
               {/* Right actions */}
-              <div className="hidden lg:flex items-center gap-2 shrink-0">
-                {user ? (
-                  <div className="flex items-center gap-1">
+              <div className="hidden w-[344px] justify-end lg:flex items-center gap-2 shrink-0">
+                {authLoading && !user ? (
+                  <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
+                    <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
+                    <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
+                  </div>
+                ) : user ? (
+                  <div className="flex w-[250px] items-center justify-end gap-1">
                     {!isPro && (
                       <Link
                         href="/registro/profesional"
@@ -1377,7 +1429,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     {/* The context switcher lives inside account menus/drawers, keeping this bar compact. */}
                     <Link
                       href={primaryPanelHref}
-                      className="relative text-sm font-medium px-3 py-2 text-[#374151] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#1a2744]"
+                      className="relative inline-flex min-w-[76px] justify-center text-sm font-medium px-3 py-2 text-[#374151] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#1a2744]"
                     >
                       {t("myPanel")}
                     </Link>
@@ -1388,7 +1440,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       mode={mode}
                       displayName={displayName}
                       avatarUrl={avatarUrl}
-                      avatarReady={avatarReady}
+                      avatarReady={true}
                       initials={initials}
                       professionalPanelHref={professionalPanelHref}
                       clientPanelHref={clientPanelHref}
@@ -1411,7 +1463,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     />
                   </div>
                 ) : (
-                  <>
+                  <div className="flex w-[250px] items-center justify-end gap-1">
                     <Link
                       href="/registro/profesional"
                       className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
@@ -1424,7 +1476,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     >
                       {t("login")}
                     </Link>
-                  </>
+                  </div>
                 )}
                 {/* Discreet, quiet globe + code dropdown — visually subordinate to the
                     prominent MODE segmented control (never a competing toggle). */}
@@ -1445,7 +1497,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             {/* ── Compact row — brand mark + smart search (Thumbtack-style) ── */}
             <div
               className="absolute inset-0 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 lg:px-8 transition-opacity duration-300"
-              style={{ opacity: compact ? 1 : 0, pointerEvents: compact ? "auto" : "none" }}
+              style={{ opacity: effectiveCompact ? 1 : 0, pointerEvents: effectiveCompact ? "auto" : "none" }}
             >
               <Link
                 href="/"
@@ -1562,8 +1614,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               {/* Desktop keeps bell + account menu in the compact row. On mobile,
                   the hamburger is the single entry point so account options do not
                   split across two menus. */}
-              {user && (
-                <div className="hidden lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+              <div className="hidden w-[96px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+                {user ? (
+                  <>
                   <NotificationBell scope={notificationScope} />
                   <AccountMenu
                     user={user}
@@ -1571,7 +1624,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     mode={mode}
                     displayName={displayName}
                     avatarUrl={avatarUrl}
-                    avatarReady={avatarReady}
+                    avatarReady={true}
                     initials={initials}
                     professionalPanelHref={professionalPanelHref}
                     clientPanelHref={clientPanelHref}
@@ -1592,8 +1645,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     onSignOut={handleSignOut}
                     onOpen={refreshNotifUnread}
                   />
-                </div>
-              )}
+                  </>
+                ) : (
+                  <span className="h-10 w-[92px]" aria-hidden />
+                )}
+              </div>
               <button
                 type="button"
                 onClick={openMobileMenu}
@@ -1662,15 +1718,28 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 />
               </div>
 
-              {user ? (
+              {authLoading && !user ? (
+                <div className="p-1.5" aria-hidden="true">
+                  <div className="mb-1 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3">
+                    <div className="h-9 w-9 animate-pulse rounded-full bg-[#eef2f6]" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="h-3.5 w-32 animate-pulse rounded-full bg-[#eef2f6]" />
+                      <div className="h-3 w-44 max-w-full animate-pulse rounded-full bg-[#eef2f6]" />
+                    </div>
+                  </div>
+                </div>
+              ) : user ? (
                 <div className="p-1.5">
                   <div className="mb-1 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={avatarUrl ?? undefined} />
-                      <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="bg-[#009FD9] text-xs font-bold text-white">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
+                    <span
+                      className={cn(
+                        "grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#009FD9] bg-cover bg-center text-sm font-bold text-white",
+                        avatarUrl && "text-transparent",
+                      )}
+                      style={avatarUrl ? { backgroundImage: `url("${avatarUrl}")` } : undefined}
+                    >
+                      <span aria-hidden>{initials}</span>
+                    </span>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myAccount")}</p>
                       <p className="truncate text-xs text-[#9ca3af]">{user.email}</p>

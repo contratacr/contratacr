@@ -105,7 +105,29 @@ function useSearchExamplePlaceholder(examples: string[], active: boolean) {
   return text;
 }
 
-export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false }: { variant?: "sidebar" | "chips"; hideSearch?: boolean; hideHeader?: boolean; closable?: boolean } = {}) {
+type SearchFiltersInitialValues = {
+  q?: string;
+  categoria?: string;
+  provincia?: string;
+  canton?: string;
+  sortBy?: string;
+  modalidad?: string;
+  aseguradora?: string;
+  idioma?: string;
+  ubicacion?: string;
+  lat?: string;
+  lng?: string;
+};
+
+type SearchFiltersProps = {
+  variant?: "sidebar" | "chips";
+  hideSearch?: boolean;
+  hideHeader?: boolean;
+  closable?: boolean;
+  initialValues?: SearchFiltersInitialValues;
+};
+
+export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false, initialValues }: SearchFiltersProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -118,8 +140,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   // picked category are MUTUALLY EXCLUSIVE (`q` XOR `categoria`), so on load we seed the
   // field from `q`, else from the active category's label (so arriving at ?categoria=X
   // shows "X" in the field instead of an empty box).
+  const initialParam = useCallback((key: keyof SearchFiltersInitialValues) => params.get(key) ?? initialValues?.[key] ?? "", [initialValues, params]);
+  const initialCategory = initialParam("categoria");
   const [query, setQuery] = useState(
-    params.get("q") ?? (params.get("categoria") ? getCategoryLabel(params.get("categoria")!, locale) : "")
+    initialParam("q") || (initialCategory ? getCategoryLabel(initialCategory, locale) : "")
   );
   // Service autocomplete for the sidebar text search (our categories taxonomy).
   const [searchOpen, setSearchOpen] = useState(false);
@@ -127,15 +151,15 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const searchBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchFieldRef = useRef<HTMLDivElement>(null);
   const searchSug = useMemo(() => (query.trim().length >= 2 ? searchCategories(query).slice(0, 6) : []), [query, customCategories]);
-  const [category, setCategory] = useState(params.get("categoria") ?? "");
-  const [province, setProvince] = useState(params.get("provincia") ?? "");
-  const [canton, setCanton] = useState(params.get("canton") ?? "");
+  const [category, setCategory] = useState(initialCategory);
+  const [province, setProvince] = useState(initialParam("provincia"));
+  const [canton, setCanton] = useState(initialParam("canton"));
   const [locationQuery, setLocationQuery] = useState(() =>
-    params.get("ubicacion")
-      ? params.get("ubicacion")!
-      : params.get("lat") && params.get("lng")
+    initialParam("ubicacion")
+      ? initialParam("ubicacion")
+      : initialParam("lat") && initialParam("lng")
       ? t("filters.nearMeActive")
-      : locationFilterLabel(params.get("provincia") ?? "", params.get("canton") ?? "")
+      : locationFilterLabel(initialParam("provincia"), initialParam("canton"))
   );
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationActiveIndex, setLocationActiveIndex] = useState(-1);
@@ -145,13 +169,18 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const mapsReadyRef = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sessionTokenRef = useRef<any>(null);
-  const initialSort = params.get("sortBy");
+  const initialSort = initialParam("sortBy");
   const [sortBy, setSortBy] = useState(initialSort && initialSort !== "cercania" ? initialSort : "rating");
-  const [modality, setModality] = useState(params.get("modalidad") ?? ANY_MODALITY);
+  const sortLabel = sortBy === "priceAsc"
+    ? t("sort.priceAsc")
+    : sortBy === "availability"
+    ? t("sort.availability")
+    : t("sort.rating");
+  const [modality, setModality] = useState(initialParam("modalidad") || ANY_MODALITY);
   const [aseguradora, setAseguradora] = useState(() =>
-    isHealthCategory(params.get("categoria")) ? (params.get("aseguradora") ?? "") : ""
+    isHealthCategory(initialCategory) ? initialParam("aseguradora") : ""
   );
-  const [language, setLanguage] = useState(params.get("idioma") ?? "");
+  const [language, setLanguage] = useState(initialParam("idioma"));
   // Geolocation ("cerca de mÃ­") â€” opt-in, requested only when the user taps the
   // control, never auto-popped. Denied/unavailable â†’ text search still works.
   const [geoLoading, setGeoLoading] = useState(false);
@@ -806,7 +835,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             setSortBy(v);
             applyFilters({ sortBy: v });
           }}>
-            <SelectTrigger className={FILTER_TRIGGER}><SelectValue /></SelectTrigger>
+            <SelectTrigger className={FILTER_TRIGGER}><SelectValue>{sortLabel}</SelectValue></SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
@@ -819,7 +848,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <div>
             <label className={fieldLabel}>{t("filters.attention")}</label>
             <Select value={modality} onValueChange={(v) => { setModality(v); applyFilters({ modalidad: v }); }}>
-              <SelectTrigger className={FILTER_TRIGGER}><SelectValue /></SelectTrigger>
+            <SelectTrigger className={FILTER_TRIGGER}><SelectValue>{sortLabel}</SelectValue></SelectTrigger>
               <SelectContent className={FILTER_CONTENT}>
                 <SelectItem value={ANY_MODALITY}>{t("filters.attentionAny")}</SelectItem>
                 <SelectItem value="in_person">{t("filters.attentionInPerson")}</SelectItem>

@@ -296,7 +296,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         role="dialog"
         aria-modal="true"
         aria-labelledby="publish-project-title"
-        className="app-bottom-sheet relative z-10 flex min-h-0 w-full max-h-[92vh] flex-col rounded-t-2xl bg-white shadow-2xl sm:max-w-lg sm:max-h-[90vh] sm:rounded-2xl"
+        className="app-bottom-sheet relative z-10 flex h-[92dvh] min-h-0 w-full max-h-[92vh] flex-col rounded-t-2xl bg-white shadow-2xl sm:h-[90vh] sm:max-w-lg sm:max-h-[90vh] sm:rounded-2xl"
       >
         {/* Header (pinned) */}
         <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] px-5 py-4 shrink-0 sm:px-6">

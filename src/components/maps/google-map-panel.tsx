@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { MapPin, Search } from "lucide-react";
@@ -187,8 +187,27 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // programmatically fit the map to the results).
   const router = useRouter();
   const [showArea, setShowArea] = useState(false);
-  const [mapReady, setMapReady] = useState(false);
   const suppressMoveRef = useRef(false);
+  const searchMapReadyRef = useRef(false);
+
+  function markSearchMapLoading() {
+    searchMapReadyRef.current = false;
+    (window as typeof window & { __ccrSearchMapReady?: boolean }).__ccrSearchMapReady = false;
+    (window as typeof window & { __ccrSearchMapLoading?: boolean }).__ccrSearchMapLoading = true;
+    window.dispatchEvent(new CustomEvent("ccr:search-map-loading"));
+  }
+
+  useLayoutEffect(() => {
+    markSearchMapLoading();
+  }, [professionals, numbering]);
+
+  function markSearchMapReady() {
+    if (searchMapReadyRef.current) return;
+    searchMapReadyRef.current = true;
+    (window as typeof window & { __ccrSearchMapReady?: boolean }).__ccrSearchMapReady = true;
+    (window as typeof window & { __ccrSearchMapLoading?: boolean }).__ccrSearchMapLoading = false;
+    window.dispatchEvent(new CustomEvent("ccr:search-map-ready"));
+  }
 
   function setPinActive(proId: string | undefined, on: boolean) {
     if (!proId) return;
@@ -442,7 +461,8 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     });
     mapInstanceRef.current = map;
     map.addListener("click", hidePopup); // tapping the map closes the popup + clears the pin highlight
-    map.addListener("idle", () => setMapReady(true));
+    map.addListener("idle", markSearchMapReady);
+    map.addListener("tilesloaded", markSearchMapReady);
     // Show "Buscar en esta área" after a user pan/zoom (ignored during programmatic fits).
     map.addListener("dragend", () => { if (!suppressMoveRef.current) setShowArea(true); });
     map.addListener("zoom_changed", () => { if (!suppressMoveRef.current) setShowArea(true); });
@@ -567,7 +587,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
   useEffect(() => {
     if (!apiKey) return;
-    setMapReady(false);
     loadGoogleMaps(apiKey).then(renderMarkers).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionals, numbering]);
@@ -638,15 +657,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           is the backstop for when the cursor leaves the WHOLE map. */}
       <div className="relative w-full h-full" onMouseMove={handleHoverProximity} onMouseLeave={hidePopup}>
         <div ref={mapRef} className="absolute inset-0" />
-        {!mapReady && (
-          <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden bg-[#eef6f0]" aria-hidden>
-            <div className="absolute inset-0 opacity-70 [background:linear-gradient(135deg,rgba(34,197,94,0.10)_0_25%,transparent_25%_50%,rgba(59,130,246,0.08)_50%_75%,transparent_75%),linear-gradient(90deg,rgba(255,255,255,0.65),rgba(255,255,255,0.18),rgba(255,255,255,0.65))] [background-size:120px_120px,240px_100%]" />
-            <div className="ccr-delayed-loading ccr-skeleton-shimmer absolute left-1/2 top-3 h-10 w-48 -translate-x-1/2 rounded-full bg-white/80 shadow-sm" />
-            <div className="ccr-delayed-loading ccr-skeleton-shimmer absolute left-10 top-24 h-3 w-32 rounded-full bg-white/70" />
-            <div className="ccr-delayed-loading ccr-skeleton-shimmer absolute right-12 top-40 h-3 w-28 rounded-full bg-white/70" />
-            <div className="ccr-delayed-loading ccr-skeleton-shimmer absolute bottom-24 left-24 h-3 w-36 rounded-full bg-white/70" />
-          </div>
-        )}
         {showArea && (
           <button
             type="button"

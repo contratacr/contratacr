@@ -38,6 +38,7 @@ import { getInitials } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
 import { anyVideoConsultCategory } from "@/lib/data/categories";
 import { useMode, type Mode } from "@/hooks/use-mode";
+import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { notificationContext } from "@/lib/notification-link";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -937,12 +938,18 @@ export default function DashboardPage() {
               the content by a single hairline divider. No gradient/decoration. */}
           <div className="mb-6 flex flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 flex-1 items-center gap-4">
-              <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb]">
-                <AvatarImage src={headerAvatar ?? undefined} />
-                <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
-                  {getInitials(displayName || "?")}
-                </AvatarFallback>
-              </Avatar>
+              <ImagePreviewDialog
+                src={headerAvatar}
+                alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
+                openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+              >
+                <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb]">
+                  <AvatarImage src={headerAvatar ?? undefined} />
+                  <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
+                    {getInitials(displayName || "?")}
+                  </AvatarFallback>
+                </Avatar>
+              </ImagePreviewDialog>
               <div className="min-w-0 flex-1">
                 <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
                   {mode === "offer" ? t("panelProfessional") : t("panelClient")}

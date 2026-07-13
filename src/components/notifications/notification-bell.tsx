@@ -23,6 +23,24 @@ type Notification = {
 };
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+const NOTIFICATIONS_CACHE_PREFIX = "ccr:notifications:";
+
+function readCachedNotifications(userId: string | undefined): Notification[] {
+  if (!userId || typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(`${NOTIFICATIONS_CACHE_PREFIX}${userId}`);
+    return raw ? uniqueNotifications(JSON.parse(raw) as Notification[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function cacheNotifications(userId: string | undefined, items: Notification[]) {
+  if (!userId || typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`${NOTIFICATIONS_CACHE_PREFIX}${userId}`, JSON.stringify(items.slice(0, 20)));
+  } catch { /* ignore */ }
+}
 
 function uniqueNotifications(items: Notification[]): Notification[] {
   const seen = new Set<string>();
@@ -34,11 +52,21 @@ function uniqueNotifications(items: Notification[]): Notification[] {
 }
 
 export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "offer" }) {
-  const { user } = useAuth();
+  const { user, notificationUnread } = useAuth();
   const router = useRouter();
   const t = useTranslations("notifications");
   const locale = useLocale();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationState, setNotificationState] = useState(() => ({
+    userId: user?.id,
+    items: readCachedNotifications(user?.id),
+  }));
+  const notifications = notificationState.userId === user?.id ? notificationState.items : readCachedNotifications(user?.id);
+  const updateNotifications = useCallback((updater: (prev: Notification[]) => Notification[]) => {
+    setNotificationState((prev) => {
+      const base = prev.userId === user?.id ? prev.items : readCachedNotifications(user?.id);
+      return { userId: user?.id, items: updater(base) };
+    });
+  }, [user?.id]);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   // A UNIQUE channel name per component instance. The navbar mounts the bell in
@@ -53,7 +81,13 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   // Outside panels the navbar is the account inbox; inside a panel, keep the bell
   // scoped to that mode so the unread count matches what the user is doing.
   const visible = scope === "all" ? notifications : notifications.filter((n) => notificationInMode(n.type, scope));
-  const unreadCount = visible.filter((n) => !n.read).length;
+  const cachedUnreadCount = visible.filter((n) => !n.read).length;
+  const serverUnreadCount = scope === "offer"
+    ? notificationUnread.offer + notificationUnread.neutral
+    : scope === "use"
+      ? notificationUnread.use + notificationUnread.neutral
+      : notificationUnread.offer + notificationUnread.use + notificationUnread.neutral;
+  const unreadCount = cachedUnreadCount || serverUnreadCount;
   const notificationTitle = (n: Notification) =>
     n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
 
@@ -68,14 +102,24 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20)
-      .then(({ data }) => setNotifications(uniqueNotifications(data ?? [])));
+      .then(({ data }) => {
+        const next = uniqueNotifications(data ?? []);
+        setNotificationState({ userId: user.id, items: next });
+        cacheNotifications(user.id, next);
+      });
   }, [user]);
+
+  useEffect(() => {
+    setNotificationState({ userId: user?.id, items: readCachedNotifications(user?.id) });
+  }, [user?.id]);
+
+  useEffect(() => {
+    cacheNotifications(user?.id, notifications);
+  }, [notifications, user?.id]);
 
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
-
-    fetchNotifications();
 
     // Real-time subscription. ALL `.on(...)` handlers are registered FIRST and
     // `.subscribe()` is called LAST, exactly once, on a per-instance unique
@@ -88,7 +132,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
-          setNotifications((prev) => uniqueNotifications([payload.new as Notification, ...prev]));
+          updateNotifications((prev) => uniqueNotifications([payload.new as Notification, ...prev]));
           window.dispatchEvent(new CustomEvent("notificationsChanged"));
         }
       )
@@ -97,7 +141,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
           const updated = payload.new as Notification;
-          setNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+          updateNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
           window.dispatchEvent(new CustomEvent("notificationsChanged"));
         }
       )
@@ -106,15 +150,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     // Clean up on unmount / user change so the channel is removed exactly once
     // and never re-subscribed with stale handlers.
     return () => { supabase.removeChannel(channel); };
-  }, [user, fetchNotifications, instanceId]);
-
-  // Fallback for projects where Supabase Realtime is slow or not enabled for the
-  // notifications table. Keeps the bell current without requiring a page reload.
-  useEffect(() => {
-    if (!user) return;
-    const id = window.setInterval(fetchNotifications, 3000);
-    return () => window.clearInterval(id);
-  }, [user, fetchNotifications]);
+  }, [user, fetchNotifications, instanceId, updateNotifications]);
 
   // Same-tab sync: other notification surfaces (the in-panel list) broadcast this
   // event after marking read / deleting; re-pull so the bell badge matches.
@@ -149,7 +185,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     if (ids.length === 0) return;
     const supabase = createClient();
     await supabase.from("notifications").update({ read: true }).in("id", ids);
-    setNotifications((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)));
+    updateNotifications((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)));
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
@@ -158,7 +194,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     if (!n.read) {
       const supabase = createClient();
       supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
-      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+      updateNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     }
     const role = user?.user_metadata?.role as string | undefined;
@@ -170,7 +206,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
 
   async function dismiss(e: React.MouseEvent, id: string) {
     e.stopPropagation();
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    updateNotifications((prev) => prev.filter((n) => n.id !== id));
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").delete().eq("id", id);
@@ -186,7 +222,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     <div className="relative" ref={panelRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-xl text-[#6b7280] hover:bg-[#f3f4f6] transition-colors"
+        className="relative grid h-10 w-10 place-items-center rounded-xl text-[#6b7280] hover:bg-[#f3f4f6] transition-colors"
         aria-label={t("title")}
       >
         <Bell className="h-5 w-5" />

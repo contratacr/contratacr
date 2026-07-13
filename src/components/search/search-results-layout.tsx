@@ -2,10 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-map-panel";
-import { isHealthCategory } from "@/lib/data/categories";
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
@@ -20,6 +18,7 @@ interface SearchResultsLayoutProps {
   locale: string;
   /** proId → card number (1..N) for THIS page, mirrored on the map pins. */
   numbering?: Record<string, number>;
+  hasActiveFilters?: boolean;
 }
 
 // Bottom-sheet snap points (fraction of the viewport height). PEEK = collapsed (map is the
@@ -45,17 +44,9 @@ const MAX = 0.74;
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, hasActiveFilters = false }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
-  const params = useSearchParams();
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
-  const hasActiveInsurer = !!params.get("aseguradora") && isHealthCategory(params.get("categoria"));
-  const hasActiveFilters =
-    !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
-    !!(params.get("n") && params.get("s") && params.get("e") && params.get("w")) ||
-    hasActiveInsurer || !!params.get("idioma") || !!params.get("lat") ||
-    (!!params.get("sortBy") && params.get("sortBy") !== "rating" && params.get("sortBy") !== "cercania") ||
-    (!!params.get("modalidad") && params.get("modalidad") !== "any");
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
   // dispatches `ccr:open-filters`; the drawer's in-card X dispatches `ccr:close-filters`.
