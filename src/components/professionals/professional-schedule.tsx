@@ -88,7 +88,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const t = useTranslations("schedule");
   const locale = useLocale();
   const scheduleRootRef = useRef<HTMLDivElement>(null);
-  const [shouldAutoRefresh, setShouldAutoRefresh] = useState(stacked);
+  const [shouldAutoRefresh, setShouldAutoRefresh] = useState(stacked || !slotsInitiallyLoaded);
   const [liveData, setLiveData] = useState<{
     professionalId: string;
     availabilityPublic: boolean;
@@ -113,6 +113,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!slotsInitiallyLoaded) {
+      setShouldAutoRefresh(true);
+      return;
+    }
     if (stacked) {
       return;
     }
@@ -128,7 +132,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [stacked]);
+  }, [slotsInitiallyLoaded, stacked]);
 
   // What the professional accepts. Booking needs public availability AND a
   // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
