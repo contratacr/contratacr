@@ -783,10 +783,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               into "Ver horario completo" (which otherwise replaced the contact buttons).
               The call sits as an outlined secondary action below the primary schedule CTA. */}
           {hasSchedule ? (
-            <>
-              {verHorarioButton}
-              {showCall && renderCall(true)}
-            </>
+            verHorarioButton
           ) : contactButtons}
         </div>
       </div>
