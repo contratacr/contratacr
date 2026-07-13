@@ -52,36 +52,6 @@ function SearchResultsLoadingNotice({ locale }: { locale: string }) {
   );
 }
 
-function SearchCardSkeleton() {
-  return (
-    <div className="ccr-delayed-loading rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-[0_2px_10px_rgba(15,23,42,0.06)] sm:p-5">
-      <div className="flex gap-3.5">
-        <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
-        <div className="min-w-0 flex-1 space-y-2">
-          <Skeleton className="h-5 w-7/12 rounded-md" />
-          <Skeleton className="h-4 w-24 rounded-full" />
-          <Skeleton className="h-3 w-32 rounded-md" />
-          <Skeleton className="h-6 w-28 rounded-full" />
-        </div>
-        <Skeleton className="h-8 w-24 shrink-0 rounded-md" />
-      </div>
-      <div className="mt-4 border-t border-[#e5e7eb] pt-3 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
-        <div className="grid grid-cols-3 gap-2">
-          {[0, 1, 2].map((day) => (
-            <div key={day} className="space-y-1.5">
-              <Skeleton className="mx-auto h-3 w-10 rounded-md" />
-              <Skeleton className="h-6 w-full rounded-md" />
-              <Skeleton className="h-6 w-full rounded-md" />
-              <Skeleton className="h-6 w-full rounded-md" />
-            </div>
-          ))}
-        </div>
-        <Skeleton className="mt-3 h-10 w-full rounded-full" />
-      </div>
-    </div>
-  );
-}
-
 function DashboardLoadingNotice({ locale }: { locale: string }) {
   const isEnglish = locale === "en";
   return (
@@ -131,11 +101,7 @@ export function SearchRouteLoading() {
               <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-[#d1d5db]" />
               <Skeleton className="h-3 w-44 rounded-md" />
             </div>
-            <div className="flex flex-col gap-3">
-              <SearchResultsLoadingNotice locale={locale} />
-              <SearchCardSkeleton />
-              <SearchCardSkeleton />
-            </div>
+            <SearchResultsLoadingNotice locale={locale} />
           </section>
         </div>
       </main>
