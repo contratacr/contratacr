@@ -639,15 +639,19 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   );
 
   const scheduleLoadingBody = (
-    <div className="grid grid-cols-3 gap-2" aria-label={locale === "en" ? "Loading availability" : "Cargando horarios"} aria-busy="true">
-      {[0, 1, 2].map((day) => (
-        <div key={day} className="space-y-2">
-          <Skeleton className="mx-auto h-3 w-12 rounded-md" />
-          <Skeleton className="h-6 w-full rounded-md" />
-          <Skeleton className="h-6 w-full rounded-md" />
-          <Skeleton className="h-6 w-full rounded-md" />
-        </div>
-      ))}
+    <div className="flex w-full items-start gap-1" aria-label={locale === "en" ? "Loading availability" : "Cargando horarios"} aria-busy="true">
+      <span className="flex w-4 shrink-0 self-center" aria-hidden />
+      <div className="grid flex-1 grid-cols-3 gap-2">
+        {days.slice(0, COLS).map((day) => (
+          <div key={day.key} className="flex min-w-0 flex-col gap-1.5">
+            <p className="truncate text-center text-[11px] font-semibold leading-tight text-[#6b7280]">{day.label}</p>
+            <Skeleton className="h-6 w-full rounded-md" />
+            <Skeleton className="h-6 w-full rounded-md" />
+            <Skeleton className="h-6 w-full rounded-md" />
+          </div>
+        ))}
+      </div>
+      <span className="flex w-4 shrink-0 self-center" aria-hidden />
     </div>
   );
 

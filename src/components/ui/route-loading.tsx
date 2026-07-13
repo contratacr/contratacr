@@ -55,29 +55,11 @@ function SearchResultsLoadingNotice({ locale }: { locale: string }) {
 function DashboardLoadingNotice({ locale }: { locale: string }) {
   const isEnglish = locale === "en";
   return (
-    <div className="ccr-delayed-loading rounded-2xl border border-[#d9edf7] bg-white px-4 py-4 shadow-[0_2px_10px_rgba(15,23,42,0.05)] sm:px-5">
-      <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eaf7fc]">
-          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#009FD9] motion-reduce:animate-none" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[#162543]">
-            {isEnglish ? "Loading your panel" : "Cargando tu panel"}
-          </p>
-          <p className="mt-0.5 text-xs text-[#6b7280]">
-            {isEnglish ? "We are preparing the latest information." : "Estamos preparando la informacion mas reciente."}
-          </p>
-        </div>
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Skeleton className="h-8 w-24 rounded-lg" />
-        <Skeleton className="h-8 w-24 rounded-lg" />
-        <Skeleton className="h-8 w-20 rounded-lg" />
-      </div>
-      <div className="mt-4 space-y-2">
-        <Skeleton className="h-2.5 w-11/12 rounded-full" />
-        <Skeleton className="h-2.5 w-7/12 rounded-full" />
-      </div>
+    <div className="ccr-delayed-loading flex min-h-[45vh] flex-col items-center justify-center gap-3 text-center">
+      <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent motion-reduce:animate-none" aria-hidden />
+      <p className="text-sm font-medium text-[#6b7280]">
+        {isEnglish ? "Loading your panel..." : "Cargando tu panel..."}
+      </p>
     </div>
   );
 }
@@ -134,22 +116,7 @@ export function DashboardRouteLoading() {
       <Navbar />
       <main>
         <div className="mx-auto max-w-5xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8 lg:pb-8">
-          <div className="flex gap-6">
-            <aside className="hidden w-60 shrink-0 lg:block">
-              <div className="ccr-delayed-loading space-y-2 rounded-2xl border border-[#e5e7eb] bg-white p-2 shadow-sm">
-                {[0, 1, 2, 3, 4, 5, 6].map((item) => (
-                  <div key={item} className="flex h-10 items-center gap-3 px-3">
-                    <Skeleton className="h-4 w-4 rounded" />
-                    <Skeleton className={`h-3 rounded-md ${item % 2 ? "w-28" : "w-32"}`} />
-                  </div>
-                ))}
-              </div>
-            </aside>
-
-            <section className="min-w-0 flex-1">
-              <DashboardLoadingNotice locale={locale} />
-            </section>
-          </div>
+          <DashboardLoadingNotice locale={locale} />
         </div>
       </main>
 
