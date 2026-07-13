@@ -14,7 +14,6 @@ import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeGetUser } from "@/lib/supabase/get-user";
-import { crTodayISO } from "@/lib/time-cr";
 import type { ScheduleSlot } from "@/components/professionals/professional-schedule";
 
 interface SearchPageProps {
@@ -116,15 +115,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const earliestByPro: Record<string, string> = {};
   const videoMode = params.modalidad === "video";
   const publicIds = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
-  // Load the visible cards' schedule strips with the page render. This keeps the
-  // search page feeling like one load instead of showing per-card skeletons while
-  // users scroll through the results.
-  if (publicIds.length > 0) {
+  // "Disponibilidad inmediata" needs slots before render because the timestamps
+  // determine the order. Normal searches let schedule panels load together on
+  // page mount, so the skeleton appears once instead of when each card is scrolled.
+  if (publicIds.length > 0 && sortBy === "availability") {
     try {
       const supabase = createAdminClient();
-      const todayISO = crTodayISO();
+      const todayISO = new Date().toISOString().slice(0, 10);
       const taken = new Set<string>();
-      const slotLimit = 3000;
+      const slotLimit = sortBy === "availability" ? 3000 : 400;
       const [takenResult, slotResult] = await Promise.all([
         supabase
           .from("bookings")
@@ -357,7 +356,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           <ProfessionalCard
                             professional={pro}
                             slots={slotsByPro[pro.id] ?? []}
-                            slotsInitiallyLoaded
+                            slotsInitiallyLoaded={sortBy === "availability"}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={i + 1}
