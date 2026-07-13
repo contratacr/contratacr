@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Navbar } from "@/components/layout/navbar";
-import { MobileServiceSearch, SearchFilters } from "@/components/search/search-filters";
+import { MobileServiceSearch } from "@/components/search/search-filters";
 import { GoogleMapPanel } from "@/components/maps/google-map-panel";
 import { useLocale } from "next-intl";
 import { Skeleton } from "@/components/ui/content-loading";
@@ -87,7 +87,7 @@ export function SearchRouteLoading() {
       <main className="relative h-[calc(100dvh-64px)] overflow-hidden lg:h-auto lg:px-8 lg:pb-5">
         <div className="absolute inset-0 lg:static lg:mx-auto lg:flex lg:max-w-[1920px] lg:gap-5">
           <aside className="hidden w-64 shrink-0 xl:block">
-            <Suspense fallback={<FilterSkeleton />}><SearchFilters /></Suspense>
+            <FilterSkeleton />
           </aside>
 
           <section className="absolute inset-0 lg:static lg:order-3 lg:min-w-0 lg:flex-1">
