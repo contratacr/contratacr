@@ -57,6 +57,13 @@ const FIELD_SECTION: Record<string, string> = {
 // it's quick to scan and edit. Presentation only; all fields still live in the
 // same form/state and save identically. CONTROLLED by the editor so a
 // "Completa tu perfil" item can open the right section and scroll to its field.
+function stableJson(value: Record<string, string>) {
+  return JSON.stringify(Object.keys(value).sort().reduce<Record<string, string>>((acc, key) => {
+    acc[key] = value[key];
+    return acc;
+  }, {}));
+}
+
 function Section({ id, title, desc, open, onToggle, children }: { id: string; title: string; desc?: string; open: boolean; onToggle: (id: string) => void; children: React.ReactNode }) {
   return (
     // A borderless ROW inside the shared settings card (the card + divide-y dividers live in
@@ -176,6 +183,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     tiktok: cleanUsername(initial.social_links?.tiktok),
   });
   const [website, setWebsite] = useState<string>(cleanWebsiteUrl(initial.social_links?.website));
+  const savedSocialLinksRef = useRef<Record<string, string>>({
+    ...Object.fromEntries(
+      SOCIAL_NETWORKS
+        .map(({ key }) => [key, cleanUsername(initial.social_links?.[key])] as const)
+        .filter(([, value]) => value)
+    ),
+    ...(cleanWebsiteUrl(initial.social_links?.website) ? { website: cleanWebsiteUrl(initial.social_links?.website) } : {}),
+  });
   const [fullName, setFullName] = useState<string>(initialFullName);
   // The official name comes from the cédula entered at signup, so it's NOT editable here —
   // EXACTLY like the client account (which locks on a national cédula). We lock when the
@@ -246,6 +261,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirtyRef = useRef(false);
   const saveRef = useRef<(auto?: boolean) => Promise<void>>(async () => {});
+  const saveSeq = useRef(0);
   useEffect(() => {
     saveRef.current = handleSave;
   });
@@ -352,6 +368,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   }
 
   async function handleSave(auto = false) {
+    const seq = ++saveSeq.current;
     if (auto) setAutoSaving(true); else setSaving(true);
     setError(null);
     const supabase = createClient();
@@ -492,14 +509,19 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // it silently. For a real failure with usernames present, surface a soft warning AFTER
       // clearing `dirty` — so the user is informed but the beforeunload warning never sticks.
       let socialWarning: string | null = null;
-      const { error: socialError } = await supabase
-        .from("professionals")
-        .update({ social_links })
-        .eq("id", professionalId);
-      if (socialError && Object.keys(social_links).length > 0) {
-        console.error("[profile-editor] social_links save failed:", socialError.message);
-        if (!/social_links|could not find|PGRST204|schema cache/i.test(socialError.message)) {
-          socialWarning = t("socialSaveError");
+      const socialChanged = stableJson(social_links) !== stableJson(savedSocialLinksRef.current);
+      if (socialChanged) {
+        const { error: socialError } = await supabase
+          .from("professionals")
+          .update({ social_links })
+          .eq("id", professionalId);
+        if (socialError) {
+          console.error("[profile-editor] social_links save failed:", socialError.message);
+          if (!/social_links|could not find|PGRST204|schema cache/i.test(socialError.message)) {
+            socialWarning = t("socialSaveError");
+          }
+        } else {
+          savedSocialLinksRef.current = social_links;
         }
       }
 
@@ -518,20 +540,28 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // "unsaved changes" beforeunload warning can never get stuck (only a core/location
       // failure throws and keeps it dirty). A best-effort social failure shows a soft notice
       // but does NOT keep the form dirty.
-      setDirty(false);
-      dirtyRef.current = false;
-      if (socialWarning) {
-        setError(socialWarning);
-      } else {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+      if (seq === saveSeq.current) {
+        setDirty(false);
+        dirtyRef.current = false;
+        if (socialWarning) {
+          setError(socialWarning);
+        } else {
+          setSaved(true);
+          setTimeout(() => {
+            if (seq === saveSeq.current) setSaved(false);
+          }, 3000);
+        }
       }
-      onSaved?.();
+      if (seq === saveSeq.current) onSaved?.();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t("saveError"));
+      if (seq === saveSeq.current) {
+        setError(err instanceof Error ? err.message : t("saveError"));
+      }
     } finally {
-      setSaving(false);
-      setAutoSaving(false);
+      if (seq === saveSeq.current) {
+        setSaving(false);
+        setAutoSaving(false);
+      }
     }
   }
 
