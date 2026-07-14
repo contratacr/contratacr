@@ -62,6 +62,7 @@ export function UnsavedChangesGuard({
 
   function proceed() {
     const anchor = pendingAnchor.current;
+    pendingAnchor.current = null;
     setOpen(false);
     if (anchor) {
       // Re-dispatch the original click; the capture handler lets it through.
@@ -82,11 +83,21 @@ export function UnsavedChangesGuard({
     proceed();
   }
 
+  function keepEditing() {
+    pendingAnchor.current = null;
+    setOpen(false);
+  }
+
   return (
-    <Dialog.Root open={open} onOpenChange={(v) => !v && setOpen(false)}>
+    <Dialog.Root open={open} onOpenChange={(nextOpen) => { if (nextOpen) setOpen(true); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white shadow-2xl data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=open]:fade-in-0">
+        <Dialog.Content
+          onEscapeKeyDown={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
+          onPointerDownOutside={(event) => event.preventDefault()}
+          className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white shadow-2xl data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=open]:fade-in-0"
+        >
           <div className="p-6">
             <div className="flex items-start gap-3">
               <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
@@ -118,7 +129,7 @@ export function UnsavedChangesGuard({
               </button>
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={keepEditing}
                 disabled={saving}
                 className="w-full h-10 rounded-xl text-sm font-medium text-[#6b7280] hover:bg-[#f9fafb] transition-colors disabled:opacity-50"
               >
