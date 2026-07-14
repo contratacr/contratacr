@@ -87,6 +87,8 @@ export function BasicProfileSection({
   const profileDirtyRef = useRef(false);
   const profileFormRef = useRef(profileForm);
   const saveProfileRef = useRef<() => Promise<void>>(async () => {});
+  const saveProfileSeq = useRef(0);
+  const mountedRef = useRef(true);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -137,9 +139,13 @@ export function BasicProfileSection({
 
   const saveProfile = useCallback(async () => {
     if (!user) return;
+    const seq = ++saveProfileSeq.current;
+    const isCurrentSave = () => mountedRef.current && seq === saveProfileSeq.current;
     const currentForm = profileFormRef.current;
-    setProfileDirty(false);
-    setProfileSaving(true);
+    if (mountedRef.current) {
+      setProfileDirty(false);
+      setProfileSaving(true);
+    }
     const supabase = createClient();
     // Never overwrite a verified official name (locked; corrections go through admin).
     const verified = profileData?.client_identity_status === "verified";
@@ -149,13 +155,16 @@ export function BasicProfileSection({
     if (!verified) update.full_name = cleanName;
     const { error: profileError } = await supabase.from("profiles").update(update).eq("id", user.id);
     if (profileError) {
-      setProfileSaving(false);
-      void showMessage({ title: errorTitle, description: locale === "en" ? "We couldn't save your profile. Try again." : "No pudimos guardar tu perfil. Intenta de nuevo.", tone: "danger" });
+      if (isCurrentSave()) {
+        setProfileSaving(false);
+        void showMessage({ title: errorTitle, description: locale === "en" ? "We couldn't save your profile. Try again." : "No pudimos guardar tu perfil. Intenta de nuevo.", tone: "danger" });
+      }
       return;
     }
     if (cleanPhone) {
       const { error: professionalPhoneError } = await supabase.from("professionals").update({ whatsapp: cleanPhone }).eq("profile_id", user.id);
       if (professionalPhoneError) {
+        if (!isCurrentSave()) return;
         setProfileSaving(false);
         void showMessage({ title: errorTitle, description: locale === "en" ? "We couldn't sync your contact number. Try again." : "No pudimos sincronizar tu número de contacto. Intenta de nuevo.", tone: "danger" });
         return;
@@ -164,12 +173,16 @@ export function BasicProfileSection({
     if (!verified && cleanName) {
       await supabase.auth.updateUser({ data: { full_name: cleanName } });
     }
-    setProfileData((prev) => (prev ? { ...prev, phone: cleanPhone ?? "", ...(!verified && cleanName ? { full_name: cleanName } : {}) } : prev));
     window.dispatchEvent(new Event("ccr:profile-updated"));
-    setProfileSaving(false);
-    setProfileSaved(true);
-    profileDirtyRef.current = false;
-    setTimeout(() => setProfileSaved(false), 3000);
+    if (isCurrentSave()) {
+      setProfileData((prev) => (prev ? { ...prev, phone: cleanPhone ?? "", ...(!verified && cleanName ? { full_name: cleanName } : {}) } : prev));
+      setProfileSaving(false);
+      setProfileSaved(true);
+      profileDirtyRef.current = false;
+      setTimeout(() => {
+        if (isCurrentSave()) setProfileSaved(false);
+      }, 3000);
+    }
   }, [errorTitle, locale, profileData?.client_identity_status, showMessage, user]);
   useEffect(() => {
     profileFormRef.current = profileForm;
@@ -178,6 +191,7 @@ export function BasicProfileSection({
 
   // Flush a pending save on unmount (e.g. switching tabs) — the data-loss fix.
   useEffect(() => () => {
+    mountedRef.current = false;
     if (profileTimer.current) clearTimeout(profileTimer.current);
     if (profileDirtyRef.current) void saveProfileRef.current?.();
   }, []);
