@@ -12,7 +12,7 @@ export type CategoryGroup = {
 };
 
 export const CATEGORY_GROUP_ICON_KEYS: Record<string, string> = {
-  hogar: "home",
+  hogar: "armchair",
   jardin: "leaf",
   limpieza: "sparkles",
   tecnologia: "laptop",

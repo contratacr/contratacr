@@ -1,9 +1,9 @@
 import {
+  Armchair,
   Briefcase,
   CalendarDays,
   Car,
   Heart,
-  Home,
   Laptop,
   Leaf,
   Map as MapIcon,
@@ -25,7 +25,7 @@ export type CategoryGroupVisual = {
 };
 
 export const CATEGORY_GROUP_VISUALS: Record<string, CategoryGroupVisual> = {
-  hogar: { iconKey: "home", from: "#1e3a8a", to: "#2563eb", Icon: Home },
+  hogar: { iconKey: "armchair", from: "#1e3a8a", to: "#2563eb", Icon: Armchair },
   jardin: { iconKey: "leaf", from: "#166534", to: "#16a34a", Icon: Leaf },
   limpieza: { iconKey: "sparkles", from: "#0369a1", to: "#0ea5e9", Icon: Sparkles },
   tecnologia: { iconKey: "laptop", from: "#13294a", to: "#0f4c81", Icon: Laptop },
