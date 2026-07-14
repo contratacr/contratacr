@@ -329,7 +329,7 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
         />
         <ProCard
-          rank={2} initials="CR" image="/logo-mark-transparent.png" company="ContrataCR" person="Isaac Sanchez" profession={copy.secondaryProfession}
+          rank={2} initials="CR" image="/logo-mark-transparent.png" company="ContrataCR" profession={copy.secondaryProfession}
           place={copy.secondaryPlace} address={copy.secondaryAddress} rating="4.8" reviews={copy.reviews(31)}
           price={copy.priceOnRequest} verified={copy.verified}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp} noScheduleNote={copy.noScheduleNote}
