@@ -16,7 +16,7 @@ export function UnsavedChangesGuard({
   onSave,
 }: {
   dirty: boolean;
-  onSave?: () => Promise<void> | void;
+  onSave?: () => Promise<boolean | void> | boolean | void;
 }) {
   const t = useTranslations("unsavedGuard");
   const [open, setOpen] = useState(false);
@@ -75,12 +75,13 @@ export function UnsavedChangesGuard({
   async function saveAndLeave() {
     if (!onSave) return proceed();
     setSaving(true);
+    let ok: boolean | void = false;
     try {
-      await onSave();
+      ok = await onSave();
     } finally {
       setSaving(false);
     }
-    proceed();
+    if (ok !== false) proceed();
   }
 
   function keepEditing() {

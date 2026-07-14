@@ -39,30 +39,7 @@ export function useReportSaveStatus(saving: boolean, saved: boolean, dirty = fal
 // visible while the user scrolls this panel. Non-interactive and out of flow.
 export function HeaderSaveStatus({ className }: { className?: string }) {
   const s = useContext(ValueCtx);
-  const [inputFocus, setInputFocus] = useState(false);
-  const visible = (s.saving || s.saved || s.dirty) && !inputFocus;
-
-  useEffect(() => {
-    function onFocusIn(e: FocusEvent) {
-      const target = e.target;
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
-        setInputFocus(true);
-      }
-    }
-
-    function onFocusOut() {
-      const next = document.activeElement;
-      if (next instanceof HTMLInputElement || next instanceof HTMLTextAreaElement) return;
-      setInputFocus(false);
-    }
-
-    document.addEventListener("focusin", onFocusIn);
-    document.addEventListener("focusout", onFocusOut);
-    return () => {
-      document.removeEventListener("focusin", onFocusIn);
-      document.removeEventListener("focusout", onFocusOut);
-    };
-  }, []);
+  const visible = s.saving || s.saved || s.dirty;
 
   return (
     <div className={cn("pointer-events-none fixed inset-x-0 top-[72px] z-50", className)}>

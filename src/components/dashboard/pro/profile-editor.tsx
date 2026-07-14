@@ -262,8 +262,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // pending save in cleanup (the fetch survives a same-page tab-switch unmount)
   // guarantees a change made right before leaving is never silently lost.
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedFlashSeq = useRef(0);
   const dirtyRef = useRef(false);
-  const saveRef = useRef<(auto?: boolean) => Promise<void>>(async () => {});
+  const saveRef = useRef<(auto?: boolean) => Promise<boolean>>(async () => true);
   const saveSeq = useRef(0);
   useEffect(() => {
     saveRef.current = handleSave;
@@ -277,6 +279,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   }, [initialFullName, fullName]);
 
   function touch() {
+    if (savedTimer.current) {
+      clearTimeout(savedTimer.current);
+      savedTimer.current = null;
+    }
     setSaved(false);
     setDirty(true);
     dirtyRef.current = true;
@@ -298,8 +304,20 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     if (dirtyRef.current) void handleSave(true);
   }
 
+  function showSavedConfirmation() {
+    const flash = ++savedFlashSeq.current;
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    setDirty(false);
+    dirtyRef.current = false;
+    setSaved(true);
+    savedTimer.current = setTimeout(() => {
+      if (flash === savedFlashSeq.current) setSaved(false);
+    }, 3000);
+  }
+
   useEffect(() => () => {
     if (autoTimer.current) clearTimeout(autoTimer.current);
+    if (savedTimer.current) clearTimeout(savedTimer.current);
     if (dirtyRef.current) void saveRef.current?.(true);
   }, []);
 
@@ -350,6 +368,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       if (upErr) throw new Error(t("photoError"));
       await supabase.auth.updateUser({ data: { avatar_url: url } });
       setAvatarPreview(url);
+      showSavedConfirmation();
       onSaved?.();
     } catch (e) {
       // Revert the optimistic preview and show the specific reason (size/format).
@@ -362,12 +381,22 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   }
 
   async function handlePhotoRemove() {
+    setAutoSaving(true);
     setError(null);
     setAvatarPreview(null);
-    const supabase = createClient();
-    await supabase.from("profiles").update({ avatar_url: null }).eq("id", profileId);
-    await supabase.auth.updateUser({ data: { avatar_url: null } });
-    onSaved?.();
+    try {
+      const supabase = createClient();
+      const { error: removeError } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", profileId);
+      if (removeError) throw new Error(t("photoError"));
+      await supabase.auth.updateUser({ data: { avatar_url: null } });
+      showSavedConfirmation();
+      onSaved?.();
+    } catch (e) {
+      setAvatarPreview(initialAvatarUrl);
+      setError(e instanceof Error && e.message ? e.message : t("photoError"));
+    } finally {
+      setAutoSaving(false);
+    }
   }
 
   async function saveBusinessNameVisibility(nextOnly: boolean) {
@@ -385,6 +414,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         })
         .eq("id", professionalId);
       if (businessError) throw businessError;
+      showSavedConfirmation();
       onSaved?.();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("saveError"));
@@ -393,7 +423,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     }
   }
 
-  async function handleSave(auto = false) {
+  async function handleSave(auto = false): Promise<boolean> {
     const seq = ++saveSeq.current;
     if (auto) setAutoSaving(true); else setSaving(true);
     setError(null);
@@ -582,17 +612,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         if (socialWarning) {
           setError(socialWarning);
         } else {
-          setSaved(true);
-          setTimeout(() => {
-            if (seq === saveSeq.current) setSaved(false);
-          }, 3000);
+          showSavedConfirmation();
         }
       }
       if (seq === saveSeq.current) onSaved?.();
+      return true;
     } catch (err: unknown) {
       if (seq === saveSeq.current) {
         setError(err instanceof Error ? err.message : t("saveError"));
       }
+      return false;
     } finally {
       if (seq === saveSeq.current) {
         setSaving(false);
@@ -603,7 +632,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
-  useReportSaveStatus(saving || autoSaving, saved, dirty);
+  useReportSaveStatus(saving || autoSaving || photoUploading, saved, dirty);
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
