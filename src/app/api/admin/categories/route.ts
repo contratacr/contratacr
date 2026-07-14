@@ -117,7 +117,9 @@ export async function GET(req: Request) {
 
   let q = db.from("category_suggestions").select("*").order("created_at", { ascending: false });
   if (status === "pending" || status === "approved" || status === "rejected") q = q.eq("status", status);
-  let { data, error: qError } = await q;
+  const qResult = await q;
+  let data = qResult.data;
+  const qError = qResult.error;
   if (qError && isMissingColumnError(qError, "status")) {
     const fallback = await db.from("category_suggestions").select("*").order("created_at", { ascending: false });
     data = fallback.data;
@@ -235,7 +237,7 @@ export async function PATCH(req: Request) {
     const rawLabel = normalizeServiceDisplayName(typeof label === "string" ? label : "");
     const rawLabelEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
     const cleanLabel = rawLabel || (rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : normalizeServiceDisplayName(labelFromId(id)));
-    const cleanLabelEn = rawLabelEn ? await suggestEnglishServiceLabel(rawLabelEn) : await suggestEnglishServiceLabel(cleanLabel);
+    const cleanLabelEn = rawLabelEn || await suggestEnglishServiceLabel(cleanLabel);
     const { error } = await upsertCategory(db, {
       id,
       name: cleanLabel,
@@ -269,7 +271,7 @@ export async function PATCH(req: Request) {
     const rawName = cleanLabel || suggestionRow!.label || suggestionRow!.suggested_name || labelFromId(id);
     const rawNameEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
     const finalName = normalizeServiceDisplayName(rawName);
-    const finalNameEn = rawNameEn ? await suggestEnglishServiceLabel(rawNameEn) : await suggestEnglishServiceLabel(finalName);
+    const finalNameEn = rawNameEn || await suggestEnglishServiceLabel(finalName);
     const review = classifySuggestedCategory(finalName);
     const upsertResult = await upsertCategory(db, {
       id,
@@ -318,7 +320,7 @@ export async function POST(req: Request) {
   const id = slugifyCategory(cleanLabel);
   const db = createAdminClient();
   const groups = await getAdminGroups(db);
-  const cleanLabelEn = rawLabelEn ? await suggestEnglishServiceLabel(rawLabelEn) : await suggestEnglishServiceLabel(cleanLabel);
+  const cleanLabelEn = rawLabelEn || await suggestEnglishServiceLabel(cleanLabel);
   const review = classifySuggestedCategory(cleanLabel);
   const flags = {
     es_salud: typeof esSalud === "boolean" ? esSalud : review.healthLikely,
@@ -357,7 +359,7 @@ async function createCategoryGroup(body: Record<string, unknown>) {
   const label = rawLabel ? await suggestSpanishServiceLabel(rawLabel) : rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "";
   if (!label) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
   const id = slugifyCategory(label);
-  const labelEn = rawLabelEn ? await suggestEnglishServiceLabel(rawLabelEn) : await suggestEnglishServiceLabel(label);
+  const labelEn = rawLabelEn || await suggestEnglishServiceLabel(label);
   const db = createAdminClient();
   const existingGroups = await getAdminGroups(db);
   const nextSort = Math.max(0, ...existingGroups.map((group) => group.sortOrder ?? 0)) + 10;
@@ -383,7 +385,7 @@ async function updateCategoryGroup(body: Record<string, unknown>) {
   const rawLabelEn = normalizeServiceDisplayName(typeof body.labelEn === "string" ? body.labelEn : "");
   const label = rawLabel ? await suggestSpanishServiceLabel(rawLabel) : rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "";
   if (!id || !label) return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
-  const labelEn = rawLabelEn ? await suggestEnglishServiceLabel(rawLabelEn) : await suggestEnglishServiceLabel(label);
+  const labelEn = rawLabelEn || await suggestEnglishServiceLabel(label);
   const sortOrder = typeof body.sortOrder === "number" ? body.sortOrder : 100;
   const db = createAdminClient();
   const { error } = await db.from("category_groups").upsert({
