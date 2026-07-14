@@ -226,6 +226,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const address = (initial.address as string) ?? "";
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
   const [publicBusinessNameOnly, setPublicBusinessNameOnly] = useState<boolean>(!!initial.business_name && initial.public_business_name_only === true);
+  const publicBusinessNameOnlyRef = useRef(publicBusinessNameOnly);
   const [workplaces, setWorkplaces] = useState<Workplace[]>(() => seedZones(initial));
   // Default to "Español" (most professionals) so a Spanish-only pro is never
   // treated as "missing" languages. Extra languages are an optional bonus.
@@ -376,20 +377,19 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     setError(null);
     const supabase = createClient();
     try {
-      let { error: businessError } = await supabase
+      const { data: savedBusiness, error: businessError } = await supabase
         .from("professionals")
         .update({
           business_name: cleanBusinessName,
           public_business_name_only: nextOnly,
         })
-        .eq("id", professionalId);
-      if (businessError && /public_business_name_only|could not find|PGRST204|schema cache/i.test(businessError.message)) {
-        ({ error: businessError } = await supabase
-          .from("professionals")
-          .update({ business_name: cleanBusinessName })
-          .eq("id", professionalId));
-      }
+        .eq("id", professionalId)
+        .select("public_business_name_only")
+        .maybeSingle();
       if (businessError) throw businessError;
+      if (!savedBusiness || savedBusiness.public_business_name_only !== nextOnly) {
+        throw new Error(t("saveError"));
+      }
       onSaved?.();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("saveError"));
@@ -442,7 +442,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       const cleanBusinessName = limitText(businessName.trim(), NAME_MAX_LENGTH);
       const businessIdentityFields = {
         business_name: cleanBusinessName || null,
-        public_business_name_only: !!cleanBusinessName && publicBusinessNameOnly,
+        public_business_name_only: !!cleanBusinessName && publicBusinessNameOnlyRef.current,
       };
       const identityFields = {
         coverage_areas: onlineCoverage,
@@ -487,17 +487,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       }
       if (locError) throw locError;
 
-      let { error: businessError } = await supabase
+      const { data: savedBusiness, error: businessError } = await supabase
         .from("professionals")
         .update(businessIdentityFields)
-        .eq("id", professionalId);
-      if (businessError && /public_business_name_only|could not find|PGRST204|schema cache/i.test(businessError.message)) {
-        ({ error: businessError } = await supabase
-          .from("professionals")
-          .update({ business_name: businessIdentityFields.business_name })
-          .eq("id", professionalId));
-      }
+        .eq("id", professionalId)
+        .select("public_business_name_only")
+        .maybeSingle();
       if (businessError) throw businessError;
+      if (!savedBusiness || savedBusiness.public_business_name_only !== businessIdentityFields.public_business_name_only) {
+        throw new Error(t("saveError"));
+      }
 
       // 3) Other optional identity columns — best-effort, NEVER fatal. A not-yet-migrated
       // column (or any error here) must not abort the save: the core + locations already
@@ -731,8 +730,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               type="button"
               onClick={() => {
                 const next = !publicBusinessNameOnly;
+                publicBusinessNameOnlyRef.current = next;
                 setPublicBusinessNameOnly(next);
-                touch();
                 void saveBusinessNameVisibility(next);
               }}
               className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", publicBusinessNameOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
