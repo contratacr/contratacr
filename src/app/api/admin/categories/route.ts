@@ -9,6 +9,7 @@ import {
   classifySuggestedCategory,
   getCategoryGroupLabel,
   isHealthCategory,
+  resolveCategoryGroupIconKey,
   searchCategories,
   slugifyCategory,
   supportsVideoConsultCategory,
@@ -591,7 +592,7 @@ async function getAdminGroups(db: ReturnType<typeof createAdminClient>): Promise
       id: group.id,
       label: group.label,
       labelEn: getCategoryGroupLabel(group.id, "en"),
-      iconKey: CATEGORY_GROUP_ICON_KEYS[group.id],
+      iconKey: resolveCategoryGroupIconKey(group.id, group.label, CATEGORY_GROUP_ICON_KEYS[group.id]),
       sortOrder: (index + 1) * 10,
     }));
 
@@ -600,7 +601,7 @@ async function getAdminGroups(db: ReturnType<typeof createAdminClient>): Promise
       id: group.id,
       label: group.label,
       labelEn: group.label_en || undefined,
-      iconKey: group.icon_key || undefined,
+      iconKey: resolveCategoryGroupIconKey(group.id, group.label, group.icon_key),
       sortOrder: group.sort_order ?? 100,
     })),
     ...fixed,

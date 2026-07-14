@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ALL_CATEGORIES, CATEGORY_GROUP_ICON_KEYS, CATEGORY_GROUP_LABELS_EN, CATEGORY_GROUPS, autoEnglishCategoryLabel } from "@/lib/data/categories";
+import { ALL_CATEGORIES, CATEGORY_GROUP_ICON_KEYS, CATEGORY_GROUP_LABELS_EN, CATEGORY_GROUPS, autoEnglishCategoryLabel, resolveCategoryGroupIconKey } from "@/lib/data/categories";
 
 // GET /api/categories/approved — public custom services + catalog overrides.
 // The operational catalog is the `categories` table. Approved suggestions are
@@ -93,7 +93,7 @@ export async function GET() {
       id: group.id,
       label: group.label,
       labelEn: CATEGORY_GROUP_LABELS_EN[group.id],
-      iconKey: CATEGORY_GROUP_ICON_KEYS[group.id],
+      iconKey: resolveCategoryGroupIconKey(group.id, group.label, CATEGORY_GROUP_ICON_KEYS[group.id]),
       sortOrder: (index + 1) * 10,
     }));
   const groups = [
@@ -101,7 +101,7 @@ export async function GET() {
       id: group.id,
       label: group.label,
       labelEn: group.label_en || undefined,
-      iconKey: group.icon_key || undefined,
+      iconKey: resolveCategoryGroupIconKey(group.id, group.label, group.icon_key),
       sortOrder: group.sort_order ?? 100,
       isHidden: !!group.is_hidden,
     })),

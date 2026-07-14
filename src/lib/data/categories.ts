@@ -345,6 +345,7 @@ export function setCustomCategories(
     normalizedGroups.set(id, {
       ...group,
       id,
+      iconKey: resolveCategoryGroupIconKey(id, group.label, group.iconKey),
       label: isOtherCategoryGroup(id, group.label) ? "Otras categorías" : group.label,
       labelEn: isOtherCategoryGroup(id, group.label) ? "Other categories" : group.labelEn,
       sortOrder: isOtherCategoryGroup(id, group.label) ? Number.MAX_SAFE_INTEGER : group.sortOrder,
@@ -405,6 +406,12 @@ export function normalizeCategoryGroupId(groupId?: string | null, label?: string
   return isOtherCategoryGroup(id, label) ? CUSTOM_GROUP_ID : id;
 }
 
+export function resolveCategoryGroupIconKey(groupId?: string | null, label?: string | null, iconKey?: string | null): string | undefined {
+  const normalized = normalizeText(`${groupId ?? ""} ${label ?? ""}`);
+  if (normalized.includes("hogar") && normalized.includes("muebles")) return "armchair";
+  return iconKey || CATEGORY_GROUP_ICON_KEYS[groupId ?? ""] || undefined;
+}
+
 export function sortCategoryGroups<T extends { id: string; label?: string; sortOrder?: number }>(groups: T[]): T[] {
   return [...groups].sort((a, b) => {
     const aOther = isOtherCategoryGroup(a.id, a.label);
@@ -419,7 +426,7 @@ export function getAllCategoryGroups(): { id: string; label: string; labelEn?: s
     id: group.id,
     label: group.label,
     labelEn: CATEGORY_GROUP_LABELS_EN[group.id],
-    iconKey: CATEGORY_GROUP_ICON_KEYS[group.id],
+    iconKey: resolveCategoryGroupIconKey(group.id, group.label, CATEGORY_GROUP_ICON_KEYS[group.id]),
     sortOrder: (index + 1) * 10,
   }));
   const fixedIds = new Set(fixed.map((group) => group.id));
