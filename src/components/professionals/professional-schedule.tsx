@@ -117,7 +117,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   useEffect(() => {
     if (!slotsInitiallyLoaded) {
-      setShouldAutoRefresh(true);
+      queueMicrotask(() => setShouldAutoRefresh(true));
       return;
     }
     if (stacked) {
@@ -142,19 +142,23 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // appointments-only.
   const canBook = !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
   const scheduleLoading = canBook && !slotsInitiallyLoaded && liveData?.professionalId !== professional.id;
-  const visualScheduleLoading = canBook && (scheduleLoading || searchShellLoading);
+  const visualScheduleLoading = syncWithSearchLoading
+    ? searchShellLoading || scheduleLoading
+    : scheduleLoading;
 
   useEffect(() => {
     if (!syncWithSearchLoading) {
-      setSearchShellLoading(false);
+      queueMicrotask(() => setSearchShellLoading(false));
       return;
     }
     const mapState = window as typeof window & {
       __ccrSearchMapLoading?: boolean;
       __ccrSearchMapReady?: boolean;
     };
-    setSearchShellLoading(true);
     let active = true;
+    queueMicrotask(() => {
+      if (active) setSearchShellLoading(true);
+    });
     let mapReady = mapState.__ccrSearchMapReady === true && mapState.__ccrSearchMapLoading !== true;
     let minimumPaintDone = false;
     let minimumTimer: number | null = null;
