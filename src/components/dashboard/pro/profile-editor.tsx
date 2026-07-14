@@ -377,19 +377,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     setError(null);
     const supabase = createClient();
     try {
-      const { data: savedBusiness, error: businessError } = await supabase
+      const { error: businessError } = await supabase
         .from("professionals")
         .update({
           business_name: cleanBusinessName,
           public_business_name_only: nextOnly,
         })
-        .eq("id", professionalId)
-        .select("public_business_name_only")
-        .maybeSingle();
+        .eq("id", professionalId);
       if (businessError) throw businessError;
-      if (!savedBusiness || savedBusiness.public_business_name_only !== nextOnly) {
-        throw new Error(t("saveError"));
-      }
       onSaved?.();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("saveError"));
@@ -487,16 +482,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       }
       if (locError) throw locError;
 
-      const { data: savedBusiness, error: businessError } = await supabase
+      const { error: businessError } = await supabase
         .from("professionals")
         .update(businessIdentityFields)
-        .eq("id", professionalId)
-        .select("public_business_name_only")
-        .maybeSingle();
+        .eq("id", professionalId);
       if (businessError) throw businessError;
-      if (!savedBusiness || savedBusiness.public_business_name_only !== businessIdentityFields.public_business_name_only) {
-        throw new Error(t("saveError"));
-      }
 
       // 3) Other optional identity columns — best-effort, NEVER fatal. A not-yet-migrated
       // column (or any error here) must not abort the save: the core + locations already
