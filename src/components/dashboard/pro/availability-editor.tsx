@@ -780,7 +780,7 @@ export function AvailabilityEditor({
 
       {/* ── Disponibilidad privada ─────────────────────────────────────────── */}
       <div className="p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
           <div className="flex min-w-0 items-center gap-3">
             {/* Blue padlock — signals this controls PRIVATE availability. */}
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
@@ -810,7 +810,7 @@ export function AvailabilityEditor({
 
       {videoConsultationAllowed && (
         <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
             <div className="flex min-w-0 items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
                 <Video className="h-5 w-5" />
