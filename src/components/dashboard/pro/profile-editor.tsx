@@ -369,6 +369,35 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     onSaved?.();
   }
 
+  async function saveBusinessNameVisibility(nextOnly: boolean) {
+    const cleanBusinessName = limitText(businessName.trim(), NAME_MAX_LENGTH);
+    if (!cleanBusinessName) return;
+    setAutoSaving(true);
+    setError(null);
+    const supabase = createClient();
+    try {
+      let { error: businessError } = await supabase
+        .from("professionals")
+        .update({
+          business_name: cleanBusinessName,
+          public_business_name_only: nextOnly,
+        })
+        .eq("id", professionalId);
+      if (businessError && /public_business_name_only|could not find|PGRST204|schema cache/i.test(businessError.message)) {
+        ({ error: businessError } = await supabase
+          .from("professionals")
+          .update({ business_name: cleanBusinessName })
+          .eq("id", professionalId));
+      }
+      if (businessError) throw businessError;
+      onSaved?.();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("saveError"));
+    } finally {
+      setAutoSaving(false);
+    }
+  }
+
   async function handleSave(auto = false) {
     const seq = ++saveSeq.current;
     if (auto) setAutoSaving(true); else setSaving(true);
@@ -410,9 +439,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // environment, so they're saved best-effort (a missing column is ignored) — and,
       // crucially, SEPARATELY from `workplaces` (below) so a missing column here can
       // NEVER drop the saved locations.
+      const cleanBusinessName = limitText(businessName.trim(), NAME_MAX_LENGTH);
+      const businessIdentityFields = {
+        business_name: cleanBusinessName || null,
+        public_business_name_only: !!cleanBusinessName && publicBusinessNameOnly,
+      };
       const identityFields = {
-        business_name: limitText(businessName.trim(), NAME_MAX_LENGTH) || null,
-        public_business_name_only: !!businessName.trim() && publicBusinessNameOnly,
         coverage_areas: onlineCoverage,
         coverage_provincias: coverageProvincias,
         coverage_country: coverageCountry,
@@ -454,6 +486,18 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         ({ error: locError } = await supabase.from("professionals").update({ workplaces: effectiveWorkplaces }).eq("id", professionalId));
       }
       if (locError) throw locError;
+
+      let { error: businessError } = await supabase
+        .from("professionals")
+        .update(businessIdentityFields)
+        .eq("id", professionalId);
+      if (businessError && /public_business_name_only|could not find|PGRST204|schema cache/i.test(businessError.message)) {
+        ({ error: businessError } = await supabase
+          .from("professionals")
+          .update({ business_name: businessIdentityFields.business_name })
+          .eq("id", professionalId));
+      }
+      if (businessError) throw businessError;
 
       // 3) Other optional identity columns — best-effort, NEVER fatal. A not-yet-migrated
       // column (or any error here) must not abort the save: the core + locations already
@@ -686,8 +730,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             <button
               type="button"
               onClick={() => {
-                setPublicBusinessNameOnly((v) => !v);
+                const next = !publicBusinessNameOnly;
+                setPublicBusinessNameOnly(next);
                 touch();
+                void saveBusinessNameVisibility(next);
               }}
               className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", publicBusinessNameOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
               aria-label={t("businessNameOnly")}
