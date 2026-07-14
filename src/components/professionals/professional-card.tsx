@@ -41,6 +41,7 @@ export type ProfessionalCardData = {
   contactPreference?: "solo_whatsapp" | "solo_citas" | "ambas";
   languages?: string[];
   businessName?: string;
+  publicBusinessNameOnly?: boolean;
   workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
   verificationStatus?: "pending" | "verified" | "rejected" | "under_appeal";
   lat?: number | null;
@@ -114,7 +115,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   // Brand hierarchy: company name leads (clients recognize the brand), personal
   // name becomes the muted subtitle. No company → personal name leads, no subtitle.
   const businessName = professional.businessName?.trim();
-  const displayName = getProfessionalDisplayName(professional.fullName, businessName);
+  const displayName = getProfessionalDisplayName(professional.fullName, businessName, professional.publicBusinessNameOnly);
   const categoryName = catLabel(professional.categoryId);
   const allProfessions = (professional.professions && professional.professions.length > 0
     ? professional.professions

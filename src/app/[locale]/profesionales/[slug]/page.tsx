@@ -36,6 +36,7 @@ import { ClientRegistrationModal } from "@/components/auth/client-registration-m
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
+import { getProfessionalDisplayName } from "@/lib/display-name";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -331,11 +332,15 @@ export default function ProfilePage() {
                 </ImagePreviewDialog>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <h1 className="text-2xl font-bold leading-tight text-[#111827]">{professional.businessName?.trim() || proDisplayName(professional.fullName)}</h1>
+                    <h1 className="text-2xl font-bold leading-tight text-[#111827]">
+                      {getProfessionalDisplayName(professional.fullName, professional.businessName, professional.publicBusinessNameOnly).primaryDesktop}
+                    </h1>
                     {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
                   </div>
-                  {professional.businessName?.trim() && (
-                    <p className="mt-0.5 text-sm font-medium text-[#6b7280]">{proDisplayName(professional.fullName)}</p>
+                  {getProfessionalDisplayName(professional.fullName, professional.businessName, professional.publicBusinessNameOnly).hasSecondary && (
+                    <p className="mt-0.5 text-sm font-medium text-[#6b7280]">
+                      {getProfessionalDisplayName(professional.fullName, professional.businessName, professional.publicBusinessNameOnly).secondaryDesktop}
+                    </p>
                   )}
                   <p className="mt-1 text-sm text-[#6b7280]">
                     {(professional.professions && professional.professions.length > 0 ? professional.professions : [professional.categoryId])

@@ -225,6 +225,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // Keep the stored value so an existing address column isn't wiped on save.
   const address = (initial.address as string) ?? "";
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
+  const [publicBusinessNameOnly, setPublicBusinessNameOnly] = useState<boolean>(!!initial.business_name && initial.public_business_name_only === true);
   const [workplaces, setWorkplaces] = useState<Workplace[]>(() => seedZones(initial));
   // Default to "Español" (most professionals) so a Spanish-only pro is never
   // treated as "missing" languages. Extra languages are an optional bonus.
@@ -251,6 +252,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasBusinessName = businessName.trim().length > 0;
 
   // ── App-wide RELIABLE autosave (the "Save standard"; see contratacr-context.md) ──
   // touch() marks dirty + debounces a save; flush() saves NOW (used on field blur);
@@ -410,6 +412,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // NEVER drop the saved locations.
       const identityFields = {
         business_name: limitText(businessName.trim(), NAME_MAX_LENGTH) || null,
+        public_business_name_only: !!businessName.trim() && publicBusinessNameOnly,
         coverage_areas: onlineCoverage,
         coverage_provincias: coverageProvincias,
         coverage_country: coverageCountry,
@@ -668,10 +671,31 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
           value={businessName}
           maxLength={NAME_MAX_LENGTH}
-          onChange={(e) => { setBusinessName(limitText(e.target.value, NAME_MAX_LENGTH)); touch(); }}
+          onChange={(e) => {
+            const next = limitText(e.target.value, NAME_MAX_LENGTH);
+            setBusinessName(next);
+            if (!next.trim()) setPublicBusinessNameOnly(false);
+            touch();
+          }}
           onBlur={flush}
           placeholder={t("businessPlaceholder")}
         />
+        {hasBusinessName && (
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
+            <p className="text-sm font-medium text-[#111827]">{t("businessNameOnly")}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setPublicBusinessNameOnly((v) => !v);
+                touch();
+              }}
+              className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", publicBusinessNameOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+              aria-label={t("businessNameOnly")}
+            >
+              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", publicBusinessNameOnly ? "left-5" : "left-0.5")} />
+            </button>
+          </div>
+        )}
 
         {/* Description */}
         <div data-field="bio">

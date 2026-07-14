@@ -22,6 +22,8 @@ export type ProfessionalCardData = {
   isVerified: boolean;
   isFeatured: boolean;
   isAvailable: boolean;
+  businessName?: string;
+  publicBusinessNameOnly?: boolean;
   workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
   videoconsulta?: boolean;
   coverage?: { country?: boolean; provincias?: string[]; cantones?: string[] };

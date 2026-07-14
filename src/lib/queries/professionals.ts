@@ -217,7 +217,7 @@ async function searchProfessionalsUncached(
             `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
              category_id, professions, pricing, services, lat, lng, service_type, availability_public, contact_preference, videoconsulta,
-             business_name, workplaces, verification_status${modern ? ", languages, no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications, call_phone" : ""},
+             business_name, workplaces, verification_status${modern ? ", languages, no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications, call_phone, public_business_name_only" : ""},
              profiles(full_name, avatar_url${modern ? ", is_disabled" : ""}),
              provincias(id, name),
              cantones(id, name)`
@@ -373,7 +373,7 @@ async function searchProfessionalsUncached(
       };
 
       let { data, error } = await build(true);
-      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|certifications|call_phone|column/i.test(error.message)) {
+      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|certifications|call_phone|public_business_name_only|column/i.test(error.message)) {
         ({ data, error } = await build(false)); // pre-migration fallback
       }
       if (error) throw error;
@@ -417,6 +417,7 @@ async function searchProfessionalsUncached(
         availabilityPublic: row.availability_public ?? true,
         contactPreference: (row.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
         businessName: row.business_name ?? undefined,
+        publicBusinessNameOnly: !!row.business_name && row.public_business_name_only === true,
         workplaces: (row.workplaces as ProfessionalCardData["workplaces"]) ?? [],
         verificationStatus: (row.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
         languages: (row.languages as string[]) ?? [],
@@ -629,27 +630,35 @@ export async function getProfessionalBySlug(
 
       // Use LEFT joins (not !inner) so missing categories/provincias/cantones
       // rows don't silently drop the professional from results.
-      const { data: pro, error } = await supabase
-        .from("professionals")
-        .select(
-          `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
+      const detailSelect = (withBusinessNameOnly: boolean) => `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name, workplaces, verification_status, insurance_networks, lat, lng, service_type, videoconsulta,
+           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name${withBusinessNameOnly ? ", public_business_name_only" : ""}, workplaces, verification_status, insurance_networks, lat, lng, service_type, videoconsulta,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
-           reviews(id, rating, comment, created_at, profiles(full_name, avatar_url))`
-        )
+           reviews(id, rating, comment, created_at, profiles(full_name, avatar_url))`;
+      let { data: pro, error } = await supabase
+        .from("professionals")
+        .select(detailSelect(true))
         .eq("slug", slug)
         .single();
+      if (error && /public_business_name_only|column|schema cache|PGRST204/i.test(error.message)) {
+        ({ data: pro, error } = await supabase
+          .from("professionals")
+          .select(detailSelect(false))
+          .eq("slug", slug)
+          .single());
+      }
 
       if (error || !pro) throw error ?? new Error("Not found");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const proRow = pro as any;
 
       // Tagged casos-de-Ã©xito + phone-call opt-in + coverage. Best-effort: separate
       // queries so a missing column (pre-migration 033/034) never breaks the profile.
       let portfolioItems: PortfolioItem[] = [];
       try {
-        const { data: pi } = await supabase.from("professionals").select("portfolio_items").eq("id", pro.id).maybeSingle();
+        const { data: pi } = await supabase.from("professionals").select("portfolio_items").eq("id", proRow.id).maybeSingle();
         if (pi && Array.isArray((pi as { portfolio_items?: PortfolioItem[] }).portfolio_items)) {
           portfolioItems = (pi as { portfolio_items: PortfolioItem[] }).portfolio_items;
         }
@@ -662,7 +671,7 @@ export async function getProfessionalBySlug(
         const { data: extra } = await supabase
           .from("professionals")
           .select("allow_phone_call, coverage_areas, coverage_provincias, coverage_country")
-          .eq("id", pro.id)
+          .eq("id", proRow.id)
           .maybeSingle();
         if (extra) {
           allowPhoneCall = !!(extra as { allow_phone_call?: boolean }).allow_phone_call;
@@ -670,32 +679,32 @@ export async function getProfessionalBySlug(
         }
       } catch { /* columns not migrated yet */ }
       try {
-        const { data: certRow } = await supabase.from("professionals").select("certifications").eq("id", pro.id).maybeSingle();
+        const { data: certRow } = await supabase.from("professionals").select("certifications").eq("id", proRow.id).maybeSingle();
         if (certRow && Array.isArray((certRow as { certifications?: unknown[] }).certifications)) {
           certifications = (certRow as { certifications: unknown[] }).certifications;
         }
       } catch { /* column not migrated yet */ }
       let callPhone: string | undefined;
       try {
-        const { data: cpRow } = await supabase.from("professionals").select("call_phone").eq("id", pro.id).maybeSingle();
+        const { data: cpRow } = await supabase.from("professionals").select("call_phone").eq("id", proRow.id).maybeSingle();
         callPhone = (cpRow as { call_phone?: string } | null)?.call_phone ?? undefined;
       } catch { /* column not migrated yet */ }
       // Optional public contact email (the pro opts in to show it). Best-effort so
       // an unmigrated DB doesn't 500 the whole profile.
       let contactEmail: string | undefined;
       try {
-        const { data: ceRow } = await supabase.from("professionals").select("contact_email").eq("id", pro.id).maybeSingle();
+        const { data: ceRow } = await supabase.from("professionals").select("contact_email").eq("id", proRow.id).maybeSingle();
         contactEmail = (ceRow as { contact_email?: string } | null)?.contact_email ?? undefined;
       } catch { /* column not migrated yet */ }
       // Optional social links (URLs only). Best-effort so an unmigrated DB doesn't 500.
       let socialLinks: SocialLinks | undefined;
       try {
-        const { data: slRow } = await supabase.from("professionals").select("social_links").eq("id", pro.id).maybeSingle();
+        const { data: slRow } = await supabase.from("professionals").select("social_links").eq("id", proRow.id).maybeSingle();
         const raw = (slRow as { social_links?: SocialLinks } | null)?.social_links;
         if (raw && typeof raw === "object") socialLinks = raw;
       } catch { /* column not migrated yet */ }
       if (portfolioItems.length === 0) {
-        portfolioItems = (pro.portfolio_urls ?? []).map((url: string) => ({ url }));
+        portfolioItems = (proRow.portfolio_urls ?? []).map((url: string) => ({ url }));
       }
 
       // Job-title snapshot per review (best-effort; column from migration 036) so
@@ -703,12 +712,12 @@ export async function getProfessionalBySlug(
       // surfaced publicly â€” only the author sees that, item 4.)
       const titleMap: Record<string, string | null> = {};
       try {
-        const { data: rj } = await supabase.from("reviews").select("id, job_title").eq("professional_id", pro.id);
+        const { data: rj } = await supabase.from("reviews").select("id, job_title").eq("professional_id", proRow.id);
         for (const r of (rj ?? []) as { id: string; job_title?: string | null }[]) titleMap[r.id] = r.job_title ?? null;
       } catch { /* column not migrated yet */ }
 
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      const reviews: Review[] = ((pro.reviews as any[]) ?? []).map((r: any) => ({
+      const reviews: Review[] = ((proRow.reviews as any[]) ?? []).map((r: any) => ({
         id: r.id,
         jobTitle: titleMap[r.id] ?? null,
         clientName: r.profiles?.full_name ?? "Cliente",
@@ -717,52 +726,53 @@ export async function getProfessionalBySlug(
         comment: r.comment,
         createdAt: r.created_at,
       }));
-      const rawServices = (pro as any).services as ProService[] | undefined;
+      const rawServices = proRow.services as ProService[] | undefined;
       const visibleServices = activeServices(rawServices);
-      const legacyProfessions = ((pro as any).professions as string[]) ?? ((pro as any).category_id ? [(pro as any).category_id] : []);
+      const legacyProfessions = (proRow.professions as string[]) ?? (proRow.category_id ? [proRow.category_id] : []);
       const publicProfessions = publicProfessionsFromServices(rawServices, legacyProfessions);
 
       return {
-        id: pro.id,
-        slug: pro.slug,
-        fullName: (pro.profiles as any)?.full_name ?? "Profesional",
-        avatarUrl: (pro.profiles as any)?.avatar_url ?? null,
+        id: proRow.id,
+        slug: proRow.slug,
+        fullName: (proRow.profiles as any)?.full_name ?? "Profesional",
+        avatarUrl: (proRow.profiles as any)?.avatar_url ?? null,
         // category_id is a plain text column â€” no join needed
-        categoryId: publicProfessions[0] ?? (pro as any).category_id ?? "",
+        categoryId: publicProfessions[0] ?? proRow.category_id ?? "",
         categoryIcon: "",
         professions: publicProfessions,
         // Price derived from Servicios (single source), legacy fields as fallback.
-        pricing: deriveDisplayPricing(visibleServices, (pro as any).pricing as ProfessionalCardData["pricing"], (pro as any).hourly_rate),
-        bio: pro.bio,
-        whatsapp: pro.whatsapp,
-        provinceName: (pro.provincias as any)?.name ?? "",
-        cantonName: (pro.cantones as any)?.name ?? "",
-        ratingAvg: Number(pro.rating_avg ?? 0),
-        reviewCount: pro.review_count ?? 0,
-        yearsExperience: pro.years_experience,
-        hourlyRate: pro.hourly_rate,
-        isVerified: pro.is_verified ?? false,
-        isFeatured: pro.is_featured ?? false,
-        isAvailable: pro.is_available ?? true,
-        lat: (pro as any).lat ?? null,
-        lng: (pro as any).lng ?? null,
-        serviceType: (pro as any).service_type ?? null,
-        videoconsulta: !!(pro as any).videoconsulta,
-        portfolioUrls: pro.portfolio_urls ?? [],
+        pricing: deriveDisplayPricing(visibleServices, proRow.pricing as ProfessionalCardData["pricing"], proRow.hourly_rate),
+        bio: proRow.bio,
+        whatsapp: proRow.whatsapp,
+        provinceName: (proRow.provincias as any)?.name ?? "",
+        cantonName: (proRow.cantones as any)?.name ?? "",
+        ratingAvg: Number(proRow.rating_avg ?? 0),
+        reviewCount: proRow.review_count ?? 0,
+        yearsExperience: proRow.years_experience,
+        hourlyRate: proRow.hourly_rate,
+        isVerified: proRow.is_verified ?? false,
+        isFeatured: proRow.is_featured ?? false,
+        isAvailable: proRow.is_available ?? true,
+        lat: proRow.lat ?? null,
+        lng: proRow.lng ?? null,
+        serviceType: proRow.service_type ?? null,
+        videoconsulta: !!proRow.videoconsulta,
+        portfolioUrls: proRow.portfolio_urls ?? [],
         portfolioItems,
         allowPhoneCall,
         coverage,
         reviews,
         services: visibleServices,
-        availabilityPublic: (pro as any).availability_public ?? true,
-        contactPreference: ((pro as any).contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
-        languages: ((pro as any).languages as string[]) ?? [],
-        businessName: ((pro as any).business_name as string) ?? undefined,
-        workplaces: ((pro as any).workplaces as ProfessionalCardData["workplaces"]) ?? [],
-        verificationStatus: ((pro as any).verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
-        insuranceNetworks: ((pro as any).insurance_networks as string[]) ?? [],
+        availabilityPublic: proRow.availability_public ?? true,
+        contactPreference: (proRow.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
+        languages: (proRow.languages as string[]) ?? [],
+        businessName: (proRow.business_name as string) ?? undefined,
+        publicBusinessNameOnly: !!proRow.business_name && proRow.public_business_name_only === true,
+        workplaces: (proRow.workplaces as ProfessionalCardData["workplaces"]) ?? [],
+        verificationStatus: (proRow.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
+        insuranceNetworks: (proRow.insurance_networks as string[]) ?? [],
         certifications: certifications as Certification[],
-        profileId: (pro as any).profile_id ?? undefined,
+        profileId: proRow.profile_id ?? undefined,
         callPhone,
         contactEmail,
         socialLinks,

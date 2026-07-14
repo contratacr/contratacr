@@ -1780,6 +1780,7 @@
     "businessName": "Nombre comercial o de tu empresa",
     "optional": "(opcional)",
     "businessPlaceholder": "Ejemplo: SG Solutions",
+    "businessNameOnly": "Mostrar solo nombre comercial",
     "businessHelp": "El nombre de tu empresa, marca o negocio, si trabajas bajo uno. Aparece junto a tu nombre en tu perfil.",
     "description": "Descripción",
     "descPlaceholder": "Describe tu experiencia, especialidades y qué te diferencia…",
