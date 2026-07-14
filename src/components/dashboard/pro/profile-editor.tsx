@@ -840,7 +840,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             onChange={(next) => { setWorkplaces(next); touch(); }}
             mapHeight={168}
             extraActions={canOfferVideoConsult ? (
-              <div className="flex w-full items-center justify-between gap-3 py-1">
+              <div className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#f9fafb] p-3.5">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
                     <Video className="h-4 w-4" />
