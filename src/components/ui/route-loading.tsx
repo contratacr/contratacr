@@ -1,9 +1,7 @@
 "use client";
 
-import { Suspense } from "react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Navbar } from "@/components/layout/navbar";
-import { MobileServiceSearch } from "@/components/search/search-filters";
 import { GoogleMapPanel } from "@/components/maps/google-map-panel";
 import { useLocale } from "next-intl";
 import { Skeleton } from "@/components/ui/content-loading";
@@ -69,7 +67,7 @@ export function SearchRouteLoading() {
   const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
   return (
     <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true">
-      <LandingNavbar mobileInline={<Suspense fallback={null}><MobileServiceSearch /></Suspense>} />
+      <LandingNavbar forceCompactSearch />
       <div className="h-16" aria-hidden />
 
       <div className="hidden lg:block">

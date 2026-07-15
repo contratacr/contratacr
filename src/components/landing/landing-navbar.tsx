@@ -71,7 +71,7 @@ export function ContrataCRLogo({ className, chip = false, size = "md", tone = "l
 
 function MobileMenuIcon({ className }: { className?: string }) {
   return (
-    <span className={cn("flex h-7 w-7 flex-col items-center justify-center gap-[5px]", className)} aria-hidden="true">
+    <span className={cn("flex h-7 w-7 flex-col items-end justify-center gap-[5px] text-[#1a2744]", className)} aria-hidden="true">
       <span className="h-[2px] w-[22px] rounded-full bg-current" />
       <span className="h-[2px] w-[14px] rounded-full bg-current" />
       <span className="h-[2px] w-[22px] rounded-full bg-current" />
@@ -959,7 +959,7 @@ function AccountMenu({
    SAME single line as the logo + menu. When present, the mobile logo compacts to the mark
    (the wordmark would crowd the row at ~360px). Desktop + pages that don't pass it are
    unchanged. */
-export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode } = {}) {
+export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -990,7 +990,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const pathname = usePathname();
   const { user, avatarUrl, avatarReady, loading: authLoading, notificationUnread } = useAuth();
   const compactEnabled = !pathname.startsWith("/dashboard");
-  const effectiveCompact = compactEnabled && compact;
+  const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
   const compactSearchExamples = useMemo(() => {
     const raw = t.raw(isSmallScreen ? "searchExamples" : "searchExamplesDesktop");
     return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
@@ -1518,9 +1518,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               </Link>
               <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
                 <div className="relative w-full max-w-5xl">
-                  <div className="flex w-full items-center h-12 rounded-2xl border border-[#e5e7eb] bg-white p-1.5 pl-3 shadow-xl sm:pl-4">
+                  <div className="flex w-full items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
                     <div ref={compactSvcRef} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
-                      <Search className="hidden h-4 w-4 shrink-0 text-[#6b7280] sm:block" />
+                      <Search className="hidden h-5 w-5 shrink-0 text-gray-300 sm:block" />
                       <input
                         type="text"
                         value={searchQuery}
@@ -1529,16 +1529,16 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                         onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
                         placeholder={compactPlaceholder || (isSmallScreen ? t("servicePlaceholderShort") : t("servicePlaceholder"))}
-                        className="flex-1 text-base text-[#111827] placeholder:text-[#6b7280] bg-transparent focus:outline-none min-w-0 sm:text-sm"
+                        className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                         role="combobox"
                         aria-expanded={searchFocused && searchQuery.trim().length > 0}
                         aria-autocomplete="list"
                         aria-controls="navbar-service-suggestions"
                       />
                     </div>
-                    <div className="hidden sm:block w-px bg-[#e5e7eb] self-stretch my-1 mx-2 shrink-0" />
+                    <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
                     <div ref={compactLocRef} className="hidden sm:flex items-center gap-2 min-w-[150px] shrink-0 h-full">
-                      <MapPin className="h-4 w-4 text-[#6b7280] shrink-0" />
+                      <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
                       <input
                         type="text"
                         value={navLocation}
@@ -1547,7 +1547,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         onFocus={() => { if (navLocBlurTimer.current) clearTimeout(navLocBlurTimer.current); if (navLocSug.length > 0) setNavLocOpen(true); }}
                         onBlur={() => { navLocBlurTimer.current = setTimeout(() => setNavLocOpen(false), 150); }}
                         placeholder={t("location")}
-                        className="flex-1 w-full text-base text-[#111827] placeholder:text-[#6b7280] bg-transparent focus:outline-none min-w-0 sm:text-sm"
+                        className="flex-1 w-full text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                         role="combobox"
                         aria-expanded={navLocOpen}
                         aria-autocomplete="list"
@@ -1557,7 +1557,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <button
                       type="submit"
                       aria-label={t("search")}
-                      className="h-full self-stretch rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-8 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
+                      className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-8 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
                     >
                       <Search className="h-4 w-4 sm:hidden" />
                       <span className="hidden sm:inline">{t("search")}</span>

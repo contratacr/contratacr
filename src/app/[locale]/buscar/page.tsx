@@ -3,7 +3,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { Search } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { SearchFilters, MobileServiceSearch } from "@/components/search/search-filters";
+import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
@@ -332,7 +332,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       {/* Mobile keeps the header to logo + search + menu; filters float over the map. */}
-      <LandingNavbar mobileInline={<Suspense fallback={null}><MobileServiceSearch /></Suspense>} />
+      <LandingNavbar forceCompactSearch />
       <div className="h-16" aria-hidden />
 
       {/* Top bar — title + subtitle. Background MATCHES the page/results area (#f4f7fa)
