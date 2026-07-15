@@ -1013,7 +1013,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               </div>
             );
           })}
-          <p className="text-xs text-[#9ca3af]">{t("socialHelp")}</p>
+          {t("socialHelp") ? <p className="text-xs text-[#9ca3af]">{t("socialHelp")}</p> : null}
         </div>
       </Section>
 
