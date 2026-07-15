@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, Minus, Plus, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 
@@ -692,17 +692,17 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
             type="button"
             onClick={() => zoomMap(-1)}
             aria-label={locale === "en" ? "Zoom out" : "Alejar mapa"}
-            className="flex h-[38px] w-10 items-center justify-center border-r border-[#e5e7eb] text-[22px] font-light leading-none text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
+            className="flex h-[38px] w-10 items-center justify-center border-r border-[#e5e7eb] text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
           >
-            -
+            <Minus className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
           <button
             type="button"
             onClick={() => zoomMap(1)}
             aria-label={locale === "en" ? "Zoom in" : "Acercar mapa"}
-            className="flex h-[38px] w-10 items-center justify-center text-[22px] font-light leading-none text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
+            className="flex h-[38px] w-10 items-center justify-center text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
           >
-            +
+            <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
         </div>
       </div>
