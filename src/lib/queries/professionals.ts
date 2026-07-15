@@ -149,7 +149,7 @@ export type PortfolioItem = { url: string; serviceId?: string; profession?: stri
 
 // Optional website/social links. Social networks are stored as usernames; the
 // website is stored as a normalized URL. Additive to "casos de Ã©xito" photos.
-export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; website?: string };
+export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; linkedin?: string; website?: string };
 
 export type ProfessionalDetail = ProfessionalCardData & {
   portfolioUrls: string[];

@@ -2,13 +2,14 @@
 // we build the URL. We store ONLY the clean username (zero storage beyond it). No
 // feeds, OAuth, "connect account", or Meta/Instagram API — just username → link.
 
-export type SocialNetwork = "instagram" | "facebook" | "tiktok";
+export type SocialNetwork = "instagram" | "facebook" | "tiktok" | "linkedin";
 
 // `prefix` is shown next to the input so the pro knows to type only their username.
 export const SOCIAL_NETWORKS: { key: SocialNetwork; label: string; prefix: string }[] = [
   { key: "instagram", label: "Instagram", prefix: "instagram.com/" },
   { key: "facebook", label: "Facebook", prefix: "facebook.com/" },
   { key: "tiktok", label: "TikTok", prefix: "tiktok.com/@" },
+  { key: "linkedin", label: "LinkedIn", prefix: "linkedin.com/in/" },
 ];
 
 // Lenient normalization → a clean username. Accepts the expected bare username, an
@@ -20,7 +21,8 @@ export function cleanUsername(value: string | null | undefined): string {
   if (s.includes("/")) {
     // "instagram.com/juanperez" / "tiktok.com/@juanperez" → take the handle segment.
     const parts = s.split("/").filter(Boolean);
-    s = parts.length > 1 ? parts[1] : parts[0];
+    const linkedinSection = parts.findIndex((part) => /^(in|company)$/i.test(part));
+    s = linkedinSection >= 0 && parts[linkedinSection + 1] ? parts[linkedinSection + 1] : parts.length > 1 ? parts[1] : parts[0];
   }
   s = s.replace(/^@+/, "").split(/[?#]/)[0].trim();
   return s;
@@ -40,6 +42,7 @@ export function buildSocialUrl(network: SocialNetwork, username: string | null |
     case "instagram": return `https://instagram.com/${u}`;
     case "facebook": return `https://facebook.com/${u}`;
     case "tiktok": return `https://tiktok.com/@${u}`;
+    case "linkedin": return `https://linkedin.com/in/${u}`;
   }
 }
 

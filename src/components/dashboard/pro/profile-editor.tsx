@@ -15,7 +15,7 @@ import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
 import { Camera, X, Plus, ChevronDown, Lock, Award, Globe, Video } from "lucide-react";
-import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
+import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
@@ -181,6 +181,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     instagram: cleanUsername(initial.social_links?.instagram),
     facebook: cleanUsername(initial.social_links?.facebook),
     tiktok: cleanUsername(initial.social_links?.tiktok),
+    linkedin: cleanUsername(initial.social_links?.linkedin),
   });
   const [website, setWebsite] = useState<string>(cleanWebsiteUrl(initial.social_links?.website));
   const savedSocialLinksRef = useRef<Record<string, string>>({
@@ -983,7 +984,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             {website.trim() && !isValidWebsiteUrl(website) && <p className="text-xs text-red-500 mt-1">{t("websiteInvalid")}</p>}
           </div>
           {SOCIAL_NETWORKS.map(({ key, label, prefix }) => {
-            const Icon = { instagram: InstagramIcon, facebook: FacebookIcon, tiktok: TikTokIcon }[key];
+            const Icon = { instagram: InstagramIcon, facebook: FacebookIcon, tiktok: TikTokIcon, linkedin: LinkedInIcon }[key];
             const cleaned = cleanUsername(social[key]);
             const invalid = cleaned.length > 0 && !isValidUsername(cleaned);
             return (
