@@ -158,37 +158,41 @@ export default function ProfilePage() {
 
   if (proNotFound || !professional) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center gap-4 px-4 text-center">
-          <BrandIconBadge icon={SearchX} size={72} />
-          <h1 className="text-2xl font-bold text-[#111827]">{t("notFoundTitle")}</h1>
-          <p className="text-[#6b7280] text-sm max-w-sm">
-            {t("notFoundDesc")}
-          </p>
-          {/* A logged-in visitor gets a role-aware "Volver a mi panel" (primary) so they're
-              never stranded; "Buscar profesionales" stays as the secondary. A guest sees
-              only "Buscar profesionales" (no broken panel link). Stacks full-width ~360px. */}
-          <div className="mt-2 flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
-            {panelHref && (
+        <main className="flex-1 bg-white">
+          <section className="mx-auto flex min-h-[calc(100dvh-64px)] max-w-3xl flex-col items-center justify-center px-6 py-14 text-center sm:px-8 sm:py-20">
+            <BrandIconBadge icon={SearchX} size={76} />
+            <div className="mt-7 space-y-4">
+              <h1 className="text-[28px] font-bold leading-tight text-[#111827] sm:text-3xl">{t("notFoundTitle")}</h1>
+              <p className="mx-auto max-w-md text-base leading-7 text-[#6b7280] sm:text-[17px]">
+                {t("notFoundDesc")}
+              </p>
+            </div>
+            {/* A logged-in visitor gets a role-aware "Volver a mi panel" (primary) so they're
+                never stranded; "Buscar profesionales" stays as the secondary. A guest sees
+                only "Buscar profesionales" (no broken panel link). Stacks full-width ~360px. */}
+            <div className="mt-9 flex w-full max-w-sm flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row sm:items-center">
+              {panelHref && (
+                <Link
+                  href={panelHref}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb] sm:w-auto"
+                >
+                  <ArrowLeft className="h-4 w-4" /> {t("backToPanel")}
+                </Link>
+              )}
               <Link
-                href={panelHref}
-                className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm w-full sm:w-auto"
+                href="/buscar"
+                className={
+                  panelHref
+                    ? "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#e5e7eb] px-6 py-3 text-sm font-semibold text-[#374151] transition-colors hover:border-[#009FD9] hover:text-[#009FD9] sm:w-auto"
+                    : "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb] sm:w-auto"
+                }
               >
-                <ArrowLeft className="h-4 w-4" /> {t("backToPanel")}
+                {t("searchProfessionals")}
               </Link>
-            )}
-            <Link
-              href="/buscar"
-              className={
-                panelHref
-                  ? "inline-flex items-center justify-center gap-2 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] font-semibold px-6 py-3 rounded-full transition-colors text-sm w-full sm:w-auto"
-                  : "inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm w-full sm:w-auto"
-              }
-            >
-              {t("searchProfessionals")}
-            </Link>
-          </div>
+            </div>
+          </section>
         </main>
         <LandingFooter />
       </div>
