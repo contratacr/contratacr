@@ -171,7 +171,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
               type="button"
               aria-label={t("filters.title")}
               onClick={() => setShowFilters(true)}
-              className="fixed left-3 top-[calc(env(safe-area-inset-top)+5rem)] z-40 inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-[#e5e7eb] bg-white/95 px-3 text-[13px] font-bold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] backdrop-blur transition-transform active:scale-95 sm:px-3.5 lg:hidden"
+              className="fixed left-3 top-[calc(env(safe-area-inset-top)+5rem)] z-40 inline-flex h-10 items-center justify-center gap-1.5 rounded-[3px] border border-[#d8e2ea] bg-white px-3 text-[13px] font-bold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition-transform active:scale-95 sm:px-3.5 lg:hidden"
             >
               <SlidersHorizontal className="h-[17px] w-[17px] text-[#0089bb]" />
               <span className="hidden min-[390px]:inline">{t("filters.title")}</span>
