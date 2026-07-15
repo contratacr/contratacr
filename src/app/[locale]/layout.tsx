@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -12,6 +13,7 @@ import { DocumentLocale } from "@/components/util/document-locale";
 import { OperationalStatusBanner } from "@/components/status/operational-status-banner";
 import { getOperationalStatusBanner } from "@/lib/status/runtime-status";
 import { AuthProvider } from "@/hooks/use-auth";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
@@ -19,6 +21,8 @@ import { notificationContext } from "@/lib/notification-link";
 type LocaleParams = {
   params: Promise<{ locale: string }>;
 };
+
+const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1980721055914350";
 
 function buildMetadata(locale: string): Metadata {
   const isEn = locale === "en";
@@ -134,6 +138,9 @@ export default async function LocaleLayout({
         <CustomCategoriesLoader />
         <NotificationLiveToast scope="all" />
         <OperationalStatusBanner locale={locale} status={operationalStatus} />
+        <Suspense fallback={null}>
+          <MetaPixel pixelId={META_PIXEL_ID} />
+        </Suspense>
         {children}
         <BackToTop />
       </AuthProvider>
