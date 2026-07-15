@@ -46,8 +46,8 @@ function buildMetadata(locale: string): Metadata {
     },
     icons: {
       icon: [
-        { url: "/favicon.ico?v=transparent-mark-2", sizes: "any" },
-        { url: "/favicon-96x96.png?v=transparent-mark-2", type: "image/png", sizes: "96x96" },
+        { url: "/favicon.ico?v=transparent-mark-max", sizes: "any" },
+        { url: "/favicon-96x96.png?v=transparent-mark-max", type: "image/png", sizes: "96x96" },
       ],
       apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
     },
