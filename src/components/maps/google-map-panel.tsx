@@ -692,7 +692,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
             type="button"
             onClick={() => zoomMap(-1)}
             aria-label={locale === "en" ? "Zoom out" : "Alejar mapa"}
-            className="flex h-[38px] w-10 items-center justify-center border-r border-[#e5e7eb] text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
+            className="flex h-[38px] w-10 items-center justify-center border-r border-[#e5e7eb] text-[#162543] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
           >
             <Minus className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
@@ -700,7 +700,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
             type="button"
             onClick={() => zoomMap(1)}
             aria-label={locale === "en" ? "Zoom in" : "Acercar mapa"}
-            className="flex h-[38px] w-10 items-center justify-center text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
+            className="flex h-[38px] w-10 items-center justify-center text-[#162543] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
           >
             <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
