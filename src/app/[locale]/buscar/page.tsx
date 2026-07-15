@@ -302,6 +302,28 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     lat: params.lat,
     lng: params.lng,
   };
+  const mapFocusTarget = mapBounds
+    ? null
+    : nearLat != null && nearLng != null
+    ? {
+        key: `coords:${nearLat.toFixed(5)},${nearLng.toFixed(5)}:${params.ubicacion ?? ""}`,
+        lat: nearLat,
+        lng: nearLng,
+        zoom: 13,
+      }
+    : activeCanton && activeProvince
+    ? {
+        key: `canton:${activeCanton.id}`,
+        label: `${activeCanton.name}, ${activeProvince.name}, Costa Rica`,
+        zoom: 12,
+      }
+    : activeProvince
+    ? {
+        key: `province:${activeProvince.id}`,
+        label: `${activeProvince.name}, Costa Rica`,
+        zoom: 9,
+      }
+    : null;
   const filtersFallback = (
     <div className="rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.05)]" aria-hidden="true">
       <div className="mb-5 flex items-center justify-between">
@@ -365,6 +387,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             numbering={numbering}
             countLabel={subtitle}
             hasActiveFilters={hasActiveFilters}
+            mapFocusTarget={mapFocusTarget}
             filters={<Suspense fallback={filtersFallback}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
             drawerFilters={<Suspense fallback={filtersFallback}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
           >

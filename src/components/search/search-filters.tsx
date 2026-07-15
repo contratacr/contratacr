@@ -450,6 +450,16 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const components: any[] = place.addressComponents ?? [];
       const pick = (type: string) => components.find((c) => c.types?.includes(type))?.longText as string | undefined;
+      const pickShort = (type: string) => components.find((c) => c.types?.includes(type))?.shortText as string | undefined;
+      const country = pick("country");
+      const countryCode = pickShort("country");
+      if (country && countryCode && countryCode.toUpperCase() !== "CR" && !/costa\s+rica/i.test(country)) {
+        setGeoError(locale === "en"
+          ? "For now, locations can only be searched inside Costa Rica."
+          : "Por ahora solo se pueden buscar ubicaciones dentro de Costa Rica.");
+        return;
+      }
+      setGeoError(null);
       const { provinceId, cantonId } = matchProvinceCanton(
         pick("administrative_area_level_1"),
         pick("administrative_area_level_2")

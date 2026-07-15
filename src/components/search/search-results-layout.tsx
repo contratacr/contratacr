@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { SlidersHorizontal } from "lucide-react";
-import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-map-panel";
+import { GoogleMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/google-map-panel";
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
@@ -19,6 +19,7 @@ interface SearchResultsLayoutProps {
   /** proId → card number (1..N) for THIS page, mirrored on the map pins. */
   numbering?: Record<string, number>;
   hasActiveFilters?: boolean;
+  mapFocusTarget?: MapFocusTarget | null;
 }
 
 // Bottom-sheet snap points (fraction of the viewport height). PEEK = collapsed (map is the
@@ -44,7 +45,7 @@ const MAX = 0.74;
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, hasActiveFilters = false }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, hasActiveFilters = false, mapFocusTarget = null }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
 
@@ -166,7 +167,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
             overlays its lower part). Desktop: the sticky right column (order-3). ONE instance. */}
         <aside className="min-h-0 min-w-0 flex-1 lg:order-3">
           <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-white lg:sticky lg:top-20">
-            <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} />
+            <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />
             <button
               type="button"
               aria-label={t("filters.title")}

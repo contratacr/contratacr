@@ -32,12 +32,22 @@ export interface MapProfessional {
   lng?: number | null;
 }
 
+export type MapFocusTarget = {
+  key: string;
+  label?: string;
+  lat?: number;
+  lng?: number;
+  zoom?: number;
+};
+
 interface GoogleMapPanelProps {
   apiKey: string;
   professionals: MapProfessional[];
   locale?: string;
   /** proId → card number (1..N) for the current page; drawn on the pins. */
   numbering?: Record<string, number>;
+  /** Active location filter. When present, the map centers here instead of fitting all result pins. */
+  focusTarget?: MapFocusTarget | null;
 }
 
 // Province centroids — fallback for professionals who travel (no fixed coords).
@@ -153,7 +163,7 @@ function highlightCard(proId: string | undefined, on: boolean, scroll: boolean) 
   }
 }
 
-export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering }: GoogleMapPanelProps) {
+export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering, focusTarget }: GoogleMapPanelProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapInstanceRef = useRef<any>(null);
@@ -184,6 +194,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // proId → its pin elements (a pro can have several workplace pins).
   const pinsByProRef = useRef<Map<string, HTMLElement[]>>(new Map());
   const hoverCardRef = useRef<string | null>(null);
+  const lastFocusKeyRef = useRef<string | null>(null);
   // "Buscar en esta área": show the button only after a USER move (suppress while we
   // programmatically fit the map to the results).
   const router = useRouter();
@@ -410,6 +421,53 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     g.event.addListenerOnce(map, "idle", () => { if (map.getZoom() > 13) map.setZoom(13); done(); });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function focusMapTarget(map: any, g: any, target: MapFocusTarget | null | undefined) {
+    if (!target?.key) return false;
+    if (lastFocusKeyRef.current === target.key) return true;
+    lastFocusKeyRef.current = target.key;
+    suppressMoveRef.current = true;
+    const done = () => { suppressMoveRef.current = false; setShowArea(false); };
+    const zoom = target.zoom ?? 12;
+    if (typeof target.lat === "number" && typeof target.lng === "number") {
+      map.setCenter({ lat: target.lat, lng: target.lng });
+      map.setZoom(zoom);
+      g.event.addListenerOnce(map, "idle", done);
+      return true;
+    }
+    if (target.label?.trim() && g.Geocoder) {
+      const geocoder = new g.Geocoder();
+      geocoder.geocode(
+        {
+          address: target.label.includes("Costa Rica") ? target.label : `${target.label}, Costa Rica`,
+          componentRestrictions: { country: "CR" },
+          region: "cr",
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (results: any[] | null, status: string) => {
+          let moved = false;
+          if (status === "OK" && results?.[0]?.geometry) {
+            const geometry = results[0].geometry;
+            if (geometry.viewport && target.zoom && target.zoom <= 10) {
+              map.fitBounds(geometry.viewport, 72);
+              moved = true;
+            }
+            else {
+              map.setCenter(geometry.location);
+              map.setZoom(zoom);
+              moved = true;
+            }
+          }
+          if (moved) g.event.addListenerOnce(map, "idle", done);
+          else done();
+        }
+      );
+      return true;
+    }
+    done();
+    return false;
+  }
+
   // The user moved the map → re-search the exact visible viewport. This is more
   // precise than a province/canton filter: if the user is zoomed into Mercedes,
   // "Buscar en esta área" should mean pins/workplaces inside that map rectangle,
@@ -592,14 +650,14 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
     boundsRef.current = bounds;
     markerCountRef.current = markers.length;
-    fitToMarkers(map, g, bounds, markers.length);
+    if (!focusMapTarget(map, g, focusTarget)) fitToMarkers(map, g, bounds, markers.length);
   }
 
   useEffect(() => {
     if (!apiKey) return;
     loadGoogleMaps(apiKey).then(renderMarkers).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professionals, numbering]);
+  }, [professionals, numbering, focusTarget?.key]);
 
   // Card → pin: hovering a result card highlights its pin (delegated, so it works
   // with server-rendered cards). Shares the same setActive as pin → card.
@@ -671,7 +729,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           <button
             type="button"
             onClick={searchThisArea}
-            className="absolute left-1/2 top-3 z-20 hidden h-10 -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-semibold text-[#162543] shadow-lg transition hover:bg-[#f9fafb] active:scale-95 lg:inline-flex"
+            className="absolute left-1/2 top-3 z-20 hidden h-10 -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-[3px] border border-[#d8e2ea] bg-white px-3 text-sm font-semibold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 lg:inline-flex"
           >
             <Search className="h-4 w-4 shrink-0 text-[#008ce0]" />
             <span className="min-w-0 truncate">{locale === "en" ? "Search this area" : "Buscar en esta área"}</span>
