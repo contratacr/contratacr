@@ -35,7 +35,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     label: "Hogar y construcción",
     emoji: "🏠",
     items: [
-      { id: "plomeria", label: "Plomería", keywords: ["fontanero", "tuberias", "canerias", "grifo", "fuga", "sanitarios", "agua", "lavamanos", "inodoro"] },
+      { id: "plomeria", label: "Plomería", keywords: ["plomero", "plomera", "fontanero", "fontanera", "tuberias", "canerias", "grifo", "fuga", "sanitarios", "agua", "lavamanos", "inodoro"] },
       { id: "electricidad", label: "Electricidad", keywords: ["electricista", "cableado", "circuitos", "enchufes", "apagadores", "tablero", "breaker", "luz"] },
       { id: "construccion", label: "Construcción", keywords: ["albanil", "constructor", "obra", "mamposterita", "concreto", "bloques", "cimientos"] },
       { id: "maestro_obras", label: "Maestro de obras", keywords: ["maestro de obra", "encargado de obra", "supervision de obra", "construccion", "remodelacion"] },
@@ -70,7 +70,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     label: "Jardín y exterior",
     emoji: "🌿",
     items: [
-      { id: "jardineria", label: "Jardinería", keywords: ["jardin", "grama", "plantas", "podado", "mantenimiento de jardin", "cesped", "flores"] },
+      { id: "jardineria", label: "Jardinería", keywords: ["jardinero", "jardinera", "jardin", "grama", "plantas", "podado", "mantenimiento de jardin", "cesped", "flores"] },
       { id: "poda_arboles", label: "Poda de árboles", keywords: ["arbol", "poda", "tala", "arborista", "ramas"] },
       { id: "paisajismo", label: "Paisajismo", keywords: ["paisaje", "diseno de jardin", "decoracion exterior", "jardin ornamental"] },
       { id: "limpieza_piscinas", label: "Limpieza de piscinas", keywords: ["piscina", "alberca", "mantenimiento de piscina", "quimica de piscina", "pool"] },
@@ -83,7 +83,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     label: "Limpieza",
     emoji: "🧹",
     items: [
-      { id: "limpieza", label: "Limpieza del hogar", keywords: ["limpieza de casa", "hogar", "servicio domestico", "empleada", "aseo", "mucama"] },
+      { id: "limpieza", label: "Limpieza del hogar", keywords: ["limpiador", "limpiadora", "limpieza de casa", "hogar", "servicio domestico", "empleada domestica", "empleado domestico", "aseo", "mucama"] },
       { id: "limpieza_oficinas", label: "Limpieza de oficinas", keywords: ["limpieza comercial", "empresa", "edificio", "bodega", "local comercial"] },
       { id: "desinfeccion", label: "Desinfección y sanitización", keywords: ["desinfectante", "esterilizacion", "sanitizacion", "higiene"] },
       { id: "lavado_alfombras", label: "Lavado de alfombras y tapetes", keywords: ["alfombra", "tapete", "moqueta", "steam cleaning", "vapor"] },
@@ -271,7 +271,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     label: "Vehículos y movilidad",
     emoji: "🚗",
     items: [
-      { id: "mecanica", label: "Mecánica automotriz", keywords: ["mecanico", "mecanico automotriz", "taller", "motor", "frenos", "transmision", "aceite", "servicio de auto"] },
+      { id: "mecanica", label: "Mecánica automotriz", keywords: ["mecanico", "mecanica", "mecanicos", "mecanico automotriz", "taller mecanico", "taller", "motor", "frenos", "transmision", "aceite", "servicio de auto"] },
       { id: "mecanica_bicicletas", label: "Mecánica de bicicletas", keywords: ["bicicleta", "bicicletas", "bici", "bicis", "cleta", "cletas", "mecanico de bicicletas", "reparacion de bicicletas", "taller de bicicletas", "frenos de bicicleta", "cadena de bicicleta", "llantas de bicicleta", "mountain bike", "ciclismo", "bicycle", "bike", "bike repair", "bicycle repair", "bicycle mechanic", "bike mechanic"] },
       { id: "hojalateria", label: "Hojalatería y pintura de carros", keywords: ["hojalatero", "chapisteria", "enderezado y pintura", "latoneria", "carroceria", "abolladuras", "pintura de carro"] },
       { id: "electricidad_automotriz", label: "Electricidad automotriz", keywords: ["electrico automotriz", "bateria", "alternador", "luces del carro", "alarmas para carro"] },
@@ -730,6 +730,50 @@ export function searchTextScore(term: string, query: string, exact: number, star
   return 0;
 }
 
+const SEARCH_WORD_SUFFIX_GROUPS = [
+  ["eria", "ero", "era", "eros", "eras"],
+  ["aria", "ario", "arias", "arios"],
+  ["ologia", "ologo", "ologa", "ologos", "ologas"],
+  ["ografia", "ografo", "ografa", "ografos", "ografas"],
+  ["ica", "ico", "icas", "icos"],
+] as const;
+
+function singularSearchWord(word: string): string {
+  if (word.length >= 6 && word.endsWith("es")) return word.slice(0, -2);
+  if (word.length >= 5 && word.endsWith("s")) return word.slice(0, -1);
+  return word;
+}
+
+function searchWordRoots(word: string): Set<string> {
+  const normalized = normalizeText(word).replace(/[^a-z0-9]/g, "");
+  const variants = new Set([normalized, singularSearchWord(normalized)]);
+  const roots = new Set<string>();
+  for (const variant of variants) {
+    if (variant.length >= 3) roots.add(variant);
+
+    for (const suffixes of SEARCH_WORD_SUFFIX_GROUPS) {
+      for (const suffix of suffixes) {
+        if (!variant.endsWith(suffix)) continue;
+        const root = variant.slice(0, -suffix.length);
+        if (root.length >= 3) roots.add(root);
+      }
+    }
+  }
+  return roots;
+}
+
+function searchMorphologyScore(term: string, query: string, score: number): number {
+  const queryWords = normalizeText(query).split(/[^a-z0-9]+/).filter((word) => word.length >= 4);
+  const termWords = normalizeText(term).split(/[^a-z0-9]+/).filter((word) => word.length >= 4);
+  if (queryWords.length !== 1 || termWords.length === 0) return 0;
+
+  const queryRoots = searchWordRoots(queryWords[0]);
+  return termWords.some((word) => {
+    const termRoots = searchWordRoots(word);
+    return [...queryRoots].some((root) => termRoots.has(root));
+  }) ? score : 0;
+}
+
 /* ─── Fuzzy search across all categories (fixed + custom) by label + keywords ─── */
 export function categorySearchScore(
   item: CategoryItem & { groupId: string; groupLabel: string },
@@ -740,8 +784,14 @@ export function categorySearchScore(
   if (!q) return 0;
   const serviceLabels = [getCategoryLabel(item.id, locale), item.label].filter(Boolean);
   const groupLabels = [item.groupLabel, getCategoryGroupLabel(item.groupId), getCategoryGroupLabel(item.groupId, locale)].filter(Boolean);
-  const serviceScore = Math.max(0, ...serviceLabels.map((term) => searchTextScore(term, q, 120, 90, 55)));
-  const keywordScore = Math.max(0, ...item.keywords.map((term) => searchTextScore(term, q, 110, 45, 28)));
+  const serviceScore = Math.max(0, ...serviceLabels.map((term) => Math.max(
+    searchTextScore(term, q, 120, 90, 55),
+    searchMorphologyScore(term, q, 82),
+  )));
+  const keywordScore = Math.max(0, ...item.keywords.map((term) => Math.max(
+    searchTextScore(term, q, 110, 45, 28),
+    searchMorphologyScore(term, q, 68),
+  )));
   const groupScore = Math.max(0, ...groupLabels.map((term) => searchTextScore(term, q, 38, 28, 18)));
   return Math.max(serviceScore, keywordScore, groupScore);
 }
