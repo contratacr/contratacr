@@ -434,11 +434,20 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     router.push(`${window.location.pathname}?${sp.toString()}`);
   }
 
+  function zoomMap(delta: number) {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const current = map.getZoom?.() ?? 11;
+    map.setZoom(Math.max(4, Math.min(18, current + delta)));
+    setShowArea(true);
+  }
+
   function ensureMap() {
     if (mapInstanceRef.current || !mapRef.current) return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
     if (!g?.marker?.AdvancedMarkerElement) return null;
+    const useNativeControls = !window.matchMedia?.("(max-width: 1023px)").matches;
     const map = new g.Map(mapRef.current, {
       mapId: MAP_ID,                 // cloud-styled light basemap + enables AdvancedMarkers
       center: GAM_CENTER,    // opens centered on Costa Rica…
@@ -453,9 +462,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       // área" pill AND the bottom card sheet (the default bottom-right zoom was hidden behind
       // the sheet on mobile). Maximize/fullscreen sits at TOP_RIGHT (the very corner); zoom is
       // RIGHT_TOP so it stacks directly BELOW it in the same right-aligned column.
-      fullscreenControl: true,
+      fullscreenControl: useNativeControls,
       fullscreenControlOptions: { position: g.ControlPosition.TOP_RIGHT },
-      zoomControl: true,
+      zoomControl: useNativeControls,
       zoomControlOptions: { position: g.ControlPosition.RIGHT_TOP },
       clickableIcons: false,
       gestureHandling: "greedy", // wheel/scroll zooms DIRECTLY over the map (no Ctrl hint); one-finger pan + pinch-zoom on mobile
@@ -662,12 +671,38 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           <button
             type="button"
             onClick={searchThisArea}
-            className="absolute left-[4.25rem] right-[4.75rem] top-3 z-20 inline-flex h-10 min-w-0 translate-x-0 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-[#e5e7eb] bg-white px-3 text-[13px] font-semibold text-[#162543] shadow-lg transition hover:bg-[#f9fafb] active:scale-95 min-[390px]:left-[7rem] min-[430px]:left-1/2 min-[430px]:right-auto min-[430px]:-translate-x-1/2 min-[480px]:px-4 min-[480px]:text-sm lg:left-1/2 lg:right-auto lg:-translate-x-1/2"
+            className="absolute left-1/2 top-3 z-20 hidden h-10 -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-semibold text-[#162543] shadow-lg transition hover:bg-[#f9fafb] active:scale-95 lg:inline-flex"
           >
             <Search className="h-4 w-4 shrink-0 text-[#008ce0]" />
             <span className="min-w-0 truncate">{locale === "en" ? "Search this area" : "Buscar en esta área"}</span>
           </button>
         )}
+        <button
+          type="button"
+          onClick={searchThisArea}
+          className="fixed left-[4.25rem] right-[4.75rem] top-[calc(env(safe-area-inset-top)+5rem)] z-40 inline-flex h-10 min-w-0 translate-x-0 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-[#e5e7eb] bg-white px-3 text-[13px] font-semibold text-[#162543] shadow-lg transition hover:bg-[#f9fafb] active:scale-95 min-[390px]:left-[7rem] min-[430px]:left-1/2 min-[430px]:right-auto min-[430px]:-translate-x-1/2 min-[480px]:px-4 min-[480px]:text-sm lg:hidden"
+        >
+          <Search className="h-4 w-4 shrink-0 text-[#008ce0]" />
+          <span className="min-w-0 truncate">{locale === "en" ? "Search this area" : "Buscar en esta área"}</span>
+        </button>
+        <div className="fixed right-3 top-[calc(env(safe-area-inset-top)+5rem)] z-40 flex overflow-hidden rounded-lg border border-[#d8e2ea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.16)] lg:hidden">
+          <button
+            type="button"
+            onClick={() => zoomMap(1)}
+            aria-label={locale === "en" ? "Zoom in" : "Acercar mapa"}
+            className="flex h-10 w-11 items-center justify-center border-r border-[#e5e7eb] text-2xl font-light leading-none text-[#374151] transition hover:bg-[#f8fafc] active:bg-[#eef2f6]"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => zoomMap(-1)}
+            aria-label={locale === "en" ? "Zoom out" : "Alejar mapa"}
+            className="flex h-10 w-11 items-center justify-center text-2xl font-light leading-none text-[#374151] transition hover:bg-[#f8fafc] active:bg-[#eef2f6]"
+          >
+            -
+          </button>
+        </div>
       </div>
     </>
   );
