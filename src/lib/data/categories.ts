@@ -27,6 +27,7 @@ export const CATEGORY_GROUP_ICON_KEYS: Record<string, string> = {
   automotriz: "car",
   turismo: "map",
   restaurantes: "utensils",
+  agricultura: "wheat",
   otras: "tag",
 };
 
@@ -411,6 +412,7 @@ export function resolveCategoryGroupIconKey(groupId?: string | null, label?: str
   const normalized = normalizeText(`${groupId ?? ""} ${label ?? ""}`);
   if (normalized.includes("hogar") && normalized.includes("muebles")) return "armchair";
   if (normalized.includes("restaurante") || normalized.includes("comida") || normalized.includes("catering")) return "utensils";
+  if (normalized.includes("agricultura") || normalized.includes("agroindustria") || normalized.includes("agro")) return "wheat";
   return iconKey || CATEGORY_GROUP_ICON_KEYS[groupId ?? ""] || undefined;
 }
 

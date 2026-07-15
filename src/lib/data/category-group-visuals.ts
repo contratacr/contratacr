@@ -14,6 +14,7 @@ import {
   Tag,
   Truck,
   Utensils,
+  Wheat,
   BookOpen,
   type LucideIcon,
 } from "lucide-react";
@@ -41,6 +42,7 @@ export const CATEGORY_GROUP_VISUALS: Record<string, CategoryGroupVisual> = {
   automotriz: { iconKey: "car", from: "#7f1d1d", to: "#dc2626", Icon: Car },
   turismo: { iconKey: "map", from: "#0f766e", to: "#14b8a6", Icon: MapIcon },
   restaurantes: { iconKey: "utensils", from: "#9a3412", to: "#ea580c", Icon: Utensils },
+  agricultura: { iconKey: "wheat", from: "#3f6212", to: "#84cc16", Icon: Wheat },
   otras: { iconKey: "tag", from: "#0f4c81", to: "#009FD9", Icon: Tag },
 };
 
