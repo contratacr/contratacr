@@ -138,6 +138,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   }, []);
   const mobileProfessionList = fitProfessionLabels(24, 1);
   const desktopProfessionList = fitProfessionLabels(24, 1);
+  const wideDesktopProfessionList = fitProfessionLabels(55, 3);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
@@ -147,6 +148,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
+  const wideDesktopExtraProfessions = allProfessions.length - wideDesktopProfessionList.length;
   const serviceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-snug text-[#6b7280]";
   const moreProfessionsClass = "relative z-10 inline-flex shrink-0 rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-bold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
@@ -268,7 +270,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 </span>
               )}
             </div>
-            <div className="hidden w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:flex">
+            <div className="hidden w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:flex 2xl:hidden">
               {desktopProfessionList.map((cat) => (
                 <span key={`desktop-service-summary-${cat}`} className={serviceChipClass} title={catLabel(cat)}>
                   {catLabel(cat)}
@@ -282,6 +284,28 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   className={moreProfessionsClass}
                 >
                   +{desktopExtraProfessions}
+                </Link>
+              )}
+              {professional.isFeatured && (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                  {tCard("featured")}
+                </span>
+              )}
+            </div>
+            <div className="hidden w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden 2xl:flex">
+              {wideDesktopProfessionList.map((cat) => (
+                <span key={`wide-desktop-service-summary-${cat}`} className={serviceChipClass} title={catLabel(cat)}>
+                  {catLabel(cat)}
+                </span>
+              ))}
+              {wideDesktopExtraProfessions > 0 && (
+                <Link
+                  href={`/profesionales/${professional.slug}`}
+                  title={tCard("moreProfessions")}
+                  aria-label={tCard("moreProfessions")}
+                  className={moreProfessionsClass}
+                >
+                  +{wideDesktopExtraProfessions}
                 </Link>
               )}
               {professional.isFeatured && (
