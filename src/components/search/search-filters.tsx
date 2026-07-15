@@ -63,6 +63,18 @@ function locationOptionLabel(suggestion: LocationOption) {
   return suggestionLabel(suggestion);
 }
 
+function crOnlyLocationMessage(locale: string) {
+  return locale === "en"
+    ? "For now, locations can only be searched inside Costa Rica."
+    : "Por ahora solo se pueden buscar ubicaciones dentro de Costa Rica.";
+}
+
+function isLikelyCostaRicaCoordinate(lat: number, lng: number) {
+  // Generous bounds include Costa Rica mainland and Isla del Coco while rejecting
+  // places from other countries if Google omits country address components.
+  return lat >= 5 && lat <= 11.8 && lng >= -87.5 && lng <= -82;
+}
+
 function useSearchExamplePlaceholder(examples: string[], active: boolean) {
   const [text, setText] = useState(examples[0] ?? "");
 
@@ -453,19 +465,23 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       const pickShort = (type: string) => components.find((c) => c.types?.includes(type))?.shortText as string | undefined;
       const country = pick("country");
       const countryCode = pickShort("country");
-      if (country && countryCode && countryCode.toUpperCase() !== "CR" && !/costa\s+rica/i.test(country)) {
-        setGeoError(locale === "en"
-          ? "For now, locations can only be searched inside Costa Rica."
-          : "Por ahora solo se pueden buscar ubicaciones dentro de Costa Rica.");
+      const countryLooksCostaRica = country ? /costa\s+rica/i.test(country) : false;
+      const countryCodeLooksCostaRica = countryCode ? countryCode.toUpperCase() === "CR" : false;
+      if ((country || countryCode) && !countryLooksCostaRica && !countryCodeLooksCostaRica) {
+        setGeoError(crOnlyLocationMessage(locale));
         return;
       }
-      setGeoError(null);
       const { provinceId, cantonId } = matchProvinceCanton(
         pick("administrative_area_level_1"),
         pick("administrative_area_level_2")
       );
       const lat = typeof place.location?.lat === "function" ? place.location.lat() : place.location?.lat;
       const lng = typeof place.location?.lng === "function" ? place.location.lng() : place.location?.lng;
+      if (typeof lat === "number" && typeof lng === "number" && !isLikelyCostaRicaCoordinate(lat, lng)) {
+        setGeoError(crOnlyLocationMessage(locale));
+        return;
+      }
+      setGeoError(null);
       setProvince(provinceId ?? "");
       setCanton(cantonId ?? "");
       sessionTokenRef.current = null;
