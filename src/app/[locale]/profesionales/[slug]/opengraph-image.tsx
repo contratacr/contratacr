@@ -12,6 +12,8 @@ export const size = {
 };
 
 export const contentType = "image/png";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 let logoWordmarkCache: string | null = null;
 

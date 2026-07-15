@@ -10,6 +10,9 @@ type ProfileLayoutProps = {
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function cleanDescription(text?: string | null) {
   const clean = (text ?? "").replace(/\s+/g, " ").trim();
   return clean.length >= 24 ? clean.slice(0, 155) : "";
@@ -39,6 +42,7 @@ export async function generateMetadata({ params }: ProfileLayoutProps): Promise<
     : `Conoce el perfil profesional de ${displayName} en ContrataCR${location ? ` en ${location}` : ""}.`;
   const description = cleanDescription(pro.bio) || fallbackDescription;
   const path = `/${locale}/profesionales/${slug}`;
+  const absoluteUrl = `${APP_URL}${path}`;
   const imageUrl = `${APP_URL}${path}/opengraph-image`;
 
   return {
@@ -50,7 +54,7 @@ export async function generateMetadata({ params }: ProfileLayoutProps): Promise<
       siteName: "ContrataCR",
       title,
       description,
-      url: path,
+      url: absoluteUrl,
       locale: isEn ? "en_US" : "es_CR",
       images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
     },

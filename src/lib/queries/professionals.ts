@@ -627,6 +627,13 @@ export async function getProfessionalBySlug(
     try {
       const { createClient } = await import("@/lib/supabase/server");
       const supabase = await createClient();
+      const normalizedSlug = (() => {
+        try {
+          return decodeURIComponent(slug);
+        } catch {
+          return slug;
+        }
+      })().trim().toLowerCase();
 
       // Use LEFT joins (not !inner) so missing categories/provincias/cantones
       // rows don't silently drop the professional from results.
@@ -637,17 +644,36 @@ export async function getProfessionalBySlug(
            provincias(id, name),
            cantones(id, name),
            reviews(id, rating, comment, created_at, profiles(full_name, avatar_url))`;
-      let { data: pro, error } = await supabase
-        .from("professionals")
-        .select(detailSelect(true))
-        .eq("slug", slug)
-        .single();
-      if (error && /public_business_name_only|column|schema cache|PGRST204/i.test(error.message)) {
-        ({ data: pro, error } = await supabase
+
+      async function fetchBySlug(select: string) {
+        let { data, error } = await supabase
           .from("professionals")
-          .select(detailSelect(false))
-          .eq("slug", slug)
-          .single());
+          .select(select)
+          .eq("slug", normalizedSlug)
+          .maybeSingle();
+
+        if (!data && !error) {
+          const suffix = normalizedSlug.split("-").filter(Boolean).at(-1);
+          if (suffix && suffix.length >= 6) {
+            const fallback = await supabase
+              .from("professionals")
+              .select(select)
+              .ilike("slug", `%-${suffix}`)
+              .limit(2);
+            if (fallback.error) {
+              error = fallback.error;
+            } else if ((fallback.data ?? []).length === 1) {
+              data = fallback.data![0];
+            }
+          }
+        }
+
+        return { data, error };
+      }
+
+      let { data: pro, error } = await fetchBySlug(detailSelect(true));
+      if (error && /public_business_name_only|column|schema cache|PGRST204|permission denied|42501/i.test(`${error.code ?? ""} ${error.message}`)) {
+        ({ data: pro, error } = await fetchBySlug(detailSelect(false)));
       }
 
       if (error || !pro) throw error ?? new Error("Not found");
