@@ -249,7 +249,7 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
   verified: "Verificado",
   whatsapp: "Contáctanos por WhatsApp",
   viewSchedule: "Ver horario completo",
-  noScheduleNote: "La disponibilidad de este perfil no es pública. Contáctanos y conoce sus horarios.",
+  noScheduleNote: "Los horarios se coordinan directamente. Contacta para consultar disponibilidad.",
   priceUnit: "/hora",
   priceOnRequest: "Consultar precio",
   secondaryProfession: "Desarrollo web",
