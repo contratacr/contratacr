@@ -26,6 +26,7 @@ export const CATEGORY_GROUP_ICON_KEYS: Record<string, string> = {
   seguridad: "shield",
   automotriz: "car",
   turismo: "map",
+  restaurantes: "utensils",
   otras: "tag",
 };
 
@@ -409,6 +410,7 @@ export function normalizeCategoryGroupId(groupId?: string | null, label?: string
 export function resolveCategoryGroupIconKey(groupId?: string | null, label?: string | null, iconKey?: string | null): string | undefined {
   const normalized = normalizeText(`${groupId ?? ""} ${label ?? ""}`);
   if (normalized.includes("hogar") && normalized.includes("muebles")) return "armchair";
+  if (normalized.includes("restaurante") || normalized.includes("comida") || normalized.includes("catering")) return "utensils";
   return iconKey || CATEGORY_GROUP_ICON_KEYS[groupId ?? ""] || undefined;
 }
 

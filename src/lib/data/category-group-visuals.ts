@@ -13,6 +13,7 @@ import {
   Star,
   Tag,
   Truck,
+  Utensils,
   BookOpen,
   type LucideIcon,
 } from "lucide-react";
@@ -39,6 +40,7 @@ export const CATEGORY_GROUP_VISUALS: Record<string, CategoryGroupVisual> = {
   seguridad: { iconKey: "shield", from: "#1e293b", to: "#475569", Icon: Shield },
   automotriz: { iconKey: "car", from: "#7f1d1d", to: "#dc2626", Icon: Car },
   turismo: { iconKey: "map", from: "#0f766e", to: "#14b8a6", Icon: MapIcon },
+  restaurantes: { iconKey: "utensils", from: "#9a3412", to: "#ea580c", Icon: Utensils },
   otras: { iconKey: "tag", from: "#0f4c81", to: "#009FD9", Icon: Tag },
 };
 
