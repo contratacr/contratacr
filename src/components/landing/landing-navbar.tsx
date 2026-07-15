@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
-  X, ChevronDown, ChevronRight, Search, MapPin, LogIn,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
   LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, Handshake, Briefcase, Compass, Bell, Globe, Check,
   HelpCircle, Lightbulb, Headset, ListChecks, UserRound, Wrench, Award, CreditCard,
 } from "lucide-react";
@@ -66,16 +66,6 @@ export function ContrataCRLogo({ className, chip = false, size = "md", tone = "l
         <span className={dark ? "text-[#38bdf8]" : "text-[#009FD9]"}>CR</span>
       </span>
     </div>
-  );
-}
-
-function MobileMenuIcon({ className }: { className?: string }) {
-  return (
-    <span className={cn("flex h-7 w-7 flex-col items-end justify-center gap-[5px] text-[#1a2744]", className)} aria-hidden="true">
-      <span className="h-[2px] w-[22px] rounded-full bg-current" />
-      <span className="h-[2px] w-[14px] rounded-full bg-current" />
-      <span className="h-[2px] w-[22px] rounded-full bg-current" />
-    </span>
   );
 }
 
@@ -1500,7 +1490,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 className="lg:hidden ml-auto grid h-10 w-10 place-items-center rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
                 aria-label={t("openMenu")}
               >
-                <MobileMenuIcon />
+                <Menu className="h-5 w-5" />
               </button>
             </div>
 
@@ -1666,7 +1656,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 className="lg:hidden ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
                 aria-label={t("openMenu")}
               >
-                <MobileMenuIcon />
+                <Menu className="h-5 w-5" />
               </button>
             </div>
 
