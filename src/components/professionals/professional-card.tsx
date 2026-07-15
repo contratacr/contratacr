@@ -137,7 +137,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
     return items;
   }, []);
   const mobileProfessionList = fitProfessionLabels(24, 2);
-  const desktopProfessionList = fitProfessionLabels(55, 3);
+  const desktopProfessionList = fitProfessionLabels(42, 2);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
@@ -147,7 +147,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
-  const serviceChipClass = "inline-flex w-fit max-w-full shrink-0 items-center whitespace-nowrap rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-snug text-[#6b7280]";
+  const serviceChipClass = "inline-flex min-w-0 max-w-full items-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-snug text-[#6b7280]";
   const moreProfessionsClass = "relative z-10 inline-flex shrink-0 rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-bold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
@@ -235,7 +235,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {(displayProfessions.length > 0 || professional.isFeatured) && (
             <>
             <div
-              className="flex w-fit max-w-full flex-nowrap items-center gap-1.5 lg:hidden"
+              className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:hidden"
               data-testid="professional-card-service-summary"
               data-service-summary-version="single-row-v4"
             >
@@ -268,7 +268,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 </span>
               )}
             </div>
-            <div className="hidden w-fit max-w-full flex-nowrap items-center gap-1.5 lg:flex">
+            <div className="hidden w-full min-w-0 max-w-full flex-wrap items-center gap-1.5 overflow-hidden lg:flex">
               {desktopProfessionList.map((cat) => (
                 <span key={`desktop-service-summary-${cat}`} className={serviceChipClass} title={catLabel(cat)}>
                   {catLabel(cat)}
