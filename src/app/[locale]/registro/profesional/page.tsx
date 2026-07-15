@@ -33,6 +33,7 @@ import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { writeStoredMode } from "@/hooks/use-mode";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 
 // Category data lives in src/lib/data/categories.ts (single source of truth).
 // The service catalog picker shares the same taxonomy and grouped UI used in
@@ -881,6 +882,10 @@ export default function RegisterProfessionalPage() {
       // flashes back. Hard navigation so the refreshed session (new role) is read.
       setRedirecting(true);
       writeStoredMode("offer");
+      trackMetaEvent("CompleteRegistration", {
+        content_name: "professional_registration",
+        status: "professional",
+      });
       const welcomeParams = opportunityCount > 0 ? `&welcomeOpportunities=1&welcomeOpportunityCount=${opportunityCount}` : "";
       window.location.href = `/${locale}/dashboard/profesional?mode=offer${welcomeParams}`;
       return;

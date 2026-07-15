@@ -31,6 +31,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 
 type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
 type BookingProfessional = ProfessionalCardData & {
@@ -721,6 +722,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
       const result = await res.json().catch(() => ({}));
       if (typeof result?.id === "string") setCreatedBookingId(result.id);
+      trackMetaEvent("Lead", {
+        content_type: "professional_service",
+        has_scheduled_time: Boolean(selectedDate && selectedTime),
+        source: "booking_request",
+      });
 
       const firstName = professional.fullName.split(" ")[0];
       const senderName = submitName.trim() || "un cliente";

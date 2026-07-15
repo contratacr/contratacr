@@ -12,6 +12,7 @@ import { isTooSoonCR } from "@/lib/time-cr";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 import { Skeleton } from "@/components/ui/content-loading";
+import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
 
@@ -518,6 +519,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   function pick(slot: ScheduleSlot) {
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
+    trackMetaEvent("InitiateCheckout", {
+      content_type: "professional_service",
+      source: stacked ? "profile_schedule_slot" : "search_schedule_slot",
+      has_selected_time: true,
+    });
     setPreset(slot);
     if (user) setShowBooking(true);
     else setShowRegistration(true);
@@ -525,6 +531,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   function openBooking() {
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
+    trackMetaEvent("InitiateCheckout", {
+      content_type: "professional_service",
+      source: stacked ? "profile_schedule" : "search_schedule",
+      has_selected_time: false,
+    });
     setPreset(null);
     if (user) setShowBooking(true);
     else setShowRegistration(true);
@@ -631,10 +642,18 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // "Llamar" link — FILLED (a primary contact action, e.g. in the no-schedule state) or
   // OUTLINED/secondary (when it sits BELOW "Ver horario completo"). Calls are blocked on
   // the pro's OWN card (shows a self note instead). Rendered only when showCall is true.
+  function trackContact(method: "whatsapp" | "phone" | "email") {
+    trackMetaEvent("Contact", {
+      content_type: "professional_service",
+      method,
+      source: stacked ? "profile" : "search",
+    });
+  }
+
   const renderCall = (secondary: boolean) => (
     <a
       href={isOwn ? undefined : telHref}
-      onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
+      onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => { e.stopPropagation(); trackContact("phone"); }}
       className={`w-full inline-flex items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-semibold transition-colors ${
         secondary
           ? "border border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
@@ -652,7 +671,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           href={isOwn ? undefined : waHref}
           target={isOwn ? undefined : "_blank"}
           rel="noopener noreferrer"
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => { e.stopPropagation(); trackContact("whatsapp"); }}
           className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2.5 text-[13px] font-semibold text-white hover:bg-[#1ebe5d] transition-colors"
         >
           {/* Profile page uses the short label "WhatsApp"; /buscar keeps "Contáctanos por WhatsApp". */}
@@ -664,7 +683,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       {showEmail && (
         <a
           href={isOwn ? undefined : emailHref}
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => e.stopPropagation()}
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => { e.stopPropagation(); trackContact("email"); }}
           className="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
         >
           <Mail className="h-4 w-4" /> {t("email")}
@@ -680,7 +699,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           href={isOwn ? undefined : waHref}
           target={isOwn ? undefined : "_blank"}
           rel="noopener noreferrer"
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => { e.stopPropagation(); trackContact("whatsapp"); }}
           className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2.5 text-[13px] font-semibold text-white hover:bg-[#1ebe5d] transition-colors"
         >
           <WhatsAppIcon className="h-4 w-4" /> {t("whatsappShort")}
@@ -692,7 +711,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           {showEmail && (
             <a
               href={isOwn ? undefined : emailHref}
-              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => e.stopPropagation()}
+              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => { e.stopPropagation(); trackContact("email"); }}
               className="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-3 py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
             >
               <Mail className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">{t("email")}</span>

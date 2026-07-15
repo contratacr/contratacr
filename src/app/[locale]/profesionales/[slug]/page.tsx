@@ -37,6 +37,7 @@ import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-actio
 import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
+import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -243,7 +244,21 @@ export default function ProfilePage() {
     hasBookableSlots;
   function requestService(cat: string) {
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
-    if (!canBookService) { if (waLink) window.open(waLink, "_blank", "noopener,noreferrer"); return; }
+    if (!canBookService) {
+      if (waLink) {
+        trackMetaEvent("Contact", {
+          content_type: "professional_service",
+          method: "whatsapp",
+          source: "profile_service",
+        });
+        window.open(waLink, "_blank", "noopener,noreferrer");
+      }
+      return;
+    }
+    trackMetaEvent("InitiateCheckout", {
+      content_type: "professional_service",
+      source: "profile_service",
+    });
     setBookingCat(cat);
     if (isAuthenticated) setBookingOpen(true);
     else setBookingReg(true);

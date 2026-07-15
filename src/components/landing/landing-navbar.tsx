@@ -23,6 +23,7 @@ import { ModeSwitcher } from "@/components/ui/mode-switcher";
 import { SupportLink } from "@/components/support/support-link";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
+import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
@@ -1207,6 +1208,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     }
     setSearchFocused(false);
     setNavLocOpen(false);
+    trackMetaEvent("Search", {
+      content_type: "professional_service",
+      search_string: params.get("categoria") ? "category" : params.get("q") ? "text" : "general",
+      has_location: params.has("provincia") || params.has("canton"),
+      source: "navbar",
+    });
     router.push(`/buscar?${params.toString()}`);
   }
 
