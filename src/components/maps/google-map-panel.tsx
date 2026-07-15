@@ -680,17 +680,17 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         <button
           type="button"
           onClick={searchThisArea}
-          className="fixed left-[3.875rem] right-[3.75rem] top-[calc(env(safe-area-inset-top)+5rem)] z-40 inline-flex h-10 min-w-0 translate-x-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-[3px] border border-[#d8e2ea] bg-white px-2.5 text-[13px] font-semibold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 min-[390px]:left-[6.875rem] min-[480px]:gap-1.5 min-[480px]:px-3 min-[480px]:text-sm lg:hidden"
+          className="fixed left-[3.875rem] right-[6.375rem] top-[calc(env(safe-area-inset-top)+5rem)] z-40 inline-flex h-10 min-w-0 translate-x-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-[3px] border border-[#d8e2ea] bg-white px-2 text-[13px] font-semibold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 min-[390px]:left-[6.875rem] min-[480px]:gap-1.5 min-[480px]:px-3 min-[480px]:text-sm lg:hidden"
         >
           <Search className="h-4 w-4 shrink-0 text-[#008ce0]" />
           <span className="min-w-0 truncate">{locale === "en" ? "Search this area" : "Buscar en esta área"}</span>
         </button>
-        <div className="fixed right-3 top-[calc(env(safe-area-inset-top)+5rem)] z-40 flex flex-col overflow-hidden rounded-[3px] border border-[#d8e2ea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.16)] lg:hidden">
+        <div className="fixed right-3 top-[calc(env(safe-area-inset-top)+5rem)] z-40 flex overflow-hidden rounded-[3px] border border-[#d8e2ea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.16)] lg:hidden">
           <button
             type="button"
             onClick={() => zoomMap(1)}
             aria-label={locale === "en" ? "Zoom in" : "Acercar mapa"}
-            className="flex h-10 w-10 items-center justify-center border-b border-[#e5e7eb] text-2xl font-light leading-none text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
+            className="flex h-10 w-10 items-center justify-center border-r border-[#e5e7eb] text-2xl font-light leading-none text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
           >
             +
           </button>
