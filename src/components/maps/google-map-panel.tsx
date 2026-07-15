@@ -690,19 +690,19 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         <div className="fixed right-3 top-[calc(env(safe-area-inset-top)+5rem)] z-40 flex overflow-hidden rounded-[3px] border border-[#d8e2ea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.16)] lg:hidden">
           <button
             type="button"
-            onClick={() => zoomMap(1)}
-            aria-label={locale === "en" ? "Zoom in" : "Acercar mapa"}
+            onClick={() => zoomMap(-1)}
+            aria-label={locale === "en" ? "Zoom out" : "Alejar mapa"}
             className="flex h-[38px] w-10 items-center justify-center border-r border-[#e5e7eb] text-[22px] font-light leading-none text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
           >
-            +
+            -
           </button>
           <button
             type="button"
-            onClick={() => zoomMap(-1)}
-            aria-label={locale === "en" ? "Zoom out" : "Alejar mapa"}
+            onClick={() => zoomMap(1)}
+            aria-label={locale === "en" ? "Zoom in" : "Acercar mapa"}
             className="flex h-[38px] w-10 items-center justify-center text-[22px] font-light leading-none text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
           >
-            -
+            +
           </button>
         </div>
       </div>
