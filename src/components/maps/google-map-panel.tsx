@@ -677,6 +677,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
             <span className="min-w-0 truncate">{locale === "en" ? "Search this area" : "Buscar en esta área"}</span>
           </button>
         )}
+        {showArea && (
         <button
           type="button"
           onClick={searchThisArea}
@@ -685,6 +686,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           <Search className="h-4 w-4 shrink-0 text-[#008ce0]" />
           <span className="min-w-0 truncate">{locale === "en" ? "Search this area" : "Buscar en esta área"}</span>
         </button>
+        )}
         <div className="fixed right-3 top-[calc(env(safe-area-inset-top)+5rem)] z-40 flex overflow-hidden rounded-[3px] border border-[#d8e2ea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.16)] lg:hidden">
           <button
             type="button"

@@ -524,10 +524,14 @@ async function searchProfessionalsUncached(
       // is not precise enough for a zoomed-in map rectangle.
       if (filters.bounds) {
         const b = filters.bounds;
+        const includeVideoNationwideForBounds =
+          filters.modality !== "in_person" &&
+          (filters.modality === "video" ||
+            (!!filters.categoryId && filters.categoryId !== "todas" && supportsVideoConsultCategory(filters.categoryId)));
         const within = (lat: number, lng: number) => lat <= b.north && lat >= b.south && lng <= b.east && lng >= b.west;
         return mapped.filter((p) => {
           if ((p.workplaces ?? []).some((w) => isExactWorkplacePin(w) && within(w.lat as number, w.lng as number))) return true;
-          return false;
+          return includeVideoNationwideForBounds && (p.videoconsulta || !!p.coverage?.country);
         });
       }
 
