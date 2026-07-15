@@ -685,12 +685,12 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           <Search className="h-4 w-4 shrink-0 text-[#008ce0]" />
           <span className="min-w-0 truncate">{locale === "en" ? "Search this area" : "Buscar en esta área"}</span>
         </button>
-        <div className="fixed right-3 top-[calc(env(safe-area-inset-top)+5rem)] z-40 flex overflow-hidden rounded-lg border border-[#d8e2ea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.16)] lg:hidden">
+        <div className="fixed right-3 top-[calc(env(safe-area-inset-top)+5rem)] z-40 flex gap-2 lg:hidden">
           <button
             type="button"
             onClick={() => zoomMap(1)}
             aria-label={locale === "en" ? "Zoom in" : "Acercar mapa"}
-            className="flex h-10 w-9 items-center justify-center border-r border-[#e5e7eb] text-2xl font-light leading-none text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6] min-[390px]:w-10"
+            className="flex h-10 w-10 items-center justify-center rounded-[3px] border border-[#d8e2ea] bg-white text-2xl font-light leading-none text-[#374151] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
           >
             +
           </button>
@@ -698,7 +698,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
             type="button"
             onClick={() => zoomMap(-1)}
             aria-label={locale === "en" ? "Zoom out" : "Alejar mapa"}
-            className="flex h-10 w-9 items-center justify-center text-2xl font-light leading-none text-[#374151] transition hover:bg-[#f9fafb] active:bg-[#eef2f6] min-[390px]:w-10"
+            className="flex h-10 w-10 items-center justify-center rounded-[3px] border border-[#d8e2ea] bg-white text-2xl font-light leading-none text-[#374151] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
           >
             -
           </button>
