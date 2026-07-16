@@ -505,7 +505,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
     if (!g?.marker?.AdvancedMarkerElement) return null;
-    const isMobileMap = window.matchMedia?.("(max-width: 1023px)").matches;
+    const useNativeControls = !window.matchMedia?.("(max-width: 1023px)").matches;
     const map = new g.Map(mapRef.current, {
       mapId: MAP_ID,                 // cloud-styled light basemap + enables AdvancedMarkers
       center: GAM_CENTER,    // opens centered on Costa Rica…
@@ -516,11 +516,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       streetViewControl: false,
       rotateControl: false,
       scaleControl: false,
-      // Keep Google's native fullscreen control visible without scrolling. The default
-      // bottom-right placement can fall below the clipped search viewport.
-      fullscreenControl: true,
-      fullscreenControlOptions: { position: g.ControlPosition.RIGHT_TOP },
-      zoomControl: !isMobileMap,
+      // Use our mobile zoom buttons and remove Google's fullscreen control, which
+      // can sit below the clipped map viewport on desktop.
+      fullscreenControl: false,
+      zoomControl: useNativeControls,
       zoomControlOptions: { position: g.ControlPosition.RIGHT_TOP },
       clickableIcons: false,
       gestureHandling: "greedy", // wheel/scroll zooms DIRECTLY over the map (no Ctrl hint); one-finger pan + pinch-zoom on mobile
