@@ -41,7 +41,7 @@ export async function GET() {
     const label = (row.name || "").trim();
     if (!label) continue;
     const fixedCategory = fixedById.get(row.id);
-    const groupId = row.group_id || fixedCategory?.groupId;
+    const groupId = fixedCategory?.groupId || row.group_id || undefined;
     if (!fixedCategory && !groupId) continue;
     categoriesById.set(row.id, {
       id: row.id,

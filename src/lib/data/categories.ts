@@ -493,14 +493,15 @@ export function setCustomCategories(
     });
   }
   CUSTOM_CATEGORY_GROUPS = Array.from(normalizedGroups.values());
-  const fixedIds = new Set(ALL_CATEGORIES.map((category) => category.id));
+  const fixedById = new Map(ALL_CATEGORIES.map((category) => [category.id, category]));
+  const fixedIds = new Set(fixedById.keys());
   CATEGORY_CATALOG_OVERRIDES = new Map(
     list
       .filter((c) => c && c.id && !c.isHidden && (c.label || c.labelEn || c.groupId))
       .map((c) => [c.id, {
         label: c.label,
         labelEn: c.labelEn,
-        groupId: c.groupId ? normalizeSegmentGroupId(c.groupId) : undefined,
+        groupId: fixedById.get(c.id)?.groupId ?? (c.groupId ? normalizeSegmentGroupId(c.groupId) : undefined),
         keywords: c.keywords,
         isHidden: c.isHidden,
       }])
