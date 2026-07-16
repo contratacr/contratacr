@@ -13,25 +13,28 @@ export type CategoryGroup = {
 
 export const CATEGORY_GROUP_ICON_KEYS: Record<string, string> = {
   hogar: "armchair",
-  jardin: "leaf",
   limpieza: "sparkles",
+  salud: "heart",
+  bienestar: "dumbbell",
+  automotriz: "car",
   tecnologia: "laptop",
   profesional: "briefcase",
-  salud: "heart",
-  belleza: "star",
-  moda_y_cuidado_personal: "shirt",
+  creatividad: "palette",
+  eventos: "calendar-days",
   educacion: "book-open",
   transporte: "truck",
-  eventos: "calendar-days",
-  seguridad: "shield",
-  automotriz: "car",
-  turismo: "map",
-  restaurantes: "utensils",
   agricultura: "wheat",
+  turismo: "map",
+  mascotas: "paw-print",
+  jardin: "leaf",
+  belleza: "star",
+  moda_y_cuidado_personal: "shirt",
+  seguridad: "shield",
+  restaurantes: "utensils",
   otras: "tag",
 };
 
-export const CATEGORY_GROUPS: CategoryGroup[] = [
+const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "hogar",
     label: "Hogar y construcción",
@@ -298,6 +301,79 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
 ];
 
 /* ─── Flat list of all category items ─── */
+type CategorySegmentDefinition = Omit<CategoryGroup, "items"> & {
+  labelEn: string;
+  iconKey: string;
+};
+
+const CATEGORY_SEGMENTS: CategorySegmentDefinition[] = [
+  { id: "hogar", label: "Hogar", labelEn: "Home", emoji: "🏠", iconKey: "armchair" },
+  { id: "limpieza", label: "Limpieza", labelEn: "Cleaning", emoji: "🧹", iconKey: "sparkles" },
+  { id: "salud", label: "Salud", labelEn: "Health", emoji: "🩺", iconKey: "heart" },
+  { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "💪", iconKey: "dumbbell" },
+  { id: "automotriz", label: "Vehículos", labelEn: "Vehicles", emoji: "🚗", iconKey: "car" },
+  { id: "tecnologia", label: "Tecnología", labelEn: "Technology", emoji: "💻", iconKey: "laptop" },
+  { id: "profesional", label: "Empresas", labelEn: "Business", emoji: "💼", iconKey: "briefcase" },
+  { id: "creatividad", label: "Creatividad", labelEn: "Creative", emoji: "🎨", iconKey: "palette" },
+  { id: "eventos", label: "Eventos", labelEn: "Events", emoji: "🎉", iconKey: "calendar-days" },
+  { id: "educacion", label: "Educación", labelEn: "Education", emoji: "📚", iconKey: "book-open" },
+  { id: "transporte", label: "Transporte", labelEn: "Transport", emoji: "🚚", iconKey: "truck" },
+  { id: "agricultura", label: "Agro", labelEn: "Agro", emoji: "🌾", iconKey: "wheat" },
+  { id: "turismo", label: "Turismo", labelEn: "Tourism", emoji: "🧭", iconKey: "map" },
+  { id: "mascotas", label: "Mascotas", labelEn: "Pets", emoji: "🐾", iconKey: "paw-print" },
+];
+
+const SOURCE_GROUP_SEGMENT_OVERRIDES: Record<string, string> = {
+  jardin: "hogar",
+  belleza: "bienestar",
+  moda_y_cuidado_personal: "bienestar",
+  seguridad: "profesional",
+  restaurantes: "eventos",
+};
+
+const CATEGORY_SEGMENT_OVERRIDES: Record<string, string> = {
+  entrenamiento_personal: "bienestar",
+  entrenamiento_deportivo: "bienestar",
+  masajes: "bienestar",
+  acupuntura: "bienestar",
+  coaching: "bienestar",
+  veterinaria: "mascotas",
+  peluqueria_canina: "mascotas",
+  cuido_mascotas: "mascotas",
+  transporte_mascotas: "mascotas",
+  marketing_digital: "creatividad",
+  diseno: "creatividad",
+  publicidad: "creatividad",
+  redaccion_contenido: "creatividad",
+  fotografia: "creatividad",
+  produccion_video: "creatividad",
+  diseno_grafico: "creatividad",
+  audio_video: "creatividad",
+  lavado_vehiculos: "automotriz",
+  alarmas: "hogar",
+  monitoreo_alarmas: "hogar",
+  cercas_electricas: "hogar",
+  cctv: "tecnologia",
+  control_acceso: "tecnologia",
+  guardas_seguridad: "profesional",
+  investigacion_privada: "profesional",
+};
+
+function getCategorySegmentId(itemId: string, sourceGroupId: string): string {
+  return CATEGORY_SEGMENT_OVERRIDES[itemId] || SOURCE_GROUP_SEGMENT_OVERRIDES[sourceGroupId] || sourceGroupId;
+}
+
+export const CATEGORY_GROUPS: CategoryGroup[] = CATEGORY_SEGMENTS.map((segment) => ({
+  id: segment.id,
+  label: segment.label,
+  emoji: segment.emoji,
+  items: BASE_CATEGORY_GROUPS.flatMap((group) =>
+    group.items
+      .filter((item) => getCategorySegmentId(item.id, group.id) === segment.id)
+      .map((item) => ({ ...item }))
+  ),
+}));
+
 export const ALL_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string })[] =
   CATEGORY_GROUPS.flatMap((g) =>
     g.items.map((item) => ({ ...item, groupId: g.id, groupLabel: g.label }))
@@ -344,6 +420,7 @@ export function setCustomCategories(
   for (const group of groups) {
     if (!group?.id || !group.label || group.isHidden) continue;
     const id = normalizeCategoryGroupId(group.id, group.label);
+    if (isOtherCategoryGroup(id, group.label)) continue;
     normalizedGroups.set(id, {
       ...group,
       id,
@@ -413,6 +490,9 @@ export function resolveCategoryGroupIconKey(groupId?: string | null, label?: str
   if (normalized.includes("hogar") && normalized.includes("muebles")) return "armchair";
   if (normalized.includes("restaurante") || normalized.includes("comida") || normalized.includes("catering")) return "utensils";
   if (normalized.includes("agricultura") || normalized.includes("agroindustria") || normalized.includes("agro")) return "wheat";
+  if (normalized.includes("bienestar") || normalized.includes("fitness") || normalized.includes("gimnasio")) return "dumbbell";
+  if (normalized.includes("creativ")) return "palette";
+  if (normalized.includes("mascota") || normalized.includes("veterin")) return "paw-print";
   return iconKey || CATEGORY_GROUP_ICON_KEYS[groupId ?? ""] || undefined;
 }
 
@@ -443,7 +523,7 @@ export function getAllCategoryGroups(): { id: string; label: string; labelEn?: s
     ])
   )
     .map((id) => normalizeCategoryGroupId(id))
-    .filter((id): id is string => typeof id === "string" && !!id && !knownIds.has(id))
+    .filter((id): id is string => typeof id === "string" && !!id && !knownIds.has(id) && !isOtherCategoryGroup(id))
     .map((id) => ({
       id,
       label: getCategoryGroupLabel(id),
@@ -1040,12 +1120,25 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
 };
 
 export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
-  hogar: "Home & construction", jardin: "Garden & outdoor", limpieza: "Cleaning",
-  tecnologia: "Technology", profesional: "Business services", salud: "Health & wellness",
-  belleza: "Beauty & aesthetics", moda_y_cuidado_personal: "Fashion & personal care",
-  educacion: "Education & classes",
-  transporte: "Moving & transport", eventos: "Events", seguridad: "Security",
-  automotriz: "Vehicles & mobility", turismo: "Tourism",
+  hogar: "Home",
+  limpieza: "Cleaning",
+  salud: "Health",
+  bienestar: "Wellness",
+  automotriz: "Vehicles",
+  tecnologia: "Technology",
+  profesional: "Business",
+  creatividad: "Creative",
+  eventos: "Events",
+  educacion: "Education",
+  transporte: "Transport",
+  agricultura: "Agro",
+  turismo: "Tourism",
+  mascotas: "Pets",
+  jardin: "Garden & outdoor",
+  belleza: "Beauty & aesthetics",
+  moda_y_cuidado_personal: "Fashion & personal care",
+  seguridad: "Security",
+  restaurantes: "Restaurants & food",
 };
 
 /* ─── Get category label from ID (locale-aware) ─── */
