@@ -516,9 +516,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       streetViewControl: false,
       rotateControl: false,
       scaleControl: false,
-      // Use our mobile zoom buttons and remove Google's fullscreen control, which
-      // can sit below the clipped map viewport on desktop.
-      fullscreenControl: false,
+      cameraControl: false,
+      fullscreenControl: useNativeControls,
+      fullscreenControlOptions: { position: g.ControlPosition.TOP_RIGHT },
       zoomControl: useNativeControls,
       zoomControlOptions: { position: g.ControlPosition.RIGHT_TOP },
       clickableIcons: false,
