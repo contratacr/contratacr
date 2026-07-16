@@ -505,7 +505,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
     if (!g?.marker?.AdvancedMarkerElement) return null;
-    const useNativeControls = !window.matchMedia?.("(max-width: 1023px)").matches;
+    const isMobileMap = window.matchMedia?.("(max-width: 1023px)").matches;
     const map = new g.Map(mapRef.current, {
       mapId: MAP_ID,                 // cloud-styled light basemap + enables AdvancedMarkers
       center: GAM_CENTER,    // opens centered on Costa Rica…
@@ -516,13 +516,11 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       streetViewControl: false,
       rotateControl: false,
       scaleControl: false,
-      // Controls in the TOP-RIGHT corner column, clear of the top-center "Buscar en esta
-      // área" pill AND the bottom card sheet (the default bottom-right zoom was hidden behind
-      // the sheet on mobile). Maximize/fullscreen sits at TOP_RIGHT (the very corner); zoom is
-      // RIGHT_TOP so it stacks directly BELOW it in the same right-aligned column.
-      fullscreenControl: useNativeControls,
-      fullscreenControlOptions: { position: g.ControlPosition.TOP_RIGHT },
-      zoomControl: useNativeControls,
+      // Keep Google's native fullscreen control visible without scrolling. The default
+      // bottom-right placement can fall below the clipped search viewport.
+      fullscreenControl: true,
+      fullscreenControlOptions: { position: g.ControlPosition.RIGHT_TOP },
+      zoomControl: !isMobileMap,
       zoomControlOptions: { position: g.ControlPosition.RIGHT_TOP },
       clickableIcons: false,
       gestureHandling: "greedy", // wheel/scroll zooms DIRECTLY over the map (no Ctrl hint); one-finger pan + pinch-zoom on mobile
