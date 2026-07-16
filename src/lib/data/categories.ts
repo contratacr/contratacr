@@ -348,6 +348,9 @@ const SOURCE_GROUP_SEGMENT_OVERRIDES: Record<string, string> = {
   moda_y_cuidado_personal: "bienestar",
   seguridad: "profesional",
   restaurantes: "comercios",
+  hogar_y_muebles: "hogar",
+  restaurantes_comida: "comercios",
+  agricultura_y_agroindustria: "agricultura",
 };
 
 const CATEGORY_SEGMENT_OVERRIDES: Record<string, string> = {
@@ -380,6 +383,21 @@ const CATEGORY_SEGMENT_OVERRIDES: Record<string, string> = {
 
 function getCategorySegmentId(itemId: string, sourceGroupId: string): string {
   return CATEGORY_SEGMENT_OVERRIDES[itemId] || SOURCE_GROUP_SEGMENT_OVERRIDES[sourceGroupId] || sourceGroupId;
+}
+
+function normalizeSegmentGroupId(groupId?: string | null, label?: string | null): string {
+  const id = normalizeCategoryGroupId(groupId, label);
+  if (isOtherCategoryGroup(id, label)) return CUSTOM_GROUP_ID;
+  if (SOURCE_GROUP_SEGMENT_OVERRIDES[id]) return SOURCE_GROUP_SEGMENT_OVERRIDES[id];
+
+  const normalized = normalizeText(`${groupId ?? ""} ${label ?? ""}`);
+  if (normalized.includes("hogar") && (normalized.includes("mueble") || normalized.includes("construccion"))) return "hogar";
+  if (normalized.includes("jardin") || normalized.includes("exterior")) return "hogar";
+  if (normalized.includes("belleza") || normalized.includes("estetica") || normalized.includes("moda") || normalized.includes("cuidado personal")) return "bienestar";
+  if (normalized.includes("restaurante") || normalized.includes("comida") || normalized.includes("farmacia") || normalized.includes("gasolinera") || normalized.includes("comercio")) return "comercios";
+  if (normalized.includes("agricultura") || normalized.includes("agroindustria") || normalized === "agro") return "agricultura";
+  if (normalized.includes("seguridad")) return "profesional";
+  return id;
 }
 
 export const CATEGORY_GROUPS: CategoryGroup[] = CATEGORY_SEGMENTS.map((segment) => ({
@@ -438,7 +456,7 @@ export function setCustomCategories(
   const normalizedGroups = new Map<string, { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }>();
   for (const group of groups) {
     if (!group?.id || !group.label || group.isHidden) continue;
-    const id = normalizeCategoryGroupId(group.id, group.label);
+    const id = normalizeSegmentGroupId(group.id, group.label);
     if (isOtherCategoryGroup(id, group.label)) continue;
     normalizedGroups.set(id, {
       ...group,
@@ -457,7 +475,7 @@ export function setCustomCategories(
       .map((c) => [c.id, {
         label: c.label,
         labelEn: c.labelEn,
-        groupId: c.groupId ? normalizeCategoryGroupId(c.groupId) : undefined,
+        groupId: c.groupId ? normalizeSegmentGroupId(c.groupId) : undefined,
         keywords: c.keywords,
         isHidden: c.isHidden,
       }])
@@ -465,7 +483,7 @@ export function setCustomCategories(
   CUSTOM_CATEGORIES = list
     .filter((c) => c && c.id && c.label && c.groupId && !c.isHidden && !fixedIds.has(c.id))
     .map((c) => {
-      const groupId = normalizeCategoryGroupId(c.groupId);
+      const groupId = normalizeSegmentGroupId(c.groupId);
       return {
         id: c.id,
         label: c.label,
@@ -542,7 +560,7 @@ export function getAllCategoryGroups(): { id: string; label: string; labelEn?: s
       ...Array.from(CATEGORY_CATALOG_OVERRIDES.values()).map((override) => override.groupId).filter(Boolean),
     ])
   )
-    .map((id) => normalizeCategoryGroupId(id))
+    .map((id) => normalizeSegmentGroupId(id))
     .filter((id): id is string => typeof id === "string" && !!id && !knownIds.has(id) && !isOtherCategoryGroup(id))
     .map((id) => ({
       id,
