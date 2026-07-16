@@ -249,6 +249,7 @@ export async function PATCH(req: Request) {
       supports_videoconsulta: !!supportsVideoconsulta,
     });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await syncProfessionalServiceNames(db, id, cleanLabel);
     return NextResponse.json({ ok: true });
   }
 
@@ -284,6 +285,7 @@ export async function PATCH(req: Request) {
       supports_videoconsulta: typeof supportsVideoconsulta === "boolean" ? supportsVideoconsulta : review.videoConsultLikely,
     });
     if (upsertResult.error) return NextResponse.json({ error: upsertResult.error.message }, { status: 500 });
+    await syncProfessionalServiceNames(db, id, finalName);
     const approvedUpdateError = await updateSuggestionRow(db, id, update);
     if (approvedUpdateError) return NextResponse.json({ error: approvedUpdateError.message }, { status: 500 });
     await notifySuggestionDecision(db, suggestionRow!, "approved", finalName);
@@ -337,6 +339,7 @@ export async function POST(req: Request) {
     ...flags,
   });
   if (categoryError) return NextResponse.json({ error: categoryError.message }, { status: 500 });
+  await syncProfessionalServiceNames(db, id, cleanLabel);
 
   const { error: suggestionError } = await db.from("category_suggestions").upsert({
     id,
@@ -475,6 +478,50 @@ async function upsertCategory(db: ReturnType<typeof createAdminClient>, row: Rec
     return result;
   }
   return db.from("categories").upsert(current, { onConflict: "id", ignoreDuplicates: false });
+}
+
+async function syncProfessionalServiceNames(
+  db: ReturnType<typeof createAdminClient>,
+  categoryId: string,
+  label: string
+) {
+  if (!categoryId || !label) return;
+  const { data, error } = await db
+    .from("professionals")
+    .select("id, services")
+    .contains("services", [{ category: categoryId }])
+    .limit(1000);
+  if (error) {
+    console.warn("[admin/categories] could not read professional services for name sync", {
+      categoryId,
+      error,
+    });
+    return;
+  }
+
+  await Promise.all((data ?? []).map(async (row) => {
+    const services = Array.isArray(row.services) ? row.services : [];
+    let changed = false;
+    const next = services.map((service) => {
+      if (!service || typeof service !== "object") return service;
+      const item = service as Record<string, unknown>;
+      if (item.category !== categoryId || item.name === label) return service;
+      changed = true;
+      return { ...item, name: label };
+    });
+    if (!changed) return;
+    const update = await db
+      .from("professionals")
+      .update({ services: next })
+      .eq("id", row.id);
+    if (update.error) {
+      console.warn("[admin/categories] could not sync professional service name", {
+        categoryId,
+        professionalId: row.id,
+        error: update.error,
+      });
+    }
+  }));
 }
 
 function normalizeReviewReason(value: unknown): string | null {
