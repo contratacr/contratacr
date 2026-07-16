@@ -333,14 +333,13 @@ const CATEGORY_SEGMENTS: CategorySegmentDefinition[] = [
   { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "\uD83E\uDD1D", iconKey: "heart-handshake" },
   { id: "belleza", label: "Belleza", labelEn: "Beauty & aesthetics", emoji: "\u2728", iconKey: "star" },
   { id: "moda_y_cuidado_personal", label: "Moda y accesorios", labelEn: "Fashion & accessories", emoji: "\uD83D\uDC55", iconKey: "shirt" },
-  { id: "automotriz", label: "Vehículos", labelEn: "Vehicles", emoji: "🚗", iconKey: "car" },
+  { id: "automotriz", label: "Veh\u00edculos y transporte", labelEn: "Vehicles & transport", emoji: "\uD83D\uDE97", iconKey: "car" },
   { id: "tecnologia", label: "Tecnología", labelEn: "Technology", emoji: "💻", iconKey: "laptop" },
   { id: "profesional", label: "Empresas", labelEn: "Business", emoji: "💼", iconKey: "briefcase" },
   { id: "comercios", label: "Comercios", labelEn: "Shops", emoji: "🏪", iconKey: "store" },
   { id: "creatividad", label: "Creatividad", labelEn: "Creative", emoji: "🎨", iconKey: "palette" },
   { id: "eventos", label: "Eventos", labelEn: "Events", emoji: "🎉", iconKey: "calendar-days" },
   { id: "educacion", label: "Educación", labelEn: "Education", emoji: "📚", iconKey: "book-open" },
-  { id: "transporte", label: "Transporte", labelEn: "Transport", emoji: "🚚", iconKey: "truck" },
   { id: "agricultura", label: "Agro", labelEn: "Agro", emoji: "🌾", iconKey: "wheat" },
   { id: "turismo", label: "Turismo", labelEn: "Tourism", emoji: "🧭", iconKey: "map" },
   { id: "mascotas", label: "Mascotas", labelEn: "Pets", emoji: "🐾", iconKey: "paw-print" },
@@ -355,6 +354,7 @@ const SOURCE_GROUP_SEGMENT_OVERRIDES: Record<string, string> = {
   hogar_y_muebles: "hogar",
   restaurantes_comida: "comercios",
   agricultura_y_agroindustria: "agricultura",
+  transporte: "automotriz",
 };
 
 const CATEGORY_SEGMENT_OVERRIDES: Record<string, string> = {
@@ -1213,7 +1213,7 @@ export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   limpieza: "Cleaning",
   salud: "Health",
   bienestar: "Wellness",
-  automotriz: "Vehicles",
+  automotriz: "Vehicles & transport",
   tecnologia: "Technology",
   profesional: "Business",
   comercios: "Shops",
