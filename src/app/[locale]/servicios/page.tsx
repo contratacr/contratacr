@@ -102,9 +102,6 @@ export default function ServiciosPage() {
               <h1 className="text-[2rem] font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
                 {tp("title")}
               </h1>
-              <p className="mt-2.5 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
-                {tp("subtitle")}
-              </p>
             </div>
           </div>
         </section>

@@ -2627,8 +2627,8 @@
   },
   "categoriesPage": {
     "eyebrow": "Services",
-    "title": "All services on ContrataCR.",
-    "subtitle": "Find what you need, organized by service.",
+    "title": "Find the service you need",
+    "subtitle": "",
     "searchPlaceholder": "Search for a service…",
     "searchAria": "Search for a service",
     "clearSearch": "Clear search",

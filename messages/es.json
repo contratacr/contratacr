@@ -2625,8 +2625,8 @@
   },
   "categoriesPage": {
     "eyebrow": "Servicios",
-    "title": "Todos los servicios en ContrataCR.",
-    "subtitle": "Encuentra lo que necesitas, organizado por servicio.",
+    "title": "Encuentra el servicio que necesitas",
+    "subtitle": "",
     "searchPlaceholder": "Busca un servicio…",
     "searchAria": "Buscar un servicio",
     "clearSearch": "Limpiar búsqueda",
