@@ -25,6 +25,7 @@ import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
+import { applyPendingSavedPro } from "@/components/professionals/save-button";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
@@ -333,6 +334,11 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!authLoading && !user && !isSigningOut()) router.push("/login");
   }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+    applyPendingSavedPro();
+  }, [authLoading, user]);
 
   useEffect(() => {
     if (authLoading || loading || !user || pro || !pendingProfessionalSignup) return;

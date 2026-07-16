@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 
 const STORAGE_PREFIX = "contratacr_saved_pros";
+const PENDING_SAVE_KEY = "contratacr:pending-save-pro";
 
 // Favorites are scoped to the signed-in user so two accounts on the same browser
 // never see each other's saved pros. We derive the user id synchronously from
@@ -79,6 +80,35 @@ export function isSaved(id: string): boolean {
   return getSavedPros().some((p) => p.id === id);
 }
 
+function isGuestUser(): boolean {
+  return currentUserId() === "guest";
+}
+
+function writePendingSave(pro: SavedPro) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(PENDING_SAVE_KEY, JSON.stringify(pro));
+}
+
+export function applyPendingSavedPro(): boolean {
+  if (typeof window === "undefined" || isGuestUser()) return false;
+  try {
+    const raw = localStorage.getItem(PENDING_SAVE_KEY);
+    if (!raw) return false;
+    const pro = JSON.parse(raw) as SavedPro;
+    if (!pro?.id || !pro?.slug || !pro?.fullName) {
+      localStorage.removeItem(PENDING_SAVE_KEY);
+      return false;
+    }
+    savePro(pro);
+    localStorage.removeItem(PENDING_SAVE_KEY);
+    window.dispatchEvent(new CustomEvent("savedProsChanged"));
+    return true;
+  } catch {
+    localStorage.removeItem(PENDING_SAVE_KEY);
+    return false;
+  }
+}
+
 /* ─── Save button component ─── */
 interface SaveButtonProps {
   pro: SavedPro;
@@ -95,6 +125,7 @@ interface SaveButtonProps {
 
 export function SaveButton({ pro, className, isOwn = false, withLabel = false }: SaveButtonProps) {
   const t = useTranslations("card");
+  const locale = useLocale();
   const [saved, setSaved] = useState(() => isSaved(pro.id));
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
@@ -111,6 +142,12 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
     e.stopPropagation();
     if (isOwn) {
       setSelfMsg(SELF_MSG.favorite);
+      return;
+    }
+    if (!saved && isGuestUser()) {
+      writePendingSave(pro);
+      const redirect = encodeURIComponent("/dashboard/profesional?tab=saved&mode=use");
+      window.location.assign(`/${locale}/login?redirect=${redirect}`);
       return;
     }
     if (saved) {

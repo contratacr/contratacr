@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Bookmark, MapPin, Star, CheckCircle2, ExternalLink, Wrench } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { getSavedPros, unsavePro, type SavedPro } from "./save-button";
+import { applyPendingSavedPro, getSavedPros, unsavePro, type SavedPro } from "./save-button";
 import { useLocale, useTranslations } from "next-intl";
 import { formatServicePrice } from "@/lib/pricing";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -91,6 +91,7 @@ export function SavedProfessionalsTab() {
 
   useEffect(() => {
     queueMicrotask(() => {
+      applyPendingSavedPro();
       setMounted(true);
       refresh();
     });
