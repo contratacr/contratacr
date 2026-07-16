@@ -1,7 +1,7 @@
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deriveDisplayPricing } from "@/lib/pricing";
-import { getMatchingCategoryIds, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { getCategoryLabel, getMatchingCategoryIds, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { getProvinceById, PROVINCES, haversineKm } from "@/lib/data/cr-geography";
 import { languageSearchValues } from "@/lib/data/languages";
 
@@ -103,11 +103,16 @@ function hasActiveService(services: unknown): boolean {
 
 function activeServices(services: unknown): ProService[] {
   if (!Array.isArray(services)) return [];
-  return services.filter((service): service is ProService => {
-    if (!service || typeof service !== "object") return false;
-    const item = service as { active?: boolean; category?: string; name?: string };
-    return item.active !== false && Boolean(item.category || item.name);
-  });
+  return services
+    .filter((service): service is ProService => {
+      if (!service || typeof service !== "object") return false;
+      const item = service as { active?: boolean; category?: string; name?: string };
+      return item.active !== false && Boolean(item.category || item.name);
+    })
+    .map((service) => {
+      const category = service.category?.trim();
+      return category ? { ...service, name: getCategoryLabel(category) } : service;
+    });
 }
 
 function uniqueIds(ids: string[]): string[] {
