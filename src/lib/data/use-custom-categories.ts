@@ -100,6 +100,24 @@ export function useCustomCategories() {
   return getCustomCategories();
 }
 
+export function useCategoryCatalogReady() {
+  const [ready, setReady] = useState(() => typeof window !== "undefined" && lastRefreshAt > 0);
+
+  useEffect(() => {
+    let cancelled = false;
+    void refreshCustomCategories({ force: !lastRefreshAt }).finally(() => {
+      if (!cancelled) setReady(true);
+    });
+    const unsubscribe = subscribeCustomCategories(() => setReady(true));
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  return ready;
+}
+
 /** Mount once app-wide so the overlay is populated even on pages whose search
  *  surfaces (hero search, /servicios box) read `searchCategories` directly
  *  without rendering a <CategorySearch>. Renders nothing. */
