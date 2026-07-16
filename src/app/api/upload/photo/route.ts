@@ -62,6 +62,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: result.secure_url, publicId: result.public_id });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error al subir la imagen";
+    console.error("[POST /api/upload/photo]", err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

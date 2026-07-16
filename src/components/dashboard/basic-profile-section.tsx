@@ -16,7 +16,7 @@ import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guar
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
 type ExtraProfileSection = {
@@ -217,16 +217,23 @@ export function BasicProfileSection({
       const fd = new FormData();
       fd.append("file", preparedFile);
       fd.append("type", "avatar");
-      const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        void showMessage({ title: errorTitle, description: j.error || t("photoError"), tone: "danger" });
+      const upload = await uploadPhotoFormDataWithRetry(fd);
+      if (!upload.ok || !upload.data.url) {
+        void showMessage({ title: errorTitle, description: upload.data.error || t("photoError"), tone: "danger" });
         return;
       }
-      const { url } = await res.json();
+      const { url } = upload.data;
       const supabase = createClient();
-      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
-      await supabase.auth.updateUser({ data: { avatar_url: url } });
+      const { error: profilePhotoError } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      if (profilePhotoError) {
+        void showMessage({ title: errorTitle, description: t("photoError"), tone: "danger" });
+        return;
+      }
+      const { error: authPhotoError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+      if (authPhotoError) {
+        void showMessage({ title: errorTitle, description: t("photoError"), tone: "danger" });
+        return;
+      }
       setProfileAvatar(url);
       window.dispatchEvent(new Event("ccr:profile-updated"));
     } catch (error) {

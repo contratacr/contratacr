@@ -22,6 +22,16 @@ type PrepareImageOptions = {
   targetBytes?: number;
 };
 
+type UploadPhotoResult = {
+  ok: boolean;
+  status: number;
+  data: { url?: string; error?: string };
+};
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 type DecodedImage = {
   source: CanvasImageSource;
   width: number;
@@ -142,4 +152,25 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
   }
 
   throw new ImageUploadPreparationError("too_large");
+}
+
+export async function uploadPhotoFormDataWithRetry(formData: FormData, attempts = 2): Promise<UploadPhotoResult> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok || (res.status >= 400 && res.status < 500 && res.status !== 429)) {
+        return { ok: res.ok, status: res.status, data };
+      }
+      lastError = new Error(data?.error || `upload failed with ${res.status}`);
+    } catch (error) {
+      lastError = error;
+    }
+
+    if (attempt < attempts - 1) await wait(650 * (attempt + 1));
+  }
+
+  const message = lastError instanceof Error && lastError.message ? lastError.message : "upload failed";
+  return { ok: false, status: 0, data: { error: message } };
 }

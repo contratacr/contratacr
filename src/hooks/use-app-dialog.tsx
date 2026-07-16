@@ -92,6 +92,8 @@ export function useAppDialog() {
       onClose={() => close({ confirmed: false })}
       title={dialog.title}
       size="sm"
+      mobilePresentation="center"
+      footerClassName="justify-center sm:justify-end"
       footer={(
         <>
           {dialog.mode === "confirm" && (

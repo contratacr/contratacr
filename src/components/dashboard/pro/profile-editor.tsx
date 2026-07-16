@@ -11,7 +11,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
 import { Camera, X, Plus, ChevronDown, Lock, Award, Globe, Video } from "lucide-react";
@@ -358,16 +358,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       const fd = new FormData();
       fd.append("file", preparedFile);
       fd.append("type", "avatar");
-      const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || t("photoError"));
+      const upload = await uploadPhotoFormDataWithRetry(fd);
+      if (!upload.ok || !upload.data.url) {
+        throw new Error(upload.data.error || t("photoError"));
       }
-      const { url } = await res.json();
+      const { url } = upload.data;
       const supabase = createClient();
       const { error: upErr } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", profileId);
       if (upErr) throw new Error(t("photoError"));
-      await supabase.auth.updateUser({ data: { avatar_url: url } });
+      const { error: authErr } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+      if (authErr) throw new Error(t("photoError"));
       setAvatarPreview(url);
       showSavedConfirmation();
       onSaved?.();

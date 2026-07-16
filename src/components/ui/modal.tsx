@@ -32,9 +32,25 @@ interface ModalProps {
   closeLabel?: string;
   /** Extra classes on the body wrapper (e.g. remove default padding). */
   bodyClassName?: string;
+  /** Small alerts can stay centered on mobile; long forms keep the bottom sheet. */
+  mobilePresentation?: "sheet" | "center";
+  /** Extra classes on the pinned footer. */
+  footerClassName?: string;
 }
 
-export function Modal({ open = true, onClose, title, subtitle, size = "md", children, footer, closeLabel = "Cerrar", bodyClassName }: ModalProps) {
+export function Modal({
+  open = true,
+  onClose,
+  title,
+  subtitle,
+  size = "md",
+  children,
+  footer,
+  closeLabel = "Cerrar",
+  bodyClassName,
+  mobilePresentation = "sheet",
+  footerClassName,
+}: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -45,8 +61,15 @@ export function Modal({ open = true, onClose, title, subtitle, size = "md", chil
 
   if (!open) return null;
 
+  const centeredMobile = mobilePresentation === "center";
+
   return (
-    <div className="app-modal-screen fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
+    <div
+      className={cn(
+        "app-modal-screen fixed inset-0 z-[100] flex justify-center",
+        centeredMobile ? "items-center p-4" : "items-end sm:items-center sm:p-4"
+      )}
+    >
       {/* Dimmed backdrop — click to close */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
@@ -55,7 +78,10 @@ export function Modal({ open = true, onClose, title, subtitle, size = "md", chil
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-10 flex w-full max-h-[92vh] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
+          "relative z-10 flex w-full flex-col overflow-hidden bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
+          centeredMobile
+            ? "max-h-[calc(var(--app-visual-viewport-height)-2rem)] rounded-2xl"
+            : "max-h-[92vh] rounded-t-2xl",
           "app-bottom-sheet min-h-0",
           SIZES[size]
         )}
@@ -83,7 +109,7 @@ export function Modal({ open = true, onClose, title, subtitle, size = "md", chil
 
         {/* Footer (pinned) */}
         {footer && (
-          <div className="flex shrink-0 justify-end gap-3 border-t border-[#f3f4f6] px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4">
+          <div className={cn("flex shrink-0 justify-end gap-3 border-t border-[#f3f4f6] px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4", footerClassName)}>
             {footer}
           </div>
         )}
