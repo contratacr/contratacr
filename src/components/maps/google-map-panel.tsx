@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { MapPin, Minus, Plus, Search } from "lucide-react";
+import { MapPin, Maximize2, Minimize2, Minus, Plus, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 
@@ -199,6 +199,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // programmatically fit the map to the results).
   const router = useRouter();
   const [showArea, setShowArea] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const suppressMoveRef = useRef(false);
   const searchMapReadyRef = useRef(false);
 
@@ -505,7 +506,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
     if (!g?.marker?.AdvancedMarkerElement) return null;
-    const useNativeControls = !window.matchMedia?.("(max-width: 1023px)").matches;
     const map = new g.Map(mapRef.current, {
       mapId: MAP_ID,                 // cloud-styled light basemap + enables AdvancedMarkers
       center: GAM_CENTER,    // opens centered on Costa Rica…
@@ -520,9 +520,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       // área" pill AND the bottom card sheet (the default bottom-right zoom was hidden behind
       // the sheet on mobile). Maximize/fullscreen sits at TOP_RIGHT (the very corner); zoom is
       // RIGHT_TOP so it stacks directly BELOW it in the same right-aligned column.
-      fullscreenControl: useNativeControls,
+      fullscreenControl: false,
       fullscreenControlOptions: { position: g.ControlPosition.TOP_RIGHT },
-      zoomControl: useNativeControls,
+      zoomControl: false,
       zoomControlOptions: { position: g.ControlPosition.RIGHT_TOP },
       clickableIcons: false,
       gestureHandling: "greedy", // wheel/scroll zooms DIRECTLY over the map (no Ctrl hint); one-finger pan + pinch-zoom on mobile
@@ -665,6 +665,28 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionals, numbering, focusTarget?.key]);
 
+  useEffect(() => {
+    // Google Maps needs a small relayout after the container switches between
+    // embedded and expanded mode; Escape exits the expanded view.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = (window as any).google?.maps;
+    const map = mapInstanceRef.current;
+    if (g && map) {
+      window.setTimeout(() => {
+        g.event.trigger(map, "resize");
+        if (boundsRef.current && markerCountRef.current > 0) {
+          fitToMarkers(map, g, boundsRef.current, markerCountRef.current);
+        }
+      }, 80);
+    }
+    if (!expanded) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [expanded]);
+
   // Card → pin: hovering a result card highlights its pin (delegated, so it works
   // with server-rendered cards). Shares the same setActive as pin → card.
   useEffect(() => {
@@ -729,7 +751,11 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           `onMouseMove` hides the hover popup promptly once the cursor leaves the tight
           pin+card region (proximity, not boundary-toggle → no flicker); `onMouseLeave`
           is the backstop for when the cursor leaves the WHOLE map. */}
-      <div className="relative w-full h-full" onMouseMove={handleHoverProximity} onMouseLeave={hidePopup}>
+      <div
+        className={expanded ? "fixed inset-0 z-[80] h-dvh w-screen bg-[#eef2f6]" : "relative h-full w-full"}
+        onMouseMove={handleHoverProximity}
+        onMouseLeave={hidePopup}
+      >
         <div ref={mapRef} className="absolute inset-0" />
         {showArea && (
           <button
@@ -769,6 +795,24 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
             <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
         </div>
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          aria-label={expanded ? (locale === "en" ? "Exit expanded map" : "Salir de mapa ampliado") : (locale === "en" ? "Expand map" : "Ampliar mapa")}
+          title={expanded ? (locale === "en" ? "Exit expanded map" : "Salir de mapa ampliado") : (locale === "en" ? "Expand map" : "Ampliar mapa")}
+          className="absolute right-3 top-3 z-40 hidden h-10 w-10 items-center justify-center rounded-[3px] border border-[#d8e2ea] bg-white text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 lg:inline-flex"
+        >
+          {expanded ? <Minimize2 className="h-[18px] w-[18px]" strokeWidth={2} /> : <Maximize2 className="h-[18px] w-[18px]" strokeWidth={2} />}
+        </button>
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          aria-label={expanded ? (locale === "en" ? "Exit expanded map" : "Salir de mapa ampliado") : (locale === "en" ? "Expand map" : "Ampliar mapa")}
+          title={expanded ? (locale === "en" ? "Exit expanded map" : "Salir de mapa ampliado") : (locale === "en" ? "Expand map" : "Ampliar mapa")}
+          className="fixed right-3 top-[calc(env(safe-area-inset-top)+7.25rem)] z-40 inline-flex h-10 w-10 items-center justify-center rounded-[3px] border border-[#d8e2ea] bg-white text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 lg:hidden"
+        >
+          {expanded ? <Minimize2 className="h-[18px] w-[18px]" strokeWidth={2} /> : <Maximize2 className="h-[18px] w-[18px]" strokeWidth={2} />}
+        </button>
       </div>
     </>
   );
