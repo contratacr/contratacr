@@ -329,6 +329,8 @@ const CATEGORY_SEGMENTS: CategorySegmentDefinition[] = [
   { id: "limpieza", label: "Limpieza", labelEn: "Cleaning", emoji: "🧹", iconKey: "sparkles" },
   { id: "salud", label: "Salud", labelEn: "Health", emoji: "🩺", iconKey: "heart" },
   { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "💪", iconKey: "dumbbell" },
+  { id: "belleza", label: "Belleza", labelEn: "Beauty & aesthetics", emoji: "\u2728", iconKey: "star" },
+  { id: "moda_y_cuidado_personal", label: "Moda y accesorios", labelEn: "Fashion & accessories", emoji: "\uD83D\uDC55", iconKey: "shirt" },
   { id: "automotriz", label: "Vehículos", labelEn: "Vehicles", emoji: "🚗", iconKey: "car" },
   { id: "tecnologia", label: "Tecnología", labelEn: "Technology", emoji: "💻", iconKey: "laptop" },
   { id: "profesional", label: "Empresas", labelEn: "Business", emoji: "💼", iconKey: "briefcase" },
@@ -344,8 +346,8 @@ const CATEGORY_SEGMENTS: CategorySegmentDefinition[] = [
 
 const SOURCE_GROUP_SEGMENT_OVERRIDES: Record<string, string> = {
   jardin: "hogar",
-  belleza: "bienestar",
-  moda_y_cuidado_personal: "bienestar",
+  belleza: "belleza",
+  moda_y_cuidado_personal: "moda_y_cuidado_personal",
   seguridad: "profesional",
   restaurantes: "comercios",
   hogar_y_muebles: "hogar",
@@ -359,6 +361,20 @@ const CATEGORY_SEGMENT_OVERRIDES: Record<string, string> = {
   masajes: "bienestar",
   acupuntura: "bienestar",
   coaching: "bienestar",
+  belleza: "belleza",
+  peluqueria: "belleza",
+  maquillaje: "belleza",
+  unhas: "belleza",
+  pestanas: "belleza",
+  depilacion: "belleza",
+  estetica_facial: "belleza",
+  spa: "belleza",
+  bronceado: "belleza",
+  costura_y_arreglos_de_ropa: "moda_y_cuidado_personal",
+  lavanderia: "moda_y_cuidado_personal",
+  zapateria: "moda_y_cuidado_personal",
+  relojeria: "moda_y_cuidado_personal",
+  joyeria: "moda_y_cuidado_personal",
   veterinaria: "mascotas",
   peluqueria_canina: "mascotas",
   cuido_mascotas: "mascotas",
@@ -393,7 +409,16 @@ function normalizeSegmentGroupId(groupId?: string | null, label?: string | null)
   const normalized = normalizeText(`${groupId ?? ""} ${label ?? ""}`);
   if (normalized.includes("hogar") && (normalized.includes("mueble") || normalized.includes("construccion"))) return "hogar";
   if (normalized.includes("jardin") || normalized.includes("exterior")) return "hogar";
-  if (normalized.includes("belleza") || normalized.includes("estetica") || normalized.includes("moda") || normalized.includes("cuidado personal")) return "bienestar";
+  if (normalized.includes("belleza") || normalized.includes("estetica")) return "belleza";
+  if (
+    normalized.includes("moda") ||
+    normalized.includes("cuidado personal") ||
+    normalized.includes("costura") ||
+    normalized.includes("lavanderia") ||
+    normalized.includes("zapateria") ||
+    normalized.includes("relojeria") ||
+    normalized.includes("joyeria")
+  ) return "moda_y_cuidado_personal";
   if (normalized.includes("restaurante") || normalized.includes("comida") || normalized.includes("farmacia") || normalized.includes("gasolinera") || normalized.includes("comercio")) return "comercios";
   if (normalized.includes("agricultura") || normalized.includes("agroindustria") || normalized === "agro") return "agricultura";
   if (normalized.includes("seguridad")) return "profesional";
@@ -1186,7 +1211,7 @@ export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   mascotas: "Pets",
   jardin: "Garden & outdoor",
   belleza: "Beauty & aesthetics",
-  moda_y_cuidado_personal: "Fashion & personal care",
+  moda_y_cuidado_personal: "Fashion & accessories",
   seguridad: "Security",
   restaurantes: "Restaurants & food",
 };
