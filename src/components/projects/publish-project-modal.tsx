@@ -296,7 +296,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         role="dialog"
         aria-modal="true"
         aria-labelledby="publish-project-title"
-        className="app-bottom-sheet relative z-10 flex h-[92dvh] min-h-0 w-full max-h-[92vh] flex-col rounded-t-2xl bg-white shadow-2xl sm:h-[90vh] sm:max-w-lg sm:max-h-[90vh] sm:rounded-2xl"
+        className="app-bottom-sheet relative z-10 flex h-[92dvh] min-h-0 w-full max-h-[92vh] flex-col rounded-t-2xl bg-white shadow-2xl sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:rounded-2xl"
       >
         {/* Header (pinned) */}
         <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] px-5 py-4 shrink-0 sm:px-6">
@@ -315,11 +315,11 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         </div>
 
         {/* Form: scrolling body + pinned footer */}
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col sm:flex-none">
           {!profileReady ? (
             <FormLoadingState label={t("loadingProfile")} />
           ) : (
-          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain px-5 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none sm:px-6">
             {/* Category */}
             <div>
               <label className="text-sm font-medium text-[#374151] block mb-1.5">
