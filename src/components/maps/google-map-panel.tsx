@@ -643,9 +643,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       clustererRef.current.clearMarkers();
       clustererRef.current.addMarkers(markers);
     } else {
+      const algorithm = clusterer.SuperClusterAlgorithm
+        ? new clusterer.SuperClusterAlgorithm({
+            radius: 92,
+            maxZoom: 17,
+          })
+        : undefined;
       // onClusterClick no-op → DISABLE the lib's default click-to-zoom; OUR el `click` handler does
       // the zoom-to-separate (so it can't double-fire / fight the hover preview).
-      clustererRef.current = new clusterer.MarkerClusterer({ map, markers, renderer, onClusterClick: () => {} });
+      clustererRef.current = new clusterer.MarkerClusterer({ map, markers, renderer, algorithm, onClusterClick: () => {} });
     }
 
     boundsRef.current = bounds;
