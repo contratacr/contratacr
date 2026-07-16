@@ -4,10 +4,10 @@
 WITH canonical(id, name, name_en) AS (
   VALUES
     ('gypsum', 'Gypsum y drywall', 'Gypsum and drywall'),
-    ('domotica', 'Domótica y smart home', 'Smart home automation'),
-    ('cuidado_infantil', 'Cuidado infantil y niñera', 'Childcare and nanny'),
-    ('peluqueria_canina', 'Peluquería canina y grooming', 'Dog grooming'),
-    ('unhas', 'Uñas y manicure', 'Nails and manicure')
+    ('domotica', U&'Dom\00F3tica y smart home', 'Smart home automation'),
+    ('cuidado_infantil', U&'Cuidado infantil y ni\00F1era', 'Childcare and nanny'),
+    ('peluqueria_canina', U&'Peluquer\00EDa canina y grooming', 'Dog grooming'),
+    ('unhas', U&'U\00F1as y manicure', 'Nails and manicure')
 )
 UPDATE public.categories c
 SET
@@ -16,7 +16,15 @@ SET
 FROM canonical
 WHERE c.id = canonical.id;
 
-WITH rewritten AS (
+WITH canonical(id, name) AS (
+  VALUES
+    ('gypsum', 'Gypsum y drywall'),
+    ('domotica', U&'Dom\00F3tica y smart home'),
+    ('cuidado_infantil', U&'Cuidado infantil y ni\00F1era'),
+    ('peluqueria_canina', U&'Peluquer\00EDa canina y grooming'),
+    ('unhas', U&'U\00F1as y manicure')
+),
+rewritten AS (
   SELECT
     p.id,
     jsonb_agg(
