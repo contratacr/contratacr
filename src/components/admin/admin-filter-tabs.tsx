@@ -41,7 +41,7 @@ export function AdminFilterTabs({
                   active ? "text-[#0089bb]" : "text-[#9ca3af] group-hover:text-[#6b7280]",
                 )}
               >
-                {count > 99 ? "99+" : count}
+                {count.toLocaleString("es-CR")}
               </span>
             )}
           </button>
