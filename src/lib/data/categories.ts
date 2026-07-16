@@ -19,6 +19,7 @@ export const CATEGORY_GROUP_ICON_KEYS: Record<string, string> = {
   automotriz: "car",
   tecnologia: "laptop",
   profesional: "briefcase",
+  comercios: "store",
   creatividad: "palette",
   eventos: "calendar-days",
   educacion: "book-open",
@@ -298,6 +299,23 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "alquiler_vacacional", label: "Alquiler vacacional", keywords: ["casa de vacaciones", "cabina", "villa", "hospedaje vacacional", "airbnb"] },
     ],
   },
+  {
+    id: "comercios",
+    label: "Comercios",
+    emoji: "🏪",
+    items: [
+      { id: "restaurantes_comida", label: "Restaurantes y comida", keywords: ["restaurante", "restaurantes", "soda", "sodas", "comida", "almuerzo", "cena", "casado", "comida rapida", "comida a domicilio", "delivery de comida"] },
+      { id: "cafeterias", label: "Cafeterías", keywords: ["cafeteria", "cafe", "coffee shop", "reposteria", "desayuno", "meriendas"] },
+      { id: "panaderias", label: "Panaderías y reposterías", keywords: ["panaderia", "pan", "reposteria", "pasteleria", "queques", "postres", "bolleria"] },
+      { id: "farmacias", label: "Farmacias", keywords: ["farmacia", "medicamentos", "recetas", "botica", "medicina", "farmaceutica"] },
+      { id: "gasolineras", label: "Gasolineras", keywords: ["gasolinera", "combustible", "gasolina", "diesel", "estacion de servicio", "servicentro"] },
+      { id: "supermercados_minisuper", label: "Supermercados y minisúper", keywords: ["supermercado", "super", "minisuper", "pulperia", "abarrotes", "conveniencia"] },
+      { id: "ferreterias", label: "Ferreterías", keywords: ["ferreteria", "herramientas", "materiales", "construccion", "pintura", "tornillos"] },
+      { id: "papelerias_librerias", label: "Papelerías y librerías", keywords: ["papeleria", "libreria", "utiles", "cuadernos", "impresiones", "fotocopias"] },
+      { id: "carnicerias_verdulerias", label: "Carnicerías y verdulerías", keywords: ["carniceria", "verduleria", "frutas", "verduras", "carne", "pollo", "pescaderia"] },
+      { id: "tiendas_mascotas", label: "Tiendas de mascotas", keywords: ["tienda de mascotas", "alimento para mascotas", "pet shop", "accesorios para mascotas", "concentrado"] },
+    ],
+  },
 ];
 
 /* ─── Flat list of all category items ─── */
@@ -314,6 +332,7 @@ const CATEGORY_SEGMENTS: CategorySegmentDefinition[] = [
   { id: "automotriz", label: "Vehículos", labelEn: "Vehicles", emoji: "🚗", iconKey: "car" },
   { id: "tecnologia", label: "Tecnología", labelEn: "Technology", emoji: "💻", iconKey: "laptop" },
   { id: "profesional", label: "Empresas", labelEn: "Business", emoji: "💼", iconKey: "briefcase" },
+  { id: "comercios", label: "Comercios", labelEn: "Shops", emoji: "🏪", iconKey: "store" },
   { id: "creatividad", label: "Creatividad", labelEn: "Creative", emoji: "🎨", iconKey: "palette" },
   { id: "eventos", label: "Eventos", labelEn: "Events", emoji: "🎉", iconKey: "calendar-days" },
   { id: "educacion", label: "Educación", labelEn: "Education", emoji: "📚", iconKey: "book-open" },
@@ -328,7 +347,7 @@ const SOURCE_GROUP_SEGMENT_OVERRIDES: Record<string, string> = {
   belleza: "bienestar",
   moda_y_cuidado_personal: "bienestar",
   seguridad: "profesional",
-  restaurantes: "eventos",
+  restaurantes: "comercios",
 };
 
 const CATEGORY_SEGMENT_OVERRIDES: Record<string, string> = {
@@ -488,6 +507,7 @@ export function normalizeCategoryGroupId(groupId?: string | null, label?: string
 export function resolveCategoryGroupIconKey(groupId?: string | null, label?: string | null, iconKey?: string | null): string | undefined {
   const normalized = normalizeText(`${groupId ?? ""} ${label ?? ""}`);
   if (normalized.includes("hogar") && normalized.includes("muebles")) return "armchair";
+  if (normalized.includes("comerc") || normalized.includes("tienda") || normalized.includes("farmacia") || normalized.includes("gasolinera")) return "store";
   if (normalized.includes("restaurante") || normalized.includes("comida") || normalized.includes("catering")) return "utensils";
   if (normalized.includes("agricultura") || normalized.includes("agroindustria") || normalized.includes("agro")) return "wheat";
   if (normalized.includes("bienestar") || normalized.includes("fitness") || normalized.includes("gimnasio")) return "dumbbell";
@@ -1103,6 +1123,17 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   alquiler_mobiliario: "Event furniture rental", maestro_ceremonias: "Master of ceremonies",
   floristeria: "Florist",
   animacion_infantil: "Kids entertainment", bartending: "Bartending",
+  // Comercios
+  restaurantes_comida: "Restaurants & food",
+  cafeterias: "Coffee shops",
+  panaderias: "Bakeries & pastry shops",
+  farmacias: "Pharmacies",
+  gasolineras: "Gas stations",
+  supermercados_minisuper: "Supermarkets & convenience stores",
+  ferreterias: "Hardware stores",
+  papelerias_librerias: "Stationery & bookstores",
+  carnicerias_verdulerias: "Butcher shops & produce stores",
+  tiendas_mascotas: "Pet stores",
   // Seguridad
   guardas_seguridad: "Security guards", alarmas: "Alarm installation",
   monitoreo_alarmas: "Alarm monitoring", cercas_electricas: "Electric fences",
@@ -1127,6 +1158,7 @@ export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   automotriz: "Vehicles",
   tecnologia: "Technology",
   profesional: "Business",
+  comercios: "Shops",
   creatividad: "Creative",
   eventos: "Events",
   educacion: "Education",
