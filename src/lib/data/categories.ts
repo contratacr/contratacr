@@ -327,13 +327,13 @@ type CategorySegmentDefinition = Omit<CategoryGroup, "items"> & {
 
 const CATEGORY_SEGMENTS: CategorySegmentDefinition[] = [
   { id: "hogar", label: "Hogar", labelEn: "Home", emoji: "🏠", iconKey: "armchair" },
-  { id: "construccion_ingenieria", label: "Construcción e ingeniería", labelEn: "Construction & engineering", emoji: "\uD83D\uDC77", iconKey: "hard-hat" },
+  { id: "construccion_ingenieria", label: "Construcci\u00f3n", labelEn: "Construction", emoji: "\uD83D\uDC77", iconKey: "hard-hat" },
   { id: "limpieza", label: "Limpieza", labelEn: "Cleaning", emoji: "🧹", iconKey: "sparkles" },
   { id: "salud", label: "Salud", labelEn: "Health", emoji: "🩺", iconKey: "heart" },
   { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "\uD83E\uDD1D", iconKey: "heart-handshake" },
   { id: "belleza", label: "Belleza", labelEn: "Beauty & aesthetics", emoji: "\u2728", iconKey: "star" },
-  { id: "moda_y_cuidado_personal", label: "Moda y accesorios", labelEn: "Fashion & accessories", emoji: "\uD83D\uDC55", iconKey: "shirt" },
-  { id: "automotriz", label: "Veh\u00edculos y transporte", labelEn: "Vehicles & transport", emoji: "\uD83D\uDE97", iconKey: "car" },
+  { id: "moda_y_cuidado_personal", label: "Moda", labelEn: "Fashion", emoji: "\uD83D\uDC55", iconKey: "shirt" },
+  { id: "automotriz", label: "Veh\u00edculos", labelEn: "Vehicles", emoji: "\uD83D\uDE97", iconKey: "car" },
   { id: "tecnologia", label: "Tecnología", labelEn: "Technology", emoji: "💻", iconKey: "laptop" },
   { id: "profesional", label: "Empresas", labelEn: "Business", emoji: "💼", iconKey: "briefcase" },
   { id: "comercios", label: "Comercios", labelEn: "Shops", emoji: "🏪", iconKey: "store" },
@@ -1209,11 +1209,11 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
 
 export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   hogar: "Home",
-  construccion_ingenieria: "Construction & engineering",
+  construccion_ingenieria: "Construction",
   limpieza: "Cleaning",
   salud: "Health",
   bienestar: "Wellness",
-  automotriz: "Vehicles & transport",
+  automotriz: "Vehicles",
   tecnologia: "Technology",
   profesional: "Business",
   comercios: "Shops",
@@ -1226,7 +1226,7 @@ export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   mascotas: "Pets",
   jardin: "Garden & outdoor",
   belleza: "Beauty & aesthetics",
-  moda_y_cuidado_personal: "Fashion & accessories",
+  moda_y_cuidado_personal: "Fashion",
   seguridad: "Security",
   restaurantes: "Restaurants & food",
 };

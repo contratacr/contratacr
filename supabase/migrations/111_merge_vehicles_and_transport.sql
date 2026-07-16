@@ -1,8 +1,8 @@
--- Migration 111: merge Transporte into Automotriz as "Vehiculos y transporte".
+-- Migration 111: merge Transporte into Automotriz as "Vehiculos".
 -- Keeps service ids unchanged; only the visible group changes.
 
 INSERT INTO public.category_groups (id, label, label_en, icon_key, sort_order, is_hidden)
-VALUES ('automotriz', U&'Veh\00EDculos y transporte', 'Vehicles & transport', 'car', 50, false)
+VALUES ('automotriz', U&'Veh\00EDculos', 'Vehicles', 'car', 50, false)
 ON CONFLICT (id) DO UPDATE SET
   label = EXCLUDED.label,
   label_en = EXCLUDED.label_en,
