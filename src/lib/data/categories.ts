@@ -13,9 +13,10 @@ export type CategoryGroup = {
 
 export const CATEGORY_GROUP_ICON_KEYS: Record<string, string> = {
   hogar: "armchair",
+  construccion_ingenieria: "hard-hat",
   limpieza: "sparkles",
   salud: "heart",
-  bienestar: "dumbbell",
+  bienestar: "heart-handshake",
   automotriz: "car",
   tecnologia: "laptop",
   profesional: "briefcase",
@@ -326,9 +327,10 @@ type CategorySegmentDefinition = Omit<CategoryGroup, "items"> & {
 
 const CATEGORY_SEGMENTS: CategorySegmentDefinition[] = [
   { id: "hogar", label: "Hogar", labelEn: "Home", emoji: "🏠", iconKey: "armchair" },
+  { id: "construccion_ingenieria", label: "Construcción e ingeniería", labelEn: "Construction & engineering", emoji: "\uD83D\uDC77", iconKey: "hard-hat" },
   { id: "limpieza", label: "Limpieza", labelEn: "Cleaning", emoji: "🧹", iconKey: "sparkles" },
   { id: "salud", label: "Salud", labelEn: "Health", emoji: "🩺", iconKey: "heart" },
-  { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "💪", iconKey: "dumbbell" },
+  { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "\uD83E\uDD1D", iconKey: "heart-handshake" },
   { id: "belleza", label: "Belleza", labelEn: "Beauty & aesthetics", emoji: "\u2728", iconKey: "star" },
   { id: "moda_y_cuidado_personal", label: "Moda y accesorios", labelEn: "Fashion & accessories", emoji: "\uD83D\uDC55", iconKey: "shirt" },
   { id: "automotriz", label: "Vehículos", labelEn: "Vehicles", emoji: "🚗", iconKey: "car" },
@@ -356,6 +358,14 @@ const SOURCE_GROUP_SEGMENT_OVERRIDES: Record<string, string> = {
 };
 
 const CATEGORY_SEGMENT_OVERRIDES: Record<string, string> = {
+  construccion: "construccion_ingenieria",
+  maestro_obras: "construccion_ingenieria",
+  remodelacion: "construccion_ingenieria",
+  ingenieria_civil: "construccion_ingenieria",
+  ingenieria_electrica: "construccion_ingenieria",
+  ingenieria_mecanica: "construccion_ingenieria",
+  arquitectura: "construccion_ingenieria",
+  topografia: "construccion_ingenieria",
   entrenamiento_personal: "bienestar",
   entrenamiento_deportivo: "bienestar",
   masajes: "bienestar",
@@ -407,6 +417,7 @@ function normalizeSegmentGroupId(groupId?: string | null, label?: string | null)
   if (SOURCE_GROUP_SEGMENT_OVERRIDES[id]) return SOURCE_GROUP_SEGMENT_OVERRIDES[id];
 
   const normalized = normalizeText(`${groupId ?? ""} ${label ?? ""}`);
+  if (normalized.includes("ingenieria") || normalized.includes("arquitectura") || normalized.includes("topografia")) return "construccion_ingenieria";
   if (normalized.includes("hogar") && (normalized.includes("mueble") || normalized.includes("construccion"))) return "hogar";
   if (normalized.includes("jardin") || normalized.includes("exterior")) return "hogar";
   if (normalized.includes("belleza") || normalized.includes("estetica")) return "belleza";
@@ -550,11 +561,13 @@ export function normalizeCategoryGroupId(groupId?: string | null, label?: string
 
 export function resolveCategoryGroupIconKey(groupId?: string | null, label?: string | null, iconKey?: string | null): string | undefined {
   const normalized = normalizeText(`${groupId ?? ""} ${label ?? ""}`);
+  if (normalized.includes("construccion") || normalized.includes("ingenieria") || normalized.includes("arquitectura")) return "hard-hat";
   if (normalized.includes("hogar") && normalized.includes("muebles")) return "armchair";
   if (normalized.includes("comerc") || normalized.includes("tienda") || normalized.includes("farmacia") || normalized.includes("gasolinera")) return "store";
   if (normalized.includes("restaurante") || normalized.includes("comida") || normalized.includes("catering")) return "utensils";
   if (normalized.includes("agricultura") || normalized.includes("agroindustria") || normalized.includes("agro")) return "wheat";
-  if (normalized.includes("bienestar") || normalized.includes("fitness") || normalized.includes("gimnasio")) return "dumbbell";
+  if (normalized.includes("bienestar")) return "heart-handshake";
+  if (normalized.includes("fitness") || normalized.includes("gimnasio")) return "dumbbell";
   if (normalized.includes("creativ")) return "palette";
   if (normalized.includes("mascota") || normalized.includes("veterin")) return "paw-print";
   return iconKey || CATEGORY_GROUP_ICON_KEYS[groupId ?? ""] || undefined;
@@ -1196,6 +1209,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
 
 export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   hogar: "Home",
+  construccion_ingenieria: "Construction & engineering",
   limpieza: "Cleaning",
   salud: "Health",
   bienestar: "Wellness",
