@@ -419,7 +419,7 @@ export function DirectChatInbox() {
           </div>
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
         </header>
-        <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-[#f3f7fa] px-4 py-5 sm:px-6">
+        <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
           {threadLoading ? <div className="grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
             const mine = message.sender_id === user?.id;
             return (
@@ -446,7 +446,7 @@ export function DirectChatInbox() {
           })}
         </div>
         {error && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error}</p>}
-        <form onSubmit={submit} className="flex items-end gap-2 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+        <form onSubmit={submit} className="shrink-0 flex items-end gap-2 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
           <textarea
             ref={textareaRef}
             rows={1}

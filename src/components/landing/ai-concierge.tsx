@@ -271,12 +271,15 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
   }, [embedded, open]);
 
   useEffect(() => {
-    if (!open || embedded) return;
-    const shouldLockScroll = window.matchMedia("(max-width: 639px)").matches;
+    if (!open) return;
+    const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
     if (!shouldLockScroll) return;
+    const root = document.documentElement;
     const previousOverflow = document.body.style.overflow;
+    root.classList.add("contratacr-ai-open");
     document.body.style.overflow = "hidden";
     return () => {
+      root.classList.remove("contratacr-ai-open");
       document.body.style.overflow = previousOverflow;
     };
   }, [embedded, open]);
@@ -501,15 +504,15 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
       }}
       className={cn(
         embedded
-          ? "fixed inset-0 z-[110] flex h-[100dvh] min-h-0 w-full items-stretch justify-stretch lg:relative lg:inset-auto lg:z-auto lg:h-[min(780px,calc(100dvh-220px))] lg:min-h-[540px]"
-          : "fixed inset-0 z-[100] flex items-end justify-end bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:bg-transparent sm:p-0 sm:backdrop-blur-none",
+          ? "fixed inset-x-0 top-[var(--app-visual-viewport-top)] z-[110] flex h-[var(--app-visual-viewport-height)] min-h-0 w-full items-stretch justify-stretch overflow-hidden lg:relative lg:inset-auto lg:z-auto lg:h-[min(780px,calc(100dvh-220px))] lg:min-h-[540px]"
+          : "fixed inset-x-0 top-[var(--app-visual-viewport-top)] z-[100] flex h-[var(--app-visual-viewport-height)] items-end justify-end overflow-hidden bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:inset-0 sm:h-auto sm:bg-transparent sm:p-0 sm:backdrop-blur-none",
       )}
     >
       <div className={cn(
         "flex w-full flex-col overflow-hidden border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)]",
         embedded
           ? "h-full rounded-none border-0 shadow-none lg:rounded-2xl lg:border lg:shadow-[0_18px_54px_-34px_rgba(4,37,77,0.6)]"
-          : "h-[min(820px,calc(100dvh-0.75rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
+          : "max-h-full h-[min(820px,calc(var(--app-visual-viewport-height)_-_0.5rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
       )}>
         <header className="relative flex shrink-0 items-center gap-2 border-b border-[#cfe3f4] bg-[linear-gradient(120deg,#ffffff_0%,#f3f9ff_100%)] px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
           {embedded && onClose && (

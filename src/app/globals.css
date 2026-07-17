@@ -312,17 +312,30 @@ input::-ms-clear {
     padding-bottom: max(env(safe-area-inset-bottom), 0.75rem) !important;
   }
 
+  html.contratacr-chat-thread-open,
   html.contratacr-chat-thread-open body {
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .contratacr-chat-thread-open .direct-chat-shell--thread {
     position: fixed;
-    inset: 0;
+    top: var(--app-visual-viewport-top);
+    right: 0;
+    bottom: auto;
+    left: 0;
     z-index: 110;
-    height: 100dvh;
+    height: var(--app-visual-viewport-height);
     min-height: 0;
     border-radius: 0;
+    overscroll-behavior: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  html.contratacr-ai-open,
+  html.contratacr-ai-open body {
+    overflow: hidden;
     overscroll-behavior: none;
   }
 }

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
   LayoutDashboard, LogOut, Briefcase, Compass, Globe, Check,
-  HelpCircle, Lightbulb, Headset, Bell, Bot,
+  HelpCircle, Lightbulb, Headset, Bell,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -1500,11 +1500,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     <Link href="/dashboard/profesional?tab=notifications" onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                       <Bell className={mobileIconClass(false)} />
                       <span className="min-w-0 flex-1">{locale === "en" ? "Notifications" : "Notificaciones"}</span>
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </Link>
-                    <Link href="/dashboard/profesional?tab=assistant" onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
-                      <Bot className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{locale === "en" ? "AI Assistant" : "Asistente con IA"}</span>
                       <ChevronRight className={mobileChevronClass(false)} />
                     </Link>
                     <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
