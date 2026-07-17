@@ -970,7 +970,7 @@ export function searchCategories(query: string, locale?: string): (CategoryItem 
 const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   limpieza: ["limpiar mi casa", "limpiar casa", "limpiar el hogar", "limpieza de mi casa", "asear mi casa", "servicio domestico", "clean my house", "clean my home", "house cleaned", "home cleaned"],
   limpieza_oficinas: ["limpiar oficina", "limpieza de oficina", "aseo de oficina", "limpiar local"],
-  plomeria: ["arreglar fuga", "tengo una fuga", "arreglar tubo", "destapar inodoro", "destapar caneria", "arreglar lavamanos", "fix a water leak", "fix leak", "water leak", "clogged toilet"],
+  plomeria: ["arreglar fuga", "tengo una fuga", "arreglar tubo", "tuberia reventada", "se revento una tuberia", "revento una tuberia", "destapar inodoro", "destapar caneria", "arreglar lavamanos", "fix a water leak", "fix leak", "burst pipe", "water leak", "clogged toilet"],
   electricidad: ["arreglar luz", "poner enchufe", "instalar toma", "problema electrico", "se fue la luz", "cambiar breaker", "electricista", "electrician"],
   pintura: ["pintar mi casa", "pintar cuarto", "pintar pared", "pintar sala", "paint my house", "paint my living room", "paint a room"],
   jardineria: ["cortar zacate", "cortar el zacate", "arreglar jardin", "limpiar jardin", "mantenimiento jardin"],
@@ -1006,6 +1006,7 @@ const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   fisioterapia: ["terapia fisica", "dolor de espalda", "fisioterapeuta", "necesito un fisioterapeuta", "physiotherapist", "physical therapist"],
   psicologia: ["necesito psicologo", "terapia psicologica", "hablar con psicologo", "psicologo en linea", "psychologist", "online psychologist"],
   contabilidad: ["contador", "contabilidad para mi negocio", "contabilidad negocio", "ayuda contable", "accountant", "accounting for my business"],
+  traduccion: ["traducir contrato", "traducir documento", "traducir al ingles", "traducir al español", "traductor", "interprete", "translate a contract", "translate a document", "translator", "interpreter"],
   legal: ["abogado", "asesoria legal", "servicios legales", "liberar hipoteca", "liberar hipoteca de carro", "cancelar hipoteca de carro", "levantar hipoteca de carro", "liberar prenda", "cancelar prenda", "cancelacion de prenda", "tramite legal de vehiculo", "registro nacional carro", "abogado para tramite"],
   notaria: ["notario publico", "autenticar documento", "hacer escritura", "traspaso de propiedad"],
   asesoria_tributaria: ["ayuda con hacienda", "declaracion de renta", "declaracion de iva", "impuestos"],
@@ -1079,8 +1080,15 @@ export function resolveCategoryIntent(query: string, locale?: string): (Category
     if (firstInGroup) return firstInGroup;
   }
 
+  // A canonical service label must always beat a keyword or alias owned by an
+  // earlier item (for example, "Herrería" is also a Soldadura keyword).
   for (const item of pool) {
-    if (termsForCategory(item, locale).some((term) => normalizeText(term) === q)) return item;
+    const labels = [item.label, getCategoryLabel(item.id, locale)];
+    if (labels.some((term) => normalizeText(term) === q)) return item;
+  }
+  for (const item of pool) {
+    const aliases = [...item.keywords, ...(NATURAL_QUERY_ALIASES[item.id] ?? [])];
+    if (aliases.some((term) => normalizeText(term) === q)) return item;
   }
 
   let best: { item: (CategoryItem & { groupId: string; groupLabel: string }); score: number } | null = null;

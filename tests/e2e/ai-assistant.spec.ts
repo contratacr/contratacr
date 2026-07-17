@@ -2,6 +2,7 @@ import { expect, test } from "playwright/test";
 import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { CONTRATACR_PRODUCT_KNOWLEDGE } from "../../src/lib/ai/product-knowledge";
+import { getAllCategories, getCategoryLabel, resolveCategoryIntent } from "../../src/lib/data/categories";
 
 type AssistantResponse = {
   answer?: string;
@@ -189,6 +190,53 @@ test.describe("@seeded ContrataCR AI", () => {
     for (const contract of requiredContracts) expect(CONTRATACR_PRODUCT_KNOWLEDGE).toMatch(contract);
   });
 
+  test("resolves every canonical service in the complete catalog", async () => {
+    const services = getAllCategories();
+    expect(services.length).toBeGreaterThanOrEqual(160);
+    expect(new Set(services.map((service) => service.id)).size).toBe(services.length);
+
+    for (const service of services) {
+      expect(resolveCategoryIntent(service.label, "es")?.id, service.label).toBe(service.id);
+      const englishLabel = getCategoryLabel(service.id, "en");
+      expect(resolveCategoryIntent(englishLabel, "en")?.id, englishLabel).toBe(service.id);
+    }
+
+    const naturalProblems = [
+      ["Se me reventó una tubería", "plomeria"],
+      ["Necesito traducir un contrato al inglés", "traduccion"],
+      ["Mi laptop no enciende", "reparacion_computadoras"],
+      ["Quiero que bañen y le corten el pelo a mi perro", "peluqueria_canina"],
+      ["Ocupo ayuda para declarar el IVA", "asesoria_tributaria"],
+    ] as const;
+    for (const [query, expectedId] of naturalProblems) {
+      expect(resolveCategoryIntent(query, "es")?.id, query).toBe(expectedId);
+    }
+  });
+
+  test("answers high-risk product questions without turning them into service searches", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const cases = [
+      { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /no garantiza|no\. la verificación/i },
+      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "tab=proposals", answer: /puede editar/i },
+      { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /cliente reprograma|no\. el cliente/i },
+      { prompt: "¿Puedo publicar una solicitud sin cuenta?", action: "login", href: "/es/login", answer: /iniciar sesión/i },
+      { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },
+      { prompt: "¿Qué hago si un profesional cancela mi cita?", action: "answer", answer: /no se puede reprogramar/i },
+      { prompt: "¿Cómo cambio de cliente a profesional?", action: "open_dashboard", href: "/es/dashboard/profesional", answer: /selector Cliente \/ Profesional/i },
+      { prompt: "¿Cómo agrego otro servicio a mi perfil?", action: "open_dashboard", href: "tab=services", answer: /servicio/i },
+      { prompt: "¿Cómo cambio mi contraseña?", action: "open_dashboard", href: "tab=cuenta", answer: /contraseña/i },
+      { prompt: "¿Dónde reviso las oportunidades para mis servicios?", action: "open_dashboard", href: "tab=proposals", answer: /oportunidades/i },
+    ];
+
+    for (const item of cases) {
+      const response = await ask(page, item.prompt);
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
+      expect(response.body.action, item.prompt).toBe(item.action);
+      expect(response.body.answer, item.prompt).toMatch(item.answer);
+      if (item.href) expect(response.body.searchHref, item.prompt).toContain(item.href);
+    }
+  });
+
   test("searches real professionals and preserves result selection context", async ({ page }) => {
     await gotoOK(page, "/es");
     const search = await ask(page, "Necesito un plomero en Atenas, Alajuela");
@@ -317,7 +365,7 @@ test.describe("@seeded ContrataCR AI", () => {
     await expect(dialog).toBeVisible();
     await dialog.getByRole("textbox", { name: /Pregunte o describa/i }).fill("¿Cómo funciona ContrataCR?");
     await dialog.getByRole("button", { name: /Enviar mensaje/i }).click();
-    await expect(dialog.getByText(/ContrataCR permite|buscar profesionales/i).last()).toBeVisible({ timeout: 25_000 });
+    await expect(dialog.getByText(/mercado de servicios|encontrar profesionales|buscar profesionales/i).last()).toBeVisible({ timeout: 25_000 });
     await expect.poll(() => page.evaluate(() => sessionStorage.getItem("contratacr:ai-session:es"))).toContain("¿Cómo funciona ContrataCR?");
     await dialog.getByRole("button", { name: /Ver cómo funciona/i }).click();
     await expect(page).toHaveURL(/\/es\/como-funciona/);

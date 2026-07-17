@@ -60,6 +60,7 @@ const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CONTENT = 700;
 const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|request)/gi;
+const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|crear|hacer|abrir)|(?:publicar|crear|hacer|abrir)|(?:i want to|i need to|how can i)\s+(?:publish|create|open)|(?:publish|create|open))\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|request)\b/i;
 
 function localeKey(value: unknown): Locale {
   return value === "en" ? "en" : "es";
@@ -78,6 +79,10 @@ function meaningfulRequestText(value: string) {
     .replace(/\b(quiero|necesito|ocupo|deseo|por favor|please|i want|i need)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function hasExplicitPublishIntent(value: string) {
+  return EXPLICIT_PUBLISH_INTENT_RE.test(value);
 }
 
 function sanitizeHistory(value: unknown): HistoryMessage[] {
@@ -343,7 +348,16 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
     if (includesAny(normalized, ["disponibilidad", "agenda", "horario", "availability", "schedule"])) {
       return `/${locale}/dashboard/profesional?tab=availability`;
     }
-    if (includesAny(normalized, ["mis servicios", "servicio que ofrezco", "my services"])) {
+    if (includesAny(normalized, ["oportunidad", "oportunidades", "propuesta", "propuestas", "opportunity", "opportunities", "proposal", "proposals"])) {
+      return `/${locale}/dashboard/profesional?tab=proposals`;
+    }
+    if (includesAny(normalized, ["mensaje", "mensajes", "chat", "message", "messages"])) {
+      return `/${locale}/dashboard/profesional?tab=chat`;
+    }
+    if (includesAny(normalized, ["correo de mi cuenta", "cambiar el correo", "cambio mi correo", "contrasena de mi cuenta", "cambiar mi contrasena", "cambio mi contrasena", "cerrar mi cuenta", "cuenta y seguridad", "account security", "change my email", "change my password", "close my account"])) {
+      return `/${locale}/dashboard/profesional?tab=cuenta`;
+    }
+    if (includesAny(normalized, ["mis servicios", "servicio que ofrezco", "servicios que ofrezco", "agregar otro servicio", "agregar un servicio", "agrego otro servicio", "agrego un servicio", "anadir otro servicio", "anadir un servicio", "anado otro servicio", "anado un servicio", "editar mis servicios", "my services", "add a service", "edit my services"])) {
       return `/${locale}/dashboard/profesional?tab=services`;
     }
     return `/${locale}/dashboard/profesional`;
@@ -407,16 +421,11 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
   const publishService = publishServiceFromMessage ?? resolveCategoryIntent(priorUserContext, locale);
   const publishPlace = resolveLocationIntent(message) ?? resolveLocationIntent(priorUserContext);
   const publishPlaceLabel = formatPlaceLabel(publishPlace);
-  const publishConversation = history.some((item) => item.role === "user" &&
-    /publicar (?:una )?solicitud|crear (?:una )?solicitud|publish (?:a )?request|create (?:a )?request/i.test(item.content),
-  );
+  const publishConversation = history.some((item) => item.role === "user" && hasExplicitPublishIntent(item.content));
   const currentHasServiceAndPlace = !!messageCategory && !!resolveLocationIntent(message);
   const hasExplicitSearchLanguage = includesAny(normalized, [
-    "profesional",
-    "profesionales",
     "quien",
     "quienes",
-    "hay",
     "busco",
     "buscando",
     "buscar",
@@ -424,7 +433,6 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     "ocupo",
     "recomiende",
     "recomiendeme",
-    "especialista",
     "opcion",
     "opciones",
     "que opciones",
@@ -432,8 +440,6 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     "muestrame",
     "muestreme",
     "contratar",
-    "professional",
-    "professionals",
     "find",
     "looking for",
     "need",
@@ -454,6 +460,73 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
       action: "select_professional",
       selectedResultIndex: resultSelection.index,
       ctaLabel: null,
+    };
+  }
+  if (includesAny(normalized, ["cambiar mi contrasena", "cambio mi contrasena", "cambiar la contrasena de mi cuenta", "cambiar mi correo", "cambio mi correo", "cerrar mi cuenta", "change my password", "change my email", "close my account"])) {
+    return {
+      ...payload,
+      action: "open_dashboard",
+      ctaLabel: locale === "en" ? "Open account settings" : "Ir a cuenta y seguridad",
+    };
+  }
+  if (includesAny(normalized, ["verificacion garantiza", "verificado garantiza", "verification guarantee", "verified guarantee"])) {
+    return {
+      ...payload,
+      action: "answer",
+      answer: locale === "en"
+        ? "No. Identity verification confirms identity information, but it does not guarantee work quality, licensing, insurance or suitability. Review the profile, experience, reviews and service details before choosing."
+        : "No. La verificación de identidad confirma datos de identidad, pero no garantiza la calidad del trabajo, licencias, seguros ni idoneidad. Revise el perfil, la experiencia, las reseñas y los detalles del servicio antes de elegir.",
+      ctaLabel: null,
+    };
+  }
+  if (includesAny(normalized, ["editar una propuesta despues", "editar mi propuesta despues", "editar propuesta enviada", "edit a proposal after", "edit my sent proposal"])) {
+    return {
+      ...payload,
+      action: "open_dashboard",
+      answer: locale === "en"
+        ? "Yes. You can edit a pending proposal from My proposals while the publication still allows it. An accepted, rejected or withdrawn proposal can no longer be edited."
+        : "Sí. Puede editar una propuesta pendiente desde Mis propuestas mientras la publicación todavía lo permita. Una propuesta aceptada, rechazada o retirada ya no se puede editar.",
+      ctaLabel: locale === "en" ? "Open my proposals" : "Ver mis propuestas",
+    };
+  }
+  if (includesAny(normalized, ["profesional puede reprogramar", "profesional puede cambiar mi cita", "can the professional reschedule", "provider reschedule my appointment"])) {
+    return {
+      ...payload,
+      action: "answer",
+      answer: locale === "en"
+        ? "No. The client reschedules an active appointment from My requests. The professional can cancel it with an optional reason and coordinate another time through Messages, but cannot move the appointment unilaterally."
+        : "No. El cliente reprograma una cita activa desde Mis solicitudes. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por Mensajes, pero no puede mover la cita unilateralmente.",
+      ctaLabel: null,
+    };
+  }
+  if (includesAny(normalized, ["profesional cancela mi cita", "profesional cancelo mi cita", "professional cancels my appointment", "professional cancelled my appointment"])) {
+    return {
+      ...payload,
+      action: "answer",
+      answer: locale === "en"
+        ? "You will receive a notification and the appointment will appear as cancelled. A cancelled appointment cannot be rescheduled; book a new available time or coordinate another time with the professional through Messages."
+        : "Recibirá una notificación y la cita aparecerá como cancelada. Una cita cancelada no se puede reprogramar; reserve un nuevo horario disponible o coordine otro momento con el profesional por Mensajes.",
+      ctaLabel: null,
+    };
+  }
+  if (includesAny(normalized, ["publicar una solicitud sin cuenta", "publicar solicitud sin cuenta", "publish a request without an account"])) {
+    return {
+      ...payload,
+      action: "login",
+      answer: locale === "en"
+        ? "You need to sign in to publish a request so proposals and notifications stay linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
+        : "Necesita iniciar sesión para publicar una solicitud, así las propuestas y notificaciones quedan vinculadas a su cuenta. Si todavía no tiene una, puede crearla desde la pantalla de ingreso.",
+      ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
+    };
+  }
+  if (includesAny(normalized, ["cambio de cliente a profesional", "cambiar de cliente a profesional", "switch from client to professional"])) {
+    return {
+      ...payload,
+      action: "open_dashboard",
+      answer: locale === "en"
+        ? "If your account can offer services, use the Client / Professional selector in My dashboard. If professional mode is not enabled yet, start the professional registration to complete your profile."
+        : "Si su cuenta ya puede ofrecer servicios, use el selector Cliente / Profesional dentro de Mi panel. Si todavía no tiene habilitado el modo profesional, inicie el registro profesional para completar su perfil.",
+      ctaLabel: locale === "en" ? "Open my dashboard" : "Ir a mi panel",
     };
   }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {
@@ -487,11 +560,10 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
   ) {
     return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open availability" : "Ir a disponibilidad" };
   }
-  if (includesAny(normalized, ["editar mis servicios", "administrar mis servicios", "servicios que ofrezco", "edit my services", "manage my services"])) {
+  if (includesAny(normalized, ["editar mis servicios", "administrar mis servicios", "servicios que ofrezco", "agregar otro servicio", "agregar un servicio", "agrego otro servicio", "agrego un servicio", "anadir otro servicio", "anadir un servicio", "anado otro servicio", "anado un servicio", "edit my services", "manage my services", "add another service", "add a service"])) {
     return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open my services" : "Ir a mis servicios" };
   }
-  const wantsToPublish = publishConversation ||
-    includesAny(normalized, ["publicar solicitud", "publicar una solicitud", "crear solicitud", "como publico", "hacer una solicitud"]);
+  const wantsToPublish = publishConversation || hasExplicitPublishIntent(message);
   // Search intent always wins over a model-suggested publication CTA. Publishing is
   // entered only through an explicit user request, never because a prior zero-result
   // answer happened to offer that alternative.
@@ -591,6 +663,9 @@ function urgentSafetyAnswer(message: string, locale: Locale): AssistantPayload |
     "emergencia medica",
     "no respira",
     "dolor fuerte en el pecho",
+    "dolor intenso en el pecho",
+    "me duele mucho el pecho",
+    "me duele fuerte el pecho",
     "riesgo de suicidio",
     "quiero suicidarme",
     "medical emergency",
@@ -762,7 +837,7 @@ async function realProfessionalResults(payload: AssistantPayload, originalMessag
 export async function POST(req: Request) {
   // A normal guided conversation can legitimately use several short turns.
   // Keep abuse protection without cutting off regression or real users mid-flow.
-  const limited = enforceRateLimit(req, "ai-assistant", 30, 60_000);
+  const limited = enforceRateLimit(req, "ai-assistant", 45, 60_000);
   if (limited) return limited;
 
   try {
@@ -783,7 +858,7 @@ export async function POST(req: Request) {
 
     const publishDetailText = rawMessage.replace(PUBLISH_REQUEST_PHRASE_RE, " ");
     const publishDetailMeaning = meaningfulRequestText(publishDetailText);
-    const explicitPublishIntent = publishDetailText !== rawMessage;
+    const explicitPublishIntent = hasExplicitPublishIntent(rawMessage);
     if (
       explicitPublishIntent &&
       publishDetailMeaning.length < 3 &&
@@ -802,7 +877,9 @@ export async function POST(req: Request) {
     const catalog = await liveCatalog(locale);
     const safetyPayload = urgentSafetyAnswer(rawMessage, locale);
     const aiPayload = safetyPayload ? null : await openAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
-    const payload = normalizePayload(safetyPayload ?? aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history);
+    // Safety guidance is terminal: ordinary search-intent normalization must never
+    // turn an emergency response back into a professional search.
+    const payload = safetyPayload ?? normalizePayload(aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history);
     const directCategory = resolveCategoryIntent(rawMessage, locale);
     const queryCategory = payload.serviceId ? null : resolveCategoryIntent(payload.searchQuery || "", locale);
     if (payload.action === "search_professionals" && (directCategory || queryCategory)) {

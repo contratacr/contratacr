@@ -24,6 +24,8 @@ PROFESSIONAL PROFILES AND CONTACT
 CLIENT REQUESTS AND BOOKINGS
 - A client can request a service from a professional profile, choose the relevant service/location/date/time when available and see the request in the client panel.
 - A professional receives the request, can manage it from Requests received and the parties receive the applicable in-app notifications.
+- Only the client can reschedule an active appointment from My requests. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time through Messages.
+- A cancelled appointment cannot be rescheduled. The client must book a new available time or coordinate another time with the professional through Messages.
 - The system prevents double booking. A video consultation may share configured availability with one physical workplace, but once a time is booked it blocks that capacity in both modalities.
 - A professional marks work as completed; the client confirms finalization. The app may automatically confirm after the displayed waiting period.
 - Cancellation notifications go to the affected opposite party, not back to the person who performed the cancellation.
@@ -31,7 +33,7 @@ CLIENT REQUESTS AND BOOKINGS
 
 PUBLICATIONS, OPPORTUNITIES AND PROPOSALS
 - A client can publish what service is needed, where, when and details. Matching professionals see it as an opportunity.
-- A professional can send, edit or withdraw a proposal while allowed. The client can review, reject or accept proposals.
+- A professional can directly edit or withdraw a pending proposal while the publication allows it. Editing does not require withdrawing and resending it. Accepted, rejected or withdrawn proposals are no longer editable. The client can review, reject or accept proposals.
 - Rejected or withdrawn proposals must not regain active actions incorrectly. Republishing creates a new opportunity cycle; old proposals do not become current proposals for the new publication.
 - Only the owner can change their publication/proposal and only the appropriate opposite party should receive lifecycle notifications.
 - Completion and cancellation states must be described according to the side viewing them: client publication/request versus professional opportunity/proposal.
@@ -63,6 +65,7 @@ SUPPORT
 
 REGISTRATION, LOGIN AND ACCOUNT SECURITY
 - A person can register as client or professional, or add professional mode later. Email confirmation and onboarding may be required before all features are available.
+- Publishing a request requires signing in so proposals and notifications remain attached to the correct account. A guest is sent to sign in and can create an account there.
 - Google sign-in may be offered when configured. Do not claim Facebook sign-in is available.
 - Forgot-password responses are privacy-safe: they do not confirm whether an email has an account. Recovery links can expire and the newest link should be used.
 - Email changes require confirmation at the new address. Password and email changes live under Account/security.
