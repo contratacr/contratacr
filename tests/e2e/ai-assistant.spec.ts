@@ -56,6 +56,16 @@ test.describe("@seeded ContrataCR AI", () => {
     };
     if (serviceIndex >= 0) services[serviceIndex] = { ...services[serviceIndex], ...plumbingService };
     else services.push(plumbingService);
+    const networksService = {
+      id: "e2e-ai-redes-atenas",
+      name: "Redes e internet",
+      category: "redes_internet",
+      description: "Redes e internet en Atenas para regresión de contexto conversacional.",
+      active: true,
+    };
+    const networksIndex = services.findIndex((item) => item?.category === "redes_internet");
+    if (networksIndex >= 0) services[networksIndex] = { ...services[networksIndex], ...networksService };
+    else services.push(networksService);
     const workplaces = Array.isArray(data.workplaces) ? [...data.workplaces] : [];
     workplaces.push({
       id: "e2e-ai-atenas",
@@ -68,7 +78,7 @@ test.describe("@seeded ContrataCR AI", () => {
     });
     const unique = (values: unknown[]) => [...new Set(values.filter(Boolean))];
     const { error: updateError } = await admin.from("professionals").update({
-      professions: unique([...(data.professions ?? []), seed.categoryId]),
+      professions: unique([...(data.professions ?? []), seed.categoryId, "redes_internet"]),
       services,
       workplaces,
       search_provincias: unique([...(data.search_provincias ?? []), "al"]),
@@ -203,6 +213,51 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(selected.status).toBe(200);
     expect(selected.body.action).toBe("select_professional");
     expect(selected.body.selectedResultIndex).toBe(1);
+  });
+
+  test("keeps search intent, service and location across natural follow-ups", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const firstPrompt = "Hola, necesito algún profesional en redes en Alajuela";
+    const first = await ask(page, firstPrompt);
+    expect(first.status).toBe(200);
+
+    const secondPrompt = "¿Redes en Atenas?";
+    const second = await ask(page, secondPrompt, {
+      history: [
+        { role: "user", content: firstPrompt },
+        { role: "assistant", content: first.body.answer || "Puede publicar una solicitud." },
+      ],
+    });
+    expect(second.status, JSON.stringify(second.body)).toBe(200);
+    expect(second.body.action).toBe("search_professionals");
+    expect(second.body.searchHref).toContain("categoria=redes_internet");
+    expect(second.body.searchHref).toContain("canton=al-at");
+    expect(second.body.professionals?.length).toBeGreaterThan(0);
+
+    const thirdPrompt = "Me refiero a que estoy buscando un especialista en redes en Atenas";
+    const third = await ask(page, thirdPrompt, {
+      history: [
+        { role: "user", content: secondPrompt },
+        { role: "assistant", content: second.body.answer || "Encontré opciones." },
+      ],
+    });
+    expect(third.status, JSON.stringify(third.body)).toBe(200);
+    expect(third.body.action).toBe("search_professionals");
+    expect(third.body.searchHref).toContain("categoria=redes_internet");
+    expect(third.body.searchHref).not.toContain("medico_especialista");
+    expect(third.body.professionals?.length).toBeGreaterThan(0);
+
+    const fourth = await ask(page, "¿Qué opciones hay?", {
+      history: [
+        { role: "user", content: thirdPrompt },
+        { role: "assistant", content: third.body.answer || "Encontré opciones." },
+      ],
+    });
+    expect(fourth.status, JSON.stringify(fourth.body)).toBe(200);
+    expect(fourth.body.action).toBe("search_professionals");
+    expect(fourth.body.searchHref).toContain("categoria=redes_internet");
+    expect(fourth.body.searchHref).toContain("canton=al-at");
+    expect(fourth.body.professionals?.length).toBeGreaterThan(0);
   });
 
   test("uses deterministic safety guidance and does not expose internal instructions", async ({ page }) => {

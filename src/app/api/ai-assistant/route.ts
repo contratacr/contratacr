@@ -243,6 +243,9 @@ Rules:
 - Ask one short clarification only when service or location is essential and missing. Otherwise act.
 - If the message contains both a service intent and a Costa Rica location, do not ask another question; set action=search_professionals.
 - If the message has a service but no location, ask which Costa Rica area. If it has a location but no service, ask which service.
+- Distinguish finding professionals from publishing a request. Words such as "busco", "profesional", "especialista", "opciones", "quienes hay" or a follow-up location mean search_professionals, not publish_request.
+- Never switch an existing professional search to publish_request unless the user explicitly asks to publish/create a request. Offering a request after zero results does not change the user's intent.
+- Preserve the most recent service and location in follow-up messages. A role word such as "especialista" must not replace an explicit trade such as "redes".
 - For creating a request, collect only the missing service and Costa Rica location. Once both are known, set action=publish_request and offer to open the form; the form collects job details.
 - Never claim that you will create, publish, submit or complete a request for the person. Only the person can review and publish it from the form.
 - Use the matching navigation action when the person wants to open services, register, sign in, reset a password, open their dashboard, support or help.
@@ -368,12 +371,12 @@ function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
 
 function normalizePayload(payload: AssistantPayload, message: string, locale: Locale, history: HistoryMessage[] = []): AssistantPayload {
   const normalized = normalizeText(message);
-  const cta = normalizeText(payload.ctaLabel || "");
-  const priorUserContext = history
+  const recentUserMessages = history
     .filter((item) => item.role === "user")
     .slice(-4)
     .map((item) => item.content)
-    .join(" ");
+    .reverse();
+  const priorUserContext = [...recentUserMessages].reverse().join(" ");
   const priorAssistantContext = history
     .filter((item) => item.role === "assistant")
     .slice(-4)
@@ -381,14 +384,20 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     .join(" ");
   const messageCategory = resolveCategoryIntent(message, locale);
   const pendingServiceFromAssistant = resolveCategoryIntent(priorAssistantContext, locale);
+  const recentUserService = recentUserMessages
+    .map((item) => resolveCategoryIntent(item, locale))
+    .find(Boolean) ?? null;
+  const recentUserPlace = recentUserMessages
+    .map((item) => resolveLocationIntent(item))
+    .find(Boolean) ?? null;
   const messageOnlyHasPlace = !!resolveLocationIntent(message) && !messageCategory;
   const directService = resolveCategoryIntent(message, locale)
-    ?? (messageOnlyHasPlace ? pendingServiceFromAssistant : null)
+    ?? (messageOnlyHasPlace ? recentUserService ?? pendingServiceFromAssistant : null)
     ?? resolveCategoryIntent(payload.searchQuery || "", locale)
-    ?? resolveCategoryIntent(priorUserContext, locale);
+    ?? recentUserService;
   const directPlace = resolveLocationIntent(message)
     ?? resolveLocationIntent(payload.locationText || "")
-    ?? resolveLocationIntent(priorUserContext);
+    ?? recentUserPlace;
   const directPlaceLabel = formatPlaceLabel(directPlace);
   const publishDetailText = message.replace(PUBLISH_REQUEST_PHRASE_RE, " ");
   const publishDetailMeaning = meaningfulRequestText(publishDetailText);
@@ -398,18 +407,30 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
   const publishService = publishServiceFromMessage ?? resolveCategoryIntent(priorUserContext, locale);
   const publishPlace = resolveLocationIntent(message) ?? resolveLocationIntent(priorUserContext);
   const publishPlaceLabel = formatPlaceLabel(publishPlace);
-  const wantsProfessionalSearch = includesAny(normalized, [
+  const publishConversation = history.some((item) => item.role === "user" &&
+    /publicar (?:una )?solicitud|crear (?:una )?solicitud|publish (?:a )?request|create (?:a )?request/i.test(item.content),
+  );
+  const currentHasServiceAndPlace = !!messageCategory && !!resolveLocationIntent(message);
+  const hasExplicitSearchLanguage = includesAny(normalized, [
     "profesional",
     "profesionales",
     "quien",
     "quienes",
     "hay",
     "busco",
+    "buscando",
     "buscar",
     "necesito",
     "ocupo",
     "recomiende",
     "recomiendeme",
+    "especialista",
+    "opcion",
+    "opciones",
+    "que opciones",
+    "cuales opciones",
+    "muestrame",
+    "muestreme",
     "contratar",
     "professional",
     "professionals",
@@ -418,16 +439,15 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     "need",
     "hire",
     "recommend",
-  ]) || payload.action === "search_professionals";
+  ]);
+  const wantsProfessionalSearch = hasExplicitSearchLanguage ||
+    (!publishConversation && (payload.action === "search_professionals" || currentHasServiceAndPlace));
   const resultSelection = [
     { words: ["primero", "primera", "first"], index: 1 },
     { words: ["segundo", "segunda", "second"], index: 2 },
     { words: ["tercero", "tercera", "third"], index: 3 },
   ].find((option) => includesAny(normalized, option.words));
   const hasShownResults = history.some((item) => /Resultados mostrados|Results shown/i.test(item.content));
-  const publishConversation = history.some((item) =>
-    /publicar (?:una )?solicitud|crear (?:una )?solicitud|publish (?:a )?request|create (?:a )?request/i.test(item.content),
-  );
   if (resultSelection && hasShownResults) {
     return {
       ...payload,
@@ -462,9 +482,56 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
       ctaLabel: locale === "en" ? "Suggest service" : "Sugerir servicio",
     };
   }
+  if (
+    includesAny(normalized, ["ocultar mi agenda", "oculto mi agenda", "mostrar mi agenda", "muestro mi agenda", "agenda privada", "mi disponibilidad", "mis horarios", "hide my schedule", "my availability"])
+  ) {
+    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open availability" : "Ir a disponibilidad" };
+  }
+  if (includesAny(normalized, ["editar mis servicios", "administrar mis servicios", "servicios que ofrezco", "edit my services", "manage my services"])) {
+    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open my services" : "Ir a mis servicios" };
+  }
   const wantsToPublish = publishConversation ||
-    includesAny(normalized, ["publicar solicitud", "publicar una solicitud", "crear solicitud", "como publico", "hacer una solicitud"]) ||
-    includesAny(cta, ["publicar solicitud", "crear solicitud", "publish request", "create request"]);
+    includesAny(normalized, ["publicar solicitud", "publicar una solicitud", "crear solicitud", "como publico", "hacer una solicitud"]);
+  // Search intent always wins over a model-suggested publication CTA. Publishing is
+  // entered only through an explicit user request, never because a prior zero-result
+  // answer happened to offer that alternative.
+  if (wantsProfessionalSearch && directService && directPlace) {
+    const serviceLabel = getCategoryLabel(directService.id, locale);
+    return {
+      ...payload,
+      action: "search_professionals",
+      serviceId: directService.id,
+      locationText: directPlaceLabel,
+      searchQuery: serviceLabel,
+      answer: locale === "en"
+        ? `I found professionals for ${serviceLabel} in ${directPlaceLabel}.`
+        : `Encontré profesionales de ${serviceLabel} en ${directPlaceLabel}.`,
+      ctaLabel: locale === "en" ? "See all results" : "Ver todos los resultados",
+    };
+  }
+  if (wantsProfessionalSearch && directService && !directPlace) {
+    const serviceLabel = getCategoryLabel(directService.id, locale);
+    return {
+      ...payload,
+      action: "answer",
+      serviceId: directService.id,
+      answer: locale === "en"
+        ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
+        : `¿En qué zona de Costa Rica desea buscar ${serviceLabel}?`,
+      ctaLabel: null,
+    };
+  }
+  if (wantsProfessionalSearch && !directService && directPlace) {
+    return {
+      ...payload,
+      action: "answer",
+      locationText: directPlaceLabel,
+      answer: locale === "en"
+        ? `Which service do you need in ${directPlaceLabel}?`
+        : `¿Qué servicio necesita en ${directPlaceLabel}?`,
+      ctaLabel: null,
+    };
+  }
   if (wantsToPublish) {
     const serviceLabel = publishService ? getCategoryLabel(publishService.id, locale) : null;
     if (!publishService && !publishPlace) {
@@ -514,51 +581,6 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
   }
   if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "forgot my password", "reset password"])) {
     return { ...payload, action: "reset_password", ctaLabel: locale === "en" ? "Reset password" : "Restablecer contraseña" };
-  }
-  if (
-    includesAny(normalized, ["ocultar mi agenda", "oculto mi agenda", "mostrar mi agenda", "muestro mi agenda", "agenda privada", "mi disponibilidad", "mis horarios", "hide my schedule", "my availability"])
-  ) {
-    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open availability" : "Ir a disponibilidad" };
-  }
-  if (includesAny(normalized, ["editar mis servicios", "administrar mis servicios", "servicios que ofrezco", "edit my services", "manage my services"])) {
-    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open my services" : "Ir a mis servicios" };
-  }
-  if (wantsProfessionalSearch && directService && directPlace) {
-    const serviceLabel = getCategoryLabel(directService.id, locale);
-    return {
-      ...payload,
-      action: "search_professionals",
-      serviceId: directService.id,
-      locationText: directPlaceLabel,
-      searchQuery: serviceLabel,
-      answer: locale === "en"
-        ? `I found professionals for ${serviceLabel} in ${directPlaceLabel}.`
-        : `Encontré profesionales de ${serviceLabel} en ${directPlaceLabel}.`,
-      ctaLabel: locale === "en" ? "See all results" : "Ver todos los resultados",
-    };
-  }
-  if (wantsProfessionalSearch && directService && !directPlace) {
-    const serviceLabel = getCategoryLabel(directService.id, locale);
-    return {
-      ...payload,
-      action: "answer",
-      serviceId: directService.id,
-      answer: locale === "en"
-        ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
-        : `¿En qué zona de Costa Rica desea buscar ${serviceLabel}?`,
-      ctaLabel: null,
-    };
-  }
-  if (wantsProfessionalSearch && !directService && directPlace) {
-    return {
-      ...payload,
-      action: "answer",
-      locationText: directPlaceLabel,
-      answer: locale === "en"
-        ? `Which service do you need in ${directPlaceLabel}?`
-        : `¿Qué servicio necesita en ${directPlaceLabel}?`,
-      ctaLabel: null,
-    };
   }
   return payload;
 }
