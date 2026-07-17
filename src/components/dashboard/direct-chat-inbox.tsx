@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Archive, ArchiveRestore, ArrowLeft, Loader2, MessageCircle, Search, Send } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Loader2, MessageSquareMore, Search, Send } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -56,7 +56,7 @@ export function DirectChatInbox() {
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
-  const [showArchived, setShowArchived] = useState(false);
+  const [showArchived, setShowArchived] = useState(searchParams.get("chatStatus") === "archived");
   const [loading, setLoading] = useState(true);
   const [threadLoading, setThreadLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -132,9 +132,25 @@ export function DirectChatInbox() {
     return () => { void supabase.removeChannel(channel); };
   }, [activeId, loadConversations, loadThread, user]);
 
+  function updateArchiveView(nextArchived: boolean, nextConversationId?: string | null) {
+    setShowArchived(nextArchived);
+    setActiveId(nextConversationId ?? null);
+    setMobileThread(false);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "chat");
+    if (nextArchived) params.set("chatStatus", "archived");
+    else params.delete("chatStatus");
+
+    if (nextConversationId) params.set("conversation", nextConversationId);
+    else params.delete("conversation");
+
+    router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
+  }
+
   function selectConversation(id: string) {
     setActiveId(id); setMobileThread(true); setError("");
-    router.replace(`/dashboard/profesional?tab=chat&conversation=${id}`, { scroll: false });
+    router.replace(`/dashboard/profesional?tab=chat${showArchived ? "&chatStatus=archived" : ""}&conversation=${id}`, { scroll: false });
   }
 
   async function submit(e: FormEvent) {
@@ -159,7 +175,9 @@ export function DirectChatInbox() {
     const res = await fetch("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId, status: showArchived ? "open" : "archived" }) });
     if (!res.ok) { const json = await res.json().catch(() => ({})); setError(json.error || (isEn ? "Could not update the conversation." : "No se pudo actualizar la conversación.")); return; }
     const remaining = conversations.filter((item) => item.id !== activeId);
-    setConversations(remaining); setActiveId(remaining[0]?.id ?? null); setMobileThread(false);
+    const nextId = remaining[0]?.id ?? null;
+    setConversations(remaining);
+    updateArchiveView(showArchived, nextId);
   }
 
   function contextHref(item: Conversation) {
@@ -169,8 +187,21 @@ export function DirectChatInbox() {
   }
 
   if (loading) return <div className="flex min-h-[360px] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>;
-  if (!conversations.length) return <div className="py-16 text-center"><MessageCircle className="mx-auto h-10 w-10 text-[#009FD9]" /><h3 className="mt-4 text-lg font-extrabold text-[#162543]">{showArchived ? (isEn ? "No archived conversations" : "No hay conversaciones archivadas") : (isEn ? "No conversations yet" : "No hay conversaciones todavía")}</h3><p className="mx-auto mt-2 max-w-md text-sm text-[#64748b]">{isEn ? "Messages related to profiles, requests and proposals will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, solicitudes y propuestas."}</p><button type="button" onClick={() => setShowArchived((value) => !value)} className="mt-5 text-sm font-bold text-[#008fc4] hover:underline">{showArchived ? (isEn ? "View active conversations" : "Ver conversaciones activas") : (isEn ? "View archived" : "Ver archivadas")}</button></div>;
 
+  if (!conversations.length) return (
+    <div className="py-16 text-center">
+      <MessageSquareMore className="mx-auto h-10 w-10 text-[#009FD9]" />
+      <h3 className="mt-4 text-lg font-extrabold text-[#162543]">
+        {showArchived ? (isEn ? "No archived conversations" : "No hay conversaciones archivadas") : (isEn ? "No conversations yet" : "No hay conversaciones todavía")}
+      </h3>
+      <p className="mx-auto mt-2 max-w-md text-sm text-[#64748b]">
+        {isEn ? "Messages related to profiles, requests and proposals will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, solicitudes y propuestas."}
+      </p>
+      <button type="button" onClick={() => updateArchiveView(!showArchived)} className="mt-5 text-sm font-bold text-[#008fc4] hover:underline">
+        {showArchived ? (isEn ? "View active conversations" : "Ver conversaciones activas") : (isEn ? "View archived" : "Ver archivadas")}
+      </button>
+    </div>
+  );
   const activePerson = active ? personFor(active) : null;
   const activeContext = active ? contextFor(active) : null;
   const detailHref = active ? contextHref(active) : null;
@@ -185,10 +216,10 @@ export function DirectChatInbox() {
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-extrabold text-[#162543]">{isEn ? "Messages" : "Mensajes"}</h2>
             <div className="grid grid-cols-2 rounded-xl border border-[#d6e4ed] bg-white p-1 text-[11px] font-extrabold shadow-sm">
-              <button type="button" onClick={() => { if (showArchived) { setShowArchived(false); setActiveId(null); setMobileThread(false); } }} className={cn("h-8 rounded-lg px-2 transition", !showArchived ? "bg-[#009FD9] text-white shadow-sm" : "text-[#64748b] hover:bg-[#f3f8fb]")}>
+              <button type="button" onClick={() => { if (showArchived) updateArchiveView(false); }} className={cn("h-8 rounded-lg px-2 transition", !showArchived ? "bg-[#009FD9] text-white shadow-sm" : "text-[#64748b] hover:bg-[#f3f8fb]")}>
                 {isEn ? "Active" : "Activos"}
               </button>
-              <button type="button" onClick={() => { if (!showArchived) { setShowArchived(true); setActiveId(null); setMobileThread(false); } }} className={cn("h-8 rounded-lg px-2 transition", showArchived ? "bg-[#009FD9] text-white shadow-sm" : "text-[#64748b] hover:bg-[#f3f8fb]")}>
+              <button type="button" onClick={() => { if (!showArchived) updateArchiveView(true); }} className={cn("h-8 rounded-lg px-2 transition", showArchived ? "bg-[#009FD9] text-white shadow-sm" : "text-[#64748b] hover:bg-[#f3f8fb]")}>
                 {isEn ? "Archived" : "Archivados"}
               </button>
             </div>

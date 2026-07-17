@@ -861,10 +861,10 @@ export default function DashboardPage() {
           activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
         )}
       >
-        <span className="relative mr-1 inline-flex shrink-0">
+        <span className="relative mr-1.5 inline-flex shrink-0">
           {TAB_ICONS[tab]}
           {badge > 0 && (
-            <span className="absolute -right-3.5 -top-2.5 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
+            <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
               {badge > 9 ? "9+" : badge}
             </span>
           )}
@@ -1308,7 +1308,7 @@ export default function DashboardPage() {
                   <span className="relative inline-flex [&>svg]:!h-[22px] [&>svg]:!w-[22px]">
                     {TAB_ICONS[tab]}
                     {badge > 0 && (
-                      <span className="absolute -right-3.5 -top-2 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">{badge > 9 ? "9+" : badge}</span>
+                      <span className="absolute -right-2.5 -top-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">{badge > 9 ? "9+" : badge}</span>
                     )}
                   </span>
                   <span className="text-[10px] font-semibold leading-none max-w-full truncate">{t(`bottomNav.${tab}`)}</span>

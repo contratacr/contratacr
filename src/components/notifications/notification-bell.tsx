@@ -110,7 +110,9 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   }, [user]);
 
   useEffect(() => {
-    setNotificationState({ userId: user?.id, items: readCachedNotifications(user?.id) });
+    queueMicrotask(() => {
+      setNotificationState({ userId: user?.id, items: readCachedNotifications(user?.id) });
+    });
   }, [user?.id]);
 
   useEffect(() => {
@@ -225,12 +227,14 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         className="relative grid h-10 w-10 place-items-center rounded-xl text-[#6b7280] hover:bg-[#f3f4f6] transition-colors"
         aria-label={t("title")}
       >
-        <Bell className="h-5 w-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
+        <span className="relative inline-flex">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </span>
       </button>
 
       {open && (
