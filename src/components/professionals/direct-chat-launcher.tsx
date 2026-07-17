@@ -21,6 +21,7 @@ type DirectChatLauncherProps = {
   openDirectly?: boolean;
   initialMessage?: string;
   onSelfAction?: () => void;
+  tone?: "primary" | "contrast";
 };
 
 export function DirectChatLauncher({
@@ -35,6 +36,7 @@ export function DirectChatLauncher({
   buttonLabel,
   initialMessage = "",
   onSelfAction,
+  tone = "primary",
 }: DirectChatLauncherProps) {
   const locale = useLocale();
   const router = useRouter();
@@ -76,9 +78,9 @@ export function DirectChatLauncher({
       disabled={loading}
       aria-busy={loading}
       className={cn(
-        buttonVariants({ variant: "chat", size: "md" }),
-        // Navy consistently identifies entry into person-to-person chat. Cyan remains
-        // reserved for the primary workflow action and the send button inside the chat.
+        buttonVariants({ variant: tone === "contrast" ? "chat" : "default", size: "md" }),
+        // Cyan is the default when messaging is the main action. Navy is opt-in only
+        // when messaging sits beside another positive workflow action.
         "gap-1.5 disabled:opacity-60",
         className || "w-full rounded-full py-2.5 text-[13px] font-semibold",
       )}

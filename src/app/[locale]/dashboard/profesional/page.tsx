@@ -641,7 +641,7 @@ export default function DashboardPage() {
   // Mobile bottom-nav split: the mode's primary tabs in the bar (incl. the shared
   // "notifications" tab, which now has a dedicated slot), then the rest scrolls after.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
-  const sidebarTabs = [...modeTabs, ...SHARED_TABS];
+  const sidebarTabs = [...modeTabs, ...SHARED_TABS].filter((tab) => tab !== "assistant");
   const barTabs = [...modeTabs, ...SHARED_TABS];
   const mobilePriorityTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
   const mobileBarTabs = [...mobilePriorityTabs, ...barTabs.filter((tab) => !mobilePriorityTabs.includes(tab))];
@@ -1023,10 +1023,12 @@ export default function DashboardPage() {
 
                         {activeTab === "chat" && <DirectChatInbox />}
                         {activeTab === "assistant" && (
-                          <AiConcierge
-                            embedded
-                            onClose={() => setTab(mode === "offer" ? "bookings" : "sent_bookings")}
-                          />
+                          <div className="lg:hidden">
+                            <AiConcierge
+                              embedded
+                              onClose={() => setTab(mode === "offer" ? "bookings" : "sent_bookings")}
+                            />
+                          </div>
                         )}
                         {activeTab === "notifications" && <NotificationsList />}
                         {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}

@@ -467,8 +467,6 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
 
   if (!sessionHydrated || pathname.startsWith("/admin")) return null;
-  if (insideDashboard && !embedded) return null;
-
   if (!embedded && !open) {
     return (
       <button
@@ -479,7 +477,7 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
         className={cn(
           "group fixed right-3 z-[95] grid h-14 w-14 place-items-center overflow-visible bg-transparent transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 sm:bottom-6 sm:right-6 sm:h-[72px] sm:w-[72px]",
           insideDashboard
-            ? "bottom-[calc(5.4rem+env(safe-area-inset-bottom))]"
+            ? "hidden lg:grid lg:bottom-6"
             : "bottom-[calc(0.85rem+env(safe-area-inset-bottom))]",
         )}
       >

@@ -1108,7 +1108,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       <Button size="sm" className="min-w-[150px] flex-1 px-3 sm:flex-none" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>
                                     )}
                                     {proposal.professionals?.id && (
-                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="min-h-9 min-w-[104px] flex-1 rounded-lg px-3 text-sm font-bold disabled:cursor-wait sm:flex-none" />
+                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} tone={project.status === "awaiting_confirmation" && isAccepted ? "contrast" : "primary"} className="min-h-9 min-w-[104px] flex-1 rounded-lg px-3 text-sm font-bold disabled:cursor-wait sm:flex-none" />
                                     )}
                                   </div>
                                 </div>
