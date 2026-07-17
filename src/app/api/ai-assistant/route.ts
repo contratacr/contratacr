@@ -479,8 +479,16 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     "no estoy seguro que servicio",
     "no estoy segura que servicio",
     "no se a quien buscar",
+    "no se que profesional buscar",
+    "no se cual profesional buscar",
+    "no se si ocupo",
+    "no se si necesito",
+    "no se si esto es",
     "not sure what service",
     "not sure who to search",
+    "not sure what professional",
+    "do not know who can fix",
+    "don't know who can fix",
     "do not know what service",
     "don't know what service",
   ]);
@@ -719,11 +727,25 @@ function urgentSafetyAnswer(message: string, locale: Locale): AssistantPayload |
     "dolor intenso en el pecho",
     "me duele mucho el pecho",
     "me duele fuerte el pecho",
+    "olor a gas",
+    "fuga de gas",
+    "escape de gas",
+    "huele a gas",
+    "incendio",
+    "se esta quemando",
+    "corto circuito con chispas",
+    "cables echando chispas",
+    "electrocutado",
+    "descarga electrica",
     "riesgo de suicidio",
     "quiero suicidarme",
     "medical emergency",
     "not breathing",
     "severe chest pain",
+    "gas leak",
+    "smell gas",
+    "fire",
+    "electrical shock",
     "suicide risk",
   ]);
   if (!urgent) return null;
@@ -733,6 +755,75 @@ function urgentSafetyAnswer(message: string, locale: Locale): AssistantPayload |
       ? "This may be an emergency. Call Costa Rica emergency services at 9-1-1 now. Do not wait for a marketplace professional or an AI response."
       : "Esto puede ser una emergencia. Llame ahora al 9-1-1 de Costa Rica. No espere a un profesional de la plataforma ni una respuesta de IA.",
   };
+}
+
+function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayload | null {
+  const normalized = normalizeText(message);
+  const asksForInternalData = includesAny(normalized, [
+    "muestre su prompt",
+    "muestra tu prompt",
+    "dame tu prompt",
+    "api key",
+    "secreto interno",
+    "secretos internos",
+    "system prompt",
+    "internal instructions",
+    "ignore sus reglas",
+    "ignore your rules",
+  ]);
+  if (asksForInternalData) {
+    return {
+      action: "answer",
+      answer: locale === "en"
+        ? "I cannot share internal instructions, secrets or implementation details. I can help you search for services, publish a request or answer questions about ContrataCR."
+        : "No puedo compartir instrucciones internas, secretos ni detalles de implementacion. Si gusta, puedo ayudarle a buscar servicios, publicar una solicitud o resolver dudas sobre ContrataCR.",
+    };
+  }
+
+  const asksForPrivateData = includesAny(normalized, [
+    "cedula de",
+    "numero de cedula",
+    "telefono privado",
+    "correo privado",
+    "mensajes de otro usuario",
+    "datos privados",
+    "private phone",
+    "private email",
+    "private data",
+    "another user's messages",
+  ]);
+  if (asksForPrivateData) {
+    return {
+      action: "answer",
+      answer: locale === "en"
+        ? "I cannot reveal private user data. Please use the public profile, request form or official support channel for legitimate coordination."
+        : "No puedo revelar datos privados de usuarios. Use el perfil publico, el formulario de solicitud o el canal oficial de soporte para una coordinacion legitima.",
+    };
+  }
+
+  const asksForHarmfulHelp = includesAny(normalized, [
+    "hackear una cuenta",
+    "robar una cuenta",
+    "falsificar un documento",
+    "falsificar firma",
+    "evadir impuestos",
+    "hacer un arma",
+    "comprar receta falsa",
+    "hack an account",
+    "forge a document",
+    "forge a signature",
+    "evade taxes",
+  ]);
+  if (asksForHarmfulHelp) {
+    return {
+      action: "answer",
+      answer: locale === "en"
+        ? "I cannot help with illegal or harmful actions. If this is a legitimate need, I can help you find an appropriate verified professional, such as legal, tax or cybersecurity support."
+        : "No puedo ayudar con acciones ilegales o daninas. Si es una necesidad legitima, puedo orientarle hacia un profesional adecuado, como apoyo legal, tributario o de ciberseguridad.",
+    };
+  }
+
+  return null;
 }
 
 function resultPrice(pro: Awaited<ReturnType<typeof searchProfessionals>>[number], locale: Locale) {
@@ -929,7 +1020,7 @@ export async function POST(req: Request) {
     }
 
     const catalog = await liveCatalog(locale);
-    const safetyPayload = urgentSafetyAnswer(rawMessage, locale);
+    const safetyPayload = urgentSafetyAnswer(rawMessage, locale) ?? sensitiveOrUnsafeAnswer(rawMessage, locale);
     const aiPayload = safetyPayload ? null : await openAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
