@@ -906,7 +906,7 @@
       "email": "Your email",
       "emailHint": "To receive updates on your request",
       "submit": "Confirm request",
-      "note": "You'll be redirected to WhatsApp to coordinate directly with the professional"
+      "note": "The conversation will stay saved in ContrataCR."
     },
     "contact": {
       "title": "Your contact information",
@@ -922,8 +922,8 @@
     "whatsappNumberBody": "We need your contact number to coordinate your appointment. We save it for your next requests.",
     "success": {
       "title": "Request confirmed!",
-      "desc": "Your request is confirmed. Coordinate the details directly via WhatsApp with the professional.",
-      "whatsapp": "Continue on WhatsApp",
+      "desc": "Your request is confirmed. You can coordinate the details in chat with the professional.",
+      "whatsapp": "Message the professional",
       "viewRequest": "View my request",
       "close": "Done"
     },
@@ -942,7 +942,7 @@
     "next": {
       "title": "What happens next",
       "step1": "You choose a date and time and send your request.",
-      "step2": "WhatsApp opens with the professional to confirm.",
+      "step2": "You can message the professional in ContrataCR chat.",
       "step3": "You coordinate price and details directly, without intermediaries."
     },
     "calendar": {
@@ -950,9 +950,9 @@
       "locationPrefix": "In <b>{location}</b>.",
       "availabilityHint": "Days with a blue dot have appointments.",
       "privateTitle": "Private availability",
-      "privateBody": "This professional coordinates schedules directly. Message them on WhatsApp to book.",
-      "whatsapp": "Coordinate on WhatsApp",
-      "whatsappOnlyTitle": "This professional coordinates on WhatsApp",
+      "privateBody": "This professional coordinates schedules directly. Message them in chat to book.",
+      "whatsapp": "Send a message",
+      "whatsappOnlyTitle": "This professional coordinates by message",
       "whatsappOnlyBody": "They haven't published online times yet. Message them to coordinate your service.",
       "today": "Today",
       "selectDateTime": "Select date and time",
@@ -1179,6 +1179,7 @@
       "services": "My services",
       "photos": "Success stories",
       "availability": "Availability",
+      "chat": "Messages",
       "bookings": "Requests received",
       "proposals": "Opportunities",
       "verificacion": "Verification",
@@ -1270,6 +1271,7 @@
       "services": "Services",
       "photos": "Wins",
       "availability": "Schedule",
+      "chat": "Messages",
       "bookings": "Requests",
       "proposals": "Opportunities",
       "verificacion": "Verification",

@@ -7,11 +7,11 @@ import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, M
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { computeAge } from "@/lib/age";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { getWhatsAppLink, cn, formatRelativeOrDate } from "@/lib/utils";
+import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
@@ -285,12 +285,6 @@ export function BookingRequests() {
     const location = booking.slot_location_label || null;
 
     // First name for the friendly WhatsApp greeting (the requester is the only contact).
-    const cliFirst = (booking.client_name || t("thePerson")).split(" ")[0];
-    // Contact: the REQUESTER (account holder) is the sole, reachable contact. The WhatsApp
-    // button now lives in the unified action row (footer), not next to the contact line.
-    const waHref = booking.client_phone
-      ? getWhatsAppLink(booking.client_phone, t("waMessage", { name: cliFirst }))
-      : null;
     // The BOOKER's identification (always the client who reserved — never the beneficiary,
     // who only has name + DOB). Keep it inside the expanded details so the closed card
     // stays scannable; absent ID reads as "Sin verificar" in the same field.
@@ -442,12 +436,8 @@ export function BookingRequests() {
             {!panelOpen && (() => {
               return (
                 <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
-                  {waHref && isActive && (
-                    <Button variant="whatsapp" size="sm" asChild className="min-w-[8rem] flex-1 rounded-lg px-4 sm:flex-none">
-                      <a href={waHref} target="_blank" rel="noopener noreferrer">
-                        <WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("contact")}
-                      </a>
-                    </Button>
+                  {isActive && (
+                    <DirectChatLauncher bookingId={booking.id} professionalName={booking.client_name || t("thePerson")} contextTitle={booking.service_description} buttonLabel={t("contact")} className="inline-flex min-h-9 min-w-[8rem] flex-1 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] sm:flex-none" />
                   )}
                   {isActive && (
                     <>

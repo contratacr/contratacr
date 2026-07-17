@@ -4,12 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PriceInput } from "@/components/ui/price-input";
-import { cn, getWhatsAppLink, formatRelativeOrDate } from "@/lib/utils";
+import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
 import { TAX_INCLUDED_SUFFIX, formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
@@ -690,9 +690,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                   const phone = p.projects?.profiles?.phone;
                   const clientName = p.projects?.profiles?.full_name;
                   const canMarkCompleted = p.status === "accepted" && ps === "in_progress";
-                  const wa = p.status === "accepted" && ps !== "cancelled" && phone
-                    ? getWhatsAppLink(phone, t("waMessage", { name: (clientName ?? "").split(" ")[0], title: p.projects?.title ?? "" }))
-                    : null;
                   const sentDate = formatRelativeOrDate(p.created_at, locale);
                   const proposalPriceParts = p.price ? splitPricingLabel(formatColonesTaxIncluded(p.price)) : null;
                   return (
@@ -802,11 +799,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               actions.push(<Button key="edit" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => startEdit(p)}>{t("editProposal")}</Button>);
                               actions.push(<Button key="withdraw" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4 border-[#fecaca] text-[#dc2626] hover:bg-[#fef2f2] hover:text-[#b91c1c] hover:border-[#fca5a5]" onClick={() => setWithdrawTarget(p)}>{t("withdraw")}</Button>);
                             } else if (p.status === "accepted") {
-                              if (wa) {
+                              if (ps !== "cancelled") {
                                 actions.push(
-                                  <Button key="wa" variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
-                                    <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("contactClient")}</a>
-                                  </Button>
+                                  <DirectChatLauncher key="chat" proposalId={p.id} professionalName={clientName || (locale === "en" ? "Client" : "Cliente")} contextTitle={p.projects?.title} buttonLabel={t("contactClient")} className="inline-flex min-h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] sm:flex-none" />
                                 );
                               }
                               if (canMarkCompleted) actions.push(<Button key="done" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);

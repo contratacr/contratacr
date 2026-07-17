@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag, CheckCircle2 } from "lucide-react";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { Link } from "@/i18n/navigation";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
 import { formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
-import { getInitials, getWhatsAppLink, cn, formatRelativeOrDate } from "@/lib/utils";
+import { getInitials, cn, formatRelativeOrDate } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
@@ -725,18 +725,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             {(() => {
                               const isActiveB = ["pending", "confirmed", "in_progress"].includes(b.status);
                               const canContactAfterProCancel = b.status === "cancelled" && b.cancelled_by === "professional";
-                              const wa = b.professionals?.whatsapp && (canContactAfterProCancel || (b.status !== "cancelled" && b.status !== "completed"))
-                                ? getWhatsAppLink(b.professionals.whatsapp, t("waBooking")) : null;
+                              const canMessage = canContactAfterProCancel || (b.status !== "cancelled" && b.status !== "completed");
                               let primary: ReactNode = null;
                               if (b.status === "awaiting_confirmation") {
                                 primary = <Button size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
                               } else if (b.status === "completed") {
                                 primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
-                              } else if (wa) {
+                              } else if (canMessage && b.professional_id) {
                                 primary = (
-                                  <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
-                                    <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("contact")}</a>
-                                  </Button>
+                                  <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} className="inline-flex min-h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] sm:flex-none" />
                                 );
                               }
                               return (
@@ -1102,12 +1099,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     {project.status === "awaiting_confirmation" && isAccepted && (
                                       <Button size="sm" className="min-w-[150px] flex-1 px-3 sm:flex-none" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>
                                     )}
-                                    {proposal.professionals?.whatsapp && (
-                                      <Button size="sm" variant="whatsapp" className="min-w-[104px] flex-1 px-3 sm:flex-none" asChild>
-                                        <a href={getWhatsAppLink(proposal.professionals.whatsapp, t("waProposal", { title: project.title }))} target="_blank" rel="noopener noreferrer">
-                                          <WhatsAppIcon className="h-3.5 w-3.5 shrink-0" /> {t("contact")}
-                                        </a>
-                                      </Button>
+                                    {proposal.professionals?.id && (
+                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("contact")} className="inline-flex min-h-9 min-w-[104px] flex-1 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-3 text-sm font-bold text-white hover:bg-[#0089bb] sm:flex-none" />
                                     )}
                                   </div>
                                 </div>

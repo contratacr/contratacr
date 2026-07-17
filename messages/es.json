@@ -905,7 +905,7 @@
       "email": "Tu email",
       "emailHint": "Para recibir actualizaciones de tu solicitud",
       "submit": "Confirmar solicitud",
-      "note": "Serás redirigido a WhatsApp para coordinar directamente con el profesional"
+      "note": "La conversación quedará guardada en ContrataCR."
     },
     "contact": {
       "title": "Tu información de contacto",
@@ -921,8 +921,8 @@
     "whatsappNumberBody": "Para coordinar tu cita necesitamos tu número de contacto. Lo guardamos para tus próximas solicitudes.",
     "success": {
       "title": "¡Solicitud confirmada!",
-      "desc": "Tu solicitud quedó confirmada. Coordina los detalles directamente por WhatsApp con el profesional.",
-      "whatsapp": "Continuar por WhatsApp",
+      "desc": "Tu solicitud quedó confirmada. Puedes coordinar los detalles en el chat con el profesional.",
+      "whatsapp": "Escribir al profesional",
       "viewRequest": "Ver mi solicitud",
       "close": "Listo"
     },
@@ -941,7 +941,7 @@
     "next": {
       "title": "Qué sigue",
       "step1": "Eliges fecha y hora y envías tu solicitud.",
-      "step2": "Se abre WhatsApp con el profesional para confirmar.",
+      "step2": "Puedes escribirle al profesional desde el chat de ContrataCR.",
       "step3": "Coordinan precio y detalles directamente, sin intermediarios."
     },
     "calendar": {
@@ -949,9 +949,9 @@
       "locationPrefix": "En <b>{location}</b>.",
       "availabilityHint": "Los días con punto azul tienen citas.",
       "privateTitle": "Disponibilidad privada",
-      "privateBody": "Este profesional coordina sus horarios directamente. Escríbele por WhatsApp para agendar.",
-      "whatsapp": "Coordinar por WhatsApp",
-      "whatsappOnlyTitle": "Este profesional coordina por WhatsApp",
+      "privateBody": "Este profesional coordina sus horarios directamente. Escríbele por el chat para agendar.",
+      "whatsapp": "Enviar mensaje",
+      "whatsappOnlyTitle": "Este profesional coordina por mensaje",
       "whatsappOnlyBody": "Aún no publica horarios en línea. Escríbele para coordinar tu servicio.",
       "today": "Hoy",
       "selectDateTime": "Selecciona fecha y hora",
@@ -1178,6 +1178,7 @@
       "services": "Mis servicios",
       "photos": "Casos de éxito",
       "availability": "Disponibilidad",
+      "chat": "Mensajes",
       "bookings": "Solicitudes recibidas",
       "proposals": "Oportunidades",
       "verificacion": "Verificación",
@@ -1269,6 +1270,7 @@
       "services": "Servicios",
       "photos": "Éxitos",
       "availability": "Agenda",
+      "chat": "Mensajes",
       "bookings": "Solicitudes",
       "proposals": "Oportunidades",
       "verificacion": "Verificación",

@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, Repeat2, Plus, AlertCircle, X,
+  ArrowRight, Sparkles, Repeat2, Plus, AlertCircle, X, MessageCircle,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -33,6 +33,7 @@ import { AccountSecuritySection } from "@/components/account/account-security";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { SupportTickets } from "@/components/support/support-tickets";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
+import { DirectChatInbox } from "@/components/dashboard/direct-chat-inbox";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
@@ -60,7 +61,7 @@ type Tab =
   | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "saved"
-  | "notifications" | "soporte" | "cuenta";
+  | "chat" | "notifications" | "soporte" | "cuenta";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -77,6 +78,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   sent_bookings: <CalendarClock className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
+  chat: <MessageCircle className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
   soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
@@ -97,14 +99,13 @@ const OFFER_TABS: Tab[] = [
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
 const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved"];
-const SHARED_TABS: Tab[] = ["notifications", "soporte"];
+const SHARED_TABS: Tab[] = ["chat", "notifications", "soporte"];
 
 // MOBILE bottom-nav: a horizontally scrollable rail with every mode tab.
 const MOBILE_PRIORITY: Record<Mode, Tab[]> = {
-  offer: ["bookings", "proposals", "notifications"],
-  use: ["sent_bookings", "sent_projects", "notifications"],
+  offer: ["bookings", "proposals", "chat", "notifications"],
+  use: ["sent_bookings", "sent_projects", "chat", "notifications"],
 };
-
 const POST_LOGIN_OPPORTUNITY_TYPES = new Set(["new_project"]);
 const POST_LOGIN_PRO_REQUEST_TYPES = new Set([
   "booking_received",
@@ -277,6 +278,7 @@ export default function DashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
+  const [chatUnread, setChatUnread] = useState(0);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
@@ -363,6 +365,39 @@ export default function DashboardPage() {
     const key = dashboardBootstrapKey(user.id);
     const current = getDashboardCache<DashboardBootstrap>(key) ?? { pro: null, profile: null };
     setDashboardCache(key, { ...current, ...next });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    let stopped = false;
+    const supabase = createClient();
+    const loadChatUnread = async () => {
+      const response = await fetch("/api/direct-chat", { cache: "no-store" }).catch(() => null);
+      if (!response?.ok || stopped) return;
+      const payload = await response.json().catch(() => ({ conversations: [] }));
+      const total = (payload.conversations ?? []).reduce((sum: number, conversation: {
+        client_id?: string;
+        client_unread_count?: number;
+        professional_unread_count?: number;
+      }) => sum + (conversation.client_id === user.id
+        ? Number(conversation.client_unread_count ?? 0)
+        : Number(conversation.professional_unread_count ?? 0)), 0);
+      setChatUnread(total);
+    };
+    void loadChatUnread();
+    const onChanged = () => void loadChatUnread();
+    window.addEventListener("notificationsChanged", onChanged);
+    const channel = supabase.channel(`dashboard-chat-unread-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, onChanged)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, onChanged)
+      .subscribe();
+    const id = window.setInterval(onChanged, 30000);
+    return () => {
+      stopped = true;
+      window.removeEventListener("notificationsChanged", onChanged);
+      window.clearInterval(id);
+      void supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchPro = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
@@ -815,7 +850,7 @@ export default function DashboardPage() {
     (computeCompletion(proForCompletion).percent < 100 || proForCompletion.verification_status !== "verified");
 
   function navButton(tab: Tab) {
-    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
+    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
     return (
       <button
         key={tab}
@@ -1217,6 +1252,7 @@ export default function DashboardPage() {
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
 
+                        {activeTab === "chat" && <DirectChatInbox />}
                         {activeTab === "notifications" && <NotificationsList />}
                         {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
                         {activeTab === "cuenta" && (
@@ -1255,7 +1291,7 @@ export default function DashboardPage() {
           >
             {isProvider && modeBottomNavButton()}
             {mobileBarTabs.map((tab) => {
-              const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
+              const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
               const active = activeTab === tab;
               return (
                 <button

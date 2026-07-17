@@ -4,10 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
-  Check, Sun, Sunset, Moon, CalendarCheck,
+  Check, Sun, Sunset, Moon, CalendarCheck, MessageCircle,
 } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,7 +22,8 @@ import {
   getCategoryLabel,
 } from "@/lib/data/categories";
 import { StarRating } from "@/components/ui/star-rating";
-import { getInitials, getWhatsAppLink, buildBookingIcs, proDisplayName } from "@/lib/utils";
+import { getInitials, buildBookingIcs, proDisplayName } from "@/lib/utils";
+import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { cn } from "@/lib/utils";
 import { formatServicePrice, splitPricingLabel } from "@/lib/pricing";
 import { isTooSoonCR } from "@/lib/time-cr";
@@ -247,7 +247,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [clientEmail, setClientEmail] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [waLink, setWaLink] = useState("");
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
   // OAuth users with no cédula on file must complete their profile before booking.
   const [needsProfile, setNeedsProfile] = useState(false);
@@ -323,7 +322,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         setCurrentMonth(im - 1);
       }
       setDescription("");
-      setWaLink("");
       setNeedsProfile(false);
       setProfileError(null);
       setAvailabilityPrivate(false);
@@ -618,7 +616,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setSelectedDate("");
     setSelectedTime("");
     setDescription("");
-    setWaLink("");
     setCreatedBookingId(null);
     onClose();
     // Refresh server data so the slot we just booked stops showing as available on /buscar
@@ -637,7 +634,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setSelectedDate("");
     setSelectedTime("");
     setDescription("");
-    setWaLink("");
     setCreatedBookingId(null);
     onClose();
     router.push(`/dashboard/profesional?${params.toString()}`);
@@ -728,26 +724,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         source: "booking_request",
       });
 
-      const firstName = professional.fullName.split(" ")[0];
-      const senderName = submitName.trim() || "un cliente";
-      const dateStr = selectedDate
-        ? `${formatDateDisplay(selectedDate, locale)}${selectedTime ? ` ${t("whatsapp.at")} ${selectedTime}` : ""}`
-        : null;
-
-      const message = [
-        t("whatsapp.greeting", { firstName, senderName }),
-        t("whatsapp.source"),
-        ``,
-        serviceDescription ? t("whatsapp.service", { description: serviceDescription }) : null,
-        dateStr ? t("whatsapp.dateTime", { dateTime: dateStr }) : null,
-        initialLocationLabel ? t("whatsapp.place", { place: initialLocationLabel }) : null,
-        ``,
-        t("whatsapp.confirmAvailability"),
-      ]
-        .filter((l) => l !== null)
-        .join("\n");
-
-      setWaLink(getWhatsAppLink(professional.whatsapp, message));
       bookedRef.current = true;
       clearPendingBookingIdentity();
       setStep("success");
@@ -827,7 +803,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       service: description,
       date: selectedDate,
       time: selectedTime,
-      whatsappLink: getWhatsAppLink(professional.whatsapp),
+      whatsappLink: createdBookingId ? `${window.location.origin}/${locale}/dashboard/profesional?tab=sent_bookings&booking=${createdBookingId}` : `${window.location.origin}/${locale}/dashboard/profesional?tab=sent_bookings`,
     });
     const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -1227,34 +1203,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           {t("calendar.privateBody")}
                         </p>
                       </div>
-                      <a
-                        href={getWhatsAppLink(professional.whatsapp, t("whatsapp.coordinate", { firstName: professional.fullName.split(" ")[0] }))}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-                      >
-                        <WhatsAppIcon className="h-4 w-4" />
-                        {t("calendar.whatsapp")}
-                      </a>
+                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel={locale === "en" ? "Send a message" : "Enviar mensaje"} className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#008fc4]" />
                     </div>
                   ) : !hasAnyAvailability ? (
                     <div className="flex flex-col items-center text-center gap-3 py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
-                        <WhatsAppIcon className="h-5 w-5 text-[#25D366]" />
+                        <MessageCircle className="h-5 w-5 text-[#009FD9]" />
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-[#111827]">{t("calendar.whatsappOnlyTitle")}</p>
                         <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">{t("calendar.whatsappOnlyBody")}</p>
                       </div>
-                      <a
-                        href={getWhatsAppLink(professional.whatsapp, t("whatsapp.coordinate", { firstName: professional.fullName.split(" ")[0] }))}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-                      >
-                        <WhatsAppIcon className="h-4 w-4" />
-                        {t("calendar.whatsapp")}
-                      </a>
+                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel={locale === "en" ? "Send a message" : "Enviar mensaje"} className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#008fc4]" />
                     </div>
                   ) : (
                     // Two sub-columns on desktop: CALENDAR (left) and that day's SLOTS (right).
@@ -1640,12 +1600,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     <h3 className="text-xl font-bold text-[#111827] mb-2">{t("success.title")}</h3>
                     <p className="text-sm text-[#6b7280] max-w-xs mx-auto">{t("success.desc")}</p>
                   </div>
-                  <Button variant="whatsapp" size="lg" asChild className="w-full max-w-xs">
-                    <a href={waLink} target="_blank" rel="noopener noreferrer">
-                      <WhatsAppIcon className="h-5 w-5" />
-                      {t("success.whatsapp")}
-                    </a>
-                  </Button>
+                  {createdBookingId && <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} bookingId={createdBookingId} contextTitle={description || categoryName} buttonLabel={locale === "en" ? "Message the professional" : "Escribir al profesional"} className="inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#008fc4]" />}
                   {selectedDate && selectedTime && (
                     <button
                       onClick={downloadCalendar}

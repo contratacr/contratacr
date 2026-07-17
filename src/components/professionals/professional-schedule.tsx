@@ -3,16 +3,15 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { CalendarDays, ChevronLeft, ChevronRight, Mail, MapPin, Phone } from "lucide-react";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { useAuth } from "@/hooks/use-auth";
-import { getWhatsAppLink } from "@/lib/utils";
 import { isTooSoonCR } from "@/lib/time-cr";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 import { Skeleton } from "@/components/ui/content-loading";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
 
@@ -581,10 +580,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // `stacked` = vertical (one above the other) — used for the PRIVATE case where
   // these are the only actions; otherwise they share ONE compact row so adding
   // "Llamar" above "Solicitar servicio" never adds a line.
-  const showWa = !!professional.whatsapp;
   const showCall = !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
   const showEmail = stacked && !!professional.contactEmail;
-  const waHref = getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`);
   const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
   const emailHref = `mailto:${professional.contactEmail}?subject=${encodeURIComponent("Consulta desde ContrataCR")}&body=${encodeURIComponent(`Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaria coordinar un servicio.`)}`;
 
@@ -666,18 +663,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   );
   const contactButtons = (
     <>
-      {showWa && (
-        <a
-          href={isOwn ? undefined : waHref}
-          target={isOwn ? undefined : "_blank"}
-          rel="noopener noreferrer"
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => { e.stopPropagation(); trackContact("whatsapp"); }}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2.5 text-[13px] font-semibold text-white hover:bg-[#1ebe5d] transition-colors"
-        >
-          {/* Profile page uses the short label "WhatsApp"; /buscar keeps "Contáctanos por WhatsApp". */}
-          <WhatsAppIcon className="h-4 w-4" /> {stacked ? t("whatsappShort") : t("whatsapp")}
-        </a>
-      )}
+      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} />
       {/* No-schedule state: filled on /buscar, outlined on the profile contact card. */}
       {showCall && renderCall(stacked)}
       {showEmail && (
@@ -694,17 +680,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   const profileContactButtons = (
     <>
-      {showWa && (
-        <a
-          href={isOwn ? undefined : waHref}
-          target={isOwn ? undefined : "_blank"}
-          rel="noopener noreferrer"
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => { e.stopPropagation(); trackContact("whatsapp"); }}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2.5 text-[13px] font-semibold text-white hover:bg-[#1ebe5d] transition-colors"
-        >
-          <WhatsAppIcon className="h-4 w-4" /> {t("whatsappShort")}
-        </a>
-      )}
+      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} />
       {(showCall || showEmail) && (
         <div className={`grid gap-2 ${showCall && showEmail ? "grid-cols-2" : "grid-cols-1"}`}>
           {showCall && renderCall(true)}
