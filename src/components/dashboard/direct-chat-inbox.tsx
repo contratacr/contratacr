@@ -1,12 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Archive, ArchiveRestore, ArrowLeft, Loader2, MessageSquareMore, Search, Send } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Box, Loader2, MessageSquareMore, Search, Send } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -57,6 +56,7 @@ export function DirectChatInbox() {
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(searchParams.get("chatStatus") === "archived");
+  const [archivedCount, setArchivedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [threadLoading, setThreadLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -83,6 +83,11 @@ export function DirectChatInbox() {
     const labels = isEn ? { booking: "Request", project: "Post", proposal: "Proposal", profile: "Profile" } : { booking: "Solicitud", project: "Publicación", proposal: "Propuesta", profile: "Perfil" };
     return { type, label: labels[type], title: item.context?.service_description || item.context?.title || item.subject || (isEn ? "General inquiry" : "Consulta general") };
   }, [isEn]);
+  const contextActionFor = useCallback((item: Conversation) => {
+    const type = item.context?.type ?? "profile";
+    const labels = isEn ? { booking: "View request", project: "View post", proposal: "View proposal", profile: "View profile" } : { booking: "Ver solicitud", project: "Ver publicación", proposal: "Ver propuesta", profile: "Ver perfil" };
+    return labels[type];
+  }, [isEn]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
@@ -98,6 +103,14 @@ export function DirectChatInbox() {
       if (!res.ok) throw new Error(json.error || "Error");
       setConversations(json.conversations ?? []);
       setActiveId((current) => current || json.conversations?.[0]?.id || null);
+      if (showArchived) {
+        setArchivedCount(json.conversations?.length ?? 0);
+      } else {
+        fetch("/api/direct-chat?status=archived", { cache: "no-store" })
+          .then((archivedRes) => archivedRes.ok ? archivedRes.json() : { conversations: [] })
+          .then((archivedJson) => setArchivedCount(Array.isArray(archivedJson.conversations) ? archivedJson.conversations.length : 0))
+          .catch(() => setArchivedCount(0));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load messages." : "No se pudieron cargar los mensajes.");
     } finally { if (!quiet) setLoading(false); }
@@ -177,6 +190,7 @@ export function DirectChatInbox() {
     const remaining = conversations.filter((item) => item.id !== activeId);
     const nextId = remaining[0]?.id ?? null;
     setConversations(remaining);
+    setArchivedCount((count) => showArchived ? Math.max(0, count - 1) : count + 1);
     updateArchiveView(showArchived, nextId);
   }
 
@@ -205,28 +219,34 @@ export function DirectChatInbox() {
   const activePerson = active ? personFor(active) : null;
   const activeContext = active ? contextFor(active) : null;
   const detailHref = active ? contextHref(active) : null;
-  const archiveLabel = showArchived ? (isEn ? "Restore conversation" : "Restaurar conversación") : (isEn ? "Archive conversation" : "Archivar conversación");
+  const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
   const activePersonName = activePerson?.name || "";
-  const activeContextText = activeContext ? `${activeContext.label} · ${activeContext.title}` : "";
-  const avatarLabel = isEn ? "View photo" : "Ver foto";
+  const activeContextTitle = activeContext?.title || "";
+  const activeContextAction = active ? contextActionFor(active) : "";
   return (
     <div className="grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
       <aside className={cn("min-h-0 border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>
         <div className="border-b border-[#e3ebf1] p-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-extrabold text-[#162543]">{isEn ? "Messages" : "Mensajes"}</h2>
-            <div className="grid grid-cols-2 rounded-xl border border-[#d6e4ed] bg-white p-1 text-[11px] font-extrabold shadow-sm">
-              <button type="button" onClick={() => { if (showArchived) updateArchiveView(false); }} className={cn("h-8 rounded-lg px-2 transition", !showArchived ? "bg-[#009FD9] text-white shadow-sm" : "text-[#64748b] hover:bg-[#f3f8fb]")}>
+            <h2 className="text-lg font-extrabold text-[#162543]">{showArchived ? (isEn ? "Archived" : "Archivados") : (isEn ? "Messages" : "Mensajes")}</h2>
+            {showArchived && (
+              <button type="button" onClick={() => updateArchiveView(false)} className="rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-[#008fc4] transition hover:bg-[#eef9fd]">
                 {isEn ? "Active" : "Activos"}
               </button>
-              <button type="button" onClick={() => { if (!showArchived) updateArchiveView(true); }} className={cn("h-8 rounded-lg px-2 transition", showArchived ? "bg-[#009FD9] text-white shadow-sm" : "text-[#64748b] hover:bg-[#f3f8fb]")}>
-                {isEn ? "Archived" : "Archivados"}
-              </button>
-            </div>
+            )}
           </div>
           <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>
         </div>
         <div className="h-[calc(100%-105px)] overflow-y-auto">
+          {!showArchived && archivedCount > 0 && (
+            <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e7eef3] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
+                <Box className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1 text-sm font-extrabold text-[#162543]">{isEn ? "Archived" : "Archivados"}</span>
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>
+            </button>
+          )}
           {filtered.map((item) => { const person = personFor(item); const context = contextFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
             <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "bg-white shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
@@ -239,9 +259,9 @@ export function DirectChatInbox() {
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
         <header className="flex min-h-[65px] items-center gap-3 border-b border-[#e3ebf1] px-3 py-3 sm:px-5">
           <button type="button" onClick={() => setMobileThread(false)} className="grid h-9 w-9 place-items-center text-[#526277] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
-          <ImagePreviewDialog src={activePerson?.avatar ?? null} alt={activePersonName} openLabel={avatarLabel} closeLabel={isEn ? "Close" : "Cerrar"}>
-            <Avatar className="h-10 w-10 cursor-zoom-in"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
-          </ImagePreviewDialog>
+          <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
+            <Avatar className="h-10 w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
+          </button>
           <div className="min-w-0 flex-1">
             {activePerson?.profileHref ? (
               <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full truncate text-left text-sm font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline">
@@ -250,12 +270,11 @@ export function DirectChatInbox() {
             ) : (
               <p className="truncate text-sm font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
             )}
-            {detailHref ? (
-              <button type="button" onClick={() => router.push(detailHref)} className="mt-0.5 block max-w-full truncate text-left text-xs font-bold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
-                {activeContextText}
+            {activeContextTitle && <p className="mt-0.5 truncate text-xs font-semibold text-[#63748a]">{activeContextTitle}</p>}
+            {detailHref && (
+              <button type="button" onClick={() => router.push(detailHref)} className="mt-0.5 block max-w-full truncate text-left text-xs font-extrabold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
+                {activeContextAction}
               </button>
-            ) : (
-              <p className="mt-0.5 truncate text-xs font-semibold text-[#63748a]">{activeContextText}</p>
             )}
           </div>
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
