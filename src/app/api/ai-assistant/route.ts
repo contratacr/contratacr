@@ -368,6 +368,14 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
   if (includesAny(normalized, ["ver todos los servicios", "catalogo de servicios", "explorar servicios", "browse services", "service catalog"])) {
     return { ...payload, action: "browse_services", ctaLabel: locale === "en" ? "Browse services" : "Ver servicios" };
   }
+  if (includesAny(normalized, ["sugerir el servicio", "sugerir un servicio", "servicio no aparece", "suggest a service", "service is missing"])) {
+    return {
+      ...payload,
+      action: "suggest_service",
+      searchQuery: payload.searchQuery || message,
+      ctaLabel: locale === "en" ? "Suggest service" : "Sugerir servicio",
+    };
+  }
   if (
     includesAny(normalized, ["publicar solicitud", "publicar una solicitud", "crear solicitud", "como publico", "hacer una solicitud"]) ||
     includesAny(cta, ["publicar solicitud", "publish request"])
@@ -465,7 +473,9 @@ async function realProfessionalResults(payload: AssistantPayload, originalMessag
 }
 
 export async function POST(req: Request) {
-  const limited = enforceRateLimit(req, "ai-assistant", 15, 60_000);
+  // A normal guided conversation can legitimately use several short turns.
+  // Keep abuse protection without cutting off regression or real users mid-flow.
+  const limited = enforceRateLimit(req, "ai-assistant", 30, 60_000);
   if (limited) return limited;
 
   try {

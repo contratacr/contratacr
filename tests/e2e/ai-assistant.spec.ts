@@ -1,6 +1,7 @@
 import { expect, test } from "playwright/test";
 import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
+import { CONTRATACR_PRODUCT_KNOWLEDGE } from "../../src/lib/ai/product-knowledge";
 
 type AssistantResponse = {
   answer?: string;
@@ -91,9 +92,10 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "Olvidé mi contraseña", action: "reset_password", href: "/es/olvide-contrasena" },
       { prompt: "Quiero ver todos los servicios", action: "browse_services", href: "/es/servicios" },
     ];
-    for (const item of cases) {
+    for (const [index, item] of cases.entries()) {
       const response = await ask(page, item.prompt);
       expect(response.status, JSON.stringify(response.body)).toBe(200);
+      if (index === 0) expect(response.body.aiProvider).toBe("openai");
       expect(response.body.answer?.length).toBeGreaterThan(10);
       expect(response.body.action).toBe(item.action);
       expect(response.body.searchHref).toBe(item.href);
@@ -104,6 +106,54 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(free.status).toBe(200);
     expect(free.body.answer).toMatch(/gratis|free/i);
     expect(free.body.answer).toMatch(/comisi/i);
+  });
+
+  test("covers every assistant navigation intent and validation boundary", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const cases = [
+      { prompt: "Quiero crear una cuenta de cliente", action: "register_client", href: "/es/registro/cliente" },
+      { prompt: "Quiero iniciar sesion", action: "login", href: "/es/login" },
+      { prompt: "Necesito ayuda con la app", action: "help", href: "/es/ayuda" },
+      { prompt: "Quiero publicar una solicitud", action: "publish_request", href: "/es/publicar-proyecto" },
+      { prompt: "Soy profesional, quiero cambiar mi disponibilidad", action: "open_dashboard", href: "/es/dashboard/profesional?tab=availability" },
+      { prompt: "Soy profesional, quiero editar mis servicios", action: "open_dashboard", href: "/es/dashboard/profesional?tab=services" },
+      { prompt: "Quiero sugerir el servicio de domador de leones", action: "suggest_service", href: "/es/servicios" },
+    ];
+    for (const item of cases) {
+      const response = await ask(page, item.prompt);
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
+      expect(response.body.action).toBe(item.action);
+      expect(response.body.searchHref).toBe(item.href);
+    }
+
+    const empty = await apiJson<AssistantResponse>(page, "/api/ai-assistant", {
+      method: "POST",
+      body: { message: "   ", locale: "es", pagePath: "/es" },
+    });
+    expect(empty.status).toBe(200);
+    expect(empty.body.action).toBe("answer");
+    expect(empty.body.answer).toMatch(/Dime que necesitas|Dime qu./i);
+  });
+
+  test("product manual contains every current business area the AI must explain", async () => {
+    const requiredContracts = [
+      /search|buscar/i,
+      /booking|solicitud/i,
+      /publication|publicacion/i,
+      /proposal|propuesta/i,
+      /availability|disponibilidad/i,
+      /videoconsulta/i,
+      /notification|notificacion/i,
+      /direct chat|chat directo/i,
+      /support|soporte/i,
+      /verification|verificacion/i,
+      /review|resena/i,
+      /service suggestion|sugerencia de servicio/i,
+      /archive|archiv/i,
+      /WhatsApp/i,
+      /email|correo/i,
+    ];
+    for (const contract of requiredContracts) expect(CONTRATACR_PRODUCT_KNOWLEDGE).toMatch(contract);
   });
 
   test("searches real professionals and preserves result selection context", async ({ page }) => {

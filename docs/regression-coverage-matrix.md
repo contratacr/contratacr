@@ -26,6 +26,7 @@ Legend:
 | Profile | Professional bio persistence and every client/professional panel section | UI + DB |
 | Notifications | Lifecycle rows, cancellation recipients, every type translated, unified-panel destination | API + DB + Contract |
 | Support | Guest and signed-in creation, acknowledgement, conversation, reopen, resolve/confirm | API + DB |
+| ContrataCR AI | Real OpenAI provider, complete action routing, live professional results, service suggestions, emergency guardrail, prompt-injection privacy, Spanish/English, responsive UI, navigation continuity, private account history and deletion | UI + API + DB + Contract |
 | Admin | Signed-out boundary and authenticated routes for overview, verification, users, reports, insurers, services, accounts, subscriptions, support, analytics, activity | UI |
 | Localization | Public routes in Spanish/English, English panels, notification labels and destinations | UI + Contract |
 | Responsive | Entire suite repeated at 390 x 844; explicit overflow/modal/card checks | UI |
@@ -40,6 +41,7 @@ The suite can verify ContrataCR's request, response handling, and resulting UI. 
 3. **Maps:** load `/buscar`, use location suggestions and near-me permission, and confirm map tiles/pins render.
 4. **Cloudinary:** upload one profile photo and one success-case image, then remove the temporary assets.
 5. **WhatsApp/call/email links:** open one professional profile and confirm the generated destination belongs to that professional.
+6. **OpenAI:** ask one natural-language service question and confirm the response reports `aiProvider: openai`; deterministic safety and navigation fallbacks remain covered even if the provider is unavailable.
 
 ## What a green run means
 
