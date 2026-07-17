@@ -198,14 +198,14 @@ function ProfessionalResult({ result, copy, onNavigate }: {
   );
 }
 
-export function AiConcierge() {
+export function AiConcierge({ embedded = false }: { embedded?: boolean } = {}) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
   const lang = language(locale);
   const copy = COPY[lang];
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(embedded);
   const [sessionHydrated, setSessionHydrated] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -226,7 +226,7 @@ export function AiConcierge() {
       if (stored) {
         setConversationId(stored.id || crypto.randomUUID());
         setMessages(stored.messages);
-        setOpen(stored.open);
+        setOpen(embedded ? true : stored.open);
       } else {
         setConversationId(crypto.randomUUID());
       }
@@ -234,40 +234,43 @@ export function AiConcierge() {
       setSessionHydrated(true);
     });
     return () => cancelAnimationFrame(frame);
-  }, [lang]);
+  }, [embedded, lang]);
 
   useEffect(() => {
     if (!sessionHydratedRef.current) return;
     try {
       window.sessionStorage.setItem(`${SESSION_KEY_PREFIX}${lang}`, JSON.stringify({
         id: conversationId,
-        open,
+        open: embedded ? true : open,
         messages: messages.slice(-MAX_STORED_MESSAGES),
       } satisfies StoredAssistantSession));
     } catch {
       /* Ignore private-mode/browser storage restrictions. */
     }
-  }, [conversationId, lang, messages, open]);
+  }, [conversationId, embedded, lang, messages, open]);
 
   useEffect(() => {
     if (previousPathnameRef.current !== pathname) {
       previousPathnameRef.current = pathname;
-      setOpen(false);
-      setShowHistory(false);
+      const frame = requestAnimationFrame(() => {
+        if (!embedded) setOpen(false);
+        setShowHistory(false);
+      });
+      return () => cancelAnimationFrame(frame);
     }
-  }, [pathname]);
+  }, [embedded, pathname]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || embedded) return;
     const minimizeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", minimizeOnEscape);
     return () => window.removeEventListener("keydown", minimizeOnEscape);
-  }, [open]);
+  }, [embedded, open]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || embedded) return;
     const shouldLockScroll = window.matchMedia("(max-width: 639px)").matches;
     if (!shouldLockScroll) return;
     const previousOverflow = document.body.style.overflow;
@@ -275,7 +278,7 @@ export function AiConcierge() {
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [open]);
+  }, [embedded, open]);
 
   useEffect(() => {
     if (!user) return;
@@ -418,13 +421,13 @@ export function AiConcierge() {
     try {
       window.sessionStorage.setItem(`${SESSION_KEY_PREFIX}${lang}`, JSON.stringify({
         id: conversationId,
-        open: false,
+        open: embedded ? true : false,
         messages: messages.slice(-MAX_STORED_MESSAGES),
       } satisfies StoredAssistantSession));
     } catch {
       /* Navigation still works when browser storage is unavailable. */
     }
-    setOpen(false);
+    if (!embedded) setOpen(false);
     const alreadyLocalized = /^\/(es|en)(?=\/|\?|$)/.test(href);
     const destination = alreadyLocalized ? href : `/${lang}${href.startsWith("/") ? href : `/${href}`}`;
     window.location.assign(destination);
@@ -460,11 +463,12 @@ export function AiConcierge() {
     }
   }
 
-  const insideDashboard = pathname.startsWith("/dashboard/");
+  const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
 
   if (!sessionHydrated || pathname.startsWith("/admin")) return null;
+  if (insideDashboard && !embedded) return null;
 
-  if (!open) {
+  if (!embedded && !open) {
     return (
       <button
         data-ai-concierge-button
@@ -491,14 +495,23 @@ export function AiConcierge() {
     <section
       data-ai-concierge-dialog
       role="dialog"
-      aria-modal="true"
+      aria-modal={embedded ? undefined : "true"}
       aria-label={copy.title}
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) setOpen(false);
+        if (!embedded && event.target === event.currentTarget) setOpen(false);
       }}
-      className="fixed inset-0 z-[100] flex items-end justify-end bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:bg-transparent sm:p-0 sm:backdrop-blur-none"
+      className={cn(
+        embedded
+          ? "relative flex h-[min(780px,calc(100dvh-220px))] min-h-[540px] w-full items-stretch justify-stretch"
+          : "fixed inset-0 z-[100] flex items-end justify-end bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:bg-transparent sm:p-0 sm:backdrop-blur-none",
+      )}
     >
-      <div className="flex h-[min(820px,calc(100dvh-0.75rem))] w-full flex-col overflow-hidden rounded-t-[34px] border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]">
+      <div className={cn(
+        "flex w-full flex-col overflow-hidden border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)]",
+        embedded
+          ? "h-full rounded-2xl shadow-[0_18px_54px_-34px_rgba(4,37,77,0.6)]"
+          : "h-[min(820px,calc(100dvh-0.75rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
+      )}>
         <header className="relative flex shrink-0 items-center gap-2 border-b border-[#cfe3f4] bg-[linear-gradient(120deg,#ffffff_0%,#f3f9ff_100%)] px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
           <div className="-my-2 -ml-1 h-[68px] w-[68px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
@@ -507,7 +520,7 @@ export function AiConcierge() {
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {user && <button type="button" onClick={() => setShowHistory((current) => !current)} title={copy.history} aria-label={copy.history} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><History className="h-4 w-4 sm:h-5 sm:w-5" /></button>}
             <button type="button" onClick={resetConversation} title={copy.reset} aria-label={copy.reset} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" /></button>
-            <button type="button" onClick={() => setOpen(false)} title={copy.minimize} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>
+            {!embedded && <button type="button" onClick={() => setOpen(false)} title={copy.minimize} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>}
           </div>
         </header>
 

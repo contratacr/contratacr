@@ -34,6 +34,7 @@ import { CloseAccountSection } from "@/components/account/close-account-section"
 import { SupportTickets } from "@/components/support/support-tickets";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
 import { DirectChatInbox } from "@/components/dashboard/direct-chat-inbox";
+import { AiConcierge } from "@/components/landing/ai-concierge";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
@@ -61,7 +62,7 @@ type Tab =
   | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "saved"
-  | "chat" | "notifications" | "soporte" | "cuenta";
+  | "chat" | "assistant" | "notifications" | "soporte" | "cuenta";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -79,6 +80,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
   chat: <MessageSquareMore className="h-4 w-4" />,
+  assistant: <Sparkles className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
   soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
@@ -99,12 +101,12 @@ const OFFER_TABS: Tab[] = [
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
 const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved"];
-const SHARED_TABS: Tab[] = ["chat", "notifications", "soporte"];
+const SHARED_TABS: Tab[] = ["chat", "assistant", "notifications", "soporte"];
 
 // MOBILE bottom-nav: a horizontally scrollable rail with every mode tab.
 const MOBILE_PRIORITY: Record<Mode, Tab[]> = {
-  offer: ["bookings", "proposals", "chat", "notifications"],
-  use: ["sent_bookings", "sent_projects", "chat", "notifications"],
+  offer: ["bookings", "proposals", "chat", "assistant", "notifications"],
+  use: ["sent_bookings", "sent_projects", "chat", "assistant", "notifications"],
 };
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
@@ -1020,6 +1022,7 @@ export default function DashboardPage() {
                         {activeTab === "saved" && <ClientActivity section="saved" />}
 
                         {activeTab === "chat" && <DirectChatInbox />}
+                        {activeTab === "assistant" && <AiConcierge embedded />}
                         {activeTab === "notifications" && <NotificationsList />}
                         {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
                         {activeTab === "cuenta" && (
