@@ -10,7 +10,7 @@ import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { DateOfBirthPicker } from "@/components/ui/date-of-birth-picker";
 import { FormLoadingState } from "@/components/ui/loading-state";
-import { Loader2, ShieldAlert, X } from "lucide-react";
+import { Loader2, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { isHealthCategory } from "@/lib/data/categories";
 import { createClient } from "@/lib/supabase/client";
@@ -387,12 +387,14 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                   </div>
                 )}
                 {identityLookup === "found" && officialName && (
-                  <div className="flex items-start gap-3 rounded-xl border border-[#f5cf6a] bg-[#fffaf0] px-4 py-3.5">
-                    <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-[#b45309]" />
+                  <div className="flex items-start gap-3 rounded-2xl border border-[#bae6fd] bg-[#f8fbff] px-4 py-3.5 shadow-sm">
+                    <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#78350f]">{t("cedulaOwnerTitle")}</p>
+                      <p className="text-xs font-semibold text-[#64748b]">{t("cedulaOwnerTitle")}</p>
                       <p className="mt-1 break-words text-sm font-bold leading-5 text-[#162543]">{officialName}</p>
-                      <p className="mt-1.5 text-xs leading-5 text-[#7c4a12]">{t("cedulaOwnerBody")}</p>
+                      <p className="mt-2 text-xs font-medium text-[#64748b]">{t("cedulaLabel")}</p>
+                      <p className="mt-0.5 text-sm font-semibold text-[#162543]">{form.cedula}</p>
+                      <p className="mt-2 text-xs leading-5 text-[#475569]">{t("cedulaOwnerBody")}</p>
                     </div>
                   </div>
                 )}

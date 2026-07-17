@@ -29,9 +29,7 @@ export function IdentityInfoBlock({
   return (
     <div className="rounded-2xl border border-[#bae6fd] bg-[#f8fbff] px-4 py-3 shadow-sm">
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#009FD9] ring-1 ring-[#bae6fd]">
-          <ShieldCheck className="h-4 w-4" />
-        </span>
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
 
         <div className="min-w-0 flex-1">
           {verified && <p className="text-xs font-semibold text-[#64748b]">{t("confirmed")}</p>}

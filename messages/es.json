@@ -2382,7 +2382,7 @@
     "description": "Descripción",
     "descriptionPlaceholder": "Cuéntanos brevemente qué necesitas. Ejemplo: Pintar la sala y el comedor, unos 50 m².",
     "cedulaHelp": "Verificamos tu identidad para que los profesionales sepan con quién coordinan.",
-    "cedulaOwnerTitle": "Confirma tu identificación",
+    "cedulaOwnerTitle": "Identidad confirmada",
     "cedulaOwnerBody": "Al continuar, tu cuenta usará este nombre oficial. Confirma únicamente si la identificación es tuya.",
     "noCedula": "No tengo identificación",
     "noCedulaNotice": "Enviarás tu solicitud <strong>sin identidad verificada</strong>. El profesional lo verá y decide si te contacta.",
