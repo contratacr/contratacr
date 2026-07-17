@@ -190,8 +190,10 @@ test.describe("@seeded ContrataCR AI", () => {
     await dialog.getByRole("textbox", { name: /Pregunte o describa/i }).fill("¿Cómo funciona ContrataCR?");
     await dialog.getByRole("button", { name: /Enviar mensaje/i }).click();
     await expect(dialog.getByText(/ContrataCR permite|buscar profesionales/i).last()).toBeVisible({ timeout: 25_000 });
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("contratacr:ai-session:es"))).toContain("¿Cómo funciona ContrataCR?");
     await dialog.getByRole("button", { name: /Ver cómo funciona/i }).click();
     await expect(page).toHaveURL(/\/es\/como-funciona/);
+    expect(await page.evaluate(() => sessionStorage.getItem("contratacr:ai-session:es"))).toContain("¿Cómo funciona ContrataCR?");
     await page.getByRole("button", { name: /Abrir asistente de ContrataCR/i }).click();
     await expect(page.getByRole("dialog", { name: /Asistente ContrataCR/i }).getByText("¿Cómo funciona ContrataCR?")).toBeVisible();
     await expectNoHorizontalOverflow(page);

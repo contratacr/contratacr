@@ -200,6 +200,7 @@ export function AiConcierge() {
   const lang = language(locale);
   const copy = COPY[lang];
   const [open, setOpen] = useState(false);
+  const [sessionHydrated, setSessionHydrated] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState("");
@@ -225,6 +226,7 @@ export function AiConcierge() {
         setConversationId(crypto.randomUUID());
       }
       sessionHydratedRef.current = true;
+      setSessionHydrated(true);
     });
     return () => cancelAnimationFrame(frame);
   }, [lang]);
@@ -459,7 +461,7 @@ export function AiConcierge() {
     }
   }
 
-  if (pathname.startsWith("/admin") || externalDialogOpen) return null;
+  if (!sessionHydrated || pathname.startsWith("/admin") || externalDialogOpen) return null;
 
   const insideDashboard = pathname.startsWith("/dashboard/");
 
