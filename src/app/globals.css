@@ -312,7 +312,7 @@ input::-ms-clear {
     padding-bottom: max(env(safe-area-inset-bottom), 0.75rem) !important;
   }
 
-  .contratacr-chat-thread-open body {
+  html.contratacr-chat-thread-open body {
     overflow: hidden;
   }
 
@@ -320,9 +320,9 @@ input::-ms-clear {
     position: fixed;
     left: 0;
     right: 0;
-    top: calc(var(--app-visual-viewport-top) + 64px);
+    top: var(--app-visual-viewport-top);
     z-index: 45;
-    height: calc(var(--app-visual-viewport-height) - 64px);
+    height: var(--app-visual-viewport-height);
     min-height: 0;
     border-radius: 0;
   }

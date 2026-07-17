@@ -371,7 +371,16 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     .slice(-4)
     .map((item) => item.content)
     .join(" ");
+  const priorAssistantContext = history
+    .filter((item) => item.role === "assistant")
+    .slice(-4)
+    .map((item) => item.content)
+    .join(" ");
+  const messageCategory = resolveCategoryIntent(message, locale);
+  const pendingServiceFromAssistant = resolveCategoryIntent(priorAssistantContext, locale);
+  const messageOnlyHasPlace = !!resolveLocationIntent(message) && !messageCategory;
   const directService = resolveCategoryIntent(message, locale)
+    ?? (messageOnlyHasPlace ? pendingServiceFromAssistant : null)
     ?? resolveCategoryIntent(payload.searchQuery || "", locale)
     ?? resolveCategoryIntent(priorUserContext, locale);
   const directPlace = resolveLocationIntent(message)
@@ -729,9 +738,10 @@ export async function POST(req: Request) {
     const safetyPayload = urgentSafetyAnswer(rawMessage, locale);
     const aiPayload = safetyPayload ? null : await openAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
     const payload = normalizePayload(safetyPayload ?? aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history);
-    const directCategory = resolveCategoryIntent(rawMessage, locale) ?? resolveCategoryIntent(payload.searchQuery || "", locale);
-    if (payload.action === "search_professionals" && directCategory) {
-      payload.serviceId = directCategory.id;
+    const directCategory = resolveCategoryIntent(rawMessage, locale);
+    const queryCategory = payload.serviceId ? null : resolveCategoryIntent(payload.searchQuery || "", locale);
+    if (payload.action === "search_professionals" && (directCategory || queryCategory)) {
+      payload.serviceId = (directCategory ?? queryCategory)!.id;
     }
     if (payload.serviceId && !catalog.labels.has(payload.serviceId)) {
       payload.serviceId = resolveCategoryIntent(payload.searchQuery || rawMessage, locale)?.id ?? null;
