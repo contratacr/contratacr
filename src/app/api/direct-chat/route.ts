@@ -175,7 +175,6 @@ export async function POST(req: Request) {
 
   if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   if (conversation.status === "blocked") return NextResponse.json({ error: "Esta conversación está bloqueada." }, { status: 403 });
-  const isClient = conversation.client_id === user.id;
   const { data: sentMessages, error: msgError } = await db.rpc("send_direct_message_atomic", {
     p_conversation_id: conversation.id,
     p_sender_id: user.id,
@@ -184,13 +183,6 @@ export async function POST(req: Request) {
   if (msgError) return NextResponse.json({ error: msgError.message }, { status: 500 });
   const msg = Array.isArray(sentMessages) ? sentMessages[0] : sentMessages;
   if (!msg) return NextResponse.json({ error: "No se pudo guardar el mensaje." }, { status: 500 });
-  const receiverId = isClient ? conversation.professional_profile_id : conversation.client_id;
-  const { error: notificationError } = await db.from("notifications").insert({
-    user_id: receiverId, type: "direct_message", title: "Nuevo mensaje",
-    message: message.length > 96 ? `${message.slice(0, 96)}...` : message,
-    data: { link: `/es/dashboard/profesional?tab=chat&conversation=${conversation.id}`, conversation_id: conversation.id, booking_id: conversation.booking_id, project_id: conversation.project_id },
-  });
-  if (notificationError) console.error("Direct-chat notification failed", notificationError);
   return NextResponse.json({ ok: true, conversationId: conversation.id, message: msg });
 }
 
