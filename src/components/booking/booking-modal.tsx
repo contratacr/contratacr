@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
@@ -191,9 +191,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // or, when the pro has a single profession, that one. When the pro has MULTIPLE
   // professions and there's no context, the client must first pick which one (so we know
   // whether it's a health service that needs a date of birth).
-  const proProfessions = (professional.professions && professional.professions.length > 0)
-    ? professional.professions
-    : (professional.categoryId ? [professional.categoryId] : []);
+  const proProfessions = useMemo(
+    () => (professional.professions && professional.professions.length > 0)
+      ? professional.professions
+      : (professional.categoryId ? [professional.categoryId] : []),
+    [professional.categoryId, professional.professions],
+  );
   const [pickedCategory, setPickedCategory] = useState<string | null>(
     initialCategoryId ?? (proProfessions.length === 1 ? proProfessions[0] : null)
   );
@@ -212,8 +215,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       : categoryName;
   const proIsHealth = anyHealthCategory(effectiveCategory ? [effectiveCategory] : []);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const todayIso = formatDateISO(today);
 
   const [step, setStep] = useState<BookingStep>("calendar");
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -337,7 +344,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     Promise.all([
       supabase.from("professionals").select("availability, availability_public").eq("id", professional.id).single(),
       supabase.from("blocked_dates").select("blocked_date").eq("professional_id", professional.id),
-      supabase.from("availability_slots").select("slot_date, slot_time, location_id").eq("professional_id", professional.id).gte("slot_date", formatDateISO(today)),
+      supabase.from("availability_slots").select("slot_date, slot_time, location_id").eq("professional_id", professional.id).gte("slot_date", todayIso),
       supabase.auth.getUser(),
       fetch(`/api/bookings?takenFor=${professional.id}`).then((r) => r.json()).catch(() => ({ taken: [] })),
     ]).then(([{ data: proData }, { data: bdData }, { data: slotData }, { data: { user } }, takenRes]) => {
@@ -415,7 +422,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         setProfileLoaded(true);
       }
     });
-  }, [open, professional.id, initialDate, initialTime, initialLocationId]);
+  }, [open, professional.id, initialCategoryId, initialDate, initialTime, initialLocationId, proProfessions, todayIso]);
 
   useEffect(() => {
     if (!open) return;
@@ -534,7 +541,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       finally { if (active) setSelfCedulaLoading(false); }
     }, 500);
     return () => { active = false; clearTimeout(t); };
-  }, [profileCedula]);
+  }, [locale, profileCedula]);
 
   // Self-heal: a logged-in account whose STORED cédula's official name differs
   // from the saved name (e.g. saved fast, before the lookup applied the official
