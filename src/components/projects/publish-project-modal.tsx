@@ -15,7 +15,7 @@ import { PROVINCES } from "@/lib/data/cr-geography";
 import { isHealthCategory } from "@/lib/data/categories";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
+import { cleanId, detectIdType, formatId, isValidId } from "@/lib/cedula";
 import { isMinorFromDob } from "@/lib/age";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
@@ -393,7 +393,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                       <p className="text-xs font-semibold text-[#64748b]">{t("cedulaOwnerTitle")}</p>
                       <p className="mt-1 break-words text-sm font-bold leading-5 text-[#162543]">{officialName}</p>
                       <p className="mt-2 text-xs font-medium text-[#64748b]">{t("cedulaLabel")}</p>
-                      <p className="mt-0.5 text-sm font-semibold text-[#162543]">{form.cedula}</p>
+                      <p className="mt-0.5 text-sm font-semibold text-[#162543]">{formatId(form.cedula)}</p>
                       <p className="mt-2 text-xs leading-5 text-[#475569]">{t("cedulaOwnerBody")}</p>
                     </div>
                   </div>

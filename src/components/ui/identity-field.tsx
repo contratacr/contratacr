@@ -145,6 +145,7 @@ export function IdentityField({
           fullName={officialName}
           cedula={cedula}
           dob={dob}
+          showOfficialNameNotice
         />
       )}
 

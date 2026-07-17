@@ -13,6 +13,7 @@ export function IdentityInfoBlock({
   cedula,
   dob,
   verified = true,
+  showOfficialNameNotice = false,
   onReset,
   resetLabel,
 }: {
@@ -20,6 +21,7 @@ export function IdentityInfoBlock({
   cedula?: string;
   dob?: string | null;
   verified?: boolean;
+  showOfficialNameNotice?: boolean;
   onReset?: () => void;
   resetLabel?: string;
 }) {
@@ -53,6 +55,10 @@ export function IdentityInfoBlock({
               </div>
             )}
           </dl>
+
+          {showOfficialNameNotice && (
+            <p className="mt-2 text-xs leading-5 text-[#475569]">{t("officialNameNotice")}</p>
+          )}
 
           {onReset && (
             <button
