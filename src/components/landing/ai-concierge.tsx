@@ -359,9 +359,16 @@ export function AiConcierge() {
   async function ask(prefilled?: string) {
     const text = (prefilled ?? input).trim();
     if (!text || loading) return;
-    const previous = messages;
+    const startedFromHistory = showHistory;
+    const previous = startedFromHistory
+      ? [{ role: "assistant" as const, body: copy.intro, createdAt: new Date().toISOString() }]
+      : messages;
     setInput("");
-    setMessages((current) => [...current, { role: "user", body: text, createdAt: new Date().toISOString() }]);
+    if (startedFromHistory) {
+      setConversationId(crypto.randomUUID());
+      setShowHistory(false);
+    }
+    setMessages([...previous, { role: "user", body: text, createdAt: new Date().toISOString() }]);
     setLoading(true);
     try {
       const latestResults = [...previous].reverse().find((message) => message.professionals?.length)?.professionals ?? [];
