@@ -1599,7 +1599,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     <h3 className="text-xl font-bold text-[#111827] mb-2">{t("success.title")}</h3>
                     <p className="text-sm text-[#6b7280] max-w-xs mx-auto">{t("success.desc")}</p>
                   </div>
-                  {createdBookingId && <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} bookingId={createdBookingId} contextTitle={description || categoryName} buttonLabel={locale === "en" ? "Message the professional" : "Escribir al profesional"} className="w-full max-w-xs rounded-xl px-5 py-3 text-sm font-semibold" />}
+                  {createdBookingId && <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} bookingId={createdBookingId} contextTitle={description || categoryName} buttonLabel={locale === "en" ? "Send message" : "Enviar mensaje"} className="w-full max-w-xs rounded-xl px-5 py-3 text-sm font-semibold" />}
                   {selectedDate && selectedTime && (
                     <button
                       onClick={downloadCalendar}
