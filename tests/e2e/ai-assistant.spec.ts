@@ -95,7 +95,7 @@ test.describe("@seeded ContrataCR AI", () => {
     for (const [index, item] of cases.entries()) {
       const response = await ask(page, item.prompt);
       expect(response.status, JSON.stringify(response.body)).toBe(200);
-      if (index === 0) expect(response.body.aiProvider).toBe("openai");
+      if (index === 0 && process.env.OPENAI_API_KEY) expect(response.body.aiProvider).toBe("openai");
       expect(response.body.answer?.length).toBeGreaterThan(10);
       expect(response.body.action).toBe(item.action);
       expect(response.body.searchHref).toBe(item.href);

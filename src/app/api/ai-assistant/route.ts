@@ -56,6 +56,7 @@ const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CONTENT = 700;
+const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|request)/gi;
 
 function localeKey(value: unknown): Locale {
   return value === "en" ? "en" : "es";
@@ -67,6 +68,13 @@ function normalizeText(value: string) {
 
 function includesAny(text: string, words: string[]) {
   return words.some((word) => text.includes(word));
+}
+
+function meaningfulRequestText(value: string) {
+  return normalizeText(value)
+    .replace(/\b(quiero|necesito|ocupo|deseo|por favor|please|i want|i need)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function sanitizeHistory(value: unknown): HistoryMessage[] {
@@ -370,6 +378,14 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     ?? resolveLocationIntent(payload.locationText || "")
     ?? resolveLocationIntent(priorUserContext);
   const directPlaceLabel = formatPlaceLabel(directPlace);
+  const publishDetailText = message.replace(PUBLISH_REQUEST_PHRASE_RE, " ");
+  const publishDetailMeaning = meaningfulRequestText(publishDetailText);
+  const publishServiceFromMessage = publishDetailMeaning.length >= 3
+    ? resolveCategoryIntent(publishDetailText, locale)
+    : null;
+  const publishService = publishServiceFromMessage ?? resolveCategoryIntent(priorUserContext, locale);
+  const publishPlace = resolveLocationIntent(message) ?? resolveLocationIntent(priorUserContext);
+  const publishPlaceLabel = formatPlaceLabel(publishPlace);
   const wantsProfessionalSearch = includesAny(normalized, [
     "profesional",
     "profesionales",
@@ -414,10 +430,10 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
   if (includesAny(normalized, ["centro de ayuda", "necesito ayuda con la app", "guia de la app", "help center", "app guide"])) {
     return { ...payload, action: "help", ctaLabel: locale === "en" ? "Open help center" : "Ver centro de ayuda" };
   }
-  if (includesAny(normalized, ["ofrecer mis servicios", "registrarme como profesional", "crear perfil profesional", "become a professional", "offer my services"])) {
+  if (includesAny(normalized, ["ofrecer mis servicios", "registrarme como profesional", "crear perfil profesional", "crear una cuenta profesional", "crear cuenta profesional", "become a professional", "offer my services"])) {
     return { ...payload, action: "register_professional", ctaLabel: locale === "en" ? "Offer my services" : "Ofrecer mis servicios" };
   }
-  if (includesAny(normalized, ["crear cuenta de cliente", "registrarme como cliente", "client account", "register as a client"])) {
+  if (includesAny(normalized, ["crear cuenta de cliente", "crear una cuenta de cliente", "registrarme como cliente", "client account", "create a client account", "register as a client"])) {
     return { ...payload, action: "register_client", ctaLabel: locale === "en" ? "Create client account" : "Crear cuenta de cliente" };
   }
   if (includesAny(normalized, ["iniciar sesion", "entrar a mi cuenta", "sign in", "log in"])) {
@@ -438,8 +454,8 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     includesAny(normalized, ["publicar solicitud", "publicar una solicitud", "crear solicitud", "como publico", "hacer una solicitud"]) ||
     includesAny(cta, ["publicar solicitud", "crear solicitud", "publish request", "create request"]);
   if (wantsToPublish) {
-    const serviceLabel = directService ? getCategoryLabel(directService.id, locale) : null;
-    if (!directService && !directPlace) {
+    const serviceLabel = publishService ? getCategoryLabel(publishService.id, locale) : null;
+    if (!publishService && !publishPlace) {
       return {
         ...payload,
         action: "answer",
@@ -449,22 +465,22 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
         ctaLabel: null,
       };
     }
-    if (!directService) {
+    if (!publishService) {
       return {
         ...payload,
         action: "answer",
-        locationText: directPlaceLabel,
+        locationText: publishPlaceLabel,
         answer: locale === "en"
-          ? `What service do you need in ${directPlaceLabel}?`
-          : `¿Qué servicio necesita en ${directPlaceLabel}?`,
+          ? `What service do you need in ${publishPlaceLabel}?`
+          : `¿Qué servicio necesita en ${publishPlaceLabel}?`,
         ctaLabel: null,
       };
     }
-    if (!directPlace) {
+    if (!publishPlace) {
       return {
         ...payload,
         action: "answer",
-        serviceId: directService.id,
+        serviceId: publishService.id,
         searchQuery: serviceLabel,
         answer: locale === "en"
           ? `In which area of Costa Rica do you need ${serviceLabel}?`
@@ -475,12 +491,12 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     return {
       ...payload,
       action: "publish_request",
-      serviceId: directService.id,
+      serviceId: publishService.id,
       searchQuery: serviceLabel,
-      locationText: directPlaceLabel,
+      locationText: publishPlaceLabel,
       answer: locale === "en"
-        ? `I have the service (${serviceLabel}) and location (${directPlaceLabel}). Open the form to add the job details, review the information and publish the request.`
-        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${directPlaceLabel}). Abra el formulario para agregar los detalles del trabajo, revisar la información y publicar la solicitud.`,
+        ? `I have the service (${serviceLabel}) and location (${publishPlaceLabel}). Open the form to add the job details, review the information and publish the request.`
+        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${publishPlaceLabel}). Abra el formulario para agregar los detalles del trabajo, revisar la información y publicar la solicitud.`,
       ctaLabel: locale === "en" ? "Create request" : "Crear solicitud",
     };
   }
@@ -635,6 +651,24 @@ export async function POST(req: Request) {
       return NextResponse.json({
         answer: locale === "en" ? "Tell me what you need and I will help." : "Dime qué necesitas y te ayudo.",
         action: "answer",
+      });
+    }
+
+    const publishDetailText = rawMessage.replace(PUBLISH_REQUEST_PHRASE_RE, " ");
+    const publishDetailMeaning = meaningfulRequestText(publishDetailText);
+    const explicitPublishIntent = publishDetailText !== rawMessage;
+    if (
+      explicitPublishIntent &&
+      publishDetailMeaning.length < 3 &&
+      !resolveLocationIntent(publishDetailText)
+    ) {
+      return NextResponse.json({
+        answer: locale === "en"
+          ? "What service do you need and in which area of Costa Rica?"
+          : "¿Qué servicio necesita y en qué zona de Costa Rica?",
+        action: "answer",
+        searchHref: null,
+        ctaLabel: null,
       });
     }
 

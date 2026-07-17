@@ -79,7 +79,8 @@ test.describe("@seeded contextual direct chat", () => {
     expect(reply.status).toBe(200);
     await gotoOK(page, `/es/dashboard/profesional?tab=chat&conversation=${first.body.conversationId}`);
     await expect(page.getByText("E2E respuesta profesional").last()).toBeVisible();
-    await expect(page.getByText(/Perfil ·|Profile ·/).last()).toBeVisible();
+    await expect(page.getByText(/Conversación desde un perfil|Profile conversation/i).last()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Ver perfil|View profile/i })).toBeVisible();
 
     const archived = await apiJson(page, "/api/direct-chat", { method: "PATCH", body: { conversationId: first.body.conversationId, status: "archived" } });
     expect(archived.status).toBe(200);
@@ -119,7 +120,8 @@ test.describe("@seeded contextual direct chat", () => {
     const created = await apiJson<ChatResponse>(page, "/api/direct-chat", { method: "POST", body: { bookingId, message: "E2E consulta de solicitud" } });
     expect(created.status).toBe(200); conversationIds.push(created.body.conversationId!);
     await gotoOK(page, `/es/dashboard/profesional?tab=chat&conversation=${created.body.conversationId}`);
-    await expect(page.getByText(/Solicitud · E2E reparación contextual/).last()).toBeVisible();
+    await expect(page.getByText("E2E reparación contextual").last()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Ver solicitud|View request/i })).toBeVisible();
 
     await resetAuth(page);
     await loginAs(page, E2E_USERS.videoProfessional.email, E2E_USERS.videoProfessional.password);
