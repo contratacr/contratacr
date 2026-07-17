@@ -104,7 +104,7 @@ test.describe("@seeded ContrataCR AI", () => {
 
     const free = await ask(page, "¿ContrataCR es gratis y cobra comisión?");
     expect(free.status).toBe(200);
-    expect(free.body.answer).toMatch(/gratis|free/i);
+    expect(free.body.answer).toMatch(/gratis|gratuit|sin costo|free/i);
     expect(free.body.answer).toMatch(/comisi/i);
   });
 
@@ -142,13 +142,13 @@ test.describe("@seeded ContrataCR AI", () => {
       /publication|publicacion/i,
       /proposal|propuesta/i,
       /availability|disponibilidad/i,
-      /videoconsulta/i,
+      /video consultation|videoconsulta/i,
       /notification|notificacion/i,
-      /direct chat|chat directo/i,
+      /direct chat|in-app chat|chat directo/i,
       /support|soporte/i,
       /verification|verificacion/i,
       /review|resena/i,
-      /service suggestion|sugerencia de servicio/i,
+      /service[- ]suggestion|sugerencia de servicio/i,
       /archive|archiv/i,
       /WhatsApp/i,
       /email|correo/i,

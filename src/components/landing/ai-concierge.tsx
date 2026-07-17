@@ -264,15 +264,23 @@ export function AiConcierge() {
   useEffect(() => {
     const updateDialogState = () => {
       const dialogs = document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]');
-      setExternalDialogOpen(Array.from(dialogs).some((dialog) =>
-        !dialog.hasAttribute("data-ai-concierge-dialog") &&
-        dialog.getAttribute("aria-hidden") !== "true" &&
-        dialog.getClientRects().length > 0,
-      ));
+      setExternalDialogOpen(Array.from(dialogs).some((dialog) => {
+        if (dialog.hasAttribute("data-ai-concierge-dialog") || dialog.hasAttribute("data-nextjs-dialog")) return false;
+        if (dialog.getAttribute("aria-hidden") === "true" || dialog.hidden) return false;
+        const style = window.getComputedStyle(dialog);
+        if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return false;
+        const rect = dialog.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && rect.right > 0 && rect.bottom > 0 && rect.left < window.innerWidth && rect.top < window.innerHeight;
+      }));
     };
     updateDialogState();
     const observer = new MutationObserver(updateDialogState);
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["aria-hidden", "class", "hidden", "style"],
+      childList: true,
+      subtree: true,
+    });
     return () => observer.disconnect();
   }, []);
 

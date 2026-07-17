@@ -390,6 +390,9 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
   ) {
     return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open availability" : "Ir a disponibilidad" };
   }
+  if (includesAny(normalized, ["editar mis servicios", "administrar mis servicios", "servicios que ofrezco", "edit my services", "manage my services"])) {
+    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open my services" : "Ir a mis servicios" };
+  }
   return payload;
 }
 
