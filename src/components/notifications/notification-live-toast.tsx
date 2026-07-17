@@ -289,9 +289,8 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
               <span className="mt-0.5 block text-xs font-medium text-[#526277]">
                 {postLoginMessage}
               </span>
-              <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-[#009FD9]">
-                <Bell className="h-3.5 w-3.5" />
-                <span>{locale === "en" ? "View notifications" : "Ver notificaciones"}</span>
+              <span className="mt-1 inline-flex items-center text-xs font-bold text-[#009FD9]">
+                {locale === "en" ? "View notifications" : "Ver notificaciones"}
               </span>
             </span>
           </button>
@@ -321,7 +320,6 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   const detailLabel = grouped
     ? locale === "en" ? "View notifications" : "Ver notificaciones"
     : locale === "en" ? "View details" : "Ver detalles";
-  const detailIcon = grouped ? <Bell className="h-3.5 w-3.5" /> : null;
   const targetHref = toastTargetHref ?? notificationsCenterHref(locale);
 
   async function openToast() {
@@ -344,9 +342,8 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-[#162543] line-clamp-1">{title}</span>
-            <span className="mt-0.5 inline-flex items-center gap-1.5 text-xs font-bold text-[#009FD9]">
-              {detailIcon}
-              <span>{detailLabel}</span>
+            <span className="mt-0.5 inline-flex items-center text-xs font-bold text-[#009FD9]">
+              {detailLabel}
             </span>
           </span>
         </button>

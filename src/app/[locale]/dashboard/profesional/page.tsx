@@ -46,6 +46,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { DashboardRouteLoading } from "@/components/ui/route-loading";
+import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import {
   dashboardBootstrapKey,
@@ -725,6 +726,26 @@ export default function DashboardPage() {
     ].filter(Boolean).join(", ");
   }
 
+  function postLoginActivityTotal(activity: PostLoginActivity) {
+    return activity.opportunities + activity.requests + activity.proposals + activity.support + activity.other;
+  }
+
+  function postLoginActivityBody(activity: PostLoginActivity) {
+    const summary = postLoginActivitySummary(activity);
+    if (locale === "en") return t("postLoginActivity.body", { summary });
+    return `Mientras no estabas en la app ${postLoginActivityTotal(activity) === 1 ? "llegó" : "llegaron"} ${summary}.`;
+  }
+
+  function postLoginActivityCtaIcon(activity: PostLoginActivity) {
+    const iconTab =
+      activity.cta === "opportunities" ? "proposals"
+      : activity.cta === "requests" ? "bookings"
+      : activity.cta === "proposals" ? "sent_projects"
+      : activity.cta === "support" ? "soporte"
+      : "notifications";
+    return TAB_ICONS[iconTab] ?? <Bell className="h-4 w-4" />;
+  }
+
   function dismissPostLoginActivity() {
     postLoginActivityDismissedRef.current = true;
     setPostLoginActivity(null);
@@ -934,13 +955,13 @@ export default function DashboardPage() {
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
       {opportunityWelcomeCount !== null && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 px-4 py-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#0f172a]/45 p-0 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="opportunity-welcome-title"
             aria-describedby="opportunity-welcome-body"
-            className="relative w-full max-w-md rounded-2xl bg-white px-5 pb-5 pt-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:px-6 sm:pb-6"
+            className="relative w-full rounded-t-2xl bg-white px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:max-w-md sm:rounded-2xl sm:px-6 sm:pb-6"
           >
             <button
               type="button"
@@ -1011,20 +1032,18 @@ export default function DashboardPage() {
             <div className="mb-6 rounded-2xl border border-[#bae6fd] bg-[#f0f9ff] p-4 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#009FD9] ring-1 ring-inset ring-[#bae6fd]">
-                    <Bell className="h-5 w-5" />
-                  </div>
+                  <BrandIconBadge icon={Bell} size={40} className="mt-0.5" />
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-[#0f172a]">{t("postLoginActivity.title")}</p>
                     <p className="mt-0.5 text-sm leading-relaxed text-[#075985]">
-                      {t("postLoginActivity.body", { summary: postLoginActivitySummary(postLoginActivity) })}
+                      {postLoginActivityBody(postLoginActivity)}
                     </p>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <Button type="button" size="sm" onClick={viewPostLoginActivity} className="flex-1 sm:flex-none">
+                    {postLoginActivityCtaIcon(postLoginActivity)}
                     {t(`postLoginActivity.cta.${postLoginActivity.cta}`)}
-                    <ArrowRight className="h-4 w-4" />
                   </Button>
                   <button
                     type="button"

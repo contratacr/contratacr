@@ -1108,9 +1108,9 @@ export function AvailabilityEditor({
 
       {/* ── Confirm: hide agenda ─────────────────────────────────────────── */}
       {showPrivateConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPrivateConfirm(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10">
+          <div className="relative z-10 w-full rounded-t-2xl bg-white p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] shadow-2xl sm:max-w-sm sm:rounded-2xl sm:pb-6">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
               <Lock className="h-5 w-5 text-[#b45309]" />
             </div>
@@ -1128,9 +1128,9 @@ export function AvailabilityEditor({
           Blocks a schedule that would have the pro in two places at once (or
           overlapping itself). Sits above the "Cambiar un día" modal (z-[210]). */}
       {conflict && (
-        <div className="fixed inset-0 z-[210] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[210] flex items-end justify-center p-0 sm:items-center sm:p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConflict(null)} />
-          <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center">
+          <div className="relative z-10 w-full rounded-t-2xl bg-white p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-center shadow-2xl sm:max-w-sm sm:rounded-2xl sm:pb-6">
             <div className={cn(
               "mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full",
               conflict.kind === "location" ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#fff7ed] text-[#b45309]",
@@ -1292,9 +1292,9 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
   ];
 
   return (
-    <div className="app-modal-screen fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="app-centered-modal relative z-10 w-full max-w-2xl overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-2xl max-h-[90vh]">
+      <div className="app-bottom-sheet relative z-10 max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] p-4 sm:p-5">
           <div>
             <h3 className="text-base font-bold text-[#111827]">{t("modalTitle")}</h3>

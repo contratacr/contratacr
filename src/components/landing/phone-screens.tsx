@@ -116,7 +116,7 @@ export function SearchScreen() {
 // "(N reseñas)" in parens; a Doctoralia-style LOCATION TAB (brand-blue, underlined) on
 // a hairline divider + the address line. Then EITHER (pro with published hours) the
 // 3-day availability strip + direct actions: the schedule entry point and WhatsApp for
-// coordination. OR (no public schedule) the coral contact note + a filled WhatsApp button.
+// coordination. OR (no public schedule) the blue coordination note + a filled WhatsApp button.
 function ProCard({
   rank, initials, image, company, person, profession, categories, place, address,
   rating, reviews, price, priceUnit, verified,
@@ -215,11 +215,11 @@ function ProCard({
         </>
       ) : (
         <>
-          {/* No public schedule → coral contact note + filled WhatsApp button. */}
+          {/* No public schedule → coordination note + filled WhatsApp button. */}
           {noScheduleNote ? (
-            <div className="mt-2.5 flex items-start gap-1.5 rounded-lg border border-[#F7D8D1] bg-[#FDF3F1] px-2 py-1.5">
-              <CalendarDays className="mt-px h-3 w-3 shrink-0 text-[#DC5B4B]" />
-              <p className="line-clamp-2 text-[9px] leading-snug text-[#DC5B4B]">{noScheduleNote}</p>
+            <div className="mt-2.5 flex items-start gap-1.5 rounded-lg border border-[#b7dcff] bg-[#EBF5FB] px-2 py-1.5">
+              <CalendarDays className="mt-px h-3 w-3 shrink-0 text-[#009FD9]" />
+              <p className="line-clamp-2 text-[9px] leading-snug text-[#0089bb]">{noScheduleNote}</p>
             </div>
           ) : null}
           <button className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2 text-[10px] font-bold text-white"><WhatsAppIcon className="h-3 w-3" /> {whatsapp}</button>
@@ -284,7 +284,7 @@ export function buildLandingResultsCopy({
     const month = d.toLocaleDateString(loc, { month: "short" }).replace(".", "");
     return {
       label: isEnglish ? `${month} ${day}` : `${day} ${month}`,
-      times: i === 3 ? ["10:00", "14:00"] : ["9:00", "14:00"],
+      times: i === 3 ? ["9:00", "10:00", "14:00"] : ["9:00", "10:00", "14:00"],
     };
   });
 

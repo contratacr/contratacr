@@ -70,6 +70,7 @@ interface PhoneInputProps {
   required?: boolean;
   optional?: boolean;
   id?: string;
+  className?: string;
 }
 
 function formatCRNational(digits: string): string {
@@ -77,7 +78,7 @@ function formatCRNational(digits: string): string {
   return d.length > 4 ? `${d.slice(0, 4)}-${d.slice(4)}` : d;
 }
 
-export function PhoneInput({ value, onChange, label, error, required, optional, id }: PhoneInputProps) {
+export function PhoneInput({ value, onChange, label, error, required, optional, id, className }: PhoneInputProps) {
   // Initialise the selected country from the value once; selection is then
   // driven by internal state so picking a country always "sticks".
   const [code, setCode] = useState(() => detect(value).country.code);
@@ -114,7 +115,7 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
   }
 
   return (
-    <div>
+    <div className={className}>
       {label && (
         <label htmlFor={id} className="text-sm font-medium text-[#374151] block mb-1.5">
           {label}{required && <span className="text-red-500"> *</span>}

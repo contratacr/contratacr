@@ -51,9 +51,9 @@ export function SelfActionModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center">
+      <div className="relative z-10 w-full rounded-t-2xl bg-white p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-center shadow-2xl sm:max-w-sm sm:rounded-2xl sm:pb-6">
         <BrandIconBadge icon={Info} size={56} className="mx-auto mb-4" />
         <h3 className="text-lg font-bold text-[#111827] mb-1.5">{t("title")}</h3>
         <p className="text-sm text-[#6b7280] mb-5 leading-relaxed">

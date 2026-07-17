@@ -397,12 +397,12 @@ export function ClientRegistrationModal({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
           className={cn(
-            "app-centered-modal fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
-            "w-[95vw] max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden",
-            "max-h-[95vh] flex flex-col",
+            "app-bottom-sheet fixed inset-x-0 bottom-0 z-50",
+            "w-full bg-white rounded-t-2xl shadow-2xl overflow-hidden sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:w-[95vw] sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl",
+            "max-h-[92vh] flex flex-col sm:max-h-[95vh]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            "data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0"
           )}
         >
           {/* Header */}

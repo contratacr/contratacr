@@ -127,7 +127,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          "relative flex h-11 w-full items-center rounded-xl border bg-white pl-3.5 pr-10 text-left text-sm font-medium transition-all",
+          "relative flex h-11 min-h-11 max-h-11 w-full items-center overflow-hidden rounded-xl border bg-white pl-3.5 pr-10 text-left text-sm font-medium transition-all",
           "focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent",
           // Mutually-exclusive states: open → ring + transparent border; error → red;
           // otherwise a neutral border that DARKENS on hover (#cbd5e1, the Input hover spec).
@@ -136,7 +136,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
-        <span className={cn("min-w-0 flex-1 truncate", selected ? "text-[#111827]" : "text-[#9ca3af]")}>
+        <span className={cn("block min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap leading-none", selected ? "text-[#111827]" : "text-[#9ca3af]")}>
           {selected?.label ?? placeholder ?? ""}
         </span>
         <ChevronDown className={cn("pointer-events-none absolute right-3 h-4 w-4 text-[#9ca3af] transition-transform", open && "rotate-180")} />

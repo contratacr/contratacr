@@ -102,7 +102,7 @@ export function LeaveReviewModal({
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-4"
+      className="fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4"
     >
       <style>{`
         @keyframes modalIn {
@@ -112,7 +112,7 @@ export function LeaveReviewModal({
       `}</style>
       <div
         style={{ animation: "modalIn 0.22s cubic-bezier(0.16,1,0.3,1) both" }}
-        className="relative w-full max-w-[420px] rounded-2xl bg-white shadow-2xl"
+        className="app-bottom-sheet relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[420px] sm:rounded-2xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#f3f4f6]">

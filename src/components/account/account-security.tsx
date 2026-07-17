@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { Button } from "@/components/ui/button";
 import { SpamNotice } from "@/components/ui/spam-notice";
+import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 
 /* Where each provider lets the user manage their account/email + sign-in security.
    Shown to OAuth users instead of fields that wouldn't work here. */
@@ -248,7 +249,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         </div>
         {emailApplied && (
           <div className="mb-3 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <BrandIconBadge icon={CheckCircle2} tone="success" size={32} className="mt-0.5" />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-emerald-800">{t("emailAppliedTitle")}</p>
               <p className="mt-0.5 text-xs leading-relaxed text-emerald-700">{t("emailAppliedBody")}</p>
@@ -257,7 +258,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         )}
         {emailPending && (
           <div className="mb-3 flex items-start gap-3 rounded-2xl border border-[#b8e4f5] bg-[#f8fbfe] px-4 py-3">
-            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
+            <BrandIconBadge icon={Clock} size={32} className="mt-0.5" />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[#162543]">{t("emailPendingTitle")}</p>
               <p className="mt-0.5 text-xs leading-relaxed text-[#4b6270]">{t("emailPendingBody")}</p>

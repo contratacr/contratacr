@@ -1046,14 +1046,13 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onInteractOutside={keepSelectMenuOpen}
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
-            "app-centered-modal fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
-            "w-[95vw] max-w-4xl rounded-3xl overflow-hidden shadow-2xl",
+            "app-bottom-sheet fixed inset-x-0 bottom-0 z-50 sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:-translate-x-1/2 sm:-translate-y-1/2",
+            "w-full overflow-hidden rounded-t-2xl shadow-2xl sm:w-[95vw] sm:max-w-4xl sm:rounded-3xl",
             "flex flex-col md:flex-row",
-            "max-h-[95vh] md:max-h-[720px]",
+            "max-h-[92vh] sm:max-h-[95vh] md:max-h-[720px]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-            "data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2"
+            "data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0"
           )}
         >
           {/* LEFT PANEL — the original dark navy→blue gradient (sprint 323 reverted the

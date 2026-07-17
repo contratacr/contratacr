@@ -97,7 +97,7 @@ export function UnsavedChangesGuard({
           onEscapeKeyDown={(event) => event.preventDefault()}
           onInteractOutside={(event) => event.preventDefault()}
           onPointerDownOutside={(event) => event.preventDefault()}
-          className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white shadow-2xl data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=open]:fade-in-0"
+          className="fixed inset-x-0 bottom-0 z-50 w-full rounded-t-2xl bg-white shadow-2xl data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-4 data-[state=open]:fade-in-0 sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[92vw] sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:data-[state=open]:zoom-in-95 sm:data-[state=open]:slide-in-from-bottom-0"
         >
           <div className="p-6">
             <div className="flex items-start gap-3">

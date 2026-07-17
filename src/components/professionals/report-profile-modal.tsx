@@ -74,9 +74,9 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4" onClick={onClose}>
       <div
-        className="relative w-full max-w-[440px] rounded-2xl bg-white shadow-2xl"
+        className="app-bottom-sheet relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[440px] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#f3f4f6]">

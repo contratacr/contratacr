@@ -65,6 +65,66 @@ const CATEGORIES = [
     href: "/buscar?categoria=seguridad",
     src: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=400&auto=format&fit=crop&q=80",
   },
+  {
+    label: "Fisioterapia",
+    href: "/buscar?categoria=fisioterapia",
+    src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Psicología",
+    href: "/buscar?categoria=psicologia",
+    src: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Contabilidad",
+    href: "/buscar?categoria=contabilidad",
+    src: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Abogados",
+    href: "/buscar?categoria=legal",
+    src: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Desarrollo web",
+    href: "/buscar?categoria=desarrollo_web",
+    src: "https://images.unsplash.com/photo-1547658719-da2b51169166?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Diseño gráfico",
+    href: "/buscar?categoria=diseno_grafico",
+    src: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Entrenamiento personal",
+    href: "/buscar?categoria=entrenamiento_personal",
+    src: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Veterinaria",
+    href: "/buscar?categoria=veterinaria",
+    src: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Fotografía",
+    href: "/buscar?categoria=fotografia",
+    src: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Catering",
+    href: "/buscar?categoria=catering",
+    src: "https://images.unsplash.com/photo-1555244162-803834f70033?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Mensajería",
+    href: "/buscar?categoria=mensajeria",
+    src: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Bienes raíces",
+    href: "/buscar?categoria=bienes_raices",
+    src: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&auto=format&fit=crop&q=80",
+  },
 ];
 
 const DOUBLED = [...CATEGORIES, ...CATEGORIES];

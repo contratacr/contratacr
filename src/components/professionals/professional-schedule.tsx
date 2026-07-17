@@ -661,11 +661,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       <Phone className="h-4 w-4" /> {stacked ? t("callShort") : t("call")}
     </a>
   );
+  const messageButtonClass = "w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#009FD9] py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-60";
   const contactButtons = (
     <>
-      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} />
+      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} className={messageButtonClass} />
       {/* No-schedule state: filled on /buscar, outlined on the profile contact card. */}
-      {showCall && renderCall(stacked)}
+      {showCall && renderCall(true)}
       {showEmail && (
         <a
           href={isOwn ? undefined : emailHref}
@@ -680,7 +681,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   const profileContactButtons = (
     <>
-      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} />
+      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} className={messageButtonClass} />
       {(showCall || showEmail) && (
         <div className={`grid gap-2 ${showCall && showEmail ? "grid-cols-2" : "grid-cols-1"}`}>
           {showCall && renderCall(true)}
