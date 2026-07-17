@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Archive, ArchiveRestore, ArrowLeft, BriefcaseBusiness, CalendarDays, ExternalLink, Loader2, MessageCircle, Search, Send } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Loader2, MessageCircle, Search, Send } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -65,8 +66,18 @@ export function DirectChatInbox() {
   const active = useMemo(() => conversations.find((item) => item.id === activeId) ?? null, [activeId, conversations]);
 
   const personFor = useCallback((item: Conversation) => user?.id === item.client_id
-    ? { name: item.professionals?.business_name || item.professionals?.profiles?.full_name || (isEn ? "Professional" : "Profesional"), avatar: item.professionals?.profiles?.avatar_url }
-    : { name: item.client_profile?.full_name || (isEn ? "Client" : "Cliente"), avatar: item.client_profile?.avatar_url }, [isEn, user?.id]);
+    ? {
+      role: "professional" as const,
+      name: item.professionals?.business_name || item.professionals?.profiles?.full_name || (isEn ? "Professional" : "Profesional"),
+      avatar: item.professionals?.profiles?.avatar_url,
+      profileHref: item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null,
+    }
+    : {
+      role: "client" as const,
+      name: item.client_profile?.full_name || (isEn ? "Client" : "Cliente"),
+      avatar: item.client_profile?.avatar_url,
+      profileHref: null,
+    }, [isEn, user?.id]);
   const contextFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
     const labels = isEn ? { booking: "Request", project: "Post", proposal: "Proposal", profile: "Profile" } : { booking: "Solicitud", project: "Publicación", proposal: "Propuesta", profile: "Perfil" };
@@ -163,8 +174,10 @@ export function DirectChatInbox() {
   const activePerson = active ? personFor(active) : null;
   const activeContext = active ? contextFor(active) : null;
   const detailHref = active ? contextHref(active) : null;
-  const detailLabel = activeContext?.type === "profile" ? (isEn ? "View profile" : "Ver perfil") : (isEn ? "View linked item" : "Ver trabajo");
   const archiveLabel = showArchived ? (isEn ? "Restore conversation" : "Restaurar conversación") : (isEn ? "Archive conversation" : "Archivar conversación");
+  const activePersonName = activePerson?.name || "";
+  const activeContextText = activeContext ? `${activeContext.label} · ${activeContext.title}` : "";
+  const avatarLabel = isEn ? "View photo" : "Ver foto";
   return (
     <div className="grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
       <aside className={cn("min-h-0 border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>
@@ -195,12 +208,27 @@ export function DirectChatInbox() {
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
         <header className="flex min-h-[65px] items-center gap-3 border-b border-[#e3ebf1] px-3 py-3 sm:px-5">
           <button type="button" onClick={() => setMobileThread(false)} className="grid h-9 w-9 place-items-center text-[#526277] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
-          <Avatar className="h-10 w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(activePerson?.name || "")}</AvatarFallback></Avatar>
-          <div className="min-w-0 flex-1"><p className="text-sm font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p><p className="mt-0.5 truncate text-xs font-semibold text-[#63748a]">{activeContext?.label} · {activeContext?.title}</p></div>
-          {detailHref && <ChatActionButton label={detailLabel} onClick={() => router.push(detailHref)} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#cfe3ee] bg-white px-2.5 text-xs font-bold text-[#008fc4] shadow-sm transition hover:bg-[#f2fbfe]"><span className="hidden xl:inline">{detailLabel}</span><ExternalLink className="h-4 w-4" /></ChatActionButton>}
+          <ImagePreviewDialog src={activePerson?.avatar ?? null} alt={activePersonName} openLabel={avatarLabel} closeLabel={isEn ? "Close" : "Cerrar"}>
+            <Avatar className="h-10 w-10 cursor-zoom-in"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
+          </ImagePreviewDialog>
+          <div className="min-w-0 flex-1">
+            {activePerson?.profileHref ? (
+              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full truncate text-left text-sm font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline">
+                {activePerson.name}
+              </button>
+            ) : (
+              <p className="truncate text-sm font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
+            )}
+            {detailHref ? (
+              <button type="button" onClick={() => router.push(detailHref)} className="mt-0.5 block max-w-full truncate text-left text-xs font-bold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
+                {activeContextText}
+              </button>
+            ) : (
+              <p className="mt-0.5 truncate text-xs font-semibold text-[#63748a]">{activeContextText}</p>
+            )}
+          </div>
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
         </header>
-        <div className="flex items-center gap-2 border-b border-[#e7eef3] bg-[#f8fbfd] px-4 py-2 text-xs font-semibold text-[#607188]">{activeContext?.type === "booking" ? <CalendarDays className="h-4 w-4 text-[#009FD9]" /> : <BriefcaseBusiness className="h-4 w-4 text-[#009FD9]" />}{isEn ? "Conversation linked to this item" : "Conversación vinculada a este trabajo"}</div>
         <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-[#f3f7fa] px-4 py-5 sm:px-6">
           {threadLoading ? <div className="grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => { const mine = message.sender_id === user?.id; return <div key={message.id} className={cn("flex", mine && "justify-end")}><div className={cn("max-w-[86%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm sm:max-w-[78%]", mine ? "rounded-br-sm bg-[#009FD9] text-white" : "rounded-bl-sm bg-white text-[#25364d]")}><p className="whitespace-pre-wrap break-words">{message.body}</p><time className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/75" : "text-[#8996a8]")}>{timeLabel(message.created_at, locale)}</time></div></div>; })}
         </div>
