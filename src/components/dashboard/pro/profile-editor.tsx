@@ -636,7 +636,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   useReportSaveStatus(saving || autoSaving || photoUploading, saved, dirty);
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {error}
