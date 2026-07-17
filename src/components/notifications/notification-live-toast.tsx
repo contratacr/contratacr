@@ -24,25 +24,26 @@ type Notification = {
 type NotificationScope = "all" | "use" | "offer";
 type ToastState = { latest: Notification; count: number };
 const POST_LOGIN_PROMPT_KEY = "contratacr:post-login-prompt";
-const POST_LOGIN_NOTIFICATIONS_SEEN_KEY = "contratacr:post-login-notifications-seen";
+const LAST_ACTIVE_AT_KEY = "contratacr:last-active-at:v2";
+const ACTIVE_HEARTBEAT_MS = 15_000;
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
-function postLoginSeenStorageKey(userId: string) {
-  return `${POST_LOGIN_NOTIFICATIONS_SEEN_KEY}:${userId}`;
+function lastActiveStorageKey(userId: string) {
+  return `${LAST_ACTIVE_AT_KEY}:${userId}`;
 }
 
-function readPostLoginSeenAt(userId: string) {
+function readLastActiveAt(userId: string) {
   if (typeof window === "undefined") return 0;
-  const value = window.localStorage.getItem(postLoginSeenStorageKey(userId));
+  const value = window.localStorage.getItem(lastActiveStorageKey(userId));
   const parsed = value ? Date.parse(value) : 0;
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function rememberPostLoginSeenAt(userId: string, createdAt?: string | null) {
-  if (typeof window === "undefined" || !createdAt) return;
+function rememberLastActiveAt(userId: string, value = new Date().toISOString()) {
+  if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(postLoginSeenStorageKey(userId), createdAt);
+    window.localStorage.setItem(lastActiveStorageKey(userId), value);
   } catch {
     /* ignore */
   }
@@ -61,6 +62,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   const pendingToastTimerRef = useRef<number | null>(null);
   const burstTimerRef = useRef<number | null>(null);
   const burstQueueRef = useRef<Notification[]>([]);
+  const summaryCheckedUserRef = useRef<string | null>(null);
 
   const clearPostLoginParam = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -81,21 +83,6 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       window.localStorage.removeItem(POST_LOGIN_PROMPT_KEY);
     } catch {
       /* ignore */
-    }
-  }, []);
-
-  const isRecentPrompt = useCallback((userId: string) => {
-    if (typeof window === "undefined") return false;
-    try {
-      const raw = window.localStorage.getItem(POST_LOGIN_PROMPT_KEY);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw) as { ts?: number; userId?: string };
-      const ts = typeof parsed.ts === "number" ? parsed.ts : 0;
-      if (Date.now() - ts > 5 * 60 * 1000) return false;
-      if (parsed.userId && parsed.userId !== userId) return false;
-      return true;
-    } catch {
-      return false;
     }
   }, []);
 
@@ -152,6 +139,10 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
+          // A realtime notification arrived while this session was connected. It may
+          // remain unread, but it must not be reported as having arrived while away
+          // on the next login.
+          rememberLastActiveAt(user.id);
           maybeShow(payload.new as Notification, true);
         },
       )
@@ -161,52 +152,38 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   }, [user, maybeShow]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      summaryCheckedUserRef.current = null;
+      return;
+    }
     const userId = user.id;
-    const shouldShowLoginNotification =
-      new URLSearchParams(window.location.search).get("postLogin") === "1" || isRecentPrompt(userId);
-    if (!shouldShowLoginNotification) return;
+    if (summaryCheckedUserRef.current === userId) return;
+    summaryCheckedUserRef.current = userId;
 
     let canceled = false;
-    async function checkUnread() {
+    async function checkNotificationsSinceLastSession() {
+      const lastActiveAt = readLastActiveAt(userId);
+      const checkedAt = new Date().toISOString();
       try {
+        // A missing v2 baseline means this is the first visit after the tracking
+        // correction. Establish it without presenting old unread items as new.
+        if (lastActiveAt <= 0) return;
+
         const supabase = createClient();
-        const { data, error } = await supabase
+        const { count, error } = await supabase
           .from("notifications")
-          .select("id, created_at")
+          .select("id", { count: "exact", head: true })
           .eq("user_id", userId)
           .eq("read", false)
-          .order("created_at", { ascending: false })
-          .limit(50);
+          .gt("created_at", new Date(lastActiveAt).toISOString());
         if (canceled) return;
         if (error) {
-          console.error("[notification-login-summary] failed to load unread count:", error);
-          const fallback = await supabase
-            .from("notifications")
-            .select("id, created_at")
-            .eq("user_id", userId)
-            .eq("read", false)
-            .order("created_at", { ascending: false })
-            .limit(50);
-          if (!canceled) {
-            const unread = fallback.data ?? [];
-            const seenAt = readPostLoginSeenAt(userId);
-            const fresh = unread.filter((item) => Date.parse(item.created_at) > seenAt);
-            if (fresh.length > 0) {
-              rememberPostLoginSeenAt(userId, unread[0]?.created_at);
-              setPostLoginUnreadCount(fresh.length);
-            }
-          }
+          console.error("[notification-login-summary] failed to load new notifications:", error);
           return;
         }
-        const unread = data ?? [];
-        const seenAt = readPostLoginSeenAt(userId);
-        const fresh = unread.filter((item) => Date.parse(item.created_at) > seenAt);
-        if (fresh.length > 0) {
-          rememberPostLoginSeenAt(userId, unread[0]?.created_at);
-          setPostLoginUnreadCount(fresh.length);
-        }
+        if ((count ?? 0) > 0) setPostLoginUnreadCount(count ?? 0);
       } finally {
+        rememberLastActiveAt(userId, checkedAt);
         if (!canceled) {
           clearPostLoginParam();
           clearPostLoginPrompt();
@@ -214,11 +191,33 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       }
     }
 
-    void checkUnread();
+    void checkNotificationsSinceLastSession();
     return () => {
       canceled = true;
     };
-  }, [user, clearPostLoginParam, clearPostLoginPrompt, isRecentPrompt]);
+  }, [user, clearPostLoginParam, clearPostLoginPrompt]);
+
+  useEffect(() => {
+    if (!user) return;
+    const userId = user.id;
+    const rememberIfVisible = () => {
+      if (document.visibilityState === "visible") rememberLastActiveAt(userId);
+    };
+    const rememberOnLeave = () => rememberLastActiveAt(userId);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") rememberOnLeave();
+    };
+
+    const heartbeat = window.setInterval(rememberIfVisible, ACTIVE_HEARTBEAT_MS);
+    window.addEventListener("pagehide", rememberOnLeave);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearInterval(heartbeat);
+      window.removeEventListener("pagehide", rememberOnLeave);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      rememberOnLeave();
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
