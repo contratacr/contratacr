@@ -414,6 +414,15 @@ export function AiConcierge() {
   function navigate(href: string) {
     const protectedDestination = href.includes("/publicar-proyecto") || href.includes("/dashboard/");
     if (!user && protectedDestination) storePendingIntent(href);
+    try {
+      window.sessionStorage.setItem(`${SESSION_KEY_PREFIX}${lang}`, JSON.stringify({
+        id: conversationId,
+        open: false,
+        messages: messages.slice(-MAX_STORED_MESSAGES),
+      } satisfies StoredAssistantSession));
+    } catch {
+      /* Navigation still works when browser storage is unavailable. */
+    }
     setOpen(false);
     const alreadyLocalized = /^\/(es|en)(?=\/|\?|$)/.test(href);
     const destination = alreadyLocalized ? href : `/${lang}${href.startsWith("/") ? href : `/${href}`}`;

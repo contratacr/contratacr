@@ -1,6 +1,6 @@
 import { expect, test } from "playwright/test";
 import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, loginAs, resetAuth } from "./helpers";
-import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient } from "./seed";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 
 type AssistantResponse = {
   answer?: string;
@@ -32,9 +32,54 @@ test.describe.configure({ mode: "serial" });
 
 test.describe("@seeded ContrataCR AI", () => {
   test.skip(!canRunSeededRegression(), "Requires the isolated test Supabase seed.");
+  let seed: RegressionSeedState;
+  let professionalSnapshot: Record<string, unknown> | null = null;
 
   test.beforeAll(async () => {
-    await ensureRegressionSeed();
+    seed = await ensureRegressionSeed();
+    const admin = regressionAdminClient();
+    const { data, error } = await admin.from("professionals")
+      .select("professions, services, workplaces, search_provincias, search_cantones")
+      .eq("id", seed.professionalId)
+      .single();
+    if (error) throw error;
+    professionalSnapshot = data;
+    const services = Array.isArray(data.services) ? [...data.services] : [];
+    const serviceIndex = services.findIndex((item) => item?.category === seed.categoryId);
+    const plumbingService = {
+      id: "e2e-ai-plomeria-atenas",
+      name: "Plomería",
+      category: seed.categoryId,
+      description: "Servicio de plomería en Atenas para regresión de ContrataCR AI.",
+      active: true,
+    };
+    if (serviceIndex >= 0) services[serviceIndex] = { ...services[serviceIndex], ...plumbingService };
+    else services.push(plumbingService);
+    const workplaces = Array.isArray(data.workplaces) ? [...data.workplaces] : [];
+    workplaces.push({
+      id: "e2e-ai-atenas",
+      name: "Atenas, Alajuela",
+      address: "Atenas centro, Alajuela, Costa Rica",
+      provinciaId: "al",
+      cantonId: "al-at",
+      lat: 9.97856,
+      lng: -84.37856,
+    });
+    const unique = (values: unknown[]) => [...new Set(values.filter(Boolean))];
+    const { error: updateError } = await admin.from("professionals").update({
+      professions: unique([...(data.professions ?? []), seed.categoryId]),
+      services,
+      workplaces,
+      search_provincias: unique([...(data.search_provincias ?? []), "al"]),
+      search_cantones: unique([...(data.search_cantones ?? []), "al-at"]),
+      is_available: true,
+    }).eq("id", seed.professionalId);
+    if (updateError) throw updateError;
+  });
+
+  test.afterAll(async () => {
+    if (!professionalSnapshot || !seed?.professionalId) return;
+    await regressionAdminClient().from("professionals").update(professionalSnapshot).eq("id", seed.professionalId);
   });
 
   test("answers product questions with stable, actionable destinations", async ({ page }) => {
