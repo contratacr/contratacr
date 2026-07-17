@@ -801,7 +801,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             } else if (p.status === "accepted") {
                               if (ps !== "cancelled") {
                                 actions.push(
-                                  <DirectChatLauncher key="chat" proposalId={p.id} professionalName={clientName || (locale === "en" ? "Client" : "Cliente")} contextTitle={p.projects?.title} buttonLabel={t("contactClient")} className="inline-flex min-h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] sm:flex-none" />
+                                  <DirectChatLauncher key="chat" proposalId={p.id} professionalName={clientName || (locale === "en" ? "Client" : "Cliente")} contextTitle={p.projects?.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: p.projects?.title || t("projectFallback") })} className="inline-flex min-h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:cursor-wait disabled:opacity-70 sm:flex-none" />
                                 );
                               }
                               if (canMarkCompleted) actions.push(<Button key="done" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);

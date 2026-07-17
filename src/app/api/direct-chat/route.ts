@@ -114,9 +114,12 @@ export async function POST(req: Request) {
   const proposalId = String(body.proposalId ?? "");
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
   const message = limitTrimmedText(body.message, 2000);
-  if (!message) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
+  const initialMessage = limitTrimmedText(body.initialMessage, 2000);
+  const openConversation = body.openConversation === true;
+  if (!message && !(openConversation && initialMessage)) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
   const db = createAdminClient();
   let conversation: ConversationRow | null = null;
+  let conversationCreated = false;
 
   if (conversationId) {
     const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
@@ -170,20 +173,25 @@ export async function POST(req: Request) {
       }).select("*").single();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       conversation = inserted as ConversationRow;
+      conversationCreated = true;
     }
   }
 
   if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   if (conversation.status === "blocked") return NextResponse.json({ error: "Esta conversación está bloqueada." }, { status: 403 });
+  if (openConversation && !conversationCreated) {
+    return NextResponse.json({ ok: true, conversationId: conversation.id, created: false });
+  }
+  const messageToSend = message || initialMessage;
   const { data: sentMessages, error: msgError } = await db.rpc("send_direct_message_atomic", {
     p_conversation_id: conversation.id,
     p_sender_id: user.id,
-    p_body: message,
+    p_body: messageToSend,
   });
   if (msgError) return NextResponse.json({ error: msgError.message }, { status: 500 });
   const msg = Array.isArray(sentMessages) ? sentMessages[0] : sentMessages;
   if (!msg) return NextResponse.json({ error: "No se pudo guardar el mensaje." }, { status: 500 });
-  return NextResponse.json({ ok: true, conversationId: conversation.id, message: msg });
+  return NextResponse.json({ ok: true, conversationId: conversation.id, message: msg, created: conversationCreated });
 }
 
 export async function PATCH(req: Request) {

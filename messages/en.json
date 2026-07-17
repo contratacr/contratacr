@@ -1491,6 +1491,8 @@
       "accepted": "Accepted"
     },
     "projectFallback": "Request",
+    "openChat": "Open chat",
+    "proposalChatGreeting": "Hi, I saw that you accepted my proposal for \"{title}\" and would like to coordinate the details.",
     "yourPriceLabel": "Your price:",
     "priceTBD": "Price to be agreed",
     "priceHint": "Leave it blank to agree on the price after seeing the job.",
@@ -1970,6 +1972,8 @@
     "changeDecision": "Change decision",
     "whatsapp": "WhatsApp",
     "waProposal": "Hi, I'm writing about your proposal on ContrataCR for the request \"{title}\".",
+    "openChat": "Open chat",
+    "proposalChatGreeting": "Hi, I received your proposal for \"{title}\" and would like to discuss the details.",
     "noProposalsYet": "No proposals yet.",
     "priceTBD": "Price to be agreed",
     "seeUnchosen": "See proposals not chosen ({count})",

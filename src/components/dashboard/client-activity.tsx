@@ -1100,7 +1100,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       <Button size="sm" className="min-w-[150px] flex-1 px-3 sm:flex-none" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>
                                     )}
                                     {proposal.professionals?.id && (
-                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("contact")} className="inline-flex min-h-9 min-w-[104px] flex-1 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-3 text-sm font-bold text-white hover:bg-[#0089bb] sm:flex-none" />
+                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="inline-flex min-h-9 min-w-[104px] flex-1 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-3 text-sm font-bold text-white hover:bg-[#0089bb] disabled:cursor-wait disabled:opacity-70 sm:flex-none" />
                                     )}
                                   </div>
                                 </div>

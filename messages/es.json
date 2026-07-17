@@ -1490,6 +1490,8 @@
       "accepted": "Aceptada"
     },
     "projectFallback": "Solicitud",
+    "openChat": "Abrir chat",
+    "proposalChatGreeting": "Hola, vi que aceptaste mi propuesta para \"{title}\" y quisiera coordinar los detalles.",
     "yourPriceLabel": "Tu precio:",
     "priceTBD": "Precio a convenir",
     "priceHint": "Déjalo en blanco para acordar el precio al ver el trabajo.",
@@ -1968,6 +1970,8 @@
     "changeDecision": "Cambiar decisión",
     "whatsapp": "WhatsApp",
     "waProposal": "Hola, te escribo por tu propuesta en ContrataCR para la solicitud \"{title}\".",
+    "openChat": "Abrir chat",
+    "proposalChatGreeting": "Hola, recibí tu propuesta para \"{title}\" y quisiera conversar sobre los detalles.",
     "noProposalsYet": "Sin propuestas todavía.",
     "priceTBD": "Precio a convenir",
     "seeUnchosen": "Ver propuestas no elegidas ({count})",

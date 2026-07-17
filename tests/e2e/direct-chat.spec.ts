@@ -153,12 +153,19 @@ test.describe("@seeded contextual direct chat", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const created = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
-      body: { proposalId, message: "E2E mensaje sobre propuesta" },
+      body: { proposalId, openConversation: true, initialMessage: "E2E mensaje sobre propuesta" },
     });
     expect(created.status, JSON.stringify(created.body)).toBe(200);
     conversationIds.push(created.body.conversationId!);
+    const reopened = await apiJson<ChatResponse>(page, "/api/direct-chat", {
+      method: "POST",
+      body: { proposalId, openConversation: true, initialMessage: "E2E mensaje que no debe duplicarse" },
+    });
+    expect(reopened.status, JSON.stringify(reopened.body)).toBe(200);
+    expect(reopened.body.conversationId).toBe(created.body.conversationId);
     const thread = await apiJson<ThreadResponse>(page, `/api/direct-chat?id=${created.body.conversationId}`);
     expect(thread.body.conversation?.context?.type).toBe("proposal");
+    expect(thread.body.messages?.map((message) => message.body)).toEqual(["E2E mensaje sobre propuesta"]);
     expect(thread.body.conversation?.context?.title).toBe("E2E publicación con chat");
 
     await resetAuth(page);

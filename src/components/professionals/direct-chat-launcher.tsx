@@ -17,6 +17,8 @@ type DirectChatLauncherProps = {
   isOwn?: boolean;
   className?: string;
   buttonLabel?: string;
+  openDirectly?: boolean;
+  initialMessage?: string;
   onSelfAction?: () => void;
 };
 
@@ -30,6 +32,8 @@ export function DirectChatLauncher({
   isOwn = false,
   className = "",
   buttonLabel,
+  openDirectly = false,
+  initialMessage = "",
   onSelfAction,
 }: DirectChatLauncherProps) {
   const locale = useLocale();
@@ -51,7 +55,7 @@ export function DirectChatLauncher({
     window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
   }, [professionalId, searchParams, user]);
 
-  function openChat() {
+  async function openChat() {
     if (isOwn) {
       onSelfAction?.();
       return;
@@ -61,6 +65,35 @@ export function DirectChatLauncher({
       target.searchParams.set("chatProfessional", professionalId);
       const next = encodeURIComponent(`${target.pathname}${target.search}`);
       router.push(`/login?next=${next}`);
+      return;
+    }
+    if (openDirectly) {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetch("/api/direct-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            professionalId,
+            bookingId,
+            projectId,
+            proposalId,
+            contextTitle,
+            initialMessage,
+            openConversation: true,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || (isEn ? "Could not open the chat." : "No se pudo abrir el chat."));
+        router.push(`/dashboard/profesional?tab=chat&conversation=${json.conversationId}`);
+      } catch (err) {
+        setMessage(initialMessage);
+        setError(err instanceof Error ? err.message : isEn ? "Could not open the chat." : "No se pudo abrir el chat.");
+        setOpen(true);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
     setOpen(true);
@@ -104,10 +137,12 @@ export function DirectChatLauncher({
     <>
       <button
         type="button"
-        onClick={openChat}
+        onClick={() => void openChat()}
+        disabled={loading}
+        aria-busy={loading}
         className={className || "w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#162543] py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#233a5f]"}
       >
-        <MessageCircle className="h-4 w-4" />
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
         {buttonLabel || (isEn ? "Message" : "Enviar mensaje")}
       </button>
 
