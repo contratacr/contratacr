@@ -204,7 +204,7 @@ export function AdminUserProfile({
                     if (!wa && !call) return <span>—</span>;
                     return (
                       <span>
-                        {wa && <>WhatsApp: {fmtPhone(wa)}</>}
+                        {wa && <>Número de contacto: {fmtPhone(wa)}</>}
                         {call && <>{wa ? " · " : ""}Llamada: {fmtPhone(call)}</>}
                       </span>
                     );

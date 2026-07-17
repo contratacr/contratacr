@@ -39,7 +39,7 @@ export function buildBookingIcs(opts: {
     `DTSTART:${start}`,
     `DTEND:${end}`,
     `SUMMARY:${esc(`${service || "Servicio"} con ${proName}`)}`,
-    `DESCRIPTION:${esc(`Servicio: ${service || "-"}\nProfesional: ${proName}\nWhatsApp: ${whatsappLink}`)}`,
+    `DESCRIPTION:${esc(`Servicio: ${service || "-"}\nProfesional: ${proName}\nConversación: ${whatsappLink}`)}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");

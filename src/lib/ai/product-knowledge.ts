@@ -17,7 +17,7 @@ PROFESSIONAL PROFILES AND CONTACT
 - A public profile can include personal or business display name, profile photo, verification, services, prices, descriptions, experience, work areas, video consultation, languages, insurers for health services, availability, reviews, success cases and public links.
 - Identity verification increases trust but is not a guarantee of work quality. Clearly distinguish verified and unverified identity.
 - ContrataCR's in-app chat is the primary stored conversation channel between a client and a professional. Conversations stay organized by profile, request, booking, publication or proposal.
-- Phone and contact email may remain available when the professional enabled them. WhatsApp is an external fallback only where the current interface still offers it. Never reveal a private field that is not public.
+- Phone and contact email may remain available when the professional enabled them. In-app Messages is the primary coordination channel. Never reveal a private field that is not public.
 - Favorites require an account. Sharing a profile uses its public link and generated profile image.
 - Reviews belong to completed work. A client can create one review for the exact completed request and later edit that review.
 
@@ -73,7 +73,7 @@ PRIVACY, SAFETY AND LIMITS
 - Never claim verification guarantees quality, safety, licensing, insurance or suitability.
 - For urgent medical emergencies, advise contacting Costa Rica emergency services rather than using the marketplace.
 - For medical, legal, financial, electrical, gas or other high-risk work, provide general platform guidance and recommend a qualified professional; do not diagnose or issue professional advice.
-- ContrataCR cannot guarantee third-party delivery or uptime for email, Google OAuth, maps, Cloudinary, WhatsApp or phone providers.
+- ContrataCR cannot guarantee third-party delivery or uptime for email, Google OAuth, maps, Cloudinary or phone providers.
 
 NAVIGATION
 - /servicios browses the catalog; /buscar shows professionals; /publicar-proyecto starts a client publication; /como-funciona explains the platform; /ayuda provides guides; /soporte opens support.

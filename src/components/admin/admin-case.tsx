@@ -6,7 +6,6 @@ import {
   ShieldCheck, IdCard, Loader2, ShieldAlert, Trash2,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { getCategoryLabel } from "@/lib/data/categories";
 import {
   verificationLabel, verificationPillClasses, caseRef, type VerificationStatus,
@@ -182,7 +181,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 neatly instead of leaving sparse empty space to the right. */}
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4 text-sm">
               <Field label="Correo" value={profile?.email} />
-              <Field label="Teléfono / WhatsApp" value={pro.whatsapp} />
+              <Field label="Número de contacto" value={pro.whatsapp} />
               <Field label="Provincia/Cantón" value={[pro.address].filter(Boolean).join(" · ") || "—"} />
               <Field label="Modalidad" value={pro.service_type === "fixed" ? "Lugar fijo" : "Se desplaza"} />
             </dl>
@@ -412,7 +411,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 rel="noopener noreferrer"
                 className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold"
               >
-                <WhatsAppIcon className="h-4 w-4" /> Contactar por WhatsApp
+                <ExternalLink className="h-4 w-4" /> Contacto externo
               </a>
             )}
           </div>

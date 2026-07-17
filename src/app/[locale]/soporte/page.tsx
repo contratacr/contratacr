@@ -8,8 +8,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Headset, Home } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { Link } from "@/i18n/navigation";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
-import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
 import { SupportForm } from "@/components/support/support-form";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { canOffer } from "@/lib/auth/capabilities";
@@ -131,19 +129,6 @@ export default function SoportePage() {
           <div className="bg-white rounded-3xl border border-[#e5e7eb] shadow-sm p-8">
             <SupportForm onSuccess={(email) => { setSuccessEmail(email); setSuccess(true); }} />
           </div>
-
-          {/* Secondary, discreet: WhatsApp Business */}
-          <p className="mt-5 text-center text-sm text-[#9ca3af]">
-            {t("whatsappPre")}{" "}
-            <a
-              href={SUPPORT_WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-medium text-[#1ebe5d] hover:underline"
-            >
-              <WhatsAppIcon className="h-4 w-4" /> {t("whatsappLink")}
-            </a>
-          </p>
 
         </div>
       </main>

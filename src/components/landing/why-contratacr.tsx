@@ -1,6 +1,5 @@
 import { getTranslations, getLocale } from "next-intl/server";
-import { Search, CalendarDays, BadgeCheck } from "lucide-react";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { Search, CalendarDays, BadgeCheck, MessageCircle } from "lucide-react";
 import { PhoneFrame, ResultsScreen, buildLandingResultsCopy } from "@/components/landing/phone-screens";
 import { Link } from "@/i18n/navigation";
 import { FadeInUp } from "@/components/landing/fade-in-up";
@@ -12,7 +11,7 @@ import { FadeInUp } from "@/components/landing/fade-in-up";
 const POINTS = [
   { Icon: Search, key: "point0" },
   { Icon: CalendarDays, key: "point1" },
-  { Icon: WhatsAppIcon, key: "point2" },
+  { Icon: MessageCircle, key: "point2" },
   { Icon: BadgeCheck, key: "point3" },
 ];
 

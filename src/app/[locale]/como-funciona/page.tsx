@@ -4,7 +4,6 @@ import { getTranslations } from "next-intl/server";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link } from "@/i18n/navigation";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { InstallAppGuide } from "@/components/landing/install-app-card";
 import { ComoFuncionaFaq } from "./faq-accordion";
 import {
@@ -19,6 +18,7 @@ import {
   Image as ImageIcon,
   Languages,
   MapPin,
+  MessageCircle,
   PhoneCall,
   Search,
   ShieldCheck,
@@ -28,7 +28,6 @@ import {
 } from "lucide-react";
 
 type IconComponent = (props: { className?: string }) => ReactNode;
-type FeatureAccent = "default" | "whatsapp";
 
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").replace(/\/$/, "");
 const iconTileClass = "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#0089bb]";
@@ -70,15 +69,11 @@ function SectionHeading({ eyebrow, title, subtitle }: { eyebrow: string; title: 
   );
 }
 
-function FeatureCard({ icon: Icon, title, body, accent = "default" }: { icon: IconComponent; title: string; body: string; accent?: FeatureAccent }) {
-  const tileClass = accent === "whatsapp"
-    ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e9fbef] text-[#25D366]"
-    : iconTileClass;
-
+function FeatureCard({ icon: Icon, title, body }: { icon: IconComponent; title: string; body: string }) {
   return (
     <div className={`${softCardClass} p-5`}>
       <div className="mb-4 flex items-center gap-3">
-        <div className={tileClass}>
+        <div className={iconTileClass}>
           <Icon className="h-5 w-5" />
         </div>
         <h3 className="text-sm font-bold leading-snug text-[#162543]">{title}</h3>
@@ -183,10 +178,10 @@ export default async function ComoFuncionaPage() {
     { icon: MapPin, title: t("proBenefit2Title"), body: t("proBenefit2Body") },
     { icon: Bell, title: t("proBenefit3Title"), body: t("proBenefit3Body") },
   ];
-  const trustItems: Array<{ icon: IconComponent; title: string; body: string; accent?: FeatureAccent }> = [
+  const trustItems: Array<{ icon: IconComponent; title: string; body: string }> = [
     { icon: BadgeCheck, title: t("trust0Title"), body: t("trust0Body") },
     { icon: Star, title: t("trust1Title"), body: t("trust1Body") },
-    { icon: WhatsAppIcon, title: t("trust2Title"), body: t("trust2Body"), accent: "whatsapp" },
+    { icon: MessageCircle, title: t("trust2Title"), body: t("trust2Body") },
     { icon: PhoneCall, title: t("trust3Title"), body: t("trust3Body") },
     { icon: Video, title: t("trust4Title"), body: t("trust4Body") },
     { icon: Languages, title: t("trust5Title"), body: t("trust5Body") },
@@ -308,7 +303,7 @@ export default async function ComoFuncionaPage() {
             <SectionHeading eyebrow={t("trustEyebrow")} title={t("trustTitle")} subtitle={t("trustSubtitle")} />
             <div className="grid gap-4 md:grid-cols-3">
               {trustItems.map((item) => (
-                <FeatureCard key={item.title} icon={item.icon} title={item.title} body={item.body} accent={item.accent} />
+                <FeatureCard key={item.title} icon={item.icon} title={item.title} body={item.body} />
               ))}
             </div>
           </div>

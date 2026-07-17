@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Star } from "lucide-react";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { CheckCircle2, MessageCircle, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 /* ─── Three phone screens ─── */
@@ -66,11 +65,11 @@ function ProfileScreen() {
         ))}
       </div>
       <div className="mt-auto space-y-2">
-        <button className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold text-xs py-2.5 rounded-xl shadow-sm">
-          <WhatsAppIcon className="h-3.5 w-3.5" /> Contactar por WhatsApp
+        <button className="w-full flex items-center justify-center gap-2 bg-[#162543] text-white font-bold text-xs py-2.5 rounded-xl shadow-sm">
+          <MessageCircle className="h-3.5 w-3.5" /> Enviar mensaje
         </button>
         <div className="bg-gray-50 rounded-xl p-2.5">
-          <p className="text-[10px] text-gray-600 leading-relaxed italic">"Excelente trabajo, muy puntual y profesional."</p>
+          <p className="text-[10px] text-gray-600 leading-relaxed italic">&ldquo;Excelente trabajo, muy puntual y profesional.&rdquo;</p>
           <p className="text-[9px] text-gray-400 mt-0.5">— María V.</p>
         </div>
       </div>
@@ -103,8 +102,8 @@ function ResultsScreen() {
               <span className="text-[10px] text-gray-500">{p.rating} ({p.reviews})</span>
             </div>
           </div>
-          <button className="shrink-0 p-1.5 bg-[#25D366]/10 rounded-lg">
-            <WhatsAppIcon className="h-3.5 w-3.5 text-[#25D366]" />
+          <button className="shrink-0 p-1.5 bg-[#EBF5FB] rounded-lg">
+            <MessageCircle className="h-3.5 w-3.5 text-[#009FD9]" />
           </button>
         </div>
       ))}

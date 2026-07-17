@@ -150,7 +150,7 @@ test.describe("@seeded ContrataCR AI", () => {
       /review|resena/i,
       /service[- ]suggestion|sugerencia de servicio/i,
       /archive|archiv/i,
-      /WhatsApp/i,
+      /phone|contact number|número de contacto/i,
       /email|correo/i,
     ];
     for (const contract of requiredContracts) expect(CONTRATACR_PRODUCT_KNOWLEDGE).toMatch(contract);

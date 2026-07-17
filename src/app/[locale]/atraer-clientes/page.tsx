@@ -5,17 +5,16 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import {
-  Camera, Star, MapPin,
+  Camera, Star, MapPin, MessageCircle,
   CheckCircle2, UserCheck, Clock, Image as ImageIcon,
 } from "lucide-react";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 
 // Icons in code; tip text (title/body/highlight) comes from the i18n namespace.
 const TIP_ICONS = [
   <Camera key="0" className="h-6 w-6" />,
   <UserCheck key="1" className="h-6 w-6" />,
   <ImageIcon key="2" className="h-6 w-6" />,
-  <WhatsAppIcon key="3" className="h-6 w-6" />,
+  <MessageCircle key="3" className="h-6 w-6" />,
   <Star key="4" className="h-6 w-6" />,
   <MapPin key="5" className="h-6 w-6" />,
   <CheckCircle2 key="6" className="h-6 w-6" />,

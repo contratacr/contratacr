@@ -34,8 +34,8 @@ test.describe("@seeded search results", () => {
     await expect(firstCard.getByRole("link").first()).toBeVisible();
     await expect(firstCard.getByText(/Verificado|Sin rese|reviews|\d+\.\d/i).first()).toBeVisible();
     await expect(
-      firstCard.getByRole("button", { name: /Ver horario completo|Ver disponibilidad|Contact|WhatsApp|Llamar|Solicitar/i }).or(
-        firstCard.getByRole("link", { name: /Contact|WhatsApp|Llamar|Solicitar/i }),
+      firstCard.getByRole("button", { name: /Ver horario completo|Ver disponibilidad|Enviar mensaje|Contact|Llamar|Solicitar/i }).or(
+        firstCard.getByRole("link", { name: /Enviar mensaje|Contact|Llamar|Solicitar/i }),
       ).first(),
     ).toBeVisible();
     await expectNoHorizontalOverflow(page);
@@ -154,7 +154,7 @@ test.describe("@seeded search results", () => {
       await expect(
         card
           .getByRole("button", { name: /Ver horario completo|View schedule|View availability/i })
-          .or(card.getByRole("link", { name: /WhatsApp|Llamar|Call|Contact/i }))
+          .or(card.getByRole("link", { name: /Enviar mensaje|Llamar|Call|Contact/i }))
           .first(),
       ).toBeVisible();
       await expectHealthyPage(page);
