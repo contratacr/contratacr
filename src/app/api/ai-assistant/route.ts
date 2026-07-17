@@ -374,7 +374,7 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
   ) {
     return { ...payload, action: "publish_request", ctaLabel: payload.ctaLabel || (locale === "en" ? "Publish request" : "Publicar solicitud") };
   }
-  if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "reset password"])) {
+  if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "forgot my password", "reset password"])) {
     return { ...payload, action: "reset_password", ctaLabel: locale === "en" ? "Reset password" : "Restablecer contraseña" };
   }
   if (
