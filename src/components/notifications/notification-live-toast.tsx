@@ -270,6 +270,9 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   if (postLoginUnreadCount !== null) {
     const unreadCount = postLoginUnreadCount;
     const title = locale === "en" ? `${unreadCount} new notifications` : `${unreadCount} notificaciones nuevas`;
+    const postLoginMessage = locale === "en"
+      ? `While you were away, ${unreadCount === 1 ? "1 notification arrived" : `${unreadCount} notifications arrived`}.`
+      : `Mientras no estabas en la app ${unreadCount === 1 ? "llegó 1 notificación" : `llegaron ${unreadCount} notificaciones`}.`;
     const targetHref = notificationsCenterHref(locale);
     return (
       <div className="fixed bottom-24 left-3 right-3 z-[180] sm:bottom-auto sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
@@ -283,8 +286,12 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold text-[#162543] line-clamp-1">{title}</span>
-              <span className="mt-0.5 block text-xs font-medium text-[#009FD9]">
-                {locale === "en" ? "View notifications" : "Ver notificaciones"}
+              <span className="mt-0.5 block text-xs font-medium text-[#526277]">
+                {postLoginMessage}
+              </span>
+              <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-[#009FD9]">
+                <Bell className="h-3.5 w-3.5" />
+                <span>{locale === "en" ? "View notifications" : "Ver notificaciones"}</span>
               </span>
             </span>
           </button>
@@ -314,6 +321,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   const detailLabel = grouped
     ? locale === "en" ? "View notifications" : "Ver notificaciones"
     : locale === "en" ? "View details" : "Ver detalles";
+  const detailIcon = grouped ? <Bell className="h-3.5 w-3.5" /> : null;
   const targetHref = toastTargetHref ?? notificationsCenterHref(locale);
 
   async function openToast() {
@@ -336,7 +344,10 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-[#162543] line-clamp-1">{title}</span>
-            <span className="mt-0.5 block text-xs font-medium text-[#009FD9]">{detailLabel}</span>
+            <span className="mt-0.5 inline-flex items-center gap-1.5 text-xs font-bold text-[#009FD9]">
+              {detailIcon}
+              <span>{detailLabel}</span>
+            </span>
           </span>
         </button>
         <button
