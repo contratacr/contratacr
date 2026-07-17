@@ -5,6 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
+import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_PREFIX = "contratacr_saved_pros";
 const PENDING_SAVE_KEY = "contratacr:pending-save-pro";
@@ -36,8 +38,8 @@ function currentUserId(): string {
   return "guest";
 }
 
-function storageKey(): string {
-  return `${STORAGE_PREFIX}_${currentUserId()}`;
+function storageKey(userId?: string): string {
+  return `${STORAGE_PREFIX}_${userId || currentUserId()}`;
 }
 
 export type SavedPro = {
@@ -55,33 +57,29 @@ export type SavedPro = {
   isVerified: boolean;
 };
 
-export function getSavedPros(): SavedPro[] {
+export function getSavedPros(userId?: string): SavedPro[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(storageKey()) ?? "[]");
+    return JSON.parse(localStorage.getItem(storageKey(userId)) ?? "[]");
   } catch {
     return [];
   }
 }
 
-export function savePro(pro: SavedPro) {
-  const saved = getSavedPros();
+export function savePro(pro: SavedPro, userId?: string) {
+  const saved = getSavedPros(userId);
   if (!saved.find((p) => p.id === pro.id)) {
-    localStorage.setItem(storageKey(), JSON.stringify([...saved, pro]));
+    localStorage.setItem(storageKey(userId), JSON.stringify([...saved, pro]));
   }
 }
 
-export function unsavePro(id: string) {
-  const saved = getSavedPros().filter((p) => p.id !== id);
-  localStorage.setItem(storageKey(), JSON.stringify(saved));
+export function unsavePro(id: string, userId?: string) {
+  const saved = getSavedPros(userId).filter((p) => p.id !== id);
+  localStorage.setItem(storageKey(userId), JSON.stringify(saved));
 }
 
-export function isSaved(id: string): boolean {
-  return getSavedPros().some((p) => p.id === id);
-}
-
-function isGuestUser(): boolean {
-  return currentUserId() === "guest";
+export function isSaved(id: string, userId?: string): boolean {
+  return getSavedPros(userId).some((p) => p.id === id);
 }
 
 function writePendingSave(pro: SavedPro) {
@@ -89,8 +87,9 @@ function writePendingSave(pro: SavedPro) {
   localStorage.setItem(PENDING_SAVE_KEY, JSON.stringify(pro));
 }
 
-export function applyPendingSavedPro(): boolean {
-  if (typeof window === "undefined" || isGuestUser()) return false;
+export function applyPendingSavedPro(userId?: string): boolean {
+  const resolvedUserId = userId || currentUserId();
+  if (typeof window === "undefined" || resolvedUserId === "guest") return false;
   try {
     const raw = localStorage.getItem(PENDING_SAVE_KEY);
     if (!raw) return false;
@@ -99,7 +98,7 @@ export function applyPendingSavedPro(): boolean {
       localStorage.removeItem(PENDING_SAVE_KEY);
       return false;
     }
-    savePro(pro);
+    savePro(pro, resolvedUserId);
     localStorage.removeItem(PENDING_SAVE_KEY);
     window.dispatchEvent(new CustomEvent("savedProsChanged"));
     return true;
@@ -126,35 +125,43 @@ interface SaveButtonProps {
 export function SaveButton({ pro, className, isOwn = false, withLabel = false }: SaveButtonProps) {
   const t = useTranslations("card");
   const locale = useLocale();
-  const [saved, setSaved] = useState(() => isSaved(pro.id));
+  const { user, loading: authLoading } = useAuth();
+  const [saved, setSaved] = useState(false);
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
   useEffect(() => {
     // Stay in sync if the SAME pro is toggled elsewhere in this tab (e.g. another
     // SaveButton instance) — cross-PAGE sync already happens via localStorage on mount.
-    const sync = () => setSaved(isSaved(pro.id));
+    const sync = () => setSaved(user ? isSaved(pro.id, user.id) : false);
+    sync();
     window.addEventListener("savedProsChanged", sync);
     return () => window.removeEventListener("savedProsChanged", sync);
-  }, [pro.id]);
+  }, [pro.id, user]);
 
-  function toggle(e: React.MouseEvent) {
+  async function toggle(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     if (isOwn) {
       setSelfMsg(SELF_MSG.favorite);
       return;
     }
-    if (!saved && isGuestUser()) {
+    // During hydration `useAuth` may briefly contain a cached user. Confirm the
+    // live Supabase session before deciding whether this is a guest action.
+    const activeUser = authLoading
+      ? (await createClient().auth.getSession()).data.session?.user ?? null
+      : user;
+    if (!saved && !activeUser) {
       writePendingSave(pro);
       const redirect = encodeURIComponent("/dashboard/profesional?tab=saved&mode=use");
       window.location.assign(`/${locale}/login?redirect=${redirect}`);
       return;
     }
+    if (!activeUser) return;
     if (saved) {
-      unsavePro(pro.id);
+      unsavePro(pro.id, activeUser.id);
       setSaved(false);
     } else {
-      savePro(pro);
+      savePro(pro, activeUser.id);
       setSaved(true);
     }
     /* dispatch custom event so saved-tab + any other SaveButton refresh */
