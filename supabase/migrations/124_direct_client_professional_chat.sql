@@ -115,4 +115,3 @@ alter table public.direct_conversations replica identity full;
 alter table public.direct_messages replica identity full;
 
 notify pgrst, 'reload schema';
-
