@@ -526,8 +526,8 @@ export function AiConcierge() {
         ) : (
         <div ref={scrollRef} className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-[linear-gradient(180deg,#fbfdff_0%,#ffffff_100%)] px-4 py-5 overscroll-contain sm:px-6">
           {messages.map((message, index) => (
-            <div key={`${message.role}-${index}`} className={cn("flex items-start gap-3", message.role === "user" && "justify-end")}>
-              {message.role === "assistant" && <div className="mt-1 h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm"><Image src="/brand/ai-assistant-robot.png" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>}
+            <div key={`${message.role}-${index}`} className={cn("flex items-end gap-2 sm:items-start sm:gap-3", message.role === "user" && "justify-end")}>
+              {message.role === "assistant" && <div className="mb-5 h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm sm:mb-0 sm:mt-1 sm:h-11 sm:w-11"><Image src="/brand/ai-assistant-robot.png" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>}
               <div className={cn("min-w-0 max-w-[82%] space-y-2.5", message.role === "user" && "flex flex-col items-end")}>
                 <div className={cn(
                   "whitespace-pre-line rounded-[22px] px-4 py-3.5 text-[15px] leading-relaxed shadow-[0_8px_24px_-18px_rgba(15,45,80,0.55)]",
