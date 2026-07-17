@@ -85,6 +85,20 @@ function hasExplicitPublishIntent(value: string) {
   return EXPLICIT_PUBLISH_INTENT_RE.test(value);
 }
 
+function uncertainSearchPayload(message: string, locale: Locale): AssistantPayload {
+  return {
+    action: "search_professionals",
+    searchQuery: message,
+    serviceId: null,
+    locationText: null,
+    confidence: 0,
+    answer: locale === "en"
+      ? "I am not fully sure which service fits that request. Search with those words first; if you do not find the right option, publish a request with the details."
+      : "No tengo total certeza de quÃ© servicio calza con esa necesidad. Busque con esas palabras primero; si no encuentra la opciÃ³n correcta, publique una solicitud con los detalles.",
+    ctaLabel: locale === "en" ? "Search in ContrataCR" : "Buscar en ContrataCR",
+  };
+}
+
 function sanitizeHistory(value: unknown): HistoryMessage[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -168,6 +182,13 @@ function resolveSearch(message: string, locale: Locale, serviceId?: string | nul
   };
 }
 
+function freeTextSearchHref(message: string) {
+  const params = new URLSearchParams();
+  const query = message.trim();
+  if (query) params.set("q", query);
+  return `/buscar${params.toString() ? `?${params.toString()}` : ""}`;
+}
+
 function localAnswer(message: string, locale: Locale): AssistantPayload {
   const normalized = normalizeText(message);
   const { category, place } = resolveSearch(message, locale);
@@ -240,6 +261,7 @@ ${CONTRATACR_PRODUCT_KNOWLEDGE}
 Rules:
 - Never invent professionals, prices, availability, ratings, app features or policies.
 - A real professional search is performed after your response. Set action=search_professionals only when a service or location search is intended.
+- If you are not sure which exact catalog service fits, do not guess a serviceId. Use action=search_professionals with serviceId=null and searchQuery as the user's own words, or publish_request only when the user clearly wants to publish a request.
 - Search results will be attached to your answer immediately. Introduce them as current options; never say "wait", "one moment" or promise a later search.
 - If the requested service is not represented by a serviceId in the catalog, set action=suggest_service and searchQuery to the shortest proper service name.
 - If the user wants a specific professional from results previously shown, explain that they can open that profile and use its service request, booking or contact action.
@@ -363,6 +385,9 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
     return `/${locale}/dashboard/profesional`;
   }
   if (payload.action === "help") return `/${locale}/ayuda`;
+  if (payload.action === "search_professionals" && !payload.serviceId && payload.searchQuery) {
+    return freeTextSearchHref(payload.searchQuery);
+  }
   const seed = payload.searchQuery || originalMessage;
   return resolveSearch(seed, locale, payload.serviceId, payload.locationText).href;
 }
@@ -446,8 +471,27 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     "hire",
     "recommend",
   ]);
+  const userSaysServiceIsUnclear = includesAny(normalized, [
+    "no se como se llama",
+    "no se cual servicio",
+    "no se que servicio",
+    "no tengo claro que servicio",
+    "no estoy seguro que servicio",
+    "no estoy segura que servicio",
+    "no se a quien buscar",
+    "not sure what service",
+    "not sure who to search",
+    "do not know what service",
+    "don't know what service",
+  ]);
   const wantsProfessionalSearch = hasExplicitSearchLanguage ||
     (!publishConversation && (payload.action === "search_professionals" || currentHasServiceAndPlace));
+  const modelOnlyService = payload.serviceId ? getAllCategories().find((item) => item.id === payload.serviceId) ?? null : null;
+  const hasConfirmedService = !!(messageCategory || pendingServiceFromAssistant || recentUserService);
+  const lowConfidenceServiceGuess = payload.action === "search_professionals"
+    && !!modelOnlyService
+    && !hasConfirmedService
+    && (typeof payload.confidence !== "number" || payload.confidence < 0.62);
   const resultSelection = [
     { words: ["primero", "primera", "first"], index: 1 },
     { words: ["segundo", "segunda", "second"], index: 2 },
@@ -564,6 +608,15 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open my services" : "Ir a mis servicios" };
   }
   const wantsToPublish = publishConversation || hasExplicitPublishIntent(message);
+  if (userSaysServiceIsUnclear && !wantsToPublish) {
+    return uncertainSearchPayload(message, locale);
+  }
+  if (lowConfidenceServiceGuess && !wantsToPublish) {
+    return uncertainSearchPayload(message, locale);
+  }
+  if (wantsProfessionalSearch && !directService && !directPlace && !wantsToPublish) {
+    return uncertainSearchPayload(message, locale);
+  }
   // Search intent always wins over a model-suggested publication CTA. Publishing is
   // entered only through an explicit user request, never because a prior zero-result
   // answer happened to offer that alternative.
@@ -745,6 +798,7 @@ function professionalDisplayLocation(pro: ProfessionalSearchResult, place: Place
 
 async function realProfessionalResults(payload: AssistantPayload, originalMessage: string, locale: Locale, labels: Map<string, string>): Promise<ProfessionalResult[]> {
   if (payload.action !== "search_professionals") return [];
+  if (payload.confidence === 0 && !payload.serviceId) return [];
   const seed = payload.searchQuery || originalMessage;
   const resolved = resolveSearch(payload.serviceId ? (payload.locationText || originalMessage) : originalMessage, locale, payload.serviceId, payload.locationText);
   const category = payload.serviceId ? { id: payload.serviceId } : resolved.category;
@@ -882,7 +936,7 @@ export async function POST(req: Request) {
     const payload = safetyPayload ?? normalizePayload(aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history);
     const directCategory = resolveCategoryIntent(rawMessage, locale);
     const queryCategory = payload.serviceId ? null : resolveCategoryIntent(payload.searchQuery || "", locale);
-    if (payload.action === "search_professionals" && (directCategory || queryCategory)) {
+    if (payload.action === "search_professionals" && payload.confidence !== 0 && (directCategory || queryCategory)) {
       payload.serviceId = (directCategory ?? queryCategory)!.id;
     }
     if (payload.serviceId && !catalog.labels.has(payload.serviceId)) {
@@ -896,7 +950,7 @@ export async function POST(req: Request) {
       console.error("[ai-assistant] professional search failed", error);
     }
 
-    const noResults = payload.action === "search_professionals" && professionals.length === 0;
+    const noResults = payload.action === "search_professionals" && !!payload.serviceId && professionals.length === 0;
     const hasResults = payload.action === "search_professionals" && professionals.length > 0;
     const suggestedService = payload.action === "suggest_service" ? payload.searchQuery || rawMessage : null;
     const requestedServiceLabel = payload.serviceId ? catalog.labels.get(payload.serviceId) : null;

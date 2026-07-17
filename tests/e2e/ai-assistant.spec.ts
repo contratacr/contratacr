@@ -43,6 +43,16 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       }
     }
   });
+
+  test("does not guess a catalog category when the need is unclear", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const response = await ask(page, "Ocupo ayuda con algo raro que no se como se llama");
+    expect(response.status, JSON.stringify(response.body)).toBe(200);
+    expect(response.body.searchHref, JSON.stringify(response.body)).toBeTruthy();
+    expect(response.body.searchHref, JSON.stringify(response.body)).not.toContain("categoria=");
+    expect(response.body.searchHref, JSON.stringify(response.body)).toMatch(/\/buscar\?q=|openPublish=1/);
+    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/no tengo total certeza|publique una solicitud|publicar una solicitud/i);
+  });
 });
 
 test.describe("@seeded ContrataCR AI", () => {
