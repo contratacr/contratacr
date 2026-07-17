@@ -95,7 +95,7 @@ const COPY = {
     closedLabel: "Abrir asistente de ContrataCR",
     minimize: "Minimizar asistente",
     title: "Asistente ContrataCR",
-    intro: "¡Hola!\n¿En qué puedo ayudarle? Puedo buscar profesionales, recomendar el servicio adecuado o explicar cualquier función de ContrataCR.",
+    intro: "¡Hola! ¿En qué puedo ayudarle hoy?",
     placeholder: "Pregunte o describa lo que necesita",
     send: "Enviar mensaje",
     thinking: "Buscando la mejor respuesta...",
