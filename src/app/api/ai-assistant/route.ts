@@ -50,6 +50,9 @@ type ProfessionalResult = {
   price: string | null;
   profileHref: string;
   requestHref: string;
+  actionHref: string;
+  actionLabel: string;
+  actionKind: "availability" | "message";
 };
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -673,23 +676,63 @@ async function realProfessionalResults(payload: AssistantPayload, originalMessag
     });
   }
 
-  return professionals.slice(0, 3).map((pro) => {
+  const topProfessionals = professionals.slice(0, 3);
+  const scheduledProfessionalIds = new Set<string>();
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const ids = topProfessionals.map((pro) => pro.id);
+    if (ids.length > 0) {
+      const { data, error } = await createAdminClient()
+        .from("availability_slots")
+        .select("professional_id")
+        .in("professional_id", ids)
+        .gte("slot_date", today)
+        .limit(50);
+      if (error) throw error;
+      for (const row of data ?? []) {
+        if (row.professional_id) scheduledProfessionalIds.add(String(row.professional_id));
+      }
+    }
+  } catch (error) {
+    console.error("[ai-assistant] availability lookup failed", error);
+  }
+
+  return topProfessionals.map((pro) => {
     const serviceId = category?.id || pro.professions?.[0] || pro.categoryId;
+    const serviceLabel = serviceId ? labels.get(serviceId) || getCategoryLabel(serviceId, locale) : (locale === "en" ? "Professional service" : "Servicio profesional");
     const requestParams = new URLSearchParams();
     if (serviceId) requestParams.set("categoria", serviceId);
     requestParams.set("profesional", pro.id);
+    const displayName = pro.publicBusinessNameOnly && pro.businessName ? pro.businessName : pro.businessName || pro.fullName;
+    const hasPublicAvailability = pro.availabilityPublic !== false && scheduledProfessionalIds.has(pro.id);
+    const requestHref = `/${locale}/profesionales/${pro.slug}?${requestParams.toString()}`;
+    const chatParams = new URLSearchParams({
+      tab: "chat",
+      draftChat: "1",
+      professionalId: pro.id,
+      professionalName: displayName,
+      contextTitle: serviceLabel,
+      draftMessage: locale === "en"
+        ? `Hi, I saw your profile on ContrataCR and would like to ask about ${serviceLabel}.`
+        : `Hola, vi su perfil en ContrataCR y quisiera consultar sobre ${serviceLabel}.`,
+    });
     return {
       id: pro.id,
-      name: pro.publicBusinessNameOnly && pro.businessName ? pro.businessName : pro.businessName || pro.fullName,
+      name: displayName,
       avatarUrl: pro.avatarUrl || null,
-      service: serviceId ? labels.get(serviceId) || getCategoryLabel(serviceId, locale) : (locale === "en" ? "Professional service" : "Servicio profesional"),
+      service: serviceLabel,
       location: professionalDisplayLocation(pro, place, videoIntent, locale),
       verified: pro.verificationStatus === "verified" || pro.isVerified,
       rating: pro.reviewCount > 0 ? pro.ratingAvg : null,
       reviewCount: pro.reviewCount,
       price: resultPrice(pro, locale),
       profileHref: `/${locale}/profesionales/${pro.slug}`,
-      requestHref: `/${locale}/profesionales/${pro.slug}?${requestParams.toString()}`,
+      requestHref,
+      actionHref: hasPublicAvailability ? requestHref : `/${locale}/dashboard/profesional?${chatParams.toString()}`,
+      actionLabel: hasPublicAvailability
+        ? locale === "en" ? "View availability" : "Ver disponibilidad"
+        : locale === "en" ? "Send message" : "Enviar mensaje",
+      actionKind: hasPublicAvailability ? "availability" : "message",
     };
   });
 }
@@ -769,11 +812,11 @@ export async function POST(req: Request) {
         : hasResults
           ? professionals.length === 1
             ? locale === "en"
-              ? "I found this option for your search. You can review the profile or request the service directly."
-              : "Encontré esta opción para su búsqueda. Puede revisar el perfil o solicitar el servicio directamente."
+              ? "I found this option for your search. You can review the profile and continue with the available action."
+              : "Encontré esta opción para su búsqueda. Puede revisar el perfil y continuar con la acción disponible."
             : locale === "en"
-              ? "I found these options for your search. You can review a profile or request the service directly."
-              : "Encontré estas opciones para su búsqueda. Puede revisar un perfil o solicitar el servicio directamente."
+              ? "I found these options for your search. You can review a profile and continue with the available action."
+              : "Encontré estas opciones para su búsqueda. Puede revisar un perfil y continuar con la acción disponible."
           : suggestedService
             ? locale === "en"
               ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."

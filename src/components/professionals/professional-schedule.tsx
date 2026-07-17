@@ -41,7 +41,7 @@ interface ProfessionalScheduleProps {
   businessName?: string;
   /** STACKED single-column layout for the professional-profile contact card (no two-column
    *  grid, no `info` slot): location tabs → 3-day strip → buttons. In stacked mode the
-   *  contact buttons (WhatsApp + Llamar) ALWAYS show, plus "Ver horario completo" when
+   *  contact buttons (WhatsApp + Llamar) ALWAYS show, plus "Ver disponibilidad" when
    *  bookable (Llamar renders outlined). Default false = the /buscar card layout (unchanged). */
   stacked?: boolean;
   /** Explicit video-consultation search result: clients coordinate by contact, no schedule strip. */
@@ -83,7 +83,7 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  * Right-hand availability panel for search cards (HuliHealth-style).
  *  - Public: a 3-day column carousel with tappable time chips that open the
  *    booking flow pre-selected, plus arrows to page further out and a
- *    "Ver horario completo" link to the full profile.
+ *    "Ver disponibilidad" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
 export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
@@ -620,8 +620,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // Action buttons live IN the right column (HuliHealth style), full-width PILLS of that
   // column — NOT a separate bottom strip. CONDITIONAL on availability (logic unchanged):
   //  • HAS available schedules (the day strip is showing → canBook && hasUpcoming): a SINGLE
-  //    FILLED "Ver horario completo" (opens the booking flow). The old separate "Solicitar
-  //    servicio" button was removed — booking happens inside "Ver horario completo".
+  //    FILLED "Ver disponibilidad" (opens the booking flow). The old separate "Solicitar
+  //    servicio" button was removed — booking happens inside "Ver disponibilidad".
   //  • NO schedules (contact-to-coordinate state): FILLED WhatsApp (green), plus FILLED
   //    "Llamar" (blue) ONLY when phone calls are enabled (showCall). No "Solicitar servicio".
   // All actions are blocked on the pro's OWN card.
@@ -637,7 +637,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     </button>
   );
   // "Llamar" link — FILLED (a primary contact action, e.g. in the no-schedule state) or
-  // OUTLINED/secondary (when it sits BELOW "Ver horario completo"). Calls are blocked on
+  // OUTLINED/secondary (when it sits BELOW "Ver disponibilidad"). Calls are blocked on
   // the pro's OWN card (shows a self note instead). Rendered only when showCall is true.
   function trackContact(method: "whatsapp" | "phone" | "email") {
     trackMetaEvent("Contact", {
@@ -806,11 +806,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   // STACKED layout (professional-profile contact card): a single vertical column —
   // location tabs/address → 3-day strip (or note) → mutually-exclusive buttons. No `info`
-  // slot, no two-column grid. Bookable → "Ver horario completo" (+ "Solicitar servicio"
+  // slot, no two-column grid. Bookable → "Ver disponibilidad" (+ "Solicitar servicio"
   // when showSolicitar); not bookable → "Contáctanos por WhatsApp" + "Contáctanos por llamada".
   if (stacked) {
     // Profile contact card: location tabs → 3-day strip (or coral note) → buttons.
-    // Bookable → "Ver horario completo" (filled) + WhatsApp (green) + Llamar (outlined).
+    // Bookable → "Ver disponibilidad" (filled) + WhatsApp (green) + Llamar (outlined).
     // Not bookable → just WhatsApp + Llamar (the coral note explains why). NO "Solicitar
     // servicio" here (the WhatsApp/Llamar contact buttons replace it).
     return (
@@ -854,7 +854,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           {scheduleBody}
           {/* A pro who enabled "Permitir contacto por llamada" should ALWAYS surface a
               "Llamar" option on their /buscar card — even when a bookable schedule funnels
-              into "Ver horario completo" (which otherwise replaced the contact buttons).
+              into "Ver disponibilidad" (which otherwise replaced the contact buttons).
               The call sits as an outlined secondary action below the primary schedule CTA. */}
           {!visualScheduleLoading && (hasSchedule ? (
             verHorarioButton

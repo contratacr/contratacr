@@ -16,7 +16,7 @@ interface BookingButtonProps {
   variant?: "default" | "outline" | "ghost";
   size?: "sm" | "md" | "lg";
   className?: string;
-  /** Override the default "Solicitar servicio" label (e.g. "Ver horario completo"). */
+  /** Override the default "Solicitar servicio" label (e.g. "Ver disponibilidad"). */
   label?: string;
 }
 

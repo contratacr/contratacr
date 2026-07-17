@@ -34,6 +34,9 @@ type ResultCard = {
   price: string | null;
   profileHref: string;
   requestHref: string;
+  actionHref: string;
+  actionLabel: string;
+  actionKind: "availability" | "message";
 };
 
 type MessageAction = { label: string; href: string; kind?: string | null };
@@ -100,7 +103,6 @@ const COPY = {
     send: "Enviar mensaje",
     thinking: "Buscando la mejor respuesta...",
     viewProfile: "Ver perfil",
-    requestService: "Solicitar",
     verified: "Verificado",
     history: "Historial",
     emptyHistory: "Todavía no hay conversaciones guardadas.",
@@ -121,7 +123,6 @@ const COPY = {
     send: "Send message",
     thinking: "Finding the best answer...",
     viewProfile: "View profile",
-    requestService: "Request",
     verified: "Verified",
     history: "History",
     emptyHistory: "There are no saved conversations yet.",
@@ -192,7 +193,7 @@ function ProfessionalResult({ result, copy, onNavigate }: {
       </button>
       <div className="grid grid-cols-2 border-t border-[#edf2f5]">
         <button type="button" onClick={() => onNavigate(result.profileHref)} className="h-10 text-xs font-bold text-[#526277] hover:bg-[#f7fafc]">{copy.viewProfile}</button>
-        <button type="button" onClick={() => onNavigate(result.requestHref)} className="h-10 border-l border-[#edf2f5] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{copy.requestService}</button>
+        <button type="button" onClick={() => onNavigate(result.actionHref)} className="h-10 border-l border-[#edf2f5] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{result.actionLabel}</button>
       </div>
     </article>
   );
