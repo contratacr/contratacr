@@ -20,6 +20,7 @@ import Image from "next/image";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { cn, getInitials } from "@/lib/utils";
 
 type ResultCard = {
@@ -275,12 +276,11 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
     const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
     if (!shouldLockScroll) return;
     const root = document.documentElement;
-    const previousOverflow = document.body.style.overflow;
     root.classList.add("contratacr-ai-open");
-    document.body.style.overflow = "hidden";
+    const releaseBodyScroll = lockBodyScroll();
     return () => {
       root.classList.remove("contratacr-ai-open");
-      document.body.style.overflow = previousOverflow;
+      releaseBodyScroll();
     };
   }, [embedded, open]);
 
@@ -504,8 +504,8 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
       }}
       className={cn(
         embedded
-          ? "fixed inset-x-0 top-[var(--app-visual-viewport-top)] z-[110] flex h-[var(--app-visual-viewport-height)] min-h-0 w-full items-stretch justify-stretch overflow-hidden lg:relative lg:inset-auto lg:z-auto lg:h-[min(780px,calc(100dvh-220px))] lg:min-h-[540px]"
-          : "fixed inset-x-0 top-[var(--app-visual-viewport-top)] z-[100] flex h-[var(--app-visual-viewport-height)] items-end justify-end overflow-hidden bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:inset-0 sm:h-auto sm:bg-transparent sm:p-0 sm:backdrop-blur-none",
+          ? "fixed inset-x-0 top-0 z-[110] flex h-[var(--app-visual-viewport-height)] min-h-0 w-full items-stretch justify-stretch overflow-hidden lg:relative lg:inset-auto lg:z-auto lg:h-[min(780px,calc(100dvh-220px))] lg:min-h-[540px]"
+          : "fixed inset-x-0 top-0 z-[100] flex h-[var(--app-visual-viewport-height)] items-end justify-end overflow-hidden bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:inset-0 sm:h-auto sm:bg-transparent sm:p-0 sm:backdrop-blur-none",
       )}
     >
       <div className={cn(
