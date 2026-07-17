@@ -2383,6 +2383,8 @@
     "descriptionPlaceholder": "Tell us briefly what you need. Example: Paint the living room and dining room, about 50 m².",
     "cedulaHelp": "We verify your identity so professionals know who they are coordinating with.",
     "cedulaOwnerWarning": "The ID entered belongs to <strong>{name}</strong>. When you confirm, your account will use this official name. Use only your own ID.",
+    "cedulaOwnerTitle": "Identity confirmed",
+    "cedulaOwnerBody": "When you continue, your account will use this official name. Confirm only if the ID belongs to you.",
     "noCedula": "I don't have an ID",
     "noCedulaNotice": "You'll send your request <strong>without a verified ID</strong>. The professional will see that and decide whether to contact you.",
     "haveCedula": "I have an ID",
