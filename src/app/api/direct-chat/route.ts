@@ -71,9 +71,20 @@ export async function GET(req: Request) {
       .select("id, conversation_id, sender_id, body, attachment_urls, read_at, created_at")
       .eq("conversation_id", id).order("created_at", { ascending: true });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    await db.from("direct_conversations").update(conversation.client_id === user.id
-      ? { client_unread_count: 0 }
-      : { professional_unread_count: 0 }).eq("id", id);
+    const readAt = new Date().toISOString();
+    const [{ error: readError }, { error: unreadError }] = await Promise.all([
+      db.from("direct_messages")
+        .update({ read_at: readAt })
+        .eq("conversation_id", id)
+        .neq("sender_id", user.id)
+        .is("read_at", null),
+      db.from("direct_conversations").update(conversation.client_id === user.id
+        ? { client_unread_count: 0 }
+        : { professional_unread_count: 0 }).eq("id", id),
+    ]);
+    if (readError || unreadError) {
+      return NextResponse.json({ error: readError?.message ?? unreadError?.message }, { status: 500 });
+    }
     const [enriched] = await enrichConversations(db, [conversation]);
     return NextResponse.json({ conversation: enriched, messages: messages ?? [] });
   }
@@ -165,21 +176,21 @@ export async function POST(req: Request) {
   if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   if (conversation.status === "blocked") return NextResponse.json({ error: "Esta conversación está bloqueada." }, { status: 403 });
   const isClient = conversation.client_id === user.id;
-  const { data: msg, error: msgError } = await db.from("direct_messages").insert({ conversation_id: conversation.id, sender_id: user.id, body: message })
-    .select("id, conversation_id, sender_id, body, created_at").single();
+  const { data: sentMessages, error: msgError } = await db.rpc("send_direct_message_atomic", {
+    p_conversation_id: conversation.id,
+    p_sender_id: user.id,
+    p_body: message,
+  });
   if (msgError) return NextResponse.json({ error: msgError.message }, { status: 500 });
-  const now = new Date().toISOString();
-  await db.from("direct_conversations").update({
-    last_message: message, last_message_at: now, last_sender_id: user.id, updated_at: now,
-    ...(isClient ? { professional_archived_at: null } : { client_archived_at: null }),
-    ...(isClient ? { professional_unread_count: (Number(conversation.professional_unread_count) || 0) + 1 } : { client_unread_count: (Number(conversation.client_unread_count) || 0) + 1 }),
-  }).eq("id", conversation.id);
+  const msg = Array.isArray(sentMessages) ? sentMessages[0] : sentMessages;
+  if (!msg) return NextResponse.json({ error: "No se pudo guardar el mensaje." }, { status: 500 });
   const receiverId = isClient ? conversation.professional_profile_id : conversation.client_id;
-  await db.from("notifications").insert({
+  const { error: notificationError } = await db.from("notifications").insert({
     user_id: receiverId, type: "direct_message", title: "Nuevo mensaje",
-    message: message.length > 96 ? `${message.slice(0, 96)}â€¦` : message,
+    message: message.length > 96 ? `${message.slice(0, 96)}...` : message,
     data: { link: `/es/dashboard/profesional?tab=chat&conversation=${conversation.id}`, conversation_id: conversation.id, booking_id: conversation.booking_id, project_id: conversation.project_id },
   });
+  if (notificationError) console.error("Direct-chat notification failed", notificationError);
   return NextResponse.json({ ok: true, conversationId: conversation.id, message: msg });
 }
 
