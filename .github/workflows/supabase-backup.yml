@@ -33,7 +33,7 @@ jobs:
       PG_BIN: /usr/lib/postgresql/17/bin
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Validate target and secrets
         run: |
