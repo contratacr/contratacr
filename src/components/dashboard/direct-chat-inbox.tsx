@@ -405,7 +405,30 @@ export function DirectChatInbox() {
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
         </header>
         <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-[#f3f7fa] px-4 py-5 sm:px-6">
-          {threadLoading ? <div className="grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => { const mine = message.sender_id === user?.id; return <div key={message.id} className={cn("flex", mine && "justify-end")}><div className={cn("max-w-[86%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm sm:max-w-[78%]", mine ? "rounded-br-sm bg-[#009FD9] text-white" : "rounded-bl-sm bg-white text-[#25364d]")}><p className="whitespace-pre-wrap break-words">{message.body}</p><time className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/75" : "text-[#8996a8]")}>{timeLabel(message.created_at, locale)}</time></div></div>; })}
+          {threadLoading ? <div className="grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
+            const mine = message.sender_id === user?.id;
+            return (
+              <div key={message.id} className={cn("flex items-end gap-2", mine && "justify-end")}>
+                {!mine && (
+                  <Avatar className="h-7 w-7 shrink-0 shadow-sm">
+                    <AvatarImage src={activePerson?.avatar ?? undefined} alt={activePersonName} />
+                    <AvatarFallback className="bg-[#e8f8ff] text-[10px] font-extrabold text-[#009FD9]">
+                      {getInitials(activePersonName)}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                <div className={cn(
+                  "rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
+                  mine
+                    ? "max-w-[86%] rounded-br-sm bg-[#009FD9] text-white sm:max-w-[78%]"
+                    : "max-w-[calc(86%_-_2.25rem)] rounded-bl-sm bg-white text-[#25364d] sm:max-w-[72%]",
+                )}>
+                  <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                  <time className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/75" : "text-[#8996a8]")}>{timeLabel(message.created_at, locale)}</time>
+                </div>
+              </div>
+            );
+          })}
         </div>
         {error && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error}</p>}
         <form onSubmit={submit} className="flex items-end gap-2 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4"><textarea rows={1} value={draft} onChange={(e) => setDraft(e.target.value.slice(0, 2000))} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} placeholder={isEn ? "Write a message" : "Escribe un mensaje"} className="max-h-28 min-h-11 min-w-0 flex-1 resize-none rounded-xl border border-[#d8e5ee] px-4 py-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10" /><button type="submit" disabled={sending || !draft.trim()} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#009FD9] text-white disabled:bg-[#d8e4e9]" aria-label={isEn ? "Send" : "Enviar"}>{sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}</button></form>
