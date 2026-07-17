@@ -46,7 +46,6 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { DashboardRouteLoading } from "@/components/ui/route-loading";
-import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import {
   dashboardBootstrapKey,
@@ -107,59 +106,12 @@ const MOBILE_PRIORITY: Record<Mode, Tab[]> = {
   offer: ["bookings", "proposals", "chat", "notifications"],
   use: ["sent_bookings", "sent_projects", "chat", "notifications"],
 };
-const POST_LOGIN_OPPORTUNITY_TYPES = new Set(["new_project"]);
-const POST_LOGIN_PRO_REQUEST_TYPES = new Set([
-  "booking_received",
-  "booking_cancelled_by_client",
-  "booking_completed_by_client",
-  "booking_rescheduled",
-]);
-const POST_LOGIN_CLIENT_REQUEST_TYPES = new Set([
-  "booking_confirmed",
-  "booking_cancelled",
-  "booking_completed",
-  "booking_update",
-  "review_request",
-]);
-const POST_LOGIN_PRO_PROPOSAL_TYPES = new Set([
-  "proposal_accepted",
-  "project_proposal_accepted",
-  "project_proposal_declined",
-]);
-const POST_LOGIN_CLIENT_PROPOSAL_TYPES = new Set([
-  "proposal_received",
-  "proposal_updated",
-  "proposal_withdrawn",
-]);
-const POST_LOGIN_SUPPORT_TYPES = new Set(["support_reply"]);
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
-type PostLoginActivity = {
-  total: number;
-  opportunities: number;
-  requests: number;
-  proposals: number;
-  support: number;
-  other: number;
-  targetTab: Tab;
-  targetMode: Mode;
-  cta: "opportunities" | "requests" | "proposals" | "support" | "notifications";
-};
-
-type UnreadNotificationSummary = {
-  id?: string;
-  type: string;
-  data?: { project_id?: string | null } | null;
-};
 type OpportunityProjectSummary = { id?: string | null };
 
 function opportunitySeenStorageKey(userId: string) {
   return `${OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX}:${userId}`;
-}
-
-function opportunityItemKey(item: { id?: string; data?: { project_id?: string | null } | null }) {
-  const projectId = item.data?.project_id;
-  return projectId ? `project:${projectId}` : item.id ? `notification:${item.id}` : null;
 }
 
 function opportunityProjectKey(project: { id?: string | null }) {
@@ -187,76 +139,6 @@ function rememberSeenOpportunityKeys(userId: string, keys: string[]) {
   }
 }
 
-function unseenOpportunityKeys(userId: string, items: Array<{ id?: string; data?: { project_id?: string | null } | null }>) {
-  const seen = readSeenOpportunityKeys(userId);
-  return items.map(opportunityItemKey).filter((key): key is string => !!key && !seen.has(key));
-}
-
-function buildPostLoginActivity(items: UnreadNotificationSummary[], currentMode: Mode): PostLoginActivity | null {
-  if (items.length === 0) return null;
-
-  let opportunities = 0;
-  let proRequests = 0;
-  let clientRequests = 0;
-  let proProposals = 0;
-  let clientProposals = 0;
-  let support = 0;
-  let other = 0;
-
-  for (const item of items) {
-    if (POST_LOGIN_OPPORTUNITY_TYPES.has(item.type)) opportunities++;
-    else if (POST_LOGIN_PRO_REQUEST_TYPES.has(item.type)) proRequests++;
-    else if (POST_LOGIN_CLIENT_REQUEST_TYPES.has(item.type)) clientRequests++;
-    else if (POST_LOGIN_PRO_PROPOSAL_TYPES.has(item.type)) proProposals++;
-    else if (POST_LOGIN_CLIENT_PROPOSAL_TYPES.has(item.type)) clientProposals++;
-    else if (POST_LOGIN_SUPPORT_TYPES.has(item.type)) support++;
-    else other++;
-  }
-
-  const requests = proRequests + clientRequests;
-  const proposals = proProposals + clientProposals;
-  let targetTab: Tab = "notifications";
-  let targetMode: Mode = currentMode;
-  let cta: PostLoginActivity["cta"] = "notifications";
-
-  if (opportunities > 0) {
-    targetTab = "proposals";
-    targetMode = "offer";
-    cta = "opportunities";
-  } else if (proRequests > 0) {
-    targetTab = "bookings";
-    targetMode = "offer";
-    cta = "requests";
-  } else if (clientRequests > 0) {
-    targetTab = "sent_bookings";
-    targetMode = "use";
-    cta = "requests";
-  } else if (proProposals > 0) {
-    targetTab = "proposals";
-    targetMode = "offer";
-    cta = "proposals";
-  } else if (clientProposals > 0) {
-    targetTab = "sent_projects";
-    targetMode = "use";
-    cta = "proposals";
-  } else if (support > 0) {
-    targetTab = "soporte";
-    cta = "support";
-  }
-
-  return {
-    total: items.length,
-    opportunities,
-    requests,
-    proposals,
-    support,
-    other,
-    targetTab,
-    targetMode,
-    cta,
-  };
-}
-
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -269,7 +151,6 @@ export default function DashboardPage() {
   const requestedTab = (legacyVerificationTab ? "profile" : rawRequestedTab) as Tab | null;
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
-  const shouldCheckPostLoginActivity = searchParams.get("postLogin") === "1";
   const shouldCheckOpportunityWelcome = searchParams.get("welcomeOpportunities") === "1";
   const opportunityWelcomeParamCount = Math.max(0, Number.parseInt(searchParams.get("welcomeOpportunityCount") ?? "0", 10) || 0);
 
@@ -283,9 +164,6 @@ export default function DashboardPage() {
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
-  const [postLoginActivity, setPostLoginActivity] = useState<PostLoginActivity | null>(null);
-  const postLoginActivityCheckedRef = useRef(false);
-  const postLoginActivityDismissedRef = useRef(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -556,15 +434,6 @@ export default function DashboardPage() {
     router.replace("/registro/profesional");
   }, [authLoading, loading, pro, user, router, noProTries, fetchPro, proLoadError]);
 
-  const clearPostLoginParam = useCallback(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (!params.has("postLogin")) return;
-
-    params.delete("postLogin");
-    const qs = params.toString();
-    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
-  }, []);
-
   const clearOpportunityWelcomeParam = useCallback(() => {
     const params = new URLSearchParams(window.location.search);
     if (!params.has("welcomeOpportunities") && !params.has("welcomeOpportunityCount")) return;
@@ -574,49 +443,6 @@ export default function DashboardPage() {
     const qs = params.toString();
     window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
   }, []);
-
-  useEffect(() => {
-    if (
-      !shouldCheckPostLoginActivity ||
-      authLoading ||
-      !user ||
-      postLoginActivityCheckedRef.current ||
-      postLoginActivityDismissedRef.current
-    ) return;
-
-    postLoginActivityCheckedRef.current = true;
-    let mounted = true;
-
-    void (async () => {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("notifications")
-          .select("id, type, data")
-          .eq("user_id", user.id)
-          .eq("read", false)
-          .order("created_at", { ascending: false })
-          .limit(50);
-        if (error) throw error;
-        if (!mounted) return;
-        const unread = (data ?? []) as UnreadNotificationSummary[];
-        const opportunityKeys = unseenOpportunityKeys(user.id, unread.filter((item) => item.type === "new_project"));
-        const filtered = unread.filter((item) => item.type !== "new_project" || opportunityKeys.includes(opportunityItemKey(item) ?? ""));
-        const activity = buildPostLoginActivity(filtered, mode);
-        if (activity?.opportunities) rememberSeenOpportunityKeys(user.id, opportunityKeys);
-        if (activity) setPostLoginActivity(activity);
-      } catch (error) {
-        console.error("[dashboard] post-login activity load failed:", error);
-      } finally {
-        if (!mounted) return;
-        clearPostLoginParam();
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [authLoading, clearPostLoginParam, mode, shouldCheckPostLoginActivity, user]);
 
   useEffect(() => {
     if (
@@ -714,54 +540,6 @@ export default function DashboardPage() {
 
   function handleSaved() {
     setRefreshKey((k) => k + 1);
-  }
-
-  function postLoginActivitySummary(activity: PostLoginActivity) {
-    return [
-      activity.opportunities > 0 ? t("postLoginActivity.parts.opportunities", { count: activity.opportunities }) : null,
-      activity.requests > 0 ? t("postLoginActivity.parts.requests", { count: activity.requests }) : null,
-      activity.proposals > 0 ? t("postLoginActivity.parts.proposals", { count: activity.proposals }) : null,
-      activity.support > 0 ? t("postLoginActivity.parts.support", { count: activity.support }) : null,
-      activity.other > 0 ? t("postLoginActivity.parts.notifications", { count: activity.other }) : null,
-    ].filter(Boolean).join(", ");
-  }
-
-  function postLoginActivityTotal(activity: PostLoginActivity) {
-    return activity.opportunities + activity.requests + activity.proposals + activity.support + activity.other;
-  }
-
-  function postLoginActivityBody(activity: PostLoginActivity) {
-    const summary = postLoginActivitySummary(activity);
-    if (locale === "en") return t("postLoginActivity.body", { summary });
-    return `Mientras no estabas en la app ${postLoginActivityTotal(activity) === 1 ? "llegó" : "llegaron"} ${summary}.`;
-  }
-
-  function postLoginActivityCtaIcon(activity: PostLoginActivity) {
-    const iconTab =
-      activity.cta === "opportunities" ? "proposals"
-      : activity.cta === "requests" ? "bookings"
-      : activity.cta === "proposals" ? "sent_projects"
-      : activity.cta === "support" ? "soporte"
-      : "notifications";
-    return TAB_ICONS[iconTab] ?? <Bell className="h-4 w-4" />;
-  }
-
-  function dismissPostLoginActivity() {
-    postLoginActivityDismissedRef.current = true;
-    setPostLoginActivity(null);
-    clearPostLoginParam();
-  }
-
-  function closePostLoginActivity() {
-    dismissPostLoginActivity();
-  }
-
-  function viewPostLoginActivity() {
-    const activity = postLoginActivity;
-    if (!activity) return;
-    dismissPostLoginActivity();
-    if (mode !== activity.targetMode) setMode(activity.targetMode);
-    setTab(activity.targetTab);
   }
 
   function dismissOpportunityWelcome() {
@@ -1027,36 +805,6 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-
-          {postLoginActivity && (
-            <div className="mb-6 rounded-2xl border border-[#bae6fd] bg-[#f0f9ff] p-4 shadow-sm">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <BrandIconBadge icon={Bell} size={40} className="mt-0.5" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-[#0f172a]">{t("postLoginActivity.title")}</p>
-                    <p className="mt-0.5 text-sm leading-relaxed text-[#075985]">
-                      {postLoginActivityBody(postLoginActivity)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Button type="button" size="sm" onClick={viewPostLoginActivity} className="flex-1 sm:flex-none">
-                    {postLoginActivityCtaIcon(postLoginActivity)}
-                    {t(`postLoginActivity.cta.${postLoginActivity.cta}`)}
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={closePostLoginActivity}
-                    aria-label={t("postLoginActivity.close")}
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#64748b] transition-colors hover:bg-white hover:text-[#0f172a]"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
           {proLoadError ? (
