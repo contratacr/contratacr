@@ -9,6 +9,8 @@ const adminRoutes = [
   { path: "/es/admin/reportes", marker: /Reportes/i },
   { path: "/es/admin/aseguradoras", marker: /Aseguradoras/i },
   { path: "/es/admin/servicios", marker: /Servicios/i },
+  { path: "/es/admin/solicitudes", marker: /Solicitudes/i },
+  { path: "/es/admin/publicaciones", marker: /Publicaciones/i },
   { path: "/es/admin/cuentas", marker: /Cuentas/i },
   { path: "/es/admin/suscripciones", marker: /Suscripciones/i },
   { path: "/es/admin/soporte", marker: /Soporte/i },
@@ -28,6 +30,26 @@ test.describe("@admin surfaces", () => {
     await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeVisible();
     await expect(page.getByPlaceholder(/Contrase.a|Contrasena/i)).toBeVisible();
     await expectHealthyPage(page);
+  });
+
+  test("admin APIs reject unauthenticated access", async ({ request }) => {
+    const routes = [
+      "/api/admin/projects",
+      "/api/admin/bookings",
+      "/api/admin/users",
+      "/api/admin/providers",
+      "/api/admin/reports",
+      "/api/admin/support",
+      "/api/admin/accounts",
+      "/api/admin/subscriptions",
+      "/api/admin/insurers",
+      "/api/admin/pending-counts",
+    ];
+
+    for (const route of routes) {
+      const response = await request.get(route);
+      expect([401, 403], `${route} must reject unauthenticated access`).toContain(response.status());
+    }
   });
 
   test("admin panel sections render when admin credentials are configured", async ({ page }) => {

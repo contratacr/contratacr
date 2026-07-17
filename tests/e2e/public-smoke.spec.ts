@@ -116,7 +116,7 @@ test.describe("@smoke public routes", () => {
     await expect(menuSearch).toBeVisible();
     await menuSearch.fill("Plomer");
 
-    await expect(page.getByText(/Hogar y construcci/i).first()).toBeVisible();
+    await expect(megaMenu.getByRole("heading", { name: /^Hogar$/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Plomer/i }).first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
     await expectHealthyPage(page);

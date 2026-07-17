@@ -26,8 +26,9 @@ Legend:
 | Profile | Professional bio persistence and every client/professional panel section | UI + DB |
 | Notifications | Lifecycle rows, cancellation recipients, every type translated, unified-panel destination | API + DB + Contract |
 | Support | Guest and signed-in creation, acknowledgement, conversation, reopen, resolve/confirm | API + DB |
+| Direct chat | One conversation per context, profile/request/proposal linkage, both participants, unread/read state, realtime delivery, archive/restore/reopen, blocked threads and outsider rejection | UI + API + DB |
 | ContrataCR AI | Real OpenAI provider, complete action routing, live professional results, service suggestions, emergency guardrail, prompt-injection privacy, Spanish/English, responsive UI, navigation continuity, private account history and deletion | UI + API + DB + Contract |
-| Admin | Signed-out boundary and authenticated routes for overview, verification, users, reports, insurers, services, accounts, subscriptions, support, analytics, activity | UI |
+| Admin | Signed-out boundary, private API boundaries and authenticated routes for overview, verification, users, requests, publications, reports, insurers, services, accounts, subscriptions, support, analytics and activity | UI + API |
 | Localization | Public routes in Spanish/English, English panels, notification labels and destinations | UI + Contract |
 | Responsive | Entire suite repeated at 390 x 844; explicit overflow/modal/card checks | UI |
 | Security baseline | Test-only Supabase guard, guest write rejection, private env check, TypeScript contracts, Vercel protection preflight | Contract + CI |
@@ -40,7 +41,7 @@ The suite can verify ContrataCR's request, response handling, and resulting UI. 
 2. **Google OAuth:** complete one sign-in and confirm the callback returns to the intended locale.
 3. **Maps:** load `/buscar`, use location suggestions and near-me permission, and confirm map tiles/pins render.
 4. **Cloudinary:** upload one profile photo and one success-case image, then remove the temporary assets.
-5. **WhatsApp/call/email links:** open one professional profile and confirm the generated destination belongs to that professional.
+5. **WhatsApp/call/email fallback links:** open one professional profile and confirm the generated destination belongs to that professional. In-app chat behavior is covered automatically.
 6. **OpenAI:** ask one natural-language service question and confirm the response reports `aiProvider: openai`; deterministic safety and navigation fallbacks remain covered even if the provider is unavailable.
 
 ## What a green run means

@@ -9,7 +9,7 @@ test.describe("@smoke services catalog", () => {
     const search = page.getByTestId("services-page-search").locator("input");
     await search.fill("Plomer");
     await expect(page.getByText(/Plomer/i).first()).toBeVisible();
-    await expect(page.getByText(/Hogar y construcci/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Hogar$/i }).last()).toBeVisible();
 
     await search.fill("");
     await search.press("Enter");
@@ -68,7 +68,7 @@ test.describe("@smoke services catalog", () => {
     await waitForInteractivePage(page);
 
     const groups = page.getByTestId("services-group-option");
-    const fashionIcon = await groups.filter({ hasText: /Moda y cuidado personal/i }).locator("svg").first().evaluate((svg) => svg.innerHTML);
+    const fashionIcon = await groups.filter({ hasText: /Moda/i }).locator("svg").first().evaluate((svg) => svg.innerHTML);
     const tourismIcon = await groups.filter({ hasText: /Turismo/i }).locator("svg").first().evaluate((svg) => svg.innerHTML);
 
     expect(fashionIcon).not.toBe(tourismIcon);

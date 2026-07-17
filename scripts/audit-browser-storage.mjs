@@ -14,6 +14,7 @@ const reviewed = new Map([
   ["src/components/booking/booking-modal.tsx", { count: 4, reason: "short-lived booking registration handoff" }],
   ["src/components/dashboard/pro/profile-completion.tsx", { count: 2, reason: "dismissed optional UI prompt" }],
   ["src/components/landing/landing-navbar.tsx", { count: 3, reason: "language and notification render caches" }],
+  ["src/components/landing/ai-concierge.tsx", { count: 8, reason: "tab-scoped anonymous conversation and post-auth intent handoff; authenticated history persists in Supabase" }],
   ["src/components/dashboard/pro/proposals-tab.tsx", { count: 2, reason: "dismissed opportunity UI state" }],
   ["src/components/status/operational-status-banner.tsx", { count: 2, reason: "dismissed operational notice" }],
   ["src/app/api/portfolio-like/route.ts", { count: 1, reason: "documentation for anonymous browser guard" }],

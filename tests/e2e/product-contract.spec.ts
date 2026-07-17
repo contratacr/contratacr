@@ -31,6 +31,9 @@ test.describe("@contract product safety contracts", () => {
       { name: "proposals", response: apiJson(page, "/api/proposals", { method: "POST", body: { projectId: "missing", price: 1000, message: "E2E" } }) },
       { name: "reviews", response: apiJson(page, "/api/reviews", { method: "POST", body: { professionalId: "missing", rating: 5, comment: "E2E" } }) },
       { name: "account disable", response: apiJson(page, "/api/account/disable", { method: "POST", body: { reason: "E2E" } }) },
+      { name: "direct chat", response: apiJson(page, "/api/direct-chat") },
+      { name: "add identity", response: apiJson(page, "/api/add-cedula", { method: "POST", body: { cedula: "990000001" } }) },
+      { name: "identity appeal", response: apiJson(page, "/api/appeals", { method: "POST", body: { message: "E2E" } }) },
       { name: "support", response: apiJson(page, "/api/support") },
     ];
 
@@ -38,6 +41,10 @@ test.describe("@contract product safety contracts", () => {
     for (const { name, result } of results) {
       expect([401, 403], `Expected ${name} to reject guest, got ${result.status}`).toContain(result.status);
     }
+
+    const guestAiHistory = await apiJson<{ conversations?: unknown[] }>(page, "/api/ai-assistant/history");
+    expect(guestAiHistory.status).toBe(200);
+    expect(guestAiHistory.body.conversations).toEqual([]);
 
     const malformedBooking = await apiJson(page, "/api/bookings", { method: "POST", body: {} });
     expect(malformedBooking.status).toBe(400);

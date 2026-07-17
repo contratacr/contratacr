@@ -61,17 +61,19 @@ It covers:
 - Booking/project/proposal notifications for create, edit, accept, reject, work done, complete, withdraw and cancellation paths.
 - Projects/proposals API flow: publish request, professional proposal, edit proposal, reject/accept ownership rules, complete project.
 - Proposal withdrawal, declined-proposal behavior, and cancellation noise checks.
-- Dashboard surfaces for professional mode: profile, services, success cases, availability, requests received, opportunities, verification, notifications, support, account security.
-- Dashboard surfaces for client mode: profile, my requests, my posts, favorites, notifications, support, account security.
+- Dashboard surfaces for professional mode: profile, services, success cases, availability, requests received, opportunities, verification, messages, notifications, support, account security.
+- Dashboard surfaces for client mode: profile, my requests, my posts, favorites, messages, notifications, support, account security.
 - UI entry points for booking and publishing request modals without submitting.
 - Editable review lifecycle after completed work, including one-review-per-request persistence.
 - Signed-in and guest support ticket creation, automatic acknowledgement, reply, reopen, and confirmation.
+- Contextual in-app chat from profiles, requests and proposals, including both participants, unread state, realtime delivery, archive/restore and access control.
+- ContrataCR AI routing, real OpenAI responses, live search results, safety boundaries, localized actions, responsive visibility and private account history.
 - Real password change and restored seeded credentials.
 - Real professional bio, service description, success-case upload, and availability privacy persistence.
 - Notification translation and destination contracts for every supported notification type.
 - Protected API boundaries for guest users and privacy-safe forgot-password behavior.
 - English professional and client panels, localized footer routes, and safe external links.
-- Admin signed-out boundary and all authenticated admin sections through the seeded test admin account.
+- Admin signed-out/API boundaries and all authenticated admin sections through the seeded test admin account, including requests and publications.
 
 No regression suite can prove literally every possible user-data combination or guarantee external-provider uptime. This suite is the launch safety net for every major product surface and the flows most likely to regress.
 

@@ -11,6 +11,7 @@ const professionalTabs = [
   { tab: "proposals", marker: /Oportunidades|Opportunities/i },
   { tab: "verificacion", marker: /Verificacion|Verificaci.n|Verification/i },
   { tab: "notifications", marker: /Notificaciones|Notifications/i },
+  { tab: "chat", marker: /Mensajes|Messages/i },
   { tab: "soporte", marker: /Soporte|Support/i },
   { tab: "cuenta", marker: /Cuenta y seguridad|Account (?:and|&) security/i },
 ] as const;
@@ -21,6 +22,7 @@ const clientTabs = [
   { tab: "sent_projects", marker: /Mis publicaciones|My posts/i },
   { tab: "saved", marker: /Mis favoritos|My favorites/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
+  { tab: "chat&mode=use", marker: /Mensajes|Messages/i },
   { tab: "soporte&mode=use", marker: /Soporte|Support/i },
   { tab: "cuenta&mode=use", marker: /Cuenta y seguridad|Account (?:and|&) security/i },
 ] as const;
@@ -116,7 +118,7 @@ test.describe("@seeded dashboard surfaces", () => {
     for (const section of professionalTabs) {
       await gotoOK(page, `/en/dashboard/profesional?tab=${section.tab}`);
       await expectVisibleText(page.locator("main"), section.marker);
-      await expect(page.locator("main")).not.toContainText(/Notificaciones|Solicitudes recibidas|Disponibilidad|Cuenta y seguridad/i);
+      await expect(page.locator("main").last()).not.toContainText(/Notificaciones|Solicitudes recibidas|Disponibilidad|Cuenta y seguridad/i);
       await expectHealthyPage(page);
     }
 
