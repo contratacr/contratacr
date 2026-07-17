@@ -219,6 +219,7 @@ export default function LoginPage() {
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
               <OtpVerification
                 email={otpEmail}
+                autoResendOnMount
                 onVerified={async () => {
                   await finishPasswordLogin(createClient());
                 }}
