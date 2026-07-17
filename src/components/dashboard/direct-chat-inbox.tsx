@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
-  id: string; client_id: string; professional_profile_id: string;
+  id: string; client_id: string; professional_profile_id: string; professional_id?: string | null;
   booking_id?: string | null; project_id?: string | null; proposal_id?: string | null;
   subject?: string | null; last_message?: string | null; last_message_at?: string | null;
   status?: "open" | "archived" | "blocked";
@@ -22,6 +22,16 @@ type Conversation = {
   context?: { type: "booking" | "project" | "proposal" | "profile"; title?: string | null; service_description?: string | null; status?: string | null; proposal_status?: string | null };
 };
 type DirectMessage = { id: string; sender_id: string; body: string; created_at: string };
+type PendingDraft = {
+  professionalId?: string;
+  bookingId?: string;
+  projectId?: string;
+  proposalId?: string;
+  contextTitle?: string;
+  draftMessage?: string;
+};
+
+const DRAFT_CONVERSATION_ID = "__draft__";
 
 function timeLabel(value?: string | null, locale = "es") {
   if (!value) return "";
@@ -44,16 +54,77 @@ function ChatActionButton({ label, children, onClick, className }: { label: stri
   );
 }
 
+function buildPendingDraft(searchParams: URLSearchParams, userId: string | undefined, isEn: boolean): { conversation: Conversation | null; payload: PendingDraft | null } {
+  if (searchParams.get("draftChat") !== "1") return { conversation: null, payload: null };
+
+  const professionalId = searchParams.get("professionalId") || undefined;
+  const professionalName = searchParams.get("professionalName") || (isEn ? "Professional" : "Profesional");
+  const bookingId = searchParams.get("bookingId") || undefined;
+  const projectId = searchParams.get("projectId") || undefined;
+  const proposalId = searchParams.get("proposalId") || undefined;
+  const contextTitle = searchParams.get("contextTitle") || (isEn ? "General inquiry" : "Consulta general");
+  const draftMessage = searchParams.get("draftMessage") || "";
+  const contextType: "booking" | "project" | "proposal" | "profile" = bookingId ? "booking" : proposalId ? "proposal" : projectId ? "project" : "profile";
+  const currentUserId = userId || "__current_user__";
+  const pendingAsClient = Boolean(professionalId);
+  const conversation: Conversation = {
+    id: DRAFT_CONVERSATION_ID,
+    client_id: pendingAsClient ? currentUserId : "__draft_client__",
+    professional_id: professionalId,
+    professional_profile_id: pendingAsClient ? "__draft_professional__" : currentUserId,
+    booking_id: bookingId ?? null,
+    project_id: projectId ?? null,
+    proposal_id: proposalId ?? null,
+    subject: contextTitle,
+    last_message: isEn ? "New message" : "Nuevo mensaje",
+    last_message_at: new Date().toISOString(),
+    status: "open",
+    client_unread_count: 0,
+    professional_unread_count: 0,
+    client_profile: pendingAsClient ? null : { full_name: professionalName },
+    professionals: pendingAsClient
+      ? { id: professionalId, business_name: null, profiles: { full_name: professionalName, avatar_url: null } }
+      : null,
+    context: {
+      type: contextType,
+      title: contextTitle,
+      service_description: bookingId ? contextTitle : null,
+      status: "open",
+      proposal_status: proposalId ? "open" : null,
+    },
+  };
+  return {
+    conversation,
+    payload: { professionalId, bookingId, projectId, proposalId, contextTitle, draftMessage },
+  };
+}
+
+function findExistingDraftConversation(rows: Conversation[], payload: PendingDraft | null) {
+  if (!payload) return null;
+  return rows.find((item) => {
+    if (payload.bookingId) return item.booking_id === payload.bookingId;
+    if (payload.proposalId) return item.proposal_id === payload.proposalId;
+    if (payload.projectId && payload.professionalId) return item.project_id === payload.projectId && item.professional_id === payload.professionalId;
+    if (payload.professionalId) {
+      return item.professional_id === payload.professionalId && !item.booking_id && !item.project_id && !item.proposal_id;
+    }
+    return false;
+  }) ?? null;
+}
+
 export function DirectChatInbox() {
   const locale = useLocale();
   const isEn = locale === "en";
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const initialPendingDraft = useMemo(() => buildPendingDraft(searchParams, user?.id, isEn), [isEn, searchParams, user?.id]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(searchParams.get("conversation"));
+  const [pendingDraft, setPendingDraft] = useState<Conversation | null>(initialPendingDraft.conversation);
+  const [pendingDraftPayload, setPendingDraftPayload] = useState<PendingDraft | null>(initialPendingDraft.payload);
+  const [activeId, setActiveId] = useState<string | null>(searchParams.get("conversation") || (initialPendingDraft.conversation ? DRAFT_CONVERSATION_ID : null));
   const [messages, setMessages] = useState<DirectMessage[]>([]);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(initialPendingDraft.payload?.draftMessage ?? "");
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(searchParams.get("chatStatus") === "archived");
   const [archivedCount, setArchivedCount] = useState(0);
@@ -63,7 +134,25 @@ export function DirectChatInbox() {
   const [error, setError] = useState("");
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
   const scrollRef = useRef<HTMLDivElement>(null);
-  const active = useMemo(() => conversations.find((item) => item.id === activeId) ?? null, [activeId, conversations]);
+  const displayedConversations = useMemo(
+    () => pendingDraft && !showArchived
+      ? [pendingDraft, ...conversations.filter((item) => item.id !== DRAFT_CONVERSATION_ID)]
+      : conversations,
+    [conversations, pendingDraft, showArchived],
+  );
+  const active = useMemo(() => displayedConversations.find((item) => item.id === activeId) ?? null, [activeId, displayedConversations]);
+
+  useEffect(() => {
+    const next = buildPendingDraft(searchParams, user?.id, isEn);
+    if (!next.conversation) return;
+    queueMicrotask(() => {
+      setPendingDraft(next.conversation);
+      setPendingDraftPayload(next.payload);
+      setActiveId(DRAFT_CONVERSATION_ID);
+      setMobileThread(true);
+      setDraft((current) => current || next.payload?.draftMessage || "");
+    });
+  }, [isEn, searchParams, user?.id]);
 
   const personFor = useCallback((item: Conversation) => user?.id === item.client_id
     ? {
@@ -91,9 +180,9 @@ export function DirectChatInbox() {
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
-    if (!needle) return conversations;
-    return conversations.filter((item) => `${personFor(item).name} ${contextFor(item).title} ${item.last_message ?? ""}`.toLocaleLowerCase(locale).includes(needle));
-  }, [contextFor, conversations, locale, personFor, query]);
+    if (!needle) return displayedConversations;
+    return displayedConversations.filter((item) => `${personFor(item).name} ${contextFor(item).title} ${item.last_message ?? ""}`.toLocaleLowerCase(locale).includes(needle));
+  }, [contextFor, displayedConversations, locale, personFor, query]);
 
   const loadConversations = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -101,8 +190,18 @@ export function DirectChatInbox() {
       const res = await fetch(`/api/direct-chat${showArchived ? "?status=archived" : ""}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
-      setConversations(json.conversations ?? []);
-      setActiveId((current) => current || json.conversations?.[0]?.id || null);
+      const rows = json.conversations ?? [];
+      const existingDraftConversation = findExistingDraftConversation(rows, pendingDraftPayload);
+      setConversations(rows);
+      if (existingDraftConversation) {
+        setPendingDraft(null);
+        setPendingDraftPayload(null);
+        setDraft("");
+        setActiveId(existingDraftConversation.id);
+        router.replace(`/dashboard/profesional?tab=chat&conversation=${existingDraftConversation.id}`, { scroll: false });
+      } else {
+        setActiveId((current) => current || (pendingDraft ? DRAFT_CONVERSATION_ID : rows[0]?.id || null));
+      }
       if (showArchived) {
         setArchivedCount(json.conversations?.length ?? 0);
       } else {
@@ -114,9 +213,14 @@ export function DirectChatInbox() {
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load messages." : "No se pudieron cargar los mensajes.");
     } finally { if (!quiet) setLoading(false); }
-  }, [isEn, showArchived]);
+  }, [isEn, pendingDraft, pendingDraftPayload, router, showArchived]);
 
   const loadThread = useCallback(async (id: string, quiet = false) => {
+    if (id === DRAFT_CONVERSATION_ID) {
+      setMessages([]);
+      setThreadLoading(false);
+      return;
+    }
     if (!quiet) setThreadLoading(true);
     try {
       const res = await fetch(`/api/direct-chat?id=${encodeURIComponent(id)}`, { cache: "no-store" });
@@ -147,6 +251,8 @@ export function DirectChatInbox() {
 
   function updateArchiveView(nextArchived: boolean, nextConversationId?: string | null) {
     setShowArchived(nextArchived);
+    setPendingDraft(null);
+    setPendingDraftPayload(null);
     setActiveId(nextConversationId ?? null);
     setMobileThread(false);
 
@@ -163,6 +269,7 @@ export function DirectChatInbox() {
 
   function selectConversation(id: string) {
     setActiveId(id); setMobileThread(true); setError("");
+    if (id === DRAFT_CONVERSATION_ID) return;
     router.replace(`/dashboard/profesional?tab=chat${showArchived ? "&chatStatus=archived" : ""}&conversation=${id}`, { scroll: false });
   }
 
@@ -173,10 +280,28 @@ export function DirectChatInbox() {
     setDraft(""); setSending(true); setError("");
     setMessages((current) => [...current, { id: optimisticId, sender_id: user?.id || "", body, created_at: new Date().toISOString() }]);
     try {
-      const res = await fetch("/api/direct-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId, message: body }) });
+      const payload = activeId === DRAFT_CONVERSATION_ID
+        ? {
+          professionalId: pendingDraftPayload?.professionalId,
+          bookingId: pendingDraftPayload?.bookingId,
+          projectId: pendingDraftPayload?.projectId,
+          proposalId: pendingDraftPayload?.proposalId,
+          contextTitle: pendingDraftPayload?.contextTitle,
+          message: body,
+        }
+        : { conversationId: activeId, message: body };
+      const res = await fetch("/api/direct-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
-      await Promise.all([loadThread(activeId, true), loadConversations(true)]);
+      if (activeId === DRAFT_CONVERSATION_ID && json.conversationId) {
+        setPendingDraft(null);
+        setPendingDraftPayload(null);
+        setActiveId(json.conversationId);
+        router.replace(`/dashboard/profesional?tab=chat&conversation=${json.conversationId}`, { scroll: false });
+        await Promise.all([loadThread(json.conversationId, true), loadConversations(true)]);
+      } else {
+        await Promise.all([loadThread(activeId, true), loadConversations(true)]);
+      }
     } catch (err) {
       setMessages((current) => current.filter((message) => message.id !== optimisticId)); setDraft(body);
       setError(err instanceof Error ? err.message : isEn ? "Could not send the message." : "No se pudo enviar el mensaje.");
@@ -202,7 +327,7 @@ export function DirectChatInbox() {
 
   if (loading) return <div className="flex min-h-[360px] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>;
 
-  if (!conversations.length) return (
+  if (!displayedConversations.length) return (
     <div className="py-16 text-center">
       <MessageSquareMore className="mx-auto h-10 w-10 text-[#009FD9]" />
       <h3 className="mt-4 text-lg font-extrabold text-[#162543]">
