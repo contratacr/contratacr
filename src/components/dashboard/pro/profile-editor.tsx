@@ -885,7 +885,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             required
             value={whatsapp}
             onChange={(digits) => { setWhatsapp(digits); touch(); }}
-            className="w-full sm:max-w-md"
+            className="w-full sm:max-w-[32rem]"
           />
           <p className="mt-1.5 text-xs text-[#6b7280]">{t("whatsappHelp")}</p>
         </div>
@@ -918,7 +918,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               label={<>{t("callNumber")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
               value={callPhone}
               onChange={(digits) => { setCallPhone(digits); touch(); }}
-              className="w-full sm:max-w-md"
+              className="w-full sm:max-w-[32rem]"
             />
             <p className="mt-1.5 text-xs text-[#6b7280]">{t("callNumberHelp")}</p>
           </div>
@@ -946,7 +946,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         </div>
 
         {showContactEmail && (
-          <div className="w-full sm:max-w-xl">
+          <div className="w-full sm:max-w-[40rem]">
             <input
               type="email"
               inputMode="email"
@@ -966,7 +966,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       {/* ── Redes sociales — USERNAME only; we build the link (additive to casos). ── */}
       <Section id="social" title={t("secSocial")} desc={t("secSocialDesc")} open={openSections.has("social")} onToggle={toggleSection}>
         <div className="flex flex-col gap-3">
-          <div className="w-full sm:max-w-xl">
+          <div className="w-full sm:max-w-[40rem]">
             <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
               <Globe className="h-4 w-4 text-[#6b7280]" strokeWidth={2.5} /> {t("website")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
             </label>
@@ -990,7 +990,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             const cleaned = cleanUsername(social[key]);
             const invalid = cleaned.length > 0 && !isValidUsername(cleaned);
             return (
-              <div key={key} className="w-full sm:max-w-xl">
+              <div key={key} className="w-full sm:max-w-[40rem]">
                 <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
                   <Icon className="h-4 w-4 text-[#6b7280]" /> {label} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                 </label>
