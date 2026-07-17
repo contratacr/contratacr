@@ -134,6 +134,7 @@ export function DirectChatInbox() {
   const [error, setError] = useState("");
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const displayedConversations = useMemo(
     () => pendingDraft && !showArchived
       ? [pendingDraft, ...conversations.filter((item) => item.id !== DRAFT_CONVERSATION_ID)]
@@ -236,6 +237,12 @@ export function DirectChatInbox() {
   useEffect(() => { queueMicrotask(() => void loadConversations()); }, [loadConversations]);
   useEffect(() => { if (activeId) queueMicrotask(() => void loadThread(activeId)); }, [activeId, loadThread]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, threadLoading]);
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 128)}px`;
+  }, [draft]);
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
@@ -431,7 +438,30 @@ export function DirectChatInbox() {
           })}
         </div>
         {error && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error}</p>}
-        <form onSubmit={submit} className="flex items-end gap-2 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4"><textarea rows={1} value={draft} onChange={(e) => setDraft(e.target.value.slice(0, 2000))} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} placeholder={isEn ? "Write a message" : "Escribe un mensaje"} className="max-h-28 min-h-11 min-w-0 flex-1 resize-none rounded-xl border border-[#d8e5ee] px-4 py-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10" /><button type="submit" disabled={sending || !draft.trim()} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#009FD9] text-white disabled:bg-[#d8e4e9]" aria-label={isEn ? "Send" : "Enviar"}>{sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}</button></form>
+        <form onSubmit={submit} className="flex items-end gap-2 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.slice(0, 2000))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.form?.requestSubmit();
+              }
+            }}
+            placeholder={isEn ? "Write a message" : "Escribe un mensaje"}
+            className="max-h-32 min-h-11 min-w-0 flex-1 resize-none overflow-y-auto rounded-xl border border-[#d8e5ee] px-4 py-2.5 text-sm leading-relaxed outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+          />
+          <button
+            type="submit"
+            disabled={sending || !draft.trim()}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#009FD9] text-white disabled:bg-[#d8e4e9]"
+            aria-label={isEn ? "Send" : "Enviar"}
+          >
+            {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+          </button>
+        </form>
       </section>
     </div>
   );

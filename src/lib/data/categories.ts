@@ -96,7 +96,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "lavado_alfombras", label: "Lavado de alfombras y tapetes", keywords: ["alfombra", "tapete", "moqueta", "steam cleaning", "vapor"] },
       { id: "lavado_muebles", label: "Lavado de muebles", keywords: ["muebles", "sillones", "sofas", "colchones", "tapiceria de muebles", "limpieza de muebles"] },
       { id: "limpieza_post_construccion", label: "Limpieza post-construcción", keywords: ["obra", "escombros", "construccion", "polvo de obra"] },
-      { id: "lavado_vehiculos", label: "Lavado de vehículos", keywords: ["carro", "auto", "lavado", "lavado express", "lavado de carro"] },
+      { id: "lavado_vehiculos", label: "Lavado de vehículos", keywords: ["lavado", "auto lavado", "lavado express", "lavado de carro", "lavar carro", "lavar auto", "limpieza de vehiculo"] },
     ],
   },
   {
@@ -127,7 +127,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
     emoji: "💼",
     items: [
       { id: "contabilidad", label: "Contabilidad y finanzas", keywords: ["contador", "CPA", "finanzas", "declaracion de renta", "tributacion", "libros contables", "impuestos", "hacienda"] },
-      { id: "legal", label: "Abogados y servicios legales", keywords: ["abogado", "notario", "asesor legal", "juridico", "contratos", "derecho", "bufete", "tramites"] },
+      { id: "legal", label: "Abogados y servicios legales", keywords: ["abogado", "notario", "asesor legal", "juridico", "contratos", "derecho", "bufete", "tramites", "liberar hipoteca", "cancelar hipoteca", "levantamiento de hipoteca", "prenda de vehiculo", "liberar prenda", "cancelar prenda", "registro nacional vehiculo"] },
       { id: "notaria", label: "Notaría", keywords: ["notario publico", "notaria publica", "escrituras", "autenticaciones", "traspasos", "protocolizacion"] },
       { id: "auditoria", label: "Auditoría", keywords: ["auditor", "auditoria financiera", "revision contable", "control interno", "cumplimiento"] },
       { id: "asesoria_financiera", label: "Asesoría financiera", keywords: ["asesor financiero", "finanzas personales", "inversiones", "presupuesto", "plan financiero"] },
@@ -993,6 +993,7 @@ const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   fisioterapia: ["terapia fisica", "dolor de espalda", "fisioterapeuta", "necesito un fisioterapeuta", "physiotherapist", "physical therapist"],
   psicologia: ["necesito psicologo", "terapia psicologica", "hablar con psicologo", "psicologo en linea", "psychologist", "online psychologist"],
   contabilidad: ["contador", "contabilidad para mi negocio", "contabilidad negocio", "ayuda contable", "accountant", "accounting for my business"],
+  legal: ["abogado", "asesoria legal", "servicios legales", "liberar hipoteca", "liberar hipoteca de carro", "cancelar hipoteca de carro", "levantar hipoteca de carro", "liberar prenda", "cancelar prenda", "cancelacion de prenda", "tramite legal de vehiculo", "registro nacional carro", "abogado para tramite"],
   notaria: ["notario publico", "autenticar documento", "hacer escritura", "traspaso de propiedad"],
   asesoria_tributaria: ["ayuda con hacienda", "declaracion de renta", "declaracion de iva", "impuestos"],
   corredor_seguros: ["corredor de seguros", "comprar seguro", "poliza", "seguro medico", "seguro de carro"],

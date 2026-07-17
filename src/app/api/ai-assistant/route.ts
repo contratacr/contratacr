@@ -579,16 +579,73 @@ function resultPrice(pro: Awaited<ReturnType<typeof searchProfessionals>>[number
   return `${new Intl.NumberFormat(locale === "en" ? "en-US" : "es-CR", { style: "currency", currency: "CRC", maximumFractionDigits: 0 }).format(amount)} I.V.A.I.`;
 }
 
+function wantsVideoIntent(text: string) {
+  const normalized = normalizeText(text);
+  return includesAny(normalized, [
+    "videoconsulta",
+    "video consulta",
+    "consulta en linea",
+    "en linea",
+    "online",
+    "virtual",
+    "remoto",
+    "remote",
+  ]);
+}
+
+type PlaceIntent = NonNullable<ReturnType<typeof resolveLocationIntent>>;
+type ProfessionalSearchResult = Awaited<ReturnType<typeof searchProfessionals>>[number];
+type WorkplaceLike = {
+  name?: string | null;
+  cantonId?: string | null;
+  provinciaId?: string | null;
+  provinceId?: string | null;
+  cantonName?: string | null;
+  provinceName?: string | null;
+};
+
+function workplaceMatchesPlace(workplace: WorkplaceLike, place: PlaceIntent) {
+  if (place.type === "canton") return workplace.cantonId === place.id;
+  return workplace.provinciaId === place.id || workplace.provinceId === place.id;
+}
+
+function workplaceLabel(workplace: WorkplaceLike, fallback?: string | null) {
+  return workplace.name
+    || [workplace.cantonName, workplace.provinceName].filter(Boolean).join(", ")
+    || fallback
+    || null;
+}
+
+function professionalDisplayLocation(pro: ProfessionalSearchResult, place: PlaceIntent | null | undefined, videoIntent: boolean, locale: Locale) {
+  const workplaces = ((pro.workplaces ?? []) as WorkplaceLike[]);
+  if (place) {
+    const placeLabel = place.type === "canton" ? `${place.label}, ${place.sublabel}` : place.label;
+    const matchedWorkplace = workplaces.find((workplace) => workplaceMatchesPlace(workplace, place));
+    if (matchedWorkplace) return workplaceLabel(matchedWorkplace, placeLabel) || placeLabel;
+  }
+
+  if (videoIntent && (pro.videoconsulta || pro.coverage?.country)) {
+    return locale === "en" ? "Video consultation" : "Videoconsulta";
+  }
+
+  const firstWorkplace = workplaces.find((workplace) => workplaceLabel(workplace));
+  return (firstWorkplace ? workplaceLabel(firstWorkplace) : null)
+    || [pro.cantonName, pro.provinceName].filter(Boolean).join(", ")
+    || "Costa Rica";
+}
+
 async function realProfessionalResults(payload: AssistantPayload, originalMessage: string, locale: Locale, labels: Map<string, string>): Promise<ProfessionalResult[]> {
   if (payload.action !== "search_professionals") return [];
   const seed = payload.searchQuery || originalMessage;
   const resolved = resolveSearch(payload.serviceId ? (payload.locationText || originalMessage) : originalMessage, locale, payload.serviceId, payload.locationText);
   const category = payload.serviceId ? { id: payload.serviceId } : resolved.category;
   const place = resolved.place ?? resolveSearch(originalMessage, locale, null, payload.locationText).place;
+  const videoIntent = wantsVideoIntent(`${originalMessage} ${payload.searchQuery ?? ""} ${payload.locationText ?? ""}`);
   let professionals = await searchProfessionals({
     categoryId: category?.id,
     provinceId: place?.type === "province" ? place.id : place?.type === "canton" ? place.provinceId : undefined,
     cantonId: place?.type === "canton" ? place.id : undefined,
+    modality: videoIntent ? "video" : place ? "in_person" : "any",
     query: category ? undefined : seed,
   });
 
@@ -597,7 +654,7 @@ async function realProfessionalResults(payload: AssistantPayload, originalMessag
   if (professionals.length === 0 && category?.id && place) {
     const serviceProfessionals = await searchProfessionals({ categoryId: category.id });
     professionals = serviceProfessionals.filter((professional) => {
-      if (professional.videoconsulta || professional.coverage?.country) return true;
+      if (videoIntent && (professional.videoconsulta || professional.coverage?.country)) return true;
       return (professional.workplaces ?? []).some((workplace) => {
         const indexed = workplace as typeof workplace & { cantonId?: string; provinciaId?: string };
         return place.type === "canton"
@@ -617,11 +674,7 @@ async function realProfessionalResults(payload: AssistantPayload, originalMessag
       name: pro.publicBusinessNameOnly && pro.businessName ? pro.businessName : pro.businessName || pro.fullName,
       avatarUrl: pro.avatarUrl || null,
       service: serviceId ? labels.get(serviceId) || getCategoryLabel(serviceId, locale) : (locale === "en" ? "Professional service" : "Servicio profesional"),
-      location: place?.type === "canton"
-        ? `${place.label}, ${place.sublabel}`
-        : place?.type === "province"
-          ? place.label
-          : [pro.cantonName, pro.provinceName].filter(Boolean).join(", ") || "Costa Rica",
+      location: professionalDisplayLocation(pro, place, videoIntent, locale),
       verified: pro.verificationStatus === "verified" || pro.isVerified,
       rating: pro.reviewCount > 0 ? pro.ratingAvg : null,
       reviewCount: pro.reviewCount,
