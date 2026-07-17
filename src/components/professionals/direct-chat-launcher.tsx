@@ -5,6 +5,7 @@ import { Loader2, MessageSquareMore } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type DirectChatLauncherProps = {
@@ -75,9 +76,10 @@ export function DirectChatLauncher({
       disabled={loading}
       aria-busy={loading}
       className={cn(
+        buttonVariants({ variant: "chat", size: "md" }),
         // Navy consistently identifies entry into person-to-person chat. Cyan remains
         // reserved for the primary workflow action and the send button inside the chat.
-        "inline-flex items-center justify-center gap-1.5 bg-[#162543] text-white transition-colors hover:bg-[#233a5f] disabled:opacity-60",
+        "gap-1.5 disabled:opacity-60",
         className || "w-full rounded-full py-2.5 text-[13px] font-semibold",
       )}
     >

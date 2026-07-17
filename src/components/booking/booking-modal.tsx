@@ -1202,7 +1202,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           {t("calendar.privateBody")}
                         </p>
                       </div>
-                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel={locale === "en" ? "Send a message" : "Enviar mensaje"} className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
+                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel={locale === "en" ? "Send message" : "Enviar mensaje"} className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
                     </div>
                   ) : !hasAnyAvailability ? (
                     <div className="flex flex-col items-center text-center gap-3 py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
@@ -1213,7 +1213,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <p className="text-sm font-semibold text-[#111827]">{t("calendar.whatsappOnlyTitle")}</p>
                         <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">{t("calendar.whatsappOnlyBody")}</p>
                       </div>
-                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel={locale === "en" ? "Send a message" : "Enviar mensaje"} className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
+                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel={locale === "en" ? "Send message" : "Enviar mensaje"} className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
                     </div>
                   ) : (
                     // Two sub-columns on desktop: CALENDAR (left) and that day's SLOTS (right).
