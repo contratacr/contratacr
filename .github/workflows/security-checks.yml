@@ -51,7 +51,10 @@ jobs:
         run: npm run security:env
 
       - name: Lint automation scripts
-        run: npx eslint scripts/check-private-env-files.mjs scripts/security-smoke.mjs scripts/sync-supabase-email-templates.mjs
+        run: npx eslint scripts/audit-browser-storage.mjs scripts/check-private-env-files.mjs scripts/security-smoke.mjs scripts/sync-supabase-email-templates.mjs
+
+      - name: Prevent browser-only account data
+        run: node scripts/audit-browser-storage.mjs
 
       - name: Security smoke
         run: npm run security:smoke
