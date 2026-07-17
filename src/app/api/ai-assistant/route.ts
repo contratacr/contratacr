@@ -232,6 +232,8 @@ Rules:
 - Ask one short clarification only when service or location is essential and missing. Otherwise act.
 - If the message contains both a service intent and a Costa Rica location, do not ask another question; set action=search_professionals.
 - If the message has a service but no location, ask which Costa Rica area. If it has a location but no service, ask which service.
+- For creating a request, collect only the missing service and Costa Rica location. Once both are known, set action=publish_request and offer to open the form; the form collects job details.
+- Never claim that you will create, publish, submit or complete a request for the person. Only the person can review and publish it from the form.
 - Use the matching navigation action when the person wants to open services, register, sign in, reset a password, open their dashboard, support or help.
 - When prior assistant history includes "Resultados mostrados", action=select_professional and selectedResultIndex must identify requests such as "the second one". Never guess an index that was not shown.
 
@@ -299,7 +301,20 @@ async function openAiAnswer(message: string, locale: Locale, history: HistoryMes
 
 function actionHref(payload: AssistantPayload, originalMessage: string, locale: Locale) {
   if (!payload.action || payload.action === "answer") return null;
-  if (payload.action === "publish_request") return `/${locale}/dashboard/profesional?mode=use&tab=sent_projects&openPublish=1`;
+  if (payload.action === "publish_request") {
+    const service = payload.serviceId
+      ? { id: payload.serviceId }
+      : resolveCategoryIntent(payload.searchQuery || originalMessage, locale);
+    const place = resolveLocationIntent(payload.locationText || "") ?? resolveLocationIntent(originalMessage);
+    const params = new URLSearchParams({ mode: "use", tab: "sent_projects", openPublish: "1" });
+    if (service?.id) params.set("categoria", service.id);
+    if (place?.type === "province") params.set("provincia", place.id);
+    if (place?.type === "canton") {
+      params.set("provincia", place.provinceId);
+      params.set("canton", place.id);
+    }
+    return `/${locale}/dashboard/profesional?${params.toString()}`;
+  }
   if (payload.action === "how_it_works") return `/${locale}/como-funciona`;
   if (payload.action === "support") return `/${locale}/soporte`;
   if (payload.action === "suggest_service") return `/${locale}/servicios`;
@@ -343,8 +358,17 @@ function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
 function normalizePayload(payload: AssistantPayload, message: string, locale: Locale, history: HistoryMessage[] = []): AssistantPayload {
   const normalized = normalizeText(message);
   const cta = normalizeText(payload.ctaLabel || "");
-  const directService = resolveCategoryIntent(message, locale) ?? resolveCategoryIntent(payload.searchQuery || "", locale);
-  const directPlace = resolveLocationIntent(message) ?? resolveLocationIntent(payload.locationText || "");
+  const priorUserContext = history
+    .filter((item) => item.role === "user")
+    .slice(-4)
+    .map((item) => item.content)
+    .join(" ");
+  const directService = resolveCategoryIntent(message, locale)
+    ?? resolveCategoryIntent(payload.searchQuery || "", locale)
+    ?? resolveCategoryIntent(priorUserContext, locale);
+  const directPlace = resolveLocationIntent(message)
+    ?? resolveLocationIntent(payload.locationText || "")
+    ?? resolveLocationIntent(priorUserContext);
   const directPlaceLabel = formatPlaceLabel(directPlace);
   const wantsProfessionalSearch = includesAny(normalized, [
     "profesional",
@@ -373,6 +397,9 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     { words: ["tercero", "tercera", "third"], index: 3 },
   ].find((option) => includesAny(normalized, option.words));
   const hasShownResults = history.some((item) => /Resultados mostrados|Results shown/i.test(item.content));
+  const publishConversation = history.some((item) =>
+    /publicar (?:una )?solicitud|crear (?:una )?solicitud|publish (?:a )?request|create (?:a )?request/i.test(item.content),
+  );
   if (resultSelection && hasShownResults) {
     return {
       ...payload,
@@ -407,11 +434,55 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
       ctaLabel: locale === "en" ? "Suggest service" : "Sugerir servicio",
     };
   }
-  if (
+  const wantsToPublish = publishConversation ||
     includesAny(normalized, ["publicar solicitud", "publicar una solicitud", "crear solicitud", "como publico", "hacer una solicitud"]) ||
-    includesAny(cta, ["publicar solicitud", "publish request"])
-  ) {
-    return { ...payload, action: "publish_request", ctaLabel: payload.ctaLabel || (locale === "en" ? "Publish request" : "Publicar solicitud") };
+    includesAny(cta, ["publicar solicitud", "crear solicitud", "publish request", "create request"]);
+  if (wantsToPublish) {
+    const serviceLabel = directService ? getCategoryLabel(directService.id, locale) : null;
+    if (!directService && !directPlace) {
+      return {
+        ...payload,
+        action: "answer",
+        answer: locale === "en"
+          ? "What service do you need and in which area of Costa Rica?"
+          : "¿Qué servicio necesita y en qué zona de Costa Rica?",
+        ctaLabel: null,
+      };
+    }
+    if (!directService) {
+      return {
+        ...payload,
+        action: "answer",
+        locationText: directPlaceLabel,
+        answer: locale === "en"
+          ? `What service do you need in ${directPlaceLabel}?`
+          : `¿Qué servicio necesita en ${directPlaceLabel}?`,
+        ctaLabel: null,
+      };
+    }
+    if (!directPlace) {
+      return {
+        ...payload,
+        action: "answer",
+        serviceId: directService.id,
+        searchQuery: serviceLabel,
+        answer: locale === "en"
+          ? `In which area of Costa Rica do you need ${serviceLabel}?`
+          : `¿En qué zona de Costa Rica necesita ${serviceLabel}?`,
+        ctaLabel: null,
+      };
+    }
+    return {
+      ...payload,
+      action: "publish_request",
+      serviceId: directService.id,
+      searchQuery: serviceLabel,
+      locationText: directPlaceLabel,
+      answer: locale === "en"
+        ? `I have the service (${serviceLabel}) and location (${directPlaceLabel}). Open the form to add the job details, review the information and publish the request.`
+        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${directPlaceLabel}). Abra el formulario para agregar los detalles del trabajo, revisar la información y publicar la solicitud.`,
+      ctaLabel: locale === "en" ? "Create request" : "Crear solicitud",
+    };
   }
   if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "forgot my password", "reset password"])) {
     return { ...payload, action: "reset_password", ctaLabel: locale === "en" ? "Reset password" : "Restablecer contraseña" };
@@ -612,7 +683,9 @@ export async function POST(req: Request) {
               : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
             : payload.answer,
       action: noResults ? "publish_request" : payload.action ?? "answer",
-      searchHref: noResults ? `/${locale}/dashboard/profesional?mode=use&tab=sent_projects&openPublish=1` : searchHref,
+      searchHref: noResults
+        ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
+        : searchHref,
       ctaLabel: noResults
         ? locale === "en" ? "Publish request" : "Publicar solicitud"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),

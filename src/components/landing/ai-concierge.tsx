@@ -410,20 +410,19 @@ export function AiConcierge() {
     void ask();
   }
 
-  function navigate(href: string, options: { keepAssistantOpen?: boolean } = {}) {
+  function navigate(href: string) {
     const protectedDestination = href.includes("/publicar-proyecto") || href.includes("/dashboard/");
-    const keepAssistantOpen = options.keepAssistantOpen === true;
     if (!user && protectedDestination) storePendingIntent(href);
     try {
       window.sessionStorage.setItem(`${SESSION_KEY_PREFIX}${lang}`, JSON.stringify({
         id: conversationId,
-        open: keepAssistantOpen,
+        open: false,
         messages: messages.slice(-MAX_STORED_MESSAGES),
       } satisfies StoredAssistantSession));
     } catch {
       /* Navigation still works when browser storage is unavailable. */
     }
-    if (!keepAssistantOpen) setOpen(false);
+    setOpen(false);
     const alreadyLocalized = /^\/(es|en)(?=\/|\?|$)/.test(href);
     const destination = alreadyLocalized ? href : `/${lang}${href.startsWith("/") ? href : `/${href}`}`;
     window.location.assign(destination);
@@ -547,7 +546,7 @@ export function AiConcierge() {
                 ))}
 
                 {message.action && (
-                  <button type="button" onClick={() => navigate(message.action!.href, { keepAssistantOpen: message.action!.kind === "publish_request" })} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#009FD9] bg-[#eef9fd] px-4 py-2.5 text-center text-sm font-extrabold text-[#008dbf] transition hover:bg-[#dff5fc] active:scale-[0.99]">
+                  <button type="button" onClick={() => navigate(message.action!.href)} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#009FD9] bg-[#eef9fd] px-4 py-2.5 text-center text-sm font-extrabold text-[#008dbf] transition hover:bg-[#dff5fc] active:scale-[0.99]">
                     {message.action.label}{actionIcon(message.action.kind)}
                   </button>
                 )}

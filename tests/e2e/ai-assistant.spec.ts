@@ -114,7 +114,6 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "Quiero crear una cuenta de cliente", action: "register_client", href: "/es/registro/cliente" },
       { prompt: "Quiero iniciar sesion", action: "login", href: "/es/login" },
       { prompt: "Necesito ayuda con la app", action: "help", href: "/es/ayuda" },
-      { prompt: "Quiero publicar una solicitud", action: "publish_request", href: "/es/publicar-proyecto" },
       { prompt: "Soy profesional, quiero cambiar mi disponibilidad", action: "open_dashboard", href: "/es/dashboard/profesional?tab=availability" },
       { prompt: "Soy profesional, quiero editar mis servicios", action: "open_dashboard", href: "/es/dashboard/profesional?tab=services" },
       { prompt: "Quiero sugerir el servicio de domador de leones", action: "suggest_service", href: "/es/servicios" },
@@ -125,6 +124,30 @@ test.describe("@seeded ContrataCR AI", () => {
       expect(response.body.action).toBe(item.action);
       expect(response.body.searchHref).toBe(item.href);
     }
+
+    const requestStart = await ask(page, "Quiero publicar una solicitud");
+    expect(requestStart.status).toBe(200);
+    expect(requestStart.body.action).toBe("answer");
+    expect(requestStart.body.answer).toMatch(/servicio/i);
+    expect(requestStart.body.answer).toMatch(/zona|ubicaci/i);
+    expect(requestStart.body.searchHref).toBeNull();
+
+    const requestReady = await ask(page, "carpinteria, Orotina", {
+      history: [
+        { role: "user", content: "Quiero publicar una solicitud" },
+        { role: "assistant", content: requestStart.body.answer },
+      ],
+    });
+    expect(requestReady.status).toBe(200);
+    expect(requestReady.body.action).toBe("publish_request");
+    expect(requestReady.body.answer).toMatch(/abra el formulario/i);
+    expect(requestReady.body.answer).not.toMatch(/voy a (?:proceder|crear|publicar)|creare|publicare/i);
+    expect(requestReady.body.ctaLabel).toBe("Crear solicitud");
+    expect(requestReady.body.searchHref).toContain("tab=sent_projects");
+    expect(requestReady.body.searchHref).toContain("openPublish=1");
+    expect(requestReady.body.searchHref).toContain("categoria=carpinteria");
+    expect(requestReady.body.searchHref).toContain("provincia=al");
+    expect(requestReady.body.searchHref).toContain("canton=al-oc");
 
     const empty = await apiJson<AssistantResponse>(page, "/api/ai-assistant", {
       method: "POST",

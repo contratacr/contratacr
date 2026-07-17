@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
@@ -35,6 +36,10 @@ const phoneDigits = (value: string) => value.replace(/\D/g, "");
 export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => void; onSuccess?: () => void }) {
   const t = useTranslations("publicarProyecto");
   const ti = useTranslations("identity");
+  const searchParams = useSearchParams();
+  const initialCategoryId = searchParams.get("categoria") || "";
+  const initialProvinceId = searchParams.get("provincia") || "";
+  const initialCantonId = searchParams.get("canton") || "";
 
   const TIMELINES = [
     { value: "Urgente (esta semana)", label: t("tlUrgent") },
@@ -44,11 +49,11 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   ];
 
   const [form, setForm] = useState({
-    categoryId: "",
+    categoryId: initialCategoryId,
     title: "",
     description: "",
-    provinciaId: "",
-    cantonId: "",
+    provinciaId: initialProvinceId,
+    cantonId: initialCantonId,
     budgetMin: "",
     budgetMax: "",
     timeline: "",

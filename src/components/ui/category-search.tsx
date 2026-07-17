@@ -42,7 +42,7 @@ export function CategorySearch({
   // Load admin-approved custom categories so they're selectable/searchable here too.
   const customCategories = useCustomCategories();
   void customCategories;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(autoFocus);
   const [query, setQuery] = useState("");
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -87,8 +87,7 @@ export function CategorySearch({
     setActiveGroupId(null);
   }
 
-  function handleClear(e: React.MouseEvent) {
-    e.stopPropagation();
+  function handleClear() {
     onChange("");
     setQuery("");
     setOpen(false);
@@ -98,11 +97,6 @@ export function CategorySearch({
   function openDropdown() {
     setOpen(true);
   }
-
-  // Open immediately when revealed by an explicit "add" action.
-  useEffect(() => {
-    if (autoFocus) setOpen(true);
-  }, [autoFocus]);
 
   // Focus the search input once the portaled panel has mounted.
   useEffect(() => {
@@ -138,37 +132,43 @@ export function CategorySearch({
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      {/* Trigger button */}
-      <button
-        type="button"
-        onClick={openDropdown}
+      {/* Trigger controls are siblings so a selected service never creates a button inside a button. */}
+      <div
         className={cn(
           "w-full flex items-center justify-between h-11 px-3.5 rounded-xl border text-sm text-left transition-all bg-white shadow-sm",
           error ? "border-red-400" : "border-[#e5e7eb]",
           open ? "border-[#009FD9] ring-2 ring-[#009FD9]/20" : "hover:border-[#009FD9]/50"
         )}
       >
-        <span className="flex min-w-0 flex-1 items-center gap-2">
+        <button type="button" onClick={openDropdown} className="flex h-full min-w-0 flex-1 items-center gap-2 text-left">
           {!selectedLabel && <Search className="h-4 w-4 shrink-0 text-[#9ca3af]" />}
           {selectedLabel ? (
             <span className="truncate font-medium text-[#111827]">{selectedLabel}</span>
           ) : (
             <span className="truncate text-[#9ca3af]">{placeholder ?? t("placeholderDefault")}</span>
           )}
-        </span>
+        </button>
         <div className="flex items-center gap-1 shrink-0 ml-2">
           {clearable && value && (
             <button
               type="button"
               onClick={handleClear}
+              aria-label={locale === "en" ? "Clear service" : "Quitar servicio"}
               className="text-[#9ca3af] hover:text-[#374151] p-0.5"
             >
               <X className="h-3.5 w-3.5" />
             </button>
           )}
-          <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] transition-transform", open && "rotate-180")} />
+          <button
+            type="button"
+            onClick={openDropdown}
+            aria-label={placeholder ?? t("placeholderDefault")}
+            className="grid h-7 w-7 place-items-center text-[#9ca3af]"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
+          </button>
         </div>
-      </button>
+      </div>
 
       {/* Dropdown — portaled to <body> so no parent overflow can clip it, and
           positioned absolute in DOCUMENT coords so it stays attached below the
