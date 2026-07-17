@@ -2,7 +2,7 @@ import { expect, test } from "playwright/test";
 import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { CONTRATACR_PRODUCT_KNOWLEDGE } from "../../src/lib/ai/product-knowledge";
-import { getAllCategories, getCategoryLabel, resolveCategoryIntent } from "../../src/lib/data/categories";
+import { getAllCategories, getCategoryLabel, NATURAL_SERVICE_SCENARIOS, resolveCategoryIntent } from "../../src/lib/data/categories";
 
 type AssistantResponse = {
   answer?: string;
@@ -31,6 +31,19 @@ const ask = (page: Parameters<typeof apiJson>[0], message: string, options: Reco
   });
 
 test.describe.configure({ mode: "serial" });
+
+test.describe("@smoke ContrataCR AI service resolver", () => {
+  test("resolves a natural customer scenario for every catalog service", async () => {
+    const services = getAllCategories();
+    for (const service of services) {
+      const scenarios = NATURAL_SERVICE_SCENARIOS[service.id] ?? [];
+      expect(scenarios.length, `${service.id} needs at least one natural customer scenario`).toBeGreaterThan(0);
+      for (const scenario of scenarios) {
+        expect(resolveCategoryIntent(scenario, "es")?.id, scenario).toBe(service.id);
+      }
+    }
+  });
+});
 
 test.describe("@seeded ContrataCR AI", () => {
   test.skip(!canRunSeededRegression(), "Requires the isolated test Supabase seed.");
