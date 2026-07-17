@@ -437,7 +437,7 @@ export function BookingRequests() {
               return (
                 <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
                   {isActive && (
-                    <DirectChatLauncher bookingId={booking.id} professionalName={booking.client_name || t("thePerson")} contextTitle={booking.service_description} buttonLabel={t("contact")} className="inline-flex min-h-9 min-w-[8rem] flex-1 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] sm:flex-none" />
+                    <DirectChatLauncher bookingId={booking.id} professionalName={booking.client_name || t("thePerson")} contextTitle={booking.service_description} buttonLabel={t("contact")} className="min-h-9 min-w-[8rem] flex-1 rounded-lg px-4 text-sm font-bold sm:flex-none" />
                   )}
                   {isActive && (
                     <>

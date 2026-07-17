@@ -5,6 +5,7 @@ import { Loader2, MessageSquareMore } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 
 type DirectChatLauncherProps = {
   professionalId?: string;
@@ -73,7 +74,12 @@ export function DirectChatLauncher({
       onClick={openChat}
       disabled={loading}
       aria-busy={loading}
-      className={className || "w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#162543] py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#233a5f]"}
+      className={cn(
+        // Navy consistently identifies entry into person-to-person chat. Cyan remains
+        // reserved for the primary workflow action and the send button inside the chat.
+        "inline-flex items-center justify-center gap-1.5 bg-[#162543] text-white transition-colors hover:bg-[#233a5f] disabled:opacity-60",
+        className || "w-full rounded-full py-2.5 text-[13px] font-semibold",
+      )}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquareMore className="h-4 w-4" />}
       {buttonLabel || sendMessageLabel}
