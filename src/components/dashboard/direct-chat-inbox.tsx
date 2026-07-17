@@ -238,6 +238,11 @@ export function DirectChatInbox() {
   useEffect(() => { if (activeId) queueMicrotask(() => void loadThread(activeId)); }, [activeId, loadThread]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, threadLoading]);
   useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("contratacr-chat-thread-open", mobileThread);
+    return () => root.classList.remove("contratacr-chat-thread-open");
+  }, [mobileThread]);
+  useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = "auto";

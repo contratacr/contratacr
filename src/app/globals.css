@@ -302,6 +302,17 @@ input::-ms-clear {
   }
 }
 
+@media (max-width: 1023px) {
+  .contratacr-chat-thread-open .dashboard-mobile-nav,
+  .contratacr-chat-thread-open [data-ai-concierge-button] {
+    display: none !important;
+  }
+
+  .contratacr-chat-thread-open .dashboard-panel-content {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.75rem) !important;
+  }
+}
+
 /* Fade-in-up for scroll-triggered sections */
 .fade-in-up {
   opacity: 0;

@@ -467,6 +467,7 @@ export function AiConcierge() {
   if (!open) {
     return (
       <button
+        data-ai-concierge-button
         type="button"
         onClick={() => setOpen(true)}
         aria-label={copy.closedLabel}
