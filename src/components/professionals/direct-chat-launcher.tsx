@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Loader2, MessageCircle, Send, X } from "lucide-react";
+import { Loader2, MessageSquareMore, Send, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -31,7 +31,6 @@ export function DirectChatLauncher({
   contextTitle,
   isOwn = false,
   className = "",
-  buttonLabel,
   openDirectly = false,
   initialMessage = "",
   onSelfAction,
@@ -46,6 +45,7 @@ export function DirectChatLauncher({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const firstName = professionalName.split(" ")[0] || professionalName;
+  const sendMessageLabel = isEn ? "Send message" : "Enviar mensaje";
 
   useEffect(() => {
     if (!user || searchParams.get("chatProfessional") !== professionalId) return;
@@ -142,8 +142,8 @@ export function DirectChatLauncher({
         aria-busy={loading}
         className={className || "w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#162543] py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#233a5f]"}
       >
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
-        {buttonLabel || (isEn ? "Message" : "Enviar mensaje")}
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquareMore className="h-4 w-4" />}
+        {sendMessageLabel}
       </button>
 
       {open && (
@@ -151,7 +151,7 @@ export function DirectChatLauncher({
           <div className="w-full max-w-md overflow-hidden rounded-[28px] bg-white shadow-2xl">
             <div className="flex items-center gap-3 border-b border-[#e6eef4] px-5 py-4">
               <span className="grid h-11 w-11 place-items-center rounded-full bg-[#e8f8ff] text-[#009FD9]">
-                <MessageCircle className="h-5 w-5" />
+                <MessageSquareMore className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-extrabold text-[#162543]">
