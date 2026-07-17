@@ -16,6 +16,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -196,6 +197,7 @@ export function AiConcierge() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const lang = language(locale);
   const copy = COPY[lang];
@@ -469,9 +471,10 @@ export function AiConcierge() {
     }
   }
 
-  if (!sessionHydrated || pathname.startsWith("/admin") || externalDialogOpen) return null;
-
   const insideDashboard = pathname.startsWith("/dashboard/");
+  const insideDashboardChat = insideDashboard && searchParams.get("tab") === "chat";
+
+  if (!sessionHydrated || pathname.startsWith("/admin") || externalDialogOpen || insideDashboardChat) return null;
 
   if (!open) {
     return (

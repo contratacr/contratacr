@@ -113,7 +113,7 @@ export function DashboardRouteLoading() {
     <div className="min-h-screen bg-[#fafafa]" aria-busy="true">
       <Navbar />
       <main>
-        <div className="mx-auto max-w-5xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8 lg:pb-8">
+        <div className="mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8 lg:pb-8">
           <DashboardLoadingNotice locale={locale} />
         </div>
       </main>

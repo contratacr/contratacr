@@ -43,7 +43,7 @@ export function HeaderSaveStatus({ className }: { className?: string }) {
 
   return (
     <div className={cn("pointer-events-none fixed inset-x-0 top-[72px] z-50", className)}>
-      <div className="mx-auto flex w-full max-w-5xl justify-end px-4 sm:px-6">
+      <div className="mx-auto flex w-full max-w-7xl justify-end px-4 sm:px-6 lg:px-8">
         <div
           className={cn(
             "rounded-full border border-[#e5e7eb] bg-white/95 px-2.5 py-1 shadow-sm shadow-[#0f172a]/6 backdrop-blur transition-all duration-200",
