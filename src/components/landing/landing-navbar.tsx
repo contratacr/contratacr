@@ -202,7 +202,7 @@ function LanguageInline({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "grid grid-cols-2 gap-2",
+        "grid grid-cols-2 rounded-2xl bg-[#f3f6f9] p-1 shadow-inner shadow-slate-200/70",
         className
       )}
       role="group"
@@ -216,10 +216,10 @@ function LanguageInline({ className }: { className?: string }) {
             onClick={() => switchLang(l.code)}
             aria-pressed={active}
             className={cn(
-              "inline-flex h-10 items-center justify-center rounded-xl border px-3 text-sm font-bold transition-all",
+              "inline-flex h-10 items-center justify-center rounded-xl px-3 text-sm font-bold transition-all",
               active
-                ? "border-[#009FD9] bg-[#009FD9] text-white shadow-sm"
-                : "border-[#dbe7ef] bg-white text-[#64748b] shadow-sm hover:border-[#bfe3f5] hover:text-[#162543]",
+                ? "bg-[#009FD9] text-white shadow-sm"
+                : "text-[#64748b] hover:bg-white/70 hover:text-[#162543]",
             )}
           >
             <span>{l.label}</span>
@@ -1495,7 +1495,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     </div>
                   </div>
                   <div className="mt-1 flex flex-col gap-0.5 border-t border-[#edf2f7] pt-1">
-                    <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
+                    <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
                       <LayoutDashboard className={mobileIconClass(false)} />
                       <span className="min-w-0 flex-1">{t("myPanel")}</span>
                       <ChevronRight className={mobileChevronClass(false)} />
