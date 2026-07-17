@@ -8,7 +8,6 @@ import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
@@ -174,12 +173,6 @@ export function DirectChatInbox() {
     const labels = isEn ? { booking: "Request", project: "Post", proposal: "Proposal", profile: "Profile" } : { booking: "Solicitud", project: "Publicación", proposal: "Propuesta", profile: "Perfil" };
     return { type, label: labels[type], title: item.context?.service_description || item.context?.title || item.subject || (isEn ? "General inquiry" : "Consulta general") };
   }, [isEn]);
-  const perspectiveFor = useCallback((item: Conversation) => {
-    const asClient = user?.id === item.client_id;
-    if (isEn) return asClient ? "As client" : "As professional";
-    return asClient ? "Como cliente" : "Como profesional";
-  }, [isEn, user?.id]);
-
   const contextActionFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
     const labels = isEn ? { booking: "View request", project: "View post", proposal: "View proposal", profile: "View profile" } : { booking: "Ver solicitud", project: "Ver publicación", proposal: "Ver propuesta", profile: "Ver perfil" };
@@ -189,8 +182,8 @@ export function DirectChatInbox() {
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
     if (!needle) return displayedConversations;
-    return displayedConversations.filter((item) => `${personFor(item).name} ${perspectiveFor(item)} ${contextFor(item).label} ${contextFor(item).title} ${item.last_message ?? ""}`.toLocaleLowerCase(locale).includes(needle));
-  }, [contextFor, displayedConversations, locale, personFor, perspectiveFor, query]);
+    return displayedConversations.filter((item) => `${personFor(item).name} ${contextFor(item).label} ${contextFor(item).title} ${item.last_message ?? ""}`.toLocaleLowerCase(locale).includes(needle));
+  }, [contextFor, displayedConversations, locale, personFor, query]);
 
   const loadConversations = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -247,11 +240,8 @@ export function DirectChatInbox() {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle("contratacr-chat-thread-open", mobileThread);
-    const shouldLockScroll = mobileThread && window.matchMedia("(max-width: 1023px)").matches;
-    const releaseBodyScroll = shouldLockScroll ? lockBodyScroll() : () => {};
     return () => {
       root.classList.remove("contratacr-chat-thread-open");
-      releaseBodyScroll();
     };
   }, [mobileThread]);
   useEffect(() => {
@@ -402,7 +392,7 @@ export function DirectChatInbox() {
           {filtered.map((item) => { const person = personFor(item); const context = contextFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
             <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "bg-white shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block truncate text-xs font-bold text-[#0090c7]">{perspectiveFor(item)} · {context.label} · {context.title}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block truncate text-xs font-bold text-[#0090c7]">{context.label} · {context.title}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>); })}
           {!filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
         </div>
@@ -422,7 +412,7 @@ export function DirectChatInbox() {
             ) : (
               <p className="truncate text-sm font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
             )}
-            {active && activeContext && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{perspectiveFor(active)} · {activeContext.label}</p>}
+            {active && activeContext && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
             {activeContextTitle && <p className="mt-0.5 truncate text-xs font-semibold text-[#63748a]">{activeContextTitle}</p>}
             {detailHref && (
               <button type="button" onClick={() => router.push(detailHref)} className="mt-0.5 block max-w-full truncate text-left text-xs font-extrabold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
