@@ -311,6 +311,21 @@ input::-ms-clear {
   .contratacr-chat-thread-open .dashboard-panel-content {
     padding-bottom: max(env(safe-area-inset-bottom), 0.75rem) !important;
   }
+
+  .contratacr-chat-thread-open body {
+    overflow: hidden;
+  }
+
+  .contratacr-chat-thread-open .direct-chat-shell--thread {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: calc(var(--app-visual-viewport-top) + 64px);
+    z-index: 45;
+    height: calc(var(--app-visual-viewport-height) - 64px);
+    min-height: 0;
+    border-radius: 0;
+  }
 }
 
 /* Fade-in-up for scroll-triggered sections */
