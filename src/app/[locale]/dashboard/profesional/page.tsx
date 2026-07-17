@@ -660,7 +660,7 @@ export default function DashboardPage() {
   // "notifications" tab, which now has a dedicated slot), then the rest scrolls after.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = [...modeTabs, ...SHARED_TABS].filter((tab) => tab !== "assistant");
-  const barTabs: Tab[] = [...modeTabs, ...SHARED_TABS].filter((tab) => tab !== "assistant");
+  const barTabs: Tab[] = [...modeTabs, ...SHARED_TABS];
   const mobilePriorityTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
   const mobileBarTabs = [...mobilePriorityTabs, ...barTabs.filter((tab) => !mobilePriorityTabs.includes(tab))];
   const showProfileCompletion =

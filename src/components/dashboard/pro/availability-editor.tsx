@@ -904,9 +904,9 @@ export function AvailabilityEditor({
               </p>
             </div>
 
-            <div className="hidden grid-cols-[6.25rem_5.75rem_minmax(12rem,1fr)_6.75rem] border-b border-[#f3f4f6] px-5 py-3 text-xs font-semibold text-[#6b7280] lg:grid">
+            <div className="hidden grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(18rem,2fr)_minmax(7rem,1fr)] border-b border-[#f3f4f6] px-5 py-3 text-xs font-semibold text-[#6b7280] lg:grid">
               <span>{t("date")}</span>
-              <span>{t("availableColumn")}</span>
+              <span className="text-center">{t("availableColumn")}</span>
               <span className="text-center">{t("scheduleColumn")}</span>
               <span className="text-center">{t("actionsColumn")}</span>
             </div>
@@ -924,7 +924,7 @@ export function AvailabilityEditor({
                   </div>
                 );
                 return (
-                  <div key={wd} className="min-w-0 px-4 py-4 lg:grid lg:grid-cols-[6.25rem_5.75rem_minmax(12rem,1fr)_6.75rem] lg:items-start lg:gap-3 lg:px-5">
+                  <div key={wd} className="min-w-0 px-4 py-4 lg:grid lg:grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(18rem,2fr)_minmax(7rem,1fr)] lg:items-start lg:gap-3 lg:px-5">
                     <div className="flex min-w-0 items-center justify-between gap-3 lg:block">
                       <span className="min-w-0 text-sm font-semibold text-[#111827]">{t(`weekday${wd}` as `weekday${number}`)}</span>
                       <button
@@ -939,7 +939,7 @@ export function AvailabilityEditor({
                       </button>
                     </div>
 
-                    <div className="hidden min-w-0 items-center lg:flex">
+                    <div className="hidden min-w-0 items-center justify-center lg:flex">
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}

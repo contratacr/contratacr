@@ -49,6 +49,16 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    return () => {
+      window.history.scrollRestoration = previousRestoration;
+    };
+  }, []);
+
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
   // dispatches `ccr:open-filters`; the drawer's in-card X dispatches `ccr:close-filters`.
   useEffect(() => {
