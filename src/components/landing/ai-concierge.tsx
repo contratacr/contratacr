@@ -17,7 +17,6 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -203,7 +202,6 @@ export function AiConcierge() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const lang = language(locale);
   const copy = COPY[lang];
@@ -213,7 +211,6 @@ export function AiConcierge() {
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState("");
   const [showHistory, setShowHistory] = useState(false);
-  const [externalDialogOpen, setExternalDialogOpen] = useState(false);
   const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([]);
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -268,29 +265,6 @@ export function AiConcierge() {
     window.addEventListener("keydown", minimizeOnEscape);
     return () => window.removeEventListener("keydown", minimizeOnEscape);
   }, [open]);
-
-  useEffect(() => {
-    const updateDialogState = () => {
-      const dialogs = document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]');
-      setExternalDialogOpen(Array.from(dialogs).some((dialog) => {
-        if (dialog.hasAttribute("data-ai-concierge-dialog") || dialog.hasAttribute("data-nextjs-dialog")) return false;
-        if (dialog.getAttribute("aria-hidden") === "true" || dialog.hidden) return false;
-        const style = window.getComputedStyle(dialog);
-        if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return false;
-        const rect = dialog.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0 && rect.right > 0 && rect.bottom > 0 && rect.left < window.innerWidth && rect.top < window.innerHeight;
-      }));
-    };
-    updateDialogState();
-    const observer = new MutationObserver(updateDialogState);
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["aria-hidden", "class", "hidden", "style"],
-      childList: true,
-      subtree: true,
-    });
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -486,9 +460,8 @@ export function AiConcierge() {
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/");
-  const insideDashboardChat = insideDashboard && searchParams.get("tab") === "chat";
 
-  if (!sessionHydrated || pathname.startsWith("/admin") || externalDialogOpen || insideDashboardChat) return null;
+  if (!sessionHydrated || pathname.startsWith("/admin")) return null;
 
   if (!open) {
     return (
@@ -497,7 +470,7 @@ export function AiConcierge() {
         onClick={() => setOpen(true)}
         aria-label={copy.closedLabel}
         className={cn(
-          "group fixed right-3 z-50 grid h-14 w-14 place-items-center overflow-visible bg-transparent transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 sm:bottom-6 sm:right-6 sm:h-[72px] sm:w-[72px]",
+          "group fixed right-3 z-[95] grid h-14 w-14 place-items-center overflow-visible bg-transparent transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 sm:bottom-6 sm:right-6 sm:h-[72px] sm:w-[72px]",
           insideDashboard
             ? "bottom-[calc(5.4rem+env(safe-area-inset-bottom))]"
             : "bottom-[calc(0.85rem+env(safe-area-inset-bottom))]",
@@ -517,7 +490,7 @@ export function AiConcierge() {
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) setOpen(false);
       }}
-      className="fixed inset-0 z-[70] flex items-end justify-end bg-[#071426]/35 backdrop-blur-[5px] sm:items-center sm:p-5"
+      className="fixed inset-0 z-[100] flex items-end justify-end bg-[#071426]/35 backdrop-blur-[5px] sm:items-center sm:p-5"
     >
       <div className="flex h-[min(820px,calc(100dvh-0.75rem))] w-full flex-col overflow-hidden rounded-t-[34px] border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)] sm:h-[min(780px,calc(100dvh-2.5rem))] sm:w-[520px] sm:rounded-[34px]">
         <header className="relative flex shrink-0 items-center gap-2 border-b border-[#cfe3f4] bg-[linear-gradient(120deg,#ffffff_0%,#f3f9ff_100%)] px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
