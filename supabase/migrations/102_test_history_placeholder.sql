@@ -1,0 +1,3 @@
+-- Test-only history placeholder.
+-- Version 102 was previously applied to the isolated test database by the
+-- experimental Pro branch. Pro remains local-only; no Pro schema is applied here.

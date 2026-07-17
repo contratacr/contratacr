@@ -1,0 +1,2 @@
+-- Test-only history placeholder.
+-- Version 105 is retained so Supabase CLI can reconcile the existing test history.
