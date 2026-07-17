@@ -1,18 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Bookmark, MapPin, Star, CheckCircle2, ExternalLink, Wrench } from "lucide-react";
+import { Bookmark, MapPin, Star, ExternalLink, Wrench } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { applyPendingSavedPro, getSavedPros, unsavePro, type SavedPro } from "./save-button";
+import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsavePro, type SavedPro } from "./save-button";
 import { useLocale, useTranslations } from "next-intl";
 import { formatServicePrice } from "@/lib/pricing";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { PanelSectionLoading } from "@/components/ui/content-loading";
 import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
 
 function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string) => void }) {
   const tSaved = useTranslations("savedPros");
+  const tCard = useTranslations("card");
   const locale = useLocale();
 
   return (
@@ -32,7 +34,11 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="font-semibold leading-5 text-[#162543] text-sm">{pro.fullName}</span>
-          {pro.isVerified && <CheckCircle2 className="h-3.5 w-3.5 text-[#009FD9] shrink-0" />}
+          {pro.isVerified && (
+            <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
+              {tCard("verifiedShort")}
+            </span>
+          )}
         </div>
         <div className="mt-1 grid gap-1 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
           <span className="flex items-center gap-1 text-xs text-[#6b7280]">
@@ -40,7 +46,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
           </span>
           <span className="flex items-center gap-1 text-xs text-[#6b7280]">
             <MapPin className="h-3 w-3 shrink-0 text-[#374151]" />
-            {pro.cantonName}, {pro.provinceName}
+            {[pro.cantonName, pro.provinceName].filter(Boolean).join(", ")}
           </span>
         </div>
         <div className="flex items-center gap-1 mt-1">
@@ -72,7 +78,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
         <button
           onClick={() => onUnsave(pro.id)}
           aria-label={tSaved("unsave")}
-          className="p-2 rounded-xl text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors"
+          className="p-2 rounded-xl text-[#009FD9] hover:text-red-500 hover:bg-red-50 transition-colors"
         >
           <Bookmark className="h-4 w-4 fill-current" />
         </button>
@@ -92,8 +98,11 @@ export function SavedProfessionalsTab() {
   }, [user]);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      if (user) applyPendingSavedPro(user.id);
+    queueMicrotask(async () => {
+      if (user) {
+        await applyPendingSavedPro(user.id);
+        await syncSavedPros(user.id, true);
+      }
       setMounted(true);
       refresh();
     });
@@ -101,8 +110,15 @@ export function SavedProfessionalsTab() {
     return () => window.removeEventListener("savedProsChanged", refresh);
   }, [refresh, user]);
 
-  function handleUnsave(id: string) {
-    if (user) unsavePro(id, user.id);
+  async function handleUnsave(id: string) {
+    if (user) {
+      unsavePro(id, user.id);
+      await createClient()
+        .from("saved_professionals")
+        .delete()
+        .eq("client_id", user.id)
+        .eq("professional_id", id);
+    }
     setSaved((prev) => prev.filter((p) => p.id !== id));
   }
 

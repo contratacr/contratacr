@@ -10,6 +10,9 @@ import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_PREFIX = "contratacr_saved_pros";
 const PENDING_SAVE_KEY = "contratacr:pending-save-pro";
+const SYNCED_PREFIX = "contratacr_saved_pros_synced";
+const syncRequests = new Map<string, Promise<SavedPro[]>>();
+const lastSyncAt = new Map<string, number>();
 
 // Favorites are scoped to the signed-in user so two accounts on the same browser
 // never see each other's saved pros. We derive the user id synchronously from
@@ -82,12 +85,84 @@ export function isSaved(id: string, userId?: string): boolean {
   return getSavedPros(userId).some((p) => p.id === id);
 }
 
+function setSavedPros(pros: SavedPro[], userId: string) {
+  localStorage.setItem(storageKey(userId), JSON.stringify(pros));
+}
+
+async function upsertRemoteSavedPros(userId: string, pros: SavedPro[]) {
+  if (pros.length === 0) return true;
+  const { error } = await createClient().from("saved_professionals").upsert(
+    pros.map((pro) => ({ client_id: userId, professional_id: pro.id, snapshot: pro })),
+    { onConflict: "client_id,professional_id" },
+  );
+  return !error;
+}
+
+/** Remote favorites are canonical after a one-time upload of this browser's old local favorites. */
+export function syncSavedPros(userId: string, force = false): Promise<SavedPro[]> {
+  if (!force) {
+    const pending = syncRequests.get(userId);
+    if (pending) return pending;
+    if (Date.now() - (lastSyncAt.get(userId) ?? 0) < 2_000) {
+      return Promise.resolve(getSavedPros(userId));
+    }
+  }
+
+  const request = (async () => {
+    const local = getSavedPros(userId);
+    const migrationKey = `${SYNCED_PREFIX}_${userId}`;
+    const migrated = localStorage.getItem(migrationKey) === "1";
+    const supabase = createClient();
+
+    if (!migrated && local.length > 0) {
+      const uploaded = await upsertRemoteSavedPros(userId, local);
+      if (!uploaded) return local;
+    }
+
+    const { data, error } = await supabase
+      .from("saved_professionals")
+      .select("professional_id, snapshot")
+      .eq("client_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) return local;
+
+    const remote = (data ?? [])
+      .map((row) => row.snapshot as SavedPro | null)
+      .filter((pro): pro is SavedPro => Boolean(pro?.id && pro?.slug && pro?.fullName));
+    setSavedPros(remote, userId);
+    localStorage.setItem(migrationKey, "1");
+    lastSyncAt.set(userId, Date.now());
+    window.dispatchEvent(new CustomEvent("savedProsChanged"));
+    return remote;
+  })();
+
+  syncRequests.set(userId, request);
+  request.finally(() => {
+    if (syncRequests.get(userId) === request) syncRequests.delete(userId);
+  });
+  return request;
+}
+
+async function saveProRemote(pro: SavedPro, userId: string) {
+  savePro(pro, userId);
+  await upsertRemoteSavedPros(userId, [pro]);
+}
+
+async function unsaveProRemote(id: string, userId: string) {
+  unsavePro(id, userId);
+  await createClient()
+    .from("saved_professionals")
+    .delete()
+    .eq("client_id", userId)
+    .eq("professional_id", id);
+}
+
 function writePendingSave(pro: SavedPro) {
   if (typeof window === "undefined") return;
   localStorage.setItem(PENDING_SAVE_KEY, JSON.stringify(pro));
 }
 
-export function applyPendingSavedPro(userId?: string): boolean {
+export async function applyPendingSavedPro(userId?: string): Promise<boolean> {
   const resolvedUserId = userId || currentUserId();
   if (typeof window === "undefined" || resolvedUserId === "guest") return false;
   try {
@@ -98,7 +173,7 @@ export function applyPendingSavedPro(userId?: string): boolean {
       localStorage.removeItem(PENDING_SAVE_KEY);
       return false;
     }
-    savePro(pro, resolvedUserId);
+    await saveProRemote(pro, resolvedUserId);
     localStorage.removeItem(PENDING_SAVE_KEY);
     window.dispatchEvent(new CustomEvent("savedProsChanged"));
     return true;
@@ -134,8 +209,21 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
     // SaveButton instance) — cross-PAGE sync already happens via localStorage on mount.
     const sync = () => setSaved(user ? isSaved(pro.id, user.id) : false);
     sync();
+    const syncRemote = () => {
+      if (user) void syncSavedPros(user.id).then(sync);
+    };
+    syncRemote();
+    const syncWhenVisible = () => {
+      if (document.visibilityState === "visible") syncRemote();
+    };
     window.addEventListener("savedProsChanged", sync);
-    return () => window.removeEventListener("savedProsChanged", sync);
+    window.addEventListener("focus", syncRemote);
+    document.addEventListener("visibilitychange", syncWhenVisible);
+    return () => {
+      window.removeEventListener("savedProsChanged", sync);
+      window.removeEventListener("focus", syncRemote);
+      document.removeEventListener("visibilitychange", syncWhenVisible);
+    };
   }, [pro.id, user]);
 
   async function toggle(e: React.MouseEvent) {
@@ -158,10 +246,10 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
     }
     if (!activeUser) return;
     if (saved) {
-      unsavePro(pro.id, activeUser.id);
+      await unsaveProRemote(pro.id, activeUser.id);
       setSaved(false);
     } else {
-      savePro(pro, activeUser.id);
+      await saveProRemote(pro, activeUser.id);
       setSaved(true);
     }
     /* dispatch custom event so saved-tab + any other SaveButton refresh */
