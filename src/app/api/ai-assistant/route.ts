@@ -581,6 +581,9 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
       ctaLabel: locale === "en" ? "Open my dashboard" : "Ir a mi panel",
     };
   }
+  if (includesAny(normalized, ["ver oportunidades", "donde veo oportunidades", "donde reviso oportunidades", "mis oportunidades", "ver propuestas", "mis propuestas", "view opportunities", "my opportunities", "my proposals"])) {
+    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open opportunities" : "Ver oportunidades" };
+  }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {
     return { ...payload, action: "support", ctaLabel: locale === "en" ? "Open support" : "Ir a soporte" };
   }

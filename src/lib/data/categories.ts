@@ -971,13 +971,13 @@ const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   limpieza: ["limpiar mi casa", "limpiar casa", "limpiar el hogar", "limpieza de mi casa", "asear mi casa", "servicio domestico", "clean my house", "clean my home", "house cleaned", "home cleaned"],
   limpieza_oficinas: ["limpiar oficina", "limpieza de oficina", "aseo de oficina", "limpiar local"],
   plomeria: ["arreglar fuga", "tengo una fuga", "arreglar tubo", "tuberia reventada", "se revento una tuberia", "revento una tuberia", "destapar inodoro", "destapar caneria", "arreglar lavamanos", "fix a water leak", "fix leak", "burst pipe", "water leak", "clogged toilet"],
-  electricidad: ["arreglar luz", "poner enchufe", "instalar toma", "problema electrico", "se fue la luz", "cambiar breaker", "electricista", "electrician"],
+  electricidad: ["arreglar luz", "poner enchufe", "instalar toma", "problema electrico", "se fue la luz", "no tengo luz en media casa", "cambiar breaker", "electricista", "electrician"],
   pintura: ["pintar mi casa", "pintar cuarto", "pintar pared", "pintar sala", "paint my house", "paint my living room", "paint a room"],
   jardineria: ["cortar zacate", "cortar el zacate", "arreglar jardin", "limpiar jardin", "mantenimiento jardin"],
   mudanzas: ["mudarme", "hacer mudanza", "mover muebles", "necesito mudanza"],
   lavado_muebles: ["lavar sillon", "lavar sillones", "limpiar sofa", "lavar colchon", "lavado de muebles"],
   reparacion_computadoras: ["arreglar computadora", "arreglar laptop", "mi computadora no enciende", "reparar pc", "reparar laptop", "repair my laptop", "fix my laptop", "repair computer", "fix computer"],
-  reparacion_celulares: ["arreglar celular", "pantalla quebrada", "cambiar pantalla", "reparar telefono", "mi celular no carga"],
+  reparacion_celulares: ["arreglar celular", "pantalla quebrada", "cambiar pantalla", "reparar telefono", "mi celular no carga", "my phone screen is broken", "phone screen is broken"],
   reparacion_impresoras: ["arreglar impresora", "mantenimiento impresora", "impresora atascada", "cambiar toner"],
   redes_internet: [
     "redes",
@@ -1019,7 +1019,7 @@ const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   lavanderia: ["lavar ropa", "planchado", "lavaseco", "lavar edredon"],
   diseno: ["diseño arte", "diseno arte", "diseño y arte", "diseno y arte", "diseño / arte", "necesito diseño", "necesito arte", "arte digital", "ilustracion", "ilustración", "artista", "diseñador"],
   fotografia: ["tomar fotos profesionales", "sesion de fotos", "fotografo profesional"],
-  fotografia_eventos: ["fotografo para boda", "fotografo para evento", "fotos de quinceanos"],
+  fotografia_eventos: ["fotografo para boda", "fotografo para evento", "fotos de quinceanos", "i need a photographer for my wedding", "photographer for my wedding"],
   organizacion_eventos: ["organizar boda", "organizar fiesta", "event planner", "coordinador de eventos"],
   dj_sonido: ["musica para fiesta", "dj para fiesta", "sonido para evento", "dj for a party", "sound for event"],
   catering: ["comida para evento", "comida para fiesta", "banquete para evento"],
@@ -1029,6 +1029,10 @@ const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   polarizado: ["polarizar carro", "poner polarizado", "lamina solar carro"],
   aire_acondicionado: ["arreglar aire acondicionado", "instalar aire acondicionado", "mantenimiento de aire"],
   soporte_tecnico: ["la compu no conecta"],
+  fumigacion: ["hay cucarachas en la cocina"],
+  herreria: ["quiero rejas para la casa"],
+  arquitectura: ["necesito planos para construir"],
+  desarrollo_web: ["i need a website for my business"],
 };
 
 export const NATURAL_SERVICE_SCENARIOS: Record<string, string[]> = {
