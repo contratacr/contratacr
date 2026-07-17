@@ -5,7 +5,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { EmojiBlocker } from "@/components/util/emoji-blocker";
-import { BackToTop } from "@/components/landing/back-to-top";
+import { AiConcierge } from "@/components/landing/ai-concierge";
 import { NotificationLiveToast } from "@/components/notifications/notification-live-toast";
 import { CustomCategoriesLoader } from "@/lib/data/use-custom-categories";
 import { ViewportEnvironment } from "@/components/util/viewport-environment";
@@ -142,7 +142,7 @@ export default async function LocaleLayout({
           <MetaPixel pixelId={META_PIXEL_ID} />
         </Suspense>
         {children}
-        <BackToTop />
+        <AiConcierge />
       </AuthProvider>
     </NextIntlClientProvider>
   );

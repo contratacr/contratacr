@@ -1,0 +1,25 @@
+name: Apply AI history migration to test once
+
+on:
+  push:
+    branches: [test]
+    paths:
+      - "supabase/migrations/130_ai_chat_history.sql"
+      - ".github/workflows/apply-ai-history-test-once.yml"
+
+jobs:
+  migrate:
+    environment: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.0
+      - name: Apply pending test migration
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL"
+          supabase db push --db-url "$SUPABASE_DB_URL" --yes --include-all
