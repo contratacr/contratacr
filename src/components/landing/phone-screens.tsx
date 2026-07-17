@@ -119,14 +119,14 @@ export function SearchScreen() {
 function ProCard({
   rank, initials, image, company, person, profession, categories, place, address,
   rating, reviews, price, priceUnit, verified,
-  schedule, viewSchedule, messageLabel, noScheduleNote,
+  schedule, viewSchedule, noScheduleNote,
 }: {
   rank: number;
   initials: string; image?: string; company: string; person?: string; profession: string; categories?: string[];
   place: string; address?: string;
   rating: string; reviews: string; price: string; priceUnit?: string; verified: string;
   schedule?: { label: string; times: string[] }[];
-  viewSchedule: string; messageLabel: string; noScheduleNote?: string;
+  viewSchedule: string; noScheduleNote?: string;
 }) {
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-[0_1px_3px_rgba(16,24,40,0.05)]">
@@ -210,7 +210,6 @@ function ProCard({
           </div>
           {/* Direct actions, matching the real search-card contact language. */}
           <button className="mt-2.5 w-full rounded-full bg-[#009FD9] py-2 text-[10px] font-semibold text-white">{viewSchedule}</button>
-          <button className="mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#b7dcff] bg-[#eef8fd] py-2 text-[10px] font-bold text-[#0089bb]"><MessageCircle className="h-3 w-3" /> {messageLabel}</button>
         </>
       ) : (
         <>
@@ -221,7 +220,6 @@ function ProCard({
               <p className="line-clamp-2 text-[9px] leading-snug text-[#0089bb]">{noScheduleNote}</p>
             </div>
           ) : null}
-          <button className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] py-2 text-[10px] font-bold text-white"><MessageCircle className="h-3 w-3" /> {messageLabel}</button>
         </>
       )}
     </div>
@@ -232,7 +230,7 @@ export type ResultsCopyTranslation = (key: string, values?: Record<string, strin
 
 export type ResultsCopy = {
   title: string; categories: string[]; results: string; search: string; verified: string;
-  messageLabel: string; viewSchedule: string; noScheduleNote: string; priceUnit: string; priceOnRequest: string; secondaryProfession: string;
+  viewSchedule: string; noScheduleNote: string; priceUnit: string; priceOnRequest: string; secondaryProfession: string;
   primaryPlace: string; primaryAddress?: string; secondaryPlace: string; secondaryAddress?: string;
   reviews: (n: number) => string;
   days: { label: string; times: string[] }[];
@@ -246,7 +244,6 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
   results: "3 profesionales en Costa Rica",
   search: "Desarrollo web y Redes e Internet en Costa Rica",
   verified: "Verificado",
-  messageLabel: "Enviar mensaje",
   viewSchedule: "Ver horario completo",
   noScheduleNote: "Los horarios se coordinan directamente. Contacta para consultar disponibilidad.",
   priceUnit: "/hora",
@@ -293,7 +290,6 @@ export function buildLandingResultsCopy({
     results: tLanding("mockResults"),
     search: tLanding("mockSearch"),
     verified: tCard("verifiedShort"),
-    messageLabel: isEnglish ? "Send message" : "Enviar mensaje",
     viewSchedule: tSchedule("viewFullSchedule"),
     noScheduleNote: tSchedule("availabilityHiddenNote"),
     priceUnit: tCard("perHour"),
@@ -325,13 +321,13 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
           rank={1} initials="SG" image={cloudinaryAssetUrl("sgimage_psyvpn_hyyp4c.jpg", "f_auto,q_auto")} company="SG Solutions" person="Luis Sanchez" profession={copy.title} categories={copy.categories}
           place={copy.primaryPlace} address={copy.primaryAddress} rating="4.9" reviews={copy.reviews(48)}
           price={copy.priceOnRequest} verified={copy.verified} schedule={copy.days}
-          viewSchedule={copy.viewSchedule} messageLabel={copy.messageLabel}
+          viewSchedule={copy.viewSchedule}
         />
         <ProCard
           rank={2} initials="CR" image="/logo-mark-transparent.png" company="ContrataCR" profession={copy.secondaryProfession}
           place={copy.secondaryPlace} address={copy.secondaryAddress} rating="4.8" reviews={copy.reviews(31)}
           price={copy.priceOnRequest} verified={copy.verified}
-          viewSchedule={copy.viewSchedule} messageLabel={copy.messageLabel} noScheduleNote={copy.noScheduleNote}
+          viewSchedule={copy.viewSchedule} noScheduleNote={copy.noScheduleNote}
         />
       </div>
     </div>
