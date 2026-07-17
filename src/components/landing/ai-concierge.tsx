@@ -268,6 +268,8 @@ export function AiConcierge() {
 
   useEffect(() => {
     if (!open) return;
+    const shouldLockScroll = window.matchMedia("(max-width: 639px)").matches;
+    if (!shouldLockScroll) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -493,9 +495,9 @@ export function AiConcierge() {
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) setOpen(false);
       }}
-      className="fixed inset-0 z-[100] flex items-end justify-end bg-[#071426]/35 backdrop-blur-[5px] sm:items-center sm:p-5"
+      className="fixed inset-0 z-[100] flex items-end justify-end bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:bg-transparent sm:p-0 sm:backdrop-blur-none"
     >
-      <div className="flex h-[min(820px,calc(100dvh-0.75rem))] w-full flex-col overflow-hidden rounded-t-[34px] border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)] sm:h-[min(780px,calc(100dvh-2.5rem))] sm:w-[520px] sm:rounded-[34px]">
+      <div className="flex h-[min(820px,calc(100dvh-0.75rem))] w-full flex-col overflow-hidden rounded-t-[34px] border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]">
         <header className="relative flex shrink-0 items-center gap-2 border-b border-[#cfe3f4] bg-[linear-gradient(120deg,#ffffff_0%,#f3f9ff_100%)] px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
           <div className="-my-2 -ml-1 h-[68px] w-[68px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
