@@ -682,7 +682,14 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   const profileContactButtons = (
     <>
-      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} className={messageButtonClass} />
+      <DirectChatLauncher
+        professionalId={professional.id}
+        professionalName={professional.fullName}
+        isOwn={isOwn}
+        onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
+        tone={hasSchedule ? "contrast" : "primary"}
+        className={messageButtonClass}
+      />
       {(showCall || showEmail) && (
         <div className={`grid gap-2 ${showCall && showEmail ? "grid-cols-2" : "grid-cols-1"}`}>
           {showCall && renderCall(true)}
