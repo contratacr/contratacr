@@ -20,7 +20,6 @@ import { cleanId, detectIdType, formatId, isValidId } from "@/lib/cedula";
 import { isMinorFromDob } from "@/lib/age";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
-import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -394,7 +393,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 )}
                 {identityLookup === "found" && officialName && (
                   <div className="flex items-start gap-3 rounded-2xl border border-[#bae6fd] bg-[#f8fbff] px-4 py-3.5 shadow-sm">
-                    <BrandIconBadge icon={ShieldCheck} size={36} className="mt-0.5" />
+                    <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-[#64748b]">{t("cedulaOwnerTitle")}</p>
                       <p className="mt-1 break-words text-sm font-bold leading-5 text-[#162543]">{officialName}</p>

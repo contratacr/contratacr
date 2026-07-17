@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import { ShieldCheck } from "lucide-react";
 import { formatId } from "@/lib/cedula";
 import { computeAge, formatAge } from "@/lib/age";
-import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 
 // Shared confirmation block shown after a cedula -> padron lookup or for stored
 // identity data. Keep the visual calm: title as context, official name as primary
@@ -32,7 +31,7 @@ export function IdentityInfoBlock({
   return (
     <div className="rounded-2xl border border-[#bae6fd] bg-[#f8fbff] px-4 py-3 shadow-sm">
       <div className="flex items-start gap-3">
-        <BrandIconBadge icon={ShieldCheck} size={36} className="mt-0.5" />
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
 
         <div className="min-w-0 flex-1">
           {verified && <p className="text-xs font-semibold text-[#64748b]">{t("confirmed")}</p>}
