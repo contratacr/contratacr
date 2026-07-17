@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Archive, ArchiveRestore, ArrowLeft, BriefcaseBusiness, CalendarDays, ExternalLink, Loader2, MessageCircle, Search, Send } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -29,6 +29,19 @@ function timeLabel(value?: string | null, locale = "es") {
   const today = new Date();
   if (date.toDateString() === today.toDateString()) return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(date);
+}
+
+function ChatActionButton({ label, children, onClick, className }: { label: string; children: ReactNode; onClick: () => void; className?: string }) {
+  return (
+    <span className="group relative inline-flex">
+      <button type="button" onClick={onClick} aria-label={label} className={className}>
+        {children}
+      </button>
+      <span className="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-20 max-w-[190px] rounded-lg bg-[#162543] px-2.5 py-1.5 text-center text-[11px] font-bold leading-tight text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100">
+        {label}
+      </span>
+    </span>
+  );
 }
 
 export function DirectChatInbox() {
@@ -150,10 +163,25 @@ export function DirectChatInbox() {
   const activePerson = active ? personFor(active) : null;
   const activeContext = active ? contextFor(active) : null;
   const detailHref = active ? contextHref(active) : null;
+  const detailLabel = activeContext?.type === "profile" ? (isEn ? "View profile" : "Ver perfil") : (isEn ? "View linked item" : "Ver trabajo");
+  const archiveLabel = showArchived ? (isEn ? "Restore conversation" : "Restaurar conversación") : (isEn ? "Archive conversation" : "Archivar conversación");
   return (
     <div className="grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
       <aside className={cn("min-h-0 border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>
-        <div className="border-b border-[#e3ebf1] p-4"><div className="flex items-center justify-between gap-3"><h2 className="text-lg font-extrabold text-[#162543]">{isEn ? "Messages" : "Mensajes"}</h2><button type="button" onClick={() => { setShowArchived((value) => !value); setActiveId(null); setMobileThread(false); }} className="text-xs font-bold text-[#008fc4] hover:underline">{showArchived ? (isEn ? "Active" : "Activos") : (isEn ? "Archived" : "Archivados")}</button></div><div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div></div>
+        <div className="border-b border-[#e3ebf1] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-extrabold text-[#162543]">{isEn ? "Messages" : "Mensajes"}</h2>
+            <div className="grid grid-cols-2 rounded-xl border border-[#d6e4ed] bg-white p-1 text-[11px] font-extrabold shadow-sm">
+              <button type="button" onClick={() => { if (showArchived) { setShowArchived(false); setActiveId(null); setMobileThread(false); } }} className={cn("h-8 rounded-lg px-2 transition", !showArchived ? "bg-[#009FD9] text-white shadow-sm" : "text-[#64748b] hover:bg-[#f3f8fb]")}>
+                {isEn ? "Active" : "Activos"}
+              </button>
+              <button type="button" onClick={() => { if (!showArchived) { setShowArchived(true); setActiveId(null); setMobileThread(false); } }} className={cn("h-8 rounded-lg px-2 transition", showArchived ? "bg-[#009FD9] text-white shadow-sm" : "text-[#64748b] hover:bg-[#f3f8fb]")}>
+                {isEn ? "Archived" : "Archivados"}
+              </button>
+            </div>
+          </div>
+          <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>
+        </div>
         <div className="h-[calc(100%-105px)] overflow-y-auto">
           {filtered.map((item) => { const person = personFor(item); const context = contextFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
             <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "bg-white shadow-[inset_3px_0_0_#009FD9]")}>
@@ -168,9 +196,9 @@ export function DirectChatInbox() {
         <header className="flex min-h-[65px] items-center gap-3 border-b border-[#e3ebf1] px-3 py-3 sm:px-5">
           <button type="button" onClick={() => setMobileThread(false)} className="grid h-9 w-9 place-items-center text-[#526277] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
           <Avatar className="h-10 w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(activePerson?.name || "")}</AvatarFallback></Avatar>
-          <div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-[#162543]">{activePerson?.name}</p><p className="truncate text-xs font-semibold text-[#63748a]">{activeContext?.label} · {activeContext?.title}</p></div>
-          {detailHref && <button type="button" onClick={() => router.push(detailHref)} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#cfe3ee] px-3 text-xs font-bold text-[#008fc4] hover:bg-[#f2fbfe]"><span className="hidden sm:inline">{isEn ? "View details" : "Ver detalle"}</span><ExternalLink className="h-4 w-4" /></button>}
-          <button type="button" onClick={() => void toggleArchiveActive()} title={showArchived ? (isEn ? "Restore conversation" : "Restaurar conversación") : (isEn ? "Archive conversation" : "Archivar conversación")} aria-label={showArchived ? (isEn ? "Restore conversation" : "Restaurar conversación") : (isEn ? "Archive conversation" : "Archivar conversación")} className="grid h-9 w-9 place-items-center rounded-lg text-[#64748b] hover:bg-[#f0f5f8]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</button>
+          <div className="min-w-0 flex-1"><p className="text-sm font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p><p className="mt-0.5 truncate text-xs font-semibold text-[#63748a]">{activeContext?.label} · {activeContext?.title}</p></div>
+          {detailHref && <ChatActionButton label={detailLabel} onClick={() => router.push(detailHref)} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#cfe3ee] bg-white px-2.5 text-xs font-bold text-[#008fc4] shadow-sm transition hover:bg-[#f2fbfe]"><span className="hidden xl:inline">{detailLabel}</span><ExternalLink className="h-4 w-4" /></ChatActionButton>}
+          <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
         </header>
         <div className="flex items-center gap-2 border-b border-[#e7eef3] bg-[#f8fbfd] px-4 py-2 text-xs font-semibold text-[#607188]">{activeContext?.type === "booking" ? <CalendarDays className="h-4 w-4 text-[#009FD9]" /> : <BriefcaseBusiness className="h-4 w-4 text-[#009FD9]" />}{isEn ? "Conversation linked to this item" : "Conversación vinculada a este trabajo"}</div>
         <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-[#f3f7fa] px-4 py-5 sm:px-6">
