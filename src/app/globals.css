@@ -217,6 +217,30 @@ input::-ms-clear {
   70%, 100%  { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes ai-concierge-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+@keyframes ai-concierge-glow {
+  0%, 72%, 100% { filter: drop-shadow(0 10px 18px rgba(0, 159, 217, 0.18)); }
+  80%           { filter: drop-shadow(0 12px 24px rgba(0, 159, 217, 0.34)); }
+  88%           { filter: drop-shadow(0 10px 18px rgba(0, 159, 217, 0.2)); }
+}
+
+.ai-concierge-float {
+  animation:
+    ai-concierge-float 3.8s ease-in-out infinite,
+    ai-concierge-glow 8s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-concierge-float {
+    animation: none;
+  }
+}
+
 .animate-marquee-infinite {
   animation: marquee-infinite 32s linear infinite;
 }

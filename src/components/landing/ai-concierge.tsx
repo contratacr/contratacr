@@ -476,7 +476,11 @@ export function AiConcierge() {
             : "bottom-[calc(0.85rem+env(safe-area-inset-bottom))]",
         )}
       >
-        <div className="absolute inset-0 scale-[1.15] sm:scale-[1.2]"><RobotMark /></div>
+        <div className="absolute inset-0 scale-[1.15] sm:scale-[1.2]">
+          <div className="ai-concierge-float h-full w-full">
+            <RobotMark />
+          </div>
+        </div>
       </button>
     );
   }
