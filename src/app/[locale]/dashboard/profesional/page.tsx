@@ -155,6 +155,7 @@ export default function DashboardPage() {
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const shouldCheckOpportunityWelcome = searchParams.get("welcomeOpportunities") === "1";
   const opportunityWelcomeParamCount = Math.max(0, Number.parseInt(searchParams.get("welcomeOpportunityCount") ?? "0", 10) || 0);
+  const searchParamsKey = searchParams.toString();
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<DashboardProfileData | null>(null);
@@ -169,6 +170,7 @@ export default function DashboardPage() {
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
+  const chatContentRef = useRef<HTMLDivElement>(null);
   const opportunityWelcomeCheckedRef = useRef(false);
   const opportunityWelcomeDismissedRef = useRef(false);
   const [bottomNavRail, setBottomNavRail] = useState<HTMLDivElement | null>(null);
@@ -515,7 +517,8 @@ export default function DashboardPage() {
     // during the animated scroll); an instant window scroll never interferes with it.
     requestAnimationFrame(() => {
       const mobile = window.matchMedia("(max-width: 1023px)").matches;
-      if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      if (tab === "chat") chatContentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      else if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
       else window.scrollTo({ top: 0, behavior: "auto" });
     });
   }
@@ -598,13 +601,18 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (activeTab !== "chat") return;
+    let secondFrame = 0;
     const frame = window.requestAnimationFrame(() => {
-      if (window.matchMedia("(min-width: 1024px)").matches) {
-        contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
-      }
+      chatContentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      secondFrame = window.requestAnimationFrame(() => {
+        chatContentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      });
     });
-    return () => window.cancelAnimationFrame(frame);
-  }, [activeTab]);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+  }, [activeTab, searchParamsKey]);
 
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro)) {
     return <DashboardRouteLoading />;
@@ -789,7 +797,7 @@ export default function DashboardPage() {
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
               ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
               the content by a single hairline divider. No gradient/decoration. */}
-          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between", activeTab === "chat" ? "hidden lg:flex" : "flex")}>
+          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between", activeTab === "chat" ? "hidden" : "flex")}>
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <ImagePreviewDialog
                 src={headerAvatar}
@@ -892,7 +900,13 @@ export default function DashboardPage() {
 
                 {/* Main content — min-w-0 so a long unbroken string inside a card can't
                     grow this flex column past the available width and break the page. */}
-                <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
+                <div
+                  ref={(node) => {
+                    contentRef.current = node;
+                    if (activeTab === "chat") chatContentRef.current = node;
+                  }}
+                  className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0"
+                >
                   <SaveStatusProvider>
                     <Card className={cn(activeTab === "chat" && "overflow-hidden")}>
                       {activeTab !== "chat" && <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
