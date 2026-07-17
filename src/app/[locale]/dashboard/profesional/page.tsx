@@ -664,7 +664,6 @@ export default function DashboardPage() {
   const mobilePriorityTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
   const mobileBarTabs = [...mobilePriorityTabs, ...barTabs.filter((tab) => !mobilePriorityTabs.includes(tab))];
   const showProfileCompletion =
-    activeTab !== "chat" &&
     mode === "offer" &&
     !!proForCompletion &&
     (computeCompletion(proForCompletion).percent < 100 || proForCompletion.verification_status !== "verified");
@@ -797,7 +796,7 @@ export default function DashboardPage() {
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
               ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
               the content by a single hairline divider. No gradient/decoration. */}
-          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between", activeTab === "chat" ? "hidden" : "flex")}>
+          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between", activeTab === "chat" ? "hidden lg:flex" : "flex")}>
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <ImagePreviewDialog
                 src={headerAvatar}
