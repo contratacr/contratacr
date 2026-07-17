@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -7,28 +7,13 @@
 <meta name="supported-color-schemes" content="light dark">
 <style>
 :root { color-scheme: light dark; supported-color-schemes: light dark; }
+.dark-logo { display:none !important; mso-hide:all; max-height:0; overflow:hidden; }
 @media (prefers-color-scheme: dark) {
-  body, .email-bg { background:#0f172a !important; color:#e5eef8 !important; }
-  .email-card { background:#111827 !important; border-color:#26344f !important; }
-  .brand-text, .email-title, .strong-text { color:#f8fafc !important; }
-  .brand-cr, .email-link { color:#38bdf8 !important; }
-  .email-body { color:#d1d5db !important; }
-  .email-muted { color:#aeb9c8 !important; }
-  .email-divider { border-top-color:#26344f !important; }
-  .code-box { background:#082f49 !important; border-color:#0ea5e9 !important; }
-  .code-text { color:#7dd3fc !important; }
-  .button-cell { background:#0ea5e9 !important; }
+  .light-logo { display:none !important; }
+  .dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
 }
-[data-ogsc] body, [data-ogsc] .email-bg { background:#0f172a !important; color:#e5eef8 !important; }
-[data-ogsc] .email-card { background:#111827 !important; border-color:#26344f !important; }
-[data-ogsc] .brand-text, [data-ogsc] .email-title, [data-ogsc] .strong-text { color:#f8fafc !important; }
-[data-ogsc] .brand-cr, [data-ogsc] .email-link { color:#38bdf8 !important; }
-[data-ogsc] .email-body { color:#d1d5db !important; }
-[data-ogsc] .email-muted { color:#aeb9c8 !important; }
-[data-ogsc] .email-divider { border-top-color:#26344f !important; }
-[data-ogsc] .code-box { background:#082f49 !important; border-color:#0ea5e9 !important; }
-[data-ogsc] .code-text { color:#7dd3fc !important; }
-[data-ogsc] .button-cell { background:#0ea5e9 !important; }
+[data-ogsc] .light-logo { display:none !important; }
+[data-ogsc] .dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
 </style>
 <title>Confirma tu nuevo correo</title>
 </head>
@@ -36,24 +21,24 @@
 <table class="email-bg" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f7fa" style="background:#f4f7fa;">
   <tr>
     <td align="center" style="padding:28px 14px;">
-      <table class="email-card" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="width:600px;max-width:100%;background:#ffffff;border:1px solid #e6edf3;border-radius:18px;overflow:hidden;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="width:600px;max-width:100%;background:#ffffff;border:1px solid #e6edf3;border-radius:18px;overflow:hidden;">
         <tr>
           <td align="center" style="padding:30px 28px 8px 28px;">
-            <img src="https://res.cloudinary.com/dxxrjx2go/image/upload/f_png,w_160/contratacr/brand/email-logo.png" width="56" height="56" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;">
-            <div class="brand-text" style="font-family:Arial,Helvetica,sans-serif;font-size:23px;font-weight:700;letter-spacing:-0.4px;margin-top:10px;color:#162543;">Contrata<span class="brand-cr" style="color:#009FD9;">CR</span></div>
+            <img class="light-logo" src="https://contratacr.com/brand/email-logo-light.png" width="167" height="36" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;">
+            <img class="dark-logo" src="https://contratacr.com/brand/email-logo-dark.png" width="167" height="36" alt="ContrataCR" style="display:none;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;max-height:0;overflow:hidden;mso-hide:all;">
           </td>
         </tr>
         <tr>
           <td style="padding:8px 34px 0 34px;font-family:Arial,Helvetica,sans-serif;">
-            <h1 class="email-title" style="font-size:21px;line-height:1.25;font-weight:700;margin:16px 0 10px 0;color:#162543;">Confirma tu nuevo correo</h1>
-            <p class="email-body" style="font-size:15px;line-height:1.65;color:#374151;margin:0 0 24px 0;">Solicitaste cambiar el correo de tu cuenta de <strong class="strong-text" style="color:#162543;">{{ .Email }}</strong> a <strong class="strong-text" style="color:#162543;">{{ .NewEmail }}</strong>. Confirma el cambio con este botón.</p>
+            <h1 style="font-size:21px;line-height:1.25;font-weight:700;margin:16px 0 10px 0;color:#162543;">Confirma tu nuevo correo</h1>
+            <p style="font-size:15px;line-height:1.65;color:#374151;margin:0 0 24px 0;">Solicitaste cambiar el correo de tu cuenta de <strong style="color:#162543;">{{ .Email }}</strong> a <strong style="color:#162543;">{{ .NewEmail }}</strong>. Confirma el cambio con este botón.</p>
           </td>
         </tr>
         <tr>
           <td align="center" style="padding:0 34px;">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td class="button-cell" align="center" bgcolor="#009FD9" style="background:#009FD9;border-radius:12px;">
+                <td align="center" bgcolor="#009FD9" style="background:#009FD9;border-radius:12px;">
                   <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change" target="_blank" style="display:inline-block;padding:14px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">Confirmar cambio</a>
                 </td>
               </tr>
@@ -62,17 +47,17 @@
         </tr>
         <tr>
           <td style="padding:20px 34px 0 34px;font-family:Arial,Helvetica,sans-serif;">
-            <p class="email-muted" style="font-size:12px;line-height:1.6;color:#8b97a6;margin:0;">¿No funciona el botón? <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change" class="email-link" style="color:#009FD9;text-decoration:underline;font-weight:700;">Abre este enlace</a>.</p>
+            <p style="font-size:12px;line-height:1.6;color:#8b97a6;margin:0;">¿No funciona el botón? <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change" style="color:#009FD9;text-decoration:underline;font-weight:700;">Abre este enlace</a>.</p>
           </td>
         </tr>
         <tr>
           <td style="padding:22px 34px 0 34px;font-family:Arial,Helvetica,sans-serif;">
-            <p class="email-muted email-divider" style="font-size:13px;line-height:1.6;color:#6b7280;margin:0;border-top:1px solid #eef1f5;padding-top:18px;">Si no solicitaste este cambio, ignora este correo y tu cuenta seguirá igual.</p>
+            <p style="font-size:13px;line-height:1.6;color:#6b7280;margin:0;border-top:1px solid #eef1f5;padding-top:18px;">Si no solicitaste este cambio, ignora este correo y tu cuenta seguirá igual.</p>
           </td>
         </tr>
         <tr>
           <td align="center" style="padding:22px 34px 30px 34px;font-family:Arial,Helvetica,sans-serif;">
-            <p class="email-muted" style="font-size:12px;line-height:1.6;color:#8b97a6;margin:0;"><strong class="strong-text" style="color:#162543;">ContrataCR</strong> — Encuentra y contrata profesionales en Costa Rica</p>
+            <p style="font-size:12px;line-height:1.6;color:#8b97a6;margin:0;"><strong style="color:#162543;">ContrataCR</strong> — Encuentra y contrata profesionales en Costa Rica</p>
           </td>
         </tr>
       </table>
