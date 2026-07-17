@@ -197,6 +197,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const targetProjectRetryRef = useRef(0);
   const targetProjectRef = useRef<string | null>(null);
   const targetProjectHandledRef = useRef(false);
+  const openPublishHandledRef = useRef(false);
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
   const loadedSectionsRef = useRef({ bookings: false, projects: false });
@@ -343,6 +344,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     window.addEventListener(OPEN_PUBLISH_PROJECT_EVENT, openPublish);
     return () => window.removeEventListener(OPEN_PUBLISH_PROJECT_EVENT, openPublish);
   }, [section]);
+
+  useEffect(() => {
+    if (section !== "projects" || openPublishHandledRef.current) return;
+    if (searchParams.get("openPublish") !== "1") return;
+    openPublishHandledRef.current = true;
+    queueMicrotask(() => setShowPublish(true));
+  }, [searchParams, section]);
 
   const loadMyReviews = useCallback(async () => {
     try {

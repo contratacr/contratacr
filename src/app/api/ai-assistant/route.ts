@@ -292,7 +292,7 @@ async function openAiAnswer(message: string, locale: Locale, history: HistoryMes
 
 function actionHref(payload: AssistantPayload, originalMessage: string, locale: Locale) {
   if (!payload.action || payload.action === "answer") return null;
-  if (payload.action === "publish_request") return `/${locale}/publicar-proyecto`;
+  if (payload.action === "publish_request") return `/${locale}/dashboard/profesional?mode=use&tab=sent_projects&openPublish=1`;
   if (payload.action === "how_it_works") return `/${locale}/como-funciona`;
   if (payload.action === "support") return `/${locale}/soporte`;
   if (payload.action === "suggest_service") return `/${locale}/servicios`;
@@ -542,7 +542,7 @@ export async function POST(req: Request) {
               : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
             : payload.answer,
       action: noResults ? "publish_request" : payload.action ?? "answer",
-      searchHref: noResults ? `/${locale}/publicar-proyecto` : searchHref,
+      searchHref: noResults ? `/${locale}/dashboard/profesional?mode=use&tab=sent_projects&openPublish=1` : searchHref,
       ctaLabel: noResults
         ? locale === "en" ? "Publish request" : "Publicar solicitud"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),

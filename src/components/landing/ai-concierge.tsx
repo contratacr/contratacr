@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BadgeCheck,
   CheckCheck,
+  ClipboardList,
   History,
   Loader2,
   MapPin,
@@ -36,7 +37,7 @@ type ResultCard = {
   requestHref: string;
 };
 
-type MessageAction = { label: string; href: string };
+type MessageAction = { label: string; href: string; kind?: string | null };
 type ChatMessage = {
   role: "assistant" | "user";
   body: string;
@@ -116,7 +117,7 @@ const COPY = {
     closedLabel: "Open ContrataCR assistant",
     minimize: "Minimize assistant",
     title: "ContrataCR Assistant",
-    intro: "Hi!\nHow can I help? I can find professionals, recommend the right service or explain any ContrataCR feature.",
+    intro: "Hi! How can I help you today?",
     placeholder: "Ask or describe what you need",
     send: "Send message",
     thinking: "Finding the best answer...",
@@ -157,6 +158,11 @@ function RobotMark({ compact = false }: { compact?: boolean }) {
 function messageTime(createdAt?: string) {
   const date = createdAt ? new Date(createdAt) : new Date();
   return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
+}
+
+function actionIcon(kind?: string | null) {
+  if (kind === "publish_request") return <ClipboardList className="h-4 w-4" />;
+  return <ArrowRight className="h-4 w-4" />;
 }
 
 function ProfessionalResult({ result, copy, onNavigate }: {
@@ -393,7 +399,7 @@ export function AiConcierge() {
       setMessages((current) => [...current, {
         role: "assistant",
         body: payload.answer,
-        action: payload.searchHref && payload.ctaLabel ? { href: payload.searchHref, label: payload.ctaLabel } : null,
+        action: payload.searchHref && payload.ctaLabel ? { href: payload.searchHref, label: payload.ctaLabel, kind: payload.action } : null,
         professionals: selectedProfessional ? [selectedProfessional] : Array.isArray(payload.professionals) ? payload.professionals : [],
         suggestedService: payload.suggestedService,
         provider: payload.aiProvider,
@@ -430,19 +436,20 @@ export function AiConcierge() {
     void ask();
   }
 
-  function navigate(href: string) {
+  function navigate(href: string, options: { keepAssistantOpen?: boolean } = {}) {
     const protectedDestination = href.includes("/publicar-proyecto") || href.includes("/dashboard/");
+    const keepAssistantOpen = options.keepAssistantOpen === true;
     if (!user && protectedDestination) storePendingIntent(href);
     try {
       window.sessionStorage.setItem(`${SESSION_KEY_PREFIX}${lang}`, JSON.stringify({
         id: conversationId,
-        open: false,
+        open: keepAssistantOpen,
         messages: messages.slice(-MAX_STORED_MESSAGES),
       } satisfies StoredAssistantSession));
     } catch {
       /* Navigation still works when browser storage is unavailable. */
     }
-    setOpen(false);
+    if (!keepAssistantOpen) setOpen(false);
     const alreadyLocalized = /^\/(es|en)(?=\/|\?|$)/.test(href);
     const destination = alreadyLocalized ? href : `/${lang}${href.startsWith("/") ? href : `/${href}`}`;
     window.location.assign(destination);
@@ -563,8 +570,8 @@ export function AiConcierge() {
                 ))}
 
                 {message.action && (
-                  <button type="button" onClick={() => navigate(message.action!.href)} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#009FD9] bg-[#eef9fd] px-4 py-2.5 text-center text-sm font-extrabold text-[#008dbf] transition hover:bg-[#dff5fc] active:scale-[0.99]">
-                    {message.action.label}<ArrowRight className="h-4 w-4" />
+                  <button type="button" onClick={() => navigate(message.action!.href, { keepAssistantOpen: message.action!.kind === "publish_request" })} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#009FD9] bg-[#eef9fd] px-4 py-2.5 text-center text-sm font-extrabold text-[#008dbf] transition hover:bg-[#dff5fc] active:scale-[0.99]">
+                    {message.action.label}{actionIcon(message.action.kind)}
                   </button>
                 )}
 
