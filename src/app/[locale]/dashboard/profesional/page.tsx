@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, Repeat2, Plus, AlertCircle, X, MessageCircle,
+  ArrowRight, Sparkles, Repeat2, Plus, AlertCircle, X,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -66,6 +66,31 @@ type Tab =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
 
+function ContrataChatIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none">
+      <path
+        d="M5.25 5.6c1.6-1.35 3.8-2.1 6.2-2.1 4.9 0 8.85 3.3 8.85 7.4s-3.95 7.4-8.85 7.4c-.7 0-1.4-.07-2.05-.2L5 20.35v-4.1C3.45 14.9 2.6 13 2.6 10.9c0-1.65.6-3.55 2.65-5.3Z"
+        stroke="currentColor"
+        strokeWidth="1.85"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M13.8 14.35c-.8.65-1.82 1.02-2.94 1.02-2.58 0-4.66-1.92-4.66-4.29s2.08-4.3 4.66-4.3c1.48 0 2.8.64 3.65 1.64"
+        stroke="currentColor"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14.05 14.05 16.2 16"
+        stroke="currentColor"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
   profile: <User className="h-4 w-4" />,
   services: <Wrench className="h-4 w-4" />,
@@ -78,7 +103,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   sent_bookings: <CalendarClock className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
-  chat: <MessageCircle className="h-4 w-4" />,
+  chat: <ContrataChatIcon className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
   soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
