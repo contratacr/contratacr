@@ -443,9 +443,8 @@ export function BookingRequests() {
                     <>
                       <Button
                         type="button"
-                        variant="outline"
                         size="sm"
-                        className="flex-1 rounded-lg px-4 text-[#374151] sm:flex-none"
+                        className="flex-1 rounded-lg px-4 sm:flex-none"
                         onClick={() => updateStatus(booking.id, "awaiting_confirmation")}
                       >
                         {t("markCompleted")}
