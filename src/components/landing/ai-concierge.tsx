@@ -179,7 +179,7 @@ function ProfessionalResult({ result, copy, onNavigate }: {
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-1.5">
             <p className="min-w-0 flex-1 text-sm font-extrabold leading-snug text-[#162543]">{result.name}</p>
-            {result.verified && <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e7f7fc] px-2 py-0.5 text-[10px] font-extrabold text-[#008dbf]"><BadgeCheck className="h-3 w-3 fill-[#009FD9] text-white" />{copy.verified}</span>}
+            {result.verified && <span className="inline-flex w-fit shrink-0 items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">{copy.verified}</span>}
           </div>
           <p className="mt-0.5 text-xs font-semibold text-[#53657a]">{result.service}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[#708095]">
@@ -199,7 +199,7 @@ function ProfessionalResult({ result, copy, onNavigate }: {
   );
 }
 
-export function AiConcierge({ embedded = false }: { embedded?: boolean } = {}) {
+export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -503,17 +503,22 @@ export function AiConcierge({ embedded = false }: { embedded?: boolean } = {}) {
       }}
       className={cn(
         embedded
-          ? "relative flex h-[min(780px,calc(100dvh-220px))] min-h-[540px] w-full items-stretch justify-stretch"
+          ? "fixed inset-0 z-[110] flex h-[100dvh] min-h-0 w-full items-stretch justify-stretch lg:relative lg:inset-auto lg:z-auto lg:h-[min(780px,calc(100dvh-220px))] lg:min-h-[540px]"
           : "fixed inset-0 z-[100] flex items-end justify-end bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:bg-transparent sm:p-0 sm:backdrop-blur-none",
       )}
     >
       <div className={cn(
         "flex w-full flex-col overflow-hidden border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)]",
         embedded
-          ? "h-full rounded-2xl shadow-[0_18px_54px_-34px_rgba(4,37,77,0.6)]"
+          ? "h-full rounded-none border-0 shadow-none lg:rounded-2xl lg:border lg:shadow-[0_18px_54px_-34px_rgba(4,37,77,0.6)]"
           : "h-[min(820px,calc(100dvh-0.75rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
       )}>
         <header className="relative flex shrink-0 items-center gap-2 border-b border-[#cfe3f4] bg-[linear-gradient(120deg,#ffffff_0%,#f3f9ff_100%)] px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
+          {embedded && onClose && (
+            <button type="button" onClick={onClose} aria-label={lang === "en" ? "Back to dashboard" : "Volver al panel"} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#102f5b] transition hover:bg-[#eef7ff] lg:hidden">
+              <ArrowRight className="h-5 w-5 rotate-180" />
+            </button>
+          )}
           <div className="-my-2 -ml-1 h-[68px] w-[68px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
             <h2 className="whitespace-nowrap text-[15px] font-black text-[#102746] sm:text-lg">{copy.title}</h2>

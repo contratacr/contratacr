@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore,
+  ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -80,7 +80,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
   chat: <MessageSquareMore className="h-4 w-4" />,
-  assistant: <Sparkles className="h-4 w-4" />,
+  assistant: <Bot className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
   soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
@@ -1022,7 +1022,12 @@ export default function DashboardPage() {
                         {activeTab === "saved" && <ClientActivity section="saved" />}
 
                         {activeTab === "chat" && <DirectChatInbox />}
-                        {activeTab === "assistant" && <AiConcierge embedded />}
+                        {activeTab === "assistant" && (
+                          <AiConcierge
+                            embedded
+                            onClose={() => setTab(mode === "offer" ? "bookings" : "sent_bookings")}
+                          />
+                        )}
                         {activeTab === "notifications" && <NotificationsList />}
                         {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
                         {activeTab === "cuenta" && (

@@ -318,13 +318,12 @@ input::-ms-clear {
 
   .contratacr-chat-thread-open .direct-chat-shell--thread {
     position: fixed;
-    left: 0;
-    right: 0;
-    top: var(--app-visual-viewport-top);
-    z-index: 45;
-    height: var(--app-visual-viewport-height);
+    inset: 0;
+    z-index: 110;
+    height: 100dvh;
     min-height: 0;
     border-radius: 0;
+    overscroll-behavior: none;
   }
 }
 
