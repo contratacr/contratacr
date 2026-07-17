@@ -98,7 +98,8 @@ export async function GET(req: Request) {
     : conversationsQuery.or(`and(client_id.eq.${user.id},client_archived_at.is.null),and(professional_profile_id.eq.${user.id},professional_archived_at.is.null)`);
   const { data, error } = await conversationsQuery
     .order("last_message_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ conversations: await enrichConversations(db, (data ?? []) as ConversationRow[]) });
 }

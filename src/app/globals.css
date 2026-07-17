@@ -321,7 +321,7 @@ input::-ms-clear {
 
   .contratacr-chat-thread-open .direct-chat-shell--thread {
     position: fixed;
-    top: var(--app-visual-viewport-top, 0px);
+    top: 0;
     right: 0;
     bottom: auto;
     left: 0;
@@ -338,7 +338,7 @@ input::-ms-clear {
   }
 
   .contratacr-ai-open [data-ai-concierge-dialog] {
-    top: var(--app-visual-viewport-top, 0px);
+    top: 0;
     height: var(--app-visual-viewport-height);
   }
 }
