@@ -15,7 +15,6 @@ import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { OtpVerification } from "@/components/auth/otp-verification";
-import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 
 type FormData = { email: string; password: string };
 
@@ -220,6 +219,7 @@ export default function LoginPage() {
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
               <OtpVerification
                 email={otpEmail}
+                autoResendOnMount
                 onVerified={async () => {
                   await finishPasswordLogin(createClient());
                 }}
@@ -256,7 +256,7 @@ export default function LoginPage() {
 
           {successNotice && (
             <div className="flex items-start gap-3 p-3.5 bg-[#f0f9ff] border border-[#bae6fd] rounded-xl text-sm text-[#075985] mb-4">
-              <BrandIconBadge icon={CheckCircle2} size={32} className="mt-0.5" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[#009FD9]" />
               <div>
                 <p className="font-semibold text-[#0f172a]">{t("emailChangedTitle")}</p>
                 <p>{successNotice}</p>

@@ -12,9 +12,17 @@ interface OtpVerificationProps {
   email: string;
   /** Called after successful verification. If omitted the component redirects by role automatically. */
   onVerified?: () => void;
+  /** Re-send once when the user lands here from a later login attempt. */
+  autoResendOnMount?: boolean;
 }
 
-export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
+const AUTO_RESEND_COOLDOWN_MS = 60_000;
+
+function autoResendStorageKey(email: string) {
+  return `contratacr:otp-auto-resend:${email.trim().toLowerCase()}`;
+}
+
+export function OtpVerification({ email, onVerified, autoResendOnMount = false }: OtpVerificationProps) {
   const router = useRouter();
   const locale = useLocale();
   const isEn = locale === "en";
@@ -23,6 +31,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
   const [resending, setResending] = useState(false);
+  const [resentOnOpen, setResentOnOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -39,6 +48,35 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     const t = setInterval(() => setCountdown((c) => c - 1), 1000);
     return () => clearInterval(t);
   }, [countdown]);
+
+  useEffect(() => {
+    if (!autoResendOnMount) return;
+
+    let cancelled = false;
+    async function resendOnOpen() {
+      const key = autoResendStorageKey(email);
+      const now = Date.now();
+      try {
+        const last = Number(window.localStorage.getItem(key) ?? 0);
+        if (Number.isFinite(last) && now - last < AUTO_RESEND_COOLDOWN_MS) return;
+        window.localStorage.setItem(key, String(now));
+      } catch {
+        // If storage is unavailable, still try once for this mount.
+      }
+
+      const supabase = createClient();
+      const { error: resendError } = await supabase.auth.resend({ email, type: "signup" });
+      if (!cancelled && !resendError) {
+        setResentOnOpen(true);
+        setCountdown(60);
+      }
+    }
+
+    resendOnOpen();
+    return () => {
+      cancelled = true;
+    };
+  }, [autoResendOnMount, email]);
 
   async function verify(token: string) {
     setVerifying(true);
@@ -109,9 +147,15 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     <div ref={containerRef} className="scroll-mt-24 text-center">
       <h1 className="text-xl font-bold text-[#111827]">{isEn ? "Verify your email" : "Verifica tu correo"}</h1>
       <p className="text-sm text-[#6b7280] mt-1.5 mb-6">
-        {isEn ? "Enter the 6-digit code we sent to" : "Ingresa el codigo de 6 digitos que enviamos a"}{" "}
+        {isEn ? "Enter the 6-digit code we sent to" : "Ingresa el código de 6 dígitos que enviamos a"}{" "}
         <strong className="text-[#111827]">{email}</strong>.
       </p>
+
+      {resentOnOpen && (
+        <div className="rounded-xl border border-[#bae6fd] bg-[#f0f9ff] px-3 py-2.5 text-left text-sm text-[#075985] mb-4">
+          {isEn ? "We sent you a new code." : "Te enviamos un código nuevo."}
+        </div>
+      )}
 
       {error && (
         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 mb-4 text-left">
@@ -153,7 +197,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
       <p className="text-sm text-[#6b7280]">
         {countdown > 0 ? (
           <>
-            {isEn ? "Resend code in" : "Reenviar codigo en"}{" "}
+            {isEn ? "Resend code in" : "Reenviar código en"}{" "}
             <strong className="text-[#374151]">{countdown}s</strong>
           </>
         ) : (
@@ -164,7 +208,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
             className="inline-flex items-center gap-1.5 text-[#009FD9] font-medium hover:underline disabled:opacity-60"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            {resending ? (isEn ? "Resending..." : "Reenviando...") : (isEn ? "Resend code" : "Reenviar codigo")}
+            {resending ? (isEn ? "Resending..." : "Reenviando...") : (isEn ? "Resend code" : "Reenviar código")}
           </button>
         )}
       </p>
