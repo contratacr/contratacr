@@ -596,6 +596,16 @@ export default function DashboardPage() {
     };
   }, [bottomNavRail, mode, isProvider]);
 
+  useEffect(() => {
+    if (activeTab !== "chat") return;
+    const frame = window.requestAnimationFrame(() => {
+      if (window.matchMedia("(min-width: 1024px)").matches) {
+        contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab]);
+
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro)) {
     return <DashboardRouteLoading />;
   }
@@ -646,6 +656,7 @@ export default function DashboardPage() {
   const mobilePriorityTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
   const mobileBarTabs = [...mobilePriorityTabs, ...barTabs.filter((tab) => !mobilePriorityTabs.includes(tab))];
   const showProfileCompletion =
+    activeTab !== "chat" &&
     mode === "offer" &&
     !!proForCompletion &&
     (computeCompletion(proForCompletion).percent < 100 || proForCompletion.verification_status !== "verified");
