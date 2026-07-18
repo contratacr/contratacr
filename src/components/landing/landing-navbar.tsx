@@ -195,41 +195,6 @@ function LanguageMenu() {
   );
 }
 
-/* ─── Language inline (mobile hamburger drawer) ─── */
-function LanguageInline({ className }: { className?: string }) {
-  const locale = useLocale();
-  const switchLang = useSwitchLang();
-  return (
-    <div
-      className={cn(
-        "grid grid-cols-2 rounded-2xl bg-[#f3f6f9] p-1 shadow-inner shadow-slate-200/70",
-        className
-      )}
-      role="group"
-      aria-label="Cambiar idioma / Change language"
-    >
-      {LANGS.map((l) => {
-        const active = locale === l.code;
-        return (
-          <button
-            key={l.code}
-            onClick={() => switchLang(l.code)}
-            aria-pressed={active}
-            className={cn(
-              "inline-flex h-10 items-center justify-center rounded-xl px-3 text-sm font-bold transition-all",
-              active
-                ? "bg-[#009FD9] text-white shadow-sm"
-                : "text-[#64748b] hover:bg-white/70 hover:text-[#162543]",
-            )}
-          >
-            <span>{l.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /* ─── Mode segmented control (Cliente ⇆ Profesional) ───
    The canonical pattern for switching between two views/contexts: BOTH modes
    shown side by side, the active one FILLED (brand), the inactive one muted but
@@ -693,7 +658,7 @@ function MobileMessagesButton({ href, onNavigate }: { href: string; onNavigate?:
       href={href}
       onClick={onNavigate}
       aria-label={locale === "en" ? "Messages" : "Mensajes"}
-      className="relative grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-[#f3f4f6]"
+      className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6]"
     >
       <MessageSquareMore className="h-5 w-5" />
       {unread > 0 && (
@@ -737,6 +702,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const router = useRouter();
   const t = useTranslations("header");
   const locale = useLocale();
+  const switchLang = useSwitchLang();
+  const alternateLocale = locale === "en" ? "es" : "en";
+  const alternateLanguageLabel = locale === "en" ? "Español" : "English";
   const pathname = usePathname();
   const { user, avatarUrl, avatarReady, loading: authLoading } = useAuth();
   const compactEnabled = !pathname.startsWith("/dashboard");
@@ -800,6 +768,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
       : isPro
         ? mode
         : "use";
+  const mobileDrawerItemClass =
+    "block w-full py-2.5 text-left text-lg font-medium text-[#1A2744] transition-colors hover:text-[#009FD9]";
+  const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-bold");
 
   const openMobileMenu = useCallback(() => {
     setMobileOpen(true);
@@ -994,7 +965,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <Link
                   href={user ? primaryPanelHref : loginHref}
                   aria-label={user ? t("myPanel") : t("login")}
-                  className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50"
+                  className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-gray-50"
                 >
                   <UserRound className="h-5 w-5" />
                 </Link>
@@ -1041,7 +1012,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
                       openMenu === "categorias"
                         ? "text-[#1a2744] bg-gray-50 after:opacity-0"
-                        : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
+                        : "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
                     )}
                   >
                     {t("categories")}
@@ -1062,7 +1033,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
 
                 <Link
                   href="/como-funciona"
-                  className="relative text-sm font-medium px-3 py-2 text-[#374151] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#1a2744]"
+                  className="relative text-sm font-medium px-3 py-2 text-[#1A2744] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#009FD9]"
                 >
                   {t("resourceLinks.howItWorks")}
                 </Link>
@@ -1076,7 +1047,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <button
                     className={cn(
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                      openMenu === "recursos" ? "text-[#1a2744] bg-gray-50 after:opacity-0" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
+                      openMenu === "recursos" ? "text-[#1a2744] bg-gray-50 after:opacity-0" : "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
                     )}
                   >
                     {t("resources")}
@@ -1093,7 +1064,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                             {link.key === "support" ? (
                               <SupportLink
                                 onNavigate={() => setOpenMenu(null)}
-                                className="block w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
+                                className="block w-full text-left px-3 py-2 rounded-lg text-sm text-[#1A2744] hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
                               >
                                 {t(`resourceLinks.${link.key}`)}
                               </SupportLink>
@@ -1101,7 +1072,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                               <Link
                                 href={link.href}
                                 onClick={() => setOpenMenu(null)}
-                                className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
+                                className="block px-3 py-2 rounded-lg text-sm text-[#1A2744] hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
                               >
                                 {t(`resourceLinks.${link.key}`)}
                               </Link>
@@ -1139,7 +1110,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     {/* The context switcher lives inside account menus/drawers, keeping this bar compact. */}
                     <Link
                       href={primaryPanelHref}
-                      className="relative inline-flex min-w-[76px] justify-center text-sm font-medium px-3 py-2 text-[#374151] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#1a2744]"
+                      className="relative inline-flex min-w-[76px] justify-center text-sm font-medium px-3 py-2 text-[#1A2744] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#009FD9]"
                     >
                       {t("myPanel")}
                     </Link>
@@ -1166,7 +1137,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     </Link>
                     <Link
                       href={loginHref}
-                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
+                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#1A2744] hover:bg-gray-50 transition-colors"
                     >
                       {t("login")}
                     </Link>
@@ -1365,7 +1336,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[88%] max-w-[380px] bg-[#f8fafc] shadow-[18px_0_60px_-18px_rgba(15,23,42,0.5)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[72vw] min-w-[240px] max-w-[300px] sm:w-[42vw] sm:max-w-[320px] bg-[#f8fafc] shadow-[18px_0_60px_-18px_rgba(15,23,42,0.5)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -1381,63 +1352,60 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             </button>
           </div>
 
-          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-7 py-7">
-            {authLoading && !user ? (
-              <div className="mb-7 space-y-2" aria-hidden="true">
-                <div className="h-4 w-40 animate-pulse rounded-full bg-[#eef2f6]" />
-                <div className="h-3 w-56 max-w-full animate-pulse rounded-full bg-[#eef2f6]" />
-              </div>
-            ) : user ? (
-              <div className="mb-7 border-b border-[#eef2f6] pb-5">
-                <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myAccount")}</p>
-                <p className="mt-0.5 truncate text-xs font-medium text-[#8a94a6]">{user.email}</p>
-              </div>
-            ) : null}
-
-            <nav className="flex flex-col gap-1 text-[#07144d]">
-              <Link href="/" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-6 py-7">
+            <nav className="flex flex-col gap-1">
+              <Link href="/" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 {locale === "en" ? "Home" : "Inicio"}
               </Link>
-              <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-bold transition-colors hover:text-[#009FD9]">
+              <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 {t("offerServices")}
               </Link>
-              <Link href="/buscar" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-bold transition-colors hover:text-[#009FD9]">
+              <Link href="/buscar" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 {t("searchProfessionals")}
               </Link>
               {!user && (
-                <Link href={loginHref} onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+                <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   {t("login")}
                 </Link>
               )}
-              <Link href="/servicios" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+              <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 {t("categories")}
               </Link>
-              <Link href="/como-funciona" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+              <Link href="/como-funciona" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 {t("resourceLinks.howItWorks")}
               </Link>
-              <Link href="/ayuda" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+              <Link href="/ayuda" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 {t("resourceLinks.helpCenter")}
               </Link>
-              <Link href="/atraer-clientes" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+              <Link href="/atraer-clientes" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 {t("resourceLinks.proTips")}
               </Link>
-              <SupportLink onNavigate={() => setMobileOpen(false)} className="py-2.5 text-left text-lg font-medium text-[#07144d] transition-colors hover:text-[#009FD9]">
+              <SupportLink onNavigate={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 {t("resourceLinks.support")}
               </SupportLink>
-            </nav>
-
-            <div className="mt-8">
-              <LanguageInline />
-            </div>
-
-            {user && (
               <button
-                onClick={handleSignOut}
-                className="mt-auto flex w-full items-center gap-2 pt-8 text-left text-lg font-medium text-red-600 transition-colors hover:text-red-700"
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  switchLang(alternateLocale);
+                }}
+                className={mobileDrawerItemClass}
               >
-                <LogOut className="h-4 w-4" /> {t("signOut")}
+                {alternateLanguageLabel}
               </button>
-            )}
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    void handleSignOut();
+                  }}
+                  className={mobileDrawerItemClass}
+                >
+                  {t("signOut")}
+                </button>
+              )}
+            </nav>
           </div>
         </div>
     </>
