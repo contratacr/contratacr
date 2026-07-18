@@ -46,7 +46,7 @@ export function DirectChatLauncher({
   const sendMessageLabel = isEn ? "Send message" : "Enviar mensaje";
 
   function chatHref() {
-    const params = new URLSearchParams({ tab: "chat", draftChat: "1" });
+    const params = new URLSearchParams({ draftChat: "1" });
     if (professionalId) params.set("professionalId", professionalId);
     if (professionalName) params.set("professionalName", professionalName);
     if (bookingId) params.set("bookingId", bookingId);
@@ -54,7 +54,7 @@ export function DirectChatLauncher({
     if (proposalId) params.set("proposalId", proposalId);
     if (contextTitle) params.set("contextTitle", contextTitle);
     if (initialMessage) params.set("draftMessage", initialMessage);
-    return `/dashboard/profesional?${params.toString()}`;
+    return `/mensajes?${params.toString()}`;
   }
 
   function openChat() {

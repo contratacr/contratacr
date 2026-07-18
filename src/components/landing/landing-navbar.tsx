@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
-  LayoutDashboard, LogOut, Briefcase, Compass, Globe, Check,
-  MessageSquareMore, UserRound,
+  LayoutDashboard, Briefcase, Compass, Globe, Check,
+  MessageSquareMore, UserRound, LogOut,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -50,7 +50,7 @@ export function ContrataCRLogo({ className, chip = false, size = "md", tone = "l
   const chipMarkCls = lg ? "h-6 w-6 sm:h-7 sm:w-7" : "h-[1.35rem] w-[1.35rem]";
   const dark = tone === "dark";
   return (
-    <div className={cn("flex items-center select-none", lg ? "gap-1.5" : "gap-1", className)}>
+    <div className={cn("flex items-center select-none", lg ? "gap-0.5" : "gap-0.5", className)}>
       {chip ? (
         <span className={cn("grid place-items-center rounded-lg bg-white shadow-sm", chipCls)}>
           <ContrataCRMark className={chipMarkCls} />
@@ -769,7 +769,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
         ? mode
         : "use";
   const mobileDrawerItemClass =
-    "block w-full py-2.5 text-left text-lg font-medium text-[#1A2744] transition-colors hover:text-[#009FD9]";
+    "block w-full py-2.5 text-left text-[17px] font-medium leading-snug text-[#1A2744] transition-colors hover:text-[#009FD9]";
   const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-bold");
 
   const openMobileMenu = useCallback(() => {
@@ -958,7 +958,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
                 {user && (
                   <>
-                    <MobileMessagesButton href="/dashboard/profesional?tab=messages" />
+                    <MobileMessagesButton href="/mensajes" />
                     <NotificationBell scope={notificationScope} />
                   </>
                 )}
@@ -1097,7 +1097,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
                   </div>
                 ) : user ? (
-                  <div className="flex w-[250px] items-center justify-end gap-1">
+                  <div className="flex w-[290px] items-center justify-end gap-1">
                     {!isPro && (
                       <Link
                         href="/registro/profesional"
@@ -1114,6 +1114,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     >
                       {t("myPanel")}
                     </Link>
+                    <MobileMessagesButton href="/mensajes" />
                     <NotificationBell scope={notificationScope} />
                     <AccountMenu
                       user={user}
@@ -1148,7 +1149,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <LanguageMenu />
               </div>
 
-              {/* Mobile toggle — only OPENS the drawer; the drawer has the single X. */}
+              {/* Mobile toggle — opens the left drawer. */}
               <button
                 type="button"
                 onClick={openMobileMenu}
@@ -1279,21 +1280,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               {/* Desktop keeps bell + account menu in the compact row. On mobile,
                   the hamburger is the single entry point so account options do not
                   split across two menus. */}
-              <div className="hidden w-[96px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+              <div className="hidden w-[136px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
                 {user ? (
                   <>
-                  <NotificationBell scope={notificationScope} />
-                  <AccountMenu
-                    user={user}
-                    isPro={isPro}
-                    displayName={displayName}
-                    avatarUrl={avatarUrl}
-                    avatarReady={avatarReady}
-                    initials={initials}
-                    professionalPanelHref={professionalPanelHref}
-                    clientPanelHref={clientPanelHref}
-                    onSignOut={handleSignOut}
-                  />
+                    <MobileMessagesButton href="/mensajes" />
+                    <NotificationBell scope={notificationScope} />
+                    <AccountMenu
+                      user={user}
+                      isPro={isPro}
+                      displayName={displayName}
+                      avatarUrl={avatarUrl}
+                      avatarReady={avatarReady}
+                      initials={initials}
+                      professionalPanelHref={professionalPanelHref}
+                      clientPanelHref={clientPanelHref}
+                      onSignOut={handleSignOut}
+                    />
                   </>
                 ) : (
                   <span className="h-10 w-[92px]" aria-hidden />
@@ -1313,12 +1315,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
         </div>
       </header>
 
-      {/* Mobile menu — slide-in LEFT drawer + scrim (OUTSIDE <header>: the
+      {/* Mobile menu — slide-in LEFT drawer + transparent outside click layer (OUTSIDE <header>: the
           header's backdrop-filter would otherwise become the containing block
           for these `fixed` elements, breaking full-viewport positioning). */}
         <div
           className={cn(
-            "lg:hidden fixed inset-0 z-[100] bg-black/50 transition-opacity duration-300",
+            "lg:hidden fixed inset-0 z-[100] bg-transparent transition-opacity duration-300",
             mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
           onClick={() => setMobileOpen(false)}
@@ -1336,30 +1338,24 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[72vw] min-w-[240px] max-w-[300px] sm:w-[42vw] sm:max-w-[320px] bg-[#f8fafc] shadow-[18px_0_60px_-18px_rgba(15,23,42,0.5)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[48vw] min-w-[180px] max-w-[230px] sm:w-[38vw] sm:max-w-[250px] bg-white shadow-[18px_0_60px_-18px_rgba(15,23,42,0.28)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#e8eef5] bg-white px-6 shadow-sm">
-            <span className="text-sm font-extrabold uppercase tracking-[0.16em] text-[#9ca3af]">{t("menu")}</span>
-            <button
-              type="button"
-              onClick={() => setMobileOpen(false)}
-              aria-label={t("closeMenu")}
-              className="p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-6 py-7">
+          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-14">
             <nav className="flex flex-col gap-1">
               <Link href="/" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 {locale === "en" ? "Home" : "Inicio"}
               </Link>
-              <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                {t("offerServices")}
-              </Link>
+              {user ? (
+                <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+                  Panel
+                </Link>
+              ) : (
+                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+                  {t("offerServices")}
+                </Link>
+              )}
               <Link href="/buscar" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 {t("searchProfessionals")}
               </Link>

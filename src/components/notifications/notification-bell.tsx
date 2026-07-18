@@ -216,15 +216,13 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
 
   if (!user) return null;
 
-  // "Ver todas" opens the Notifications SECTION inside the ONE unified panel — it
-  // shows the SAME active mode (no longer ambiguous: the bell is per-mode now).
-  const allNotificationsHref = `/${locale}/dashboard/profesional?tab=notifications`;
+  const allNotificationsHref = `/${locale}/notificaciones`;
 
   return (
     <div className="relative" ref={panelRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative grid h-10 w-10 place-items-center rounded-xl text-[#6b7280] hover:bg-[#f3f4f6] transition-colors"
+        className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] hover:bg-[#f3f4f6] transition-colors"
         aria-label={t("title")}
       >
         <span className="relative inline-flex">
@@ -306,7 +304,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
             )}
           </div>
 
-          {/* Footer — open the Notifications tab inside the user's own panel */}
+          {/* Footer — open the full notifications screen. */}
           <a
             href={allNotificationsHref}
             className="block text-center px-4 py-2.5 border-t border-[#f3f4f6] text-sm font-medium text-[#009FD9] hover:bg-[#f9fafb] transition-colors"
