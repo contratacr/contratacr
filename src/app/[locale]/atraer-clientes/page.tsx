@@ -3,133 +3,93 @@
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { FadeInUp } from "@/components/landing/fade-in-up";
+import { Link } from "@/i18n/navigation";
 import {
-  Camera, Star, MapPin, MessageCircle,
-  CheckCircle2, UserCheck, Clock, Image as ImageIcon,
+  ArrowRight,
+  BadgeCheck,
+  BriefcaseBusiness,
+  CalendarDays,
+  Camera,
+  CheckCircle2,
+  Images,
+  MapPin,
+  Star,
 } from "lucide-react";
 
-// Icons in code; tip text (title/body/highlight) comes from the i18n namespace.
-const TIP_ICONS = [
-  <Camera key="0" className="h-6 w-6" />,
-  <UserCheck key="1" className="h-6 w-6" />,
-  <ImageIcon key="2" className="h-6 w-6" />,
-  <MessageCircle key="3" className="h-6 w-6" />,
-  <Star key="4" className="h-6 w-6" />,
-  <MapPin key="5" className="h-6 w-6" />,
-  <CheckCircle2 key="6" className="h-6 w-6" />,
-  <Clock key="7" className="h-6 w-6" />,
+const PROFILE_ACTIONS = [
+  { index: 0, icon: Camera },
+  { index: 1, icon: BadgeCheck },
+  { index: 2, icon: Images },
+  { index: 4, icon: Star },
+  { index: 5, icon: MapPin },
+  { index: 7, icon: CalendarDays },
 ];
-
-const leadIconClass = "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
 
 export default function AtraerClientesPage() {
   const t = useTranslations("atraerClientes");
-  const dos = t.raw("dos") as string[];
-  const donts = t.raw("donts") as string[];
+  const dos = (t.raw("dos") as string[]).slice(0, 4);
+  const donts = (t.raw("donts") as string[]).slice(0, 4);
+
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
+      <main className="flex-1">
+        <section className="border-b border-[#e5e7eb] px-4 pb-12 pt-24 sm:pb-14 sm:pt-32">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><BriefcaseBusiness className="h-5 w-5" /></div>
+            <p className="mt-4 text-xs font-bold uppercase text-[#009fd9]">{t("eyebrow")}</p>
+            <h1 className="mt-3 text-3xl font-black leading-tight text-[#162543] sm:text-5xl">{t("titleA")} {t("titleB")}</h1>
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#6b7280] sm:text-lg">{t("subtitle")}</p>
+          </div>
+        </section>
 
-      {/* Hero */}
-      <section className="pt-32 pb-14 text-center px-4 bg-white">
-        <FadeInUp>
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
-            {t("eyebrow")}
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
-            {t("titleA")}<br className="hidden sm:block" />{" "}{t("titleB")}
-          </h1>
-          <p className="text-lg text-gray-500 max-w-xl mx-auto">
-            {t("subtitle")}
-          </p>
-        </FadeInUp>
-      </section>
-
-      {/* Tips */}
-      <section className="pb-20 px-4 bg-[#f4f7fa]">
-        <div className="mx-auto max-w-4xl">
-          <FadeInUp>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-10">
-              {TIP_ICONS.map((icon, i) => {
-                const highlight = t(`tip${i}Highlight`);
-                return (
-                <FadeInUp key={i} delay={i * 40}>
-                  <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-sm transition-shadow h-full">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={leadIconClass}>
-                        {icon}
-                      </div>
-                      <h3 className="text-sm font-bold text-[#1a2744] leading-snug">{t(`tip${i}Title`)}</h3>
-                    </div>
-                    <p className="text-sm text-gray-500 leading-relaxed mb-2">{t(`tip${i}Body`)}</p>
-                    {highlight && (
-                      <p className="text-xs text-[#009FD9] font-medium bg-[#EBF5FB] rounded-lg px-3 py-2 mt-2">
-                        {highlight}
-                      </p>
-                    )}
+        <section className="bg-[#f4f7fa] px-4 py-12 sm:py-16">
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-7 max-w-2xl">
+              <h2 className="text-2xl font-extrabold text-[#162543]">{t("profileChecklistTitle")}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("profileChecklistSubtitle")}</p>
+            </div>
+            <div className="divide-y divide-[#e5e7eb] rounded-lg border border-[#dfe5eb] bg-white px-5 sm:px-7">
+              {PROFILE_ACTIONS.map(({ index, icon: Icon }) => (
+                <article key={index} className="grid gap-3 py-6 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><Icon className="h-5 w-5" /></div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#162543]">{t(`tip${index}Title`)}</h3>
+                    <p className="mt-1 text-sm leading-6 text-[#6b7280]">{t(`tip${index}Body`)}</p>
+                    <p className="mt-2 text-xs font-semibold text-[#0089bb]">{t(`tip${index}Highlight`)}</p>
                   </div>
-                </FadeInUp>
-                );
-              })}
+                </article>
+              ))}
             </div>
-          </FadeInUp>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Do / Don't */}
-      <section className="py-20 px-4 bg-white">
-        <div className="mx-auto max-w-4xl">
-          <FadeInUp>
-            <h2 className="text-2xl font-extrabold text-[#1a2744] mb-2 text-center">{t("dosDontsTitle")}</h2>
-            <p className="text-gray-500 text-center text-sm mb-10">{t("dosDontsSubtitle")}</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-emerald-700 mb-4 uppercase tracking-wide">{t("dosTitle")}</h3>
-                <ul className="space-y-3">
-                  {dos.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm text-gray-700">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+        <section className="px-4 py-12 sm:py-16">
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-7">
+              <h2 className="text-2xl font-extrabold text-[#162543]">{t("dosDontsTitle")}</h2>
+              <p className="mt-2 text-sm text-[#6b7280]">{t("dosDontsSubtitle")}</p>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="rounded-lg border border-[#cae8db] bg-[#f3fbf7] p-5">
+                <h3 className="text-sm font-bold text-[#166534]">{t("dosTitle")}</h3>
+                <ul className="mt-4 space-y-3">{dos.map((item) => <li key={item} className="flex gap-2 text-sm leading-6 text-[#374151]"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-[#16a34a]" />{item}</li>)}</ul>
               </div>
-              <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-red-600 mb-4 uppercase tracking-wide">{t("dontsTitle")}</h3>
-                <ul className="space-y-3">
-                  {donts.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm text-gray-700">
-                      <span className="text-red-400 shrink-0 mt-0.5 font-bold">✕</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+              <div className="rounded-lg border border-[#f0d3d3] bg-[#fff8f8] p-5">
+                <h3 className="text-sm font-bold text-[#b91c1c]">{t("dontsTitle")}</h3>
+                <ul className="mt-4 space-y-3">{donts.map((item) => <li key={item} className="flex gap-2 text-sm leading-6 text-[#374151]"><span className="font-bold text-[#dc2626]">×</span>{item}</li>)}</ul>
               </div>
             </div>
-          </FadeInUp>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* CR market reality */}
-      <section className="py-16 px-4 bg-[#f4f7fa]">
-        <div className="mx-auto max-w-4xl">
-          <FadeInUp>
-            <div className="bg-white rounded-3xl border border-gray-100 p-8">
-              <h2 className="text-xl font-bold text-[#1a2744] mb-4">{t("marketTitle")}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-600 leading-relaxed">
-                {[0, 1, 2, 3].map((i) => (
-                  <div key={i}>
-                    <p className="font-semibold text-[#1a2744] mb-2">{t(`market${i}Title`)}</p>
-                    <p>{t(`market${i}Body`)}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </FadeInUp>
-        </div>
-      </section>
-
+        <section className="border-t border-[#e5e7eb] bg-[#f7fbfd] px-4 py-12">
+          <div className="mx-auto flex max-w-4xl flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+            <div><h2 className="text-xl font-extrabold text-[#162543]">{t("ctaTitle")}</h2><p className="mt-2 text-sm text-[#6b7280]">{t("ctaSubtitle")}</p></div>
+            <Link href="/registro/profesional" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#0089bb]">{t("ctaRegister")}<ArrowRight className="h-4 w-4" /></Link>
+          </div>
+        </section>
+      </main>
       <LandingFooter />
     </div>
   );

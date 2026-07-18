@@ -80,9 +80,9 @@
       "more": "More services"
     },
     "resourceLinks": {
-      "howItWorks": "How it works",
+      "howItWorks": "How to use ContrataCR",
       "helpCenter": "Help center",
-      "proTips": "Tips for professionals",
+      "proTips": "For professionals",
       "support": "Support"
     },
     "loginModal": {
@@ -835,13 +835,13 @@
       "title": "For clients",
       "search": "Find services",
       "categories": "Categories",
-      "howItWorks": "How it works",
+      "howItWorks": "How to use ContrataCR",
       "publish": "Post a request"
     },
     "pros": {
       "title": "For professionals",
       "register": "Offer my services",
-      "attract": "How to attract clients",
+      "attract": "Improve my profile",
       "verification": "Identity verification"
     },
     "support": {
@@ -2833,11 +2833,11 @@
     "visualSearchButton": "Search"
   },
   "comoFunciona": {
-    "metaTitle": "How ContrataCR works | Clients and professionals in Costa Rica",
+    "metaTitle": "How to use ContrataCR | Guide for clients and professionals",
     "metaDesc": "Learn how to use ContrataCR to find services, post requests, receive proposals, and offer professional services in Costa Rica.",
-    "eyebrow": "How it works",
-    "title": "The simplest way to find or get service jobs in Costa Rica",
-    "subtitle": "ContrataCR connects clients with local professionals. You can search directly, post a request, review profiles, coordinate in Messages, and manage everything from your dashboard.",
+    "eyebrow": "Quick guide",
+    "title": "How to use ContrataCR",
+    "subtitle": "Choose what you want to do and follow a clear process. Find help, post a request, or offer your services from one account.",
     "metric0Value": "2 ways",
     "metric0Label": "Find professionals or post a request.",
     "metric1Value": "0 commissions",
@@ -2855,7 +2855,7 @@
     "clientStep1Title": "Compare profiles",
     "clientStep1Body": "Check verified identity, previous jobs, reviews, reference prices, work areas, and availability.",
     "clientStep2Title": "Contact or schedule",
-    "clientStep2Body": "Request the service, choose a time when available, and finish coordinating in Messages.",
+    "clientStep2Body": "Request the service, choose a time when available, and use the contact options enabled on the profile.",
     "clientPathCta": "View professionals",
     "publishPathBadge": "Option 2",
     "publishPathTitle": "Post a request",
@@ -2957,7 +2957,9 @@
   "ayuda": {
     "eyebrow": "Help center",
     "title": "How can we help you?",
-    "subtitle": "Find quick answers or contact us directly.",
+    "subtitle": "Choose a task, open its answer, and continue without reading information you do not need.",
+    "topicsTitle": "Choose a topic",
+    "topicsSubtitle": "Shortcuts to the most common tasks.",
     "cat0Title": "Create your account",
     "cat0Desc": "Sign up with email or Google. It only takes a few minutes.",
     "cat1Title": "Find services",
@@ -2981,13 +2983,13 @@
     "faq3Q": "How do I search for a service?",
     "faq3A": "Use the search bar on the home page or the services search page. You can search by service type (plumber, psychologist, designer, etc.), by province and canton, and sort by rating. The search understands synonyms — if you type 'nanny' it will also find childcare professionals.",
     "faq4Q": "How do I coordinate the service?",
-    "faq4A": "Two ways. If you search directly, open the professional's profile and send them a message. If you post a request, professionals send you proposals and you coordinate in Messages with whoever you choose. You agree on price, date, and details with no middlemen.",
+    "faq4A": "If you search directly, open the profile and use one of the available contact options. If you post a request, compare proposals and coordinate with the professional you choose. Price, date, and details are agreed directly.",
     "faq5Q": "How do I leave a review?",
     "faq5A": "After a service is completed, you can leave a review from your panel, in Client mode → My requests. Only clients who actually hired that service can leave reviews — that keeps them authentic.",
     "faq6Q": "What is posting a request?",
     "faq6A": "Posting a request is an alternative to searching directly. You describe what you need (for example: 'painting a 4x4m living room, budget ₡80,000'), and the professionals who offer that service in your area send you proposals with their price. You choose who to work with.",
     "faq7Q": "Is my personal information safe?",
-    "faq7A": "Yes. Your phone number and email are never publicly visible on the platform. You can communicate in Messages without sharing those details. We comply with Costa Rica's Data Protection Law 8968.",
+    "faq7A": "Your identity document is not published, and contact details are shown only through the options enabled on the platform. We process personal information under Costa Rica's Data Protection Law 8968.",
     "faq8Q": "How do I add ContrataCR to my home screen?",
     "faq8A": "You can add ContrataCR as a shortcut from your browser menu.",
     "faq8Link": "View the visual guide",
@@ -2998,9 +3000,11 @@
   },
   "atraerClientes": {
     "eyebrow": "For professionals",
-    "titleA": "How to attract more clients",
-    "titleB": "on ContrataCR",
-    "subtitle": "Practical, honest tips for people offering services who want to grow in the Costa Rican market.",
+    "titleA": "Build a profile",
+    "titleB": "clients can trust",
+    "subtitle": "A practical guide to completing the information clients review before choosing a professional.",
+    "profileChecklistTitle": "The essentials of a complete profile",
+    "profileChecklistSubtitle": "Prioritize these actions. Each one helps clients understand who you are, what you do, and where you work.",
     "tip0Title": "Use a good profile photo",
     "tip0Body": "A clear, well-lit photo where your face is visible helps the client understand who they are talking to. It is a simple trust signal compared with a profile with no photo or an unclear one.",
     "tip0Highlight": "No blurry photos, dark glasses, or party pics.",

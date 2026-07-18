@@ -4,28 +4,26 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { FadeInUp } from "@/components/landing/fade-in-up";
 import { InstallAppGuide } from "@/components/landing/install-app-card";
 import { Link } from "@/i18n/navigation";
-import { ChevronDown, Headset, Search, UserCheck, CalendarDays, Star, ShieldCheck, HelpCircle, Smartphone } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronDown,
+  Headset,
+  Search,
+  ShieldCheck,
+  Smartphone,
+  Star,
+  UserCheck,
+} from "lucide-react";
 
-const FAQ_ICONS = [
-  <HelpCircle key="0" className="h-4 w-4" />, <UserCheck key="1" className="h-4 w-4" />,
-  <ShieldCheck key="2" className="h-4 w-4" />, <Search key="3" className="h-4 w-4" />,
-  <CalendarDays key="4" className="h-4 w-4" />, <Star key="5" className="h-4 w-4" />,
-  <HelpCircle key="6" className="h-4 w-4" />, <UserCheck key="7" className="h-4 w-4" />,
-  <Smartphone key="8" className="h-4 w-4" />,
-];
-
-/* ── Help categories. Each card leads to ITS ANSWER: most open + scroll to the
-   matching FAQ item below (`faq` index); the support card navigates to /soporte. ── */
-const HELP_CATEGORIES: { icon: React.ReactNode; faq?: number; href?: "/soporte" }[] = [
-  { icon: <UserCheck className="h-6 w-6 text-[#009FD9]" />, faq: 1 },       // Crear tu cuenta → registro
-  { icon: <Search className="h-6 w-6 text-[#009FD9]" />, faq: 3 },          // Buscar profesionales
-  { icon: <ShieldCheck className="h-6 w-6 text-[#009FD9]" />, faq: 2 },     // Verificación de identidad
-  { icon: <CalendarDays className="h-6 w-6 text-[#009FD9]" />, faq: 6 },    // Solicitudes y proyectos
-  { icon: <Star className="h-6 w-6 text-[#009FD9]" />, faq: 5 },            // Reseñas y calificaciones
-  { icon: <Smartphone className="h-6 w-6 text-[#009FD9]" />, faq: 8 },        // Instalar la app
+const TOPICS = [
+  { icon: UserCheck, faq: 1 },
+  { icon: Search, faq: 3 },
+  { icon: ShieldCheck, faq: 2 },
+  { icon: CalendarDays, faq: 6 },
+  { icon: Star, faq: 5 },
+  { icon: Smartphone, faq: 8 },
 ];
 
 export default function AyudaPage() {
@@ -37,156 +35,87 @@ export default function AyudaPage() {
     if (window.location.hash !== "#agregar-a-inicio") return;
     const timer = window.setTimeout(() => {
       setShowInstallGuide(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          document.getElementById("agregar-a-inicio")?.scrollIntoView({ block: "start" });
-        });
-      });
+      requestAnimationFrame(() => document.getElementById("agregar-a-inicio")?.scrollIntoView({ block: "start" }));
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
-  // Open the matching FAQ answer and scroll it into view (clears the fixed navbar
-  // via scroll-mt on each item). Used by the category cards above.
-  function goToFaq(i: number) {
-    setOpenFaq(i);
-    requestAnimationFrame(() => {
-      document.getElementById(`faq-${i}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+  function selectTopic(faq: number) {
+    setOpenFaq(faq);
+    requestAnimationFrame(() => document.getElementById(`faq-${faq}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
   }
 
   function openInstallGuide() {
     setShowInstallGuide(true);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        document.getElementById("agregar-a-inicio")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    });
+    requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("agregar-a-inicio")?.scrollIntoView({ behavior: "smooth", block: "start" })));
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
-
-      {/* Hero */}
-      <section className="pt-32 pb-14 bg-white text-center px-4">
-        <FadeInUp>
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
-            {t("eyebrow")}
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
-            {t("title")}
-          </h1>
-          <p className="text-lg text-gray-500 max-w-lg mx-auto">
-            {t("subtitle")}
-          </p>
-        </FadeInUp>
-      </section>
-
-      {/* Category Cards — same max-width as FAQ below */}
-      <section className="pb-16 px-4 bg-[#f4f7fa]">
-        <div className="mx-auto max-w-4xl">
-          <FadeInUp>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-10">
-              {HELP_CATEGORIES.map((cat, i) => {
-                const card = (
-                  <div className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-full text-left">
-                    <div className="mb-3">{cat.icon}</div>
-                    <h3 className="text-sm font-bold text-[#1a2744] mb-1">{t(`cat${i}Title`)}</h3>
-                    <p className="text-sm text-gray-400 leading-relaxed">{t(`cat${i}Desc`)}</p>
-                  </div>
-                );
-                return (
-                  <FadeInUp key={i} delay={i * 50}>
-                    {cat.href ? (
-                      <Link href={cat.href} className="block h-full">{card}</Link>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => goToFaq(cat.faq!)}
-                        className="block h-full w-full"
-                        aria-label={t(`cat${i}Title`)}
-                      >
-                        {card}
-                      </button>
-                    )}
-                  </FadeInUp>
-                );
-              })}
+      <main className="flex-1">
+        <section className="border-b border-[#e5e7eb] px-4 pb-10 pt-24 sm:pb-12 sm:pt-32">
+          <div className="mx-auto max-w-4xl">
+            <p className="text-xs font-bold uppercase text-[#009fd9]">{t("eyebrow")}</p>
+            <div className="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+              <div>
+                <h1 className="text-3xl font-black leading-tight text-[#162543] sm:text-5xl">{t("title")}</h1>
+                <p className="mt-3 max-w-xl text-base leading-7 text-[#6b7280]">{t("subtitle")}</p>
+              </div>
+              <Link href="/soporte" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#cdd8e1] px-5 text-sm font-bold text-[#162543] hover:border-[#009fd9] hover:text-[#0089bb]">
+                <Headset className="h-4 w-4" />{t("contactCta")}
+              </Link>
             </div>
-          </FadeInUp>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* FAQ — same max-width as category cards above */}
-      <section className="py-16 px-4 bg-white">
-        <div className="mx-auto max-w-4xl">
-          <FadeInUp>
-            <h2 className="text-2xl font-extrabold text-[#1a2744] mb-1">{t("faqTitle")}</h2>
-            <p className="text-gray-500 mb-8 text-sm">{t("faqSubtitle")}</p>
-            <div className="divide-y divide-gray-100">
-              {FAQ_ICONS.map((icon, i) => (
-                <div key={i} id={`faq-${i}`} className="scroll-mt-24">
-                  <button
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    aria-expanded={openFaq === i}
-                    className="w-full flex items-center justify-between py-5 text-left gap-4 group"
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <span className="text-[#009FD9] shrink-0">{icon}</span>
-                      <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#009FD9] transition-colors">
-                        {t(`faq${i}Q`)}
-                      </span>
-                    </div>
-                    <ChevronDown
-                      className={`h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-180 text-[#009FD9]" : ""}`}
-                    />
+        <section className="bg-[#f4f7fa] px-4 py-10 sm:py-14">
+          <div className="mx-auto grid max-w-4xl gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
+            <aside>
+              <h2 className="text-sm font-extrabold text-[#162543]">{t("topicsTitle")}</h2>
+              <p className="mt-1 text-sm leading-6 text-[#6b7280]">{t("topicsSubtitle")}</p>
+              <nav className="mt-5 space-y-2" aria-label={t("topicsTitle")}>
+                {TOPICS.map(({ icon: Icon, faq }, index) => (
+                  <button key={index} type="button" onClick={() => selectTopic(faq)} className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${openFaq === faq ? "border-[#9bd8ef] bg-[#eaf7fd] text-[#0089bb]" : "border-[#dfe5eb] bg-white text-[#162543] hover:border-[#b8dcea]"}`}>
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="text-sm font-bold">{t(`cat${index}Title`)}</span>
                   </button>
-                  {openFaq === i && (
-                    <p className="pb-5 text-sm text-gray-500 leading-relaxed pl-7">
-                      {t(`faq${i}A`)}
-                      {i === 8 && (
-                        <>
-                          {" "}
-                          <button type="button" onClick={openInstallGuide} className="font-bold text-[#009FD9] hover:underline">
-                            {t("faq8Link")}
-                          </button>
-                        </>
-                      )}
+                ))}
+              </nav>
+            </aside>
+
+            <div className="rounded-lg border border-[#dfe5eb] bg-white px-5 sm:px-7">
+              <div className="border-b border-[#e5e7eb] py-5">
+                <h2 className="text-xl font-extrabold text-[#162543]">{t("faqTitle")}</h2>
+                <p className="mt-1 text-sm text-[#6b7280]">{t("faqSubtitle")}</p>
+              </div>
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
+                <div key={index} id={`faq-${index}`} className="scroll-mt-28 border-b border-[#edf0f3] last:border-0">
+                  <button type="button" onClick={() => setOpenFaq(openFaq === index ? null : index)} aria-expanded={openFaq === index} className="flex w-full items-center justify-between gap-4 py-5 text-left">
+                    <span className="text-sm font-bold leading-6 text-[#162543]">{t(`faq${index}Q`)}</span>
+                    <ChevronDown className={`h-5 w-5 shrink-0 text-[#9ca3af] transition-transform ${openFaq === index ? "rotate-180 text-[#009fd9]" : ""}`} />
+                  </button>
+                  {openFaq === index && (
+                    <p className="pb-5 text-sm leading-6 text-[#6b7280]">
+                      {t(`faq${index}A`)}
+                      {index === 8 && <>{" "}<button type="button" onClick={openInstallGuide} className="font-bold text-[#0089bb] hover:underline">{t("faq8Link")}</button></>}
                     </p>
                   )}
                 </div>
               ))}
             </div>
-          </FadeInUp>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {showInstallGuide && <InstallAppGuide />}
+        {showInstallGuide && <InstallAppGuide />}
 
-      {/* Contact */}
-      <section className="py-14 px-4 bg-[#f4f7fa]">
-        <div className="mx-auto max-w-4xl">
-          <FadeInUp>
-            <div className="bg-white rounded-3xl border border-gray-100 p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <div>
-                <h2 className="text-xl font-bold text-[#1a2744] mb-1">{t("contactTitle")}</h2>
-                <p className="text-sm text-gray-500">{t("contactSubtitle")}</p>
-              </div>
-              <div className="shrink-0">
-                <Link
-                  href="/soporte"
-                  className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm whitespace-nowrap"
-                >
-                  <Headset className="h-4 w-4" />
-                  {t("contactCta")}
-                </Link>
-              </div>
-            </div>
-          </FadeInUp>
-        </div>
-      </section>
-
+        <section className="border-t border-[#e5e7eb] px-4 py-12">
+          <div className="mx-auto flex max-w-4xl flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+            <div><h2 className="text-xl font-extrabold text-[#162543]">{t("contactTitle")}</h2><p className="mt-1 text-sm text-[#6b7280]">{t("contactSubtitle")}</p></div>
+            <Link href="/soporte" className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#0089bb]"><Headset className="h-4 w-4" />{t("contactCta")}</Link>
+          </div>
+        </section>
+      </main>
       <LandingFooter />
     </div>
   );

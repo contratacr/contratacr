@@ -80,9 +80,9 @@
       "more": "Más servicios"
     },
     "resourceLinks": {
-      "howItWorks": "Cómo funciona",
+      "howItWorks": "Cómo usar ContrataCR",
       "helpCenter": "Centro de ayuda",
-      "proTips": "Consejos para profesionales",
+      "proTips": "Para profesionales",
       "support": "Soporte"
     },
     "loginModal": {
@@ -834,13 +834,13 @@
       "title": "Para clientes",
       "search": "Buscar servicios",
       "categories": "Categorías",
-      "howItWorks": "Cómo funciona",
+      "howItWorks": "Cómo usar ContrataCR",
       "publish": "Publicar una solicitud"
     },
     "pros": {
       "title": "Para profesionales",
       "register": "Ofrecer mis servicios",
-      "attract": "Cómo atraer clientes",
+      "attract": "Mejorar mi perfil",
       "verification": "Verificación de identidad"
     },
     "support": {
@@ -2831,11 +2831,11 @@
     "visualSearchButton": "Buscar"
   },
   "comoFunciona": {
-    "metaTitle": "Cómo funciona ContrataCR | Clientes y profesionales en Costa Rica",
+    "metaTitle": "Cómo usar ContrataCR | Guía para clientes y profesionales",
     "metaDesc": "Conoce cómo usar ContrataCR para buscar servicios, publicar solicitudes, recibir propuestas y ofrecer servicios profesionales en Costa Rica.",
-    "eyebrow": "Cómo funciona",
-    "title": "La forma más simple de encontrar o conseguir servicios en Costa Rica",
-    "subtitle": "ContrataCR conecta clientes con profesionales locales. Puedes buscar directamente, publicar una solicitud, revisar perfiles, coordinar por Mensajes y manejar todo desde tu panel.",
+    "eyebrow": "Guía rápida",
+    "title": "Cómo usar ContrataCR",
+    "subtitle": "Elige lo que quieres hacer y sigue un proceso claro. Puedes buscar ayuda, publicar una solicitud u ofrecer tus servicios desde una sola cuenta.",
     "metric0Value": "2 formas",
     "metric0Label": "Buscar profesionales o publicar una solicitud.",
     "metric1Value": "0 comisiones",
@@ -2853,7 +2853,7 @@
     "clientStep1Title": "Compara perfiles",
     "clientStep1Body": "Revisa identidad verificada, trabajos anteriores, reseñas, precios de referencia, zonas de trabajo y disponibilidad.",
     "clientStep2Title": "Contacta o agenda",
-    "clientStep2Body": "Solicita el servicio, elige horario cuando esté disponible y termina de coordinar por Mensajes.",
+    "clientStep2Body": "Solicita el servicio, elige horario cuando esté disponible y usa las opciones de contacto habilitadas.",
     "clientPathCta": "Ver profesionales",
     "publishPathBadge": "Opción 2",
     "publishPathTitle": "Publica una solicitud",
@@ -2955,7 +2955,9 @@
   "ayuda": {
     "eyebrow": "Centro de ayuda",
     "title": "¿En qué te podemos ayudar?",
-    "subtitle": "Encuentra respuestas rápidas o contáctanos directamente.",
+    "subtitle": "Busca por tarea, abre una respuesta y continúa sin recorrer información que no necesitas.",
+    "topicsTitle": "Elige un tema",
+    "topicsSubtitle": "Accesos directos a las tareas más consultadas.",
     "cat0Title": "Crear tu cuenta",
     "cat0Desc": "Regístrate con correo o Google. El proceso toma pocos minutos.",
     "cat1Title": "Buscar servicios",
@@ -2979,13 +2981,13 @@
     "faq3Q": "¿Cómo busco un servicio?",
     "faq3A": "Usa la barra de búsqueda en la página principal o la página de búsqueda de servicios. Puedes buscar por tipo de servicio (plomero, psicólogo, diseñador, etc.), por provincia y cantón, y ordenar por calificación. El buscador entiende sinónimos — si escribes 'niñera' también va a encontrar profesionales de cuidado infantil.",
     "faq4Q": "¿Cómo coordino el servicio?",
-    "faq4A": "De dos formas. Si buscas directamente, entras al perfil del profesional y le envías un mensaje. Si publicas una solicitud, los profesionales te envían propuestas y coordinas por Mensajes con quien elijas. Acuerdan precio, fecha y detalles sin intermediarios.",
+    "faq4A": "Si buscas directamente, abre el perfil y usa una de las opciones de contacto habilitadas. Si publicas una solicitud, compara las propuestas y coordina con el profesional que elijas. El precio, la fecha y los detalles se acuerdan directamente.",
     "faq5Q": "¿Cómo dejo una reseña?",
     "faq5A": "Después de completar un servicio, puedes dejar una reseña desde tu panel, en Modo cliente → Mis solicitudes. Solo clientes que realmente contrataron ese servicio pueden dejar reseñas — así se garantiza que son auténticas.",
     "faq6Q": "¿Qué es publicar una solicitud?",
     "faq6A": "Publicar una solicitud es una alternativa a buscar directamente. Describes lo que necesitas (por ejemplo: 'pintura de sala 4x4m, presupuesto ₡80.000'), y los profesionales que ofrecen ese servicio en tu zona te envían propuestas con su precio. Tú eliges con quién trabajar.",
     "faq7Q": "¿Mi información personal está segura?",
-    "faq7A": "Sí. Tu número de teléfono y correo nunca son visibles públicamente en la plataforma. Puedes comunicarte mediante Mensajes sin compartir esos datos. Cumplimos con la Ley 8968 de Protección de Datos de Costa Rica.",
+    "faq7A": "Tu identificación no se publica y los datos de contacto se muestran únicamente según las opciones habilitadas en la plataforma. Tratamos la información personal conforme a la Ley 8968 de Protección de Datos de Costa Rica.",
     "faq8Q": "¿Cómo agrego ContrataCR a la pantalla de inicio?",
     "faq8A": "Puedes agregar ContrataCR como acceso directo desde el menú de tu navegador.",
     "faq8Link": "Ver la guía visual",
@@ -2996,9 +2998,11 @@
   },
   "atraerClientes": {
     "eyebrow": "Para profesionales",
-    "titleA": "Cómo atraer más clientes",
-    "titleB": "en ContrataCR",
-    "subtitle": "Consejos prácticos y honestos para profesionales que quieren crecer en el mercado costarricense.",
+    "titleA": "Haz que tu perfil",
+    "titleB": "genere confianza",
+    "subtitle": "Una guía práctica para completar la información que los clientes revisan antes de elegir a un profesional.",
+    "profileChecklistTitle": "Lo esencial de un perfil completo",
+    "profileChecklistSubtitle": "Prioriza estas acciones. Cada una ayuda a que el cliente entienda quién eres, qué haces y dónde trabajas.",
     "tip0Title": "Usa una buena foto de perfil",
     "tip0Body": "Una foto clara, bien iluminada y donde se vea tu cara ayuda a que el cliente entienda con quién está hablando. Es una señal simple de confianza frente a un perfil sin foto o con una foto poco clara.",
     "tip0Highlight": "Nada de fotos borrosas, con lentes oscuros, o de fiestas.",
