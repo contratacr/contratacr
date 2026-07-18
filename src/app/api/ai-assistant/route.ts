@@ -1271,7 +1271,7 @@ async function realProfessionalMatches(payload: AssistantPayload, originalMessag
 export async function POST(req: Request) {
   // A normal guided conversation can legitimately use several short turns.
   // Keep abuse protection without cutting off regression or real users mid-flow.
-  const limited = enforceRateLimit(req, "ai-assistant", 45, 60_000);
+  const limited = enforceRateLimit(req, "ai-assistant", 60, 60_000);
   if (limited) return limited;
 
   try {
