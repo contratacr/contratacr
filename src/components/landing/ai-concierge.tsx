@@ -489,7 +489,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
         className={cn(
           "group fixed right-3 z-[95] grid h-14 w-14 place-items-center overflow-visible bg-transparent transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 sm:bottom-6 sm:right-6 sm:h-[72px] sm:w-[72px]",
           insideDashboard
-            ? "hidden bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:grid lg:bottom-6"
+            ? "bottom-[calc(1rem+env(safe-area-inset-bottom))] lg:bottom-6"
             : "bottom-[calc(0.85rem+env(safe-area-inset-bottom))]",
         )}
       >

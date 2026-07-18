@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
-  User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
+  User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut,
 } from "lucide-react";
@@ -33,7 +33,6 @@ import { AccountSecuritySection } from "@/components/account/account-security";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { SupportTickets } from "@/components/support/support-tickets";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
-import { AiConcierge } from "@/components/landing/ai-concierge";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
@@ -166,6 +165,7 @@ export default function DashboardPage() {
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -195,12 +195,21 @@ export default function DashboardPage() {
     legacyVerificationTab ? "offer" : requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
   const defaultTab: Tab = mode === "offer" ? "bookings" : "sent_bookings";
-  const activeTab: Tab = requestedTab ?? defaultTab;
+  const activeTab: Tab = requestedTab ?? (preferMobileMenuDefault ? "home" : defaultTab);
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
   useEffect(() => {
     if (isProvider && urlForcedMode && urlForcedMode !== globalMode) setMode(urlForcedMode);
   }, [isProvider, urlForcedMode, globalMode, setMode]);
+
+  useEffect(() => {
+    const updateDefaultPanelTarget = () => {
+      setPreferMobileMenuDefault(!rawRequestedTab && window.matchMedia("(max-width: 1023px)").matches);
+    };
+    updateDefaultPanelTarget();
+    window.addEventListener("resize", updateDefaultPanelTarget);
+    return () => window.removeEventListener("resize", updateDefaultPanelTarget);
+  }, [rawRequestedTab]);
 
   useEffect(() => {
     if (!legacyVerificationTab) return;
@@ -220,10 +229,18 @@ export default function DashboardPage() {
   }, [requestedTab, searchParams, router]);
 
   useEffect(() => {
+    if (requestedTab !== "assistant") return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("tab");
+    const qs = params.toString();
+    router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
+  }, [requestedTab, searchParams, router]);
+
+  useEffect(() => {
     if (requestedTab !== "home") return;
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
-      setMobilePanelOpen(false);
-      return;
+      const frame = requestAnimationFrame(() => setMobilePanelOpen(false));
+      return () => cancelAnimationFrame(frame);
     }
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", defaultTab);
@@ -637,7 +654,7 @@ export default function DashboardPage() {
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = modeTabs;
   const mobileSectionTabs = sidebarTabs;
-  const mobileFullScreenTab = activeTab === "assistant";
+  const mobileFullScreenTab = false;
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
   const profileCompletionPercent = proForCompletion ? computeCompletion(proForCompletion).percent : null;
   const showProfileCompletion =
@@ -1094,12 +1111,6 @@ export default function DashboardPage() {
                         {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
-
-                        {activeTab === "assistant" && (
-                          <div className="lg:hidden">
-                            <AiConcierge embedded onBack={() => setTab(mode === "offer" ? "bookings" : "sent_bookings")} />
-                          </div>
-                        )}
                         {activeTab === "notifications" && <NotificationsList />}
                         {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
                         {activeTab === "cuenta" && (
