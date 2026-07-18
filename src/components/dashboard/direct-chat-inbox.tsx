@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Archive, ArchiveRestore, ArrowLeft, Loader2, MessageSquareMore, Search, Send, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -145,7 +145,7 @@ export function DirectChatInbox() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   useContainedTouchScroll(scrollRef, mobileThread);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!mobileThread) return;
     const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
     if (!shouldLockScroll) return;

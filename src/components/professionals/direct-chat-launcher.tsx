@@ -57,7 +57,7 @@ export function DirectChatLauncher({
     return `/mensajes?${params.toString()}`;
   }
 
-  function openChat() {
+  async function openChat() {
     if (isOwn) {
       onSelfAction?.();
       return;
@@ -68,13 +68,32 @@ export function DirectChatLauncher({
       return;
     }
     setLoading(true);
-    router.push(href);
+    try {
+      const response = await fetch("/api/direct-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          professionalId,
+          bookingId,
+          projectId,
+          proposalId,
+          contextTitle,
+          initialMessage,
+          openConversation: true,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.conversationId) throw new Error(payload.error || "Could not open chat");
+      router.push(`/mensajes?conversation=${encodeURIComponent(payload.conversationId)}`);
+    } catch {
+      router.push(href);
+    }
   }
 
   return (
     <button
       type="button"
-      onClick={openChat}
+      onClick={() => void openChat()}
       disabled={loading}
       aria-busy={loading}
       className={cn(

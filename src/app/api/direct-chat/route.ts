@@ -138,7 +138,7 @@ export async function POST(req: Request) {
   const message = limitTrimmedText(body.message, 2000);
   const initialMessage = limitTrimmedText(body.initialMessage, 2000);
   const openConversation = body.openConversation === true;
-  if (!message && !(openConversation && initialMessage)) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
+  if (!message && !openConversation) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
   const db = createAdminClient();
   let conversation: ConversationRow | null = null;
   let conversationCreated = false;
@@ -224,6 +224,9 @@ export async function POST(req: Request) {
   if (conversation.status === "blocked") return NextResponse.json({ error: "Esta conversación está bloqueada." }, { status: 403 });
   if (openConversation && !conversationCreated) {
     return NextResponse.json({ ok: true, conversationId: conversation.id, created: false });
+  }
+  if (openConversation && !message && !initialMessage) {
+    return NextResponse.json({ ok: true, conversationId: conversation.id, created: conversationCreated });
   }
   const messageToSend = message || initialMessage;
   const { data: sentMessages, error: msgError } = await db.rpc("send_direct_message_atomic", {
