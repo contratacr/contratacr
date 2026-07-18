@@ -35,11 +35,13 @@ export function ViewportEnvironment() {
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
     vv?.addEventListener("resize", update);
+    vv?.addEventListener("scroll", update);
 
     return () => {
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
       vv?.removeEventListener("resize", update);
+      vv?.removeEventListener("scroll", update);
     };
   }, []);
 

@@ -321,12 +321,13 @@ input::-ms-clear {
 
   .contratacr-chat-thread-open .direct-chat-shell--thread {
     position: fixed;
-    top: 0;
-    right: 0;
+    top: var(--app-visual-viewport-top);
+    right: auto;
     bottom: auto;
-    left: 0;
+    left: var(--app-visual-viewport-left);
     z-index: 110;
     height: var(--app-visual-viewport-height);
+    width: var(--app-visual-viewport-width);
     min-height: 0;
     border-radius: 0;
     overscroll-behavior: none;
@@ -338,8 +339,11 @@ input::-ms-clear {
   }
 
   .contratacr-ai-open [data-ai-concierge-dialog] {
-    top: 0;
+    top: var(--app-visual-viewport-top);
+    left: var(--app-visual-viewport-left);
+    right: auto;
     height: var(--app-visual-viewport-height);
+    width: var(--app-visual-viewport-width);
   }
 }
 
