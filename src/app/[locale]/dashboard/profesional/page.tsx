@@ -940,7 +940,17 @@ export default function DashboardPage() {
                     <span className="hidden min-[390px]:inline">{t("back")}</span>
                   </button>
                   <h2 className="min-w-0 flex-1 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
-                  <span className="w-[74px] shrink-0" />
+                  <div className="flex w-[74px] shrink-0 justify-end">
+                    {publicProfileHref && (
+                      <Link
+                        href={publicProfileHref}
+                        aria-label={t("viewAsClient")}
+                        className="grid h-10 w-10 place-items-center rounded-full border border-[#dbeafe] bg-white text-[#64748b] transition active:bg-[#EBF5FB] active:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Link>
+                    )}
+                  </div>
                 </div>
               )}
 
