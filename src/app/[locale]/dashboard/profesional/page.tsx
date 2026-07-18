@@ -915,7 +915,7 @@ export default function DashboardPage() {
                       activeTab === "chat" && "overflow-hidden",
                       mobileFullScreenTab && "rounded-none border-0 shadow-none lg:rounded-2xl lg:border lg:shadow-sm",
                     )}>
-                      {!mobileFullScreenTab && <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
+                      {activeTab !== "chat" && !mobileFullScreenTab && <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
