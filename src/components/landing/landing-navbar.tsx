@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, LogOut, Briefcase, Compass, Globe, Check,
-  HelpCircle, Lightbulb, Headset, Bell,
+  MessageSquareMore, UserRound,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -50,7 +50,7 @@ export function ContrataCRLogo({ className, chip = false, size = "md", tone = "l
   const chipMarkCls = lg ? "h-6 w-6 sm:h-7 sm:w-7" : "h-[1.35rem] w-[1.35rem]";
   const dark = tone === "dark";
   return (
-    <div className={cn("flex items-center select-none", lg ? "gap-2.5" : "gap-2", className)}>
+    <div className={cn("flex items-center select-none", lg ? "gap-1.5" : "gap-1", className)}>
       {chip ? (
         <span className={cn("grid place-items-center rounded-lg bg-white shadow-sm", chipCls)}>
           <ContrataCRMark className={chipMarkCls} />
@@ -254,11 +254,6 @@ const RESOURCES_LINKS: { key: string; href: string }[] = [
   { key: "proTips",    href: "/atraer-clientes" },
   { key: "support",    href: "/soporte" },
 ];
-const RESOURCE_ICONS = {
-  helpCenter: HelpCircle,
-  proTips: Lightbulb,
-  support: Headset,
-} as const;
 
 /* ─── Accent- and typo-tolerant category matcher ───
    `searchCategories` already does accent-insensitive substring matching over
@@ -298,146 +293,6 @@ function matchCategories(query: string, limit = 8, locale?: string): CatMatch[] 
     .sort((a, b) => a.best - b.best)
     .slice(0, limit)
     .map((x) => x.item);
-}
-
-/* ─── Smart category search with autocomplete ───
-   Used both inside the Categorías mega-menu and as the compact (scrolled)
-   header search. Selecting a suggestion jumps straight to /buscar filtered by
-   that category; free text falls back to a keyword search. */
-function CategoryAutocomplete({
-  placeholder = "Busca un servicio…",
-  autoFocus = false,
-  province,
-  onNavigate,
-  size = "md",
-}: {
-  placeholder?: string;
-  autoFocus?: boolean;
-  province?: string;
-  onNavigate?: () => void;
-  size?: "md" | "lg";
-}) {
-  const t = useTranslations("header");
-  // Shared category-suggestion strings — keeps the navbar's "no results / ¿No ves tu
-  // categoría?" wording IDENTICAL to the crear-proyecto / agregar-profesión picker.
-  const ts = useTranslations("categorySearch");
-  const tp = useTranslations("categoriesPage");
-  const locale = useLocale();
-  const router = useRouter();
-  useCustomCategories();
-  const [q, setQ] = useState("");
-  const [active, setActive] = useState(0);
-  const [focused, setFocused] = useState(false);
-  // True while the inline "suggest a category" box is open/just-sent, so the dropdown
-  // stays open even though the search input lost focus to the suggestion field.
-  const [suggestActive, setSuggestActive] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
-  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const suggestions = matchCategories(q, 8, locale);
-
-  useEffect(() => {
-    if (autoFocus) {
-      const id = requestAnimationFrame(() => inputRef.current?.focus());
-      return () => cancelAnimationFrame(id);
-    }
-  }, [autoFocus]);
-  useEffect(() => { queueMicrotask(() => setActive(0)); }, [q]);
-
-  function go(id?: string) {
-    const params = new URLSearchParams();
-    if (id) params.set("categoria", id);
-    else if (q.trim()) params.set("q", q.trim());
-    if (province) params.set("provincia", province);
-    router.push(`/buscar${params.toString() ? `?${params.toString()}` : ""}`);
-    setQ("");
-    setFocused(false);
-    onNavigate?.();
-  }
-
-  function onKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, suggestions.length - 1)); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
-    else if (e.key === "Enter") { e.preventDefault(); go(suggestions[active]?.id); }
-    else if (e.key === "Escape") { setFocused(false); inputRef.current?.blur(); }
-  }
-
-  // Stay open while the suggest box is in use (the search input has blurred to it).
-  const open = (focused || suggestActive) && q.trim().length > 0;
-  const lg = size === "lg";
-
-  return (
-    <div className="relative w-full">
-      <form
-        ref={formRef}
-        onSubmit={(e) => { e.preventDefault(); go(suggestions[active]?.id); }}
-        className={cn(
-          "flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50/70 transition-all focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/20 focus-within:bg-white",
-          lg ? "h-12 px-4" : "h-10 px-3",
-        )}
-      >
-        <Search className="h-4 w-4 text-gray-400 shrink-0" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onFocus={() => { if (blurTimer.current) clearTimeout(blurTimer.current); setFocused(true); }}
-          onBlur={() => { blurTimer.current = setTimeout(() => setFocused(false), 150); }}
-          onKeyDown={onKeyDown}
-          placeholder={placeholder}
-          aria-label={t("searchServiceAria")}
-          className="flex-1 min-w-0 bg-transparent text-base sm:text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
-        />
-      </form>
-
-      <AnchoredDropdown anchorRef={formRef} open={open} maxHeight={340} className="rounded-xl border-gray-100 shadow-2xl">
-        <div className="py-1.5">
-          {suggestions.length === 0 ? (
-            <>
-              {/* No match → consistent "No encontramos esa categoría" wording + the SAME
-                  inline suggest flow used in crear-proyecto / agregar-profesión (submits to
-                  admin). The "Ver todos los profesionales" link was removed (sprint 305). */}
-              <div className="px-4 pt-3 pb-2 text-center">
-                <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
-                <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{tp("suggestDescription")}</p>
-              </div>
-              <div className="flex justify-center px-4 pb-3">
-                <CategorySuggestionBox
-                  prominent
-                  defaultName={q}
-                  notListedLabel={tp("suggestCta")}
-                  placeholder={tp("suggestPlaceholder")}
-                  sendLabel={tp("suggestSend")}
-                  sendingLabel={tp("suggestSending")}
-                  cancelLabel={ts("cancel")}
-                  thanksLabel={tp("suggestThanks")}
-                  onActiveChange={setSuggestActive}
-                />
-              </div>
-            </>
-          ) : (
-            suggestions.map((s, i) => (
-              <button
-                key={s.id}
-                onMouseDown={(e) => { e.preventDefault(); go(s.id); }}
-                onMouseEnter={() => setActive(i)}
-                className={cn(
-                  "w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors",
-                  active === i ? "bg-[#EBF5FB]" : "hover:bg-gray-50",
-                )}
-              >
-                <span className="text-sm font-medium text-[#1a2744]">{getCategoryLabel(s.id, locale)}</span>
-                {suggestions.length > 1 && (
-                  <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
-                )}
-              </button>
-            ))
-          )}
-        </div>
-      </AnchoredDropdown>
-    </div>
-  );
 }
 
 /* ─── Categorías mega-menu panel ───
@@ -791,6 +646,65 @@ function AccountMenu({
   );
 }
 
+function MobileMessagesButton({ href, onNavigate }: { href: string; onNavigate?: () => void }) {
+  const { user } = useAuth();
+  const locale = useLocale();
+  const [unread, setUnread] = useState(0);
+
+  const loadUnread = useCallback(async () => {
+    if (!user) {
+      setUnread(0);
+      return;
+    }
+    try {
+      const res = await fetch("/api/direct-chat", { cache: "no-store" });
+      if (!res.ok) return;
+      const json = await res.json();
+      const total = (json.conversations ?? []).reduce((sum: number, item: {
+        client_id?: string;
+        client_unread_count?: number;
+        professional_unread_count?: number;
+      }) => {
+        const count = item.client_id === user.id ? item.client_unread_count : item.professional_unread_count;
+        return sum + (Number(count) || 0);
+      }, 0);
+      setUnread(total);
+    } catch {
+      setUnread(0);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => void loadUnread(), 0);
+    const onChanged = () => void loadUnread();
+    window.addEventListener("directChatChanged", onChanged);
+    window.addEventListener("focus", onChanged);
+    return () => {
+      window.clearTimeout(timeout);
+      window.removeEventListener("directChatChanged", onChanged);
+      window.removeEventListener("focus", onChanged);
+    };
+  }, [loadUnread]);
+
+  if (!user) return null;
+
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      aria-label={locale === "en" ? "Messages" : "Mensajes"}
+      className="relative grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-[#f3f4f6]"
+    >
+      <MessageSquareMore className="h-5 w-5" />
+      {unread > 0 && (
+        <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 /* ─── Navbar ───
    `mobileInline` (optional): content injected into the MOBILE header row only (<lg),
    between the logo and the hamburger — used by /buscar to put the search + filters on the
@@ -874,11 +788,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     () => RESOURCES_LINKS.filter((link) => link.key !== "proTips" || !user || isPro),
     [isPro, user],
   );
-  const mobileLoggedInResourceLinks = useMemo(
-    () => RESOURCES_LINKS.filter((link) => link.key !== "support"),
-    [],
-  );
-
   // Airbnb FULL mode switch: providers can change Cliente/Profesional from the
   // panel header or account menus, and the navbar reads that mode for quick links.
   // Keep notifications in and out of the panel aligned: outside the panel, we
@@ -895,17 +804,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const openMobileMenu = useCallback(() => {
     setMobileOpen(true);
   }, []);
-  const mobileRowBase = "relative flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors before:absolute before:left-0 before:top-3 before:bottom-3 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity";
-  const mobileRowClass = (active: boolean, strong = false) => cn(
-    mobileRowBase,
-    active
-      ? "bg-[#EBF5FB] text-[#0089bb] before:opacity-100"
-      : strong
-        ? "text-[#162543] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
-      : "text-[#4b5563] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
-  );
-  const mobileIconClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#009FD9]" : "text-[#9ca3af]");
-  const mobileChevronClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#009FD9]/60" : "text-gray-300");
 
   const compactSuggestions = matchCategories(searchQuery, 8, locale);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
@@ -1068,10 +966,44 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="relative h-16">
+            <div className="absolute inset-0 flex items-center gap-2 lg:hidden">
+              <button
+                type="button"
+                onClick={openMobileMenu}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] transition-colors hover:bg-gray-50"
+                aria-label={t("openMenu")}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+
+              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+                {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
+              </Link>
+
+              {mobileInline && (
+                <div className="flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
+              )}
+
+              <div className="ml-auto flex shrink-0 items-center gap-0.5">
+                {user && (
+                  <>
+                    <MobileMessagesButton href="/dashboard/profesional?tab=messages" />
+                    <NotificationBell scope={notificationScope} />
+                  </>
+                )}
+                <Link
+                  href={user ? primaryPanelHref : loginHref}
+                  aria-label={user ? t("myPanel") : t("login")}
+                  className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50"
+                >
+                  <UserRound className="h-5 w-5" />
+                </Link>
+              </div>
+            </div>
 
             {/* ── Default row ── */}
             <div
-              className="absolute inset-0 flex items-center gap-4 transition-opacity duration-300"
+              className="absolute inset-0 hidden items-center gap-4 transition-opacity duration-300 lg:flex"
               style={{ opacity: effectiveCompact ? 0 : 1, pointerEvents: effectiveCompact ? "none" : "auto" }}
             >
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
@@ -1258,7 +1190,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
 
             {/* ── Compact row — brand mark + smart search (Thumbtack-style) ── */}
             <div
-              className="absolute inset-0 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 lg:px-8 transition-opacity duration-300"
+              className="absolute inset-0 hidden items-center gap-2 px-4 transition-opacity duration-300 sm:gap-3 sm:px-6 lg:flex lg:px-8"
               style={{ opacity: effectiveCompact ? 1 : 0, pointerEvents: effectiveCompact ? "auto" : "none" }}
             >
               <Link
@@ -1437,11 +1369,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          {/* Drawer header — logo (home link) + close */}
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#e8eef5] bg-white px-4 shadow-sm">
-            <Link href="/" aria-label="ContrataCR inicio" onClick={() => setMobileOpen(false)}>
-              <ContrataCRLogo size="lg" />
-            </Link>
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#e8eef5] bg-white px-6 shadow-sm">
+            <span className="text-sm font-extrabold uppercase tracking-[0.16em] text-[#9ca3af]">{t("menu")}</span>
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
@@ -1452,146 +1381,62 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             </button>
           </div>
 
-          {/* Scrollable content - mirrors the desktop navbar with mobile icon rows. */}
-          <div className="flex-1 overflow-y-auto px-4 py-4">
-            <div className="overflow-hidden rounded-2xl border border-[#e8eef5] bg-white shadow-[0_18px_45px_-26px_rgba(15,23,42,0.65)]">
-              {/* Smart search on mobile */}
-              <div className="border-b border-[#edf2f7] p-2">
-                <CategoryAutocomplete
-                  placeholder={t("searchServicePlaceholderShort")}
-                  size="lg"
-                  onNavigate={() => setMobileOpen(false)}
-                />
+          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-7 py-7">
+            {authLoading && !user ? (
+              <div className="mb-7 space-y-2" aria-hidden="true">
+                <div className="h-4 w-40 animate-pulse rounded-full bg-[#eef2f6]" />
+                <div className="h-3 w-56 max-w-full animate-pulse rounded-full bg-[#eef2f6]" />
               </div>
+            ) : user ? (
+              <div className="mb-7 border-b border-[#eef2f6] pb-5">
+                <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myAccount")}</p>
+                <p className="mt-0.5 truncate text-xs font-medium text-[#8a94a6]">{user.email}</p>
+              </div>
+            ) : null}
 
-              {authLoading && !user ? (
-                <div className="p-1.5" aria-hidden="true">
-                  <div className="mb-1 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3">
-                    <div className="h-9 w-9 animate-pulse rounded-full bg-[#eef2f6]" />
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <div className="h-3.5 w-32 animate-pulse rounded-full bg-[#eef2f6]" />
-                      <div className="h-3 w-44 max-w-full animate-pulse rounded-full bg-[#eef2f6]" />
-                    </div>
-                  </div>
-                </div>
-              ) : user ? (
-                <div className="p-1.5">
-                  <div className="mb-1 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3">
-                    <span
-                      className={cn(
-                        "grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#009FD9] bg-cover bg-center text-sm font-bold text-white",
-                        avatarUrl && "text-transparent",
-                      )}
-                      style={avatarUrl ? { backgroundImage: `url("${avatarUrl}")` } : undefined}
-                    >
-                      <span aria-hidden>{initials}</span>
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myAccount")}</p>
-                      <p className="truncate text-xs text-[#9ca3af]">{user.email}</p>
-                    </div>
-                  </div>
-                  <div className="mt-1 flex flex-col gap-0.5 border-t border-[#edf2f7] pt-1">
-                    <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
-                      <LayoutDashboard className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{t("myPanel")}</span>
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </Link>
-                    <Link href="/dashboard/profesional?tab=notifications" onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
-                      <Bell className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{locale === "en" ? "Notifications" : "Notificaciones"}</span>
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </Link>
-                    <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
-                      <Compass className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{t("categories")}</span>
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </Link>
-                    {mobileLoggedInResourceLinks.map((link) => {
-                      const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
-                      return (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={() => setMobileOpen(false)}
-                          className={mobileRowClass(false)}
-                        >
-                          <ResourceIcon className={mobileIconClass(false)} />
-                          <span className="min-w-0 flex-1">{t(`resourceLinks.${link.key}`)}</span>
-                          <ChevronRight className={mobileChevronClass(false)} />
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="p-1.5">
-                  <div className="flex flex-col gap-0.5">
-                    <Link
-                      href="/registro/profesional"
-                      onClick={() => setMobileOpen(false)}
-                      className="inline-flex w-fit px-3 py-2 text-sm font-medium text-[#009FD9] transition-colors hover:text-[#007fae]"
-                    >
-                      {t("registerPro")}
-                    </Link>
-                    <Link
-                      href={loginHref}
-                      onClick={() => setMobileOpen(false)}
-                      className={mobileRowClass(false)}
-                    >
-                      <LogIn className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{t("login")}</span>
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </Link>
-                  </div>
-                </div>
-              )}
-
+            <nav className="flex flex-col gap-1 text-[#07144d]">
+              <Link href="/" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+                {locale === "en" ? "Home" : "Inicio"}
+              </Link>
+              <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-bold transition-colors hover:text-[#009FD9]">
+                {t("offerServices")}
+              </Link>
+              <Link href="/buscar" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-bold transition-colors hover:text-[#009FD9]">
+                {t("searchProfessionals")}
+              </Link>
               {!user && (
-                <div className="mt-1 border-t border-[#dbe3ea] bg-white/70 p-1.5">
-                  <div className="flex flex-col gap-0.5">
-                    <Link
-                      href="/servicios"
-                      onClick={() => setMobileOpen(false)}
-                      className={mobileRowClass(false, true)}
-                    >
-                      <Compass className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{t("categories")}</span>
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </Link>
-                    {visibleResourceLinks.filter((link) => link.key !== "support").map((link) => {
-                      const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
-                      return (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={() => setMobileOpen(false)}
-                          className={mobileRowClass(false)}
-                        >
-                          <ResourceIcon className={mobileIconClass(false)} />
-                          <span className="min-w-0 flex-1">{t(`resourceLinks.${link.key}`)}</span>
-                          <ChevronRight className={mobileChevronClass(false)} />
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
+                <Link href={loginHref} onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+                  {t("login")}
+                </Link>
               )}
+              <Link href="/servicios" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+                {t("categories")}
+              </Link>
+              <Link href="/como-funciona" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+                {t("resourceLinks.howItWorks")}
+              </Link>
+              <Link href="/ayuda" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+                {t("resourceLinks.helpCenter")}
+              </Link>
+              <Link href="/atraer-clientes" onClick={() => setMobileOpen(false)} className="py-2.5 text-lg font-medium transition-colors hover:text-[#009FD9]">
+                {t("resourceLinks.proTips")}
+              </Link>
+              <SupportLink onNavigate={() => setMobileOpen(false)} className="py-2.5 text-left text-lg font-medium text-[#07144d] transition-colors hover:text-[#009FD9]">
+                {t("resourceLinks.support")}
+              </SupportLink>
+            </nav>
 
-              {/* Idioma */}
-              <div className="px-3 pb-3 pt-1.5">
-                <LanguageInline />
-              </div>
+            <div className="mt-8">
+              <LanguageInline />
             </div>
 
-            {/* Cerrar sesión — logged-in only, at the very bottom */}
             {user && (
-              <div className="mt-4">
-                <button onClick={handleSignOut}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50">
-                  <LogOut className="h-4 w-4" /> {t("signOut")}
-                </button>
-              </div>
+              <button
+                onClick={handleSignOut}
+                className="mt-auto flex w-full items-center gap-2 pt-8 text-left text-lg font-medium text-red-600 transition-colors hover:text-red-700"
+              >
+                <LogOut className="h-4 w-4" /> {t("signOut")}
+              </button>
             )}
           </div>
         </div>
