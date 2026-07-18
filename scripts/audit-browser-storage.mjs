@@ -9,11 +9,12 @@ import fs from "node:fs";
 // a previously reviewed file.
 const reviewed = new Map([
   ["src/hooks/use-auth.ts", { count: 9, reason: "authenticated user/avatar render cache" }],
-  ["src/hooks/use-mode.ts", { count: 3, reason: "device presentation preference" }],
+  ["src/hooks/use-mode.ts", { count: 2, reason: "device presentation preference" }],
+  ["src/components/auth/otp-verification.tsx", { count: 2, reason: "short-lived OTP auto-resend cooldown; auth state stays in Supabase" }],
   ["src/components/auth/client-registration-modal.tsx", { count: 2, reason: "short-lived booking registration handoff" }],
   ["src/components/booking/booking-modal.tsx", { count: 4, reason: "short-lived booking registration handoff" }],
   ["src/components/dashboard/pro/profile-completion.tsx", { count: 2, reason: "dismissed optional UI prompt" }],
-  ["src/components/landing/landing-navbar.tsx", { count: 3, reason: "language and notification render caches" }],
+  ["src/components/landing/landing-navbar.tsx", { count: 1, reason: "language preference; not account-owned data" }],
   ["src/components/landing/ai-concierge.tsx", { count: 8, reason: "tab-scoped anonymous conversation and post-auth intent handoff; authenticated history persists in Supabase" }],
   ["src/components/dashboard/pro/proposals-tab.tsx", { count: 2, reason: "dismissed opportunity UI state" }],
   ["src/components/status/operational-status-banner.tsx", { count: 2, reason: "dismissed operational notice" }],
@@ -21,7 +22,7 @@ const reviewed = new Map([
   ["src/components/professionals/save-button.tsx", { count: 16, reason: "Supabase-backed favorites cache and login handoff" }],
   ["src/lib/dashboard-prefetch-cache.ts", { count: 6, reason: "five-minute backend response cache" }],
   ["src/components/professionals/case-like-button.tsx", { count: 3, reason: "anonymous like guard; count persists in backend" }],
-  ["src/components/notifications/notification-live-toast.tsx", { count: 4, reason: "notification presentation state; records persist in backend" }],
+  ["src/components/notifications/notification-live-toast.tsx", { count: 3, reason: "notification presentation state; records persist in backend" }],
   ["src/components/notifications/notification-bell.tsx", { count: 2, reason: "backend notification render cache" }],
   ["src/app/[locale]/login/page.tsx", { count: 1, reason: "short-lived post-login presentation handoff" }],
   ["src/app/[locale]/dashboard/profesional/page.tsx", { count: 2, reason: "seen opportunity modal UI state" }],
