@@ -115,7 +115,10 @@ export async function GET(req: NextRequest) {
       .single();
     if (!pro) return NextResponse.json({ proposals: [] });
 
-    const { data, error } = await supabase
+    // Ownership was verified above. Use the service client so RLS does not hide
+    // declined proposals from the professional's own history.
+    const admin = createAdminClient();
+    const { data, error } = await admin
       .from("proposals")
       .select("*")
       .eq("professional_id", pro.id)
@@ -129,7 +132,6 @@ export async function GET(req: NextRequest) {
     // project moved to in_progress — which hid the pro's "Marcar trabajo realizado"
     // button and stuck the project at "Aceptada". Reading via admin fixes that.
     // Client name + photo are always shown; the PHONE only on accepted proposals.
-    const admin = createAdminClient();
     const projIds = [...new Set((data ?? []).map((p) => p.project_id).filter(Boolean))];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const projMap: Record<string, any> = {};

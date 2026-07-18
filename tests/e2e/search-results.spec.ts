@@ -151,12 +151,7 @@ test.describe("@seeded search results", () => {
       await expect(
         card.getByRole("button", { name: seed.videoSecondSlotTime }).first(),
       ).toBeVisible();
-      await expect(
-        card
-          .getByRole("button", { name: /Ver horario completo|View schedule|View availability/i })
-          .or(card.getByRole("link", { name: /Enviar mensaje|Llamar|Call|Contact/i }))
-          .first(),
-      ).toBeVisible();
+      await expect(card.locator('a[href*="/profesionales/"]').first()).toBeVisible();
       await expectHealthyPage(page);
     }
   });

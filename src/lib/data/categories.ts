@@ -1280,6 +1280,26 @@ export function resolveCategoryIntent(query: string, locale?: string): (Category
     if (scenarios.some((term) => normalizeText(term) === q)) return item;
   }
 
+  // Natural requests commonly wrap the exact service label in a sentence
+  // ("I need appliance repair", "Busco reparación de computadoras"). Prefer
+  // the longest complete label or multi-word alias before scoring generic
+  // words such as "repair". Single-word aliases stay in the scored fallback so
+  // terms such as "red" cannot create unrelated partial matches.
+  const paddedQuery = ` ${q} `;
+  const containedLabelMatch = pool
+    .map((item) => {
+      const canonicalLabels = [item.label, getCategoryLabel(item.id, locale)].map((term) => normalizeText(term));
+      return {
+        item,
+        labels: [...canonicalLabels, ...item.keywords, ...(NATURAL_QUERY_ALIASES[item.id] ?? [])]
+          .map((term) => normalizeText(term))
+          .filter((term) => term.length >= 4 && (term.includes(" ") || canonicalLabels.includes(term)) && paddedQuery.includes(` ${term} `)),
+      };
+    })
+    .filter((candidate) => candidate.labels.length > 0)
+    .sort((a, b) => Math.max(...b.labels.map((label) => label.length)) - Math.max(...a.labels.map((label) => label.length)))[0];
+  if (containedLabelMatch) return containedLabelMatch.item;
+
   let best: { item: (CategoryItem & { groupId: string; groupLabel: string }); score: number } | null = null;
   const tokens = queryTokens(raw);
   for (const item of pool) {

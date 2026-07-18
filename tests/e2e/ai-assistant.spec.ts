@@ -2,7 +2,13 @@ import { expect, test } from "playwright/test";
 import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { CONTRATACR_PRODUCT_KNOWLEDGE } from "../../src/lib/ai/product-knowledge";
-import { getAllCategories, getCategoryLabel, NATURAL_SERVICE_SCENARIOS, resolveCategoryIntent } from "../../src/lib/data/categories";
+import {
+  CATEGORY_LABELS_EN,
+  getAllCategories,
+  getCategoryLabel,
+  NATURAL_SERVICE_SCENARIOS,
+  resolveCategoryIntent,
+} from "../../src/lib/data/categories";
 
 type AssistantResponse = {
   answer?: string;
@@ -41,6 +47,22 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       for (const scenario of scenarios) {
         expect(resolveCategoryIntent(scenario, "es")?.id, scenario).toBe(service.id);
       }
+    }
+  });
+
+  test("understands every catalog service in natural Spanish and English", async () => {
+    const services = getAllCategories();
+    expect(services.length).toBeGreaterThanOrEqual(160);
+
+    for (const service of services) {
+      const spanishScenario = NATURAL_SERVICE_SCENARIOS[service.id]?.[0];
+      expect(spanishScenario, `${service.id} needs a Spanish natural-language scenario`).toBeTruthy();
+      expect(resolveCategoryIntent(spanishScenario!, "es")?.id, spanishScenario).toBe(service.id);
+
+      const englishLabel = CATEGORY_LABELS_EN[service.id];
+      expect(englishLabel, `${service.id} needs an English service label`).toBeTruthy();
+      const englishScenario = `I need help with ${englishLabel}`;
+      expect(resolveCategoryIntent(englishScenario, "en")?.id, englishScenario).toBe(service.id);
     }
   });
 
@@ -120,6 +142,9 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       ["quiero pulir el carro", "detailing"],
       ["el carro quedo botado", "grua"],
       ["la compu no conecta", "soporte_tecnico"],
+      ["necesito un profesional en redes en Alajuela", "redes_internet"],
+      ["I need a network specialist in Alajuela", "redes_internet"],
+      ["necesito ayuda con redes sociales", "marketing_digital"],
       ["I need someone to fix a water leak", "plomeria"],
       ["My dog needs grooming", "peluqueria_canina"],
       ["I want to learn English", "idiomas"],
@@ -279,7 +304,7 @@ test.describe("@seeded ContrataCR AI", () => {
       /availability|disponibilidad/i,
       /video consultation|videoconsulta/i,
       /notification|notificacion/i,
-      /direct chat|in-app chat|chat directo/i,
+      /WhatsApp/i,
       /support|soporte/i,
       /verification|verificacion/i,
       /review|resena/i,
@@ -338,30 +363,31 @@ test.describe("@seeded ContrataCR AI", () => {
     }
   });
 
-  test("searches real professionals and preserves result selection context", async ({ page }) => {
+  test("explains the current WhatsApp contact flow in Spanish and English", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const spanish = await ask(page, "¿Cómo contacto a un profesional?");
+    expect(spanish.status, JSON.stringify(spanish.body)).toBe(200);
+    expect(spanish.body.action).toBe("answer");
+    expect(spanish.body.answer).toMatch(/WhatsApp/i);
+    expect(spanish.body.answer).not.toMatch(/chat interno|mensajes dentro de la app/i);
+
+    const english = await ask(page, "How do I contact a professional?", { locale: "en", pagePath: "/en" });
+    expect(english.status, JSON.stringify(english.body)).toBe(200);
+    expect(english.body.action).toBe("answer");
+    expect(english.body.answer).toMatch(/WhatsApp/i);
+    expect(english.body.answer).not.toMatch(/in-app chat|direct chat/i);
+  });
+
+  test("searches real professionals through a trustworthy filtered-results link", async ({ page }) => {
     await gotoOK(page, "/es");
     const search = await ask(page, "Necesito un plomero en Atenas, Alajuela");
     expect(search.status, JSON.stringify(search.body)).toBe(200);
     expect(search.body.action).toBe("search_professionals");
     expect(search.body.searchHref).toContain("categoria=plomeria");
     expect(search.body.searchHref).toContain("provincia=al");
-    expect(search.body.professionals?.length).toBeGreaterThan(0);
-    for (const professional of search.body.professionals ?? []) {
-      expect(professional.name).toBeTruthy();
-      expect(professional.profileHref).toMatch(/^\/es\/profesionales\//);
-      expect(professional.requestHref).toContain("profesional=");
-    }
-
-    const names = (search.body.professionals ?? []).map((item, index) => `${index + 1}. ${item.name}`).join("; ");
-    const selected = await ask(page, "Muéstreme el primero", {
-      history: [
-        { role: "user", content: "Necesito un plomero en Atenas" },
-        { role: "assistant", content: `Encontré opciones.\nResultados mostrados: ${names}` },
-      ],
-    });
-    expect(selected.status).toBe(200);
-    expect(selected.body.action).toBe("select_professional");
-    expect(selected.body.selectedResultIndex).toBe(1);
+    expect(search.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);
+    expect(search.body.answer).toMatch(/Encontré \d+ profesional(?:es)?/i);
+    expect(search.body.professionals).toEqual([]);
   });
 
   test("keeps search intent, service and location across natural follow-ups", async ({ page }) => {
@@ -381,7 +407,7 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(second.body.action).toBe("search_professionals");
     expect(second.body.searchHref).toContain("categoria=redes_internet");
     expect(second.body.searchHref).toContain("canton=al-at");
-    expect(second.body.professionals?.length).toBeGreaterThan(0);
+    expect(second.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);
 
     const thirdPrompt = "Me refiero a que estoy buscando un especialista en redes en Atenas";
     const third = await ask(page, thirdPrompt, {
@@ -394,7 +420,7 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(third.body.action).toBe("search_professionals");
     expect(third.body.searchHref).toContain("categoria=redes_internet");
     expect(third.body.searchHref).not.toContain("medico_especialista");
-    expect(third.body.professionals?.length).toBeGreaterThan(0);
+    expect(third.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);
 
     const fourth = await ask(page, "¿Qué opciones hay?", {
       history: [
@@ -406,7 +432,7 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(fourth.body.action).toBe("search_professionals");
     expect(fourth.body.searchHref).toContain("categoria=redes_internet");
     expect(fourth.body.searchHref).toContain("canton=al-at");
-    expect(fourth.body.professionals?.length).toBeGreaterThan(0);
+    expect(fourth.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);
   });
 
   test("uses deterministic safety guidance and does not expose internal instructions", async ({ page }) => {

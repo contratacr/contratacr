@@ -295,6 +295,12 @@ function naturalCatalogOverride(text: string, labels: Map<string, string>) {
   if (has("pagina web", "página web", "sitio web", "website", "web app")) {
     return availableCategoryId(labels, ["desarrollo_web"], ["desarrollo web"]);
   }
+  if (has("redes sociales", "social media", "community manager", "instagram ads", "facebook ads")) {
+    return availableCategoryId(labels, ["marketing_digital"], ["marketing digital"]);
+  }
+  if (has("profesional en redes", "especialista en redes", "tecnico en redes", "ingeniero de redes", "redes e internet", "network specialist", "network technician")) {
+    return availableCategoryId(labels, ["redes_internet"], ["redes e internet"]);
+  }
   if (has("celular", "cel", "telefono", "smartphone", "iphone", "android") && has("pantalla", "bateria", "carga", "quebro", "quebrado", "reparar", "arreglar")) {
     return availableCategoryId(labels, ["reparacion_celulares"], ["reparacion de celulares"]);
   }
@@ -884,6 +890,24 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       ctaLabel: locale === "en" ? "Open account settings" : "Ir a cuenta y seguridad",
+    };
+  }
+  if (includesAny(normalized, [
+    "como contacto a un profesional",
+    "como contactar a un profesional",
+    "como hablo con un profesional",
+    "contactar por whatsapp",
+    "how do i contact a professional",
+    "how can i contact a professional",
+    "how do i talk to a professional",
+  ])) {
+    return {
+      ...payload,
+      action: "answer",
+      answer: locale === "en"
+        ? "Open the professional's public profile and use the WhatsApp contact button. ContrataCR opens WhatsApp with the public contact method enabled by that professional."
+        : "Abra el perfil público del profesional y use el botón de contacto por WhatsApp. ContrataCR abrirá WhatsApp con el medio público habilitado por ese profesional.",
+      ctaLabel: null,
     };
   }
   if (includesAny(normalized, ["verificacion garantiza", "verificado garantiza", "verification guarantee", "verified guarantee"])) {
