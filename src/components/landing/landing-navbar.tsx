@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
-  LayoutDashboard, Briefcase, Compass, Globe, Check,
+  LayoutDashboard, Briefcase, Compass, Check,
   MessageSquareMore, UserRound, LogOut,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -13,7 +13,6 @@ import { signOutToHome } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
 import { canOffer } from "@/lib/auth/capabilities";
 import { useMode, type Mode } from "@/hooks/use-mode";
-import { getInitials } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
@@ -154,15 +153,14 @@ function LanguageMenu() {
         aria-expanded={open}
         aria-label="Cambiar idioma / Change language"
         className={cn(
-          "inline-flex h-10 w-[82px] items-center justify-center gap-2 rounded-full border px-3 text-[12px] font-bold transition-all",
+          "inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-2.5 text-[12px] font-bold uppercase tracking-[0.02em] transition-colors",
           open
-            ? "border-[#bfe3f5] bg-[#EBF5FB] text-[#0089bb] shadow-[0_10px_26px_-20px_rgba(0,159,217,0.85)]"
-            : "border-[#e8eef5] bg-white text-[#374151] shadow-[0_8px_24px_-22px_rgba(15,23,42,0.6)] hover:border-[#ccecf8] hover:bg-[#f8fbfd] hover:text-[#162543]"
+            ? "bg-[#EBF5FB] text-[#009FD9]"
+            : "text-[#1A2744] hover:bg-gray-50 hover:text-[#009FD9]"
         )}
       >
-        <Globe className={cn("h-4 w-4", open ? "text-[#0089bb]" : "text-[#9ca3af]")} aria-hidden />
         <span>{locale.toUpperCase()}</span>
-        <ChevronDown className={cn("h-3.5 w-3.5 text-[#9ca3af] transition-transform duration-200", open && "rotate-180 text-[#0089bb]")} />
+        <ChevronDown className={cn("h-3.5 w-3.5 text-current transition-transform duration-200", open && "rotate-180")} />
       </button>
       {open && (
         <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-[#e8eef5] bg-white p-1.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.5)]">
@@ -532,7 +530,7 @@ interface AccountMenuProps {
   onSignOut: () => void;
 }
 
-function AccountMenu({
+export function AccountMenu({
   user, isPro, displayName, avatarUrl, avatarReady, initials,
   professionalPanelHref, clientPanelHref, onSignOut,
 }: AccountMenuProps) {
@@ -676,6 +674,19 @@ function MobileMessagesButton({ href, onNavigate }: { href: string; onNavigate?:
    SAME single line as the logo + menu. When present, the mobile logo compacts to the mark
    (the wordmark would crowd the row at ~360px). Desktop + pages that don't pass it are
    unchanged. */
+function PanelIconLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      title={label}
+      className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+    >
+      <UserRound className="h-5 w-5" />
+    </Link>
+  );
+}
+
 export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -706,7 +717,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const alternateLocale = locale === "en" ? "es" : "en";
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
   const pathname = usePathname();
-  const { user, avatarUrl, avatarReady, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
   const compactSearchExamples = useMemo(() => {
@@ -727,8 +738,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   // `isPro` = the account can OFFER services (Airbnb "host" capability). It only
   // controls menu LABELS/grouping now — everyone uses the ONE unified panel.
   const isPro = canOffer(user);
-  const initials = getInitials(user?.user_metadata?.full_name ?? user?.email ?? "?");
-  const displayName = (user?.user_metadata?.full_name as string) || (user?.user_metadata?.name as string) || user?.email?.split("@")[0] || "";
   const { mode } = useMode(isPro);
 
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
@@ -1090,14 +1099,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               <div className={cn("flex-1", mobileInline && "hidden lg:block")} />
 
               {/* Right actions */}
-              <div className="hidden w-[344px] justify-end lg:flex items-center gap-2 shrink-0">
+              <div className="hidden w-[300px] justify-end lg:flex items-center gap-2 shrink-0">
                 {authLoading && !user ? (
                   <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
                     <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
                     <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
                   </div>
                 ) : user ? (
-                  <div className="flex w-[290px] items-center justify-end gap-1">
+                  <div className="flex w-[240px] items-center justify-end gap-1">
                     {!isPro && (
                       <Link
                         href="/registro/profesional"
@@ -1107,26 +1116,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                         {t("offerServices")}
                       </Link>
                     )}
-                    {/* The context switcher lives inside account menus/drawers, keeping this bar compact. */}
-                    <Link
-                      href={primaryPanelHref}
-                      className="relative inline-flex min-w-[76px] justify-center text-sm font-medium px-3 py-2 text-[#1A2744] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#009FD9]"
-                    >
-                      {t("myPanel")}
-                    </Link>
                     <MobileMessagesButton href="/mensajes" />
                     <NotificationBell scope={notificationScope} />
-                    <AccountMenu
-                      user={user}
-                      isPro={isPro}
-                      displayName={displayName}
-                      avatarUrl={avatarUrl}
-                      avatarReady={avatarReady}
-                      initials={initials}
-                      professionalPanelHref={professionalPanelHref}
-                      clientPanelHref={clientPanelHref}
-                      onSignOut={handleSignOut}
-                    />
+                    <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
                   </div>
                 ) : (
                   <div className="flex w-[250px] items-center justify-end gap-1">
@@ -1285,17 +1277,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <>
                     <MobileMessagesButton href="/mensajes" />
                     <NotificationBell scope={notificationScope} />
-                    <AccountMenu
-                      user={user}
-                      isPro={isPro}
-                      displayName={displayName}
-                      avatarUrl={avatarUrl}
-                      avatarReady={avatarReady}
-                      initials={initials}
-                      professionalPanelHref={professionalPanelHref}
-                      clientPanelHref={clientPanelHref}
-                      onSignOut={handleSignOut}
-                    />
+                    <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
                   </>
                 ) : (
                   <span className="h-10 w-[92px]" aria-hidden />
