@@ -213,12 +213,30 @@ function availableCategoryId(labels: Map<string, string>, preferredIds: string[]
   })?.[0] ?? null;
 }
 
-function naturalCatalogOverride(text: string, labels: Map<string, string>) {
-  const normalized = normalizedPhrase(text);
-  const has = (...terms: string[]) => terms.some((term) => normalized.includes(normalizedPhrase(term)));
+function exactCatalogPhraseMatch(text: string, labels: Map<string, string>) {
+  const phrase = ` ${normalizedPhrase(text)} `;
+  let best: { id: string; length: number } | null = null;
+  for (const [id, label] of labels) {
+    const normalizedLabel = normalizedPhrase(label);
+    if (normalizedLabel.length < 5 || GENERIC_CATEGORY_TERMS.has(normalizedLabel)) continue;
+    if (!phrase.includes(` ${normalizedLabel} `)) continue;
+    if (normalizedLabel.length > (best?.length ?? 0)) best = { id, length: normalizedLabel.length };
+  }
+  return best?.id ?? null;
+}
 
-  if (has("bateria", "alternador", "electricidad del carro", "electrico del carro")) {
-    return availableCategoryId(labels, ["electricidad_automotriz"], ["electricidad automotriz"]);
+function naturalCatalogOverride(text: string, labels: Map<string, string>) {
+  const normalized = ` ${normalizedPhrase(text)} `;
+  const has = (...terms: string[]) => terms.some((term) => {
+    const normalizedTerm = normalizedPhrase(term);
+    if (!normalizedTerm) return false;
+    return normalizedTerm.includes(" ")
+      ? normalized.includes(normalizedTerm)
+      : normalized.includes(` ${normalizedTerm} `);
+  });
+
+  if (has("electrico automotriz", "electricidad automotriz", "electrico del carro", "bateria del carro", "alternador")) {
+    return availableCategoryId(labels, ["electricidad_automotriz"], ["electricidad automotriz", "electromecanica automotriz"]);
   }
   if (
     has("carro", "auto", "vehiculo") &&
@@ -229,10 +247,10 @@ function naturalCatalogOverride(text: string, labels: Map<string, string>) {
   if (has("pintar", "pintura", "pintor")) {
     return availableCategoryId(labels, ["pintura"], ["pintura"]);
   }
-  if (has("impuesto", "tributario", "tributaria", "declaracion de renta", "hacienda", "iva")) {
+  if (has("impuesto", "impuestos", "tributario", "tributaria", "declaracion de renta", "hacienda", "iva")) {
     return availableCategoryId(labels, ["asesoria_tributaria"], ["asesoria tributaria"]);
   }
-  if (has("boda", "matrimonio", "quinceanos") && has("foto", "fotografo", "fotografia")) {
+  if (has("boda", "matrimonio", "quinceanos") && has("foto", "fotos", "fotografo", "fotografia")) {
     return availableCategoryId(labels, ["fotografia_eventos"], ["fotografia de eventos"]);
   }
   if (has("tubo", "tuberia", "fuga de agua", "caneria", "inodoro", "lavamanos")) {
@@ -259,19 +277,117 @@ function naturalCatalogOverride(text: string, labels: Map<string, string>) {
   if (has("jardin", "zacate", "cesped", "grama", "patio", "plantas")) {
     return availableCategoryId(labels, ["jardineria"], ["jardineria"]);
   }
-  if (has("computadora", "computador", "laptop", "ordenador", "reparar pc", "arreglar pc")) {
+  if (has("chapear", "chapea", "chapeo", "chapia", "chapiar", "lote")) {
+    return availableCategoryId(labels, ["jardineria"], ["jardineria", "zonas verdes"]);
+  }
+  if (has("se fue la luz", "sin luz", "breaker", "apagador", "enchufe", "corto circuito", "cableado")) {
+    return availableCategoryId(labels, ["electricidad"], ["electricidad"]);
+  }
+  if (has("llave", "llaves", "cerradura", "chapa", "candado")) {
+    return availableCategoryId(labels, ["cerrajeria"], ["cerrajeria"]);
+  }
+  if (has("cucaracha", "cucarachas", "chinche", "chinches", "termitas", "hormigas", "ratones", "plaga", "plagas")) {
+    return availableCategoryId(labels, ["fumigacion"], ["fumigacion"]);
+  }
+  if (has("computadora", "computador", "compu", "laptop", "ordenador", "reparar pc", "arreglar pc")) {
     return availableCategoryId(labels, ["reparacion_computadoras"], ["reparacion de computadoras"]);
+  }
+  if (has("pagina web", "página web", "sitio web", "website", "web app")) {
+    return availableCategoryId(labels, ["desarrollo_web"], ["desarrollo web"]);
+  }
+  if (has("celular", "cel", "telefono", "smartphone", "iphone", "android") && has("pantalla", "bateria", "carga", "quebro", "quebrado", "reparar", "arreglar")) {
+    return availableCategoryId(labels, ["reparacion_celulares"], ["reparacion de celulares"]);
+  }
+  if (has("dj", "disc jockey")) {
+    return availableCategoryId(labels, ["dj_sonido"], ["dj", "sonido"]);
+  }
+  if (has("catering", "banquete", "buffet")) {
+    return availableCategoryId(labels, ["catering"], ["catering", "banquetes"]);
+  }
+  if (has("zapato", "zapatos", "suela", "suelas", "tacon", "tacones")) {
+    return availableCategoryId(labels, ["zapateria"], ["zapateria"]);
+  }
+  if (has("ruedo", "ruedos", "costura", "pantalon", "ropa")) {
+    return availableCategoryId(labels, ["costura_y_arreglos_de_ropa"], ["costura", "arreglos de ropa"]);
+  }
+  if (has("barberia", "barbero", "corte de pelo", "cabello")) {
+    return availableCategoryId(labels, ["peluqueria"], ["peluqueria", "barberia"]);
+  }
+  if (has("repuesto", "repuestos", "automotriz", "automotrices")) {
+    return availableCategoryId(labels, ["repuestos_automotrices"], ["repuestos"]);
+  }
+  if (has("grua", "gruas")) {
+    return availableCategoryId(labels, ["gruas"], ["grua"]);
+  }
+  if (has("porton electrico", "portones electricos", "motor de porton")) {
+    return availableCategoryId(labels, ["portones_electricos"], ["portones electricos"]);
+  }
+  if (has("unas acrilicas", "unas", "manicure", "pedicure")) {
+    return availableCategoryId(labels, ["unhas"], ["unas", "manicure"]);
+  }
+  if (has("cejas", "pestanas", "facial", "limpieza facial")) {
+    return availableCategoryId(labels, ["estetica_facial", "belleza"], ["estetica facial", "belleza"]);
+  }
+  if (has("bebe", "nino", "ninos", "pediatra", "salud infantil")) {
+    return availableCategoryId(labels, ["pediatria"], ["pediatria"]);
+  }
+  if (has("espalda", "rehabilitacion", "terapia fisica", "fisioterapia")) {
+    return availableCategoryId(labels, ["fisioterapia"], ["fisioterapia"]);
+  }
+  if (has("adulto mayor", "adulta mayor", "anciano", "anciana", "cuide a mi mama", "cuide a mi papa")) {
+    return availableCategoryId(labels, ["cuidado_adultos"], ["cuidado de adultos"]);
+  }
+  if (has("pasear mi perro", "pasee mi perro", "paseo de perro", "paseo de perros", "dog walker")) {
+    return availableCategoryId(labels, ["cuido_mascotas"], ["mascotas", "paseo"]);
+  }
+  if (has("matematica", "matematicas", "mate", "algebra", "calculo")) {
+    return availableCategoryId(labels, ["matematicas"], ["matematicas"]);
+  }
+  if (has("lavar carro", "lavado de carro", "lavar mi carro", "lavado vehiculo", "lavado de vehiculo")) {
+    return availableCategoryId(labels, ["lavado_vehiculos"], ["lavado de vehiculos"]);
+  }
+  if (has("flor", "flores", "florista", "floristeria", "arreglos florales", "ramos")) {
+    return availableCategoryId(labels, ["floristeria"], ["floristeria"]);
+  }
+  if (has("investigador privado", "investigacion privada", "detective privado")) {
+    return availableCategoryId(labels, ["investigacion_privada"], ["investigacion privada"]);
+  }
+  if (has("flete", "fletes")) {
+    return availableCategoryId(labels, ["fletes"], ["fletes"]);
   }
   return null;
 }
 
 function safeCatalogCategoryMatch(text: string, locale: Locale, labels: Map<string, string>) {
-  const direct = naturalCatalogOverride(text, labels) ?? liveCatalogCategoryMatch(text, labels);
+  const direct = exactCatalogPhraseMatch(text, labels) ?? naturalCatalogOverride(text, labels);
   if (direct) return direct;
   const strong = strongCategoryMention([text], locale);
   if (strong && labels.has(strong)) return strong;
   const confident = confidentCategoryMatch(text, locale);
   return confident && labels.has(confident) ? confident : null;
+}
+
+function genericUnclearRequest(text: string) {
+  const normalized = normalizeText(text);
+  return includesAny(normalized, [
+    "ayuda con mi casa",
+    "arreglar algo",
+    "busco tecnico",
+    "busco un tecnico",
+    "necesito mantenimiento",
+    "necesito asesoria",
+    "ocupo asesoria",
+    "necesito un profesional",
+    "ocupo un profesional",
+  ]);
+}
+
+function clearMissingServiceName(text: string) {
+  const normalized = normalizeText(text);
+  if (includesAny(normalized, ["parabrisas", "vidrio del carro", "vidrio de carro"])) return "Parabrisas";
+  if (includesAny(normalized, ["reparar un dron", "reparacion de dron", "reparar dron", "drones"])) return "Reparación de drones";
+  if (includesAny(normalized, ["masaje para caballos", "masajes para caballos"])) return "Masaje para caballos";
+  return null;
 }
 
 function strongCategoryMention(texts: string[], locale: Locale) {
@@ -1178,6 +1294,27 @@ export async function POST(req: Request) {
     const resolvedCategory = hasValidResolvedService
       ? { id: payload.serviceId!, needsClarification: false }
       : resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
+    const missingServiceName = !resolvedCategory.id ? clearMissingServiceName(rawMessage) : null;
+    if (missingServiceName && !explicitPublishIntent) {
+      payload.action = "suggest_service";
+      payload.answer = locale === "en"
+        ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
+        : "Ese servicio todavÃ­a no estÃ¡ en el catÃ¡logo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
+      payload.searchQuery = missingServiceName;
+      payload.serviceId = null;
+      payload.locationText = null;
+      payload.ctaLabel = locale === "en" ? "Suggest service" : "Sugerir servicio";
+    }
+    if (!resolvedCategory.id && !explicitPublishIntent && genericUnclearRequest(rawMessage)) {
+      payload.action = "answer";
+      payload.answer = locale === "en"
+        ? "Which service do you need? For example: plumbing, electricity, cleaning, repair or consulting."
+        : "Â¿QuÃ© tipo de servicio necesita? Por ejemplo: plomerÃ­a, electricidad, limpieza, reparaciÃ³n o asesorÃ­a.";
+      payload.searchQuery = null;
+      payload.serviceId = null;
+      payload.locationText = null;
+      payload.ctaLabel = null;
+    }
     if (payload.action === "search_professionals" && payload.confidence !== 0) {
       if (resolvedCategory.id) {
         payload.serviceId = resolvedCategory.id;
