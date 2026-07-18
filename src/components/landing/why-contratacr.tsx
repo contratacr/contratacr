@@ -41,7 +41,7 @@ export async function WhyContratacr() {
               {t("guideCta")}
             </Link>
             <Link
-              href="/como-funciona#agregar-a-inicio"
+              href="/ayuda#agregar-a-inicio"
               className="text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline"
             >
               {t("installLink")}

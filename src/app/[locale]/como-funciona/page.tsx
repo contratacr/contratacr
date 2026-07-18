@@ -4,27 +4,14 @@ import { getTranslations } from "next-intl/server";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link } from "@/i18n/navigation";
-import { InstallAppGuide } from "@/components/landing/install-app-card";
-import { ComoFuncionaFaq } from "./faq-accordion";
 import {
   ArrowRight,
   BadgeCheck,
-  Bell,
   BriefcaseBusiness,
-  CalendarClock,
-  CheckCircle2,
   FileText,
-  Heart,
-  Image as ImageIcon,
-  Languages,
-  MapPin,
   MessageCircle,
-  PhoneCall,
   Search,
-  ShieldCheck,
   Star,
-  UserCheck,
-  Video,
 } from "lucide-react";
 
 type IconComponent = (props: { className?: string }) => ReactNode;
@@ -69,60 +56,6 @@ function SectionHeading({ eyebrow, title, subtitle }: { eyebrow: string; title: 
   );
 }
 
-function FeatureCard({ icon: Icon, title, body }: { icon: IconComponent; title: string; body: string }) {
-  return (
-    <div className={`${softCardClass} p-5`}>
-      <div className="mb-4 flex items-center gap-3">
-        <div className={iconTileClass}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <h3 className="text-sm font-bold leading-snug text-[#162543]">{title}</h3>
-      </div>
-      <p className="text-sm leading-relaxed text-[#6b7280]">{body}</p>
-    </div>
-  );
-}
-
-function BenefitListCard({
-  icon: Icon,
-  eyebrow,
-  title,
-  body,
-  items,
-}: {
-  icon: IconComponent;
-  eyebrow: string;
-  title: string;
-  body: string;
-  items: Array<{ icon: IconComponent; title: string; body: string }>;
-}) {
-  return (
-    <div className={`${softCardClass} p-5 sm:p-6`}>
-      <div className="mb-5 flex items-start gap-3">
-        <div className={iconTileClass}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#009FD9]">{eyebrow}</p>
-          <h2 className="text-xl font-black leading-tight text-[#162543]">{title}</h2>
-          <p className="mt-2 text-sm leading-relaxed text-[#6b7280]">{body}</p>
-        </div>
-      </div>
-      <div className="divide-y divide-[#eef1f5]">
-        {items.map(({ icon: ItemIcon, title: itemTitle, body: itemBody }) => (
-          <div key={itemTitle} className="flex gap-3 py-3 first:pt-0 last:pb-0">
-            <ItemIcon className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
-            <div>
-              <p className="text-sm font-bold text-[#162543]">{itemTitle}</p>
-              <p className="mt-0.5 text-sm leading-relaxed text-[#6b7280]">{itemBody}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function StepCard({ n, title, body }: { n: number; title: string; body: string }) {
   return (
     <div className="flex gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4">
@@ -161,30 +94,10 @@ export default async function ComoFuncionaPage() {
     title: t(`proStep${i}Title`),
     body: t(`proStep${i}Body`),
   }));
-  const faqs = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({
-    question: t(`faq${i}Q`),
-    answer: t(`faq${i}A`),
-  }));
-
-  const clientBenefits = [
-    { icon: Search, title: t("clientBenefit0Title"), body: t("clientBenefit0Body") },
-    { icon: ShieldCheck, title: t("clientBenefit1Title"), body: t("clientBenefit1Body") },
-    { icon: CalendarClock, title: t("clientBenefit2Title"), body: t("clientBenefit2Body") },
-    { icon: Heart, title: t("clientBenefit3Title"), body: t("clientBenefit3Body") },
-  ];
-  const proBenefits = [
-    { icon: UserCheck, title: t("proBenefit0Title"), body: t("proBenefit0Body") },
-    { icon: ImageIcon, title: t("proBenefit1Title"), body: t("proBenefit1Body") },
-    { icon: MapPin, title: t("proBenefit2Title"), body: t("proBenefit2Body") },
-    { icon: Bell, title: t("proBenefit3Title"), body: t("proBenefit3Body") },
-  ];
   const trustItems: Array<{ icon: IconComponent; title: string; body: string }> = [
     { icon: BadgeCheck, title: t("trust0Title"), body: t("trust0Body") },
     { icon: Star, title: t("trust1Title"), body: t("trust1Body") },
     { icon: MessageCircle, title: t("trust2Title"), body: t("trust2Body") },
-    { icon: PhoneCall, title: t("trust3Title"), body: t("trust3Body") },
-    { icon: Video, title: t("trust4Title"), body: t("trust4Body") },
-    { icon: Languages, title: t("trust5Title"), body: t("trust5Body") },
   ];
 
   return (
@@ -256,28 +169,6 @@ export default async function ComoFuncionaPage() {
         </section>
 
         <section className="bg-[#f4f7fa] px-4 py-16">
-          <div className="mx-auto max-w-5xl">
-            <SectionHeading eyebrow={t("clientsEyebrow")} title={t("clientsTitle")} subtitle={t("clientsSubtitle")} />
-            <div className="grid gap-5 lg:grid-cols-2">
-              <BenefitListCard
-                icon={Search}
-                eyebrow={t("clientsBadge")}
-                title={t("clientPathTitle")}
-                body={t("clientPathDesc")}
-                items={clientBenefits}
-              />
-              <BenefitListCard
-                icon={BriefcaseBusiness}
-                eyebrow={t("prosBadge")}
-                title={t("prosTitle")}
-                body={t("prosSubtitle")}
-                items={proBenefits}
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-white px-4 py-16">
           <div className="mx-auto max-w-3xl">
             <div className={`${softCardClass} p-5 sm:p-6`}>
               <div className="mb-5 flex items-start gap-3">
@@ -298,40 +189,41 @@ export default async function ComoFuncionaPage() {
           </div>
         </section>
 
-        <section className="bg-[#EBF5FB] px-4 py-16">
+        <section className="bg-white px-4 py-16">
           <div className="mx-auto max-w-5xl">
             <SectionHeading eyebrow={t("trustEyebrow")} title={t("trustTitle")} subtitle={t("trustSubtitle")} />
             <div className="grid gap-4 md:grid-cols-3">
               {trustItems.map((item) => (
-                <FeatureCard key={item.title} icon={item.icon} title={item.title} body={item.body} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-white px-4 py-16">
-          <div className="mx-auto max-w-5xl">
-            <SectionHeading eyebrow={t("compareEyebrow")} title={t("compareTitle")} subtitle={t("compareSubtitle")} />
-            <div className="grid gap-4 lg:grid-cols-3">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className={`${softCardClass} p-5`}>
-                  <div className="mb-3 flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-[#009FD9]" />
-                    <h3 className="text-sm font-black text-[#162543]">{t(`compare${i}Title`)}</h3>
+                <div key={item.title} className={`${softCardClass} p-5`}>
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className={iconTileClass}><item.icon className="h-5 w-5" /></div>
+                    <h3 className="text-sm font-bold leading-snug text-[#162543]">{item.title}</h3>
                   </div>
-                  <p className="text-sm leading-relaxed text-[#6b7280]">{t(`compare${i}Body`)}</p>
+                  <p className="text-sm leading-relaxed text-[#6b7280]">{item.body}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <InstallAppGuide />
-
         <section className="bg-[#f8fbfd] px-4 py-16">
-          <div className="mx-auto max-w-3xl">
-            <SectionHeading eyebrow={t("faqEyebrow")} title={t("faqTitle")} subtitle={t("faqSubtitle")} />
-            <ComoFuncionaFaq items={faqs} />
+          <div className="mx-auto max-w-4xl text-center">
+            <h2 className="text-2xl font-extrabold text-[#162543] sm:text-3xl">{t("ctaTitle")}</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-[#6b7280] sm:text-base">{t("ctaSubtitle")}</p>
+            <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Link href="/buscar" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-6 py-3 text-sm font-black text-white hover:bg-[#0089bb]">
+                {t("ctaSearch")} <Search className="h-4 w-4" />
+              </Link>
+              <Link href="/publicar-proyecto" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#d7e0e8] bg-white px-6 py-3 text-sm font-black text-[#162543] hover:border-[#009FD9] hover:text-[#0089bb]">
+                {t("ctaPublish")} <FileText className="h-4 w-4" />
+              </Link>
+              <Link href="/registro/profesional" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#d7e0e8] bg-white px-6 py-3 text-sm font-black text-[#162543] hover:border-[#009FD9] hover:text-[#0089bb]">
+                {t("ctaOffer")} <BriefcaseBusiness className="h-4 w-4" />
+              </Link>
+            </div>
+            <Link href="/ayuda" className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb] hover:underline">
+              {t("helpCta")} <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
       </main>

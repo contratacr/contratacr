@@ -2949,7 +2949,8 @@
     "ctaSubtitle": "Si necesitas ayuda, busca un servicio. Si ofreces servicios, crea tu perfil y empieza a construir presencia en ContrataCR.",
     "ctaSearch": "Buscar un servicio",
     "ctaPublish": "Publicar una solicitud",
-    "ctaOffer": "Ofrecer mis servicios"
+    "ctaOffer": "Ofrecer mis servicios",
+    "helpCta": "Ver respuestas y guías"
   },
   "ayuda": {
     "eyebrow": "Centro de ayuda",
@@ -2965,8 +2966,8 @@
     "cat3Desc": "Cómo solicitar un servicio, publicar una solicitud y gestionar propuestas.",
     "cat4Title": "Reseñas y calificaciones",
     "cat4Desc": "Cómo dejar y gestionar reseñas verificadas de servicios.",
-    "cat5Title": "Contactar soporte",
-    "cat5Desc": "¿No encontraste lo que buscas? Nuestro equipo responde en menos de 24 horas.",
+    "cat5Title": "Instalar ContrataCR",
+    "cat5Desc": "Agrega ContrataCR a la pantalla de inicio de iPhone o Android.",
     "faqTitle": "Preguntas frecuentes",
     "faqSubtitle": "Las consultas más comunes de nuestra comunidad.",
     "faq0Q": "¿ContrataCR cobra alguna comisión o cargo?",
@@ -2986,8 +2987,8 @@
     "faq7Q": "¿Mi información personal está segura?",
     "faq7A": "Sí. Tu número de teléfono y correo nunca son visibles públicamente en la plataforma. Puedes comunicarte mediante Mensajes sin compartir esos datos. Cumplimos con la Ley 8968 de Protección de Datos de Costa Rica.",
     "faq8Q": "¿Cómo agrego ContrataCR a la pantalla de inicio?",
-    "faq8A": "La guía visual está en Cómo funciona para no recargar esta página de ayuda.",
-    "faq8Link": "Ver pasos para agregarla",
+    "faq8A": "Puedes agregar ContrataCR como acceso directo desde el menú de tu navegador.",
+    "faq8Link": "Ver la guía visual",
     "contactTitle": "¿No encontraste lo que buscas?",
     "contactSubtitle": "Nuestro equipo responde rápido.",
     "contactCta": "Contactar soporte",

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
+import { InstallAppGuide } from "@/components/landing/install-app-card";
 import { Link } from "@/i18n/navigation";
 import { ChevronDown, Headset, Search, UserCheck, CalendarDays, Star, ShieldCheck, HelpCircle, Smartphone } from "lucide-react";
 
@@ -24,12 +25,26 @@ const HELP_CATEGORIES: { icon: React.ReactNode; faq?: number; href?: "/soporte" 
   { icon: <ShieldCheck className="h-6 w-6 text-[#009FD9]" />, faq: 2 },     // Verificación de identidad
   { icon: <CalendarDays className="h-6 w-6 text-[#009FD9]" />, faq: 6 },    // Solicitudes y proyectos
   { icon: <Star className="h-6 w-6 text-[#009FD9]" />, faq: 5 },            // Reseñas y calificaciones
-  { icon: <Headset className="h-6 w-6 text-[#009FD9]" />, href: "/soporte" }, // Contactar soporte
+  { icon: <Smartphone className="h-6 w-6 text-[#009FD9]" />, faq: 8 },        // Instalar la app
 ];
 
 export default function AyudaPage() {
   const t = useTranslations("ayuda");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash !== "#agregar-a-inicio") return;
+    const timer = window.setTimeout(() => {
+      setShowInstallGuide(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.getElementById("agregar-a-inicio")?.scrollIntoView({ block: "start" });
+        });
+      });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   // Open the matching FAQ answer and scroll it into view (clears the fixed navbar
   // via scroll-mt on each item). Used by the category cards above.
@@ -37,6 +52,15 @@ export default function AyudaPage() {
     setOpenFaq(i);
     requestAnimationFrame(() => {
       document.getElementById(`faq-${i}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function openInstallGuide() {
+    setShowInstallGuide(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.getElementById("agregar-a-inicio")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     });
   }
 
@@ -124,9 +148,9 @@ export default function AyudaPage() {
                       {i === 8 && (
                         <>
                           {" "}
-                          <Link href="/como-funciona#agregar-a-inicio" className="font-bold text-[#009FD9] hover:underline">
+                          <button type="button" onClick={openInstallGuide} className="font-bold text-[#009FD9] hover:underline">
                             {t("faq8Link")}
-                          </Link>
+                          </button>
                         </>
                       )}
                     </p>
@@ -137,6 +161,8 @@ export default function AyudaPage() {
           </FadeInUp>
         </div>
       </section>
+
+      {showInstallGuide && <InstallAppGuide />}
 
       {/* Contact */}
       <section className="py-14 px-4 bg-[#f4f7fa]">

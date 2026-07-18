@@ -2951,7 +2951,8 @@
     "ctaSubtitle": "If you need help, find a service. If you offer services, create your profile and start building your presence on ContrataCR.",
     "ctaSearch": "Find a service",
     "ctaPublish": "Post a request",
-    "ctaOffer": "Offer my services"
+    "ctaOffer": "Offer my services",
+    "helpCta": "View answers and guides"
   },
   "ayuda": {
     "eyebrow": "Help center",
@@ -2967,8 +2968,8 @@
     "cat3Desc": "How to request a service, post a request, and manage proposals.",
     "cat4Title": "Reviews and ratings",
     "cat4Desc": "How to leave and manage verified service reviews.",
-    "cat5Title": "Contact support",
-    "cat5Desc": "Didn't find what you were looking for? Our team replies in under 24 hours.",
+    "cat5Title": "Install ContrataCR",
+    "cat5Desc": "Add ContrataCR to your iPhone or Android home screen.",
     "faqTitle": "Frequently asked questions",
     "faqSubtitle": "The most common questions from our community.",
     "faq0Q": "Does ContrataCR charge any commission or fee?",
@@ -2988,8 +2989,8 @@
     "faq7Q": "Is my personal information safe?",
     "faq7A": "Yes. Your phone number and email are never publicly visible on the platform. You can communicate in Messages without sharing those details. We comply with Costa Rica's Data Protection Law 8968.",
     "faq8Q": "How do I add ContrataCR to my home screen?",
-    "faq8A": "The visual guide is in How it works so this help page stays easy to scan.",
-    "faq8Link": "See the steps",
+    "faq8A": "You can add ContrataCR as a shortcut from your browser menu.",
+    "faq8Link": "View the visual guide",
     "contactTitle": "Didn't find what you were looking for?",
     "contactSubtitle": "Our team replies fast.",
     "contactCta": "Contact support",
