@@ -1175,7 +1175,7 @@
     "groupPro": "Ofrezco servicios",
     "groupClient": "Busco servicios",
     "tabs": {
-      "home": "Inicio",
+      "home": "Panel",
       "profile": "Mi perfil",
       "services": "Mis servicios",
       "photos": "Casos de éxito",
@@ -1230,6 +1230,18 @@
         "services": {
           "title": "Mis servicios",
           "body": "Actualice lo que ofrece, precios y detalles."
+        },
+        "photos": {
+          "title": "Casos de éxito",
+          "body": "Agregue fotos de trabajos para generar más confianza."
+        },
+        "availability": {
+          "title": "Disponibilidad",
+          "body": "Defina horarios y cómo pueden contactarle los clientes."
+        },
+        "verification": {
+          "title": "Verificación",
+          "body": "Revise su estado de identidad y aumente la confianza."
         },
         "profile": {
           "title": "Perfil profesional",
@@ -1321,7 +1333,7 @@
       "close": "Cerrar"
     },
     "bottomNav": {
-      "home": "Inicio",
+      "home": "Panel",
       "profile": "Perfil",
       "services": "Servicios",
       "photos": "Éxitos",

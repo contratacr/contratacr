@@ -1176,7 +1176,7 @@
     "groupPro": "Offering services",
     "groupClient": "Looking for services",
     "tabs": {
-      "home": "Home",
+      "home": "Panel",
       "profile": "My profile",
       "services": "My services",
       "photos": "Success stories",
@@ -1231,6 +1231,18 @@
         "services": {
           "title": "My services",
           "body": "Update what you offer, prices and details."
+        },
+        "photos": {
+          "title": "Success stories",
+          "body": "Add photos of your work to build more trust."
+        },
+        "availability": {
+          "title": "Availability",
+          "body": "Set your hours and how clients can contact you."
+        },
+        "verification": {
+          "title": "Verification",
+          "body": "Review your identity status and increase trust."
         },
         "profile": {
           "title": "Professional profile",
@@ -1322,7 +1334,7 @@
       "close": "Close"
     },
     "bottomNav": {
-      "home": "Home",
+      "home": "Panel",
       "profile": "Profile",
       "services": "Services",
       "photos": "Wins",

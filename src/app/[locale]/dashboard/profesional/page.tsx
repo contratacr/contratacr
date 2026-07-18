@@ -170,6 +170,24 @@ function DashboardHomePanel({
             onClick: () => onSetTab("services"),
           })}
           {dashboardHomeAction({
+            icon: <Award className="h-5 w-5" />,
+            title: t("home.actions.photos.title"),
+            body: t("home.actions.photos.body"),
+            onClick: () => onSetTab("photos"),
+          })}
+          {dashboardHomeAction({
+            icon: <CalendarDays className="h-5 w-5" />,
+            title: t("home.actions.availability.title"),
+            body: t("home.actions.availability.body"),
+            onClick: () => onSetTab("availability"),
+          })}
+          {dashboardHomeAction({
+            icon: <ShieldCheck className="h-5 w-5" />,
+            title: t("home.actions.verification.title"),
+            body: t("home.actions.verification.body"),
+            onClick: () => onSetTab("verificacion"),
+          })}
+          {dashboardHomeAction({
             icon: <User className="h-5 w-5" />,
             title: t("home.actions.profile.title"),
             body: t("home.actions.profile.body", { percent: completionPercent }),
