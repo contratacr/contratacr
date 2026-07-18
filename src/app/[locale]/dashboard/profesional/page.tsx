@@ -976,6 +976,30 @@ export default function DashboardPage() {
     );
   }
 
+  function switchPanelButton({ mobile = false }: { mobile?: boolean } = {}) {
+    if (!isProvider) return null;
+    const nextMode: Mode = mode === "offer" ? "use" : "offer";
+    return (
+      <button
+        type="button"
+        onClick={() => handleSwitchMode(nextMode)}
+        className={cn(
+          "w-full flex items-center rounded-xl text-left font-semibold transition-colors",
+          mobile ? "gap-4 px-4 py-4 text-base" : "gap-3 px-3 py-2.5 text-sm",
+          "text-[#162543] hover:bg-[#EBF5FB]",
+        )}
+      >
+        <span className={cn(
+          "relative inline-flex shrink-0 items-center justify-center text-[#64748b]",
+          mobile ? "h-9 w-9 [&>svg]:h-6 [&>svg]:w-6" : "mr-1.5",
+        )}>
+          <Repeat2 className="h-4 w-4" />
+        </span>
+        {mode === "offer" ? t("panelClient") : t("panelProfessional")}
+      </button>
+    );
+  }
+
   function mobileSectionButton(tab: Tab) {
     return (
       <button
@@ -1176,6 +1200,8 @@ export default function DashboardPage() {
                 <nav className="hidden lg:block lg:w-60 shrink-0 space-y-3">
                   <Card>
                     <CardContent className="p-2">
+                      {switchPanelButton()}
+                      {isProvider && <div className="my-2 border-t border-[#f3f4f6]" />}
                       <div>{sidebarTabs.map(navButton)}</div>
                       <div className="my-2 border-t border-[#f3f4f6] pt-2">
                         {signOutButton()}
@@ -1191,6 +1217,7 @@ export default function DashboardPage() {
                     grow this flex column past the available width and break the page. */}
                 <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
                   <SaveStatusProvider>
+                    <HeaderSaveStatus />
                     <Card className={cn(
                       activeTab === "chat" && "overflow-hidden",
                       (mobileFullScreenTab || mobileSectionOpen) && "rounded-none border-0 bg-white shadow-none lg:rounded-xl lg:border lg:shadow-sm",
@@ -1200,7 +1227,6 @@ export default function DashboardPage() {
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
                           </div>
-                          <HeaderSaveStatus />
                         </div>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
                           <div className="mt-0.5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1258,6 +1284,8 @@ export default function DashboardPage() {
                               ) : (
                                 <>
                                   <div className="space-y-1 py-2">
+                                    {switchPanelButton({ mobile: true })}
+                                    {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
                                     {mobileSectionTabs.map(mobileSectionButton)}
                                   </div>
                                   <div className="my-4 border-t border-[#e5e7eb]" />

@@ -357,8 +357,9 @@ export function AvailabilityEditor({
     return out;
   }, [schedulableLocationIds]);
 
-  const regenerate = useCallback(async (wk: WeeklyRow[], exc: ExcRow[]): Promise<boolean> => {
-    setBusy(true);
+  const regenerate = useCallback(async (wk: WeeklyRow[], exc: ExcRow[], options: { silent?: boolean } = {}): Promise<boolean> => {
+    const silent = options.silent === true;
+    if (!silent) setBusy(true);
     try {
       const supabase = createClient();
       const desired = computeDesiredSlots(wk, exc);
@@ -376,14 +377,17 @@ export function AvailabilityEditor({
           if (error) throw error;
         }
       }
-      pulseSaved();
-      onSaved?.();
+      if (!silent) {
+        pulseSaved();
+        onSaved?.();
+      }
       return true;
     } catch (error) {
-      reportSaveFailure("materialize failed", error);
+      if (silent) console.warn("[availability] silent materialize failed", error);
+      else reportSaveFailure("materialize failed", error);
       return false;
     } finally {
-      setBusy(false);
+      if (!silent) setBusy(false);
     }
   }, [professionalId, computeDesiredSlots, onSaved, reportSaveFailure]);
 
@@ -418,7 +422,7 @@ export function AvailabilityEditor({
       // Refresh the materialized window from the template (keeps the rolling 70-day
       // horizon current). Skip when there is NO template at all, so a legacy pro's
       // manually-created slots are preserved until they adopt the weekly editor.
-      if (isPublic && (wkRows.length > 0 || excRows.length > 0 || staleWeeklyIds.length > 0 || staleExceptionIds.length > 0)) void regenerate(wkRows, excRows);
+      if (isPublic && (wkRows.length > 0 || excRows.length > 0 || staleWeeklyIds.length > 0 || staleExceptionIds.length > 0)) void regenerate(wkRows, excRows, { silent: true });
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -42,11 +42,11 @@ export function HeaderSaveStatus({ className }: { className?: string }) {
   const visible = s.saving || s.saved || s.dirty;
 
   return (
-    <div className={cn("pointer-events-none fixed inset-x-0 top-[72px] z-50", className)}>
-      <div className="mx-auto flex w-full max-w-7xl justify-end px-4 sm:px-6 lg:px-8">
+    <div className={cn("pointer-events-none fixed inset-x-0 top-[76px] z-[120] sm:top-[82px]", className)}>
+      <div className="mx-auto flex w-full max-w-7xl justify-center px-4 sm:justify-end sm:px-6 lg:px-8">
         <div
           className={cn(
-            "rounded-full border border-[#e5e7eb] bg-white/95 px-2.5 py-1 shadow-sm shadow-[#0f172a]/6 backdrop-blur transition-all duration-200",
+            "rounded-full border border-[#9bdaf3] bg-[#EBF8FD]/98 px-4 py-2 shadow-lg shadow-[#009FD9]/18 backdrop-blur transition-all duration-200",
             visible ? "scale-100 opacity-100" : "scale-95 opacity-0",
           )}
         >

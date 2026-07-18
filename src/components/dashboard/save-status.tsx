@@ -36,22 +36,22 @@ export function SaveStatus({
   return (
     <div
       className={cn(
-        "flex h-5 items-center justify-end whitespace-nowrap transition-opacity duration-200",
+        "flex h-6 items-center justify-end whitespace-nowrap transition-opacity duration-200",
         show ? "opacity-100" : "opacity-0",
         className
       )}
       aria-live="polite"
     >
       {saving ? (
-        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#6b7280]">
+        <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#162543]">
           <Loader2 className="h-4 w-4 animate-spin" /> {t("saving")}
         </span>
       ) : saved ? (
-        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600">
+        <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700">
           <Check className="h-4 w-4" /> {t("saved")}
         </span>
       ) : dirty ? (
-        <span className="text-sm font-medium text-amber-600">{t("unsaved")}</span>
+        <span className="text-sm font-bold text-amber-700">{t("unsaved")}</span>
       ) : (
         // Keep the element present (fixed height) even when idle → no mount/unmount.
         <span className="text-sm">&nbsp;</span>
