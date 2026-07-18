@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   BadgeCheck,
   CheckCheck,
@@ -201,7 +202,7 @@ function ProfessionalResult({ result, copy, onNavigate }: {
   );
 }
 
-export function AiConcierge({ embedded = false }: { embedded?: boolean } = {}) {
+export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; onBack?: () => void } = {}) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -275,7 +276,6 @@ export function AiConcierge({ embedded = false }: { embedded?: boolean } = {}) {
 
   useEffect(() => {
     if (!open) return;
-    if (embedded) return;
     const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
     if (!shouldLockScroll) return;
     const root = document.documentElement;
@@ -518,6 +518,16 @@ export function AiConcierge({ embedded = false }: { embedded?: boolean } = {}) {
           : "max-h-full h-[min(820px,calc(var(--app-visual-viewport-height)_-_0.5rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
       )}>
         <header className="relative flex shrink-0 items-center gap-2 border-b border-[#cfe3f4] bg-[linear-gradient(120deg,#ffffff_0%,#f3f9ff_100%)] px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
+          {embedded && (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label={lang === "en" ? "Back" : "Atrás"}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#102f5b] transition hover:bg-[#eef7ff]"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
           <div className="-my-2 -ml-1 h-[68px] w-[68px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
             <h2 className="whitespace-nowrap text-[15px] font-black text-[#102746] sm:text-lg">{copy.title}</h2>

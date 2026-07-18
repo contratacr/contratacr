@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
@@ -137,6 +138,20 @@ export function DirectChatInbox() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   useContainedTouchScroll(scrollRef, mobileThread);
+
+  useEffect(() => {
+    if (!mobileThread) return;
+    const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
+    if (!shouldLockScroll) return;
+    const root = document.documentElement;
+    root.classList.add("contratacr-chat-thread-open");
+    const releaseBodyScroll = lockBodyScroll();
+    return () => {
+      root.classList.remove("contratacr-chat-thread-open");
+      releaseBodyScroll();
+    };
+  }, [mobileThread]);
+
   const displayedConversations = useMemo(
     () => pendingDraft && !showArchived
       ? [pendingDraft, ...conversations.filter((item) => item.id !== DRAFT_CONVERSATION_ID)]
@@ -365,7 +380,7 @@ export function DirectChatInbox() {
   const activeContextAction = active ? contextActionFor(active) : "";
   return (
     <div className={cn(
-      "direct-chat-shell grid h-[calc(var(--app-visual-viewport-height)_-_4rem)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
+      "direct-chat-shell grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
       mobileThread && "direct-chat-shell--thread",
     )}>
       <aside className={cn("min-h-0 border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>

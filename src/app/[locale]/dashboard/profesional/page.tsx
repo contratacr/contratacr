@@ -663,7 +663,7 @@ export default function DashboardPage() {
   const barTabs: Tab[] = [...modeTabs, ...SHARED_TABS];
   const mobilePriorityTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
   const mobileBarTabs = [...mobilePriorityTabs, ...barTabs.filter((tab) => !mobilePriorityTabs.includes(tab))];
-  const mobileFullScreenTab = activeTab === "chat" || activeTab === "assistant";
+  const mobileFullScreenTab = activeTab === "assistant";
   const showProfileCompletion =
     mode === "offer" &&
     !!proForCompletion &&
@@ -1055,7 +1055,7 @@ export default function DashboardPage() {
                         {activeTab === "chat" && <DirectChatInbox />}
                         {activeTab === "assistant" && (
                           <div className="lg:hidden">
-                            <AiConcierge embedded />
+                            <AiConcierge embedded onBack={() => setTab(mode === "offer" ? "bookings" : "sent_bookings")} />
                           </div>
                         )}
                         {activeTab === "notifications" && <NotificationsList />}
