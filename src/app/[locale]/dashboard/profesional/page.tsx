@@ -1048,10 +1048,7 @@ export default function DashboardPage() {
                         {activeTab === "chat" && <DirectChatInbox />}
                         {activeTab === "assistant" && (
                           <div className="lg:hidden">
-                            <AiConcierge
-                              embedded
-                              onClose={() => setTab(mode === "offer" ? "bookings" : "sent_bookings")}
-                            />
+                            <AiConcierge embedded />
                           </div>
                         )}
                         {activeTab === "notifications" && <NotificationsList />}

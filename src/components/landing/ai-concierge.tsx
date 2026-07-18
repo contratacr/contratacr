@@ -201,7 +201,7 @@ function ProfessionalResult({ result, copy, onNavigate }: {
   );
 }
 
-export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
+export function AiConcierge({ embedded = false }: { embedded?: boolean } = {}) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -514,7 +514,7 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
       <div className={cn(
         "flex w-full flex-col overflow-hidden border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)]",
         embedded
-          ? "h-full rounded-none border-0 shadow-none lg:rounded-2xl lg:border lg:shadow-[0_18px_54px_-34px_rgba(4,37,77,0.6)]"
+          ? "h-full rounded-[28px] shadow-[0_18px_54px_-34px_rgba(4,37,77,0.6)] lg:rounded-2xl"
           : "max-h-full h-[min(820px,calc(var(--app-visual-viewport-height)_-_0.5rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
       )}>
         <header className="relative flex shrink-0 items-center gap-2 border-b border-[#cfe3f4] bg-[linear-gradient(120deg,#ffffff_0%,#f3f9ff_100%)] px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
@@ -525,7 +525,7 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {user && <button type="button" onClick={() => setShowHistory((current) => !current)} title={copy.history} aria-label={copy.history} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><History className="h-4 w-4 sm:h-5 sm:w-5" /></button>}
             <button type="button" onClick={resetConversation} title={copy.reset} aria-label={copy.reset} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" /></button>
-            {(!embedded || onClose) && <button type="button" onClick={() => embedded ? onClose?.() : setOpen(false)} title={copy.minimize} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>}
+            {!embedded && <button type="button" onClick={() => setOpen(false)} title={copy.minimize} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>}
           </div>
         </header>
 
