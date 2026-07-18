@@ -14,7 +14,7 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { Camera, X, Plus, ChevronDown, Lock, Award, Globe, Video } from "lucide-react";
+import { Camera, X, Plus, ChevronDown, Lock, Award, Globe, Video, ExternalLink } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -128,6 +128,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const initialFullName = typeof initialProfile?.full_name === "string" ? initialProfile.full_name.trim() : "";
   const initialEmail = typeof initialProfile?.email === "string" ? initialProfile.email : "";
   const initialAvatarUrl = typeof initialProfile?.avatar_url === "string" ? initialProfile.avatar_url : null;
+  const publicProfileHref = typeof initial.slug === "string" && initial.slug.trim() ? `/profesionales/${initial.slug.trim()}` : null;
   // Which collapsible sections are open. Empty = all collapsed (default), so a
   // pro lands on a tidy, scannable list and opens what they want.
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
@@ -701,6 +702,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             onChange={(e) => { const f = e.target.files?.[0]; if (f) void handlePhotoSelect(f); e.target.value = ""; }}
           />
         </div>
+
+        {publicProfileHref && (
+          <Link
+            href={publicProfileHref}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#dbeafe] bg-[#f8fbfd] px-4 py-2.5 text-sm font-bold text-[#0089BB] transition-colors hover:border-[#9fd8ec] hover:bg-[#EBF5FB]"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {t("viewAsClients")}
+          </Link>
+        )}
 
         {/* Official name — locked when verified / national cédula. The "Verificado" badge
             lives ONCE in the panel HEADER (next to the name+avatar); here the Lock icon +

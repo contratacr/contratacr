@@ -66,7 +66,7 @@ function ProfileScreen() {
       </div>
       <div className="mt-auto space-y-2">
         <button className="w-full flex items-center justify-center gap-2 bg-[#162543] text-white font-bold text-xs py-2.5 rounded-xl shadow-sm">
-          <MessageCircle className="h-3.5 w-3.5" /> Enviar mensaje
+          <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
         </button>
         <div className="bg-gray-50 rounded-xl p-2.5">
           <p className="text-[10px] text-gray-600 leading-relaxed italic">&ldquo;Excelente trabajo, muy puntual y profesional.&rdquo;</p>

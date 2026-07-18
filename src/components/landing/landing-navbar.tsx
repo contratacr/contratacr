@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass,
-  MessageSquareMore, UserRound, LogOut,
+  UserRound, LogOut,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -12,8 +12,7 @@ import { cn } from "@/lib/utils";
 import { signOutToHome } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
 import { canOffer } from "@/lib/auth/capabilities";
-import { useMode, type Mode } from "@/hooks/use-mode";
-import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useMode } from "@/hooks/use-mode";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
@@ -559,65 +558,6 @@ export function AccountMenu({
   );
 }
 
-function MobileMessagesButton({ href, onNavigate }: { href: string; onNavigate?: () => void }) {
-  const { user } = useAuth();
-  const locale = useLocale();
-  const [unread, setUnread] = useState(0);
-
-  const loadUnread = useCallback(async () => {
-    if (!user) {
-      setUnread(0);
-      return;
-    }
-    try {
-      const res = await fetch("/api/direct-chat", { cache: "no-store" });
-      if (!res.ok) return;
-      const json = await res.json();
-      const total = (json.conversations ?? []).reduce((sum: number, item: {
-        client_id?: string;
-        client_unread_count?: number;
-        professional_unread_count?: number;
-      }) => {
-        const count = item.client_id === user.id ? item.client_unread_count : item.professional_unread_count;
-        return sum + (Number(count) || 0);
-      }, 0);
-      setUnread(total);
-    } catch {
-      setUnread(0);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => void loadUnread(), 0);
-    const onChanged = () => void loadUnread();
-    window.addEventListener("directChatChanged", onChanged);
-    window.addEventListener("focus", onChanged);
-    return () => {
-      window.clearTimeout(timeout);
-      window.removeEventListener("directChatChanged", onChanged);
-      window.removeEventListener("focus", onChanged);
-    };
-  }, [loadUnread]);
-
-  if (!user) return null;
-
-  return (
-    <Link
-      href={href}
-      onClick={onNavigate}
-      aria-label={locale === "en" ? "Messages" : "Mensajes"}
-      className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6]"
-    >
-      <MessageSquareMore className="h-5 w-5" />
-      {unread > 0 && (
-        <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
-          {unread > 9 ? "9+" : unread}
-        </span>
-      )}
-    </Link>
-  );
-}
-
 /* ─── Navbar ───
    `mobileInline` (optional): content injected into the MOBILE header row only (<lg),
    between the logo and the hamburger — used by /buscar to put the search + filters on the
@@ -715,18 +655,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     () => RESOURCES_LINKS.filter((link) => link.key !== "proTips" || !user || isPro),
     [isPro, user],
   );
-  // Airbnb FULL mode switch: providers can change Cliente/Profesional from the
-  // panel header or account menus, and the navbar reads that mode for quick links.
-  // Keep notifications in and out of the panel aligned: outside the panel, we
-  // show the same mode-scoped feed as the active navbar mode (or client mode for
-  // accounts without offer capability). This avoids confusing cross-mode mixes.
-  const notificationScope: "all" | Mode = pathname.startsWith("/dashboard/profesional")
-    ? mode
-    : pathname.startsWith("/dashboard/cliente")
-      ? "use"
-      : isPro
-        ? mode
-        : "use";
   const mobileDrawerItemClass =
     "block w-full py-2.5 text-left text-[17px] font-medium leading-snug text-[#1A2744] transition-colors hover:text-[#009FD9]";
   const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-bold");
@@ -915,12 +843,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               )}
 
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                {user && (
-                  <>
-                    <MobileMessagesButton href="/mensajes" />
-                    <NotificationBell scope={notificationScope} />
-                  </>
-                )}
+                <LanguageMenu />
                 <Link
                   href={user ? primaryPanelHref : loginHref}
                   aria-label={user ? t("myPanel") : t("login")}
@@ -1056,7 +979,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
                   </div>
                 ) : user ? (
-                  <div className="flex w-[240px] items-center justify-end gap-1">
+                  <div className="flex w-[180px] items-center justify-end gap-1">
                     {!isPro && (
                       <Link
                         href="/registro/profesional"
@@ -1066,8 +989,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                         {t("offerServices")}
                       </Link>
                     )}
-                    <MobileMessagesButton href="/mensajes" />
-                    <NotificationBell scope={notificationScope} />
                     <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
                   </div>
                 ) : (
@@ -1222,15 +1143,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               {/* Desktop keeps bell + account menu in the compact row. On mobile,
                   the hamburger is the single entry point so account options do not
                   split across two menus. */}
-              <div className="hidden w-[136px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+              <div className="hidden w-[112px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+                <LanguageMenu />
                 {user ? (
-                  <>
-                    <MobileMessagesButton href="/mensajes" />
-                    <NotificationBell scope={notificationScope} />
-                    <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
-                  </>
+                  <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
                 ) : (
-                  <span className="h-10 w-[92px]" aria-hidden />
+                  null
                 )}
               </div>
               <button

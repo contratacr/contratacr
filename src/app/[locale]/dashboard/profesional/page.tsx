@@ -741,7 +741,7 @@ export default function DashboardPage() {
         )}>
           <Repeat2 className="h-4 w-4" />
         </span>
-        {mode === "offer" ? t("panelClient") : t("panelProfessional")}
+        {mode === "offer" ? t("switchToClientPanel") : t("switchToProfessionalPanel")}
       </button>
     );
   }

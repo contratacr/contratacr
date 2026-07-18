@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, MessageSquareMore } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { useLocale } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
-import { useAuth } from "@/hooks/use-auth";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -36,57 +34,41 @@ export function DirectChatLauncher({
   buttonLabel,
   initialMessage = "",
   onSelfAction,
-  tone = "primary",
 }: DirectChatLauncherProps) {
   const locale = useLocale();
-  const router = useRouter();
-  const { user } = useAuth();
   const isEn = locale === "en";
   const [loading, setLoading] = useState(false);
-  const sendMessageLabel = isEn ? "Send message" : "Enviar mensaje";
-
-  function chatHref() {
-    const params = new URLSearchParams({ draftChat: "1" });
-    if (professionalId) params.set("professionalId", professionalId);
-    if (professionalName) params.set("professionalName", professionalName);
-    if (bookingId) params.set("bookingId", bookingId);
-    if (projectId) params.set("projectId", projectId);
-    if (proposalId) params.set("proposalId", proposalId);
-    if (contextTitle) params.set("contextTitle", contextTitle);
-    if (initialMessage) params.set("draftMessage", initialMessage);
-    return `/mensajes?${params.toString()}`;
-  }
+  const whatsappLabel = isEn ? "Contact on WhatsApp" : "Contactar por WhatsApp";
 
   async function openChat() {
     if (isOwn) {
       onSelfAction?.();
       return;
     }
-    const href = chatHref();
-    if (!user) {
-      router.push(`/login?next=${encodeURIComponent(href)}`);
-      return;
-    }
+
     setLoading(true);
     try {
-      const response = await fetch("/api/direct-chat", {
+      const response = await fetch("/api/contact/whatsapp-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           professionalId,
           bookingId,
+          professionalName,
           projectId,
           proposalId,
           contextTitle,
           initialMessage,
-          openConversation: true,
+          locale,
         }),
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.conversationId) throw new Error(payload.error || "Could not open chat");
-      router.push(`/mensajes?conversation=${encodeURIComponent(payload.conversationId)}`);
+      if (!response.ok || !payload.href) throw new Error(payload.error || "Could not open WhatsApp");
+      window.open(String(payload.href), "_blank", "noopener,noreferrer");
     } catch {
-      router.push(href);
+      window.alert(isEn ? "No WhatsApp number is available for this contact." : "No hay un numero de WhatsApp disponible para este contacto.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -97,15 +79,14 @@ export function DirectChatLauncher({
       disabled={loading}
       aria-busy={loading}
       className={cn(
-        buttonVariants({ variant: tone === "contrast" ? "chat" : "default", size: "md" }),
-        // Cyan is the default when messaging is the main action. Navy is opt-in only
-        // when messaging sits beside another positive workflow action.
+        buttonVariants({ variant: "whatsapp", size: "md" }),
         "gap-1.5 disabled:opacity-60",
         className || "w-full rounded-full py-2.5 text-[13px] font-semibold",
+        "bg-[#25d366] text-white hover:bg-[#1da851] focus-visible:ring-[#25d366]",
       )}
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquareMore className="h-4 w-4" />}
-      {buttonLabel || sendMessageLabel}
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+      {buttonLabel || whatsappLabel}
     </button>
   );
 }

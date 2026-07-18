@@ -598,7 +598,7 @@ export default function ProfilePage() {
                                         </span>
                                       </p>
                                     </div>
-                                    {canBookService ? <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4"><span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">{t("serviceRequest")}</span></button> : <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={catLabel(cat)} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.request)} buttonLabel={locale === "en" ? "Send message" : "Enviar mensaje"} className="mt-auto w-full rounded-xl px-4 py-2.5 text-sm font-semibold" />}
+                                    {canBookService ? <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4"><span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">{t("serviceRequest")}</span></button> : <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={catLabel(cat)} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.request)} buttonLabel="WhatsApp" className="mt-auto w-full rounded-xl px-4 py-2.5 text-sm font-semibold" />}
                                   </div>
                                 </div>
                               );
