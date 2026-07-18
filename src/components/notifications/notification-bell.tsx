@@ -218,11 +218,18 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   if (!user) return null;
 
   const allNotificationsHref = `/${locale}/notificaciones`;
+  const openNotifications = () => {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      router.push(allNotificationsHref);
+      return;
+    }
+    setOpen(!open);
+  };
 
   return (
     <div className="relative" ref={panelRef}>
       <button
-        onClick={() => setOpen(!open)}
+        onClick={openNotifications}
         className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] hover:bg-[#f3f4f6] transition-colors"
         aria-label={t("title")}
       >

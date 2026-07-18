@@ -22,7 +22,7 @@ export function AppTooltip({ label, children, className, tooltipClassName, side 
         : "right-0";
 
   return (
-    <span className={cn("group relative inline-flex", className)}>
+    <span className={cn("group relative inline-flex w-fit shrink-0 align-middle leading-none", className)}>
       {children}
       <span
         role="tooltip"

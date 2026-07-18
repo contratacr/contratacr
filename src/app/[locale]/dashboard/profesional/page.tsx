@@ -202,10 +202,10 @@ const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
-  "home", "bookings", "proposals", "services", "availability", "photos", "profile",
+  "bookings", "proposals", "services", "availability", "photos", "profile",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
-const USE_TABS: Tab[] = ["home", "sent_bookings", "sent_projects", "profile", "saved"];
+const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved"];
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 function compactDisplayName(name: string) {
@@ -306,7 +306,7 @@ export default function DashboardPage() {
   const urlForcedMode: Mode | null =
     legacyVerificationTab ? "offer" : requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
-  const activeTab: Tab = requestedTab ?? "home";
+  const activeTab: Tab = requestedTab ?? (mode === "offer" ? "bookings" : "sent_bookings");
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
   useEffect(() => {
@@ -696,7 +696,7 @@ export default function DashboardPage() {
   function handleSwitchMode(next: Mode) {
     if (next === mode) return;
     setMode(next);
-    setTab("home");
+    setTab(next === "offer" ? "bookings" : "sent_bookings");
   }
 
   function handleSaved() {
