@@ -1203,6 +1203,7 @@
       "switchToUse": "Cambiar a panel cliente",
       "switchToOffer": "Cambiar a panel profesional",
       "quickActions": "Accesos rápidos",
+      "clientOnlyHint": "Para ofrecer servicios, complete el registro profesional desde la opción Ofrecer mis servicios.",
       "actions": {
         "publish": {
           "title": "Publicar solicitud",
@@ -1267,6 +1268,8 @@
       "saved": "Perfiles que guardaste para contratar más adelante."
     },
     "profileSections": {
+      "photosDesc": "Fotos y trabajos realizados que ven los clientes.",
+      "availabilityDesc": "Horarios, contacto y disponibilidad visible para clientes.",
       "verificationDesc": "Identidad y estado de verificación.",
       "accountDesc": "Correo, contraseña y seguridad de la cuenta."
     },

@@ -1204,6 +1204,7 @@
       "switchToUse": "Switch to client panel",
       "switchToOffer": "Switch to professional panel",
       "quickActions": "Quick actions",
+      "clientOnlyHint": "To offer services, complete professional registration from the Offer my services option.",
       "actions": {
         "publish": {
           "title": "Post a request",
@@ -1268,6 +1269,8 @@
       "saved": "Profiles you saved to hire later."
     },
     "profileSections": {
+      "photosDesc": "Photos and completed work clients can see.",
+      "availabilityDesc": "Hours, contact preferences and availability shown to clients.",
       "verificationDesc": "Identity and verification status.",
       "accountDesc": "Email, password and account security."
     },

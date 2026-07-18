@@ -68,181 +68,69 @@ type Tab =
 type ProData = Record<string, any>;
 type ProPanelTranslator = ReturnType<typeof useTranslations>;
 
-function dashboardHomeAction({
-  icon,
-  title,
-  body,
-  onClick,
-  primary = false,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-  onClick: () => void;
-  primary?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "group flex min-h-[92px] w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors",
-        primary
-          ? "border-[#009FD9] bg-[#EBF5FB] hover:bg-[#dff1fb]"
-          : "border-[#e5e7eb] bg-white hover:border-[#bae6fd] hover:bg-[#f8fbfd]",
-      )}
-    >
-      <span className={cn(
-        "mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-        primary ? "bg-white text-[#009FD9]" : "bg-[#f3f4f6] text-[#374151] group-hover:text-[#009FD9]",
-      )}>
-        {icon}
-      </span>
-      <span className="min-w-0">
-        <span className="block text-sm font-bold text-[#111827]">{title}</span>
-        <span className="mt-1 block text-sm leading-relaxed text-[#6b7280]">{body}</span>
-      </span>
-    </button>
-  );
-}
-
 function DashboardHomePanel({
   mode,
   isProvider,
-  completionPercent,
   t,
   onSwitchMode,
-  onSetTab,
+  onViewPublicProfile,
   onSearch,
   onPublish,
 }: {
   mode: Mode;
   isProvider: boolean;
-  completionPercent: number;
   t: ProPanelTranslator;
   onSwitchMode: (mode: Mode) => void;
-  onSetTab: (tab: Tab) => void;
+  onViewPublicProfile?: () => void;
   onSearch: () => void;
   onPublish: () => void;
 }) {
   const isOffer = mode === "offer";
+  const nextMode: Mode = isOffer ? "use" : "offer";
   return (
-    <div className="space-y-5">
-      <div className="rounded-2xl border border-[#c7eafb] bg-[#f8fbfd] p-5 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#009FD9]">
-              {isOffer ? t("home.offerEyebrow") : t("home.useEyebrow")}
-            </p>
-            <h2 className="mt-1 text-xl font-bold text-[#111827] sm:text-2xl">{isOffer ? t("home.offerTitle") : t("home.useTitle")}</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#4b5563]">
-              {isOffer ? t("home.offerBody") : t("home.useBody")}
-            </p>
-          </div>
+    <div className="rounded-2xl border border-[#c7eafb] bg-[#f8fbfd] p-5 shadow-sm sm:p-6">
+      <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
+          <Repeat2 className="h-6 w-6" />
+        </div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#009FD9]">
+          {isOffer ? t("home.offerEyebrow") : t("home.useEyebrow")}
+        </p>
+        <h2 className="mt-1 text-xl font-bold text-[#111827] sm:text-2xl">{isOffer ? t("home.offerTitle") : t("home.useTitle")}</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#4b5563]">
+          {isOffer ? t("home.offerBody") : t("home.useBody")}
+        </p>
+        <div className="mt-6 flex w-full flex-col justify-center gap-2 sm:w-auto sm:flex-row">
           {isProvider && (
-            <Button type="button" onClick={() => onSwitchMode(isOffer ? "use" : "offer")} className="w-full shrink-0 bg-[#009FD9] text-white hover:bg-[#0089BB] sm:w-auto">
+            <Button type="button" onClick={() => onSwitchMode(nextMode)} className="w-full bg-[#009FD9] text-white hover:bg-[#0089BB] sm:w-auto">
               <Repeat2 className="h-4 w-4" />
               {isOffer ? t("home.switchToUse") : t("home.switchToOffer")}
             </Button>
           )}
+          {isOffer && onViewPublicProfile && (
+            <Button type="button" variant="outline" onClick={onViewPublicProfile} className="w-full sm:w-auto">
+              <ExternalLink className="h-4 w-4" />
+              {t("viewPublicProfile")}
+            </Button>
+          )}
+          {!isOffer && (
+            <>
+              <Button type="button" variant={isProvider ? "outline" : "default"} onClick={onSearch} className={cn("w-full sm:w-auto", !isProvider && "bg-[#009FD9] text-white hover:bg-[#0089BB]")}>
+                <Search className="h-4 w-4" />
+                {t("home.actions.search.title")}
+              </Button>
+              <Button type="button" variant="outline" onClick={onPublish} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4" />
+                {t("home.actions.publish.title")}
+              </Button>
+            </>
+          )}
         </div>
-      </div>
-
-      <div>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
-          {t("home.quickActions")}
-        </p>
-
-        {isOffer ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {dashboardHomeAction({
-            icon: <CalendarCheck className="h-5 w-5" />,
-            title: t("home.actions.requests.title"),
-            body: t("home.actions.requests.body"),
-            onClick: () => onSetTab("bookings"),
-            primary: true,
-          })}
-          {dashboardHomeAction({
-            icon: <Handshake className="h-5 w-5" />,
-            title: t("home.actions.opportunities.title"),
-            body: t("home.actions.opportunities.body"),
-            onClick: () => onSetTab("proposals"),
-          })}
-          {dashboardHomeAction({
-            icon: <Wrench className="h-5 w-5" />,
-            title: t("home.actions.services.title"),
-            body: t("home.actions.services.body"),
-            onClick: () => onSetTab("services"),
-          })}
-          {dashboardHomeAction({
-            icon: <Award className="h-5 w-5" />,
-            title: t("home.actions.photos.title"),
-            body: t("home.actions.photos.body"),
-            onClick: () => onSetTab("photos"),
-          })}
-          {dashboardHomeAction({
-            icon: <CalendarDays className="h-5 w-5" />,
-            title: t("home.actions.availability.title"),
-            body: t("home.actions.availability.body"),
-            onClick: () => onSetTab("availability"),
-          })}
-          {dashboardHomeAction({
-            icon: <ShieldCheck className="h-5 w-5" />,
-            title: t("home.actions.verification.title"),
-            body: t("home.actions.verification.body"),
-            onClick: () => onSetTab("verificacion"),
-          })}
-          {dashboardHomeAction({
-            icon: <User className="h-5 w-5" />,
-            title: t("home.actions.profile.title"),
-            body: t("home.actions.profile.body", { percent: completionPercent }),
-            onClick: () => onSetTab("profile"),
-          })}
-        </div>
-        ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {dashboardHomeAction({
-            icon: <Plus className="h-5 w-5" />,
-            title: t("home.actions.publish.title"),
-            body: t("home.actions.publish.body"),
-            onClick: onPublish,
-            primary: true,
-          })}
-          {dashboardHomeAction({
-            icon: <Search className="h-5 w-5" />,
-            title: t("home.actions.search.title"),
-            body: t("home.actions.search.body"),
-            onClick: onSearch,
-          })}
-          {dashboardHomeAction({
-            icon: <CalendarClock className="h-5 w-5" />,
-            title: t("home.actions.myRequests.title"),
-            body: t("home.actions.myRequests.body"),
-            onClick: () => onSetTab("sent_bookings"),
-          })}
-          {dashboardHomeAction({
-            icon: <Bookmark className="h-5 w-5" />,
-            title: t("home.actions.saved.title"),
-            body: t("home.actions.saved.body"),
-            onClick: () => onSetTab("saved"),
-          })}
-        </div>
+        {!isProvider && (
+          <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm leading-relaxed text-[#6b7280]">
+            {t("home.clientOnlyHint")}
+          </div>
         )}
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        {dashboardHomeAction({
-          icon: <Bot className="h-5 w-5" />,
-          title: t("home.actions.assistant.title"),
-          body: t("home.actions.assistant.body"),
-          onClick: () => onSetTab("assistant"),
-        })}
-        {dashboardHomeAction({
-          icon: <Headset className="h-5 w-5" />,
-          title: t("home.actions.support.title"),
-          body: t("home.actions.support.body"),
-          onClick: () => onSetTab("soporte"),
-        })}
       </div>
     </div>
   );
@@ -279,7 +167,7 @@ const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
-  "home", "bookings", "proposals", "profile", "services", "photos", "availability",
+  "home", "bookings", "proposals", "services", "profile",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
 const USE_TABS: Tab[] = ["home", "sent_bookings", "sent_projects", "profile", "saved"];
@@ -802,11 +690,11 @@ export default function DashboardPage() {
   // after the professional lookup finished; until then the panel shell stays visible.
   const showOfferGate = !loading && mode === "offer" && !pro && !canOffer(user);
 
-  // Mobile bottom-nav: five fixed destinations. Shared/global surfaces like chat,
-  // notifications and support remain reachable from the navbar/sidebar/profile area,
-  // instead of competing with the core panel tasks.
+  // Keep the primary dashboard navigation focused on five destinations. Shared
+  // surfaces like chat, notifications and support stay routable from the navbar
+  // or direct links instead of competing with the core panel tasks.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
-  const sidebarTabs = [...modeTabs, ...SHARED_TABS].filter((tab) => tab !== "assistant");
+  const sidebarTabs = modeTabs;
   const barTabs: Tab[] = [...modeTabs, ...SHARED_TABS];
   const mobileBarTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
   const mobileFullScreenTab = activeTab === "assistant";
@@ -814,7 +702,6 @@ export default function DashboardPage() {
     mode === "offer" &&
     !!proForCompletion &&
     (computeCompletion(proForCompletion).percent < 100 || proForCompletion.verification_status !== "verified");
-  const completionPercent = proForCompletion ? computeCompletion(proForCompletion).percent : 0;
 
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
@@ -837,24 +724,6 @@ export default function DashboardPage() {
           )}
         </span>
         {t(`tabs.${tab}`)}
-      </button>
-    );
-  }
-
-  function modePanelButton({ mobile = false }: { mobile?: boolean } = {}) {
-    const next: Mode = mode === "offer" ? "use" : "offer";
-    return (
-      <button
-        type="button"
-        onClick={() => { handleSwitchMode(next); }}
-        className={cn(
-          "w-full flex items-center gap-3 rounded-xl text-left text-sm font-medium transition-colors",
-          mobile ? "px-3 py-3" : "px-3 py-2.5",
-          "text-[#374151] hover:bg-[#f3f4f6]"
-        )}
-      >
-        <span className="shrink-0 text-[#111827]"><Repeat2 className="h-4 w-4" /></span>
-        <span className="flex-1">{next === "offer" ? t("panelProfessional") : t("panelClient")}</span>
       </button>
     );
   }
@@ -1019,11 +888,6 @@ export default function DashboardPage() {
                 <nav className="hidden lg:block lg:w-60 shrink-0 space-y-3">
                   <Card>
                     <CardContent className="p-2">
-                      {isProvider && (
-                        <div className="mb-2 border-b border-[#f3f4f6] pb-2">
-                          {modePanelButton()}
-                        </div>
-                      )}
                       <div>{sidebarTabs.map(navButton)}</div>
                     </CardContent>
                   </Card>
@@ -1084,10 +948,9 @@ export default function DashboardPage() {
                           <DashboardHomePanel
                             mode={mode}
                             isProvider={isProvider}
-                            completionPercent={completionPercent}
                             t={t}
                             onSwitchMode={handleSwitchMode}
-                            onSetTab={setTab}
+                            onViewPublicProfile={mode === "offer" && pro?.slug ? () => router.push(`/profesionales/${pro.slug}?preview=1`) : undefined}
                             onSearch={() => router.push("/buscar")}
                             onPublish={() => {
                               setTab("sent_projects");
@@ -1106,6 +969,37 @@ export default function DashboardPage() {
                             focusField={profileFocus?.field ?? null}
                             focusKey={profileFocus?.key}
                             extraSections={[
+                              {
+                                id: "photos",
+                                title: t("tabs.photos"),
+                                desc: t("profileSections.photosDesc"),
+                                children: (
+                                  <PhotoGallery
+                                    professionalId={pro.id}
+                                    initialUrls={pro.portfolio_urls ?? []}
+                                    initialItems={pro.portfolio_items ?? undefined}
+                                    professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
+                                    services={pro.services ?? []}
+                                    onSaved={handleSaved}
+                                  />
+                                ),
+                              },
+                              {
+                                id: "availability",
+                                title: t("tabs.availability"),
+                                desc: t("profileSections.availabilityDesc"),
+                                children: (
+                                  <AvailabilityEditor
+                                    professionalId={pro.id}
+                                    initialPublic={pro.availability_public ?? true}
+                                    initialContactPreference={pro.contact_preference ?? "ambas"}
+                                    workplaces={pro.workplaces ?? []}
+                                    videoConsultationAllowed={anyVideoConsultCategory((pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : []))}
+                                    initialVideoConsultation={!!pro.videoconsulta}
+                                    onSaved={handleSaved}
+                                  />
+                                ),
+                              },
                               {
                                 id: "verificacion",
                                 title: t("tabs.verificacion"),
