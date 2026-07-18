@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
-import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
@@ -240,16 +239,6 @@ export function DirectChatInbox() {
   useEffect(() => { queueMicrotask(() => void loadConversations()); }, [loadConversations]);
   useEffect(() => { if (activeId) queueMicrotask(() => void loadThread(activeId)); }, [activeId, loadThread]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, threadLoading]);
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("contratacr-chat-thread-open", mobileThread);
-    const shouldLockScroll = mobileThread && window.matchMedia("(max-width: 1023px)").matches;
-    const releaseBodyScroll = shouldLockScroll ? lockBodyScroll() : () => {};
-    return () => {
-      root.classList.remove("contratacr-chat-thread-open");
-      releaseBodyScroll();
-    };
-  }, [mobileThread]);
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
