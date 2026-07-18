@@ -26,7 +26,7 @@ type AssistantAction =
   | "open_dashboard"
   | "help";
 
-type HistoryMessage = { role: Role; content: string };
+type HistoryMessage = { role: Role; content: string; serviceId?: string | null };
 type AssistantPayload = {
   answer: string;
   action?: AssistantAction;
@@ -85,7 +85,7 @@ function uncertainSearchPayload(message: string, locale: Locale): AssistantPaylo
 function sanitizeHistory(value: unknown): HistoryMessage[] {
   if (!Array.isArray(value)) return [];
   return value
-    .filter((item): item is { role: Role; content: string } =>
+    .filter((item): item is { role: Role; content: string; serviceId?: unknown } =>
       !!item &&
       typeof item === "object" &&
       (item.role === "assistant" || item.role === "user") &&
@@ -94,6 +94,7 @@ function sanitizeHistory(value: unknown): HistoryMessage[] {
     .map((item) => ({
       role: item.role,
       content: item.content.trim().slice(0, MAX_HISTORY_CONTENT),
+      serviceId: typeof item.serviceId === "string" ? item.serviceId : null,
     }))
     .filter((item) => item.content.length > 0);
 }
@@ -246,7 +247,11 @@ function latestClarificationService(history: HistoryMessage[], locale: Locale) {
       const normalized = normalizeText(item.content);
       return includesAny(normalized, ["zona", "area", "buscar", "search", "which area", "donde"]);
     });
-  return assistantMessage ? resolveCategoryIntent(assistantMessage.content, locale) : null;
+  if (!assistantMessage) return null;
+  if (assistantMessage.serviceId) {
+    return getAllCategories().find((item) => item.id === assistantMessage.serviceId) ?? null;
+  }
+  return resolveCategoryIntent(assistantMessage.content, locale);
 }
 
 function resolveSearch(message: string, locale: Locale, serviceId?: string | null, locationText?: string | null) {
@@ -503,20 +508,26 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     .map((item) => item.content)
     .reverse();
   const priorUserContext = [...recentUserMessages].reverse().join(" ");
-  const messageCategory = resolveCategoryIntent(message, locale);
+  const currentPlace = resolveLocationIntent(message);
   const pendingServiceFromAssistant = latestClarificationService(history, locale);
+  // Keep the exact service from the previous question when the user answers
+  // with a location. A generic alias such as "mecánico en Atenas" must not
+  // turn the location-only answer "Atenas" into Mecánica automotriz.
+  const messageCategory = currentPlace && pendingServiceFromAssistant
+    ? pendingServiceFromAssistant
+    : resolveCategoryIntent(message, locale);
   const recentUserService = recentUserMessages
     .map((item) => resolveCategoryIntent(item, locale))
     .find(Boolean) ?? null;
   const recentUserPlace = recentUserMessages
     .map((item) => resolveLocationIntent(item))
     .find(Boolean) ?? null;
-  const messageOnlyHasPlace = !!resolveLocationIntent(message) && !messageCategory;
-  const directService = resolveCategoryIntent(message, locale)
-    ?? (messageOnlyHasPlace ? recentUserService ?? pendingServiceFromAssistant : null)
+  const messageOnlyHasPlace = !!currentPlace && !!pendingServiceFromAssistant;
+  const directService = (messageOnlyHasPlace ? pendingServiceFromAssistant : messageCategory)
+    ?? (messageOnlyHasPlace ? recentUserService : null)
     ?? resolveCategoryIntent(payload.searchQuery || "", locale)
     ?? recentUserService;
-  const directPlace = resolveLocationIntent(message)
+  const directPlace = currentPlace
     ?? resolveLocationIntent(payload.locationText || "")
     ?? recentUserPlace;
   const directPlaceLabel = formatPlaceLabel(directPlace);
@@ -1064,6 +1075,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       answer: assistantAnswer,
       action: noResults ? "publish_request" : payload.action ?? "answer",
+      serviceId: payload.serviceId ?? null,
       searchHref: noResults
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
         : searchHref,

@@ -52,6 +52,7 @@ type ChatMessage = {
   suggestedService?: string | null;
   provider?: "openai" | "local";
   suggestionSent?: boolean;
+  serviceId?: string | null;
 };
 
 type StoredAssistantSession = {
@@ -375,6 +376,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           history: previous.slice(-8).map((message) => ({
             role: message.role,
             content: `${message.body}${message.professionals?.length ? `\nResultados mostrados: ${message.professionals.map((result, index) => `${index + 1}. ${result.name}`).join("; ")}` : ""}`,
+            serviceId: message.serviceId ?? null,
           })),
         }),
       });
@@ -389,6 +391,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
         professionals: selectedProfessional ? [selectedProfessional] : Array.isArray(payload.professionals) ? payload.professionals : [],
         suggestedService: payload.suggestedService,
         provider: payload.aiProvider,
+        serviceId: typeof payload.serviceId === "string" ? payload.serviceId : null,
         createdAt: new Date().toISOString(),
       }]);
     } catch {
@@ -460,12 +463,10 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     try {
       const response = await fetch(`/api/ai-assistant/history?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!response.ok) throw new Error("delete_failed");
-      setSavedConversations((current) => {
-        const next = current.filter((conversation) => conversation.id !== id);
-        if (conversationId === id && next.length === 0) resetConversation();
-        else if (conversationId === id) setShowHistory(true);
-        return next;
-      });
+      const remainingConversations = savedConversations.filter((conversation) => conversation.id !== id);
+      setSavedConversations(remainingConversations);
+      if (remainingConversations.length === 0) resetConversation();
+      else if (conversationId === id) setShowHistory(true);
     } catch {
       setMessages((current) => [...current, { role: "assistant", body: copy.error, createdAt: new Date().toISOString() }]);
       setShowHistory(true);
