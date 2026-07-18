@@ -1176,6 +1176,7 @@
     "groupPro": "Offering services",
     "groupClient": "Looking for services",
     "tabs": {
+      "home": "Home",
       "profile": "My profile",
       "services": "My services",
       "photos": "Success stories",
@@ -1192,6 +1193,58 @@
       "notifications": "Notifications",
       "soporte": "Support",
       "cuenta": "Account & security"
+    },
+    "home": {
+      "useEyebrow": "Client mode",
+      "useTitle": "What do you need today?",
+      "useBody": "Quickly access your requests, posts and saved professionals.",
+      "offerEyebrow": "Professional mode",
+      "offerTitle": "Your work summary",
+      "offerBody": "Review requests, opportunities and keep your professional profile up to date.",
+      "switchToUse": "Switch to client",
+      "switchToOffer": "Switch to professional",
+      "actions": {
+        "publish": {
+          "title": "Post a request",
+          "body": "Describe what you need and receive proposals from professionals."
+        },
+        "search": {
+          "title": "Search professionals",
+          "body": "Find services by category, location or name."
+        },
+        "myRequests": {
+          "title": "My requests",
+          "body": "Review services you requested and their status."
+        },
+        "saved": {
+          "title": "Saved",
+          "body": "Quickly return to professionals you saved."
+        },
+        "requests": {
+          "title": "Requests received",
+          "body": "See clients who contacted you directly."
+        },
+        "opportunities": {
+          "title": "Opportunities",
+          "body": "Respond to open posts that match your services."
+        },
+        "services": {
+          "title": "My services",
+          "body": "Update what you offer, prices and details."
+        },
+        "profile": {
+          "title": "Professional profile",
+          "body": "Profile {percent}% complete."
+        },
+        "assistant": {
+          "title": "Assistant",
+          "body": "Get help finding services or understanding the app."
+        },
+        "support": {
+          "title": "Support",
+          "body": "Open tickets or review replies from the team."
+        }
+      }
     },
     "servicesHeading": "My services",
     "subtitles": {
@@ -1269,6 +1322,7 @@
       "close": "Close"
     },
     "bottomNav": {
+      "home": "Home",
       "profile": "Profile",
       "services": "Services",
       "photos": "Wins",

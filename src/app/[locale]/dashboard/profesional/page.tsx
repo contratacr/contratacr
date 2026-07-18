@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore,
+  ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, Search,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -59,15 +59,173 @@ import {
 // (the offer capability — unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
-  | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
+  | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "saved"
   | "chat" | "assistant" | "notifications" | "soporte" | "cuenta";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
+type ProPanelTranslator = ReturnType<typeof useTranslations>;
+
+function dashboardHomeAction({
+  icon,
+  title,
+  body,
+  onClick,
+  primary = false,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  onClick: () => void;
+  primary?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "group flex min-h-[92px] w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors",
+        primary
+          ? "border-[#009FD9] bg-[#EBF5FB] hover:bg-[#dff1fb]"
+          : "border-[#e5e7eb] bg-white hover:border-[#bae6fd] hover:bg-[#f8fbfd]",
+      )}
+    >
+      <span className={cn(
+        "mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+        primary ? "bg-white text-[#009FD9]" : "bg-[#f3f4f6] text-[#374151] group-hover:text-[#009FD9]",
+      )}>
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-bold text-[#111827]">{title}</span>
+        <span className="mt-1 block text-sm leading-relaxed text-[#6b7280]">{body}</span>
+      </span>
+    </button>
+  );
+}
+
+function DashboardHomePanel({
+  mode,
+  isProvider,
+  completionPercent,
+  t,
+  onSwitchMode,
+  onSetTab,
+  onSearch,
+  onPublish,
+}: {
+  mode: Mode;
+  isProvider: boolean;
+  completionPercent: number;
+  t: ProPanelTranslator;
+  onSwitchMode: (mode: Mode) => void;
+  onSetTab: (tab: Tab) => void;
+  onSearch: () => void;
+  onPublish: () => void;
+}) {
+  const isOffer = mode === "offer";
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-[#e5e7eb] bg-[#f8fbfd] p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
+              {isOffer ? t("home.offerEyebrow") : t("home.useEyebrow")}
+            </p>
+            <h2 className="mt-1 text-xl font-bold text-[#111827]">{isOffer ? t("home.offerTitle") : t("home.useTitle")}</h2>
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#6b7280]">
+              {isOffer ? t("home.offerBody") : t("home.useBody")}
+            </p>
+          </div>
+          {isProvider && (
+            <Button type="button" variant="outline" onClick={() => onSwitchMode(isOffer ? "use" : "offer")} className="w-full shrink-0 sm:w-auto">
+              <Repeat2 className="h-4 w-4" />
+              {isOffer ? t("home.switchToUse") : t("home.switchToOffer")}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {isOffer ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {dashboardHomeAction({
+            icon: <CalendarCheck className="h-5 w-5" />,
+            title: t("home.actions.requests.title"),
+            body: t("home.actions.requests.body"),
+            onClick: () => onSetTab("bookings"),
+            primary: true,
+          })}
+          {dashboardHomeAction({
+            icon: <Handshake className="h-5 w-5" />,
+            title: t("home.actions.opportunities.title"),
+            body: t("home.actions.opportunities.body"),
+            onClick: () => onSetTab("proposals"),
+          })}
+          {dashboardHomeAction({
+            icon: <Wrench className="h-5 w-5" />,
+            title: t("home.actions.services.title"),
+            body: t("home.actions.services.body"),
+            onClick: () => onSetTab("services"),
+          })}
+          {dashboardHomeAction({
+            icon: <User className="h-5 w-5" />,
+            title: t("home.actions.profile.title"),
+            body: t("home.actions.profile.body", { percent: completionPercent }),
+            onClick: () => onSetTab("profile"),
+          })}
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {dashboardHomeAction({
+            icon: <Plus className="h-5 w-5" />,
+            title: t("home.actions.publish.title"),
+            body: t("home.actions.publish.body"),
+            onClick: onPublish,
+            primary: true,
+          })}
+          {dashboardHomeAction({
+            icon: <Search className="h-5 w-5" />,
+            title: t("home.actions.search.title"),
+            body: t("home.actions.search.body"),
+            onClick: onSearch,
+          })}
+          {dashboardHomeAction({
+            icon: <CalendarClock className="h-5 w-5" />,
+            title: t("home.actions.myRequests.title"),
+            body: t("home.actions.myRequests.body"),
+            onClick: () => onSetTab("sent_bookings"),
+          })}
+          {dashboardHomeAction({
+            icon: <Bookmark className="h-5 w-5" />,
+            title: t("home.actions.saved.title"),
+            body: t("home.actions.saved.body"),
+            onClick: () => onSetTab("saved"),
+          })}
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {dashboardHomeAction({
+          icon: <Bot className="h-5 w-5" />,
+          title: t("home.actions.assistant.title"),
+          body: t("home.actions.assistant.body"),
+          onClick: () => onSetTab("assistant"),
+        })}
+        {dashboardHomeAction({
+          icon: <Headset className="h-5 w-5" />,
+          title: t("home.actions.support.title"),
+          body: t("home.actions.support.body"),
+          onClick: () => onSetTab("soporte"),
+        })}
+      </div>
+    </div>
+  );
+}
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
+  home: <Home className="h-4 w-4" />,
   profile: <User className="h-4 w-4" />,
   services: <Wrench className="h-4 w-4" />,
   photos: <Award className="h-4 w-4" />,
@@ -97,16 +255,16 @@ const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
-  "bookings", "proposals", "profile", "services", "photos", "availability",
+  "home", "bookings", "proposals", "profile", "services", "photos", "availability",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
-const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved"];
+const USE_TABS: Tab[] = ["home", "sent_bookings", "sent_projects", "profile", "saved"];
 const SHARED_TABS: Tab[] = ["chat", "assistant", "notifications", "soporte"];
 
-// MOBILE bottom-nav: a horizontally scrollable rail with every mode tab.
+// MOBILE bottom-nav: five fixed, native-app style destinations.
 const MOBILE_PRIORITY: Record<Mode, Tab[]> = {
-  offer: ["bookings", "proposals", "chat", "assistant", "notifications"],
-  use: ["sent_bookings", "sent_projects", "chat", "assistant", "notifications"],
+  offer: ["home", "bookings", "proposals", "services", "profile"],
+  use: ["home", "sent_bookings", "sent_projects", "saved", "profile"],
 };
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
@@ -173,8 +331,6 @@ export default function DashboardPage() {
   const chatContentRef = useRef<HTMLDivElement>(null);
   const opportunityWelcomeCheckedRef = useRef(false);
   const opportunityWelcomeDismissedRef = useRef(false);
-  const [bottomNavRail, setBottomNavRail] = useState<HTMLDivElement | null>(null);
-  const [bottomNavOverflow, setBottomNavOverflow] = useState({ left: false, right: true });
   const [noProTries, setNoProTries] = useState(0);
   const focusKeyRef = useRef(0);
   const bootstrapHydratedForRef = useRef<string | null>(null);
@@ -198,7 +354,7 @@ export default function DashboardPage() {
   const urlForcedMode: Mode | null =
     legacyVerificationTab ? "offer" : requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
-  const activeTab: Tab = requestedTab ?? (mode === "offer" ? "bookings" : "sent_bookings");
+  const activeTab: Tab = requestedTab ?? "home";
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
   useEffect(() => {
@@ -540,7 +696,7 @@ export default function DashboardPage() {
   function handleSwitchMode(next: Mode) {
     if (next === mode) return;
     setMode(next);
-    setTab(next === "offer" ? "bookings" : "sent_bookings");
+    setTab("home");
   }
 
   function handleSaved() {
@@ -564,40 +720,6 @@ export default function DashboardPage() {
     if (mode !== "offer") setMode("offer");
     setTab("proposals");
   }
-
-  useEffect(() => {
-    if (!bottomNavRail) return;
-    let frame = 0;
-    const apply = () => {
-      const maxScroll = Math.max(0, bottomNavRail.scrollWidth - bottomNavRail.clientWidth);
-      const remainingRight = maxScroll - bottomNavRail.scrollLeft;
-      const next = {
-        left: bottomNavRail.scrollLeft > 2,
-        right: remainingRight > 4,
-      };
-      setBottomNavOverflow((prev) => (
-        prev.left === next.left && prev.right === next.right ? prev : next
-      ));
-    };
-    const update = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(apply);
-    };
-    update();
-    const timeout = window.setTimeout(update, 250);
-    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
-    resizeObserver?.observe(bottomNavRail);
-    Array.from(bottomNavRail.children).forEach((child) => resizeObserver?.observe(child));
-    bottomNavRail.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(timeout);
-      resizeObserver?.disconnect();
-      bottomNavRail.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [bottomNavRail, mode, isProvider]);
 
   useEffect(() => {
     if (activeTab !== "chat") return;
@@ -656,18 +778,19 @@ export default function DashboardPage() {
   // after the professional lookup finished; until then the panel shell stays visible.
   const showOfferGate = !loading && mode === "offer" && !pro && !canOffer(user);
 
-  // Mobile bottom-nav split: the mode's primary tabs in the bar (incl. the shared
-  // "notifications" tab, which now has a dedicated slot), then the rest scrolls after.
+  // Mobile bottom-nav: five fixed destinations. Shared/global surfaces like chat,
+  // notifications and support remain reachable from the navbar/sidebar/profile area,
+  // instead of competing with the core panel tasks.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = [...modeTabs, ...SHARED_TABS].filter((tab) => tab !== "assistant");
   const barTabs: Tab[] = [...modeTabs, ...SHARED_TABS];
-  const mobilePriorityTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
-  const mobileBarTabs = [...mobilePriorityTabs, ...barTabs.filter((tab) => !mobilePriorityTabs.includes(tab))];
+  const mobileBarTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
   const mobileFullScreenTab = activeTab === "assistant";
   const showProfileCompletion =
     mode === "offer" &&
     !!proForCompletion &&
     (computeCompletion(proForCompletion).percent < 100 || proForCompletion.verification_status !== "verified");
+  const completionPercent = proForCompletion ? computeCompletion(proForCompletion).percent : 0;
 
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
@@ -713,23 +836,7 @@ export default function DashboardPage() {
   }
 
   const bottomNavItemClass =
-    "relative flex w-[clamp(67px,calc((100vw-60px)/4),94px)] min-w-[clamp(67px,calc((100vw-60px)/4),94px)] max-w-[94px] shrink-0 flex-col items-center justify-center gap-1 px-0.5 py-1.5 transition-colors";
-
-  function modeBottomNavButton() {
-    const next: Mode = mode === "offer" ? "use" : "offer";
-    return (
-      <button
-        type="button"
-        onClick={() => { handleSwitchMode(next); }}
-        className={cn(bottomNavItemClass, "w-[92px] min-w-[92px] max-w-[92px] text-[#374151] hover:text-[#111827]")}
-      >
-        <Repeat2 className="h-[22px] w-[22px]" />
-        <span className="whitespace-nowrap text-center text-[10px] font-semibold leading-none">
-          {next === "offer" ? t("panelProfessional") : t("panelClient")}
-        </span>
-      </button>
-    );
-  }
+    "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5 py-1.5 transition-colors";
 
   function identityBadge() {
     if (clientVerified || pro?.verification_status === "verified") {
@@ -949,6 +1056,22 @@ export default function DashboardPage() {
                         )}
                       </CardHeader>}
                       <CardContent className={mobileFullScreenTab ? "p-0 sm:p-0" : "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6"}>
+                        {activeTab === "home" && (
+                          <DashboardHomePanel
+                            mode={mode}
+                            isProvider={isProvider}
+                            completionPercent={completionPercent}
+                            t={t}
+                            onSwitchMode={handleSwitchMode}
+                            onSetTab={setTab}
+                            onSearch={() => router.push("/buscar")}
+                            onPublish={() => {
+                              setTab("sent_projects");
+                              window.setTimeout(() => window.dispatchEvent(new Event("contratacr:open-publish-project")), 80);
+                            }}
+                          />
+                        )}
+
                         {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
                         {activeTab === "profile" && mode === "offer" && pro && (
                           <ProfileEditor
@@ -1083,18 +1206,12 @@ export default function DashboardPage() {
 
       {/* MOBILE bottom nav bar — a native-app tab bar (icon + label, Instagram-style). Fixed,
           thumb-reachable, always visible while in the panel; replaces the sidebar on phones.
-          The rail scrolls horizontally and intentionally peeks the next item, so users can
-          tell there are more actions without opening a separate discovery affordance first. */}
+          fixed to five items so there is no hidden horizontal navigation on phones. */}
       {!mobileFullScreenTab && <nav
         className="dashboard-mobile-nav lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#e5e7eb] bg-white shadow-[0_-14px_34px_-18px_rgba(15,23,42,0.45)] pb-[env(safe-area-inset-bottom)]"
         aria-label={t("title")}
       >
-        <div className="relative">
-          <div
-            ref={setBottomNavRail}
-            className="flex min-h-[56px] items-stretch gap-0 overflow-x-auto overscroll-x-contain scroll-smooth hide-scrollbar"
-          >
-            {isProvider && modeBottomNavButton()}
+        <div className="relative flex min-h-[56px] items-stretch gap-0">
             {mobileBarTabs.map((tab) => {
               const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
               const active = activeTab === tab;
@@ -1120,21 +1237,6 @@ export default function DashboardPage() {
                 </button>
               );
             })}
-          </div>
-          <span
-            className={cn(
-              "pointer-events-none absolute bottom-0 left-0 top-0 w-[12vw] min-w-9 max-w-12 bg-gradient-to-r from-white/60 via-white/25 to-transparent backdrop-blur-[1px] transition-opacity duration-150",
-              bottomNavOverflow.left ? "opacity-100" : "opacity-0"
-            )}
-            aria-hidden
-          />
-          <span
-            className={cn(
-              "pointer-events-none absolute bottom-0 right-0 top-0 w-[12vw] min-w-9 max-w-12 bg-gradient-to-l from-white/60 via-white/25 to-transparent backdrop-blur-[1px] transition-opacity duration-150",
-              bottomNavOverflow.right ? "opacity-100" : "opacity-0"
-            )}
-            aria-hidden
-          />
         </div>
       </nav>}
     </div>

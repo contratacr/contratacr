@@ -1175,6 +1175,7 @@
     "groupPro": "Ofrezco servicios",
     "groupClient": "Busco servicios",
     "tabs": {
+      "home": "Inicio",
       "profile": "Mi perfil",
       "services": "Mis servicios",
       "photos": "Casos de éxito",
@@ -1191,6 +1192,58 @@
       "notifications": "Notificaciones",
       "soporte": "Soporte",
       "cuenta": "Cuenta y seguridad"
+    },
+    "home": {
+      "useEyebrow": "Modo cliente",
+      "useTitle": "¿Qué necesita hacer hoy?",
+      "useBody": "Acceda rápido a sus solicitudes, publicaciones y profesionales guardados.",
+      "offerEyebrow": "Modo profesional",
+      "offerTitle": "Resumen de su trabajo",
+      "offerBody": "Revise solicitudes, oportunidades y mantenga actualizado su perfil profesional.",
+      "switchToUse": "Cambiar a cliente",
+      "switchToOffer": "Cambiar a profesional",
+      "actions": {
+        "publish": {
+          "title": "Publicar solicitud",
+          "body": "Cuente qué necesita y reciba propuestas de profesionales."
+        },
+        "search": {
+          "title": "Buscar profesionales",
+          "body": "Encuentre servicios por categoría, ubicación o nombre."
+        },
+        "myRequests": {
+          "title": "Mis solicitudes",
+          "body": "Revise servicios que solicitó y su estado."
+        },
+        "saved": {
+          "title": "Favoritos",
+          "body": "Vuelva rápido a profesionales que guardó."
+        },
+        "requests": {
+          "title": "Solicitudes recibidas",
+          "body": "Vea clientes que le contactaron directamente."
+        },
+        "opportunities": {
+          "title": "Oportunidades",
+          "body": "Responda publicaciones abiertas que coinciden con sus servicios."
+        },
+        "services": {
+          "title": "Mis servicios",
+          "body": "Actualice lo que ofrece, precios y detalles."
+        },
+        "profile": {
+          "title": "Perfil profesional",
+          "body": "Perfil completo al {percent}%."
+        },
+        "assistant": {
+          "title": "Asistente",
+          "body": "Pida ayuda para encontrar servicios o entender la app."
+        },
+        "support": {
+          "title": "Soporte",
+          "body": "Abra tickets o revise respuestas del equipo."
+        }
+      }
     },
     "servicesHeading": "Mis servicios",
     "subtitles": {
@@ -1268,6 +1321,7 @@
       "close": "Cerrar"
     },
     "bottomNav": {
+      "home": "Inicio",
       "profile": "Perfil",
       "services": "Servicios",
       "photos": "Éxitos",
