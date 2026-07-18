@@ -38,23 +38,6 @@ type AssistantPayload = {
   selectedResultIndex?: number | null;
 };
 
-type ProfessionalResult = {
-  id: string;
-  name: string;
-  avatarUrl: string | null;
-  service: string;
-  location: string;
-  verified: boolean;
-  rating: number | null;
-  reviewCount: number;
-  price: string | null;
-  profileHref: string;
-  requestHref: string;
-  actionHref: string;
-  actionLabel: string;
-  actionKind: "availability" | "message";
-};
-
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const MAX_HISTORY_MESSAGES = 8;
@@ -160,6 +143,17 @@ function resolveLocationIntent(raw: string) {
 function formatPlaceLabel(place: ReturnType<typeof resolveLocationIntent>) {
   if (!place) return null;
   return place.type === "canton" ? `${place.label}, ${place.sublabel}` : place.label;
+}
+
+function latestClarificationService(history: HistoryMessage[], locale: Locale) {
+  const assistantMessage = [...history]
+    .reverse()
+    .find((item) => {
+      if (item.role !== "assistant") return false;
+      const normalized = normalizeText(item.content);
+      return includesAny(normalized, ["zona", "area", "buscar", "search", "which area", "donde"]);
+    });
+  return assistantMessage ? resolveCategoryIntent(assistantMessage.content, locale) : null;
 }
 
 function resolveSearch(message: string, locale: Locale, serviceId?: string | null, locationText?: string | null) {
@@ -416,13 +410,8 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     .map((item) => item.content)
     .reverse();
   const priorUserContext = [...recentUserMessages].reverse().join(" ");
-  const priorAssistantContext = history
-    .filter((item) => item.role === "assistant")
-    .slice(-4)
-    .map((item) => item.content)
-    .join(" ");
   const messageCategory = resolveCategoryIntent(message, locale);
-  const pendingServiceFromAssistant = resolveCategoryIntent(priorAssistantContext, locale);
+  const pendingServiceFromAssistant = latestClarificationService(history, locale);
   const recentUserService = recentUserMessages
     .map((item) => resolveCategoryIntent(item, locale))
     .find(Boolean) ?? null;
@@ -829,12 +818,6 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
   return null;
 }
 
-function resultPrice(pro: Awaited<ReturnType<typeof searchProfessionals>>[number], locale: Locale) {
-  const amount = pro.pricing?.find((tier) => typeof tier.amount === "number" && tier.amount > 0)?.amount;
-  if (!amount) return null;
-  return `${new Intl.NumberFormat(locale === "en" ? "en-US" : "es-CR", { style: "currency", currency: "CRC", maximumFractionDigits: 0 }).format(amount)} I.V.A.I.`;
-}
-
 function wantsVideoIntent(text: string) {
   const normalized = normalizeText(text);
   return includesAny(normalized, [
@@ -849,48 +832,9 @@ function wantsVideoIntent(text: string) {
   ]);
 }
 
-type PlaceIntent = NonNullable<ReturnType<typeof resolveLocationIntent>>;
 type ProfessionalSearchResult = Awaited<ReturnType<typeof searchProfessionals>>[number];
-type WorkplaceLike = {
-  name?: string | null;
-  cantonId?: string | null;
-  provinciaId?: string | null;
-  provinceId?: string | null;
-  cantonName?: string | null;
-  provinceName?: string | null;
-};
 
-function workplaceMatchesPlace(workplace: WorkplaceLike, place: PlaceIntent) {
-  if (place.type === "canton") return workplace.cantonId === place.id;
-  return workplace.provinciaId === place.id || workplace.provinceId === place.id;
-}
-
-function workplaceLabel(workplace: WorkplaceLike, fallback?: string | null) {
-  return workplace.name
-    || [workplace.cantonName, workplace.provinceName].filter(Boolean).join(", ")
-    || fallback
-    || null;
-}
-
-function professionalDisplayLocation(pro: ProfessionalSearchResult, place: PlaceIntent | null | undefined, videoIntent: boolean, locale: Locale) {
-  const workplaces = ((pro.workplaces ?? []) as WorkplaceLike[]);
-  if (place) {
-    const placeLabel = place.type === "canton" ? `${place.label}, ${place.sublabel}` : place.label;
-    const matchedWorkplace = workplaces.find((workplace) => workplaceMatchesPlace(workplace, place));
-    if (matchedWorkplace) return workplaceLabel(matchedWorkplace, placeLabel) || placeLabel;
-  }
-
-  if (videoIntent && (pro.videoconsulta || pro.coverage?.country)) {
-    return locale === "en" ? "Video consultation" : "Videoconsulta";
-  }
-
-  const firstWorkplace = workplaces.find((workplace) => workplaceLabel(workplace));
-  return (firstWorkplace ? workplaceLabel(firstWorkplace) : null)
-    || [pro.cantonName, pro.provinceName].filter(Boolean).join(", ")
-    || "Costa Rica";
-}
-
-async function realProfessionalResults(payload: AssistantPayload, originalMessage: string, locale: Locale, labels: Map<string, string>): Promise<ProfessionalResult[]> {
+async function realProfessionalMatches(payload: AssistantPayload, originalMessage: string, locale: Locale): Promise<ProfessionalSearchResult[]> {
   if (payload.action !== "search_professionals") return [];
   if (payload.confidence === 0 && !payload.serviceId) return [];
   const seed = payload.searchQuery || originalMessage;
@@ -921,65 +865,7 @@ async function realProfessionalResults(payload: AssistantPayload, originalMessag
     });
   }
 
-  const topProfessionals = professionals.slice(0, 3);
-  const scheduledProfessionalIds = new Set<string>();
-  try {
-    const today = new Date().toISOString().slice(0, 10);
-    const ids = topProfessionals.map((pro) => pro.id);
-    if (ids.length > 0) {
-      const { data, error } = await createAdminClient()
-        .from("availability_slots")
-        .select("professional_id")
-        .in("professional_id", ids)
-        .gte("slot_date", today)
-        .limit(50);
-      if (error) throw error;
-      for (const row of data ?? []) {
-        if (row.professional_id) scheduledProfessionalIds.add(String(row.professional_id));
-      }
-    }
-  } catch (error) {
-    console.error("[ai-assistant] availability lookup failed", error);
-  }
-
-  return topProfessionals.map((pro) => {
-    const serviceId = category?.id || pro.professions?.[0] || pro.categoryId;
-    const serviceLabel = serviceId ? labels.get(serviceId) || getCategoryLabel(serviceId, locale) : (locale === "en" ? "Professional service" : "Servicio profesional");
-    const requestParams = new URLSearchParams();
-    if (serviceId) requestParams.set("categoria", serviceId);
-    requestParams.set("profesional", pro.id);
-    const displayName = pro.publicBusinessNameOnly && pro.businessName ? pro.businessName : pro.businessName || pro.fullName;
-    const hasPublicAvailability = pro.availabilityPublic !== false && scheduledProfessionalIds.has(pro.id);
-    const requestHref = `/${locale}/profesionales/${pro.slug}?${requestParams.toString()}`;
-    const chatParams = new URLSearchParams({
-      tab: "chat",
-      draftChat: "1",
-      professionalId: pro.id,
-      professionalName: displayName,
-      contextTitle: serviceLabel,
-      draftMessage: locale === "en"
-        ? `Hi, I saw your profile on ContrataCR and would like to ask about ${serviceLabel}.`
-        : `Hola, vi su perfil en ContrataCR y quisiera consultar sobre ${serviceLabel}.`,
-    });
-    return {
-      id: pro.id,
-      name: displayName,
-      avatarUrl: pro.avatarUrl || null,
-      service: serviceLabel,
-      location: professionalDisplayLocation(pro, place, videoIntent, locale),
-      verified: pro.verificationStatus === "verified" || pro.isVerified,
-      rating: pro.reviewCount > 0 ? pro.ratingAvg : null,
-      reviewCount: pro.reviewCount,
-      price: resultPrice(pro, locale),
-      profileHref: `/${locale}/profesionales/${pro.slug}`,
-      requestHref,
-      actionHref: hasPublicAvailability ? requestHref : `/${locale}/dashboard/profesional?${chatParams.toString()}`,
-      actionLabel: hasPublicAvailability
-        ? locale === "en" ? "View availability" : "Ver disponibilidad"
-        : locale === "en" ? "Send message" : "Enviar mensaje",
-      actionKind: hasPublicAvailability ? "availability" : "message",
-    };
-  });
+  return professionals;
 }
 
 export async function POST(req: Request) {
@@ -1037,38 +923,45 @@ export async function POST(req: Request) {
       payload.serviceId = resolveCategoryIntent(payload.searchQuery || rawMessage, locale)?.id ?? null;
     }
     const searchHref = actionHref(payload, rawMessage, locale);
-    let professionals: ProfessionalResult[] = [];
+    let matchedProfessionals: ProfessionalSearchResult[] = [];
     try {
-      professionals = await realProfessionalResults(payload, rawMessage, locale, catalog.labels);
+      matchedProfessionals = await realProfessionalMatches(payload, rawMessage, locale);
     } catch (error) {
       console.error("[ai-assistant] professional search failed", error);
     }
 
-    const noResults = payload.action === "search_professionals" && !!payload.serviceId && professionals.length === 0;
-    const hasResults = payload.action === "search_professionals" && professionals.length > 0;
+    const resultCount = matchedProfessionals.length;
+    const noResults = payload.action === "search_professionals" && !!payload.serviceId && resultCount === 0;
+    const hasResults = payload.action === "search_professionals" && resultCount > 0;
     const suggestedService = payload.action === "suggest_service" ? payload.searchQuery || rawMessage : null;
     const requestedServiceLabel = payload.serviceId ? catalog.labels.get(payload.serviceId) : null;
-    const resultCta = requestedServiceLabel
-      ? locale === "en" ? `See all in ${requestedServiceLabel}` : `Ver todos en ${requestedServiceLabel}`
-      : locale === "en" ? "See all results" : "Ver todos los resultados";
+    const resolvedAnswerSearch = resolveSearch(rawMessage, locale, payload.serviceId, payload.locationText);
+    const requestedPlaceLabel = formatPlaceLabel(resolvedAnswerSearch.place);
+    const resultCta = locale === "en"
+      ? `See ${resultCount} ${resultCount === 1 ? "professional" : "professionals"}`
+      : `Ver ${resultCount} ${resultCount === 1 ? "profesional" : "profesionales"}`;
+    const servicePhrase = requestedServiceLabel || (locale === "en" ? "that service" : "ese servicio");
+    const placePhrase = requestedPlaceLabel || "Costa Rica";
+    const assistantAnswer = noResults
+      ? locale === "en"
+        ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can publish a request so related professionals are notified.`
+        : `Todavia no encontre profesionales de ${servicePhrase} en ${placePhrase}. Puede publicar una solicitud para notificar a profesionales relacionados.`
+      : hasResults
+        ? resultCount === 1
+          ? locale === "en"
+            ? `I found 1 professional for ${servicePhrase} in ${placePhrase}. Open the filtered list to review the profile, reviews, availability and messages.`
+            : `Encontre 1 profesional de ${servicePhrase} en ${placePhrase}. Abra el listado filtrado para revisar el perfil, resenas, disponibilidad y mensajes.`
+          : locale === "en"
+            ? `I found ${resultCount} professionals for ${servicePhrase} in ${placePhrase}. Open the filtered list to review profiles, reviews, availability and messages.`
+            : `Encontre ${resultCount} profesionales de ${servicePhrase} en ${placePhrase}. Abra el listado filtrado para revisar perfiles, resenas, disponibilidad y mensajes.`
+        : suggestedService
+          ? locale === "en"
+            ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
+            : "Ese servicio todavia no esta en el catalogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
+          : payload.answer;
+
     return NextResponse.json({
-      answer: noResults
-        ? locale === "en"
-          ? "I could not find professionals matching that search yet. You can publish a request so related professionals are notified."
-          : "Todavía no encontré profesionales que coincidan con esa búsqueda. Puede publicar una solicitud para notificar a profesionales relacionados."
-        : hasResults
-          ? professionals.length === 1
-            ? locale === "en"
-              ? "I found this option for your search. You can review the profile and continue with the available action."
-              : "Encontré esta opción para su búsqueda. Puede revisar el perfil y continuar con la acción disponible."
-            : locale === "en"
-              ? "I found these options for your search. You can review a profile and continue with the available action."
-              : "Encontré estas opciones para su búsqueda. Puede revisar un perfil y continuar con la acción disponible."
-          : suggestedService
-            ? locale === "en"
-              ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-              : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
-            : payload.answer,
+      answer: assistantAnswer,
       action: noResults ? "publish_request" : payload.action ?? "answer",
       searchHref: noResults
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
@@ -1076,7 +969,7 @@ export async function POST(req: Request) {
       ctaLabel: noResults
         ? locale === "en" ? "Publish request" : "Publicar solicitud"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),
-      professionals,
+      professionals: [],
       suggestedService,
       selectedResultIndex: payload.action === "select_professional" && Number.isInteger(payload.selectedResultIndex)
         ? payload.selectedResultIndex
