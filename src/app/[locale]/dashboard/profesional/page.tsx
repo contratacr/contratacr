@@ -128,19 +128,19 @@ function DashboardHomePanel({
   const isOffer = mode === "offer";
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-[#e5e7eb] bg-[#f8fbfd] p-4 sm:p-5">
+      <div className="rounded-2xl border border-[#c7eafb] bg-[#f8fbfd] p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#009FD9]">
               {isOffer ? t("home.offerEyebrow") : t("home.useEyebrow")}
             </p>
-            <h2 className="mt-1 text-xl font-bold text-[#111827]">{isOffer ? t("home.offerTitle") : t("home.useTitle")}</h2>
-            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#6b7280]">
+            <h2 className="mt-1 text-xl font-bold text-[#111827] sm:text-2xl">{isOffer ? t("home.offerTitle") : t("home.useTitle")}</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#4b5563]">
               {isOffer ? t("home.offerBody") : t("home.useBody")}
             </p>
           </div>
           {isProvider && (
-            <Button type="button" variant="outline" onClick={() => onSwitchMode(isOffer ? "use" : "offer")} className="w-full shrink-0 sm:w-auto">
+            <Button type="button" onClick={() => onSwitchMode(isOffer ? "use" : "offer")} className="w-full shrink-0 bg-[#009FD9] text-white hover:bg-[#0089BB] sm:w-auto">
               <Repeat2 className="h-4 w-4" />
               {isOffer ? t("home.switchToUse") : t("home.switchToOffer")}
             </Button>
@@ -148,7 +148,12 @@ function DashboardHomePanel({
         </div>
       </div>
 
-      {isOffer ? (
+      <div>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
+          {t("home.quickActions")}
+        </p>
+
+        {isOffer ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {dashboardHomeAction({
             icon: <CalendarCheck className="h-5 w-5" />,
@@ -194,7 +199,7 @@ function DashboardHomePanel({
             onClick: () => onSetTab("profile"),
           })}
         </div>
-      ) : (
+        ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {dashboardHomeAction({
             icon: <Plus className="h-5 w-5" />,
@@ -222,7 +227,8 @@ function DashboardHomePanel({
             onClick: () => onSetTab("saved"),
           })}
         </div>
-      )}
+        )}
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {dashboardHomeAction({

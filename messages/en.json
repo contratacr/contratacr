@@ -1195,14 +1195,15 @@
       "cuenta": "Account & security"
     },
     "home": {
-      "useEyebrow": "Client mode",
-      "useTitle": "What do you need today?",
-      "useBody": "Quickly access your requests, posts and saved professionals.",
-      "offerEyebrow": "Professional mode",
-      "offerTitle": "Your work summary",
-      "offerBody": "Review requests, opportunities and keep your professional profile up to date.",
-      "switchToUse": "Switch to client",
-      "switchToOffer": "Switch to professional",
+      "useEyebrow": "Client panel",
+      "useTitle": "You are using ContrataCR as a client",
+      "useBody": "If you offer services, you can switch to the professional panel to receive requests, view opportunities and manage your profile.",
+      "offerEyebrow": "Professional panel",
+      "offerTitle": "You are using ContrataCR as a professional",
+      "offerBody": "You can also switch to the client panel to search for services, post requests or save professionals.",
+      "switchToUse": "Switch to client panel",
+      "switchToOffer": "Switch to professional panel",
+      "quickActions": "Quick actions",
       "actions": {
         "publish": {
           "title": "Post a request",

@@ -1194,14 +1194,15 @@
       "cuenta": "Cuenta y seguridad"
     },
     "home": {
-      "useEyebrow": "Modo cliente",
-      "useTitle": "¿Qué necesita hacer hoy?",
-      "useBody": "Acceda rápido a sus solicitudes, publicaciones y profesionales guardados.",
-      "offerEyebrow": "Modo profesional",
-      "offerTitle": "Resumen de su trabajo",
-      "offerBody": "Revise solicitudes, oportunidades y mantenga actualizado su perfil profesional.",
-      "switchToUse": "Cambiar a cliente",
-      "switchToOffer": "Cambiar a profesional",
+      "useEyebrow": "Panel cliente",
+      "useTitle": "Está usando ContrataCR como cliente",
+      "useBody": "Si ofrece servicios, puede cambiar a panel profesional para recibir solicitudes, ver oportunidades y administrar su perfil.",
+      "offerEyebrow": "Panel profesional",
+      "offerTitle": "Está usando ContrataCR como profesional",
+      "offerBody": "También puede cambiar a panel cliente para buscar servicios, publicar solicitudes o guardar profesionales.",
+      "switchToUse": "Cambiar a panel cliente",
+      "switchToOffer": "Cambiar a panel profesional",
+      "quickActions": "Accesos rápidos",
       "actions": {
         "publish": {
           "title": "Publicar solicitud",
