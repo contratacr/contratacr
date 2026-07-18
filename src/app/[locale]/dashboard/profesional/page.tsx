@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut,
+  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -41,10 +41,11 @@ import { anyVideoConsultCategory } from "@/lib/data/categories";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { notificationContext } from "@/lib/notification-link";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { DashboardRouteLoading } from "@/components/ui/route-loading";
+import { AppTooltip } from "@/components/ui/app-tooltip";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import {
   dashboardBootstrapKey,
@@ -637,6 +638,9 @@ export default function DashboardPage() {
         },
       }
     : pro;
+  const publicProfileHref = activeTab === "profile" && mode === "offer" && typeof pro?.slug === "string" && pro.slug.trim()
+    ? `/profesionales/${pro.slug.trim()}`
+    : null;
   // Client (use mode) identity: verified via cédula (saved at solicitud/booking or before).
   // Drives the "Verificado" badge below the name — the SAME badge the pro side uses.
   const clientVerified =
@@ -971,6 +975,17 @@ export default function DashboardPage() {
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                            {publicProfileHref && (
+                              <AppTooltip label={t("viewAsClient")} side="top" align="center">
+                                <Link
+                                  href={publicProfileHref}
+                                  aria-label={t("viewAsClient")}
+                                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#dbeafe] bg-white text-[#64748b] transition hover:border-[#9fd8ec] hover:bg-[#EBF5FB] hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </Link>
+                              </AppTooltip>
+                            )}
                           </div>
                         </div>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (

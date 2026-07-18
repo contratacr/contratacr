@@ -16,16 +16,16 @@ PUBLIC SEARCH AND SERVICES
 PROFESSIONAL PROFILES AND CONTACT
 - A public profile can include personal or business display name, profile photo, verification, services, prices, descriptions, experience, work areas, video consultation, languages, insurers for health services, availability, reviews, success cases and public links.
 - Identity verification increases trust but is not a guarantee of work quality. Clearly distinguish verified and unverified identity.
-- ContrataCR's in-app chat is the primary stored conversation channel between a client and a professional. Conversations stay organized by profile, request, booking, publication or proposal.
-- Phone and contact email may remain available when the professional enabled them. In-app Messages is the primary coordination channel. Never reveal a private field that is not public.
+- WhatsApp is the primary visible coordination channel between a client and a professional. Open WhatsApp only through public contact actions and never reveal a private number directly.
+- Phone and contact email may remain available when the professional enabled them. Never reveal a private field that is not public.
 - Favorites require an account. Sharing a profile uses its public link and generated profile image.
 - Reviews belong to completed work. A client can create one review for the exact completed request and later edit that review.
 
 CLIENT REQUESTS AND BOOKINGS
 - A client can request a service from a professional profile, choose the relevant service/location/date/time when available and see the request in the client panel.
 - A professional receives the request, can manage it from Requests received and the parties receive the applicable in-app notifications.
-- Only the client can reschedule an active appointment from My requests. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time through Messages.
-- A cancelled appointment cannot be rescheduled. The client must book a new available time or coordinate another time with the professional through Messages.
+- Only the client can reschedule an active appointment from My requests. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time through WhatsApp.
+- A cancelled appointment cannot be rescheduled. The client must book a new available time or coordinate another time with the professional through WhatsApp.
 - The system prevents double booking. A video consultation may share configured availability with one physical workplace, but once a time is booked it blocks that capacity in both modalities.
 - A professional marks work as completed; the client confirms finalization. The app may automatically confirm after the displayed waiting period.
 - Cancellation notifications go to the affected opposite party, not back to the person who performed the cancellation.
@@ -40,7 +40,6 @@ PUBLICATIONS, OPPORTUNITIES AND PROPOSALS
 
 PROFESSIONAL PANEL
 - Main sections include Requests received, Opportunities and proposals, Notifications, Profile, Services, Availability, Success cases, Verification, Support and Account/security.
-- The Messages section contains direct client-professional conversations. Each participant may archive or restore a conversation without deleting the other participant's history; a new incoming message reopens it for the recipient.
 - Profile completion helps public visibility. A professional needs at least one active service to appear correctly in public search.
 - Services can have a public description, price and experience information. Prices are CRC and displayed as I.V.A.I. where applicable.
 - Work areas can be exact map pins, cantons, whole provinces or nationwide video coverage for compatible services.
@@ -50,7 +49,6 @@ PROFESSIONAL PANEL
 
 CLIENT PANEL
 - Main sections include My requests, My publications, Favorites, Notifications, Profile, Support and Account/security.
-- Messages related to profiles, requests, publications and proposals are available from the unified panel and persist between sessions.
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS

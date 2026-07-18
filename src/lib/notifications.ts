@@ -165,8 +165,8 @@ export async function notifyBookingRescheduled(bookingId: string): Promise<void>
     );
     const title = "Cita reprogramada";
     const message = whenText
-      ? `${clientFirst} cambió el horario de '${service}' a ${whenText}. Coordina los detalles en Mensajes.`
-      : `${clientFirst} cambió el horario de '${service}'. Coordina los detalles en Mensajes.`;
+      ? `${clientFirst} cambió el horario de '${service}' a ${whenText}. Coordina los detalles por WhatsApp.`
+      : `${clientFirst} cambió el horario de '${service}'. Coordina los detalles por WhatsApp.`;
 
     if (proId) {
       await admin.from("notifications").insert({
