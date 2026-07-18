@@ -242,6 +242,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
       phone: E2E_USERS.client.phone,
       role: "client",
       is_provider: false,
+      is_disabled: false,
       onboarding_completed: true,
       client_identity_status: "verified",
       client_identity_verified_at: now,
@@ -261,6 +262,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
       phone: E2E_USERS.professional.phone,
       role: "professional",
       is_provider: true,
+      is_disabled: false,
       onboarding_completed: true,
       client_identity_status: "verified",
       client_identity_verified_at: now,
@@ -280,6 +282,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
       phone: E2E_USERS.videoProfessional.phone,
       role: "professional",
       is_provider: true,
+      is_disabled: false,
       onboarding_completed: true,
       client_identity_status: "verified",
       client_identity_verified_at: now,
@@ -299,6 +302,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
       phone: E2E_USERS.admin.phone,
       role: "admin",
       is_provider: false,
+      is_disabled: false,
       onboarding_completed: true,
       updated_at: now,
     },
@@ -465,7 +469,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
 
   const slotDate = futureDate(8);
   const videoSlotDate = futureDate(9);
-  const { error: slotError } = await admin.from("availability_slots").insert([
+  const regressionSlots = [
     {
       professional_id: professional.id,
       slot_date: slotDate,
@@ -508,8 +512,13 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
       category_id: "desarrollo_web",
       location_id: "e2e-video-office",
     },
-  ]);
-  if (slotError) throw slotError;
+  ];
+  for (const slot of regressionSlots) {
+    const { error: slotError } = await admin.from("availability_slots").insert(slot);
+    // A referenced slot can legitimately survive cleanup. Its unique key means
+    // it already has exactly the deterministic state required by this seed.
+    if (slotError && slotError.code !== "23505") throw slotError;
+  }
 
   return {
     clientId: clientUser.id,
