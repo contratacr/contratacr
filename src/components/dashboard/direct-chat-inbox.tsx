@@ -56,6 +56,14 @@ function ChatActionButton({ label, children, onClick, className }: { label: stri
   );
 }
 
+function resizeMessageTextarea(textarea: HTMLTextAreaElement | null) {
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  const nextHeight = Math.min(textarea.scrollHeight, 144);
+  textarea.style.height = `${nextHeight}px`;
+  textarea.style.overflowY = textarea.scrollHeight > 144 ? "auto" : "hidden";
+}
+
 function buildPendingDraft(searchParams: URLSearchParams, userId: string | undefined, isEn: boolean): { conversation: Conversation | null; payload: PendingDraft | null } {
   if (searchParams.get("draftChat") !== "1") return { conversation: null, payload: null };
 
@@ -260,10 +268,7 @@ export function DirectChatInbox() {
   useEffect(() => { if (activeId) queueMicrotask(() => void loadThread(activeId)); }, [activeId, loadThread]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, threadLoading]);
   useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 128)}px`;
+    resizeMessageTextarea(textareaRef.current);
   }, [draft]);
   useEffect(() => {
     if (!user) return;
@@ -452,10 +457,10 @@ export function DirectChatInbox() {
                   </Avatar>
                 )}
                 <div className={cn(
-                  "rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
+                  "min-w-[86px] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)]",
                   mine
-                    ? "max-w-[86%] rounded-br-sm bg-[#009FD9] text-white sm:max-w-[78%]"
-                    : "max-w-[calc(86%_-_2.25rem)] rounded-bl-sm bg-white text-[#25364d] sm:max-w-[72%]",
+                    ? "max-w-[86%] rounded-br-md bg-[#009FD9] font-medium text-white sm:max-w-[78%]"
+                    : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d] sm:max-w-[72%]",
                 )}>
                   <p className="whitespace-pre-wrap break-words">{message.body}</p>
                   <time className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/75" : "text-[#8996a8]")}>{timeLabel(message.created_at, locale)}</time>
@@ -470,7 +475,10 @@ export function DirectChatInbox() {
             ref={textareaRef}
             rows={1}
             value={draft}
-            onChange={(e) => setDraft(e.target.value.slice(0, 2000))}
+            onChange={(e) => {
+              setDraft(e.target.value.slice(0, 2000));
+              resizeMessageTextarea(e.currentTarget);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -478,12 +486,12 @@ export function DirectChatInbox() {
               }
             }}
             placeholder={isEn ? "Write a message" : "Escribe un mensaje"}
-            className="max-h-32 min-h-11 min-w-0 flex-1 resize-none overflow-y-auto rounded-xl border border-[#d8e5ee] px-4 py-2.5 text-sm leading-relaxed outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+            className="max-h-36 min-h-[52px] min-w-0 flex-1 resize-none overflow-hidden rounded-[20px] border border-[#d8e5ee] px-4 py-3 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
           />
           <button
             type="submit"
             disabled={sending || !draft.trim()}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#009FD9] text-white disabled:bg-[#d8e4e9]"
+            className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#d8e4e9] disabled:shadow-none"
             aria-label={isEn ? "Send" : "Enviar"}
           >
             {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
