@@ -507,7 +507,7 @@ export function AiConcierge({ embedded = false }: { embedded?: boolean } = {}) {
       }}
       className={cn(
         embedded
-          ? "relative flex h-[calc(var(--app-visual-viewport-height)_-_7rem)] min-h-[360px] w-full items-stretch justify-stretch overflow-hidden lg:h-[min(780px,calc(100dvh-220px))] lg:min-h-[540px]"
+          ? "relative flex h-[calc(var(--app-visual-viewport-height)_-_4rem)] min-h-[360px] w-full items-stretch justify-stretch overflow-hidden lg:h-[min(780px,calc(100dvh-220px))] lg:min-h-[540px]"
           : "fixed inset-x-0 top-0 z-[100] flex h-[var(--app-visual-viewport-height)] items-end justify-end overflow-hidden bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:inset-0 sm:h-auto sm:bg-transparent sm:p-0 sm:backdrop-blur-none",
       )}
     >

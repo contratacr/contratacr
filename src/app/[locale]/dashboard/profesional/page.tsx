@@ -663,6 +663,7 @@ export default function DashboardPage() {
   const barTabs: Tab[] = [...modeTabs, ...SHARED_TABS];
   const mobilePriorityTabs = MOBILE_PRIORITY[mode].filter((tab) => barTabs.includes(tab));
   const mobileBarTabs = [...mobilePriorityTabs, ...barTabs.filter((tab) => !mobilePriorityTabs.includes(tab))];
+  const mobileFullScreenTab = activeTab === "chat" || activeTab === "assistant";
   const showProfileCompletion =
     mode === "offer" &&
     !!proForCompletion &&
@@ -792,11 +793,14 @@ export default function DashboardPage() {
         </div>
       )}
       <main className="flex-1">
-        <div className="dashboard-panel-content mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8 lg:pb-8">
+        <div className={cn(
+          "dashboard-panel-content mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8 lg:pb-8",
+          mobileFullScreenTab && "max-w-none px-0 pb-0 pt-0 sm:px-0 lg:max-w-7xl lg:px-8 lg:pb-8 lg:pt-8",
+        )}>
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
               ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
               the content by a single hairline divider. No gradient/decoration. */}
-          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between", activeTab === "chat" ? "hidden lg:flex" : "flex")}>
+          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between", mobileFullScreenTab ? "hidden lg:flex" : "flex")}>
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <ImagePreviewDialog
                 src={headerAvatar}
@@ -863,7 +867,7 @@ export default function DashboardPage() {
           ) : (
             <>
               {/* Profile-completion — offer mode only, hides itself once complete. */}
-              {showProfileCompletion && (
+              {showProfileCompletion && !mobileFullScreenTab && (
                 <ProfileCompletion
                   pro={proForCompletion}
                   onGo={(tab, field) => {
@@ -907,8 +911,11 @@ export default function DashboardPage() {
                   className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0"
                 >
                   <SaveStatusProvider>
-                    <Card className={cn(activeTab === "chat" && "overflow-hidden")}>
-                      {activeTab !== "chat" && <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
+                    <Card className={cn(
+                      activeTab === "chat" && "overflow-hidden",
+                      mobileFullScreenTab && "rounded-none border-0 shadow-none lg:rounded-2xl lg:border lg:shadow-sm",
+                    )}>
+                      {!mobileFullScreenTab && <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
@@ -941,7 +948,7 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </CardHeader>}
-                      <CardContent className={activeTab === "chat" ? "p-0 sm:p-0" : "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6"}>
+                      <CardContent className={mobileFullScreenTab ? "p-0 sm:p-0" : "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6"}>
                         {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
                         {activeTab === "profile" && mode === "offer" && pro && (
                           <ProfileEditor
@@ -1078,7 +1085,7 @@ export default function DashboardPage() {
           thumb-reachable, always visible while in the panel; replaces the sidebar on phones.
           The rail scrolls horizontally and intentionally peeks the next item, so users can
           tell there are more actions without opening a separate discovery affordance first. */}
-      <nav
+      {!mobileFullScreenTab && <nav
         className="dashboard-mobile-nav lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#e5e7eb] bg-white shadow-[0_-14px_34px_-18px_rgba(15,23,42,0.45)] pb-[env(safe-area-inset-bottom)]"
         aria-label={t("title")}
       >
@@ -1129,7 +1136,7 @@ export default function DashboardPage() {
             aria-hidden
           />
         </div>
-      </nav>
+      </nav>}
     </div>
   );
 }
