@@ -1327,21 +1327,23 @@ export default function RegisterProfessionalPage() {
                   casos de éxito now lives in the panel's profile-completion flow. */}
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={() => { setPhotoFile(null); setPhotoPreview(null); }} />
 
-              <div className="flex gap-3 mt-2">
-                <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)}>
+              <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+                <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)} className="px-4 sm:px-7">
                   <ArrowLeft className="h-4 w-4" /> {t("back")}
                 </Button>
                 <Button
                   type="submit"
                   size="lg"
-                  className="flex-1"
+                  className="min-w-0 px-4 sm:px-7"
                   loading={submitting || uploadingPhoto}
                 >
-                  {uploadingPhoto
-                    ? t("uploadingPhoto")
-                    : submitting
-                    ? t("creating")
-                    : t("create")}
+                  <span className="min-w-0 truncate">
+                    {uploadingPhoto
+                      ? t("uploadingPhoto")
+                      : submitting
+                      ? t("creating")
+                      : t("create")}
+                  </span>
                 </Button>
               </div>
             </form>

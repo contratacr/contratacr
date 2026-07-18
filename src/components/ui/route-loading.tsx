@@ -113,19 +113,10 @@ export function DashboardRouteLoading() {
     <div className="min-h-screen bg-[#fafafa]" aria-busy="true">
       <Navbar />
       <main>
-        <div className="mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8 lg:pb-8">
+        <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 sm:px-6 lg:px-8">
           <DashboardLoadingNotice locale={locale} />
         </div>
       </main>
-
-      <div className="fixed inset-x-0 bottom-0 z-20 flex h-[72px] items-center justify-around border-t border-[#e5e7eb] bg-white px-3 lg:hidden">
-        {[0, 1, 2, 3].map((item) => (
-          <div key={item} className="flex w-16 flex-col items-center gap-2">
-            <Skeleton className="h-5 w-5 rounded" />
-            <Skeleton className="h-2.5 w-12 rounded-md" />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
