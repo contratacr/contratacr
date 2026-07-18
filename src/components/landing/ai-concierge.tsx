@@ -20,6 +20,7 @@ import Image from "next/image";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -221,6 +222,7 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
+  useContainedTouchScroll(scrollRef, open || embedded);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {

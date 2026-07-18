@@ -8,6 +8,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { createClient } from "@/lib/supabase/client";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
@@ -135,6 +136,7 @@ export function DirectChatInbox() {
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  useContainedTouchScroll(scrollRef, mobileThread);
   const displayedConversations = useMemo(
     () => pendingDraft && !showArchived
       ? [pendingDraft, ...conversations.filter((item) => item.id !== DRAFT_CONVERSATION_ID)]
