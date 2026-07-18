@@ -75,6 +75,9 @@ jobs:
       - name: Typecheck regression and application contracts
         run: npx tsc --noEmit
 
+      - name: Lint regression contracts
+        run: npx eslint tests/e2e playwright.config.ts
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 

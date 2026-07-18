@@ -8,6 +8,12 @@ import { apiJson, resetAuth } from "./helpers";
 const notificationTypes = [...TRANSLATED_NOTIFICATION_TYPES].sort();
 
 test.describe("@contract product safety contracts", () => {
+  test("Spanish product copy has no broken encoding placeholders", () => {
+    const serialized = JSON.stringify(esMessages);
+    expect(serialized).not.toMatch(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]\?[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/);
+    expect(serialized).not.toMatch(/Ã.|Â.|â.|�/);
+  });
+
   test("every notification type is translated in both languages and routes inside the unified panel", async () => {
     const esTypes = esMessages.notifications.types as Record<string, string>;
     const enTypes = enMessages.notifications.types as Record<string, string>;

@@ -1,8 +1,9 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, expectVisibleText, gotoOK, loginAs } from "./helpers";
+import { expectHealthyPage, expectVisibleText, gotoOK, isMobileProject, loginAs } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
 
 const professionalTabs = [
+  { tab: "home", marker: /Panel profesional|Professional panel/i },
   { tab: "profile", marker: /Mi perfil|My profile/i },
   { tab: "services", marker: /Servicios|Services/i },
   { tab: "photos", marker: /Casos de exito|Casos de .xito|Success cases|Success stories/i },
@@ -17,6 +18,7 @@ const professionalTabs = [
 ] as const;
 
 const clientTabs = [
+  { tab: "home&mode=use", marker: /Panel cliente|Client panel/i },
   { tab: "profile&mode=use", marker: /Mi perfil|My profile/i },
   { tab: "sent_bookings", marker: /Mis solicitudes|My requests/i },
   { tab: "sent_projects", marker: /Mis publicaciones|My posts/i },
@@ -68,6 +70,25 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(page).toHaveURL(/tab=availability/);
     await expectVisibleText(page.locator("main"), /Disponibilidad|Availability/i);
     expect(await page.evaluate(() => (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation)).toBe("active");
+  });
+
+  test("dashboard landing keeps core sections in the panel and shared tools in the navbar", async ({ page }, testInfo) => {
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional");
+
+    await expectVisibleText(page.locator("main"), /Panel profesional/i);
+    await expect(page.getByTestId("panel-tab-bookings").filter({ visible: true })).toHaveCount(1);
+    await expect(page.getByTestId("panel-tab-proposals").filter({ visible: true })).toHaveCount(1);
+    await expect(page.getByTestId("panel-tab-chat").filter({ visible: true })).toHaveCount(0);
+    await expect(page.getByTestId("panel-tab-notifications").filter({ visible: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Asistente ContrataCR|Open ContrataCR assistant/i })).toBeVisible();
+
+    if (isMobileProject(testInfo)) {
+      await expect(page).not.toHaveURL(/tab=bookings/);
+      await expect(page.getByTestId("panel-tab-services").filter({ visible: true })).toHaveCount(1);
+    }
+
+    await expectHealthyPage(page);
   });
 
   test("professional add-service picker keeps its scroll inside the modal", async ({ page }) => {
