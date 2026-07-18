@@ -15,7 +15,7 @@ export default function GlobalError({
   reset?: () => void;
   unstable_retry?: () => void;
 }) {
-  const [offline, setOffline] = useState(false);
+  const [offline] = useState(() => typeof navigator !== "undefined" && navigator.onLine === false);
   const retry = unstable_retry ?? reset ?? (() => window.location.reload());
   const kind = getRuntimeErrorKind(error, offline);
   const title =
@@ -33,17 +33,17 @@ export default function GlobalError({
 
   useEffect(() => {
     console.error("[global error boundary]", error);
-    if (typeof navigator !== "undefined" && navigator.onLine === false) setOffline(true);
   }, [error]);
 
   return (
     <html lang="es">
       <body style={{ margin: 0, fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", background: "#ffffff" }}>
         <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", textAlign: "center", boxSizing: "border-box" }}>
-          <a href="/" aria-label="ContrataCR inicio" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 36, textDecoration: "none" }}>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/" aria-label="ContrataCR inicio" style={{ display: "inline-flex", alignItems: "center", gap: 2, marginBottom: 36, textDecoration: "none" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark.png" alt="ContrataCR" width={34} height={34} style={{ height: 34, width: 34 }} />
-            <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em" }}>
+            <img src="/logo-mark-transparent.png" alt="ContrataCR" width={28} height={28} style={{ height: 28, width: 28 }} />
+            <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1 }}>
               <span style={{ color: "#1a2744" }}>Contrata</span><span style={{ color: "#009FD9" }}>CR</span>
             </span>
           </a>
@@ -62,6 +62,7 @@ export default function GlobalError({
             >
               Reintentar
             </button>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/"
               style={{ border: "1px solid #e5e7eb", color: "#374151", background: "white", borderRadius: 12, padding: "12px 22px", fontWeight: 700, fontSize: 14, textDecoration: "none" }}

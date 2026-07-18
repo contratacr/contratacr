@@ -12,17 +12,16 @@ export const errorSecondaryBtn =
 
 function BrandLogo() {
   return (
-    <span className="flex items-center gap-2.5 select-none">
+    <span className="flex items-center gap-0.5 select-none">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/logo-mark.png"
-        srcSet="/logo-mark.png 1x, /logo-mark@2x.png 2x"
+        src="/logo-mark-transparent.png"
         alt="ContrataCR"
-        width={36}
-        height={36}
-        className="h-8 w-8 sm:h-9 sm:w-9"
+        width={28}
+        height={28}
+        className="h-7 w-7"
       />
-      <span className="text-[20px] sm:text-[22px] font-extrabold tracking-tight leading-none">
+      <span className="text-[17px] font-extrabold tracking-tight leading-none">
         <span className="text-[#1a2744]">Contrata</span>
         <span className="text-[#009FD9]">CR</span>
       </span>
@@ -45,6 +44,7 @@ export function ErrorScreen({
 }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4 py-12 text-center">
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a href="/" aria-label="ContrataCR inicio" className="mb-8 sm:mb-10">
         <BrandLogo />
       </a>

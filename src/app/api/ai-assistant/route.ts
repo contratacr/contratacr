@@ -157,10 +157,121 @@ const GENERIC_CATEGORY_TERMS = new Set([
   "technology",
   "service",
   "services",
+  "asesoria",
+  "ayuda",
+  "para",
+  "con",
 ]);
 
 function normalizedPhrase(value: string) {
   return normalizeText(value).replace(/[^a-z0-9ñ\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function catalogWord(value: string) {
+  const word = normalizedPhrase(value);
+  if (word.length > 4 && word.endsWith("es")) return word.slice(0, -2);
+  if (word.length > 3 && word.endsWith("s")) return word.slice(0, -1);
+  return word;
+}
+
+function liveCatalogCategoryMatch(text: string, labels: Map<string, string>) {
+  const phrase = normalizedPhrase(text);
+  if (!phrase) return null;
+  const queryWords = new Set(
+    phrase.split(" ")
+      .map(catalogWord)
+      .filter((word) => word.length >= 4 && !GENERIC_CATEGORY_TERMS.has(word)),
+  );
+  let best: { id: string; score: number } | null = null;
+  let secondScore = 0;
+
+  for (const [id, label] of labels) {
+    const normalizedLabel = normalizedPhrase(label);
+    const labelWords = normalizedLabel.split(" ")
+      .map(catalogWord)
+      .filter((word) => word.length >= 4 && !GENERIC_CATEGORY_TERMS.has(word));
+    const matches = labelWords.filter((word) => queryWords.has(word));
+    const exactPhrase = phrase.includes(normalizedLabel);
+    const score = exactPhrase ? 200 + normalizedLabel.length : matches.length * 80;
+    if (score > (best?.score ?? 0)) {
+      secondScore = best?.score ?? 0;
+      best = { id, score };
+    } else if (score > secondScore) {
+      secondScore = score;
+    }
+  }
+
+  return best && best.score >= 80 && best.score > secondScore ? best.id : null;
+}
+
+function availableCategoryId(labels: Map<string, string>, preferredIds: string[], labelTerms: string[]) {
+  const direct = preferredIds.find((id) => labels.has(id));
+  if (direct) return direct;
+  return [...labels].find(([, label]) => {
+    const normalizedLabel = normalizedPhrase(label);
+    return labelTerms.some((term) => normalizedLabel.includes(normalizedPhrase(term)));
+  })?.[0] ?? null;
+}
+
+function naturalCatalogOverride(text: string, labels: Map<string, string>) {
+  const normalized = normalizedPhrase(text);
+  const has = (...terms: string[]) => terms.some((term) => normalized.includes(normalizedPhrase(term)));
+
+  if (has("bateria", "alternador", "electricidad del carro", "electrico del carro")) {
+    return availableCategoryId(labels, ["electricidad_automotriz"], ["electricidad automotriz"]);
+  }
+  if (
+    has("carro", "auto", "vehiculo") &&
+    has("motor", "freno", "transmision", "aceite", "mecanico", "no enciende", "ruido")
+  ) {
+    return availableCategoryId(labels, ["mecanica"], ["mecanica automotriz"]);
+  }
+  if (has("pintar", "pintura", "pintor")) {
+    return availableCategoryId(labels, ["pintura"], ["pintura"]);
+  }
+  if (has("impuesto", "tributario", "tributaria", "declaracion de renta", "hacienda", "iva")) {
+    return availableCategoryId(labels, ["asesoria_tributaria"], ["asesoria tributaria"]);
+  }
+  if (has("boda", "matrimonio", "quinceanos") && has("foto", "fotografo", "fotografia")) {
+    return availableCategoryId(labels, ["fotografia_eventos"], ["fotografia de eventos"]);
+  }
+  if (has("tubo", "tuberia", "fuga de agua", "caneria", "inodoro", "lavamanos")) {
+    return availableCategoryId(labels, ["plomeria"], ["plomeria"]);
+  }
+  if (
+    has("lavadora", "secadora", "refrigeradora", "nevera", "cocina", "horno", "microondas", "lavaplatos") &&
+    has("reparar", "arreglar", "no funciona", "no enciende", "dejo de funcionar")
+  ) {
+    return availableCategoryId(labels, ["reparacion_electrodomesticos"], ["reparacion de electrodomesticos"]);
+  }
+  if (has("riego", "aspersor", "goteo", "irrigacion")) {
+    return availableCategoryId(labels, ["riego_automatizado"], ["riego"]);
+  }
+  if (has("huerta", "huerto", "cultivo", "siembra", "horticultura", "agricultura")) {
+    return availableCategoryId(labels, ["asesoria_en_huertas"], ["huerta", "cultivo", "agricultura"]);
+  }
+  if (
+    has("perro", "gato", "mascota", "animal") &&
+    has("enfermo", "enferma", "doctor", "medico", "salud", "consulta", "veterinario")
+  ) {
+    return availableCategoryId(labels, ["veterinaria"], ["veterinaria"]);
+  }
+  if (has("jardin", "zacate", "cesped", "grama", "patio", "plantas")) {
+    return availableCategoryId(labels, ["jardineria"], ["jardineria"]);
+  }
+  if (has("computadora", "computador", "laptop", "ordenador", "reparar pc", "arreglar pc")) {
+    return availableCategoryId(labels, ["reparacion_computadoras"], ["reparacion de computadoras"]);
+  }
+  return null;
+}
+
+function safeCatalogCategoryMatch(text: string, locale: Locale, labels: Map<string, string>) {
+  const direct = naturalCatalogOverride(text, labels) ?? liveCatalogCategoryMatch(text, labels);
+  if (direct) return direct;
+  const strong = strongCategoryMention([text], locale);
+  if (strong && labels.has(strong)) return strong;
+  const confident = confidentCategoryMatch(text, locale);
+  return confident && labels.has(confident) ? confident : null;
 }
 
 function strongCategoryMention(texts: string[], locale: Locale) {
@@ -222,8 +333,11 @@ function resolveAssistantCategory(
   labels: Map<string, string>,
 ) {
   const rawPlace = resolveLocationIntent(rawMessage);
-  const pendingServiceFromAssistant = rawPlace ? latestClarificationService(history, locale) : null;
+  const pendingServiceFromAssistant = rawPlace ? latestClarificationService(history, locale, labels) : null;
   if (pendingServiceFromAssistant) return { id: pendingServiceFromAssistant.id, needsClarification: false };
+
+  const liveMatch = safeCatalogCategoryMatch(rawMessage, locale, labels);
+  if (liveMatch) return { id: liveMatch, needsClarification: false };
 
   const historyTexts = history.slice().reverse().map((item) => item.content);
   const strong = strongCategoryMention([rawMessage, ...historyTexts], locale);
@@ -239,7 +353,7 @@ function resolveAssistantCategory(
   return { id: null, needsClarification: true };
 }
 
-function latestClarificationService(history: HistoryMessage[], locale: Locale) {
+function latestClarificationService(history: HistoryMessage[], locale: Locale, labels?: Map<string, string>): { id: string } | null {
   const assistantMessage = [...history]
     .reverse()
     .find((item) => {
@@ -248,10 +362,13 @@ function latestClarificationService(history: HistoryMessage[], locale: Locale) {
       return includesAny(normalized, ["zona", "area", "buscar", "search", "which area", "donde"]);
     });
   if (!assistantMessage) return null;
-  if (assistantMessage.serviceId) {
-    return getAllCategories().find((item) => item.id === assistantMessage.serviceId) ?? null;
+  if (assistantMessage.serviceId && (!labels || labels.has(assistantMessage.serviceId))) {
+    return { id: assistantMessage.serviceId };
   }
-  return resolveCategoryIntent(assistantMessage.content, locale);
+  const liveMatch = labels ? liveCatalogCategoryMatch(assistantMessage.content, labels) : null;
+  if (liveMatch) return { id: liveMatch };
+  const category = resolveCategoryIntent(assistantMessage.content, locale);
+  return category ? { id: category.id } : null;
 }
 
 function resolveSearch(message: string, locale: Locale, serviceId?: string | null, locationText?: string | null) {
@@ -500,7 +617,13 @@ function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
   return null;
 }
 
-function normalizePayload(payload: AssistantPayload, message: string, locale: Locale, history: HistoryMessage[] = []): AssistantPayload {
+function normalizePayload(
+  payload: AssistantPayload,
+  message: string,
+  locale: Locale,
+  history: HistoryMessage[] = [],
+  labels: Map<string, string> = new Map(),
+): AssistantPayload {
   const normalized = normalizeText(message);
   const recentUserMessages = history
     .filter((item) => item.role === "user")
@@ -509,24 +632,32 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     .reverse();
   const priorUserContext = [...recentUserMessages].reverse().join(" ");
   const currentPlace = resolveLocationIntent(message);
-  const pendingServiceFromAssistant = latestClarificationService(history, locale);
+  const pendingServiceFromAssistant = latestClarificationService(history, locale, labels);
   // Keep the exact service from the previous question when the user answers
   // with a location. A generic alias such as "mecánico en Atenas" must not
   // turn the location-only answer "Atenas" into Mecánica automotriz.
   const messageCategory = currentPlace && pendingServiceFromAssistant
     ? pendingServiceFromAssistant
-    : resolveCategoryIntent(message, locale);
+    : (() => {
+        const liveMatch = safeCatalogCategoryMatch(message, locale, labels);
+        return liveMatch ? { id: liveMatch } : null;
+      })();
   const recentUserService = recentUserMessages
-    .map((item) => resolveCategoryIntent(item, locale))
-    .find(Boolean) ?? null;
+    .map((item) => safeCatalogCategoryMatch(item, locale, labels))
+    .find(Boolean);
   const recentUserPlace = recentUserMessages
     .map((item) => resolveLocationIntent(item))
     .find(Boolean) ?? null;
   const messageOnlyHasPlace = !!currentPlace && !!pendingServiceFromAssistant;
   const directService = (messageOnlyHasPlace ? pendingServiceFromAssistant : messageCategory)
-    ?? (messageOnlyHasPlace ? recentUserService : null)
-    ?? resolveCategoryIntent(payload.searchQuery || "", locale)
-    ?? recentUserService;
+    ?? (messageOnlyHasPlace && recentUserService ? { id: recentUserService } : null)
+    ?? (() => {
+      const payloadService = payload.searchQuery
+        ? safeCatalogCategoryMatch(payload.searchQuery, locale, labels)
+        : null;
+      return payloadService ? { id: payloadService } : null;
+    })()
+    ?? (recentUserService ? { id: recentUserService } : null);
   const directPlace = currentPlace
     ?? resolveLocationIntent(payload.locationText || "")
     ?? recentUserPlace;
@@ -564,6 +695,31 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     "hire",
     "recommend",
   ]);
+  const describesServiceNeed = !!messageCategory && includesAny(normalized, [
+    "ayuda",
+    "arreglar",
+    "reparar",
+    "instalar",
+    "necesito",
+    "ocupo",
+    "quiero",
+    "busco",
+    "no funciona",
+    "no enciende",
+    "se rompio",
+    "rompio",
+    "enfermo",
+    "enferma",
+    "hace ruido",
+    "declarar",
+    "help",
+    "fix",
+    "repair",
+    "install",
+    "need",
+    "not working",
+    "broken",
+  ]);
   const userSaysServiceIsUnclear = includesAny(normalized, [
     "no se como se llama",
     "no se cual servicio",
@@ -585,7 +741,7 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     "do not know what service",
     "don't know what service",
   ]);
-  const wantsProfessionalSearch = hasExplicitSearchLanguage ||
+  const wantsProfessionalSearch = hasExplicitSearchLanguage || describesServiceNeed ||
     (!publishConversation && (payload.action === "search_professionals" || currentHasServiceAndPlace));
   const modelOnlyService = payload.serviceId ? getAllCategories().find((item) => item.id === payload.serviceId) ?? null : null;
   const hasConfirmedService = !!(messageCategory || pendingServiceFromAssistant || recentUserService);
@@ -725,7 +881,7 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
   // entered only through an explicit user request, never because a prior zero-result
   // answer happened to offer that alternative.
   if (wantsProfessionalSearch && directService && directPlace) {
-    const serviceLabel = getCategoryLabel(directService.id, locale);
+    const serviceLabel = labels.get(directService.id) || getCategoryLabel(directService.id, locale);
     return {
       ...payload,
       action: "search_professionals",
@@ -739,7 +895,7 @@ function normalizePayload(payload: AssistantPayload, message: string, locale: Lo
     };
   }
   if (wantsProfessionalSearch && directService && !directPlace) {
-    const serviceLabel = getCategoryLabel(directService.id, locale);
+    const serviceLabel = labels.get(directService.id) || getCategoryLabel(directService.id, locale);
     return {
       ...payload,
       action: "answer",
@@ -1017,8 +1173,11 @@ export async function POST(req: Request) {
     const aiPayload = safetyPayload ? null : await openAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
-    const payload = safetyPayload ?? normalizePayload(aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history);
-    const resolvedCategory = resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
+    const payload = safetyPayload ?? normalizePayload(aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history, catalog.labels);
+    const hasValidResolvedService = !!payload.serviceId && catalog.labels.has(payload.serviceId);
+    const resolvedCategory = hasValidResolvedService
+      ? { id: payload.serviceId!, needsClarification: false }
+      : resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
     if (payload.action === "search_professionals" && payload.confidence !== 0) {
       if (resolvedCategory.id) {
         payload.serviceId = resolvedCategory.id;
@@ -1061,11 +1220,11 @@ export async function POST(req: Request) {
       : hasResults
         ? resultCount === 1
           ? locale === "en"
-            ? `I found 1 professional for ${servicePhrase} in ${placePhrase}. Open the filtered list to review the profile, reviews, availability and messages.`
-            : `Encontré 1 profesional de ${servicePhrase} en ${placePhrase}. Abra el listado filtrado para revisar el perfil, reseñas, disponibilidad y mensajes.`
+            ? `I found 1 professional for ${servicePhrase} in ${placePhrase}. Use the button to view the profile.`
+            : `Encontré 1 profesional de ${servicePhrase} en ${placePhrase}. Use el botón para ver el perfil.`
           : locale === "en"
-            ? `I found ${resultCount} professionals for ${servicePhrase} in ${placePhrase}. Open the filtered list to review profiles, reviews, availability and messages.`
-            : `Encontré ${resultCount} profesionales de ${servicePhrase} en ${placePhrase}. Abra el listado filtrado para revisar perfiles, reseñas, disponibilidad y mensajes.`
+            ? `I found ${resultCount} professionals for ${servicePhrase} in ${placePhrase}. Use the button to view their profiles.`
+            : `Encontré ${resultCount} profesionales de ${servicePhrase} en ${placePhrase}. Use el botón para ver los perfiles.`
         : suggestedService
           ? locale === "en"
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."

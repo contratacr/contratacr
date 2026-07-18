@@ -1094,21 +1094,21 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       <ExpandableText text={proposal.message} lines={2} className="mt-1 text-[13px] leading-relaxed" />
                                     </div>
                                   </div>
-                                  <div className="mt-3 flex flex-wrap justify-start gap-2 border-t border-[#eef0f2] pt-3 sm:justify-end">
+                                  <div className="mt-3 flex flex-col justify-start gap-2 border-t border-[#eef0f2] pt-3 sm:flex-row sm:flex-wrap sm:justify-end">
                                     {proposal.status === "pending" && !locked && (
                                       <>
-                                        <Button size="sm" className="min-w-[92px] flex-1 px-3 sm:flex-none" onClick={() => acceptProposal(proposal.id, project.id)}>{t("accept")}</Button>
-                                        <Button size="sm" variant="outline" className="min-w-[92px] flex-1 px-3 sm:flex-none" onClick={() => declineProposal(proposal.id, project.id)}>{t("decline")}</Button>
+                                        <Button size="sm" className="w-full px-3 sm:w-auto sm:min-w-[92px] sm:flex-none" onClick={() => acceptProposal(proposal.id, project.id)}>{t("accept")}</Button>
+                                        <Button size="sm" variant="outline" className="w-full px-3 sm:w-auto sm:min-w-[92px] sm:flex-none" onClick={() => declineProposal(proposal.id, project.id)}>{t("decline")}</Button>
                                       </>
                                     )}
                                     {!locked && (proposal.status === "accepted" || proposal.status === "declined") && (
-                                      <Button size="sm" variant="outline" className="min-w-[132px] flex-1 px-3 sm:flex-none" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
+                                      <Button size="sm" variant="outline" className="w-full px-3 sm:w-auto sm:min-w-[132px] sm:flex-none" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
                                     )}
                                     {project.status === "awaiting_confirmation" && isAccepted && (
-                                      <Button size="sm" className="min-w-[150px] flex-1 px-3 sm:flex-none" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>
+                                      <Button size="sm" className="w-full px-3 sm:w-auto sm:min-w-[150px] sm:flex-none" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>
                                     )}
                                     {proposal.professionals?.id && (
-                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} tone={(proposal.status === "pending" && !locked) || (project.status === "awaiting_confirmation" && isAccepted) ? "contrast" : "primary"} className="min-h-9 min-w-[104px] flex-1 rounded-lg px-3 text-sm font-bold disabled:cursor-wait sm:flex-none" />
+                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} tone={(proposal.status === "pending" && !locked) || (project.status === "awaiting_confirmation" && isAccepted) ? "contrast" : "primary"} className="min-h-9 w-full rounded-lg px-3 text-sm font-bold disabled:cursor-wait sm:w-auto sm:min-w-[104px] sm:flex-none" />
                                     )}
                                   </div>
                                 </div>
@@ -1140,17 +1140,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 );
               })}
 
-              {/* MOBILE floating action button (FAB) — the section's PRIMARY action. A top
-                  button isn't thumb-reachable once you scroll a long list, so on phones the
-                  publish CTA floats bottom-right, offset ABOVE the fixed bottom nav bar
-                  (z-30 < the bar's z-40, and bottom = bar height + a gap) so it's always
-                  reachable while scrolling and NEVER overlaps/hides behind the bar. Desktop
-                  uses the top button above instead (this is lg:hidden). */}
+              {/* MOBILE floating action button (FAB) — the section's primary action.
+                  There is no dashboard bottom tab bar now, so keep it close to the safe
+                  area instead of floating too high. */}
               <button
                 type="button"
                 onClick={() => setShowPublish(true)}
                 aria-label={t("publishProject")}
-                className="lg:hidden fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 inline-flex items-center gap-2 rounded-full bg-[#009FD9] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#009FD9]/30 transition-transform active:scale-95 hover:bg-[#0089bb]"
+                className="lg:hidden fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 inline-flex items-center gap-2 rounded-full bg-[#009FD9] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#009FD9]/30 transition-transform active:scale-95 hover:bg-[#0089bb]"
               >
                 <Plus className="h-5 w-5" />
                 {t("publishShort")}
