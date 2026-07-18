@@ -280,7 +280,7 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
     if (!shouldLockScroll) return;
     const root = document.documentElement;
     root.classList.add("contratacr-ai-open");
-    const releaseBodyScroll = embedded ? () => {} : lockBodyScroll();
+    const releaseBodyScroll = lockBodyScroll();
     return () => {
       root.classList.remove("contratacr-ai-open");
       releaseBodyScroll();
