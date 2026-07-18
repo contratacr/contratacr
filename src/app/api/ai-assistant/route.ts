@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAllCategories, getCategoryLabel, resolveCategoryIntent } from "@/lib/data/categories";
+import { categorySearchScore, getAllCategories, getCategoryLabel, resolveCategoryIntent, searchCategories } from "@/lib/data/categories";
 import { allLocationSuggestions, resolveLocation } from "@/lib/data/location-search";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -77,7 +77,7 @@ function uncertainSearchPayload(message: string, locale: Locale): AssistantPaylo
     confidence: 0,
     answer: locale === "en"
       ? "I am not fully sure which service fits that request. Search with those words first; if you do not find the right option, publish a request with the details."
-      : "No tengo total certeza de quÃ© servicio calza con esa necesidad. Busque con esas palabras primero; si no encuentra la opciÃ³n correcta, publique una solicitud con los detalles.",
+      : "No tengo total certeza de qué servicio calza con esa necesidad. Busque con esas palabras primero; si no encuentra la opción correcta, publique una solicitud con los detalles.",
     ctaLabel: locale === "en" ? "Search in ContrataCR" : "Buscar en ContrataCR",
   };
 }
@@ -143,6 +143,95 @@ function resolveLocationIntent(raw: string) {
 function formatPlaceLabel(place: ReturnType<typeof resolveLocationIntent>) {
   if (!place) return null;
   return place.type === "canton" ? `${place.label}, ${place.sublabel}` : place.label;
+}
+
+const GENERIC_CATEGORY_TERMS = new Set([
+  "servicio",
+  "servicios",
+  "tecnico",
+  "tecnica",
+  "profesional",
+  "profesionales",
+  "costa rica",
+  "technology",
+  "service",
+  "services",
+]);
+
+function normalizedPhrase(value: string) {
+  return normalizeText(value).replace(/[^a-z0-9ñ\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function strongCategoryMention(texts: string[], locale: Locale) {
+  const pool = getAllCategories();
+  for (const text of texts) {
+    const haystack = ` ${normalizedPhrase(text)} `;
+    if (!haystack.trim()) continue;
+    let best: { id: string; score: number } | null = null;
+    for (const item of pool) {
+      const terms = [item.label, getCategoryLabel(item.id, locale), ...item.keywords];
+      for (const term of terms) {
+        const normalizedTerm = normalizedPhrase(String(term));
+        if (
+          normalizedTerm.length < 5 ||
+          GENERIC_CATEGORY_TERMS.has(normalizedTerm) ||
+          !haystack.includes(` ${normalizedTerm} `)
+        ) continue;
+        const score = normalizedTerm.length + (normalizedPhrase(item.label) === normalizedTerm ? 35 : 0);
+        if (score > (best?.score ?? 0)) best = { id: item.id, score };
+      }
+    }
+    if (best) return best.id;
+  }
+  return null;
+}
+
+function confidentCategoryMatch(text: string, locale: Locale) {
+  const matches = searchCategories(text, locale)
+    .map((item, index) => ({ item, index, score: categorySearchScore(item, text, locale) }))
+    .filter((match) => match.score > 0)
+    .sort((a, b) => b.score - a.score || a.index - b.index);
+  const [first, second] = matches;
+  if (!first) return null;
+  const gap = first.score - (second?.score ?? 0);
+  return first.score >= 95 && gap >= 25 ? first.item.id : null;
+}
+
+function categoryClarification(text: string, locale: Locale, labels: Map<string, string>) {
+  const options = searchCategories(text, locale)
+    .slice(0, 3)
+    .map((item) => labels.get(item.id) || getCategoryLabel(item.id, locale))
+    .filter(Boolean);
+  if (options.length === 0) {
+    return locale === "en"
+      ? "Which service do you need? Please write the service name so I can search correctly."
+      : "¿Qué servicio necesita? Escríbame el nombre del servicio para buscar correctamente.";
+  }
+  const formatted = options.map((option) => `“${option}”`).join(", ");
+  return locale === "en"
+    ? `To search correctly, which service do you mean: ${formatted}?`
+    : `Para buscar correctamente, ¿se refiere a ${formatted}?`;
+}
+
+function resolveAssistantCategory(
+  rawMessage: string,
+  history: HistoryMessage[],
+  locale: Locale,
+  modelServiceId: string | null | undefined,
+  labels: Map<string, string>,
+) {
+  const historyTexts = history.slice().reverse().map((item) => item.content);
+  const strong = strongCategoryMention([rawMessage, ...historyTexts], locale);
+  if (strong) return { id: strong, needsClarification: false };
+
+  const confident = confidentCategoryMatch(rawMessage, locale);
+  if (confident) return { id: confident, needsClarification: false };
+
+  if (modelServiceId && labels.has(modelServiceId) && resolveLocationIntent(rawMessage)) {
+    return { id: modelServiceId, needsClarification: false };
+  }
+
+  return { id: null, needsClarification: true };
 }
 
 function latestClarificationService(history: HistoryMessage[], locale: Locale) {
@@ -234,7 +323,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     action: "answer",
     answer: locale === "en"
       ? "Tell me the service and area you need. I can also explain any ContrataCR feature."
-      : "Dime qué servicio y zona necesitas. También puedo explicarte cualquier función de ContrataCR.",
+      : "Dime qué servicio y zona necesita. También puedo explicarle cualquier función de ContrataCR.",
   };
 }
 
@@ -914,10 +1003,18 @@ export async function POST(req: Request) {
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
     const payload = safetyPayload ?? normalizePayload(aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history);
-    const directCategory = resolveCategoryIntent(rawMessage, locale);
-    const queryCategory = payload.serviceId ? null : resolveCategoryIntent(payload.searchQuery || "", locale);
-    if (payload.action === "search_professionals" && payload.confidence !== 0 && (directCategory || queryCategory)) {
-      payload.serviceId = (directCategory ?? queryCategory)!.id;
+    const resolvedCategory = resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
+    if (payload.action === "search_professionals" && payload.confidence !== 0) {
+      if (resolvedCategory.id) {
+        payload.serviceId = resolvedCategory.id;
+      } else if (resolvedCategory.needsClarification) {
+        payload.action = "answer";
+        payload.answer = categoryClarification(rawMessage, locale, catalog.labels);
+        payload.searchQuery = null;
+        payload.serviceId = null;
+        payload.locationText = null;
+        payload.ctaLabel = null;
+      }
     }
     if (payload.serviceId && !catalog.labels.has(payload.serviceId)) {
       payload.serviceId = resolveCategoryIntent(payload.searchQuery || rawMessage, locale)?.id ?? null;
@@ -945,19 +1042,19 @@ export async function POST(req: Request) {
     const assistantAnswer = noResults
       ? locale === "en"
         ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can publish a request so related professionals are notified.`
-        : `Todavia no encontre profesionales de ${servicePhrase} en ${placePhrase}. Puede publicar una solicitud para notificar a profesionales relacionados.`
+        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puede publicar una solicitud para notificar a profesionales relacionados.`
       : hasResults
         ? resultCount === 1
           ? locale === "en"
             ? `I found 1 professional for ${servicePhrase} in ${placePhrase}. Open the filtered list to review the profile, reviews, availability and messages.`
-            : `Encontre 1 profesional de ${servicePhrase} en ${placePhrase}. Abra el listado filtrado para revisar el perfil, resenas, disponibilidad y mensajes.`
+            : `Encontré 1 profesional de ${servicePhrase} en ${placePhrase}. Abra el listado filtrado para revisar el perfil, reseñas, disponibilidad y mensajes.`
           : locale === "en"
             ? `I found ${resultCount} professionals for ${servicePhrase} in ${placePhrase}. Open the filtered list to review profiles, reviews, availability and messages.`
-            : `Encontre ${resultCount} profesionales de ${servicePhrase} en ${placePhrase}. Abra el listado filtrado para revisar perfiles, resenas, disponibilidad y mensajes.`
+            : `Encontré ${resultCount} profesionales de ${servicePhrase} en ${placePhrase}. Abra el listado filtrado para revisar perfiles, reseñas, disponibilidad y mensajes.`
         : suggestedService
           ? locale === "en"
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-            : "Ese servicio todavia no esta en el catalogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
+            : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
           : payload.answer;
 
     return NextResponse.json({
