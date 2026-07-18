@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, Search, LogOut,
+  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -25,7 +25,7 @@ import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
-import { applyPendingSavedPro, getSavedPros, syncSavedPros } from "@/components/professionals/save-button";
+import { applyPendingSavedPro } from "@/components/professionals/save-button";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
@@ -65,111 +65,6 @@ type Tab =
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
-type ProPanelTranslator = ReturnType<typeof useTranslations>;
-type DashboardSummaryItem = {
-  tab: Tab;
-  label: string;
-  value: string;
-  action: string;
-  icon: React.ReactNode;
-};
-
-function DashboardHomePanel({
-  mode,
-  isProvider,
-  t,
-  onSwitchMode,
-  onViewPublicProfile,
-  onSearch,
-  onPublish,
-  summaryItems,
-  onOpenTab,
-}: {
-  mode: Mode;
-  isProvider: boolean;
-  t: ProPanelTranslator;
-  onSwitchMode: (mode: Mode) => void;
-  onViewPublicProfile?: () => void;
-  onSearch: () => void;
-  onPublish: () => void;
-  summaryItems: DashboardSummaryItem[];
-  onOpenTab: (tab: Tab) => void;
-}) {
-  const isOffer = mode === "offer";
-  const nextMode: Mode = isOffer ? "use" : "offer";
-  return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-[#dbe4ea] bg-[#f8fbfd] px-4 py-5 sm:px-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#009FD9]">
-          {isOffer ? t("home.offerEyebrow") : t("home.useEyebrow")}
-        </p>
-        <div className="mt-1 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-2xl">
-            <h2 className="text-xl font-bold text-[#111827] sm:text-2xl">{isOffer ? t("home.offerTitle") : t("home.useTitle")}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-[#4b5563]">
-              {isOffer ? t("home.offerBody") : t("home.useBody")}
-            </p>
-          </div>
-          <div className="flex w-full flex-col items-center gap-2 sm:flex-row sm:justify-center lg:w-auto lg:min-w-[260px] lg:flex-col">
-            {isProvider && (
-              <Button type="button" onClick={() => onSwitchMode(nextMode)} className="w-full justify-center bg-[#009FD9] text-white hover:bg-[#0089BB] sm:w-auto lg:w-full">
-                <Repeat2 className="h-4 w-4" />
-                {isOffer ? t("home.switchToUse") : t("home.switchToOffer")}
-              </Button>
-            )}
-            {isOffer && onViewPublicProfile && (
-              <Button type="button" variant="outline" onClick={onViewPublicProfile} className="w-full justify-center sm:w-auto lg:w-full">
-                <ExternalLink className="h-4 w-4" />
-                {t("viewPublicProfile")}
-              </Button>
-            )}
-            {!isOffer && (
-              <>
-                <Button type="button" variant={isProvider ? "outline" : "default"} onClick={onSearch} className={cn("w-full justify-center sm:w-auto lg:w-full", !isProvider && "bg-[#009FD9] text-white hover:bg-[#0089BB]")}>
-                  <Search className="h-4 w-4" />
-                  {t("home.actions.search.title")}
-                </Button>
-                <Button type="button" variant="outline" onClick={onPublish} className="w-full justify-center sm:w-auto lg:w-full">
-                  <Plus className="h-4 w-4" />
-                  {t("home.actions.publish.title")}
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-        {!isProvider && (
-          <div className="mt-4 max-w-2xl rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm leading-relaxed text-[#6b7280]">
-            {t("home.clientOnlyHint")}
-          </div>
-        )}
-      </div>
-
-      <div>
-        <p className="mb-3 text-sm font-semibold text-[#111827]">{t("home.summaryTitle")}</p>
-        <div className="grid gap-3 md:grid-cols-2">
-          {summaryItems.map((item) => (
-            <div key={`${item.tab}-${item.label}`} className="flex min-w-0 items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white px-4 py-3">
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f3f6f8] text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
-                {item.icon}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-[#111827]">{item.label}</p>
-                <p className="mt-0.5 truncate text-sm text-[#6b7280]" title={item.value}>{item.value}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => onOpenTab(item.tab)}
-                className="shrink-0 rounded-full border border-[#dbe4ea] px-3 py-1 text-xs font-semibold text-[#009FD9] transition-colors hover:border-[#009FD9] hover:bg-[#EBF5FB]"
-              >
-                {item.action}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
   home: <Home className="h-4 w-4" />,
@@ -267,13 +162,6 @@ export default function DashboardPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
   const [chatUnread, setChatUnread] = useState(0);
-  const [homeCounts, setHomeCounts] = useState({
-    professionalBookings: null as number | null,
-    opportunities: null as number | null,
-    clientBookings: null as number | null,
-    clientProjects: null as number | null,
-    savedPros: null as number | null,
-  });
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
@@ -306,7 +194,8 @@ export default function DashboardPage() {
   const urlForcedMode: Mode | null =
     legacyVerificationTab ? "offer" : requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
-  const activeTab: Tab = requestedTab ?? (mode === "offer" ? "bookings" : "sent_bookings");
+  const defaultTab: Tab = mode === "offer" ? "bookings" : "sent_bookings";
+  const activeTab: Tab = requestedTab ?? defaultTab;
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
   useEffect(() => {
@@ -329,6 +218,18 @@ export default function DashboardPage() {
     const qs = params.toString();
     router.replace(`/mensajes${qs ? `?${qs}` : ""}`, { scroll: false });
   }, [requestedTab, searchParams, router]);
+
+  useEffect(() => {
+    if (requestedTab !== "home") return;
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setMobilePanelOpen(false);
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", defaultTab);
+    const qs = params.toString();
+    router.replace(`/dashboard/profesional?${qs}`, { scroll: false });
+  }, [defaultTab, requestedTab, router, searchParams]);
 
   // Suppress the login-redirect while signing out (from the navbar menu) → straight
   // to main, no /login flash. Logout lives only in the navbar profile menu now.
@@ -540,40 +441,6 @@ export default function DashboardPage() {
     };
   }, [user]);
 
-  useEffect(() => {
-    if (!user) return;
-    let stopped = false;
-    const readCount = async (url: string, key: "bookings" | "projects") => {
-      const response = await fetch(url, { cache: "no-store" }).catch(() => null);
-      if (!response?.ok) return null;
-      const payload = await response.json().catch(() => null);
-      const rows = payload?.[key];
-      return Array.isArray(rows) ? rows.length : null;
-    };
-    const loadHomeCounts = async () => {
-      const [professionalBookings, opportunities, clientBookings, clientProjects] = await Promise.all([
-        isProvider ? readCount("/api/bookings?role=professional", "bookings") : Promise.resolve(null),
-        isProvider ? readCount("/api/projects?role=professional", "projects") : Promise.resolve(null),
-        readCount("/api/bookings?role=client", "bookings"),
-        readCount("/api/projects?role=client", "projects"),
-      ]);
-      await syncSavedPros(user.id, true).catch(() => {});
-      const savedPros = getSavedPros(user.id).length;
-      if (stopped) return;
-      setHomeCounts({ professionalBookings, opportunities, clientBookings, clientProjects, savedPros });
-    };
-    void loadHomeCounts();
-    window.addEventListener("notificationsChanged", loadHomeCounts);
-    window.addEventListener("savedProsChanged", loadHomeCounts);
-    const id = window.setInterval(loadHomeCounts, 30000);
-    return () => {
-      stopped = true;
-      window.removeEventListener("notificationsChanged", loadHomeCounts);
-      window.removeEventListener("savedProsChanged", loadHomeCounts);
-      window.clearInterval(id);
-    };
-  }, [isProvider, user]);
-
   // Inconsistent state ONLY: metadata says this account can offer, but no pro row
   // exists yet. A freshly-created pro account can lag (replication/RLS) — retry a
   // few times, then send them to finish the professional profile. A genuine seeker
@@ -773,157 +640,6 @@ export default function DashboardPage() {
   const mobileFullScreenTab = activeTab === "assistant";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
   const profileCompletionPercent = proForCompletion ? computeCompletion(proForCompletion).percent : null;
-  const servicesCount = pro
-    ? (Array.isArray(pro.services) && pro.services.length > 0
-      ? pro.services.length
-      : Array.isArray(pro.professions)
-        ? pro.professions.length
-        : pro.category_id
-          ? 1
-          : 0)
-    : null;
-  const workplacesCount = pro
-    ? (Array.isArray(pro.workplaces) && pro.workplaces.length > 0
-      ? pro.workplaces.length
-      : (pro.provincia_id || pro.canton_id || pro.coverage_country) ? 1 : 0)
-    : null;
-  const successCasesCount = pro
-    ? (Array.isArray(pro.portfolio_items) && pro.portfolio_items.length > 0
-      ? pro.portfolio_items.length
-      : Array.isArray(pro.portfolio_urls)
-        ? pro.portfolio_urls.length
-        : 0)
-    : null;
-  const certificationsCount = pro && Array.isArray(pro.certifications) ? pro.certifications.length : null;
-  const languagesCount = pro && Array.isArray(pro.languages) ? pro.languages.length : null;
-  const publicLinksCount = pro?.social_links && typeof pro.social_links === "object"
-    ? Object.values(pro.social_links as Record<string, unknown>).filter((value) => typeof value === "string" && value.trim().length > 0).length
-    : null;
-  const hasAvailability =
-    !!pro &&
-    (
-      Array.isArray(pro.availability_slots) && pro.availability_slots.length > 0 ||
-      Array.isArray(pro.availability) && pro.availability.length > 0 ||
-      Array.isArray(pro.weekly_availability) && pro.weekly_availability.length > 0 ||
-      !!pro.availability_schedule
-    );
-  const availabilitySummary = !pro || !hasAvailability
-    ? t("home.summary.noneAdded")
-    : pro.availability_public === false
-      ? t("home.summary.availabilityPrivate")
-      : t("home.summary.availabilityPublic");
-  const formatNullableCount = (count: number | null, singularKey: string, pluralKey: string, emptyKey = "home.summary.noneAdded") => {
-    if (count === null) return t("home.summary.notAvailable");
-    if (count === 0) return t(emptyKey);
-    return t(count === 1 ? singularKey : pluralKey, { count });
-  };
-  const formatFlowCount = (count: number | null, singularKey: string, pluralKey: string) => {
-    if (count === null) return t("home.summary.review");
-    return t(count === 1 ? singularKey : pluralKey, { count });
-  };
-  const dashboardSummaryItems: DashboardSummaryItem[] = mode === "offer"
-    ? [
-        {
-          tab: "bookings",
-          label: t("tabs.bookings"),
-          value: formatFlowCount(homeCounts.professionalBookings, "home.summary.requestOne", "home.summary.requestMany"),
-          action: t("home.summary.actionView"),
-          icon: TAB_ICONS.bookings,
-        },
-        {
-          tab: "proposals",
-          label: t("tabs.proposals"),
-          value: formatFlowCount(homeCounts.opportunities, "home.summary.opportunityOne", "home.summary.opportunityMany"),
-          action: t("home.summary.actionView"),
-          icon: TAB_ICONS.proposals,
-        },
-        {
-          tab: "services",
-          label: t("tabs.services"),
-          value: formatNullableCount(servicesCount, "home.summary.serviceOne", "home.summary.serviceMany"),
-          action: t("home.summary.actionEdit"),
-          icon: TAB_ICONS.services,
-        },
-        {
-          tab: "availability",
-          label: t("tabs.availability"),
-          value: availabilitySummary,
-          action: t("home.summary.actionEdit"),
-          icon: TAB_ICONS.availability,
-        },
-        {
-          tab: "profile",
-          label: t("home.summary.workplaces"),
-          value: formatNullableCount(workplacesCount, "home.summary.workplaceOne", "home.summary.workplaceMany"),
-          action: t("home.summary.actionEdit"),
-          icon: TAB_ICONS.profile,
-        },
-        {
-          tab: "photos",
-          label: t("tabs.photos"),
-          value: formatNullableCount(successCasesCount, "home.summary.caseOne", "home.summary.caseMany"),
-          action: t("home.summary.actionEdit"),
-          icon: TAB_ICONS.photos,
-        },
-        {
-          tab: "profile",
-          label: t("home.summary.training"),
-          value: formatNullableCount(certificationsCount, "home.summary.trainingOne", "home.summary.trainingMany", "home.summary.trainingEmpty"),
-          action: t("home.summary.actionEdit"),
-          icon: <Award className="h-4 w-4" />,
-        },
-        {
-          tab: "profile",
-          label: t("home.summary.languages"),
-          value: formatNullableCount(languagesCount, "home.summary.languageOne", "home.summary.languageMany", "home.summary.languagesEmpty"),
-          action: t("home.summary.actionEdit"),
-          icon: <MessageSquareMore className="h-4 w-4" />,
-        },
-        {
-          tab: "profile",
-          label: t("home.summary.publicLinks"),
-          value: formatNullableCount(publicLinksCount, "home.summary.linkOne", "home.summary.linkMany"),
-          action: t("home.summary.actionEdit"),
-          icon: <ExternalLink className="h-4 w-4" />,
-        },
-        {
-          tab: "profile",
-          label: t("home.summary.identity"),
-          value: clientVerified || pro?.verification_status === "verified" ? t("identityVerified") : t("notVerifiedBadge"),
-          action: t("home.summary.actionEdit"),
-          icon: TAB_ICONS.verificacion,
-        },
-      ]
-    : [
-        {
-          tab: "sent_projects",
-          label: t("tabs.sent_projects"),
-          value: formatFlowCount(homeCounts.clientProjects, "home.summary.postOne", "home.summary.postMany"),
-          action: t("home.summary.actionView"),
-          icon: TAB_ICONS.sent_projects,
-        },
-        {
-          tab: "sent_bookings",
-          label: t("tabs.sent_bookings"),
-          value: formatFlowCount(homeCounts.clientBookings, "home.summary.clientRequestOne", "home.summary.clientRequestMany"),
-          action: t("home.summary.actionView"),
-          icon: TAB_ICONS.sent_bookings,
-        },
-        {
-          tab: "saved",
-          label: t("tabs.saved"),
-          value: formatFlowCount(homeCounts.savedPros, "home.summary.favoriteOne", "home.summary.favoriteMany"),
-          action: t("home.summary.actionView"),
-          icon: TAB_ICONS.saved,
-        },
-        {
-          tab: "profile",
-          label: t("home.summary.identity"),
-          value: clientVerified ? t("identityVerified") : t("notVerifiedBadge"),
-          action: t("home.summary.actionEdit"),
-          icon: TAB_ICONS.verificacion,
-        },
-      ];
   const showProfileCompletion =
     mode === "offer" &&
     !!proForCompletion &&
@@ -982,7 +698,20 @@ export default function DashboardPage() {
     return (
       <button
         type="button"
-        onClick={() => handleSwitchMode(nextMode)}
+        onClick={() => {
+          if (mobile) {
+            setMode(nextMode);
+            setMobilePanelOpen(false);
+            const params = new URLSearchParams(window.location.search);
+            params.set("tab", "home");
+            params.delete("mode");
+            const qs = params.toString();
+            window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+            scrollDashboardToPageTop();
+            return;
+          }
+          handleSwitchMode(nextMode);
+        }}
         className={cn(
           "w-full flex items-center rounded-xl text-left font-semibold transition-colors",
           mobile ? "gap-4 px-4 py-4 text-base" : "gap-3 px-3 py-2.5 text-sm",
@@ -1195,8 +924,7 @@ export default function DashboardPage() {
               )}
 
               <div className="flex flex-col lg:flex-row gap-6">
-                {/* Sidebar nav (DESKTOP only) — mobile renders the same sections as
-                    full-screen entries inside Panel. */}
+                {/* Sidebar nav (desktop only); mobile renders the same sections as full-screen entries. */}
                 <nav className="hidden lg:block lg:w-60 shrink-0 space-y-3">
                   <Card>
                     <CardContent className="p-2">
@@ -1222,7 +950,7 @@ export default function DashboardPage() {
                       activeTab === "chat" && "overflow-hidden",
                       (mobileFullScreenTab || mobileSectionOpen) && "rounded-none border-0 bg-white shadow-none lg:rounded-xl lg:border lg:shadow-sm",
                     )}>
-                      {activeTab !== "chat" && !mobileFullScreenTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
+                      {activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
@@ -1251,65 +979,15 @@ export default function DashboardPage() {
                         {activeTab === "home" && (
                           <>
                             <div className="lg:hidden">
-                              {mobilePanelOpen ? (
-                                <>
-                                  <div className="-mx-5 -mt-5 mb-5 flex min-h-16 items-center border-b border-[#e5e7eb] bg-white px-3 py-2 text-[#162543] sm:-mx-6">
-                                    <button
-                                      type="button"
-                                      onClick={() => setMobilePanelOpen(false)}
-                                      aria-label={t("backToPanel")}
-                                      className="inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6]"
-                                    >
-                                      <ArrowLeft className="h-5 w-5" />
-                                      <span className="hidden min-[390px]:inline">{t("back")}</span>
-                                    </button>
-                                    <h2 className="min-w-0 flex-1 truncate px-2 text-center text-base font-bold">{t("tabs.home")}</h2>
-                                    <span className="w-[74px] shrink-0" />
-                                  </div>
-                                  <DashboardHomePanel
-                                    mode={mode}
-                                    isProvider={isProvider}
-                                    t={t}
-                                    onSwitchMode={handleSwitchMode}
-                                    onViewPublicProfile={mode === "offer" && pro?.slug ? () => router.push(`/profesionales/${pro.slug}?preview=1`) : undefined}
-                                    onSearch={() => router.push("/buscar")}
-                                    onPublish={() => {
-                                      setTab("sent_projects");
-                                      window.setTimeout(() => window.dispatchEvent(new Event("contratacr:open-publish-project")), 80);
-                                    }}
-                                    summaryItems={dashboardSummaryItems}
-                                    onOpenTab={setTab}
-                                  />
-                                </>
-                              ) : (
-                                <>
-                                  <div className="space-y-1 py-2">
-                                    {switchPanelButton({ mobile: true })}
-                                    {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
-                                    {mobileSectionTabs.map(mobileSectionButton)}
-                                  </div>
-                                  <div className="my-4 border-t border-[#e5e7eb]" />
-                                  <div className="space-y-1 pb-2">
-                                    {signOutButton({ mobile: true })}
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                            <div className="hidden lg:block">
-                              <DashboardHomePanel
-                                mode={mode}
-                                isProvider={isProvider}
-                                t={t}
-                                onSwitchMode={handleSwitchMode}
-                                onViewPublicProfile={mode === "offer" && pro?.slug ? () => router.push(`/profesionales/${pro.slug}?preview=1`) : undefined}
-                                onSearch={() => router.push("/buscar")}
-                                onPublish={() => {
-                                  setTab("sent_projects");
-                                  window.setTimeout(() => window.dispatchEvent(new Event("contratacr:open-publish-project")), 80);
-                                }}
-                                summaryItems={dashboardSummaryItems}
-                                onOpenTab={setTab}
-                              />
+                              <div className="space-y-1 py-2">
+                                {switchPanelButton({ mobile: true })}
+                                {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
+                                {mobileSectionTabs.map(mobileSectionButton)}
+                              </div>
+                              <div className="my-4 border-t border-[#e5e7eb]" />
+                              <div className="space-y-1 pb-2">
+                                {signOutButton({ mobile: true })}
+                              </div>
                             </div>
                           </>
                         )}
