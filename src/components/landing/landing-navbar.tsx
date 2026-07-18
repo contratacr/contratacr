@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
-  LayoutDashboard, Briefcase, Compass, Check,
+  LayoutDashboard, Briefcase, Compass,
   MessageSquareMore, UserRound, LogOut,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -66,10 +66,6 @@ export function ContrataCRLogo({ className, chip = false, size = "md", tone = "l
 }
 
 /* ─── Language switch — shared locale-change helper ─── */
-const LANGS = [
-  { code: "es", label: "Español" },
-  { code: "en", label: "English" },
-] as const;
 function useTypedPlaceholder(examples: string[], active: boolean) {
   const [text, setText] = useState(examples[0] ?? "");
 
@@ -132,64 +128,18 @@ function useSwitchLang() {
 function LanguageMenu() {
   const locale = useLocale();
   const switchLang = useSwitchLang();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function onOutside(e: Event) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onOutside);
-    document.addEventListener("touchstart", onOutside);
-    return () => {
-      document.removeEventListener("mousedown", onOutside);
-      document.removeEventListener("touchstart", onOutside);
-    };
-  }, []);
+  const nextLocale = locale === "en" ? "es" : "en";
+  const label = nextLocale.toUpperCase();
+
   return (
-    <div ref={ref} className="relative shrink-0">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Cambiar idioma / Change language"
-        className={cn(
-          "inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-2.5 text-[12px] font-bold uppercase tracking-[0.02em] transition-colors",
-          open
-            ? "bg-[#EBF5FB] text-[#009FD9]"
-            : "text-[#1A2744] hover:bg-gray-50 hover:text-[#009FD9]"
-        )}
-      >
-        <span>{locale.toUpperCase()}</span>
-        <ChevronDown className={cn("h-3.5 w-3.5 text-current transition-transform duration-200", open && "rotate-180")} />
-      </button>
-      {open && (
-        <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-[#e8eef5] bg-white p-1.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.5)]">
-          {LANGS.map((l) => {
-            const active = locale === l.code;
-            return (
-              <button
-                key={l.code}
-                role="menuitemradio"
-                aria-checked={active}
-                onClick={() => { setOpen(false); switchLang(l.code); }}
-                className={cn(
-                  "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                  active ? "bg-[#EBF5FB] font-semibold text-[#0089bb]" : "text-[#374151] hover:bg-[#f8fafc] hover:text-[#162543]",
-                )}
-              >
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold">{l.label}</span>
-                  <span className="block text-[11px] font-medium uppercase tracking-wide text-[#9ca3af]">{l.code}</span>
-                </span>
-                <span className={cn("grid h-5 w-5 shrink-0 place-items-center rounded-full", active ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-transparent")}>
-                  <Check className="h-3.5 w-3.5" />
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    <button
+      type="button"
+      onClick={() => switchLang(nextLocale)}
+      aria-label={locale === "en" ? "Cambiar a español" : "Switch to English"}
+      className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
+    >
+      {label}
+    </button>
   );
 }
 
@@ -1320,7 +1270,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[48vw] min-w-[180px] max-w-[230px] sm:w-[38vw] sm:max-w-[250px] bg-white shadow-[18px_0_60px_-18px_rgba(15,23,42,0.28)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[48vw] min-w-[180px] max-w-[230px] sm:w-[38vw] sm:max-w-[250px] bg-white shadow-[12px_0_28px_-18px_rgba(15,23,42,0.55)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
