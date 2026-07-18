@@ -472,7 +472,7 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
 
-  if (!sessionHydrated || pathname.startsWith("/admin")) return null;
+  if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
   if (!embedded && !open) {
     return (
       <button

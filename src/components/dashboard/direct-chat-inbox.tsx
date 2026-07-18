@@ -175,6 +175,11 @@ export function DirectChatInbox() {
     const labels = isEn ? { booking: "Request", project: "Post", proposal: "Proposal", profile: "Profile" } : { booking: "Solicitud", project: "Publicación", proposal: "Propuesta", profile: "Perfil" };
     return { type, label: labels[type], title: item.context?.service_description || item.context?.title || item.subject || (isEn ? "General inquiry" : "Consulta general") };
   }, [isEn]);
+  const contextSummaryFor = useCallback((item: Conversation) => {
+    const context = contextFor(item);
+    if (context.type === "profile") return context.title;
+    return `${context.label} · ${context.title}`;
+  }, [contextFor]);
   const contextActionFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
     const labels = isEn ? { booking: "View request", project: "View post", proposal: "View proposal", profile: "View profile" } : { booking: "Ver solicitud", project: "Ver publicación", proposal: "Ver propuesta", profile: "Ver perfil" };
@@ -184,8 +189,8 @@ export function DirectChatInbox() {
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
     if (!needle) return displayedConversations;
-    return displayedConversations.filter((item) => `${personFor(item).name} ${contextFor(item).label} ${contextFor(item).title} ${item.last_message ?? ""}`.toLocaleLowerCase(locale).includes(needle));
-  }, [contextFor, displayedConversations, locale, personFor, query]);
+    return displayedConversations.filter((item) => `${personFor(item).name} ${contextSummaryFor(item)} ${item.last_message ?? ""}`.toLocaleLowerCase(locale).includes(needle));
+  }, [contextSummaryFor, displayedConversations, locale, personFor, query]);
 
   const loadConversations = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -331,7 +336,8 @@ export function DirectChatInbox() {
   function contextHref(item: Conversation) {
     if (item.booking_id) return `/dashboard/profesional?tab=${user?.id === item.client_id ? "sent_bookings" : "bookings"}&booking=${item.booking_id}`;
     if (item.project_id) return `/dashboard/profesional?tab=${user?.id === item.client_id ? "sent_projects" : "proposals"}&project=${item.project_id}`;
-    return item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null;
+    const isClientSide = user?.id === item.client_id;
+    return isClientSide && item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null;
   }
 
   if (loading) return <div className="flex min-h-[360px] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>;
@@ -384,10 +390,10 @@ export function DirectChatInbox() {
               <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>
             </button>
           )}
-          {filtered.map((item) => { const person = personFor(item); const context = contextFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
+          {filtered.map((item) => { const person = personFor(item); const summary = contextSummaryFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
             <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "bg-white shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block truncate text-xs font-bold text-[#0090c7]">{context.label} · {context.title}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block truncate text-xs font-bold text-[#0090c7]">{summary}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>); })}
           {!filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
         </div>
@@ -407,7 +413,7 @@ export function DirectChatInbox() {
             ) : (
               <p className="truncate text-sm font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
             )}
-            {active && activeContext && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
+            {active && activeContext && activeContext.type !== "profile" && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
             {activeContextTitle && <p className="mt-0.5 truncate text-xs font-semibold text-[#63748a]">{activeContextTitle}</p>}
             {detailHref && (
               <button type="button" onClick={() => router.push(detailHref)} className="mt-0.5 block max-w-full truncate text-left text-xs font-extrabold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
