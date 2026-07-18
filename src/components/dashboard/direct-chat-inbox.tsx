@@ -385,8 +385,9 @@ export function DirectChatInbox() {
       <p className="mx-auto mt-2 max-w-md text-sm text-[#64748b]">
         {isEn ? "Messages related to profiles, requests and proposals will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, solicitudes y propuestas."}
       </p>
-      <button type="button" onClick={() => updateArchiveView(!showArchived)} className="mt-5 text-sm font-bold text-[#008fc4] hover:underline">
-        {showArchived ? (isEn ? "View active conversations" : "Ver conversaciones activas") : (isEn ? "View archived" : "Ver archivadas")}
+      <button type="button" onClick={() => updateArchiveView(!showArchived)} className="mt-5 inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
+        {showArchived && <ArrowLeft className="h-4 w-4" />}
+        {showArchived ? (isEn ? "Back" : "Volver") : (isEn ? "View archived" : "Ver archivadas")}
       </button>
     </div>
   );
@@ -408,8 +409,9 @@ export function DirectChatInbox() {
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-extrabold text-[#162543]">{showArchived ? (isEn ? "Archived" : "Archivados") : (isEn ? "Messages" : "Mensajes")}</h2>
             {showArchived && (
-              <button type="button" onClick={() => updateArchiveView(false)} className="rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-[#008fc4] transition hover:bg-[#eef9fd]">
-                {isEn ? "Active" : "Activos"}
+              <button type="button" onClick={() => updateArchiveView(false)} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-[#008fc4] transition hover:bg-[#eef9fd]">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                {isEn ? "Back" : "Volver"}
               </button>
             )}
           </div>
