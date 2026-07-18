@@ -11,6 +11,7 @@ import { notificationHref, notificationInMode } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
+import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type Notification = {
   id: string;
@@ -290,14 +291,15 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                         </div>
                       </div>
                     </button>
-                    <button
-                      onClick={(e) => dismiss(e, n.id)}
-                      className="absolute top-2 right-2 p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-red-500 transition-colors"
-                      aria-label={t("delete")}
-                      title={t("delete")}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <AppTooltip label={t("delete")} className="absolute top-2 right-2">
+                      <button
+                        onClick={(e) => dismiss(e, n.id)}
+                        className="p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-red-500 transition-colors"
+                        aria-label={t("delete")}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </AppTooltip>
                   </li>
                 ))}
               </ul>

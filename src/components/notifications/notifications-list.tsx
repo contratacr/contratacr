@@ -14,6 +14,7 @@ import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
 import { PanelSectionLoading } from "@/components/ui/content-loading";
+import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type Notification = {
   id: string;
@@ -211,13 +212,17 @@ export function NotificationsList() {
                     never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
                 <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
                   {!n.read && (
-                    <button onClick={(e) => markOneRead(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#dcfce7] hover:text-[#15803d] transition-colors" aria-label={t("markRead")} title={t("markRead")}>
-                      <Check className="h-3.5 w-3.5" />
-                    </button>
+                    <AppTooltip label={t("markRead")}>
+                      <button onClick={(e) => markOneRead(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#dcfce7] hover:text-[#15803d] transition-colors" aria-label={t("markRead")}>
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                    </AppTooltip>
                   )}
-                  <button onClick={(e) => dismiss(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label={t("delete")} title={t("delete")}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <AppTooltip label={t("delete")}>
+                    <button onClick={(e) => dismiss(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label={t("delete")}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </AppTooltip>
                 </div>
               </li>
               );

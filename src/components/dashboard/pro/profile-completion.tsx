@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronRight, X } from "lucide-react";
+import { AppTooltip } from "@/components/ui/app-tooltip";
 
 // Context-aware profile-completion (inspired by Airbnb's "complete your listing"
 // checklist + LinkedIn's profile-strength meter). The PERCENT counts only the
@@ -180,16 +181,17 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
                   {t(opt.actionKey)}
                   <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </button>
-                <button
-                  type="button"
-                  onClick={dismiss}
-                  aria-label={t("dismissVerify")}
-                  title={t("dismissVerify")}
-                  className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
-                >
-                  <X className="h-3.5 w-3.5" />
-                  {t("dismissVerify")}
-                </button>
+                <AppTooltip label={t("dismissVerify")}>
+                  <button
+                    type="button"
+                    onClick={dismiss}
+                    aria-label={t("dismissVerify")}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    {t("dismissVerify")}
+                  </button>
+                </AppTooltip>
               </div>
             </li>
           ))}

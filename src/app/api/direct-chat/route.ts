@@ -15,6 +15,8 @@ type ConversationRow = {
   status?: "open" | "archived" | "blocked";
   client_archived_at?: string | null;
   professional_archived_at?: string | null;
+  client_deleted_at?: string | null;
+  professional_deleted_at?: string | null;
   [key: string]: unknown;
 };
 
@@ -26,6 +28,11 @@ async function currentUser() {
 
 function participant(row: ConversationRow, userId: string) {
   return row.client_id === userId || row.professional_profile_id === userId;
+}
+
+function missingParticipantDeleteColumns(error: { code?: string; message?: string } | null | undefined) {
+  const message = error?.message ?? "";
+  return error?.code === "42703" || message.includes("client_deleted_at") || message.includes("professional_deleted_at");
 }
 
 async function enrichConversations(db: ReturnType<typeof createAdminClient>, rows: ConversationRow[]) {
@@ -66,6 +73,10 @@ export async function GET(req: Request) {
       .select("*, professionals(id, slug, business_name, profiles(full_name, avatar_url))")
       .eq("id", id).maybeSingle();
     const conversation = data as ConversationRow | null;
+    const deletedForParticipant = conversation && (conversation.client_id === user.id
+      ? conversation.client_deleted_at
+      : conversation.professional_deleted_at);
+    if (deletedForParticipant) return NextResponse.json({ error: "ConversaciÃ³n no encontrada" }, { status: 404 });
     if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
     const { data: messages, error } = await db.from("direct_messages")
       .select("id, conversation_id, sender_id, body, attachment_urls, read_at, created_at")
@@ -89,17 +100,27 @@ export async function GET(req: Request) {
     return NextResponse.json({ conversation: enriched, messages: messages ?? [] });
   }
   const archived = searchParams.get("status") === "archived";
-  let conversationsQuery = db.from("direct_conversations")
-    .select("*, professionals(id, slug, business_name, profiles(full_name, avatar_url))")
-    .or(`client_id.eq.${user.id},professional_profile_id.eq.${user.id}`)
-    .neq("status", "blocked");
-  conversationsQuery = archived
-    ? conversationsQuery.or(`and(client_id.eq.${user.id},client_archived_at.not.is.null),and(professional_profile_id.eq.${user.id},professional_archived_at.not.is.null)`)
-    : conversationsQuery.or(`and(client_id.eq.${user.id},client_archived_at.is.null),and(professional_profile_id.eq.${user.id},professional_archived_at.is.null)`);
-  const { data, error } = await conversationsQuery
-    .order("last_message_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const buildConversationsQuery = (filterDeleted: boolean) => {
+    let conversationsQuery = db.from("direct_conversations")
+      .select("*, professionals(id, slug, business_name, profiles(full_name, avatar_url))")
+      .or(`client_id.eq.${user.id},professional_profile_id.eq.${user.id}`)
+      .neq("status", "blocked");
+    conversationsQuery = archived
+      ? conversationsQuery.or(`and(client_id.eq.${user.id},client_archived_at.not.is.null),and(professional_profile_id.eq.${user.id},professional_archived_at.not.is.null)`)
+      : conversationsQuery.or(`and(client_id.eq.${user.id},client_archived_at.is.null),and(professional_profile_id.eq.${user.id},professional_archived_at.is.null)`);
+    if (filterDeleted) {
+      conversationsQuery = conversationsQuery
+        .or(`and(client_id.eq.${user.id},client_deleted_at.is.null),and(professional_profile_id.eq.${user.id},professional_deleted_at.is.null)`);
+    }
+    return conversationsQuery
+      .order("last_message_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(50);
+  };
+  let { data, error } = await buildConversationsQuery(true);
+  if (missingParticipantDeleteColumns(error)) {
+    ({ data, error } = await buildConversationsQuery(false));
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ conversations: await enrichConversations(db, (data ?? []) as ConversationRow[]) });
 }
@@ -161,11 +182,32 @@ export async function POST(req: Request) {
     const { data: existing } = await query.limit(1).maybeSingle();
     conversation = existing as ConversationRow | null;
     if (conversation && contextTitle && !resolvedBookingId && !resolvedProjectId) {
-      const { error: subjectError } = await db.from("direct_conversations")
-        .update({ subject: contextTitle, updated_at: new Date().toISOString() })
+      let { error: subjectError } = await db.from("direct_conversations")
+        .update({
+          subject: contextTitle,
+          client_deleted_at: null,
+          professional_deleted_at: null,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", conversation.id);
+      if (missingParticipantDeleteColumns(subjectError)) {
+        ({ error: subjectError } = await db.from("direct_conversations")
+          .update({ subject: contextTitle, updated_at: new Date().toISOString() })
+          .eq("id", conversation.id));
+      }
       if (subjectError) return NextResponse.json({ error: subjectError.message }, { status: 500 });
       conversation.subject = contextTitle;
+      conversation.client_deleted_at = null;
+      conversation.professional_deleted_at = null;
+    } else if (conversation) {
+      const { error: reopenDeletedError } = await db.from("direct_conversations")
+        .update({ client_deleted_at: null, professional_deleted_at: null, updated_at: new Date().toISOString() })
+        .eq("id", conversation.id);
+      if (reopenDeletedError && !missingParticipantDeleteColumns(reopenDeletedError)) {
+        return NextResponse.json({ error: reopenDeletedError.message }, { status: 500 });
+      }
+      conversation.client_deleted_at = null;
+      conversation.professional_deleted_at = null;
     }
     if (!conversation) {
       const { data: inserted, error } = await db.from("direct_conversations").insert({
@@ -209,6 +251,31 @@ export async function PATCH(req: Request) {
   const now = new Date().toISOString();
   const archiveField = conversation.client_id === user.id ? "client_archived_at" : "professional_archived_at";
   const { error } = await db.from("direct_conversations").update({ [archiveField]: archived ? now : null, updated_at: now }).eq("id", conversationId);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(req: Request) {
+  const user = await currentUser();
+  if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const body = await req.json().catch(() => ({}));
+  const conversationId = String(body.conversationId ?? "");
+  if (!conversationId) return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
+
+  const db = createAdminClient();
+  const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
+  const conversation = data as ConversationRow | null;
+  if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
+
+  const isClient = conversation.client_id === user.id;
+  const archiveField = isClient ? "client_archived_at" : "professional_archived_at";
+  const deleteField = isClient ? "client_deleted_at" : "professional_deleted_at";
+  if (!conversation[archiveField]) {
+    return NextResponse.json({ error: "Solo puedes eliminar conversaciones archivadas." }, { status: 409 });
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await db.from("direct_conversations").update({ [deleteField]: now, updated_at: now }).eq("id", conversationId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

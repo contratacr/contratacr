@@ -20,6 +20,7 @@ import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
 import { PanelSectionLoading } from "@/components/ui/content-loading";
+import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type Booking = {
   id: string;
@@ -471,16 +472,17 @@ export function BookingRequests() {
                       {t("archive")}
                     </Button>
                   )}
-                  <button
-                    type="button"
-                    aria-label={t("reportClient")}
-                    title={t("reportClient")}
-                    onClick={() => setReportFor(booking)}
-                    className="ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-md px-1.5 text-xs font-medium text-[#9ca3af] transition-colors hover:text-[#dc2626]"
-                  >
-                    <Flag className="h-3.5 w-3.5" />
-                    <span>{t("reportClient")}</span>
-                  </button>
+                  <AppTooltip label={t("reportClient")} className="ml-auto">
+                    <button
+                      type="button"
+                      aria-label={t("reportClient")}
+                      onClick={() => setReportFor(booking)}
+                      className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-md px-1.5 text-xs font-medium text-[#9ca3af] transition-colors hover:text-[#dc2626]"
+                    >
+                      <Flag className="h-3.5 w-3.5" />
+                      <span>{t("reportClient")}</span>
+                    </button>
+                  </AppTooltip>
                 </div>
               );
             })()}

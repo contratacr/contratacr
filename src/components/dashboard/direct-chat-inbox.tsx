@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Archive, ArchiveRestore, ArrowLeft, Loader2, MessageSquareMore, Search, Send } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Loader2, MessageSquareMore, Search, Send, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
+import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
@@ -45,14 +46,11 @@ function timeLabel(value?: string | null, locale = "es") {
 
 function ChatActionButton({ label, children, onClick, className }: { label: string; children: ReactNode; onClick: () => void; className?: string }) {
   return (
-    <span className="group relative inline-flex">
+    <AppTooltip label={label}>
       <button type="button" onClick={onClick} aria-label={label} className={className}>
         {children}
       </button>
-      <span className="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-20 max-w-[190px] rounded-lg bg-[#162543] px-2.5 py-1.5 text-center text-[11px] font-bold leading-tight text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100">
-        {label}
-      </span>
-    </span>
+    </AppTooltip>
   );
 }
 
@@ -229,7 +227,7 @@ export function DirectChatInbox() {
         setPendingDraftPayload(null);
         setDraft("");
         setActiveId(existingDraftConversation.id);
-        router.replace(`/dashboard/profesional?tab=chat&conversation=${existingDraftConversation.id}`, { scroll: false });
+        router.replace(`/mensajes?conversation=${existingDraftConversation.id}`, { scroll: false });
       } else {
         setActiveId((current) => current || (pendingDraft ? DRAFT_CONVERSATION_ID : rows[0]?.id || null));
       }
@@ -291,20 +289,21 @@ export function DirectChatInbox() {
     setMobileThread(false);
 
     const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", "chat");
+    params.delete("tab");
     if (nextArchived) params.set("chatStatus", "archived");
     else params.delete("chatStatus");
 
     if (nextConversationId) params.set("conversation", nextConversationId);
     else params.delete("conversation");
 
-    router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
+    const qs = params.toString();
+    router.replace(`/mensajes${qs ? `?${qs}` : ""}`, { scroll: false });
   }
 
   function selectConversation(id: string) {
     setActiveId(id); setMobileThread(true); setError("");
     if (id === DRAFT_CONVERSATION_ID) return;
-    router.replace(`/dashboard/profesional?tab=chat${showArchived ? "&chatStatus=archived" : ""}&conversation=${id}`, { scroll: false });
+    router.replace(`/mensajes${showArchived ? "?chatStatus=archived&" : "?"}conversation=${id}`, { scroll: false });
   }
 
   async function submit(e: FormEvent) {
@@ -331,7 +330,7 @@ export function DirectChatInbox() {
         setPendingDraft(null);
         setPendingDraftPayload(null);
         setActiveId(json.conversationId);
-        router.replace(`/dashboard/profesional?tab=chat&conversation=${json.conversationId}`, { scroll: false });
+        router.replace(`/mensajes?conversation=${json.conversationId}`, { scroll: false });
         await Promise.all([loadThread(json.conversationId, true), loadConversations(true)]);
       } else {
         await Promise.all([loadThread(activeId, true), loadConversations(true)]);
@@ -351,6 +350,21 @@ export function DirectChatInbox() {
     setConversations(remaining);
     setArchivedCount((count) => showArchived ? Math.max(0, count - 1) : count + 1);
     updateArchiveView(showArchived, nextId);
+  }
+
+  async function deleteArchivedActive() {
+    if (!activeId || !showArchived || activeId === DRAFT_CONVERSATION_ID) return;
+    const res = await fetch("/api/direct-chat", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId }) });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setError(json.error || (isEn ? "Could not delete the conversation." : "No se pudo eliminar la conversación."));
+      return;
+    }
+    const remaining = conversations.filter((item) => item.id !== activeId);
+    const nextId = remaining[0]?.id ?? null;
+    setConversations(remaining);
+    setArchivedCount((count) => Math.max(0, count - 1));
+    updateArchiveView(true, nextId);
   }
 
   function contextHref(item: Conversation) {
@@ -380,6 +394,7 @@ export function DirectChatInbox() {
   const activeContext = active ? contextFor(active) : null;
   const detailHref = active ? contextHref(active) : null;
   const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
+  const deleteLabel = isEn ? "Delete" : "Eliminar";
   const activePersonName = activePerson?.name || "";
   const activeContextTitle = activeContext?.title || "";
   const activeContextAction = active ? contextActionFor(active) : "";
@@ -442,6 +457,11 @@ export function DirectChatInbox() {
             )}
           </div>
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
+          {showArchived && (
+            <ChatActionButton label={deleteLabel} onClick={() => void deleteArchivedActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
+              <Trash2 className="h-4 w-4" />
+            </ChatActionButton>
+          )}
         </header>
         <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
           {threadLoading ? <div className="grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {

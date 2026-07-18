@@ -15,6 +15,7 @@ import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib
 import { getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, type ServiceLike } from "@/lib/services";
 import { useAppDialog } from "@/hooks/use-app-dialog";
+import { AppTooltip } from "@/components/ui/app-tooltip";
 
 // NEW per-profession model (sprint 493): a "caso de éxito" is a CASE (service done · for whom ·
 // when · up to 3 photos), and there can be up to 3 cases PER PROFESSION (the old overall limit of
@@ -228,8 +229,12 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                     {typeof c.likes === "number" && c.likes > 0 && <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3 text-[#374151]" /> {c.likes}</span>}
                   </div>
                   <div className="flex shrink-0 items-center gap-0.5">
-                    <button onClick={() => openEdit(c)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}><Pencil className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => deleteCase(c.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("remove")} aria-label={t("remove")}><Trash2 className="h-3.5 w-3.5" /></button>
+                    <AppTooltip label={t("edit")}>
+                      <button onClick={() => openEdit(c)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" aria-label={t("edit")}><Pencil className="h-3.5 w-3.5" /></button>
+                    </AppTooltip>
+                    <AppTooltip label={t("remove")}>
+                      <button onClick={() => deleteCase(c.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label={t("remove")}><Trash2 className="h-3.5 w-3.5" /></button>
+                    </AppTooltip>
                   </div>
                 </div>
               </div>

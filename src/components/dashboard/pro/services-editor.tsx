@@ -16,6 +16,7 @@ import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, TAX_INCLUDED_SUFFIX, formatServicePrice, splitPricingLabel, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { parseMoneyAmount } from "@/lib/money-limits";
+import { AppTooltip } from "@/components/ui/app-tooltip";
 
 export type ProService = {
   id: string;
@@ -389,22 +390,23 @@ export function ServicesEditor({
                       </p>
                     </div>
                     {/* Active/inactive toggle — FAR RIGHT (end of the header row). */}
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={isActive}
-                      onClick={() => toggleServiceActive(prof)}
-                      className="flex shrink-0 items-center gap-1.5"
-                      title={isActive ? t("svcActive") : t("svcInactive")}
-                      aria-label={isActive ? t("svcActive") : t("svcInactive")}
-                    >
-                      <span className={cn("relative h-4 w-7 rounded-full transition-colors", isActive ? "bg-[#009FD9]" : "bg-[#d1d5db]")}>
-                        <span className={cn("absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all", isActive ? "left-[14px]" : "left-0.5")} />
-                      </span>
-                      <span className={cn("hidden text-[11px] font-semibold sm:inline", isActive ? "text-[#16a34a]" : "text-[#9ca3af]")}>
-                        {isActive ? t("svcActive") : t("svcInactive")}
-                      </span>
-                    </button>
+                    <AppTooltip label={isActive ? t("svcActive") : t("svcInactive")}>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={isActive}
+                        onClick={() => toggleServiceActive(prof)}
+                        className="flex shrink-0 items-center gap-1.5"
+                        aria-label={isActive ? t("svcActive") : t("svcInactive")}
+                      >
+                        <span className={cn("relative h-4 w-7 rounded-full transition-colors", isActive ? "bg-[#009FD9]" : "bg-[#d1d5db]")}>
+                          <span className={cn("absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all", isActive ? "left-[14px]" : "left-0.5")} />
+                        </span>
+                        <span className={cn("hidden text-[11px] font-semibold sm:inline", isActive ? "text-[#16a34a]" : "text-[#9ca3af]")}>
+                          {isActive ? t("svcActive") : t("svcInactive")}
+                        </span>
+                      </button>
+                    </AppTooltip>
                   </div>
 
                   {/* Description group — calm supporting text (or a gentle prompt). */}
@@ -439,15 +441,16 @@ export function ServicesEditor({
                       <Pencil className="h-3.5 w-3.5" /> {t("editInfo")}
                     </button>
                     <div className="ml-auto flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => removeService(prof)}
-                        title={t("removeProfession")}
-                        aria-label={t("removeProfession")}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <AppTooltip label={t("removeProfession")}>
+                        <button
+                          type="button"
+                          onClick={() => removeService(prof)}
+                          aria-label={t("removeProfession")}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </AppTooltip>
                     </div>
                   </div>
                 </section>

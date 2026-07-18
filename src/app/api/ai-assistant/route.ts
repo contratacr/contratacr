@@ -583,7 +583,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
       return `/${locale}/dashboard/profesional?tab=proposals`;
     }
     if (includesAny(normalized, ["mensaje", "mensajes", "chat", "message", "messages"])) {
-      return `/${locale}/dashboard/profesional?tab=chat`;
+      return `/${locale}/mensajes`;
     }
     if (includesAny(normalized, ["correo de mi cuenta", "cambiar el correo", "cambio mi correo", "contrasena de mi cuenta", "cambiar mi contrasena", "cambio mi contrasena", "cerrar mi cuenta", "cuenta y seguridad", "account security", "change my email", "change my password", "close my account"])) {
       return `/${locale}/dashboard/profesional?tab=cuenta`;

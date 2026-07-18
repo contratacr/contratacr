@@ -33,7 +33,6 @@ import { AccountSecuritySection } from "@/components/account/account-security";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { SupportTickets } from "@/components/support/support-tickets";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
-import { DirectChatInbox } from "@/components/dashboard/direct-chat-inbox";
 import { AiConcierge } from "@/components/landing/ai-concierge";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
@@ -260,7 +259,6 @@ export default function DashboardPage() {
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const shouldCheckOpportunityWelcome = searchParams.get("welcomeOpportunities") === "1";
   const opportunityWelcomeParamCount = Math.max(0, Number.parseInt(searchParams.get("welcomeOpportunityCount") ?? "0", 10) || 0);
-  const searchParamsKey = searchParams.toString();
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<DashboardProfileData | null>(null);
@@ -283,7 +281,6 @@ export default function DashboardPage() {
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
-  const chatContentRef = useRef<HTMLDivElement>(null);
   const opportunityWelcomeCheckedRef = useRef(false);
   const opportunityWelcomeDismissedRef = useRef(false);
   const [noProTries, setNoProTries] = useState(0);
@@ -324,6 +321,14 @@ export default function DashboardPage() {
     params.set("focus", "verification");
     router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
   }, [legacyVerificationTab, searchParams, router]);
+
+  useEffect(() => {
+    if (requestedTab !== "chat") return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("tab");
+    const qs = params.toString();
+    router.replace(`/mensajes${qs ? `?${qs}` : ""}`, { scroll: false });
+  }, [requestedTab, searchParams, router]);
 
   // Suppress the login-redirect while signing out (from the navbar menu) → straight
   // to main, no /login flash. Logout lives only in the navbar profile menu now.
@@ -663,8 +668,7 @@ export default function DashboardPage() {
     // during the animated scroll); an instant window scroll never interferes with it.
     requestAnimationFrame(() => {
       const mobile = window.matchMedia("(max-width: 1023px)").matches;
-      if (tab === "chat") chatContentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
-      else if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
       else window.scrollTo({ top: 0, behavior: "auto" });
     });
   }
@@ -710,21 +714,6 @@ export default function DashboardPage() {
     if (mode !== "offer") setMode("offer");
     setTab("proposals");
   }
-
-  useEffect(() => {
-    if (activeTab !== "chat") return;
-    let secondFrame = 0;
-    const frame = window.requestAnimationFrame(() => {
-      chatContentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
-      secondFrame = window.requestAnimationFrame(() => {
-        chatContentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
-      });
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-      if (secondFrame) window.cancelAnimationFrame(secondFrame);
-    };
-  }, [activeTab, searchParamsKey]);
 
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro)) {
     return <DashboardRouteLoading />;
@@ -1194,13 +1183,7 @@ export default function DashboardPage() {
 
                 {/* Main content — min-w-0 so a long unbroken string inside a card can't
                     grow this flex column past the available width and break the page. */}
-                <div
-                  ref={(node) => {
-                    contentRef.current = node;
-                    if (activeTab === "chat") chatContentRef.current = node;
-                  }}
-                  className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0"
-                >
+                <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
                   <SaveStatusProvider>
                     <Card className={cn(
                       activeTab === "chat" && "overflow-hidden",
@@ -1400,7 +1383,6 @@ export default function DashboardPage() {
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
 
-                        {activeTab === "chat" && <DirectChatInbox />}
                         {activeTab === "assistant" && (
                           <div className="lg:hidden">
                             <AiConcierge embedded onBack={() => setTab(mode === "offer" ? "bookings" : "sent_bookings")} />

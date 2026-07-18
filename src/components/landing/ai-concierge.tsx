@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { cn, getInitials } from "@/lib/utils";
+import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type ResultCard = {
   id: string;
@@ -538,9 +539,19 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             <h2 className="whitespace-nowrap text-[15px] font-black text-[#102746] sm:text-lg">{copy.title}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {user && <button type="button" onClick={() => setShowHistory((current) => !current)} title={copy.history} aria-label={copy.history} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><History className="h-4 w-4 sm:h-5 sm:w-5" /></button>}
-            <button type="button" onClick={resetConversation} title={copy.reset} aria-label={copy.reset} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" /></button>
-            {!embedded && <button type="button" onClick={() => setOpen(false)} title={copy.minimize} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>}
+            {user && (
+              <AppTooltip label={copy.history}>
+                <button type="button" onClick={() => setShowHistory((current) => !current)} aria-label={copy.history} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><History className="h-4 w-4 sm:h-5 sm:w-5" /></button>
+              </AppTooltip>
+            )}
+            <AppTooltip label={copy.reset}>
+              <button type="button" onClick={resetConversation} aria-label={copy.reset} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" /></button>
+            </AppTooltip>
+            {!embedded && (
+              <AppTooltip label={copy.minimize}>
+                <button type="button" onClick={() => setOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>
+              </AppTooltip>
+            )}
           </div>
         </header>
 
@@ -555,9 +566,11 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                     <span className="block truncate text-sm font-bold text-[#162543]">{conversation.title}</span>
                     <span className="mt-1 block text-xs text-[#718096]">{messageTime(conversation.updated_at)}</span>
                   </button>
-                  <button type="button" disabled={deletingId === conversation.id} onClick={() => void deleteConversation(conversation.id)} aria-label={copy.deleteConversation} title={copy.deleteConversation} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#708095] hover:bg-[#fff1f1] hover:text-[#b42318] disabled:opacity-50">
-                    {deletingId === conversation.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                  </button>
+                  <AppTooltip label={copy.deleteConversation}>
+                    <button type="button" disabled={deletingId === conversation.id} onClick={() => void deleteConversation(conversation.id)} aria-label={copy.deleteConversation} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#708095] hover:bg-[#fff1f1] hover:text-[#b42318] disabled:opacity-50">
+                      {deletingId === conversation.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    </button>
+                  </AppTooltip>
                 </div>
               ))}
             </div>
