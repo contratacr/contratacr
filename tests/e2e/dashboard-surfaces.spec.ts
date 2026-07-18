@@ -57,12 +57,20 @@ test.describe("@seeded dashboard surfaces", () => {
       (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation = "active";
     });
 
+    if (isMobileProject(test.info())) {
+      await page.getByRole("button", { name: /Volver al panel|Back to panel/i }).click();
+    }
+
     const servicesTab = page.getByTestId("panel-tab-services").filter({ visible: true });
     await expect(servicesTab).toHaveCount(1);
     await servicesTab.click();
     await expect(page).toHaveURL(/tab=services/);
     await expectVisibleText(page.locator("main"), /Servicios|Services/i);
     expect(await page.evaluate(() => (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation)).toBe("active");
+
+    if (isMobileProject(test.info())) {
+      await page.getByRole("button", { name: /Volver al panel|Back to panel/i }).click();
+    }
 
     const availabilityTab = page.getByTestId("panel-tab-availability").filter({ visible: true });
     await expect(availabilityTab).toHaveCount(1);
@@ -81,7 +89,7 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(page.getByTestId("panel-tab-proposals").filter({ visible: true })).toHaveCount(1);
     await expect(page.getByTestId("panel-tab-chat").filter({ visible: true })).toHaveCount(0);
     await expect(page.getByTestId("panel-tab-notifications").filter({ visible: true })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /Asistente ContrataCR|Open ContrataCR assistant/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Abrir asistente de ContrataCR|Open ContrataCR assistant/i })).toBeVisible();
 
     if (isMobileProject(testInfo)) {
       await expect(page).not.toHaveURL(/tab=bookings/);

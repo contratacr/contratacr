@@ -80,7 +80,7 @@ test.describe("@seeded contextual direct chat", () => {
     await gotoOK(page, `/es/mensajes?conversation=${first.body.conversationId}`);
     await expect(page.getByText("E2E respuesta profesional").last()).toBeVisible();
     await expect(page.getByText(/Conversación desde un perfil|Profile conversation/i).last()).toBeVisible();
-    await expect(page.getByRole("button", { name: /Ver perfil|View profile/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Ver perfil|View profile/i })).toHaveCount(0);
 
     const archived = await apiJson(page, "/api/direct-chat", { method: "PATCH", body: { conversationId: first.body.conversationId, status: "archived" } });
     expect(archived.status).toBe(200);
