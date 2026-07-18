@@ -219,11 +219,10 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const dialogRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
-  useContainedTouchScroll(scrollRef, open || embedded, dialogRef);
+  useContainedTouchScroll(scrollRef, open || embedded);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -499,7 +498,6 @@ export function AiConcierge({ embedded = false, onClose }: { embedded?: boolean;
   return (
     <section
       data-ai-concierge-dialog
-      ref={dialogRef}
       role="dialog"
       aria-modal={embedded ? undefined : "true"}
       aria-label={copy.title}

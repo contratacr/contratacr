@@ -5,13 +5,11 @@ import { useEffect, type RefObject } from "react";
 export function useContainedTouchScroll(
   scrollRef: RefObject<HTMLElement | null>,
   enabled = true,
-  boundaryRef?: RefObject<HTMLElement | null>,
 ) {
   useEffect(() => {
     if (!enabled) return;
     const scrollElement = scrollRef.current;
-    const boundaryElement = boundaryRef?.current ?? scrollElement;
-    if (!scrollElement || !boundaryElement) return;
+    if (!scrollElement) return;
 
     let startY = 0;
 
@@ -45,12 +43,12 @@ export function useContainedTouchScroll(
       }
     };
 
-    boundaryElement.addEventListener("touchstart", onTouchStart, { passive: true });
-    boundaryElement.addEventListener("touchmove", onTouchMove, { passive: false });
+    document.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+    document.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
 
     return () => {
-      boundaryElement.removeEventListener("touchstart", onTouchStart);
-      boundaryElement.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchstart", onTouchStart, { capture: true });
+      document.removeEventListener("touchmove", onTouchMove, { capture: true });
     };
-  }, [boundaryRef, enabled, scrollRef]);
+  }, [enabled, scrollRef]);
 }
