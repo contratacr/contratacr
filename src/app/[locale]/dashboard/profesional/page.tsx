@@ -426,7 +426,7 @@ export default function DashboardPage() {
       setNoProTries((n) => n + 1);
     }
     if (!silent) setLoading(false);
-  }, [cacheDashboardBootstrap, user]);
+  }, [cacheDashboardBootstrap, setLoading, setNoProTries, setPro, setProLoadError, user]);
 
   const fetchProfile = useCallback(async () => {
     if (!user) return;
@@ -436,7 +436,7 @@ export default function DashboardPage() {
       setProfile(data);
       cacheDashboardBootstrap({ profile: data });
     }
-  }, [cacheDashboardBootstrap, user]);
+  }, [cacheDashboardBootstrap, setProfile, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -649,6 +649,20 @@ export default function DashboardPage() {
     };
   }, [authLoading, clearOpportunityWelcomeParam, loading, opportunityWelcomeParamCount, pro, shouldCheckOpportunityWelcome, user]);
 
+  function scrollDashboardToPageTop() {
+    const scrollTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    scrollTop();
+    requestAnimationFrame(() => {
+      scrollTop();
+      requestAnimationFrame(scrollTop);
+    });
+  }
+
   function setTab(tab: Tab) {
     setMobilePanelOpen(false);
     if (tab === "verificacion") {
@@ -666,22 +680,14 @@ export default function DashboardPage() {
     // Reset to the top of the new section INSTANTLY via the window. A smooth scrollIntoView
     // fought the fixed mobile bottom bar (its backdrop-blur made "Más" flicker / feel covered
     // during the animated scroll); an instant window scroll never interferes with it.
-    requestAnimationFrame(() => {
-      const mobile = window.matchMedia("(max-width: 1023px)").matches;
-      if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
-      else window.scrollTo({ top: 0, behavior: "auto" });
-    });
+    scrollDashboardToPageTop();
   }
 
   function openProfileVerification() {
     if (isProvider && mode !== "offer") setMode("offer");
     setProfileFocus({ field: "verification", key: nextFocusKey() });
     window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
-    requestAnimationFrame(() => {
-      const mobile = window.matchMedia("(max-width: 1023px)").matches;
-      if (mobile) contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
-      else window.scrollTo({ top: 0, behavior: "auto" });
-    });
+    scrollDashboardToPageTop();
   }
 
   // The mode switch now lives in the panel header (sprint 518). Switching flips the global
@@ -979,7 +985,7 @@ export default function DashboardPage() {
         onClick={() => {
           if (tab === "home") {
             setMobilePanelOpen(true);
-            requestAnimationFrame(() => contentRef.current?.scrollIntoView({ block: "start", behavior: "auto" }));
+            scrollDashboardToPageTop();
             return;
           }
           setTab(tab);
