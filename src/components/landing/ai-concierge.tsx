@@ -460,11 +460,15 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     try {
       const response = await fetch(`/api/ai-assistant/history?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!response.ok) throw new Error("delete_failed");
-      setSavedConversations((current) => current.filter((conversation) => conversation.id !== id));
-      if (conversationId === id) resetConversation();
+      setSavedConversations((current) => {
+        const next = current.filter((conversation) => conversation.id !== id);
+        if (conversationId === id && next.length === 0) resetConversation();
+        else if (conversationId === id) setShowHistory(true);
+        return next;
+      });
     } catch {
       setMessages((current) => [...current, { role: "assistant", body: copy.error, createdAt: new Date().toISOString() }]);
-      setShowHistory(false);
+      setShowHistory(true);
     } finally {
       setDeletingId(null);
     }

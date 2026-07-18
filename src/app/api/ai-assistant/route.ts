@@ -220,6 +220,10 @@ function resolveAssistantCategory(
   modelServiceId: string | null | undefined,
   labels: Map<string, string>,
 ) {
+  const rawPlace = resolveLocationIntent(rawMessage);
+  const pendingServiceFromAssistant = rawPlace ? latestClarificationService(history, locale) : null;
+  if (pendingServiceFromAssistant) return { id: pendingServiceFromAssistant.id, needsClarification: false };
+
   const historyTexts = history.slice().reverse().map((item) => item.content);
   const strong = strongCategoryMention([rawMessage, ...historyTexts], locale);
   if (strong) return { id: strong, needsClarification: false };
@@ -227,7 +231,7 @@ function resolveAssistantCategory(
   const confident = confidentCategoryMatch(rawMessage, locale);
   if (confident) return { id: confident, needsClarification: false };
 
-  if (modelServiceId && labels.has(modelServiceId) && resolveLocationIntent(rawMessage)) {
+  if (modelServiceId && labels.has(modelServiceId) && rawPlace) {
     return { id: modelServiceId, needsClarification: false };
   }
 
