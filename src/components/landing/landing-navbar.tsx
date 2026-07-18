@@ -1281,7 +1281,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               </Link>
               {user ? (
                 <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  {locale === "en" ? "My account" : "Mi cuenta"}
+                  {locale === "en" ? "My dashboard" : "Mi panel"}
                 </Link>
               ) : (
                 <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
