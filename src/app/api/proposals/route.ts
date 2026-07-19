@@ -5,6 +5,7 @@ import { parseMoneyAmount } from "@/lib/money-limits";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
+import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 
 export async function POST(req: NextRequest) {
   try {
@@ -87,6 +88,17 @@ export async function POST(req: NextRequest) {
         price: parseMoneyAmount(price),
         message: safeMessage,
         status: "pending",
+      },
+    });
+
+    await recordServerInteraction(admin, req, {
+      type: "proposal_sent",
+      professionalId: pro.id,
+      viewerUserId: session.user.id,
+      source: "project",
+      metadata: {
+        project_id: projectId,
+        proposal_id: data.id,
       },
     });
 
@@ -382,6 +394,16 @@ export async function PATCH(req: NextRequest) {
               title: "¡Tu propuesta fue aceptada!",
               message: `El cliente aceptó tu propuesta para "${title}". Coordina el trabajo y márcalo como realizado al terminar.`,
               data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
+            });
+            await recordServerInteraction(admin, req, {
+              type: "proposal_accepted",
+              professionalId: prop.professional_id,
+              viewerUserId: session.user.id,
+              source: "project",
+              metadata: {
+                project_id: prop.project_id,
+                proposal_id: id,
+              },
             });
           }
         }

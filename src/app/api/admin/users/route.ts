@@ -243,7 +243,9 @@ export async function GET(req: Request) {
         profile_service: "Servicio del perfil",
         profile_social: "Redes del perfil",
         booking: "Solicitud",
+        project: "Publicacion",
         favorites: "Guardados",
+        api: "Guardado en backend",
         whatsapp_followup: "WhatsApp histórico",
         unknown: "Sin origen",
       };
@@ -256,6 +258,10 @@ export async function GET(req: Request) {
         availabilityActions: countType(["availability_view", "schedule_slot_selected"]),
         favorites: countType(["favorite_add"]),
         serviceRequestsStarted: countType(["service_request_started"]),
+        serviceRequestsCreated: countType(["service_request_created"]),
+        proposalsSent: countType(["proposal_sent"]),
+        proposalsAccepted: countType(["proposal_accepted"]),
+        reviewsReceived: countType(["review_created"]),
         shares: countType(["profile_share"]),
         lastInteractionAt: interactions[0]?.created_at ?? null,
         bySource: [...sourceCounts.entries()]

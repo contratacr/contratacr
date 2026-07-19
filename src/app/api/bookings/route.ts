@@ -9,6 +9,7 @@ import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
+import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 
 // Lazy auto-confirm: a booking the pro marked "trabajo realizado" auto-completes
 // after AUTO_CONFIRM_DAYS if the client never confirmed. Best-effort.
@@ -234,6 +235,18 @@ export async function POST(req: NextRequest) {
         status: "confirmed",
       },
       metadata: { slot_location_id: slotLocationId ?? null, category_id: categoryId ?? null },
+    });
+
+    await recordServerInteraction(adminInsert, req, {
+      type: "service_request_created",
+      professionalId,
+      viewerUserId: session?.user?.id ?? null,
+      source: "booking",
+      categoryId: categoryId ?? null,
+      metadata: {
+        booking_id: data.id,
+        scheduled: Boolean(scheduledDate && scheduledTime),
+      },
     });
 
     // Notify the professional (in-app + optional WhatsApp). Best-effort.

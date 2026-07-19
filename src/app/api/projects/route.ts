@@ -12,6 +12,7 @@ import { isMinorFromDob } from "@/lib/age";
 import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
+import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -250,6 +251,17 @@ export async function POST(req: NextRequest) {
         status: "open",
       },
       metadata: { client_identity_status: clientIdentityStatus },
+    });
+
+    await recordServerInteraction(admin, req, {
+      type: "project_published",
+      viewerUserId: uid,
+      source: "project",
+      categoryId: categoryId ?? null,
+      metadata: {
+        project_id: projectId,
+        has_location: Boolean(provinciaId),
+      },
     });
 
     // Notify every professional whose profession matches the project category.
