@@ -844,7 +844,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               )}
 
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                <LanguageMenu />
                 {user && <NotificationBell scope="all" />}
                 <Link
                   href={user ? primaryPanelHref : loginHref}
