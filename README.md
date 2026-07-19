@@ -1,5 +1,19 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Branches and Worktrees
+
+Use `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-main` for production-ready work on `main`.
+
+Use `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-test` for test-environment work on `test`.
+
+These local branches are parked and must not be pushed or merged unless Isaac explicitly decides otherwise:
+
+- `local/capacitor-no-push` - Android/Capacitor mobile app work.
+- `local/direct-messages-no-push` - in-app direct messages/chat work.
+- `local/pro-suite-no-push` - Pro suite work: facturacion, cotizaciones, inventario and clientes.
+
+Before pushing, confirm `git status --short --branch` shows `main` or `test`, and confirm migrations are current. The current production baseline includes `supabase/migrations/139_interaction_analytics_saved_actions.sql`.
+
 ## Getting Started
 
 First, run the development server:
