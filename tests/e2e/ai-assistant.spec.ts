@@ -129,6 +129,10 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       ["necesito revisar un contrato", "legal"],
       ["necesito pasar un documento a ingles", "traduccion"],
       ["quiero aprender ingles", "idiomas"],
+      ["necesito un airbnb", "alquiler_vacacional"],
+      ["necesito un aribnb", "alquiler_vacacional"],
+      ["busco hospedaje para vacaciones", "alquiler_vacacional"],
+      ["quiero una renta vacacional", "alquiler_vacacional"],
       ["veo borroso y necesito revisar la vista", "optometria"],
       ["necesito comprar lentes graduados", "optica_lentes"],
       ["quiero video de la boda", "videografia"],
@@ -330,6 +334,7 @@ test.describe("@seeded ContrataCR AI", () => {
     const naturalProblems = [
       ["Se me reventó una tubería", "plomeria"],
       ["Necesito traducir un contrato al inglés", "traduccion"],
+      ["Necesito un aribnb", "alquiler_vacacional"],
       ["Mi laptop no enciende", "reparacion_computadoras"],
       ["Quiero que bañen y le corten el pelo a mi perro", "peluqueria_canina"],
       ["Ocupo ayuda para declarar el IVA", "asesoria_tributaria"],

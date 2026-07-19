@@ -1319,6 +1319,23 @@ export async function POST(req: Request) {
       ? { id: payload.serviceId!, needsClarification: false }
       : resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
     const missingServiceName = !resolvedCategory.id ? clearMissingServiceName(rawMessage) : null;
+    if (payload.action === "suggest_service" && resolvedCategory.id && !explicitPublishIntent) {
+      const serviceLabel = catalog.labels.get(resolvedCategory.id) || getCategoryLabel(resolvedCategory.id, locale);
+      const placeLabel = formatPlaceLabel(resolveLocationIntent(rawMessage) ?? resolveLocationIntent(payload.locationText || ""));
+      payload.action = placeLabel ? "search_professionals" : "answer";
+      payload.answer = placeLabel
+        ? locale === "en"
+          ? `I found professionals for ${serviceLabel} in ${placeLabel}.`
+          : `Encontré profesionales de ${serviceLabel} en ${placeLabel}.`
+        : locale === "en"
+          ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
+          : `¿En qué zona de Costa Rica desea buscar ${serviceLabel}?`;
+      payload.searchQuery = serviceLabel;
+      payload.serviceId = resolvedCategory.id;
+      payload.locationText = placeLabel;
+      payload.ctaLabel = null;
+      payload.confidence = 0.9;
+    }
     if (missingServiceName && !explicitPublishIntent) {
       payload.action = "suggest_service";
       payload.answer = locale === "en"

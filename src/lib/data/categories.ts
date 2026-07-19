@@ -297,7 +297,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "agencia_viajes", label: "Agencia de viajes", keywords: ["viajes", "paquetes turisticos", "boletos", "vacaciones", "tour"] },
       { id: "guia_turistico", label: "Guía turístico", keywords: ["guia turistico", "guia local", "tour guide", "excursiones", "recorridos"] },
       { id: "operador_turistico", label: "Operador turístico", keywords: ["operador de tours", "tours", "excursiones", "turismo aventura", "paquetes"] },
-      { id: "alquiler_vacacional", label: "Alquiler vacacional", keywords: ["casa de vacaciones", "cabina", "villa", "hospedaje vacacional", "airbnb"] },
+      { id: "alquiler_vacacional", label: "Alquiler vacacional", keywords: ["casa de vacaciones", "cabina", "villa", "hospedaje vacacional", "airbnb", "air bnb", "aribnb", "arbnb", "alojamiento", "hospedaje", "renta vacacional"] },
     ],
   },
   {
@@ -891,6 +891,42 @@ export function searchTextScore(term: string, query: string, exact: number, star
   return 0;
 }
 
+function damerauLevenshteinDistance(a: string, b: string): number {
+  const rows = a.length + 1;
+  const cols = b.length + 1;
+  const matrix = Array.from({ length: rows }, () => Array<number>(cols).fill(0));
+  for (let i = 0; i < rows; i += 1) matrix[i][0] = i;
+  for (let j = 0; j < cols; j += 1) matrix[0][j] = j;
+
+  for (let i = 1; i < rows; i += 1) {
+    for (let j = 1; j < cols; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost,
+      );
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        matrix[i][j] = Math.min(matrix[i][j], matrix[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return matrix[a.length][b.length];
+}
+
+function searchTypoScore(term: string, query: string, score: number): number {
+  const queryWords = normalizeText(query).split(/[^a-z0-9]+/).filter((word) => word.length >= 5);
+  if (queryWords.length !== 1) return 0;
+  const termWords = normalizeText(term).split(/[^a-z0-9]+/).filter((word) => word.length >= 5);
+  const queryWord = queryWords[0];
+  return termWords.some((word) => {
+    const lengthGap = Math.abs(word.length - queryWord.length);
+    if (lengthGap > 2) return false;
+    const maxDistance = Math.min(word.length, queryWord.length) >= 7 ? 2 : 1;
+    return damerauLevenshteinDistance(word, queryWord) <= maxDistance;
+  }) ? score : 0;
+}
+
 const SEARCH_WORD_SUFFIX_GROUPS = [
   ["eria", "ero", "era", "eros", "eras"],
   ["aria", "ario", "arias", "arios"],
@@ -948,10 +984,12 @@ export function categorySearchScore(
   const serviceScore = Math.max(0, ...serviceLabels.map((term) => Math.max(
     searchTextScore(term, q, 120, 90, 55),
     searchMorphologyScore(term, q, 82),
+    searchTypoScore(term, q, 76),
   )));
   const keywordScore = Math.max(0, ...item.keywords.map((term) => Math.max(
     searchTextScore(term, q, 110, 45, 28),
     searchMorphologyScore(term, q, 68),
+    searchTypoScore(term, q, 72),
   )));
   const groupScore = Math.max(0, ...groupLabels.map((term) => searchTextScore(term, q, 38, 28, 18)));
   return Math.max(serviceScore, keywordScore, groupScore);
