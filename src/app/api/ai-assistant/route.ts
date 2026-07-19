@@ -256,6 +256,9 @@ function naturalCatalogOverride(text: string, labels: Map<string, string>) {
   if (has("tubo", "tuberia", "fuga de agua", "caneria", "inodoro", "lavamanos")) {
     return availableCategoryId(labels, ["plomeria"], ["plomeria"]);
   }
+  if (has("mantenimiento de aire", "aire acondicionado", "mini split", "minisplit")) {
+    return availableCategoryId(labels, ["aire_acondicionado"], ["aire acondicionado"]);
+  }
   if (
     has("lavadora", "secadora", "refrigeradora", "nevera", "cocina", "horno", "microondas", "lavaplatos") &&
     has("reparar", "arreglar", "no funciona", "no enciende", "dejo de funcionar")
@@ -388,6 +391,49 @@ function genericUnclearRequest(text: string) {
   ]);
 }
 
+const AMBIGUOUS_SERVICE_WORDS = new Set([
+  "ayuda",
+  "asesoria",
+  "mantenimiento",
+  "reparacion",
+  "reparar",
+  "arreglar",
+  "soporte",
+  "tecnico",
+]);
+
+const AMBIGUOUS_INTENT_WORDS = new Set([
+  "necesito",
+  "ocupo",
+  "quiero",
+  "busco",
+  "buscar",
+  "un",
+  "una",
+  "uno",
+  "de",
+  "del",
+  "para",
+  "con",
+  "en",
+  "por",
+  "favor",
+  "servicio",
+  "servicios",
+  "profesional",
+]);
+
+function ambiguousGenericServiceRequest(text: string) {
+  const normalized = normalizedPhrase(text);
+  if (AMBIGUOUS_SERVICE_WORDS.has(normalized)) return true;
+  const words = normalized.split(" ").filter(Boolean);
+  if (words.length === 0) return false;
+  const meaningfulWords = words.filter((word) => !AMBIGUOUS_INTENT_WORDS.has(word));
+  if (meaningfulWords.length === 0) return false;
+  if (!meaningfulWords.every((word) => AMBIGUOUS_SERVICE_WORDS.has(word))) return false;
+  return words.some((word) => AMBIGUOUS_SERVICE_WORDS.has(word));
+}
+
 function clearMissingServiceName(text: string) {
   const normalized = normalizeText(text);
   if (includesAny(normalized, ["parabrisas", "vidrio del carro", "vidrio de carro"])) return "Parabrisas";
@@ -432,10 +478,11 @@ function confidentCategoryMatch(text: string, locale: Locale) {
 }
 
 function categoryClarification(text: string, locale: Locale, labels: Map<string, string>) {
-  const options = searchCategories(text, locale)
+  const tailored = ambiguousClarificationOptions(text, labels);
+  const options = (tailored.length > 0 ? tailored : searchCategories(text, locale)
     .slice(0, 3)
     .map((item) => labels.get(item.id) || getCategoryLabel(item.id, locale))
-    .filter(Boolean);
+    .filter(Boolean));
   if (options.length === 0) {
     return locale === "en"
       ? "Which service do you need? Please write the service name so I can search correctly."
@@ -447,6 +494,28 @@ function categoryClarification(text: string, locale: Locale, labels: Map<string,
     : `Para buscar correctamente, ¿se refiere a ${formatted}?`;
 }
 
+function ambiguousClarificationOptions(text: string, labels: Map<string, string>) {
+  if (!ambiguousGenericServiceRequest(text)) return [];
+  const normalized = normalizedPhrase(text);
+  const pick = (ids: string[]) => ids
+    .map((id) => labels.get(id))
+    .filter((label): label is string => Boolean(label));
+
+  if (normalized.includes("soporte") || normalized.includes("tecnico")) {
+    return pick(["soporte_tecnico", "reparacion_computadoras", "redes_internet"]);
+  }
+  if (normalized.includes("reparacion") || normalized.includes("reparar") || normalized.includes("arreglar")) {
+    return pick(["reparacion_computadoras", "reparacion_celulares", "reparacion_electrodomesticos"]);
+  }
+  if (normalized.includes("mantenimiento")) {
+    return pick(["aire_acondicionado", "jardineria", "limpieza_piscinas"]);
+  }
+  if (normalized.includes("asesoria") || normalized.includes("ayuda")) {
+    return pick(["asesoria_tributaria", "asesoria_financiera", "consultoria"]);
+  }
+  return [];
+}
+
 function resolveAssistantCategory(
   rawMessage: string,
   history: HistoryMessage[],
@@ -454,6 +523,8 @@ function resolveAssistantCategory(
   modelServiceId: string | null | undefined,
   labels: Map<string, string>,
 ) {
+  if (ambiguousGenericServiceRequest(rawMessage)) return { id: null, needsClarification: true };
+
   const rawPlace = resolveLocationIntent(rawMessage);
   const pendingServiceFromAssistant = rawPlace ? latestClarificationService(history, locale, labels) : null;
   if (pendingServiceFromAssistant) return { id: pendingServiceFromAssistant.id, needsClarification: false };
@@ -1314,7 +1385,8 @@ export async function POST(req: Request) {
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
     const payload = safetyPayload ?? normalizePayload(aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history, catalog.labels);
-    const hasValidResolvedService = !!payload.serviceId && catalog.labels.has(payload.serviceId);
+    const needsGenericClarification = ambiguousGenericServiceRequest(rawMessage);
+    const hasValidResolvedService = !needsGenericClarification && !!payload.serviceId && catalog.labels.has(payload.serviceId);
     const resolvedCategory = hasValidResolvedService
       ? { id: payload.serviceId!, needsClarification: false }
       : resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
@@ -1335,6 +1407,14 @@ export async function POST(req: Request) {
       payload.locationText = placeLabel;
       payload.ctaLabel = null;
       payload.confidence = 0.9;
+    }
+    if (needsGenericClarification && !explicitPublishIntent) {
+      payload.action = "answer";
+      payload.answer = categoryClarification(rawMessage, locale, catalog.labels);
+      payload.searchQuery = null;
+      payload.serviceId = null;
+      payload.locationText = null;
+      payload.ctaLabel = null;
     }
     if (missingServiceName && !explicitPublishIntent) {
       payload.action = "suggest_service";

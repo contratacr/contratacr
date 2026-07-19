@@ -96,6 +96,20 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
     }
   });
 
+  test("asks before guessing when the service word is too generic", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const genericRequests = ["soporte", "mantenimiento", "reparacion", "asesoria"];
+
+    for (const prompt of genericRequests) {
+      const response = await ask(page, prompt);
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
+      expect(response.body.action, prompt).toBe("answer");
+      expect(response.body.searchHref ?? null, prompt).toBeNull();
+      expect(response.body.ctaLabel ?? null, prompt).toBeNull();
+      expect(response.body.answer, prompt).toMatch(/se refiere|servicio/i);
+    }
+  });
+
   test("does not turn emergencies or unsafe requests into service searches", async ({ page }) => {
     await gotoOK(page, "/es");
     const cases = [
@@ -146,6 +160,9 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       ["quiero pulir el carro", "detailing"],
       ["el carro quedo botado", "grua"],
       ["la compu no conecta", "soporte_tecnico"],
+      ["soporte de computadoras", "soporte_tecnico"],
+      ["mantenimiento de aire", "aire_acondicionado"],
+      ["asesoria tributaria", "asesoria_tributaria"],
       ["necesito un profesional en redes en Alajuela", "redes_internet"],
       ["I need a network specialist in Alajuela", "redes_internet"],
       ["necesito ayuda con redes sociales", "marketing_digital"],
