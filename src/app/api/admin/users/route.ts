@@ -218,15 +218,51 @@ export async function GET(req: Request) {
     let verificationLog: unknown[] = [];
     let appeals: unknown[] = [];
     let reports: unknown[] = [];
+    let analytics: Record<string, unknown> | null = null;
     if (professional) {
-      const [log, ap, rep] = await Promise.all([
+      const [log, ap, rep, interactionResult] = await Promise.all([
         db.from("provider_verification_log").select("*").eq("professional_id", professional.id).order("created_at", { ascending: false }),
         db.from("provider_appeals").select("*").eq("professional_id", professional.id).order("created_at", { ascending: false }),
         db.from("reports").select("id, reason, status, reporter_email, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }),
+        db.from("interaction_events").select("event_type, visitor_hash, source, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }).limit(10000),
       ]);
       verificationLog = log.data ?? [];
       appeals = ap.data ?? [];
       reports = rep.data ?? [];
+
+      const interactions = interactionResult.data ?? [];
+      const countType = (types: string[]) => interactions.filter((event) => types.includes(String(event.event_type))).length;
+      const sourceCounts = new Map<string, number>();
+      for (const event of interactions) {
+        const source = String(event.source || "unknown");
+        sourceCounts.set(source, (sourceCounts.get(source) ?? 0) + 1);
+      }
+      const sourceLabels: Record<string, string> = {
+        search: "Buscar",
+        profile: "Perfil",
+        profile_service: "Servicio del perfil",
+        profile_social: "Redes del perfil",
+        booking: "Solicitud",
+        favorites: "Guardados",
+        whatsapp_followup: "WhatsApp histórico",
+        unknown: "Sin origen",
+      };
+      analytics = {
+        total: interactions.length,
+        uniqueVisitors: new Set(interactions.map((event) => event.visitor_hash).filter(Boolean)).size,
+        profileViews: countType(["profile_view"]),
+        whatsappClicks: countType(["whatsapp_click"]),
+        phoneClicks: countType(["phone_click"]),
+        availabilityActions: countType(["availability_view", "schedule_slot_selected"]),
+        favorites: countType(["favorite_add"]),
+        serviceRequestsStarted: countType(["service_request_started"]),
+        shares: countType(["profile_share"]),
+        lastInteractionAt: interactions[0]?.created_at ?? null,
+        bySource: [...sourceCounts.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
+          .map(([source, value]) => ({ label: sourceLabels[source] ?? source, value })),
+      };
     }
 
     return NextResponse.json({
@@ -239,6 +275,7 @@ export async function GET(req: Request) {
       verificationLog,
       appeals,
       reports,
+      analytics,
     });
   }
 

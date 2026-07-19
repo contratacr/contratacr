@@ -11,7 +11,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 //  • verificacion  — account identity awaiting review: professionals pending/appeal
 //                    plus client-only profiles with client_identity_status=pending.
 //  • reportes      — open moderation reports.
-//  • suscripciones — manual SINPE/transfer payments awaiting approval.
 //  • categorias    — user-suggested categories awaiting review ("¿No ves tu categoría?").
 //  • soporte       — open tickets + in_progress ones whose last reply was the USER's
 //                    (same "needsAttention" definition the Soporte view uses).
@@ -37,7 +36,6 @@ export async function GET() {
   return NextResponse.json({
     verificacion: (verificacionPros.count ?? 0) + clientOnlyPending,
     reportes: reportes.count ?? 0,
-    suscripciones: 0,
     categorias: categorias.count ?? 0,
     soporte: (supportOpen.count ?? 0) + (supportAwaiting.count ?? 0),
   });

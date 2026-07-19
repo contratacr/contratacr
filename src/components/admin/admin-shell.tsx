@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShieldCheck, LogOut, Flag, Shield, Tag, Headset, Users, CreditCard, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList } from "lucide-react";
+import { ShieldCheck, LogOut, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
   | "resumen" | "verificacion" | "usuarios" | "solicitudes" | "publicaciones" | "reportes" | "aseguradoras"
-  | "categorias" | "cuentas" | "suscripciones" | "soporte" | "analitica" | "actividad";
+  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad";
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
 // scroll strip on small screens). "Resumen" is the home/overview; the other
@@ -25,7 +25,7 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   // Pending-count badges for EVERY section with an actionable queue (not just
-  // Soporte) — verificación, reportes, suscripciones, soporte — from ONE polled
+  // Soporte) — verificación, reportes, soporte — from ONE polled
   // endpoint so the counts stay accurate and consistent. Polled + refreshed on
   // window focus so resolving an item updates its badge.
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -76,7 +76,6 @@ export function AdminShell({
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },
-    { id: "suscripciones", label: "Suscripciones", icon: CreditCard, href: "/admin/suscripciones", badge: counts.suscripciones ?? 0 },
     { id: "soporte", label: "Soporte", icon: Headset, href: "/admin/soporte", badge: counts.soporte ?? 0 },
     { id: "analitica", label: "Analítica", icon: BarChart3, href: "/admin/analitica", badge: 0 },
     { id: "actividad", label: "Actividad", icon: Activity, href: "/admin/actividad", badge: 0 },
@@ -126,7 +125,7 @@ export function AdminShell({
           {[
             { label: "Principal", ids: ["resumen", "usuarios"] },
             { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "reportes", "soporte"] },
-            { label: "Gestión", ids: ["categorias", "aseguradoras", "suscripciones"] },
+            { label: "Gestión", ids: ["categorias", "aseguradoras"] },
             { label: "Información", ids: ["analitica", "actividad"] },
           ].map((group, index) => (
             <div key={group.label} className={index === 0 ? "" : "mt-4 border-t border-white/10 pt-3"}>

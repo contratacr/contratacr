@@ -7,7 +7,7 @@ import { getAdminReports } from "@/lib/admin/reports";
 export const dynamic = "force-dynamic";
 
 // Comprehensive admin analytics — users, professionals, marketplace activity,
-// subscriptions/payments and support. Admin-only.
+// interactions and support. Admin-only.
 export default async function AdminAnaliticaPage() {
   const admin = await getAdminUser();
   if (!admin) return <AdminLogin />;
