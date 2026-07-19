@@ -11,6 +11,7 @@ import { SelfActionModal, SELF_MSG } from "./self-action-modal";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 import { Skeleton } from "@/components/ui/content-loading";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
@@ -523,6 +524,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       source: stacked ? "profile_schedule_slot" : "search_schedule_slot",
       has_selected_time: true,
     });
+    trackInteraction({
+      type: "schedule_slot_selected",
+      professionalId: professional.id,
+      source: stacked ? "profile" : "search",
+      locale,
+      categoryId: slot.categoryId ?? activeCategory ?? null,
+    });
     setPreset(slot);
     if (user) setShowBooking(true);
     else setShowRegistration(true);
@@ -534,6 +542,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       content_type: "professional_service",
       source: stacked ? "profile_schedule" : "search_schedule",
       has_selected_time: false,
+    });
+    trackInteraction({
+      type: "availability_view",
+      professionalId: professional.id,
+      source: stacked ? "profile" : "search",
+      locale,
+      categoryId: activeCategory ?? null,
     });
     setPreset(null);
     if (user) setShowBooking(true);
@@ -645,6 +660,14 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       method,
       source: stacked ? "profile" : "search",
     });
+    trackInteraction({
+      type: method === "phone" ? "phone_click" : "external_link_click",
+      professionalId: professional.id,
+      source: stacked ? "profile" : "search",
+      locale,
+      categoryId: activeCategory ?? null,
+      metadata: method === "email" ? { channel: "email" } : undefined,
+    });
   }
 
   const renderCall = (secondary: boolean) => (
@@ -665,7 +688,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const searchMessageButtonClass = `${messageButtonClass} bg-[#009FD9] hover:bg-[#0089bb] focus-visible:ring-[#009FD9]`;
   const contactButtons = (
     <>
-      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} className={searchMessageButtonClass} />
+      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} />
       {/* No-schedule state: filled on /buscar, outlined on the profile contact card. */}
       {showCall && renderCall(true)}
       {showEmail && (
@@ -687,6 +710,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         professionalName={professional.fullName}
         isOwn={isOwn}
         onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
+        analyticsSource="profile"
         tone={hasSchedule ? "contrast" : "primary"}
         className={messageButtonClass}
       />

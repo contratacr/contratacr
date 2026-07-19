@@ -9,6 +9,19 @@ import { getCategoryLabel } from "@/lib/data/categories";
 export type Count = { label: string; value: number };
 export type RegPoint = { date: string; pros: number; clients: number };
 export type ActPoint = { date: string; solicitudes: number; proyectos: number };
+export type InteractionPoint = { date: string; total: number };
+export type ProfessionalInteraction = {
+  professionalId: string;
+  slug: string;
+  professionalName: string;
+  total: number;
+  profileViews: number;
+  whatsappClicks: number;
+  phoneClicks: number;
+  availabilityActions: number;
+  favorites: number;
+  uniqueVisitors: number;
+};
 
 export type AdminReports = {
   users: { total: number; clients: number; pros: number; verifiedPros: number; activeClients: number; reg30: RegPoint[] };
@@ -16,6 +29,7 @@ export type AdminReports = {
   activity: { solicitudesTotal: number; solicitudesByStatus: Count[]; solicitudesResponded: number; proyectosTotal: number; proyectosByStatus: Count[]; topCategories: Count[]; series30: ActPoint[] };
   subs: { total: number; active: number; expired: number; byPlan: Count[]; byStatus: Count[]; byCycle: Count[]; byMethod: Count[]; revenueTotal: number; revenueByMethod: Count[]; pendingPayments: number; hasData: boolean };
   support: { total: number; byStatus: Count[]; series30: { date: string; tickets: number }[] };
+  interactions: { total: number; uniqueVisitors: number; byType: Count[]; series30: InteractionPoint[]; professionals: ProfessionalInteraction[] };
 };
 
 const DAY = 86400000;
@@ -49,6 +63,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     activity: { solicitudesTotal: 0, solicitudesByStatus: [], solicitudesResponded: 0, proyectosTotal: 0, proyectosByStatus: [], topCategories: [], series30: days30.map((d) => ({ date: d, solicitudes: 0, proyectos: 0 })) },
     subs: { total: 0, active: 0, expired: 0, byPlan: [], byStatus: [], byCycle: [], byMethod: [], revenueTotal: 0, revenueByMethod: [], pendingPayments: 0, hasData: false },
     support: { total: 0, byStatus: [], series30: days30.map((d) => ({ date: d, tickets: 0 })) },
+    interactions: { total: 0, uniqueVisitors: 0, byType: [], series30: days30.map((d) => ({ date: d, total: 0 })), professionals: [] },
   };
 
   // ── Users + professionals + clients ──
@@ -166,6 +181,55 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const tBucket = bucketByDay(tRows.map((t) => t.created_at as string), days30);
     empty.support.series30 = days30.map((d) => ({ date: d, tickets: tBucket[d] }));
   } catch (e) { console.error("[reports] support", e); }
+
+  // First-party interaction analytics. Totals and per-professional values are
+  // all-time; the compact trend remains limited to the last 30 days.
+  try {
+    const since = new Date(now - 29 * DAY);
+    since.setHours(0, 0, 0, 0);
+    const { data, error } = await admin.rpc("get_admin_interaction_analytics", { p_since: since.toISOString() });
+    if (error) throw error;
+    const payload = (data ?? {}) as Record<string, unknown>;
+    const typeLabels: Record<string, string> = {
+      profile_view: "Vistas de perfil",
+      whatsapp_click: "WhatsApp",
+      phone_click: "Llamadas",
+      availability_view: "Ver disponibilidad",
+      schedule_slot_selected: "Horarios seleccionados",
+      favorite_add: "Perfiles guardados",
+      favorite_remove: "Perfiles eliminados de guardados",
+      profile_share: "Perfiles compartidos",
+      external_link_click: "Enlaces externos",
+      service_request_started: "Solicitudes iniciadas",
+    };
+    empty.interactions.total = Number(payload.total) || 0;
+    empty.interactions.uniqueVisitors = Number(payload.uniqueVisitors) || 0;
+    empty.interactions.byType = (Array.isArray(payload.byType) ? payload.byType : []).map((row) => {
+      const item = row as Record<string, unknown>;
+      const type = String(item.type ?? "");
+      return { label: typeLabels[type] ?? type, value: Number(item.total) || 0 };
+    });
+    const seriesMap = new Map((Array.isArray(payload.series) ? payload.series : []).map((row) => {
+      const item = row as Record<string, unknown>;
+      return [String(item.date ?? ""), Number(item.total) || 0] as const;
+    }));
+    empty.interactions.series30 = days30.map((date) => ({ date, total: seriesMap.get(date) ?? 0 }));
+    empty.interactions.professionals = (Array.isArray(payload.professionals) ? payload.professionals : []).map((row) => {
+      const item = row as Record<string, unknown>;
+      return {
+        professionalId: String(item.professional_id ?? ""),
+        slug: String(item.slug ?? ""),
+        professionalName: String(item.professional_name ?? "Profesional"),
+        total: Number(item.total) || 0,
+        profileViews: Number(item.profile_views) || 0,
+        whatsappClicks: Number(item.whatsapp_clicks) || 0,
+        phoneClicks: Number(item.phone_clicks) || 0,
+        availabilityActions: Number(item.availability_actions) || 0,
+        favorites: Number(item.favorites) || 0,
+        uniqueVisitors: Number(item.unique_visitors) || 0,
+      };
+    });
+  } catch (e) { console.error("[reports] interactions", e); }
 
   return empty;
 }

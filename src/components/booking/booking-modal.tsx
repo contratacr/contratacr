@@ -1209,7 +1209,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           {t("calendar.privateBody")}
                         </p>
                       </div>
-                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel="WhatsApp" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
+                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
                     </div>
                   ) : !hasAnyAvailability ? (
                     <div className="flex flex-col items-center text-center gap-3 py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
@@ -1220,7 +1220,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <p className="text-sm font-semibold text-[#111827]">{t("calendar.whatsappOnlyTitle")}</p>
                         <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">{t("calendar.whatsappOnlyBody")}</p>
                       </div>
-                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel="WhatsApp" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
+                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
                     </div>
                   ) : (
                     // Two sub-columns on desktop: CALENDAR (left) and that day's SLOTS (right).
@@ -1606,7 +1606,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     <h3 className="text-xl font-bold text-[#111827] mb-2">{t("success.title")}</h3>
                     <p className="text-sm text-[#6b7280] max-w-xs mx-auto">{t("success.desc")}</p>
                   </div>
-                  {createdBookingId && <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} bookingId={createdBookingId} contextTitle={description || categoryName} buttonLabel="WhatsApp" className="w-full max-w-xs rounded-xl px-5 py-3 text-sm font-semibold" />}
+                  {createdBookingId && <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} bookingId={createdBookingId} contextTitle={description || categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="w-full max-w-xs rounded-xl px-5 py-3 text-sm font-semibold" />}
                   {selectedDate && selectedTime && (
                     <button
                       onClick={downloadCalendar}

@@ -741,7 +741,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
                               } else if (canMessage && b.professional_id) {
                                 primary = (
-                                  <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} className="min-h-9 flex-1 rounded-lg px-4 text-sm font-bold sm:flex-none" />
+                                  <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" className="min-h-9 flex-1 rounded-lg px-4 text-sm font-bold sm:flex-none" />
                                 );
                               }
                               return (

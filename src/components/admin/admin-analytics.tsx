@@ -1,4 +1,4 @@
-import { Users, UserCheck, Briefcase, FolderOpen, CreditCard, Headset, Truck, CalendarClock } from "lucide-react";
+import { Users, UserCheck, Briefcase, FolderOpen, CreditCard, Headset, Truck, CalendarClock, MousePointerClick } from "lucide-react";
 import { formatColones } from "@/lib/pricing";
 import type { AdminReports, Count } from "@/lib/admin/reports";
 
@@ -106,7 +106,7 @@ function Legend({ items }: { items: { label: string; color: string }[] }) {
 }
 
 export function AdminAnalytics({ data }: { data: AdminReports }) {
-  const { users, pros, activity, subs, support } = data;
+  const { users, pros, activity, subs, support, interactions } = data;
   const respRate = activity.solicitudesTotal > 0 ? Math.round((activity.solicitudesResponded / activity.solicitudesTotal) * 100) : 0;
 
   return (
@@ -181,6 +181,72 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           <div><p className="mb-2 text-xs font-semibold text-[#334155]">Solicitudes por estado</p><BarsH items={activity.solicitudesByStatus} /></div>
           <div><p className="mb-2 text-xs font-semibold text-[#334155]">Proyectos por estado</p><BarsH items={activity.proyectosByStatus} /></div>
           <div><p className="mb-2 text-xs font-semibold text-[#334155]">Categorías más solicitadas</p><BarsH items={activity.topCategories} color="#008ce0" /></div>
+        </div>
+      </Section>
+
+      {/* INTERACCIONES */}
+      <Section icon={MousePointerClick} title="Interacciones" sub="Intención comercial registrada por ContrataCR · totales históricos">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Tile label="Interacciones" value={interactions.total} accent="#008ce0" />
+          <Tile label="Visitantes únicos" value={interactions.uniqueVisitors} accent="#7c3aed" />
+          <Tile label="WhatsApp" value={interactions.byType.find((item) => item.label === "WhatsApp")?.value ?? 0} accent="#16a34a" />
+          <Tile label="Llamadas" value={interactions.byType.find((item) => item.label === "Llamadas")?.value ?? 0} accent="#f59e0b" />
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <div>
+            <p className="mb-2 text-xs font-semibold text-[#334155]">Interacciones diarias · últimos 30 días</p>
+            <DailyBars data={interactions.series30 as unknown as Record<string, number>[]} aKey="total" aColor="#008ce0" />
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold text-[#334155]">Por acción</p>
+            <BarsH items={interactions.byType} color="#008ce0" />
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <div className="mb-2 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-[#334155]">Por profesional</p>
+              <p className="text-[11px] text-[#94a3b8]">Clics totales y visitantes únicos desde que comenzó la medición.</p>
+            </div>
+            <span className="text-[11px] text-[#94a3b8]">Hasta 100 profesionales</span>
+          </div>
+          {interactions.professionals.length === 0 ? (
+            <Empty className="py-10" />
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-[#e5e7eb]">
+              <table className="w-full min-w-[860px] text-left text-xs">
+                <thead className="bg-[#f8fafc] text-[#64748b]">
+                  <tr>
+                    <th className="px-3 py-2.5 font-semibold">Profesional</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Únicos</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Vistas</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">WhatsApp</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Llamadas</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Disponibilidad</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Guardados</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#eef2f7] text-[#334155]">
+                  {interactions.professionals.map((professional) => (
+                    <tr key={professional.professionalId} className="hover:bg-[#f8fafc]">
+                      <td className="max-w-[240px] px-3 py-2.5 font-semibold text-[#0f172a]">
+                        <span className="block truncate" title={professional.professionalName}>{professional.professionalName}</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.uniqueVisitors}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.profileViews}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.whatsappClicks}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.phoneClicks}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.availabilityActions}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.favorites}</td>
+                      <td className="px-3 py-2.5 text-right font-bold tabular-nums text-[#008ce0]">{professional.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </Section>
 

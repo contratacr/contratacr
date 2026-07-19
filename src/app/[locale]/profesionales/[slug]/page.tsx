@@ -38,6 +38,7 @@ import { SaveButton, type SavedPro } from "@/components/professionals/save-butto
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { trackInteraction } from "@/lib/analytics/interaction-events";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -112,6 +113,9 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
       setViewerId(user?.id ?? null);
+      if (user?.id !== pro.profileId) {
+        trackInteraction({ type: "profile_view", professionalId: pro.id, source: "profile", locale });
+      }
 
       // Upcoming slots for the contact card, already excluding active bookings.
       const availability = await fetch(`/api/public-availability?professionalId=${pro.id}`, { cache: "no-store" })
@@ -120,7 +124,7 @@ export default function ProfilePage() {
       setProfileSlots(Array.isArray(availability?.slots) ? availability.slots : []);
     }
     load();
-  }, [routeSlug]);
+  }, [locale, routeSlug]);
 
   // Resolve the viewer's role-aware panel route up front (parallel, non-blocking) so the
   // "Profesional no encontrado" screen can offer "Volver a mi panel" even though load()
@@ -230,10 +234,18 @@ export default function ProfilePage() {
     (professional.contactPreference ?? "ambas") !== "solo_whatsapp" &&
     hasBookableSlots;
   function requestService(cat: string) {
+    if (!professional) return;
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
     trackMetaEvent("InitiateCheckout", {
       content_type: "professional_service",
       source: "profile_service",
+    });
+    trackInteraction({
+      type: "service_request_started",
+      professionalId: professional.id,
+      source: "profile_service",
+      locale,
+      categoryId: cat,
     });
     setBookingCat(cat);
     if (isAuthenticated) setBookingOpen(true);
@@ -242,6 +254,7 @@ export default function ProfilePage() {
 
   async function shareProfile() {
     if (!professional) return;
+    trackInteraction({ type: "profile_share", professionalId: professional.id, source: "profile", locale });
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
     const url = `${baseUrl}/${locale}/profesionales/${professional.slug}`;
     const text = professional.businessName?.trim()
@@ -449,6 +462,13 @@ export default function ProfilePage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={k}
+                          onClick={() => trackInteraction({
+                            type: "external_link_click",
+                            professionalId: professional.id,
+                            source: "profile_social",
+                            locale,
+                            metadata: { channel: k },
+                          })}
                           className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
                         >
                           <Icon className="h-4 w-4" />
@@ -598,7 +618,7 @@ export default function ProfilePage() {
                                         </span>
                                       </p>
                                     </div>
-                                    {canBookService ? <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4"><span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">{t("serviceRequest")}</span></button> : <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={catLabel(cat)} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.request)} buttonLabel="WhatsApp" className="mt-auto w-full rounded-xl px-4 py-2.5 text-sm font-semibold" />}
+                                    {canBookService ? <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4"><span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">{t("serviceRequest")}</span></button> : <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={catLabel(cat)} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.request)} buttonLabel="WhatsApp" analyticsSource="profile_service" className="mt-auto w-full rounded-xl px-4 py-2.5 text-sm font-semibold" />}
                                   </div>
                                 </div>
                               );

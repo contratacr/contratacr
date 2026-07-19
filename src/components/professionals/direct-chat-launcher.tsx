@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { trackInteraction } from "@/lib/analytics/interaction-events";
 
 type DirectChatLauncherProps = {
   professionalId?: string;
@@ -20,6 +21,7 @@ type DirectChatLauncherProps = {
   initialMessage?: string;
   onSelfAction?: () => void;
   tone?: "primary" | "contrast";
+  analyticsSource?: "search" | "profile" | "profile_service" | "booking" | "favorites" | "unknown";
 };
 
 function WhatsAppLogo({ className = "h-5 w-5" }: { className?: string }) {
@@ -42,6 +44,7 @@ export function DirectChatLauncher({
   buttonLabel,
   initialMessage = "",
   onSelfAction,
+  analyticsSource = "unknown",
 }: DirectChatLauncherProps) {
   const locale = useLocale();
   const isEn = locale === "en";
@@ -72,6 +75,14 @@ export function DirectChatLauncher({
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.href) throw new Error(payload.error || "Could not open WhatsApp");
+      if (professionalId) {
+        trackInteraction({
+          type: "whatsapp_click",
+          professionalId,
+          source: analyticsSource,
+          locale,
+        });
+      }
       window.open(String(payload.href), "_blank", "noopener,noreferrer");
     } catch {
       window.alert(isEn ? "No WhatsApp number is available for this contact." : "No hay un numero de WhatsApp disponible para este contacto.");

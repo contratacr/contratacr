@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -248,9 +249,11 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
     if (saved) {
       await unsaveProRemote(pro.id, activeUser.id);
       setSaved(false);
+      trackInteraction({ type: "favorite_remove", professionalId: pro.id, source: "favorites", locale });
     } else {
       await saveProRemote(pro, activeUser.id);
       setSaved(true);
+      trackInteraction({ type: "favorite_add", professionalId: pro.id, source: "favorites", locale });
     }
     /* dispatch custom event so saved-tab + any other SaveButton refresh */
     window.dispatchEvent(new CustomEvent("savedProsChanged"));
