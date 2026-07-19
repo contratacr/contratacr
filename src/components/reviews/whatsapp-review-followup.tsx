@@ -26,6 +26,7 @@ export function WhatsAppReviewFollowUp() {
   const isEn = locale === "en";
   const { user, loading: authLoading } = useAuth();
   const [followUp, setFollowUp] = useState<FollowUp | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,7 +50,12 @@ export function WhatsAppReviewFollowUp() {
       const response = await fetch("/api/contact/follow-up", { cache: "no-store" });
       const payload = await response.json();
       const item = payload.followUp as FollowUp | null;
-      if (!active || !item) return;
+      if (!active) return;
+      setPendingCount(Number(payload.pendingCount ?? (item ? 1 : 0)));
+      if (!item) {
+        setFollowUp(null);
+        return;
+      }
 
       if (item.status === "hire_intent" && user) {
         const result = await act(item, "hired");
@@ -92,7 +98,11 @@ export function WhatsAppReviewFollowUp() {
     setSubmitting(true);
     try {
       const result = await act(followUp, action);
-      if (result?.review) setReviewTarget(result.review);
+      if (result?.review) {
+        setReviewTarget(result.review);
+      } else {
+        window.setTimeout(() => void checkFollowUp(true), 500);
+      }
       setFollowUp(null);
     } catch {
       // Keep the card visible so the user can retry.
@@ -114,14 +124,16 @@ export function WhatsAppReviewFollowUp() {
       : method === "email"
         ? "por correo"
         : "por WhatsApp";
-  const question = followUp
+  const title = followUp
     ? isEn
-      ? service
-        ? `Did you hire ${followUp.professional_name} for ${service} after contacting them ${methodLabel}?`
-        : `Did you hire ${followUp.professional_name} after contacting them ${methodLabel}?`
-      : service
-        ? `¿Contrató a ${followUp.professional_name} para ${service} después de contactarlo ${methodLabel}?`
-        : `¿Contrató a ${followUp.professional_name} después de contactarlo ${methodLabel}?`
+      ? `You contacted ${followUp.professional_name} ${methodLabel}`
+      : `Contactaste a ${followUp.professional_name} ${methodLabel}`
+    : "";
+  const question = isEn ? "Did you end up hiring them?" : "¿Llegaste a contratarlo?";
+  const pendingLabel = pendingCount > 1
+    ? isEn
+      ? `1 of ${pendingCount} pending contacts`
+      : `1 de ${pendingCount} contactos pendientes`
     : "";
 
   return (
@@ -142,7 +154,10 @@ export function WhatsAppReviewFollowUp() {
           </button>
           <div className="pr-7">
             <div className="min-w-0">
-              <p className="text-[15px] font-bold leading-5 text-[#1A2744]">{question}</p>
+              {pendingLabel && <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#009FD9]">{pendingLabel}</p>}
+              <p className="text-[15px] font-bold leading-5 text-[#1A2744]">{title}</p>
+              <p className="mt-1 text-sm font-semibold text-[#1A2744]">{question}</p>
+              {service && <p className="mt-2 inline-flex rounded-full bg-[#eef4f8] px-2.5 py-1 text-xs font-semibold text-[#667085]">{service}</p>}
               <p className="mt-1 text-xs leading-5 text-[#667085]">
                 {isEn ? "Your experience can help other people choose." : "Su experiencia puede ayudar a otras personas a elegir."}
               </p>

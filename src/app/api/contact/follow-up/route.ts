@@ -27,17 +27,21 @@ export async function GET(request: NextRequest) {
 
   let query = db
     .from("whatsapp_contact_followups")
-    .select("id, professional_id, professional_name, service_name, contact_method, status, contacted_at")
+    .select("id, professional_id, professional_name, service_name, contact_method, status, contacted_at", { count: "exact" })
     .in("status", userId ? ["contacted", "hire_intent"] : ["contacted"])
     .lte("follow_up_at", new Date().toISOString())
     .order("contacted_at", { ascending: false })
     .limit(1);
 
   query = userId ? query.eq("client_id", userId) : query.eq("anonymous_token_hash", tokenHash).is("client_id", null);
-  const { data, error } = await query.maybeSingle();
+  const { data, error, count } = await query.maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const response = NextResponse.json({ followUp: data ?? null, authenticated: Boolean(userId) });
+  const response = NextResponse.json({
+    followUp: data ?? null,
+    pendingCount: count ?? (data ? 1 : 0),
+    authenticated: Boolean(userId),
+  });
   setContactCookie(response, token);
   return response;
 }
