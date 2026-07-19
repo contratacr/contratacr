@@ -14,7 +14,7 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   let action = "";
   await page.route("**/api/contact/follow-up", async (route) => {
     if (route.request().method() === "GET") {
-      await route.fulfill({ json: { followUp, authenticated: false } });
+      await route.fulfill({ json: { followUp, pendingCount: 1, authenticated: false } });
       return;
     }
     action = String((route.request().postDataJSON() as { action?: string }).action ?? "");
@@ -24,7 +24,9 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   await page.goto("/es/como-funciona");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText("¿Contrató a SG Solutions para Reparación de computadoras después de contactarlo por WhatsApp?");
+  await expect(dialog).toContainText("Contactaste a SG Solutions por WhatsApp");
+  await expect(dialog).toContainText("¿Llegaste a contratarlo?");
+  await expect(dialog).toContainText("Reparación de computadoras");
   await expect(dialog.getByRole("button", { name: "Sí, dejar una reseña" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Aún no" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "No", exact: true })).toBeVisible();
@@ -42,6 +44,36 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   expect(action).toBe("not_now");
 });
 
+test("contact follow-up shows pending contacts one at a time", async ({ page }) => {
+  const queue = [
+    { ...followUp, id: "00000000-0000-4000-8000-000000000201", professional_name: "SG Solutions" },
+    { ...followUp, id: "00000000-0000-4000-8000-000000000202", professional_name: "Juan Electricidad", service_name: "Electricidad" },
+  ];
+  let getCount = 0;
+  const actions: string[] = [];
+
+  await page.route("**/api/contact/follow-up", async (route) => {
+    if (route.request().method() === "GET") {
+      const item = queue[Math.min(getCount, queue.length - 1)] ?? null;
+      getCount += 1;
+      await route.fulfill({ json: { followUp: item, pendingCount: item ? queue.length - Math.min(getCount - 1, queue.length - 1) : 0, authenticated: false } });
+      return;
+    }
+    actions.push(String((route.request().postDataJSON() as { action?: string }).action ?? ""));
+    await route.fulfill({ json: { ok: true } });
+  });
+
+  await page.goto("/es/como-funciona");
+  const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
+  await expect(dialog).toContainText("1 de 2 contactos pendientes");
+  await expect(dialog).toContainText("SG Solutions");
+
+  await dialog.getByRole("button", { name: "Aún no" }).click();
+  await expect(dialog).toContainText("Juan Electricidad", { timeout: 2000 });
+  await expect(dialog).toContainText("Electricidad");
+  expect(actions).toEqual(["not_now"]);
+});
+
 test("contact follow-up names phone and email contact methods", async ({ page }) => {
   const methods = [
     { contact_method: "phone", text: "por llamada" },
@@ -51,7 +83,7 @@ test("contact follow-up names phone and email contact methods", async ({ page })
   for (const method of methods) {
     await page.route("**/api/contact/follow-up", async (route) => {
       if (route.request().method() === "GET") {
-        await route.fulfill({ json: { followUp: { ...followUp, contact_method: method.contact_method }, authenticated: false } });
+        await route.fulfill({ json: { followUp: { ...followUp, contact_method: method.contact_method }, pendingCount: 1, authenticated: false } });
         return;
       }
       await route.fulfill({ json: { ok: true } });
@@ -66,7 +98,7 @@ test("contact follow-up names phone and email contact methods", async ({ page })
 test("an anonymous review intent continues through login", async ({ page }) => {
   await page.route("**/api/contact/follow-up", async (route) => {
     if (route.request().method() === "GET") {
-      await route.fulfill({ json: { followUp, authenticated: false } });
+      await route.fulfill({ json: { followUp, pendingCount: 1, authenticated: false } });
       return;
     }
     await route.fulfill({ status: 401, json: { authRequired: true } });
