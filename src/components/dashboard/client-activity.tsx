@@ -26,7 +26,7 @@ import { SavedProfessionalsTab } from "@/components/professionals/saved-professi
 import { useAuth } from "@/hooks/use-auth";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
-import { PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
 
 /**
  * Shared "acting as a client" activity views — the user's SENT solicitudes,
@@ -598,14 +598,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       {section === "bookings" && (
         <div className="space-y-4">
           {bookings.length === 0 ? (
-            <div className="text-center py-16">
-              <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-              <p className="font-semibold text-[#374151]">{t("bEmpty")}</p>
-              <p className="text-sm text-[#6b7280] mt-1">{t("bEmptySub")}</p>
-              <Button className="mt-5" asChild>
-                <Link href="/buscar">{t("searchPros")}</Link>
-              </Button>
-            </div>
+            <PanelEmptyState
+              icon={CalendarDays}
+              title={t("bEmpty")}
+              description={t("bEmptySub")}
+              action={<Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button>}
+            />
           ) : (
             <>
               <StatusFilterTabs tabs={SOLICITUD_TABS} value={bookingFilter} onChange={setBookingFilter} counts={bookingCounts} />
@@ -831,16 +829,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       {section === "projects" && (
         <div>
           {projects.length === 0 ? (
-            <div className="text-center py-16">
-              <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-              <p className="font-semibold text-[#374151]">{t("pEmpty")}</p>
-              <p className="text-sm text-[#6b7280] mt-1">
-                {t("pEmptySub")}
-              </p>
-              <Button className="mt-5 lg:hidden" onClick={() => setShowPublish(true)}>
-                {t("publishProject")}
-              </Button>
-            </div>
+            <PanelEmptyState
+              icon={FolderOpen}
+              title={t("pEmpty")}
+              description={t("pEmptySub")}
+              action={<Button className="lg:hidden" onClick={() => setShowPublish(true)}>{t("publishProject")}</Button>}
+            />
           ) : (
             <div className="flex flex-col gap-3.5">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />

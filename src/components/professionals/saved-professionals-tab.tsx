@@ -8,7 +8,7 @@ import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsavePro, type Save
 import { useLocale, useTranslations } from "next-intl";
 import { formatServicePrice } from "@/lib/pricing";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 
@@ -128,16 +128,12 @@ export function SavedProfessionalsTab() {
 
   if (saved.length === 0) {
     return (
-      <div className="text-center py-16">
-        <Bookmark className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-        <p className="font-semibold text-[#374151]">{t("empty")}</p>
-        <p className="text-sm text-[#9ca3af] mt-1 max-w-xs mx-auto">
-          {t("emptySub")}
-        </p>
-        <Button className="mt-5" asChild>
-          <Link href="/buscar">{t("searchPros")}</Link>
-        </Button>
-      </div>
+      <PanelEmptyState
+        icon={Bookmark}
+        title={t("empty")}
+        description={t("emptySub")}
+        action={<Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button>}
+      />
     );
   }
 

@@ -13,7 +13,7 @@ import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
-import { PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type Notification = {
@@ -181,10 +181,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         {busy ? (
           <PanelSectionLoading />
         ) : visible.length === 0 ? (
-          <div className="text-center py-16">
-            <Bell className="h-10 w-10 text-[#e5e7eb] mx-auto mb-3" />
-            <p className="text-sm text-[#6b7280]">{t("noneList")}</p>
-          </div>
+          <PanelEmptyState icon={Bell} title={t("noneList")} />
         ) : (
           <ul>
             {visible.map((n) => {

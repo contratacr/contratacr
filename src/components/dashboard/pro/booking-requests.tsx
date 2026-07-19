@@ -19,7 +19,7 @@ import { ReportModal } from "@/components/dashboard/report-modal";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
-import { PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type Booking = {
@@ -256,11 +256,7 @@ export function BookingRequests() {
 
   if (bookings.length === 0) {
     return (
-      <div className="text-center py-16">
-        <CalendarCheck className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-        <h3 className="font-semibold text-[#374151] mb-1">{t("empty")}</h3>
-        <p className="text-sm text-[#6b7280]">{t("emptySub")}</p>
-      </div>
+      <PanelEmptyState icon={CalendarCheck} title={t("empty")} description={t("emptySub")} />
     );
   }
 
