@@ -3,7 +3,7 @@ import { getProvinceById } from "@/lib/data/cr-geography";
 import { getCategoryLabel } from "@/lib/data/categories";
 
 // ── Comprehensive admin analytics ("Analítica"). Real aggregation across users,
-// professionals, marketplace activity, subscriptions/payments and support.
+// professionals, marketplace activity, interactions and support.
 // Best-effort per section (try/catch) so a missing table/column never 500s.
 
 export type Count = { label: string; value: number };
@@ -27,7 +27,6 @@ export type AdminReports = {
   users: { total: number; clients: number; pros: number; verifiedPros: number; activeClients: number; reg30: RegPoint[] };
   pros: { total: number; verified: number; pending: number; unverified: number; rejected: number; byCategory: Count[]; byProvince: Count[]; traveling: number; fixed: number; withSchedule: number; withoutSchedule: number; withServices: number; withoutServices: number };
   activity: { solicitudesTotal: number; solicitudesByStatus: Count[]; solicitudesResponded: number; proyectosTotal: number; proyectosByStatus: Count[]; topCategories: Count[]; series30: ActPoint[] };
-  subs: { total: number; active: number; expired: number; byPlan: Count[]; byStatus: Count[]; byCycle: Count[]; byMethod: Count[]; revenueTotal: number; revenueByMethod: Count[]; pendingPayments: number; hasData: boolean };
   support: { total: number; byStatus: Count[]; series30: { date: string; tickets: number }[] };
   interactions: { total: number; uniqueVisitors: number; byType: Count[]; series30: InteractionPoint[]; professionals: ProfessionalInteraction[] };
 };
@@ -61,7 +60,6 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     users: { total: 0, clients: 0, pros: 0, verifiedPros: 0, activeClients: 0, reg30: days30.map((d) => ({ date: d, pros: 0, clients: 0 })) },
     pros: { total: 0, verified: 0, pending: 0, unverified: 0, rejected: 0, byCategory: [], byProvince: [], traveling: 0, fixed: 0, withSchedule: 0, withoutSchedule: 0, withServices: 0, withoutServices: 0 },
     activity: { solicitudesTotal: 0, solicitudesByStatus: [], solicitudesResponded: 0, proyectosTotal: 0, proyectosByStatus: [], topCategories: [], series30: days30.map((d) => ({ date: d, solicitudes: 0, proyectos: 0 })) },
-    subs: { total: 0, active: 0, expired: 0, byPlan: [], byStatus: [], byCycle: [], byMethod: [], revenueTotal: 0, revenueByMethod: [], pendingPayments: 0, hasData: false },
     support: { total: 0, byStatus: [], series30: days30.map((d) => ({ date: d, tickets: 0 })) },
     interactions: { total: 0, uniqueVisitors: 0, byType: [], series30: days30.map((d) => ({ date: d, total: 0 })), professionals: [] },
   };
@@ -146,32 +144,6 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const pBucket = bucketByDay(pRows.map((p) => p.created_at as string), days30);
     empty.activity.series30 = days30.map((d) => ({ date: d, solicitudes: bBucket[d], proyectos: pBucket[d] }));
   } catch (e) { console.error("[reports] activity", e); }
-
-  // ── Subscriptions + payments (works now; populates when payments activate) ──
-  try {
-    const [{ data: subs }, { data: payments }] = await Promise.all([
-      admin.from("subscriptions").select("status, plan, billing_cycle, payment_method"),
-      admin.from("subscription_payments").select("amount, method, status, paid_at"),
-    ]);
-    const sRows = subs ?? [];
-    const payRows = payments ?? [];
-    empty.subs.total = sRows.length;
-    empty.subs.active = sRows.filter((s) => s.status === "active").length;
-    empty.subs.expired = sRows.filter((s) => s.status === "expired").length;
-    empty.subs.byPlan = tally(sRows.map((s) => s.plan as string), { free: "Free", premium: "Premium" });
-    empty.subs.byStatus = tally(sRows.map((s) => s.status as string), { active: "Activa", inactive: "Inactiva", expired: "Expirada", pending: "Pendiente", cancelled: "Cancelada" });
-    empty.subs.byCycle = tally(sRows.map((s) => s.billing_cycle as string), { monthly: "Mensual", annual: "Anual" });
-    empty.subs.byMethod = tally(sRows.map((s) => s.payment_method as string), { card: "Tarjeta", sinpe: "SINPE", manual: "Manual" });
-
-    const paid = payRows.filter((p) => p.status === "paid");
-    empty.subs.revenueTotal = paid.reduce((a, p) => a + (Number(p.amount) || 0), 0);
-    const revByMethod = new Map<string, number>();
-    for (const p of paid) revByMethod.set(p.method as string, (revByMethod.get(p.method as string) ?? 0) + (Number(p.amount) || 0));
-    const methodLabels: Record<string, string> = { card: "Tarjeta", sinpe: "SINPE", manual: "Manual" };
-    empty.subs.revenueByMethod = [...revByMethod.entries()].sort((a, b) => b[1] - a[1]).map(([k, value]) => ({ label: methodLabels[k] ?? k, value }));
-    empty.subs.pendingPayments = payRows.filter((p) => p.status === "pending").length;
-    empty.subs.hasData = sRows.length > 0 || payRows.length > 0;
-  } catch (e) { console.error("[reports] subs", e); }
 
   // ── Support tickets ──
   try {

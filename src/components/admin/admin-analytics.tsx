@@ -1,7 +1,5 @@
-import { Users, UserCheck, Briefcase, FolderOpen, CreditCard, Headset, Truck, CalendarClock, MousePointerClick } from "lucide-react";
-import { formatColones } from "@/lib/pricing";
+import { Users, UserCheck, Briefcase, FolderOpen, Headset, Truck, CalendarClock, MousePointerClick } from "lucide-react";
 import type { AdminReports, Count } from "@/lib/admin/reports";
-import { AdminProfessionalInteractions } from "@/components/admin/admin-professional-interactions";
 
 const PALETTE = ["#008ce0", "#16a34a", "#7c3aed", "#f59e0b", "#ef4444", "#0ea5e9", "#64748b", "#ec4899"];
 
@@ -107,14 +105,14 @@ function Legend({ items }: { items: { label: string; color: string }[] }) {
 }
 
 export function AdminAnalytics({ data }: { data: AdminReports }) {
-  const { users, pros, activity, subs, support, interactions } = data;
+  const { users, pros, activity, support, interactions } = data;
   const respRate = activity.solicitudesTotal > 0 ? Math.round((activity.solicitudesResponded / activity.solicitudesTotal) * 100) : 0;
 
   return (
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="text-2xl font-bold text-[#0f172a]">Analítica</h1>
-        <p className="mt-0.5 text-sm text-[#64748b]">Métricas de usuarios, profesionales, actividad, suscripciones y soporte.</p>
+        <p className="mt-0.5 text-sm text-[#64748b]">Métricas globales de usuarios, profesionales, actividad, interacciones y soporte.</p>
       </div>
 
       {/* USUARIOS */}
@@ -203,37 +201,6 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
             <BarsH items={interactions.byType} color="#008ce0" />
           </div>
         </div>
-
-        <AdminProfessionalInteractions />
-      </Section>
-
-      {/* SUSCRIPCIONES */}
-      <Section icon={CreditCard} title="Suscripciones y pagos" sub="Se llena automáticamente cuando se activen los pagos">
-        {!subs.hasData ? (
-          <Empty className="py-10" />
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Tile label="Suscriptores" value={subs.total} accent="#008ce0" />
-              <Tile label="Activas" value={subs.active} accent="#16a34a" />
-              <Tile label="Expiradas" value={subs.expired} accent="#94a3b8" />
-                <Tile label="Pagos pendientes" value={subs.pendingPayments} accent="#f59e0b" />
-            </div>
-            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div className="rounded-xl bg-[#f8fafc] p-4">
-                <p className="text-xs font-medium text-[#64748b]">Ingresos totales (pagado)</p>
-                <p className="mt-1 text-2xl font-bold text-[#0f172a]">{formatColones(subs.revenueTotal)}</p>
-                <div className="mt-3"><BarsH items={subs.revenueByMethod} color="#16a34a" /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><p className="mb-2 text-xs font-semibold text-[#334155]">Por plan</p><BarsH items={subs.byPlan} /></div>
-                <div><p className="mb-2 text-xs font-semibold text-[#334155]">Por método</p><BarsH items={subs.byMethod} /></div>
-                <div><p className="mb-2 text-xs font-semibold text-[#334155]">Por estado</p><BarsH items={subs.byStatus} /></div>
-                <div><p className="mb-2 text-xs font-semibold text-[#334155]">Por ciclo</p><BarsH items={subs.byCycle} /></div>
-              </div>
-            </div>
-          </>
-        )}
       </Section>
 
       {/* SOPORTE */}

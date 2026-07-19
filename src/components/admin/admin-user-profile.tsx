@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft, Loader2, ExternalLink, ShieldCheck, Headset, Flag, FolderOpen,
   CalendarDays, Ban, ShieldOff, Mail, Phone, IdCard, BadgeCheck, History,
-  CheckCircle2, RotateCcw, XCircle, Clock3,
+  CheckCircle2, RotateCcw, XCircle, Clock3, MousePointerClick,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { verificationLabel, verificationPillClasses, type VerificationStatus } from "@/lib/verification";
-import { AdminSubscription } from "@/components/admin/admin-subscription";
 import { supportTicketRef } from "@/lib/support-ticket";
 
 type Profile = {
@@ -33,6 +32,19 @@ type LogRow = { id: string; action?: string; decision?: string; status?: string;
 type Appeal = { id: string; message?: string; status?: string; created_at: string };
 type Report = { id: string; reason: string; status: string; reporter_email: string | null; created_at: string };
 type ActionState = "verify" | "reject" | "revert_pending";
+type Analytics = {
+  total: number;
+  uniqueVisitors: number;
+  profileViews: number;
+  whatsappClicks: number;
+  phoneClicks: number;
+  availabilityActions: number;
+  favorites: number;
+  serviceRequestsStarted: number;
+  shares: number;
+  lastInteractionAt: string | null;
+  bySource: { label: string; value: number }[];
+};
 
 type Data = {
   profile: Profile;
@@ -44,6 +56,7 @@ type Data = {
   verificationLog: LogRow[];
   appeals: Appeal[];
   reports: Report[];
+  analytics: Analytics | null;
 };
 
 function fmt(d?: string | null) {
@@ -86,6 +99,15 @@ function Section({ icon: Icon, title, count, children }: { icon: React.ElementTy
         {count != null && <span className="text-xs text-[#9ca3af]">({count})</span>}
       </div>
       {children}
+    </div>
+  );
+}
+
+function AnalyticsTile({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5">
+      <p className="text-xl font-bold tabular-nums text-[#0f172a]">{typeof value === "number" ? value.toLocaleString("es-CR") : value}</p>
+      <p className="mt-0.5 text-[11px] font-medium text-[#6b7280]">{label}</p>
     </div>
   );
 }
@@ -158,7 +180,7 @@ export function AdminUserProfile({
     );
   }
 
-  const { profile, professional: pro, professionalSignupIncomplete, tickets, projects, bookings, verificationLog, appeals, reports } = data;
+  const { profile, professional: pro, professionalSignupIncomplete, tickets, projects, bookings, verificationLog, appeals, reports, analytics } = data;
   const identityStatus = accountVerificationStatus(profile, pro);
   const isIdentityVerified = identityStatus === "verified";
   const isIdentityPending = identityStatus === "pending";
@@ -377,6 +399,49 @@ export function AdminUserProfile({
         </div>
       </Section>
 
+      {pro && (
+        <Section icon={MousePointerClick} title="Analíticas del profesional">
+          <div className="p-4">
+            {!analytics || analytics.total === 0 ? (
+              <div className="rounded-xl bg-[#f8fafc] px-4 py-6 text-center text-sm text-[#94a3b8]">
+                Aún no hay interacciones registradas para este profesional.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  <AnalyticsTile label="Interacciones" value={analytics.total} />
+                  <AnalyticsTile label="Visitantes únicos" value={analytics.uniqueVisitors} />
+                  <AnalyticsTile label="Vistas de perfil" value={analytics.profileViews} />
+                  <AnalyticsTile label="Última interacción" value={fmt(analytics.lastInteractionAt) || "—"} />
+                </div>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  <AnalyticsTile label="WhatsApp" value={analytics.whatsappClicks} />
+                  <AnalyticsTile label="Llamadas" value={analytics.phoneClicks} />
+                  <AnalyticsTile label="Disponibilidad" value={analytics.availabilityActions} />
+                  <AnalyticsTile label="Guardados" value={analytics.favorites} />
+                </div>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  <AnalyticsTile label="Solicitudes iniciadas" value={analytics.serviceRequestsStarted} />
+                  <AnalyticsTile label="Compartidos" value={analytics.shares} />
+                </div>
+                {analytics.bySource.length > 0 && (
+                  <div className="rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-3">
+                    <p className="mb-2 text-xs font-semibold text-[#334155]">Origen de las interacciones</p>
+                    <div className="flex flex-wrap gap-2">
+                      {analytics.bySource.map((item) => (
+                        <span key={item.label} className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-[#475569] ring-1 ring-[#e5e7eb]">
+                          {item.label}: <strong className="text-[#0f172a]">{item.value.toLocaleString("es-CR")}</strong>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
+
       {/* ── Support tickets ── */}
       <Section icon={Headset} title="Tickets de soporte" count={tickets.length}>
         {tickets.length === 0 ? (
@@ -404,9 +469,6 @@ export function AdminUserProfile({
           </ul>
         )}
       </Section>
-
-      {/* ── Subscription (pro only) — admin-only management, incl. manual SINPE ── */}
-      {pro && <AdminSubscription professionalId={pro.id} />}
 
       {/* ── Verification history + appeals (pro only) ── */}
       {pro && (
