@@ -132,8 +132,8 @@ export function WhatsAppReviewFollowUp() {
   const question = isEn ? "Did you end up hiring them?" : "¿Llegaste a contratarlo?";
   const pendingLabel = pendingCount > 1
     ? isEn
-      ? `1 of ${pendingCount} pending contacts`
-      : `1 de ${pendingCount} contactos pendientes`
+      ? `1 of ${pendingCount} pending confirmations`
+      : `1 de ${pendingCount} confirmaciones pendientes`
     : "";
 
   return (
