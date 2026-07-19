@@ -13,6 +13,7 @@ const PRO_TYPES = new Set([
   "booking_cancelled_by_client",
   "booking_completed_by_client",
   "booking_rescheduled",
+  "review_received",
   "proposal_accepted",
   "project_proposal_accepted",
   "project_proposal_declined",
