@@ -1,8 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getWhatsAppLink } from "@/lib/utils";
 import { limitTrimmedText } from "@/lib/text-limits";
+import { contactCookieValue, hashContactToken, setContactCookie } from "@/lib/contact-followup";
+
+const FOLLOW_UP_DELAY_MS = 5 * 24 * 60 * 60 * 1000;
 
 type ProfessionalContact = {
   id: string;
@@ -67,7 +70,7 @@ async function currentUserId() {
   return user?.id ?? null;
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const professionalId = String(body.professionalId ?? "");
   const bookingId = String(body.bookingId ?? "");
@@ -80,6 +83,8 @@ export async function POST(req: Request) {
 
   let phone: string | null = null;
   let recipientName: string | null = null;
+  let targetProfessionalId: string | null = null;
+  let isProfessionalContactingClient = false;
 
   if (bookingId) {
     const { data: booking, error } = await db
@@ -94,9 +99,11 @@ export async function POST(req: Request) {
     if (!booking || !professional) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
 
     if (userId && userId === professional.profile_id) {
+      isProfessionalContactingClient = true;
       phone = bookingRow?.client_phone ?? null;
       recipientName = bookingRow?.client_name ?? null;
     } else {
+      targetProfessionalId = professional.id;
       phone = professional.whatsapp ?? null;
       recipientName = profileName(professional);
     }
@@ -115,9 +122,11 @@ export async function POST(req: Request) {
     if (!proposal || !professional || !project) return NextResponse.json({ error: "Propuesta no encontrada." }, { status: 404 });
 
     if (userId && userId === professional.profile_id) {
+      isProfessionalContactingClient = true;
       phone = clientProfile?.phone ?? null;
       recipientName = clientProfile?.full_name ?? null;
     } else {
+      targetProfessionalId = professional.id;
       phone = professional.whatsapp ?? null;
       recipientName = profileName(professional);
     }
@@ -131,6 +140,7 @@ export async function POST(req: Request) {
     if (!professional) return NextResponse.json({ error: "Profesional no encontrado." }, { status: 404 });
 
     const professionalRow = professional as ProfessionalContact;
+    targetProfessionalId = professionalRow.id;
     phone = professionalRow.whatsapp ?? null;
     recipientName = profileName(professionalRow);
   }
@@ -140,5 +150,62 @@ export async function POST(req: Request) {
   }
 
   const message = initialMessage || defaultMessage(locale, recipientName, contextTitle);
-  return NextResponse.json({ href: getWhatsAppLink(phone, message) });
+  const token = contactCookieValue(req);
+  let contactId: string | null = null;
+
+  if (targetProfessionalId && !isProfessionalContactingClient) {
+    const tokenHash = hashContactToken(token);
+    const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    let recentQuery = db
+      .from("whatsapp_contact_followups")
+      .select("id")
+      .eq("professional_id", targetProfessionalId)
+      .eq("contact_method", "whatsapp")
+      .gte("contacted_at", recentSince)
+      .in("status", ["contacted", "hire_intent"])
+      .order("contacted_at", { ascending: false })
+      .limit(1);
+    recentQuery = contextTitle ? recentQuery.eq("service_name", contextTitle) : recentQuery.is("service_name", null);
+    recentQuery = userId
+      ? recentQuery.eq("client_id", userId)
+      : recentQuery.eq("anonymous_token_hash", tokenHash).is("client_id", null);
+    const { data: recent, error: recentError } = await recentQuery.maybeSingle();
+    if (recentError) {
+      console.error("[whatsapp-followup] recent lookup failed:", recentError.message);
+    }
+
+    if (recent?.id) {
+      contactId = recent.id;
+      const { error: updateError } = await db
+        .from("whatsapp_contact_followups")
+        .update({
+          follow_up_at: new Date(Date.now() + FOLLOW_UP_DELAY_MS).toISOString(),
+          status: "contacted",
+          responded_at: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", recent.id);
+      if (updateError) {
+        console.error("[whatsapp-followup] reschedule failed:", updateError.message);
+      }
+    } else {
+      const { data: inserted, error: insertError } = await db.from("whatsapp_contact_followups").insert({
+        professional_id: targetProfessionalId,
+        client_id: userId,
+        anonymous_token_hash: userId ? null : tokenHash,
+        professional_name: recipientName || (locale === "en" ? "Professional" : "Profesional"),
+        service_name: contextTitle || null,
+        contact_method: "whatsapp",
+        follow_up_at: new Date(Date.now() + FOLLOW_UP_DELAY_MS).toISOString(),
+      }).select("id").single();
+      if (insertError) {
+        console.error("[whatsapp-followup] insert failed:", insertError.message);
+      }
+      contactId = inserted?.id ?? null;
+    }
+  }
+
+  const response = NextResponse.json({ href: getWhatsAppLink(phone, message), contactId });
+  setContactCookie(response, token);
+  return response;
 }

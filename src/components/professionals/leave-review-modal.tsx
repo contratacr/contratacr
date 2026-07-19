@@ -11,6 +11,7 @@ interface LeaveReviewModalProps {
   /** Tie the review to a specific finished item (per-job reviews). */
   bookingId?: string;
   projectId?: string;
+  contactId?: string;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -20,6 +21,7 @@ export function LeaveReviewModal({
   professionalName,
   bookingId,
   projectId,
+  contactId,
   onClose,
   onSuccess,
 }: LeaveReviewModalProps) {
@@ -37,7 +39,7 @@ export function LeaveReviewModal({
   // Prefill from this item's existing review so it can be EDITED (stars filled).
   useEffect(() => {
     let active = true;
-    const qs = bookingId ? `bookingId=${bookingId}` : projectId ? `projectId=${projectId}` : `professionalId=${professionalId}`;
+    const qs = bookingId ? `bookingId=${bookingId}` : projectId ? `projectId=${projectId}` : contactId ? `contactId=${contactId}` : `professionalId=${professionalId}`;
     (async () => {
       try {
         const res = await fetch(`/api/reviews?${qs}`);
@@ -50,7 +52,7 @@ export function LeaveReviewModal({
       } catch { /* ignore */ }
     })();
     return () => { active = false; };
-  }, [professionalId, bookingId, projectId]);
+  }, [professionalId, bookingId, projectId, contactId]);
 
   // Close on Escape (an explicit key — unlike an accidental outside-click, which is
   // intentionally NOT a dismiss here so a half-written review is never lost).
@@ -78,7 +80,7 @@ export function LeaveReviewModal({
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ professionalId, rating, comment: comment.trim(), bookingId, projectId }),
+        body: JSON.stringify({ professionalId, rating, comment: comment.trim(), bookingId, projectId, contactId }),
       });
       const json = await res.json();
       if (!res.ok) {
