@@ -16,6 +16,7 @@ import { useMode } from "@/hooks/use-mode";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
@@ -844,6 +845,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
 
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
                 <LanguageMenu />
+                {user && <NotificationBell scope="all" />}
                 <Link
                   href={user ? primaryPanelHref : loginHref}
                   aria-label={user ? t("myPanel") : t("login")}
@@ -972,14 +974,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               <div className={cn("flex-1", mobileInline && "hidden lg:block")} />
 
               {/* Right actions */}
-              <div className="hidden w-[300px] justify-end lg:flex items-center gap-2 shrink-0">
+              <div className="hidden w-[340px] justify-end lg:flex items-center gap-2 shrink-0">
                 {authLoading && !user ? (
                   <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
                     <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
                     <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
                   </div>
                 ) : user ? (
-                  <div className="flex w-[180px] items-center justify-end gap-1">
+                  <div className="flex w-[220px] items-center justify-end gap-1">
                     {!isPro && (
                       <Link
                         href="/registro/profesional"
@@ -989,6 +991,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                         {t("offerServices")}
                       </Link>
                     )}
+                    <NotificationBell scope="all" />
                     <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
                   </div>
                 ) : (
@@ -1143,8 +1146,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               {/* Desktop keeps bell + account menu in the compact row. On mobile,
                   the hamburger is the single entry point so account options do not
                   split across two menus. */}
-              <div className="hidden w-[112px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+              <div className="hidden w-[156px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
                 <LanguageMenu />
+                {user && <NotificationBell scope="all" />}
                 {user ? (
                   <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
                 ) : (
