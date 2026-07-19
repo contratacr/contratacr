@@ -1,6 +1,7 @@
 import { Users, UserCheck, Briefcase, FolderOpen, CreditCard, Headset, Truck, CalendarClock, MousePointerClick } from "lucide-react";
 import { formatColones } from "@/lib/pricing";
 import type { AdminReports, Count } from "@/lib/admin/reports";
+import { AdminProfessionalInteractions } from "@/components/admin/admin-professional-interactions";
 
 const PALETTE = ["#008ce0", "#16a34a", "#7c3aed", "#f59e0b", "#ef4444", "#0ea5e9", "#64748b", "#ec4899"];
 
@@ -120,10 +121,10 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
       <Section icon={Users} title="Usuarios" sub="Totales y registros (últimos 30 días)">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           <Tile label="Usuarios totales" value={users.total} />
-          <Tile label="Clientes" value={users.clients} accent="#16a34a" />
+          <Tile label="Solo clientes" value={users.clients} accent="#16a34a" />
           <Tile label="Profesionales" value={users.pros} accent="#008ce0" />
           <Tile label="Prof. verificados" value={users.verifiedPros} accent="#f59e0b" />
-          <Tile label="Clientes activos" value={users.activeClients} accent="#7c3aed" />
+          <Tile label="Con solicitudes" value={users.activeClients} accent="#7c3aed" />
         </div>
         <div className="mt-4">
           <div className="mb-2 flex items-center justify-between">
@@ -203,51 +204,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           </div>
         </div>
 
-        <div className="mt-5">
-          <div className="mb-2 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold text-[#334155]">Por profesional</p>
-              <p className="text-[11px] text-[#94a3b8]">Clics totales y visitantes únicos desde que comenzó la medición.</p>
-            </div>
-            <span className="text-[11px] text-[#94a3b8]">Hasta 100 profesionales</span>
-          </div>
-          {interactions.professionals.length === 0 ? (
-            <Empty className="py-10" />
-          ) : (
-            <div className="overflow-x-auto rounded-xl border border-[#e5e7eb]">
-              <table className="w-full min-w-[860px] text-left text-xs">
-                <thead className="bg-[#f8fafc] text-[#64748b]">
-                  <tr>
-                    <th className="px-3 py-2.5 font-semibold">Profesional</th>
-                    <th className="px-3 py-2.5 text-right font-semibold">Únicos</th>
-                    <th className="px-3 py-2.5 text-right font-semibold">Vistas</th>
-                    <th className="px-3 py-2.5 text-right font-semibold">WhatsApp</th>
-                    <th className="px-3 py-2.5 text-right font-semibold">Llamadas</th>
-                    <th className="px-3 py-2.5 text-right font-semibold">Disponibilidad</th>
-                    <th className="px-3 py-2.5 text-right font-semibold">Guardados</th>
-                    <th className="px-3 py-2.5 text-right font-semibold">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#eef2f7] text-[#334155]">
-                  {interactions.professionals.map((professional) => (
-                    <tr key={professional.professionalId} className="hover:bg-[#f8fafc]">
-                      <td className="max-w-[240px] px-3 py-2.5 font-semibold text-[#0f172a]">
-                        <span className="block truncate" title={professional.professionalName}>{professional.professionalName}</span>
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.uniqueVisitors}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.profileViews}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.whatsappClicks}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.phoneClicks}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.availabilityActions}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{professional.favorites}</td>
-                      <td className="px-3 py-2.5 text-right font-bold tabular-nums text-[#008ce0]">{professional.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <AdminProfessionalInteractions />
       </Section>
 
       {/* SUSCRIPCIONES */}

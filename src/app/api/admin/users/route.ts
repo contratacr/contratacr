@@ -62,6 +62,7 @@ export async function GET(req: Request) {
 
   if (mode === "list") {
     const filter = url.searchParams.get("filter") ?? "all";
+    const verification = url.searchParams.get("verification") ?? "all";
     const q = (url.searchParams.get("q") ?? "").trim();
     const page = Math.max(1, Number(url.searchParams.get("page") ?? "1") || 1);
     const pageSize = Math.min(100, Math.max(10, Number(url.searchParams.get("pageSize") ?? "25") || 25));
@@ -71,7 +72,7 @@ export async function GET(req: Request) {
     for (let from = 0; from < 10000; from += batchSize) {
       const { data, error } = await db
         .from("profiles")
-        .select("id, full_name, email, cedula, role, avatar_url, is_disabled, client_identity_status, created_at, professionals(id, verification_status, is_banned)")
+        .select("id, full_name, email, cedula, role, avatar_url, is_disabled, client_identity_status, created_at, professionals(id, verification_status, is_banned, business_name)")
         .order("created_at", { ascending: false })
         .range(from, from + batchSize - 1);
       if (error) {
@@ -84,7 +85,7 @@ export async function GET(req: Request) {
 
     const incompleteIds = await getIncompleteProfessionalSignupIds();
     const rows = allProfiles.map((profile) => {
-      const pro = firstProfessional(profile) as { id?: string; verification_status?: string | null; is_banned?: boolean | null } | undefined;
+      const pro = firstProfessional(profile) as { id?: string; verification_status?: string | null; is_banned?: boolean | null; business_name?: string | null } | undefined;
       const isPro = !!pro?.id;
       const professionalSignupIncomplete = !isPro && incompleteIds.has(profile.id);
       const kind = isPro
@@ -96,9 +97,9 @@ export async function GET(req: Request) {
             : "client";
       const verificationStatus = isPro
         ? pro?.verification_status ?? null
-        : profile.client_identity_status === "verified" || profile.client_identity_status === "pending"
+        : ["verified", "pending", "rejected"].includes(profile.client_identity_status ?? "")
           ? profile.client_identity_status
-          : "rejected";
+          : null;
       return {
         id: profile.id,
         full_name: profile.full_name,
@@ -109,6 +110,7 @@ export async function GET(req: Request) {
         created_at: profile.created_at,
         is_disabled: profile.is_disabled === true,
         isPro,
+        business_name: pro?.business_name ?? null,
         professionalSignupIncomplete,
         kind,
         verification_status: verificationStatus,
@@ -121,6 +123,7 @@ export async function GET(req: Request) {
       professional: rows.filter((row) => row.kind === "professional").length,
       incomplete: rows.filter((row) => row.kind === "incomplete").length,
       client: rows.filter((row) => row.kind === "client").length,
+      admin: rows.filter((row) => row.kind === "admin").length,
       disabled: rows.filter((row) => row.is_disabled).length,
     };
 
@@ -129,9 +132,16 @@ export async function GET(req: Request) {
       if (filter === "professional" && row.kind !== "professional") return false;
       if (filter === "incomplete" && row.kind !== "incomplete") return false;
       if (filter === "client" && row.kind !== "client") return false;
+      if (filter === "admin" && row.kind !== "admin") return false;
       if (filter === "disabled" && !row.is_disabled) return false;
+      if (verification !== "all") {
+        if (!row.isPro) return false;
+        if (verification === "banned" && !row.is_banned) return false;
+        if (verification === "unverified" && row.verification_status != null) return false;
+        if (!["banned", "unverified"].includes(verification) && row.verification_status !== verification) return false;
+      }
       if (queryTokens.length === 0) return true;
-      const haystack = norm(`${row.full_name ?? ""} ${row.email ?? ""} ${row.cedula ?? ""}`);
+      const haystack = norm(`${row.full_name ?? ""} ${row.business_name ?? ""} ${row.email ?? ""} ${row.cedula ?? ""}`);
       return queryTokens.every((token) => haystack.includes(token));
     });
 

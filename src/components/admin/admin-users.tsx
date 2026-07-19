@@ -22,6 +22,7 @@ type ListedUser = {
   created_at: string;
   is_disabled: boolean;
   isPro: boolean;
+  business_name?: string | null;
   professionalSignupIncomplete?: boolean;
   kind: UserKind;
   verification_status: VerificationStatus | null;
@@ -40,6 +41,7 @@ const FILTERS = [
   { id: "professional", label: "Profesionales" },
   { id: "incomplete", label: "Registros incompletos" },
   { id: "client", label: "Clientes" },
+  { id: "admin", label: "Administradores" },
   { id: "disabled", label: "Deshabilitados" },
 ] as const;
 
@@ -62,6 +64,7 @@ function fmtDate(value: string) {
 }
 
 function statusLabel(user: ListedUser) {
+  if (user.kind === "admin") return "No aplica";
   if (user.professionalSignupIncomplete) return "Pendiente de completar";
   if (user.verification_status) return verificationLabel(user.verification_status);
   return "Sin verificar";
@@ -70,12 +73,13 @@ function statusLabel(user: ListedUser) {
 function statusClass(user: ListedUser) {
   if (user.professionalSignupIncomplete) return "border-[#fed7aa] bg-[#fff7ed] text-[#9a3412]";
   if (user.verification_status) return verificationPillClasses(user.verification_status);
-  return verificationPillClasses("rejected");
+  return "border-[#e5e7eb] bg-[#f8fafc] text-[#64748b]";
 }
 
 export function AdminUsers() {
   const [filter, setFilter] = useState<string>("all");
   const [q, setQ] = useState("");
+  const [verification, setVerification] = useState("all");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<ListedUser[]>([]);
@@ -101,6 +105,7 @@ export function AdminUsers() {
         pageSize: "25",
       });
       if (debouncedQ) params.set("q", debouncedQ);
+      if (verification !== "all") params.set("verification", verification);
       const res = await fetch(`/api/admin/users?${params.toString()}`, { cache: "no-store" });
       const data = await res.json();
       setItems(data.users ?? []);
@@ -112,7 +117,7 @@ export function AdminUsers() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [debouncedQ, filter, page]);
+  }, [debouncedQ, filter, page, verification]);
 
   useEffect(() => {
     queueMicrotask(() => void load());
@@ -126,6 +131,7 @@ export function AdminUsers() {
 
   function changeFilter(next: string) {
     setFilter(next);
+    if (next !== "professional") setVerification("all");
     setPage(1);
   }
 
@@ -153,17 +159,33 @@ export function AdminUsers() {
         <label className="text-xs font-semibold text-[#6b7280]" htmlFor="admin-users-search">
           Buscar usuario
         </label>
-        <div className="relative mt-2">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
-          <input
-            id="admin-users-search"
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            placeholder="Nombre, correo o identificación"
-            className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#111827] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
-          />
+        <div className="mt-2 grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+            <input
+              id="admin-users-search"
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+              placeholder="Nombre, nombre comercial, correo o identificación"
+              className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#111827] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
+            />
+          </div>
+          <select
+            aria-label="Estado de verificación"
+            value={verification}
+            onChange={(event) => { setVerification(event.target.value); setFilter("professional"); setPage(1); }}
+            className="h-11 rounded-xl border border-[#dbe2ea] bg-white px-3 text-sm text-[#374151] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
+          >
+            <option value="all">Cualquier verificación</option>
+            <option value="verified">Verificados</option>
+            <option value="pending">Pendientes</option>
+            <option value="under_appeal">En apelación</option>
+            <option value="rejected">No aprobados</option>
+            <option value="unverified">Sin verificar</option>
+            <option value="banned">Profesionales bloqueados</option>
+          </select>
         </div>
-        <p className="mt-2 text-xs text-[#9ca3af]">Abre cualquier fila para ver cuenta, soporte, solicitudes, publicaciones, reportes y verificación.</p>
+        <p className="mt-2 text-xs text-[#9ca3af]">Los resultados están paginados; puedes consultar todas las cuentas, no solo las primeras 100.</p>
       </div>
 
       <AdminFilterTabs tabs={FILTERS} value={filter} onChange={changeFilter} counts={filterCounts} />
@@ -209,6 +231,7 @@ export function AdminUsers() {
                         )}
                       </div>
                       <p className="mt-0.5 truncate text-xs text-[#6b7280]">
+                        {user.business_name ? `${user.business_name} · ` : ""}
                         {user.cedula ? `${formatId(user.cedula)} · ` : ""}
                         {user.email ?? "Sin correo"}
                       </p>

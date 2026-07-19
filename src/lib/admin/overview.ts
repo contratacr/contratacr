@@ -56,7 +56,7 @@ function dailyCounts(times: number[], n: number, now: number): number[] {
 }
 
 type ProRow = {
-  id: string; slug: string | null; created_at: string; verification_status: string | null;
+  id: string; profile_id: string; slug: string | null; created_at: string; verification_status: string | null;
   category_id: string | null; provincia_id: string | null;
   professions: string[] | null; profiles: { full_name?: string } | null;
 };
@@ -71,13 +71,14 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
     const last30 = now - 30 * DAY, prev30 = now - 60 * DAY;
 
     const [prosRes, clientsRes, bookingsRes] = await Promise.all([
-      admin.from("professionals").select("id, slug, created_at, verification_status, category_id, provincia_id, professions, profiles(full_name)").order("created_at", { ascending: false }),
+      admin.from("professionals").select("id, profile_id, slug, created_at, verification_status, category_id, provincia_id, professions, profiles(full_name)").order("created_at", { ascending: false }),
       admin.from("profiles").select("id, created_at, full_name").eq("role", "client").order("created_at", { ascending: false }),
       admin.from("bookings").select("created_at").order("created_at", { ascending: false }),
     ]);
 
     const pros = (prosRes.data ?? []) as unknown as ProRow[];
-    const clients = (clientsRes.data ?? []) as unknown as ClientRow[];
+    const professionalProfileIds = new Set(pros.map((professional) => professional.profile_id));
+    const clients = ((clientsRes.data ?? []) as unknown as ClientRow[]).filter((client) => !professionalProfileIds.has(client.id));
     const bookings = (bookingsRes.data ?? []) as unknown as BookingRow[];
 
     const proTimes = pros.map((p) => new Date(p.created_at).getTime()).filter((n) => !isNaN(n));
