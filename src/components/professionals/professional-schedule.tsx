@@ -104,6 +104,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // pro's slots (no profession filter). `activeCategory` is still used purely as the
   // booking context (which service the request is about), not to hide hours.
   const slots = liveSlots.filter((s) => !s.locationId?.startsWith("cov_"));
+  const hasInitialDisplayableSlots = allSlots.some((s) => !s.locationId?.startsWith("cov_"));
   const { user } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
@@ -142,7 +143,16 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
   // appointments-only.
   const canBook = !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
-  const scheduleLoading = canBook && !slotsInitiallyLoaded && liveData?.professionalId !== professional.id;
+  const awaitingProfileAvailability =
+    stacked &&
+    shouldAutoRefresh &&
+    !forceContactOnly &&
+    contactPreference !== "solo_whatsapp" &&
+    liveData?.professionalId !== professional.id &&
+    !hasInitialDisplayableSlots;
+  const scheduleLoading =
+    awaitingProfileAvailability ||
+    (canBook && !slotsInitiallyLoaded && liveData?.professionalId !== professional.id);
   const visualScheduleLoading = syncWithSearchLoading
     ? searchShellLoading || scheduleLoading
     : scheduleLoading;
