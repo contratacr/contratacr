@@ -10,7 +10,7 @@ import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAppDialog } from "@/hooks/use-app-dialog";
-import { PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
 
 type Ticket = {
   id: string;
@@ -367,14 +367,17 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
           </button>
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
-          <Headset className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-          <p className="font-semibold text-[#374151]">{t("empty")}</p>
-          <p className="text-sm text-[#9ca3af] mt-1">{t("emptySub")}</p>
-          <button onClick={() => setShowModal(true)} className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb]">
-            <Plus className="h-4 w-4" /> {t("openTicket")}
-          </button>
-        </div>
+        <PanelEmptyState
+          icon={Headset}
+          title={t("empty")}
+          description={t("emptySub")}
+          className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white"
+          action={(
+            <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb]">
+              <Plus className="h-4 w-4" /> {t("openTicket")}
+            </button>
+          )}
+        />
       ) : filtered.length === 0 ? (
         <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>
       ) : (

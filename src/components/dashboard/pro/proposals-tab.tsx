@@ -17,7 +17,7 @@ import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, propo
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { useAppDialog } from "@/hooks/use-app-dialog";
-import { PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -607,11 +607,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       {view === "browse" && (
         <div>
           {openProjects.length === 0 ? (
-            <div className="text-center py-16">
-              <Handshake className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-              <p className="font-medium text-[#374151]">{t("emptyBrowse")}</p>
-              <p className="text-sm text-[#6b7280] mt-1">{t("emptyBrowseSub")}</p>
-            </div>
+            <PanelEmptyState icon={Handshake} title={t("emptyBrowse")} description={t("emptyBrowseSub")} />
           ) : (
             <div className="flex flex-col gap-4">
               {/* Filter by the pro's professions — only when they have more than one. */}
@@ -673,11 +669,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       {view === "mine" && (
         <div>
           {myProposals.length === 0 ? (
-            <div className="text-center py-16">
-              <Handshake className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-              <p className="font-medium text-[#374151]">{t("emptyMine")}</p>
-              <p className="text-sm text-[#6b7280] mt-1">{t("emptyMineSub")}</p>
-            </div>
+            <PanelEmptyState icon={Handshake} title={t("emptyMine")} description={t("emptyMineSub")} />
           ) : (
             <div className="flex flex-col gap-4">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(myProposals.map((p) => proposalBucket(p.status, p.projects?.status)))} />

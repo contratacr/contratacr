@@ -12,6 +12,7 @@ import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 import { AppTooltip } from "@/components/ui/app-tooltip";
+import { PanelEmptyState } from "@/components/ui/content-loading";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
@@ -377,19 +378,17 @@ export function DirectChatInbox() {
   if (loading) return <div className="flex min-h-[360px] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>;
 
   if (!displayedConversations.length) return (
-    <div className="py-16 text-center">
-      <MessageSquareMore className="mx-auto h-10 w-10 text-[#009FD9]" />
-      <h3 className="mt-4 text-lg font-extrabold text-[#162543]">
-        {showArchived ? (isEn ? "No archived conversations" : "No hay conversaciones archivadas") : (isEn ? "No conversations yet" : "No hay conversaciones todavía")}
-      </h3>
-      <p className="mx-auto mt-2 max-w-md text-sm text-[#64748b]">
-        {isEn ? "Messages related to profiles, requests and proposals will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, solicitudes y propuestas."}
-      </p>
-      <button type="button" onClick={() => updateArchiveView(!showArchived)} className="mt-5 inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
-        {showArchived && <ArrowLeft className="h-4 w-4" />}
-        {showArchived ? (isEn ? "Back" : "Volver") : (isEn ? "View archived" : "Ver archivadas")}
-      </button>
-    </div>
+    <PanelEmptyState
+      icon={MessageSquareMore}
+      title={showArchived ? (isEn ? "No archived conversations" : "No hay conversaciones archivadas") : (isEn ? "No conversations yet" : "No hay conversaciones todavía")}
+      description={isEn ? "Messages related to profiles, requests and proposals will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, solicitudes y propuestas."}
+      action={(
+        <button type="button" onClick={() => updateArchiveView(!showArchived)} className="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
+          {showArchived && <ArrowLeft className="h-4 w-4" />}
+          {showArchived ? (isEn ? "Back" : "Volver") : (isEn ? "View archived" : "Ver archivadas")}
+        </button>
+      )}
+    />
   );
   const activePerson = active ? personFor(active) : null;
   const activeContext = active ? contextFor(active) : null;
