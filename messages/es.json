@@ -13,7 +13,7 @@
   "nav": {
     "search": "Buscar",
     "categories": "Servicios",
-    "howItWorks": "¿Cómo funciona?",
+    "howItWorks": "Cómo usar",
     "login": "Iniciar sesión",
     "register": "Registrarse",
     "searchProfessionals": "Buscar servicios",
@@ -21,7 +21,7 @@
   },
   "header": {
     "categories": "Servicios",
-    "howItWorks": "Cómo funciona",
+    "howItWorks": "Cómo usar",
     "resources": "Recursos",
     "viewAllCategories": "Ver todos los servicios",
     "searchServicePlaceholder": "Busca un servicio…",
@@ -80,7 +80,7 @@
       "more": "Más servicios"
     },
     "resourceLinks": {
-      "howItWorks": "Cómo usar ContrataCR",
+      "howItWorks": "Cómo usar",
       "helpCenter": "Centro de ayuda",
       "proTips": "Para profesionales",
       "support": "Soporte"
@@ -834,7 +834,7 @@
       "title": "Para clientes",
       "search": "Buscar servicios",
       "categories": "Categorías",
-      "howItWorks": "Cómo usar ContrataCR",
+      "howItWorks": "Cómo usar",
       "publish": "Publicar una solicitud"
     },
     "pros": {

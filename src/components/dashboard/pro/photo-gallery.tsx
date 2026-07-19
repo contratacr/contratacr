@@ -244,15 +244,24 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       )}
 
       {/* Agregar nuevo caso de éxito (dashed, full width). */}
-      <button
-        type="button"
-        onClick={openAdd}
-        disabled={addFull || professions.length === 0}
-        className={cn("flex w-full flex-col items-center gap-1 rounded-2xl border-2 border-dashed py-6 text-center transition-colors", addFull || professions.length === 0 ? "cursor-not-allowed border-[#e5e7eb] opacity-60" : "border-[#bfdbfe] hover:border-[#009FD9] hover:bg-[#EBF5FB]")}
-      >
-        <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#0089bb]"><Plus className="h-4 w-4" /> {t("addCase")}</span>
-        <span className="text-xs text-[#9ca3af]">{addFull ? t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION }) : t("addCaseHint")}</span>
-      </button>
+      <div className={cn(shownCases.length === 0 && "flex min-h-[18rem] items-center sm:min-h-[20rem]")}>
+        <button
+          type="button"
+          onClick={openAdd}
+          disabled={addFull || professions.length === 0}
+          className={cn(
+            "flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-5 py-8 text-center transition-colors",
+            shownCases.length === 0 && "min-h-40",
+            addFull || professions.length === 0 ? "cursor-not-allowed border-[#e5e7eb] opacity-60" : "border-[#bfdbfe] hover:border-[#009FD9] hover:bg-[#EBF5FB]",
+          )}
+        >
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
+            <Plus className="h-5 w-5" />
+          </span>
+          <span className="text-base font-bold text-[#0089bb]">{t("addCase")}</span>
+          <span className="max-w-sm text-sm leading-relaxed text-[#9ca3af]">{addFull ? t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION }) : t("addCaseHint")}</span>
+        </button>
+      </div>
 
       {/* ── Add / edit case ─────────────────────────────────────────────── */}
       {draft && (

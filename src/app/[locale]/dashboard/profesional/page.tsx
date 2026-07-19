@@ -835,7 +835,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      <main className="flex-1">
+      <main className="flex-1 min-h-[calc(100svh-88px)]">
         <div className={cn(
           "dashboard-panel-content mx-auto max-w-6xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8",
           mobileSectionOpen && "px-0 pt-0 sm:px-0 lg:px-8 lg:pt-8",
@@ -1014,9 +1014,9 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </CardHeader>}
-                      <CardContent className={mobileFullScreenTab ? "p-0 sm:p-0" : cn(
+                      <CardContent className={mobileFullScreenTab ? "min-h-[calc(100svh-88px)] p-0 sm:p-0" : cn(
                         "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6",
-                        mobileSectionOpen && "px-5 pb-7 pt-5 sm:px-6 lg:px-6 lg:pb-6 lg:pt-1",
+                        mobileSectionOpen && "min-h-[calc(100svh-150px)] px-5 pb-8 pt-5 sm:px-6 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-1",
                       )}>
                         {activeTab === "home" && (
                           <>
