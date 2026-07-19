@@ -2569,6 +2569,7 @@
       "booking_cancelled": "Request cancelled",
       "booking_cancelled_by_client": "Request cancelled by client",
       "review_request": "Leave your review",
+      "review_received": "New review received",
       "proposal_received": "New proposal",
       "proposal_updated": "Proposal updated",
       "proposal_withdrawn": "Proposal withdrawn",

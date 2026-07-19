@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
   // Self-interaction guard.
   const { data: targetPro } = await supabase
-    .from("professionals").select("profile_id").eq("id", professionalId).maybeSingle();
+    .from("professionals").select("profile_id, slug").eq("id", professionalId).maybeSingle();
   if (targetPro?.profile_id === user.id) {
     return NextResponse.json({ error: "No puedes dejarte una reseña a ti mismo." }, { status: 400 });
   }
@@ -143,6 +143,25 @@ export async function POST(req: Request) {
     entityOwnerUserId: user.id,
     afterData: { professional_id: professionalId, rating, comment, booking_id: bookingId ?? null, project_id: projectId ?? null, whatsapp_contact_id: contactId ?? null, job_title: jobTitle },
   });
+  if (targetPro?.profile_id && targetPro?.slug && insertedReview?.id) {
+    const stars = Number(rating).toLocaleString("es-CR", { maximumFractionDigits: 1 });
+    const clientName = profile?.full_name?.split(" ")[0] || "Un cliente";
+    const admin = createAdminClient();
+    const { error: notificationError } = await admin.from("notifications").insert({
+      user_id: targetPro.profile_id,
+      type: "review_received",
+      title: "Nueva reseña recibida",
+      message: `${clientName} te dejó una reseña de ${stars} estrellas.`,
+      data: {
+        link: `/es/profesionales/${targetPro.slug}`,
+        professional_id: professionalId,
+        review_id: insertedReview.id,
+      },
+    });
+    if (notificationError) {
+      console.error("[reviews] failed to notify professional:", notificationError.message);
+    }
+  }
   return NextResponse.json({ ok: true, edited: false });
 }
 
