@@ -70,11 +70,12 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   try {
     const [{ data: profiles }, { data: pros }] = await Promise.all([
       admin.from("profiles").select("id, role, created_at"),
-      admin.from("professionals").select("id, created_at, verification_status, category_id, provincia_id, professions, service_type, availability_public, services"),
+      admin.from("professionals").select("id, profile_id, created_at, verification_status, category_id, provincia_id, professions, service_type, availability_public, services"),
     ]);
     const allProfiles = profiles ?? [];
-    const clients = allProfiles.filter((p) => p.role === "client");
     const proRows = pros ?? [];
+    const professionalProfileIds = new Set(proRows.map((professional) => professional.profile_id).filter(Boolean));
+    const clients = allProfiles.filter((profile) => profile.role === "client" && !professionalProfileIds.has(profile.id));
 
     empty.users.total = allProfiles.length;
     empty.users.clients = clients.length;
@@ -88,7 +89,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     // Professionals breakdowns
     empty.pros.total = proRows.length;
     empty.pros.verified = proRows.filter((p) => p.verification_status === "verified").length;
-    empty.pros.pending = proRows.filter((p) => p.verification_status === "pending" || p.verification_status === "under_review").length;
+    empty.pros.pending = proRows.filter((p) => p.verification_status === "pending" || p.verification_status === "under_appeal").length;
     empty.pros.rejected = proRows.filter((p) => p.verification_status === "rejected").length;
     empty.pros.unverified = proRows.length - empty.pros.verified - empty.pros.pending - empty.pros.rejected;
     empty.pros.traveling = proRows.filter((p) => String(p.service_type ?? "").includes("mobile")).length;

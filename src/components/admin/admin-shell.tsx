@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, Headset, Users, CreditCard, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ShieldCheck, LogOut, Flag, Shield, Tag, Headset, Users, CreditCard, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ export function AdminShell({
   // endpoint so the counts stay accurate and consistent. Polled + refreshed on
   // window focus so resolving an item updates its badge.
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const countsRef = useRef<Record<string, number>>({});
   useEffect(() => {
     let alive = true;
     const fetchCounts = () => {
@@ -37,8 +38,13 @@ export function AdminShell({
         .then((r) => r.json())
         .then((d) => {
           if (!alive) return;
-          setCounts(d ?? {});
-          window.dispatchEvent(new Event(ADMIN_REFRESH_EVENT));
+          const nextCounts = (d ?? {}) as Record<string, number>;
+          const changed = JSON.stringify(nextCounts) !== JSON.stringify(countsRef.current);
+          if (!changed) return;
+          const hadPreviousCounts = Object.keys(countsRef.current).length > 0;
+          countsRef.current = nextCounts;
+          setCounts(nextCounts);
+          if (hadPreviousCounts) window.dispatchEvent(new Event(ADMIN_REFRESH_EVENT));
         })
         .catch(() => {});
     };
@@ -70,7 +76,6 @@ export function AdminShell({
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },
-    { id: "cuentas", label: "Cuentas", icon: UserX, href: "/admin/cuentas", badge: 0 },
     { id: "suscripciones", label: "Suscripciones", icon: CreditCard, href: "/admin/suscripciones", badge: counts.suscripciones ?? 0 },
     { id: "soporte", label: "Soporte", icon: Headset, href: "/admin/soporte", badge: counts.soporte ?? 0 },
     { id: "analitica", label: "Analítica", icon: BarChart3, href: "/admin/analitica", badge: 0 },
@@ -102,7 +107,7 @@ export function AdminShell({
         <it.icon className={cn("h-4 w-4", active === it.id && "text-[#38bdf8]")} />
         {it.badge > 0 && (
           <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#38bdf8] px-1 text-center text-[9px] font-bold leading-none text-[#0f172a] ring-2 ring-[#0f172a]">
-            {it.badge > 9 ? "9+" : it.badge}
+            {it.badge.toLocaleString("es-CR")}
           </span>
         )}
       </span>
@@ -117,9 +122,21 @@ export function AdminShell({
         <Link href="/admin" className="flex h-16 shrink-0 items-center gap-2 px-5">
           <ContrataCRLogo tone="dark" />
         </Link>
-        <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
-          {items.map((it) => (
-            <div key={it.id} className="relative">{navLink(it, "side")}</div>
+        <nav className="flex-1 overflow-y-auto px-3 py-2">
+          {[
+            { label: "Principal", ids: ["resumen", "usuarios"] },
+            { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "reportes", "soporte"] },
+            { label: "Gestión", ids: ["categorias", "aseguradoras", "suscripciones"] },
+            { label: "Información", ids: ["analitica", "actividad"] },
+          ].map((group, index) => (
+            <div key={group.label} className={index === 0 ? "" : "mt-4 border-t border-white/10 pt-3"}>
+              <p className="mb-1 px-3 text-[10px] font-semibold uppercase text-white/35">{group.label}</p>
+              <div className="space-y-0.5">
+                {items.filter((item) => group.ids.includes(item.id)).map((item) => (
+                  <div key={item.id} className="relative">{navLink(item, "side")}</div>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
         <div className="border-t border-white/10 p-3 flex items-center gap-2.5">
