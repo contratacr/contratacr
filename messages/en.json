@@ -2557,6 +2557,7 @@
     "deleteAllBody": "This action can't be undone.",
     "cancel": "Cancel",
     "noneList": "You have no notifications.",
+    "emptySub": "Updates about requests, proposals, messages, or your account will appear here.",
     "filterAll": "All",
     "filterUnread": "Unread",
     "noUnread": "You have no unread notifications.",

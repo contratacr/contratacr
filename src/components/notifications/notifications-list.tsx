@@ -181,7 +181,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         {busy ? (
           <PanelSectionLoading />
         ) : visible.length === 0 ? (
-          <PanelEmptyState icon={Bell} title={t("noneList")} />
+          <PanelEmptyState icon={Bell} title={t("noneList")} description={t("emptySub")} />
         ) : (
           <ul>
             {visible.map((n) => {
