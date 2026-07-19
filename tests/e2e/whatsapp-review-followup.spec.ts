@@ -44,7 +44,7 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   expect(action).toBe("not_now");
 });
 
-test("contact follow-up shows pending contacts one at a time", async ({ page }) => {
+test("contact follow-up shows pending confirmations one at a time", async ({ page }) => {
   const queue = [
     { ...followUp, id: "00000000-0000-4000-8000-000000000201", professional_name: "SG Solutions" },
     { ...followUp, id: "00000000-0000-4000-8000-000000000202", professional_name: "Juan Electricidad", service_name: "Electricidad" },
@@ -65,7 +65,7 @@ test("contact follow-up shows pending contacts one at a time", async ({ page }) 
 
   await page.goto("/es/como-funciona");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
-  await expect(dialog).toContainText("1 de 2 contactos pendientes");
+  await expect(dialog).toContainText("1 de 2 confirmaciones pendientes");
   await expect(dialog).toContainText("SG Solutions");
 
   await dialog.getByRole("button", { name: "Aún no" }).click();
