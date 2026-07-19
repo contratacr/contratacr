@@ -6,9 +6,9 @@ export default function NotificationsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f8fb]">
       <LandingNavbar />
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-16 pt-24 sm:px-6 lg:px-8">
-        <section className="rounded-2xl border border-[#dfe8f0] bg-white p-4 shadow-sm sm:p-6">
-          <NotificationsList />
+      <main className="flex w-full flex-1 flex-col px-0 pb-0 pt-16 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8">
+        <section className="mx-auto w-full max-w-5xl flex-1 bg-white p-4 sm:flex-none sm:rounded-2xl sm:border sm:border-[#dfe8f0] sm:p-6 sm:shadow-sm">
+          <NotificationsList scope="all" />
         </section>
       </main>
       <LandingFooter />

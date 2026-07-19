@@ -40,9 +40,9 @@ function uniqueNotifications(items: Notification[]): Notification[] {
 // the kind of notification is already clear from its title/text, and a single shared
 // icon reads as "this is your notifications", consistent across the app.
 
-// Shared notifications list — used by the dedicated /notificaciones page and the
-// professional panel tab so both roles get the same notifications experience.
-export function NotificationsList() {
+// Shared notifications list. The standalone /notificaciones page shows the full
+// account history; the legacy panel tab can still scope by the active mode.
+export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" } = {}) {
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
@@ -86,7 +86,7 @@ export function NotificationsList() {
   }, [user, loadNotifications]);
 
   // Only the active mode's notifications are shown / acted on here.
-  const visible = items.filter((n) => notificationInMode(n.type, mode));
+  const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
   const notificationTitle = (n: Notification) =>
     n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
