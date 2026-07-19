@@ -8,7 +8,7 @@ import { writeSourceColumns } from "@/lib/security/write-guard";
 // (solicitud) OR project (proyecto). A client can review EACH finished item with
 // the same professional separately. The profile aggregates them.
 export async function POST(req: Request) {
-  const { professionalId, rating, comment, bookingId, projectId } = await req.json();
+  const { professionalId, rating, comment, bookingId, projectId, contactId } = await req.json();
 
   if (!professionalId || !rating) {
     return NextResponse.json({ error: "Faltan campos requeridos." }, { status: 400 });
@@ -39,7 +39,18 @@ export async function POST(req: Request) {
   // Also snapshot the job title so each per-job review shows its context.
   let allowed = false;
   let jobTitle: string | null = null;
-  if (bookingId) {
+  if (contactId) {
+    const { data: contact } = await createAdminClient()
+      .from("whatsapp_contact_followups")
+      .select("id, service_name")
+      .eq("id", contactId)
+      .eq("client_id", user.id)
+      .eq("professional_id", professionalId)
+      .eq("status", "hired")
+      .maybeSingle();
+    allowed = !!contact;
+    if (contact?.service_name) jobTitle = String(contact.service_name).slice(0, 80);
+  } else if (bookingId) {
     const { data: b } = await supabase
       .from("bookings").select("id, service_description")
       .eq("id", bookingId).eq("client_id", user.id).eq("professional_id", professionalId)
@@ -74,7 +85,8 @@ export async function POST(req: Request) {
 
   // One review per finished item (or per pair when no item id). EDIT if it exists.
   let existingQuery = supabase.from("reviews").select("id").eq("client_id", user.id).eq("professional_id", professionalId);
-  if (bookingId) existingQuery = existingQuery.eq("booking_id", bookingId);
+  if (contactId) existingQuery = existingQuery.eq("whatsapp_contact_id", contactId);
+  else if (bookingId) existingQuery = existingQuery.eq("booking_id", bookingId);
   else if (projectId) existingQuery = existingQuery.eq("project_id", projectId);
   const { data: existing } = await existingQuery.limit(1).maybeSingle();
 
@@ -92,7 +104,7 @@ export async function POST(req: Request) {
       entityTable: "reviews",
       entityId: existing.id,
       entityOwnerUserId: user.id,
-      afterData: { professional_id: professionalId, rating, comment, booking_id: bookingId ?? null, project_id: projectId ?? null },
+      afterData: { professional_id: professionalId, rating, comment, booking_id: bookingId ?? null, project_id: projectId ?? null, whatsapp_contact_id: contactId ?? null },
     });
     return NextResponse.json({ ok: true, edited: true });
   }
@@ -108,13 +120,20 @@ export async function POST(req: Request) {
   };
   if (bookingId) row.booking_id = bookingId;
   if (projectId) row.project_id = projectId;
+  if (contactId) row.whatsapp_contact_id = contactId;
   if (jobTitle) row.job_title = jobTitle;
   let { data: insertedReview, error } = await supabase.from("reviews").insert(row).select("id").single();
   // Retry without the new columns if not migrated yet (migrations 035/036).
-  if (error && /client_.*snapshot|created_source|created_app|created_supabase|booking_id|project_id|job_title|column|schema cache|PGRST204/i.test(error.message)) {
+  if (!contactId && error && /client_.*snapshot|created_source|created_app|created_supabase|booking_id|project_id|job_title|column|schema cache|PGRST204/i.test(error.message)) {
     ({ data: insertedReview, error } = await supabase.from("reviews").insert({ professional_id: professionalId, client_id: user.id, rating, comment }).select("id").single());
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (contactId) {
+    await createAdminClient().from("whatsapp_contact_followups").update({
+      status: "reviewed",
+      updated_at: new Date().toISOString(),
+    }).eq("id", contactId).eq("client_id", user.id);
+  }
   await auditUserAction(createAdminClient(), req, {
     actorUserId: user.id,
     actorRole: "client",
@@ -122,7 +141,7 @@ export async function POST(req: Request) {
     entityTable: "reviews",
     entityId: insertedReview?.id,
     entityOwnerUserId: user.id,
-    afterData: { professional_id: professionalId, rating, comment, booking_id: bookingId ?? null, project_id: projectId ?? null, job_title: jobTitle },
+    afterData: { professional_id: professionalId, rating, comment, booking_id: bookingId ?? null, project_id: projectId ?? null, whatsapp_contact_id: contactId ?? null, job_title: jobTitle },
   });
   if (targetPro?.profile_id && targetPro?.slug && insertedReview?.id) {
     const stars = Number(rating).toLocaleString("es-CR", { maximumFractionDigits: 1 });
@@ -154,6 +173,7 @@ export async function GET(req: Request) {
   const bookingId = url.searchParams.get("bookingId");
   const projectId = url.searchParams.get("projectId");
   const professionalId = url.searchParams.get("professionalId");
+  const contactId = url.searchParams.get("contactId");
   const mine = url.searchParams.get("mine");
 
   const supabase = await createClient();
@@ -174,7 +194,8 @@ export async function GET(req: Request) {
   }
 
   let q = supabase.from("reviews").select("id, rating, comment, edited_at").eq("client_id", user.id);
-  if (bookingId) q = q.eq("booking_id", bookingId);
+  if (contactId) q = q.eq("whatsapp_contact_id", contactId);
+  else if (bookingId) q = q.eq("booking_id", bookingId);
   else if (projectId) q = q.eq("project_id", projectId);
   else if (professionalId) q = q.eq("professional_id", professionalId);
   else return NextResponse.json({ review: null });

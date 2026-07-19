@@ -670,10 +670,24 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     });
   }
 
+  function recordContactFollowUp(method: "phone" | "email") {
+    void fetch("/api/contact/follow-up/record", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        professionalId: professional.id,
+        method,
+        contextTitle: categoryName,
+      }),
+    })
+      .then(() => window.dispatchEvent(new CustomEvent("contratacr:whatsapp-contacted")))
+      .catch(() => {});
+  }
+
   const renderCall = (secondary: boolean) => (
     <a
       href={isOwn ? undefined : telHref}
-      onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => { e.stopPropagation(); trackContact("phone"); }}
+      onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => { e.stopPropagation(); trackContact("phone"); recordContactFollowUp("phone"); }}
       className={`w-full inline-flex items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-semibold transition-colors ${
         secondary
           ? "border border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
@@ -694,7 +708,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       {showEmail && (
         <a
           href={isOwn ? undefined : emailHref}
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => { e.stopPropagation(); trackContact("email"); }}
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => { e.stopPropagation(); trackContact("email"); recordContactFollowUp("email"); }}
           className="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
         >
           <Mail className="h-4 w-4" /> {t("email")}
@@ -720,7 +734,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           {showEmail && (
             <a
               href={isOwn ? undefined : emailHref}
-              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => { e.stopPropagation(); trackContact("email"); }}
+              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => { e.stopPropagation(); trackContact("email"); recordContactFollowUp("email"); }}
               className="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-3 py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
             >
               <Mail className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">{t("email")}</span>

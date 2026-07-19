@@ -17,6 +17,7 @@ import { MetaPixel } from "@/components/analytics/meta-pixel";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
+import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-followup";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -142,6 +143,7 @@ export default async function LocaleLayout({
           <MetaPixel pixelId={META_PIXEL_ID} />
         </Suspense>
         {children}
+        <WhatsAppReviewFollowUp />
         <AiConcierge />
       </AuthProvider>
     </NextIntlClientProvider>
