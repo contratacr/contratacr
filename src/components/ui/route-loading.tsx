@@ -6,6 +6,7 @@ import { GoogleMapPanel } from "@/components/maps/google-map-panel";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { useLocale } from "next-intl";
 import { BrandLoadingMark, Skeleton } from "@/components/ui/content-loading";
+import { Loader2 } from "lucide-react";
 
 function FilterSkeleton() {
   return (
@@ -54,11 +55,12 @@ function SearchResultsLoadingNotice({ locale }: { locale: string }) {
 function DashboardLoadingNotice({ locale }: { locale: string }) {
   const isEnglish = locale === "en";
   return (
-    <BrandLoadingMark className="min-h-[45vh] text-center">
+    <div className="ccr-delayed-loading flex min-h-[45vh] flex-col items-center justify-center gap-3 text-center" aria-busy="true" role="status">
+      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" />
       <span className="sr-only">
         {isEnglish ? "Loading your panel..." : "Cargando tu panel..."}
       </span>
-    </BrandLoadingMark>
+    </div>
   );
 }
 

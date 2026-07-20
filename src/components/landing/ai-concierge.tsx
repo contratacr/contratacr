@@ -450,7 +450,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     if (!embedded) setOpen(false);
     const alreadyLocalized = /^\/(es|en)(?=\/|\?|$)/.test(href);
     const destination = alreadyLocalized ? href : `/${lang}${href.startsWith("/") ? href : `/${href}`}`;
-    window.location.assign(destination);
+    router.push(destination);
   }
 
   function resetConversation() {

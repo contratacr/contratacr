@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
+import { useRouter } from "@/i18n/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -46,6 +47,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
+  const router = useRouter();
   // Per-mode (Airbnb full switch): the panel tab shows ONLY the active mode's
   // notifications, matching the navbar bell.
   const { mode } = useMode(canOffer(user));
@@ -126,7 +128,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     }
-    window.location.assign(notificationHref(n, role, locale));
+    router.push(notificationHref(n, role, locale));
   }
 
   async function dismiss(e: React.MouseEvent, id: string) {

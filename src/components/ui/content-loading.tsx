@@ -1,6 +1,7 @@
 "use client";
 
 import type { ElementType, ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Skeleton({ className }: { className: string }) {
@@ -19,7 +20,11 @@ export function BrandLoadingMark({ className, children }: { className?: string; 
 
 export function PanelSectionLoading(_props: { rows?: number } = {}) {
   void _props;
-  return <BrandLoadingMark className="ccr-panel-section-loading min-h-24 py-8" />;
+  return (
+    <div className="ccr-delayed-loading ccr-panel-section-loading flex min-h-24 items-center justify-center py-8" aria-busy="true" role="status">
+      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-label="Cargando" />
+    </div>
+  );
 }
 
 export function PanelEmptyState({
