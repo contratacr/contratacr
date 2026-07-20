@@ -1,5 +1,5 @@
 import { DashboardRouteLoading } from "@/components/ui/route-loading";
 
 export default function Loading() {
-  return <DashboardRouteLoading />;
+  return <DashboardRouteLoading title="Cargando mensajes" />;
 }

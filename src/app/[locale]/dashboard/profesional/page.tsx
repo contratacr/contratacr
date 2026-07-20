@@ -608,7 +608,7 @@ export default function DashboardPage() {
   }
 
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro)) {
-    return <DashboardRouteLoading />;
+    return <DashboardRouteLoading title="Cargando panel" />;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;

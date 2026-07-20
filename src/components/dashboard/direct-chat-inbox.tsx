@@ -375,7 +375,12 @@ export function DirectChatInbox() {
     return isClientSide && item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null;
   }
 
-  if (loading) return <div className="ccr-delayed-loading flex min-h-[360px] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>;
+  if (loading) return (
+    <div className="ccr-delayed-loading flex min-h-[360px] flex-col items-center justify-center gap-2 px-4 text-center" aria-busy="true" role="status">
+      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
+      <p className="text-sm font-extrabold text-[#162543]">Cargando mensajes</p>
+    </div>
+  );
 
   if (!displayedConversations.length) return (
     <PanelEmptyState

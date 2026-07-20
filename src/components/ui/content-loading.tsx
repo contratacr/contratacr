@@ -18,11 +18,14 @@ export function BrandLoadingMark({ className, children }: { className?: string; 
   );
 }
 
-export function PanelSectionLoading(_props: { rows?: number } = {}) {
-  void _props;
+export function PanelSectionLoading({ title = "Cargando", description }: { rows?: number; title?: ReactNode; description?: ReactNode } = {}) {
   return (
-    <div className="ccr-delayed-loading ccr-panel-section-loading flex min-h-24 items-center justify-center py-8" aria-busy="true" role="status">
-      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-label="Cargando" />
+    <div className="ccr-delayed-loading ccr-panel-section-loading flex min-h-24 flex-col items-center justify-center gap-2 px-4 py-8 text-center" aria-busy="true" role="status">
+      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
+      <div>
+        <p className="text-sm font-extrabold text-[#162543]">{title}</p>
+        {description && <p className="mt-1 text-xs font-medium text-[#6b7280]">{description}</p>}
+      </div>
     </div>
   );
 }

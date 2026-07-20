@@ -251,7 +251,7 @@ export function BookingRequests() {
   }
 
   if (loading) {
-    return <PanelSectionLoading />;
+    return <PanelSectionLoading title={t("title")} />;
   }
 
   if (bookings.length === 0) {
