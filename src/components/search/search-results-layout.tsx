@@ -185,7 +185,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
               className="fixed left-3 top-[calc(env(safe-area-inset-top)+4.25rem)] z-40 inline-flex h-10 items-center justify-center gap-1.5 rounded-[3px] border border-[#d8e2ea] bg-white px-3 text-[13px] font-bold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition-transform active:scale-95 sm:px-3.5 lg:hidden"
             >
               <SlidersHorizontal className="h-[17px] w-[17px] text-[#0089bb]" />
-              <span className="hidden min-[390px]:inline">{t("filters.title")}</span>
+              <span>{t("filters.title")}</span>
               {hasActiveFilters && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#008ce0]" />}
             </button>
           </div>

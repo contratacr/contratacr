@@ -66,8 +66,8 @@
   touch-action: manipulation;
 }
 
-.ccr-native-app button:not([aria-label]),
-.ccr-native-app a[role="button"] {
+body.ccr-native-app:not(.ccr-native-web-parity) button:not([aria-label]),
+body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
   min-height: 44px;
 }
 

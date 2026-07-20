@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 
 function canPullToRefresh(pathname: string) {
@@ -8,6 +9,8 @@ function canPullToRefresh(pathname: string) {
 }
 
 export function MobileAppBridge() {
+  const pathname = usePathname();
+
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
     document.documentElement.classList.add("ccr-native-app");
@@ -30,6 +33,17 @@ export function MobileAppBridge() {
       document.body.classList.remove("ccr-native-app");
     };
   }, []);
+
+  useEffect(() => {
+    if (!isNativeAppRuntime()) return;
+    const webParity = pathname.startsWith("/buscar");
+    document.documentElement.classList.toggle("ccr-native-web-parity", webParity);
+    document.body.classList.toggle("ccr-native-web-parity", webParity);
+    return () => {
+      document.documentElement.classList.remove("ccr-native-web-parity");
+      document.body.classList.remove("ccr-native-web-parity");
+    };
+  }, [pathname]);
 
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
