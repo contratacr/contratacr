@@ -930,18 +930,17 @@ export default function DashboardPage() {
               )}
 
               {activeTab !== "home" && !mobileFullScreenTab && (
-                <div className="sticky top-0 z-20 flex min-h-16 items-center border-b border-[#e5e7eb] bg-white px-3 py-2 text-[#162543] lg:hidden">
+                <div className="sticky top-0 z-20 grid min-h-16 grid-cols-[64px_minmax(0,1fr)_64px] items-center border-b border-[#e5e7eb] bg-white px-2 py-2 text-[#162543] lg:hidden">
                   <button
                     type="button"
                     onClick={() => setTab("home")}
                     aria-label={t("backToPanel")}
-                    className="inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6]"
+                    className="inline-flex h-10 shrink-0 items-center gap-1 justify-self-start rounded-lg px-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6]"
                   >
                     <ArrowLeft className="h-5 w-5" />
-                    <span className="hidden min-[390px]:inline">{t("back")}</span>
                   </button>
-                  <h2 className="min-w-0 flex-1 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
-                  <div className="flex w-[74px] shrink-0 justify-end">
+                  <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                  <div className="flex shrink-0 justify-self-end">
                     {publicProfileHref && (
                       <Link
                         href={publicProfileHref}

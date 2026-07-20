@@ -864,24 +864,49 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="relative h-16">
-            <div className="absolute inset-0 flex items-center gap-2 lg:hidden">
+            <div className={cn(
+              "absolute inset-0 lg:hidden",
+              nativeApp
+                ? "grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-0"
+                : "flex items-center gap-2",
+            )}>
               <button
                 type="button"
                 onClick={openMobileMenu}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] transition-colors hover:bg-gray-50"
+                className={cn(
+                  "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] transition-colors hover:bg-gray-50",
+                  nativeApp && "justify-self-start",
+                )}
                 aria-label={t("openMenu")}
               >
                 <Menu className="h-5 w-5" />
               </button>
 
-              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+              <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeApp && "min-w-0 justify-self-center")}>
                 {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
               </Link>
 
-              {mobileInline && (
+              {!nativeApp && mobileInline && (
                 <div className="flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
               )}
 
+              {nativeApp ? (
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
+                  aria-label={locale === "en" ? "Assistant" : "Asistente"}
+                  className="grid h-11 w-11 justify-self-end place-items-center overflow-hidden rounded-full border border-[#d7edf8] bg-[#eef9fd] shadow-[0_8px_18px_-14px_rgba(0,159,217,0.85)] transition active:scale-[0.98]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/brand/ai-assistant-robot.png"
+                    alt=""
+                    width={52}
+                    height={52}
+                    className="h-12 w-12 translate-y-1 object-contain"
+                  />
+                </button>
+              ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
                 {nativeApp && user && (
                   <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
@@ -897,6 +922,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <UserRound className="h-5 w-5" />
                 </Link>
               </div>
+              )}
             </div>
 
             {/* ── Default row ── */}

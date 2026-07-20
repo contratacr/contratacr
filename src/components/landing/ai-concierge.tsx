@@ -230,6 +230,13 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   useContainedTouchScroll(scrollRef, open || embedded);
 
   useEffect(() => {
+    if (embedded) return;
+    const openAssistant = () => setOpen(true);
+    window.addEventListener("contratacr:open-ai", openAssistant);
+    return () => window.removeEventListener("contratacr:open-ai", openAssistant);
+  }, [embedded]);
+
+  useEffect(() => {
     const frame = requestAnimationFrame(() => {
       const stored = readStoredSession(lang);
       if (stored) {
@@ -481,6 +488,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
 
   if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
+  if (!embedded && nativeApp && !open) return null;
   if (!embedded && !open) {
     return (
       <button
