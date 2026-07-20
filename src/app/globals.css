@@ -46,6 +46,62 @@
   --radius-2xl: 1.5rem;
 }
 
+.ccr-native-app .ccr-app-footer {
+  display: none;
+}
+
+.ccr-native-app {
+  background: #f4f7fa;
+}
+
+.ccr-native-app body {
+  min-height: 100svh;
+  background: #f4f7fa;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.ccr-native-app button,
+.ccr-native-app a {
+  touch-action: manipulation;
+}
+
+.ccr-native-app button:not([aria-label]),
+.ccr-native-app a[role="button"] {
+  min-height: 44px;
+}
+
+.ccr-native-refresh-indicator {
+  --ccr-pull-distance: 0px;
+  position: fixed;
+  left: 50%;
+  top: calc(env(safe-area-inset-top) + 10px);
+  z-index: 10000;
+  display: grid;
+  height: 34px;
+  min-width: 108px;
+  place-items: center;
+  border: 1px solid rgba(0, 159, 217, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #162543;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-54px + var(--ccr-pull-distance))) scale(0.96);
+  transition: opacity 120ms ease, transform 120ms ease, background-color 120ms ease, color 120ms ease;
+  box-shadow: 0 14px 34px -18px rgba(22, 37, 67, 0.45);
+}
+
+.ccr-native-refresh-indicator.is-visible {
+  opacity: 1;
+}
+
+.ccr-native-refresh-indicator.is-armed {
+  background: #009fd9;
+  color: #ffffff;
+}
+
 * {
   box-sizing: border-box;
 }
