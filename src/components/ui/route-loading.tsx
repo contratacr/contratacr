@@ -3,6 +3,7 @@
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Navbar } from "@/components/layout/navbar";
 import { GoogleMapPanel } from "@/components/maps/google-map-panel";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { useLocale } from "next-intl";
 import { Skeleton } from "@/components/ui/content-loading";
 
@@ -110,6 +111,19 @@ export function SearchRouteLoading() {
 
 export function DashboardRouteLoading() {
   const locale = useLocale();
+  const nativeApp = useNativeApp();
+  if (nativeApp) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#f4f7fa]" aria-busy="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-mark-transparent.png" alt="" width={80} height={80} className="h-20 w-20 object-contain" />
+        <span className="sr-only">
+          {locale === "en" ? "Loading your panel..." : "Cargando tu panel..."}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true">
       <Navbar />

@@ -135,6 +135,11 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialNotificationUnread={initialNotificationUnread}>
         <DocumentLocale locale={locale} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add('ccr-native-app');document.body&&document.body.classList.add('ccr-native-app');}}catch(e){}`,
+          }}
+        />
         <EmojiBlocker />
         <ViewportEnvironment />
         <MobileAppBridge />

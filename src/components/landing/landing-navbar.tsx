@@ -892,11 +892,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
 
               {nativeApp ? (
                 <Link
-                  href={user ? "/buscar" : loginHref}
-                  aria-label={user ? t("searchProfessionals") : t("login")}
+                  href="/buscar"
+                  aria-label={t("searchProfessionals")}
                   className="grid h-10 w-10 justify-self-end place-items-center rounded-xl text-[#1A2744] transition-colors active:bg-[#eef9fd] active:text-[#009FD9]"
                 >
-                  {user ? <Search className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
+                  <Search className="h-5 w-5" />
                 </Link>
               ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
