@@ -971,10 +971,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             </div>
 
             {/* ── Default row ── */}
-            <div
-              className="absolute inset-0 hidden items-center gap-4 transition-opacity duration-300 lg:flex"
-              style={{ opacity: effectiveCompact ? 0 : 1, pointerEvents: effectiveCompact ? "none" : "auto" }}
-            >
+            <div className="relative hidden h-full items-center gap-4 lg:flex">
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
                 {mobileInline ? (
                   <>
@@ -1140,21 +1137,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               </button>
             </div>
 
-            {/* ── Compact row — brand mark + smart search (Thumbtack-style) ── */}
+            {/* ── Scroll search overlay — inserts search without moving the base navbar. ── */}
             <div
-              className="absolute inset-0 hidden items-center gap-2 px-4 transition-opacity duration-300 sm:gap-3 sm:px-6 lg:flex lg:px-8"
+              className="absolute inset-y-0 left-[320px] right-[390px] hidden items-center transition-opacity duration-200 lg:flex xl:left-[340px]"
               style={{ opacity: effectiveCompact ? 1 : 0, pointerEvents: effectiveCompact ? "auto" : "none" }}
             >
-              <Link
-                href="/"
-                aria-label="ContrataCR inicio"
-                className="relative z-20 shrink-0 -ml-1 grid place-items-center p-1 rounded-lg active:bg-gray-100 touch-manipulation"
-              >
-                <ContrataCRMark className="h-9 w-9" />
-              </Link>
               <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
-                <div className="relative w-full max-w-5xl">
-                  <div className="flex w-full items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
+                <div className="relative w-full max-w-3xl">
+                  <div className="flex w-full items-center h-11 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-4 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
                     <div ref={compactSvcRef} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
                       <Search className="hidden h-5 w-5 shrink-0 text-gray-300 sm:block" />
                       <input
@@ -1193,7 +1183,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     <button
                       type="submit"
                       aria-label={t("search")}
-                      className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-8 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
+                      className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-6 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
                     >
                       <Search className="h-4 w-4 sm:hidden" />
                       <span className="hidden sm:inline">{t("search")}</span>
@@ -1257,31 +1247,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 </div>
               </form>
 
-              {/* Desktop keeps bell + account menu in the compact row. On mobile,
-                  the hamburger is the single entry point so account options do not
-                  split across two menus. */}
-              <div className="hidden w-[156px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
-                <LanguageMenu />
-                {nativeApp && user && (
-                  <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
-                    <MessageSquareText className="h-5 w-5" />
-                  </HeaderIconLink>
-                )}
-                {user && <NotificationBell scope="all" />}
-                {user ? (
-                  <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
-                ) : (
-                  null
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={openMobileMenu}
-                className="lg:hidden ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
-                aria-label={t("openMenu")}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
             </div>
 
           </div>
