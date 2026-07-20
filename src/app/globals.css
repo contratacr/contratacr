@@ -61,6 +61,10 @@
   overscroll-behavior-y: contain;
 }
 
+body.ccr-native-app.ccr-native-search-route {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 .ccr-native-app button,
 .ccr-native-app a {
   touch-action: manipulation;
@@ -101,8 +105,8 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
 }
 
 .ccr-native-app .ccr-search-bottom-sheet {
-  bottom: calc(64px + env(safe-area-inset-bottom));
-  max-height: calc(100dvh - 228px) !important;
+  bottom: env(safe-area-inset-bottom);
+  max-height: calc(100dvh - 164px - env(safe-area-inset-bottom)) !important;
 }
 
 .ccr-native-app .ccr-panel-section-loading {

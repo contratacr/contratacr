@@ -646,7 +646,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const nativeApp = useNativeApp();
   const nativeSearchRoute = /(^|\/)buscar(\/|$)/.test(pathname);
   const nativeHeaderShell = nativeApp;
-  const nativeBottomShell = nativeApp;
+  const nativeBottomShell = nativeApp && !nativeSearchRoute;
   const { user, loading: authLoading } = useAuth();
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
@@ -742,11 +742,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   );
 
   useEffect(() => {
-    setNativePendingHref(null);
+    const id = window.setTimeout(() => setNativePendingHref(null), 0);
     if (nativePendingTimer.current) {
       window.clearTimeout(nativePendingTimer.current);
       nativePendingTimer.current = null;
     }
+    return () => window.clearTimeout(id);
   }, [pathname]);
 
   const compactSuggestions = matchCategories(searchQuery, 8, locale);
@@ -1282,7 +1283,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
         >
           <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
             <nav className="flex flex-col gap-1">
-              {user && !nativeApp ? (
+              {user ? (
                 <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                   <DrawerIcon><LayoutDashboard /></DrawerIcon>
                   <span>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
