@@ -116,10 +116,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const earliestByPro: Record<string, string> = {};
   const videoMode = params.modalidad === "video";
   const publicIds = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
-  // Load the visible cards' schedule strips with the page render. This keeps the
-  // search page feeling like one load instead of showing per-card skeletons while
-  // users scroll through the results.
-  if (publicIds.length > 0) {
+  // Render the page and professional cards before availability finishes loading.
+  // Each card keeps its established schedule skeleton while it refreshes client-side.
+  // Availability sorting is the exception because slot timestamps determine order.
+  if (publicIds.length > 0 && sortBy === "availability") {
     try {
       const supabase = createAdminClient();
       const todayISO = crTodayISO();
@@ -421,7 +421,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           <ProfessionalCard
                             professional={pro}
                             slots={slotsByPro[pro.id] ?? []}
-                            slotsInitiallyLoaded
+                            slotsInitiallyLoaded={sortBy === "availability"}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={i + 1}
