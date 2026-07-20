@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
@@ -12,6 +12,7 @@ import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
 import { AppTooltip } from "@/components/ui/app-tooltip";
+import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 
 type Notification = {
   id: string;
@@ -24,34 +25,6 @@ type Notification = {
 };
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
-const NOTIFICATIONS_CACHE_PREFIX = "ccr:notifications:";
-
-function readCachedNotifications(userId: string | undefined): Notification[] {
-  if (!userId || typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(`${NOTIFICATIONS_CACHE_PREFIX}${userId}`);
-    return raw ? uniqueNotifications(JSON.parse(raw) as Notification[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function cacheNotifications(userId: string | undefined, items: Notification[]) {
-  if (!userId || typeof window === "undefined") return;
-  try {
-    localStorage.setItem(`${NOTIFICATIONS_CACHE_PREFIX}${userId}`, JSON.stringify(items.slice(0, 20)));
-  } catch { /* ignore */ }
-}
-
-function uniqueNotifications(items: Notification[]): Notification[] {
-  const seen = new Set<string>();
-  return items.filter((item) => {
-    if (seen.has(item.id)) return false;
-    seen.add(item.id);
-    return true;
-  });
-}
-
 export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "offer" }) {
   const { user, notificationUnread } = useAuth();
   const router = useRouter();
@@ -59,12 +32,15 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   const locale = useLocale();
   const [notificationState, setNotificationState] = useState(() => ({
     userId: user?.id,
-    items: readCachedNotifications(user?.id),
+    items: readCachedNotifications(user?.id) ?? [],
   }));
-  const notifications = notificationState.userId === user?.id ? notificationState.items : readCachedNotifications(user?.id);
+  const notifications = useMemo(
+    () => notificationState.userId === user?.id ? notificationState.items : readCachedNotifications(user?.id) ?? [],
+    [notificationState, user?.id],
+  );
   const updateNotifications = useCallback((updater: (prev: Notification[]) => Notification[]) => {
     setNotificationState((prev) => {
-      const base = prev.userId === user?.id ? prev.items : readCachedNotifications(user?.id);
+      const base = prev.userId === user?.id ? prev.items : readCachedNotifications(user?.id) ?? [];
       return { userId: user?.id, items: updater(base) };
     });
   }, [user?.id]);
@@ -112,7 +88,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
 
   useEffect(() => {
     queueMicrotask(() => {
-      setNotificationState({ userId: user?.id, items: readCachedNotifications(user?.id) });
+      setNotificationState({ userId: user?.id, items: readCachedNotifications(user?.id) ?? [] });
     });
   }, [user?.id]);
 
