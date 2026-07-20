@@ -359,12 +359,19 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const locTabs = hasRealLoc
     ? visibleLocationOptions
     : (placeFallback ? [{ id: "__fallback", label: placeFallback }] : []);
-  // Address under the tabs: the selected workplace's street address, else the
-  // province/cantón fallback. Home service is shown as a separate card chip, never
-  // as an address.
+  // Address under the tabs: follow the selected tab. If a workplace has no exact
+  // address, show that tab label instead of falling back to another location from
+  // the search result.
   const isVideoLocation = effectiveId === "videoconsulta";
   const workplaceAddr = hasRealLoc && effectiveId && !isVideoLocation ? locAddress(effectiveId) : "";
-  const addressLine = isVideoLocation ? "" : (workplaceAddr || placeAddress || "");
+  const selectedLocationLabel = hasRealLoc && effectiveId && !isVideoLocation
+    ? visibleLocationOptions.find((o) => o.id === effectiveId)?.label?.trim() ?? ""
+    : "";
+  const addressLine = isVideoLocation
+    ? ""
+    : hasRealLoc
+      ? (workplaceAddr || selectedLocationLabel)
+      : (placeAddress || "");
   const venueName = workplaceAddr ? businessName.trim() : "";
   // Show the chevron nav whenever the tab row actually OVERFLOWS its container (FIT-based, not a
   // fixed count) — so on a NARROW card (e.g. the profile contact rail) where the 3rd location is

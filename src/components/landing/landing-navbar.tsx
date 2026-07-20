@@ -1277,7 +1277,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[80vw] max-w-[340px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[46vw] min-w-[180px] max-w-[210px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
