@@ -709,7 +709,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   );
   const mobileDrawerItemClass =
     "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[17px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
-  const mobileDrawerTextClass = "min-w-0 flex-1 break-words";
+  const mobileDrawerTextClass = "min-w-0 flex-1 truncate";
   const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-extrabold");
   const mobileDrawerSubItemClass =
     "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[15px] font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
@@ -1278,7 +1278,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[74vw] max-w-[320px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[68vw] max-w-[300px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
