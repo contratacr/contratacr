@@ -741,14 +741,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     [router],
   );
 
-  useEffect(() => {
-    setNativePendingHref(null);
-    if (nativePendingTimer.current) {
-      window.clearTimeout(nativePendingTimer.current);
-      nativePendingTimer.current = null;
-    }
-  }, [pathname]);
-
   const compactSuggestions = matchCategories(searchQuery, 8, locale);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
 
@@ -911,11 +903,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
 
   return (
     <>
-      {nativeApp && nativePendingHref && (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-[200] h-0.5 overflow-hidden bg-[#009FD9]/15" aria-hidden="true">
-          <span className="block h-full w-1/2 animate-[native-route-progress_1s_ease-in-out_infinite] bg-[#009FD9]" />
-        </div>
-      )}
       <header
         className="fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80"
       >
