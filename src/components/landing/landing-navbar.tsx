@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass,
-  UserRound, LogOut, FileText, ShieldCheck,
+  UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -579,6 +579,19 @@ function PanelIconLink({ href, label }: { href: string; label: string }) {
   );
 }
 
+function HeaderIconLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      title={label}
+      className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+    >
+      {children}
+    </Link>
+  );
+}
+
 export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -848,6 +861,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               )}
 
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
+                {nativeApp && user && (
+                  <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
+                    <MessageSquareText className="h-5 w-5" />
+                  </HeaderIconLink>
+                )}
                 {user && <NotificationBell scope="all" />}
                 <Link
                   href={user ? primaryPanelHref : loginHref}
@@ -993,6 +1011,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                         <Briefcase className="h-4 w-4" />
                         {t("offerServices")}
                       </Link>
+                    )}
+                    {nativeApp && (
+                      <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
+                        <MessageSquareText className="h-5 w-5" />
+                      </HeaderIconLink>
                     )}
                     <NotificationBell scope="all" />
                     <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
@@ -1151,6 +1174,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   split across two menus. */}
               <div className="hidden w-[156px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
                 <LanguageMenu />
+                {nativeApp && user && (
+                  <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
+                    <MessageSquareText className="h-5 w-5" />
+                  </HeaderIconLink>
+                )}
                 {user && <NotificationBell scope="all" />}
                 {user ? (
                   <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
@@ -1216,6 +1244,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               <Link href="/buscar" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 {t("searchProfessionals")}
               </Link>
+              {nativeApp && user && (
+                <Link href="/mensajes" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+                  {locale === "en" ? "Messages" : "Mensajes"}
+                </Link>
+              )}
               {!user && (
                 <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   {t("login")}
