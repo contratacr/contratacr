@@ -582,7 +582,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   }
 
   if (loading) {
-    return <PanelSectionLoading />;
+    return <PanelSectionLoading title="Oportunidades" />;
   }
 
   return (
