@@ -8,6 +8,10 @@ function canPullToRefresh(pathname: string) {
   return /\/(dashboard|mensajes|notificaciones|buscar)(\/|$)/.test(pathname);
 }
 
+function isSearchPath(pathname: string) {
+  return /(^|\/)buscar(\/|$)/.test(pathname);
+}
+
 export function MobileAppBridge() {
   const pathname = usePathname();
 
@@ -36,7 +40,7 @@ export function MobileAppBridge() {
 
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
-    const webParity = pathname.startsWith("/buscar");
+    const webParity = isSearchPath(pathname);
     document.documentElement.classList.toggle("ccr-native-web-parity", webParity);
     document.body.classList.toggle("ccr-native-web-parity", webParity);
     return () => {
