@@ -167,15 +167,33 @@
 }
 
 .ccr-native-boot-card img {
-  height: 64px;
-  width: 64px;
+  height: 72px;
+  width: 72px;
   object-fit: contain;
 }
 
 .ccr-brand-loading-mark {
-  height: 64px;
-  width: 64px;
+  height: 72px;
+  width: 72px;
   object-fit: contain;
+  animation: ccr-brand-loading-glow 1.55s ease-in-out infinite;
+}
+
+.ccr-native-boot-card img {
+  animation: ccr-brand-loading-glow 1.55s ease-in-out infinite;
+}
+
+@keyframes ccr-brand-loading-glow {
+  0%, 100% {
+    filter: brightness(1);
+    opacity: 0.88;
+    transform: scale(0.985);
+  }
+  50% {
+    filter: brightness(1.12);
+    opacity: 1;
+    transform: scale(1.02);
+  }
 }
 
 .ccr-native-refresh-indicator {
