@@ -251,7 +251,7 @@ export function BookingRequests() {
   }
 
   if (loading) {
-    return <PanelSectionLoading title="Solicitudes recibidas" />;
+    return <PanelSectionLoading />;
   }
 
   if (bookings.length === 0) {

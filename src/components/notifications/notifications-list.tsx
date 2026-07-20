@@ -215,7 +215,6 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
         {busy ? (
           <PanelSectionLoading
-            title={t("title")}
             className={scope === "all" ? "min-h-[calc(100dvh-13rem)] sm:min-h-[18rem]" : "min-h-[16rem] sm:min-h-[18rem]"}
           />
         ) : visible.length === 0 ? (

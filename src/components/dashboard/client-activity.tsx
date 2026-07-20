@@ -585,11 +585,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   if (loading) {
-    const loadingTitle =
-      section === "projects"
-        ? "Cargando publicaciones"
-        : "Cargando solicitudes";
-    return <PanelSectionLoading title={loadingTitle} />;
+    return <PanelSectionLoading />;
   }
 
   const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));
