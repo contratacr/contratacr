@@ -116,10 +116,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const earliestByPro: Record<string, string> = {};
   const videoMode = params.modalidad === "video";
   const publicIds = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
-  // Only block the page render on availability when the user explicitly sorts by
-  // it. Otherwise the card strips load client-side with the existing skeletons,
-  // which lets /buscar paint much faster.
-  if (sortBy === "availability" && publicIds.length > 0) {
+  // Load the visible cards' schedule strips with the page render. This keeps the
+  // search page feeling like one load instead of showing per-card skeletons while
+  // users scroll through the results.
+  if (publicIds.length > 0) {
     try {
       const supabase = createAdminClient();
       const todayISO = crTodayISO();
@@ -421,7 +421,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           <ProfessionalCard
                             professional={pro}
                             slots={slotsByPro[pro.id] ?? []}
-                            slotsInitiallyLoaded={sortBy === "availability"}
+                            slotsInitiallyLoaded
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={i + 1}
