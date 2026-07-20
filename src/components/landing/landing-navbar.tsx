@@ -6,7 +6,6 @@ import {
   LayoutDashboard, Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Bot,
-  Bell,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -891,13 +890,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               )}
 
               {nativeApp ? (
-                <Link
-                  href="/buscar"
-                  aria-label={t("searchProfessionals")}
-                  className="grid h-10 w-10 justify-self-end place-items-center rounded-xl text-[#1A2744] transition-colors active:bg-[#eef9fd] active:text-[#009FD9]"
-                >
-                  <Search className="h-5 w-5" />
-                </Link>
+                user ? (
+                  <div className="grid h-10 w-10 justify-self-end place-items-center">
+                    <NotificationBell scope="all" />
+                  </div>
+                ) : (
+                  <Link
+                    href={loginHref}
+                    aria-label={t("login")}
+                    className="grid h-10 w-10 justify-self-end place-items-center rounded-xl text-[#1A2744] transition-colors active:bg-[#eef9fd] active:text-[#009FD9]"
+                  >
+                    <UserRound className="h-5 w-5" />
+                  </Link>
+                )
               ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
                 {nativeApp && user && (
@@ -1291,19 +1296,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <span>{t("offerServices")}</span>
                 </Link>
               )}
-              {nativeApp && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    window.dispatchEvent(new Event("contratacr:open-ai"));
-                  }}
-                  className={mobileDrawerItemClass}
-                >
-                  <DrawerIcon><Bot /></DrawerIcon>
-                  <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
-                </button>
-              )}
               <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 <DrawerIcon><Wrench /></DrawerIcon>
                 <span>{t("categories")}</span>
@@ -1412,10 +1404,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <MessageSquareText className="h-5 w-5" />
                 <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
               </Link>
-              <Link href="/notificaciones" className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]">
-                <Bell className="h-5 w-5" />
-                <span>{locale === "en" ? "Alerts" : "Notificaciones"}</span>
-              </Link>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
+                className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]"
+              >
+                <Bot className="h-5 w-5" />
+                <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
+              </button>
             </div>
           </nav>
         )}
