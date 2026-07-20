@@ -25,7 +25,6 @@ export function MobileAppBridge() {
     overlay.innerHTML = `
       <div class="ccr-native-boot-card" aria-label="ContrataCR">
         <img src="/logo-mark-transparent.png" alt="" />
-        <strong><span>Contrata</span><span>CR</span></strong>
       </div>
     `;
     document.body.appendChild(overlay);

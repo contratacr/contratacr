@@ -162,26 +162,15 @@
 }
 
 .ccr-native-boot-card {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  display: grid;
+  place-items: center;
   transform: translateY(-18px);
 }
 
 .ccr-native-boot-card img {
-  height: 42px;
-  width: 42px;
-}
-
-.ccr-native-boot-card strong {
-  font-size: 28px;
-  font-weight: 900;
-  line-height: 1;
-  color: #1a2744;
-}
-
-.ccr-native-boot-card strong span:last-child {
-  color: #009fd9;
+  height: 80px;
+  width: 80px;
+  object-fit: contain;
 }
 
 .ccr-native-refresh-indicator {

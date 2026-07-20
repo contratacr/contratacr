@@ -54,10 +54,11 @@ function DashboardLoadingNotice({ locale }: { locale: string }) {
   const isEnglish = locale === "en";
   return (
     <div className="ccr-delayed-loading flex min-h-[45vh] flex-col items-center justify-center gap-3 text-center">
-      <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent motion-reduce:animate-none" aria-hidden />
-      <p className="text-sm font-medium text-[#6b7280]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo-mark-transparent.png" alt="" width={72} height={72} className="h-[72px] w-[72px] object-contain" />
+      <span className="sr-only">
         {isEnglish ? "Loading your panel..." : "Cargando tu panel..."}
-      </p>
+      </span>
     </div>
   );
 }
@@ -110,7 +111,7 @@ export function SearchRouteLoading() {
 export function DashboardRouteLoading() {
   const locale = useLocale();
   return (
-    <div className="min-h-screen bg-[#fafafa]" aria-busy="true">
+    <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true">
       <Navbar />
       <main>
         <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 sm:px-6 lg:px-8">

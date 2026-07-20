@@ -5,7 +5,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2,
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Bot,
   Bell,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -891,21 +891,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               )}
 
               {nativeApp ? (
-                <button
-                  type="button"
-                  onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
-                  aria-label={locale === "en" ? "Assistant" : "Asistente"}
-                  className="grid h-11 w-11 justify-self-end place-items-center overflow-hidden rounded-full border border-[#d7edf8] bg-[#eef9fd] shadow-[0_8px_18px_-14px_rgba(0,159,217,0.85)] transition active:scale-[0.98]"
+                <Link
+                  href={user ? "/buscar" : loginHref}
+                  aria-label={user ? t("searchProfessionals") : t("login")}
+                  className="grid h-10 w-10 justify-self-end place-items-center rounded-xl text-[#1A2744] transition-colors active:bg-[#eef9fd] active:text-[#009FD9]"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/brand/ai-assistant-robot.png"
-                    alt=""
-                    width={52}
-                    height={52}
-                    className="h-12 w-12 translate-y-1 object-contain"
-                  />
-                </button>
+                  {user ? <Search className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
+                </Link>
               ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
                 {nativeApp && user && (
@@ -1289,17 +1281,30 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <span>{t("searchProfessionals")}</span>
                 </Link>
               )}
-              {nativeApp && user && false && (
-                <Link href="/mensajes" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  <DrawerIcon><MessageSquareText /></DrawerIcon>
-                  <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
-                </Link>
-              )}
               {!user && (
                 <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><UserRound /></DrawerIcon>
                   <span>{t("login")}</span>
                 </Link>
+              )}
+              {nativeApp && user && !isPro && (
+                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+                  <DrawerIcon><Briefcase /></DrawerIcon>
+                  <span>{t("offerServices")}</span>
+                </Link>
+              )}
+              {nativeApp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    window.dispatchEvent(new Event("contratacr:open-ai"));
+                  }}
+                  className={mobileDrawerItemClass}
+                >
+                  <DrawerIcon><Bot /></DrawerIcon>
+                  <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
+                </button>
               )}
               <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 <DrawerIcon><Wrench /></DrawerIcon>
@@ -1397,7 +1402,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] backdrop-blur"
           >
             <div className="mx-auto grid max-w-[390px] grid-cols-4 gap-1">
-              <Link href={primaryPanelHref} className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#162543] active:bg-[#eef9fd] active:text-[#009FD9]">
+              <Link href={primaryPanelHref} className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]">
                 <LayoutDashboard className="h-5 w-5" />
                 <span>Panel</span>
               </Link>
