@@ -29,11 +29,19 @@ export function MobileAppBridge() {
     `;
     document.body.appendChild(overlay);
 
+    const startedAt = window.performance.now();
+    let hiding = false;
     const hide = () => {
-      overlay.classList.add("is-hiding");
-      window.setTimeout(() => overlay.remove(), 260);
+      if (hiding) return;
+      hiding = true;
+      const elapsed = window.performance.now() - startedAt;
+      const wait = Math.max(0, 700 - elapsed);
+      window.setTimeout(() => {
+        overlay.classList.add("is-hiding");
+        window.setTimeout(() => overlay.remove(), 260);
+      }, wait);
     };
-    const timer = window.setTimeout(hide, document.readyState === "complete" ? 420 : 850);
+    const timer = window.setTimeout(hide, 2200);
     window.addEventListener("load", hide, { once: true });
     return () => {
       window.clearTimeout(timer);
