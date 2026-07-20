@@ -709,6 +709,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   );
   const mobileDrawerItemClass =
     "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[17px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
+  const mobileDrawerTextClass = "min-w-0 flex-1 break-words";
   const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-extrabold");
   const mobileDrawerSubItemClass =
     "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[15px] font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
@@ -1277,7 +1278,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[46vw] min-w-[180px] max-w-[210px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[84vw] max-w-[370px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -1286,22 +1287,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               {user ? (
                 <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                   <DrawerIcon><LayoutDashboard /></DrawerIcon>
-                  <span>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                 </Link>
               ) : !user ? (
                 <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                   <DrawerIcon><Briefcase /></DrawerIcon>
-                  <span>{t("offerServices")}</span>
+                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
                 </Link>
               ) : null}
               <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 <DrawerIcon><Search /></DrawerIcon>
-                <span>{t("searchProfessionals")}</span>
+                <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
               </Link>
               {nativeApp && user && (
                 <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><MessageSquareText /></DrawerIcon>
-                  <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
                 </Link>
               )}
               <button
@@ -1313,24 +1314,24 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 className={mobileDrawerItemClass}
               >
                 <DrawerIcon><Bot /></DrawerIcon>
-                <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
+                <span className={mobileDrawerTextClass}>{locale === "en" ? "Assistant" : "Asistente"}</span>
               </button>
               {!user && (
                 <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><UserRound /></DrawerIcon>
-                  <span>{t("login")}</span>
+                  <span className={mobileDrawerTextClass}>{t("login")}</span>
                 </Link>
               )}
 
               {user && !isPro && (
                 <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><Briefcase /></DrawerIcon>
-                  <span>{t("offerServices")}</span>
+                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
                 </Link>
               )}
               <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 <DrawerIcon><Wrench /></DrawerIcon>
-                <span>{t("categories")}</span>
+                <span className={mobileDrawerTextClass}>{t("categories")}</span>
               </Link>
 
               <div className="mt-1">
@@ -1348,19 +1349,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <div className="mt-1 grid gap-1 pl-[52px]">
                     <Link href="/como-funciona" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
                       <ResourceIcon name="howItWorks" />
-                      <span>{t("resourceLinks.howItWorks")}</span>
+                      <span className={mobileDrawerTextClass}>{t("resourceLinks.howItWorks")}</span>
                     </Link>
                     <Link href="/ayuda" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
                       <ResourceIcon name="helpCenter" />
-                      <span>{t("resourceLinks.helpCenter")}</span>
+                      <span className={mobileDrawerTextClass}>{t("resourceLinks.helpCenter")}</span>
                     </Link>
                     <Link href="/atraer-clientes" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
                       <ResourceIcon name="proTips" />
-                      <span>{t("resourceLinks.proTips")}</span>
+                      <span className={mobileDrawerTextClass}>{t("resourceLinks.proTips")}</span>
                     </Link>
                     <SupportLink onNavigate={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
                       <ResourceIcon name="support" />
-                      <span>{t("resourceLinks.support")}</span>
+                      <span className={mobileDrawerTextClass}>{t("resourceLinks.support")}</span>
                     </SupportLink>
                   </div>
                 )}
@@ -1375,7 +1376,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 className={mobileDrawerItemClass}
               >
                 <DrawerIcon><Globe2 /></DrawerIcon>
-                <span>{alternateLanguageLabel}</span>
+                <span className={mobileDrawerTextClass}>{alternateLanguageLabel}</span>
               </button>
             </nav>
             {false && nativeApp && (
