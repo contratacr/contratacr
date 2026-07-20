@@ -644,8 +644,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
   const pathname = usePathname();
   const nativeApp = useNativeApp();
-  const nativeSearchRoute = pathname.startsWith("/buscar");
-  const nativeShell = nativeApp && !nativeSearchRoute;
+  const nativeSearchRoute = /(^|\/)buscar(\/|$)/.test(pathname);
+  const nativeHeaderShell = nativeApp;
+  const nativeBottomShell = nativeApp && !nativeSearchRoute;
   const { user, loading: authLoading } = useAuth();
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
@@ -681,18 +682,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   // use Next's prefetched route payload instead of waiting after the click.
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      if (!pathname.startsWith("/buscar")) router.prefetch("/buscar");
+      if (!nativeSearchRoute) router.prefetch("/buscar");
       if (user && !pathname.startsWith("/dashboard/profesional")) {
         router.prefetch(primaryPanelHref);
         prefetchDashboardBootstrap(user.id);
       }
     }, 900);
     return () => window.clearTimeout(timeout);
-  }, [pathname, primaryPanelHref, router, user]);
+  }, [nativeSearchRoute, pathname, primaryPanelHref, router, user]);
+
+  useEffect(() => {
+    if (!nativeApp) return;
+    router.prefetch("/buscar");
+  }, [nativeApp, router]);
 
   useEffect(() => {
     if (!nativeApp || !user) return;
-    router.prefetch("/buscar");
     router.prefetch("/mensajes");
     router.prefetch(primaryPanelHref);
     prefetchDashboardBootstrap(user.id);
@@ -905,7 +910,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
           <div className="relative h-16">
             <div className={cn(
               "absolute inset-0 lg:hidden",
-              nativeShell
+              nativeHeaderShell
                 ? "grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-0"
                 : "flex items-center gap-2",
             )}>
@@ -914,22 +919,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 onClick={openMobileMenu}
                 className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] transition-colors hover:bg-gray-50",
-                  nativeShell && "justify-self-start",
+                  nativeHeaderShell && "justify-self-start",
                 )}
                 aria-label={t("openMenu")}
               >
                 <Menu className="h-5 w-5" />
               </button>
 
-              <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeShell && "min-w-0 justify-self-center")}>
+              <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "min-w-0 justify-self-center")}>
                 {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
               </Link>
 
-              {!nativeShell && mobileInline && (
+              {!nativeHeaderShell && mobileInline && (
                 <div className="flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
               )}
 
-              {nativeShell ? (
+              {nativeHeaderShell ? (
                 user ? (
                   <div className="grid h-10 w-10 justify-self-end place-items-center">
                     <NotificationBell scope="all" />
@@ -1315,7 +1320,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <span>{t("offerServices")}</span>
                 </Link>
               ) : null}
-              <Link href="/buscar" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+              <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 <DrawerIcon><Search /></DrawerIcon>
                 <span>{t("searchProfessionals")}</span>
               </Link>
@@ -1434,7 +1439,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             )}
           </div>
         </div>
-        {nativeShell && user && (
+        {nativeBottomShell && user && (
           <nav
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] backdrop-blur"
@@ -1444,7 +1449,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <LayoutDashboard className="h-5 w-5" />
                 <span>Panel</span>
               </Link>
-              <Link href="/buscar" onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
+              <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
                 <Search className="h-5 w-5" />
                 <span>{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
