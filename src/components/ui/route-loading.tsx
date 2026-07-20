@@ -5,7 +5,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { GoogleMapPanel } from "@/components/maps/google-map-panel";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { useLocale } from "next-intl";
-import { BrandLoadingMark, Skeleton } from "@/components/ui/content-loading";
+import { Skeleton } from "@/components/ui/content-loading";
 import { Loader2 } from "lucide-react";
 
 function FilterSkeleton() {
@@ -115,36 +115,7 @@ export function DashboardRouteLoading() {
   if (nativeApp) {
     return (
       <div className="grid min-h-screen place-items-center bg-[#f4f7fa]" aria-busy="true">
-        <BrandLoadingMark className="min-h-0">
-          <span className="sr-only">
-            {locale === "en" ? "Loading your panel..." : "Cargando tu panel..."}
-          </span>
-        </BrandLoadingMark>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true">
-      <Navbar />
-      <main>
-        <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 sm:px-6 lg:px-8">
-          <DashboardLoadingNotice locale={locale} />
-        </div>
-      </main>
-    </div>
-  );
-}
-
-export function NativeBrandRouteLoading({ label }: { label?: string } = {}) {
-  const locale = useLocale();
-  const nativeApp = useNativeApp();
-  if (nativeApp) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-[#f4f7fa]" aria-busy="true">
-        <BrandLoadingMark className="min-h-0">
-          <span className="sr-only">{label ?? "Cargando"}</span>
-        </BrandLoadingMark>
+        <DashboardLoadingNotice locale={locale} />
       </div>
     );
   }

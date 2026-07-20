@@ -91,7 +91,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const t = useTranslations("schedule");
   const locale = useLocale();
   const scheduleRootRef = useRef<HTMLDivElement>(null);
-  const [shouldAutoRefresh, setShouldAutoRefresh] = useState(stacked || !slotsInitiallyLoaded);
+  const [shouldAutoRefresh, setShouldAutoRefresh] = useState(stacked);
   const [liveData, setLiveData] = useState<{
     professionalId: string;
     availabilityPublic: boolean;
@@ -118,11 +118,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const [searchShellLoading, setSearchShellLoading] = useState(false);
 
   useEffect(() => {
-    if (!slotsInitiallyLoaded) {
-      queueMicrotask(() => setShouldAutoRefresh(true));
-      return;
-    }
     if (stacked) {
+      queueMicrotask(() => setShouldAutoRefresh(true));
       return;
     }
     const el = scheduleRootRef.current;
