@@ -105,7 +105,10 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
   max-height: calc(100dvh - 228px) !important;
 }
 
-.ccr-native-app .ccr-panel-section-loading,
+.ccr-native-app .ccr-panel-section-loading {
+  min-height: min(360px, calc(var(--app-visual-viewport-height) - 220px));
+}
+
 .ccr-native-app .ccr-form-loading-state {
   min-height: min(520px, calc(var(--app-visual-viewport-height) - 180px));
 }
