@@ -5,6 +5,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
+  Home, HelpCircle, LifeBuoy, BookOpen, Sparkles, Headset, Globe2,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -592,11 +593,20 @@ function HeaderIconLink({ href, label, children }: { href: string; label: string
   );
 }
 
+function DrawerIcon({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#162543] [&>svg]:h-6 [&>svg]:w-6">
+      {children}
+    </span>
+  );
+}
+
 export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileLegalOpen, setMobileLegalOpen] = useState(false);
+  const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   useCustomCategories();
   // A picked category (so a chosen suggestion filters by id, not free text).
@@ -673,11 +683,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     [isPro, user],
   );
   const mobileDrawerItemClass =
-    "block w-full py-2.5 text-left text-[17px] font-medium leading-snug text-[#1A2744] transition-colors hover:text-[#009FD9]";
-  const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-bold");
+    "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[17px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
+  const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-extrabold");
+  const mobileDrawerSubItemClass =
+    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[15px] font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
 
   const openMobileMenu = useCallback(() => {
     setMobileLegalOpen(false);
+    setMobileHelpOpen(false);
     setMobileOpen(true);
   }, []);
 
@@ -1223,52 +1236,81 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[48vw] min-w-[180px] max-w-[230px] sm:w-[38vw] sm:max-w-[250px] bg-white shadow-[12px_0_28px_-18px_rgba(15,23,42,0.55)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[86vw] max-w-[390px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-14">
+          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
             <nav className="flex flex-col gap-1">
-              <Link href="/" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {locale === "en" ? "Home" : "Inicio"}
-              </Link>
+              {!nativeApp && (
+                <Link href="/" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                  <DrawerIcon><Home /></DrawerIcon>
+                  <span>{locale === "en" ? "Home" : "Inicio"}</span>
+                </Link>
+              )}
               {user ? (
                 <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  {locale === "en" ? "My dashboard" : "Mi panel"}
+                  <DrawerIcon><LayoutDashboard /></DrawerIcon>
+                  <span>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                 </Link>
               ) : (
                 <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  {t("offerServices")}
+                  <DrawerIcon><Briefcase /></DrawerIcon>
+                  <span>{t("offerServices")}</span>
                 </Link>
               )}
               <Link href="/buscar" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                {t("searchProfessionals")}
+                <DrawerIcon><Search /></DrawerIcon>
+                <span>{t("searchProfessionals")}</span>
               </Link>
               {nativeApp && user && (
                 <Link href="/mensajes" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  {locale === "en" ? "Messages" : "Mensajes"}
+                  <DrawerIcon><MessageSquareText /></DrawerIcon>
+                  <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
                 </Link>
               )}
               {!user && (
                 <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                  {t("login")}
+                  <DrawerIcon><UserRound /></DrawerIcon>
+                  <span>{t("login")}</span>
                 </Link>
               )}
               <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("categories")}
+                <DrawerIcon><Compass /></DrawerIcon>
+                <span>{t("categories")}</span>
               </Link>
-              <Link href="/como-funciona" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("resourceLinks.howItWorks")}
-              </Link>
-              <Link href="/ayuda" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("resourceLinks.helpCenter")}
-              </Link>
-              <Link href="/atraer-clientes" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("resourceLinks.proTips")}
-              </Link>
-              <SupportLink onNavigate={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("resourceLinks.support")}
-              </SupportLink>
+              <div className="mt-2 border-t border-gray-100 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setMobileHelpOpen((open) => !open)}
+                  className={mobileDrawerItemClass}
+                  aria-expanded={mobileHelpOpen}
+                >
+                  <DrawerIcon><HelpCircle /></DrawerIcon>
+                  <span className="min-w-0 flex-1">{locale === "en" ? "Help and support" : "Ayuda y soporte"}</span>
+                  <ChevronDown className={cn("h-5 w-5 shrink-0 text-[#64748b] transition-transform", mobileHelpOpen && "rotate-180")} />
+                </button>
+                {mobileHelpOpen && (
+                  <div className="mt-1 grid gap-1 pl-[52px]">
+                    <Link href="/como-funciona" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <BookOpen className="h-5 w-5 text-[#64748b]" />
+                      <span>{t("resourceLinks.howItWorks")}</span>
+                    </Link>
+                    <Link href="/ayuda" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <LifeBuoy className="h-5 w-5 text-[#64748b]" />
+                      <span>{t("resourceLinks.helpCenter")}</span>
+                    </Link>
+                    <Link href="/atraer-clientes" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <Sparkles className="h-5 w-5 text-[#64748b]" />
+                      <span>{t("resourceLinks.proTips")}</span>
+                    </Link>
+                    <SupportLink onNavigate={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <Headset className="h-5 w-5 text-[#64748b]" />
+                      <span>{t("resourceLinks.support")}</span>
+                    </SupportLink>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -1277,21 +1319,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 }}
                 className={mobileDrawerItemClass}
               >
-                {alternateLanguageLabel}
+                <DrawerIcon><Globe2 /></DrawerIcon>
+                <span>{alternateLanguageLabel}</span>
               </button>
-              {user && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileLegalOpen(false);
-                    setMobileOpen(false);
-                    void handleSignOut();
-                  }}
-                  className={mobileDrawerItemClass}
-                >
-                  {t("signOut")}
-                </button>
-              )}
             </nav>
             {nativeApp && (
               <div className="mt-auto border-t border-gray-100 pt-4">
@@ -1317,6 +1347,21 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   </div>
                 )}
               </div>
+            )}
+            {user && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileLegalOpen(false);
+                  setMobileHelpOpen(false);
+                  setMobileOpen(false);
+                  void handleSignOut();
+                }}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#eef2f6] px-4 py-3.5 text-base font-extrabold text-[#162543] transition-colors hover:bg-[#e2e8f0]"
+              >
+                <LogOut className="h-5 w-5" />
+                {t("signOut")}
+              </button>
             )}
           </div>
         </div>

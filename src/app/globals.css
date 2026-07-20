@@ -89,6 +89,30 @@
   min-height: calc(100svh - 64px);
 }
 
+.ccr-native-app .app-modal-screen {
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+
+.ccr-native-app .app-bottom-sheet {
+  height: var(--app-visual-viewport-height);
+  max-height: var(--app-visual-viewport-height);
+  border-radius: 0;
+}
+
+@media (min-width: 640px) {
+  .ccr-native-app .app-modal-screen {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .ccr-native-app .app-bottom-sheet {
+    max-width: none;
+    border-radius: 0;
+  }
+}
+
 .ccr-native-app .ccr-empty-state,
 .ccr-native-app [data-empty-state] {
   min-height: min(420px, calc(100svh - 220px));
