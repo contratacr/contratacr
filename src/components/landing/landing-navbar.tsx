@@ -5,7 +5,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Bot, SlidersHorizontal,
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Bot,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -911,41 +911,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
 
   return (
     <>
-      {nativeApp && nativePendingHref === "/buscar" && !nativeSearchRoute && (
-        <div className="fixed inset-x-0 bottom-0 top-16 z-[80] overflow-hidden bg-[#eef3f7]" aria-label={locale === "en" ? "Loading professionals" : "Cargando profesionales"}>
-          <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(#d9e4ea_1px,transparent_1px),linear-gradient(90deg,#d9e4ea_1px,transparent_1px)] [background-size:56px_56px]" />
-          <div className="absolute left-3 top-3 flex h-11 items-center gap-2 rounded-md bg-white px-3 text-sm font-bold text-[#162543] shadow-md">
-            <SlidersHorizontal className="h-4 w-4 text-[#009FD9]" />
-            {locale === "en" ? "Filters" : "Filtros"}
-          </div>
-          <div className="absolute right-3 top-3 flex overflow-hidden rounded-md bg-white shadow-md">
-            <span className="grid h-11 w-11 place-items-center border-r border-[#e5e7eb] text-xl text-[#475569]">-</span>
-            <span className="grid h-11 w-11 place-items-center text-xl text-[#475569]">+</span>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 h-[48dvh] min-h-[330px] rounded-t-[22px] bg-white px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6 shadow-[0_-12px_30px_rgba(15,23,42,0.13)]">
-            <span className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-[#cbd5e1]" />
-            <div className="ccr-skeleton-shimmer mb-4 h-4 w-52 rounded-md" />
-            <div className="rounded-2xl border border-[#dfe5eb] bg-white p-4 shadow-sm">
-              <div className="flex gap-3">
-                <div className="ccr-skeleton-shimmer h-14 w-14 shrink-0 rounded-full" />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <div className="ccr-skeleton-shimmer h-4 w-2/3 rounded-md" />
-                  <div className="ccr-skeleton-shimmer h-3 w-24 rounded-md" />
-                  <div className="ccr-skeleton-shimmer h-3 w-1/2 rounded-md" />
-                </div>
-                <div className="ccr-skeleton-shimmer h-8 w-20 rounded-md" />
-              </div>
-              <div className="ccr-skeleton-shimmer mt-5 h-4 w-40 rounded-md" />
-              <div className="mt-5 grid grid-cols-3 gap-2">
-                {[0, 1, 2, 3, 4, 5].map((item) => (
-                  <div key={item} className="ccr-skeleton-shimmer h-7 rounded-lg" />
-                ))}
-              </div>
-              <div className="ccr-skeleton-shimmer mt-4 h-11 w-full rounded-xl bg-[#d7eef8]" />
-            </div>
-          </div>
-        </div>
-      )}
       <header
         className="fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80"
       >
