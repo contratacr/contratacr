@@ -5,7 +5,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
-  HelpCircle, LifeBuoy, Route, Lightbulb, Headset, Globe2,
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2,
   Bell,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -604,8 +604,8 @@ function DrawerIcon({ children }: { children: ReactNode }) {
 }
 
 function ResourceIcon({ name, className = "h-5 w-5 text-[#64748b]" }: { name: string; className?: string }) {
-  if (name === "howItWorks") return <Route className={className} />;
-  if (name === "helpCenter") return <LifeBuoy className={className} />;
+  if (name === "howItWorks") return <ListChecks className={className} />;
+  if (name === "helpCenter") return <HelpCircle className={className} />;
   if (name === "proTips") return <Lightbulb className={className} />;
   return <Headset className={className} />;
 }
