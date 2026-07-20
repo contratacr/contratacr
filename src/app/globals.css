@@ -57,7 +57,7 @@
 .ccr-native-app body {
   min-height: 100svh;
   background: #f4f7fa;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
   overscroll-behavior-y: contain;
 }
 
@@ -87,6 +87,33 @@
 
 .ccr-native-app main {
   min-height: calc(100svh - 64px);
+}
+
+.ccr-native-app .ccr-native-bottom-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.35rem);
+}
+
+.ccr-native-app .ccr-panel-section-loading,
+.ccr-native-app .ccr-form-loading-state {
+  min-height: min(520px, calc(var(--app-visual-viewport-height) - 180px));
+}
+
+.ccr-native-app .direct-chat-shell {
+  height: calc(var(--app-visual-viewport-height) - 64px - 72px);
+  min-height: 0;
+  border-radius: 0;
+}
+
+.ccr-native-app [data-messages-page-main] {
+  max-width: none;
+  padding: 64px 0 0;
+}
+
+.ccr-native-app [data-messages-page-shell] {
+  min-height: calc(var(--app-visual-viewport-height) - 64px - 72px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .ccr-native-app .app-modal-screen {
@@ -447,6 +474,7 @@ input::-ms-clear {
 
 @media (max-width: 1023px) {
   .contratacr-chat-thread-open .dashboard-mobile-nav,
+  .contratacr-chat-thread-open .ccr-native-bottom-nav,
   .contratacr-chat-thread-open [data-ai-concierge-button],
   .contratacr-ai-open .dashboard-mobile-nav {
     display: none !important;

@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
-  LayoutDashboard, Briefcase, Compass,
+  LayoutDashboard, Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
-  Home, HelpCircle, LifeBuoy, BookOpen, Sparkles, Headset, Globe2,
+  HelpCircle, LifeBuoy, BookOpen, Sparkles, Headset, Globe2,
+  Bell,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -1242,12 +1243,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
         >
           <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
             <nav className="flex flex-col gap-1">
-              {!nativeApp && (
-                <Link href="/" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                  <DrawerIcon><Home /></DrawerIcon>
-                  <span>{locale === "en" ? "Home" : "Inicio"}</span>
-                </Link>
-              )}
               {user ? (
                 <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                   <DrawerIcon><LayoutDashboard /></DrawerIcon>
@@ -1276,10 +1271,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 </Link>
               )}
               <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                <DrawerIcon><Compass /></DrawerIcon>
+                <DrawerIcon><Wrench /></DrawerIcon>
                 <span>{t("categories")}</span>
               </Link>
-              <div className="mt-2 border-t border-gray-100 pt-2">
+              <div className="mt-1">
                 <button
                   type="button"
                   onClick={() => setMobileHelpOpen((open) => !open)}
@@ -1323,7 +1318,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <span>{alternateLanguageLabel}</span>
               </button>
             </nav>
-            {nativeApp && (
+            {false && nativeApp && (
               <div className="mt-auto border-t border-gray-100 pt-4">
                 <button
                   type="button"
@@ -1365,6 +1360,35 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             )}
           </div>
         </div>
+        {nativeApp && user && (
+          <nav
+            aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
+            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] backdrop-blur"
+          >
+            <div className="mx-auto grid max-w-[430px] grid-cols-5 gap-1">
+              <Link href="/buscar" className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]">
+                <Search className="h-5 w-5" />
+                <span>{locale === "en" ? "Search" : "Buscar"}</span>
+              </Link>
+              <Link href={isPro ? "/dashboard/profesional?mode=offer&tab=bookings" : "/dashboard/profesional?mode=use&tab=sent_bookings"} className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]">
+                <Briefcase className="h-5 w-5" />
+                <span>{locale === "en" ? "Requests" : "Solicitudes"}</span>
+              </Link>
+              <Link href="/mensajes" className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]">
+                <MessageSquareText className="h-5 w-5" />
+                <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
+              </Link>
+              <Link href="/notificaciones" className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]">
+                <Bell className="h-5 w-5" />
+                <span>{locale === "en" ? "Alerts" : "Avisos"}</span>
+              </Link>
+              <Link href={primaryPanelHref} className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#162543] active:bg-[#eef9fd] active:text-[#009FD9]">
+                <LayoutDashboard className="h-5 w-5" />
+                <span>Panel</span>
+              </Link>
+            </div>
+          </nav>
+        )}
     </>
   );
 }
