@@ -644,6 +644,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
   const pathname = usePathname();
   const nativeApp = useNativeApp();
+  const nativeSearchRoute = pathname.startsWith("/buscar");
+  const nativeShell = nativeApp && !nativeSearchRoute;
   const { user, loading: authLoading } = useAuth();
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
@@ -903,7 +905,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
           <div className="relative h-16">
             <div className={cn(
               "absolute inset-0 lg:hidden",
-              nativeApp
+              nativeShell
                 ? "grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-0"
                 : "flex items-center gap-2",
             )}>
@@ -912,22 +914,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 onClick={openMobileMenu}
                 className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] transition-colors hover:bg-gray-50",
-                  nativeApp && "justify-self-start",
+                  nativeShell && "justify-self-start",
                 )}
                 aria-label={t("openMenu")}
               >
                 <Menu className="h-5 w-5" />
               </button>
 
-              <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeApp && "min-w-0 justify-self-center")}>
+              <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeShell && "min-w-0 justify-self-center")}>
                 {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
               </Link>
 
-              {!nativeApp && mobileInline && (
+              {!nativeShell && mobileInline && (
                 <div className="flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
               )}
 
-              {nativeApp ? (
+              {nativeShell ? (
                 user ? (
                   <div className="grid h-10 w-10 justify-self-end place-items-center">
                     <NotificationBell scope="all" />
@@ -1432,7 +1434,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             )}
           </div>
         </div>
-        {nativeApp && user && (
+        {nativeShell && user && (
           <nav
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] backdrop-blur"

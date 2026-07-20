@@ -140,6 +140,11 @@ export default async function LocaleLayout({
             __html: `try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add('ccr-native-app');document.body&&document.body.classList.add('ccr-native-app');}}catch(e){}`,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&!document.getElementById('ccr-native-boot')){var b=document.createElement('div');b.id='ccr-native-boot';b.className='ccr-native-boot';b.innerHTML='<div class="ccr-native-boot-card"><img src="/logo-mark-transparent.png" alt="" /></div>';document.body.appendChild(b);var hide=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){b.classList.add('is-hiding');setTimeout(function(){b&&b.remove&&b.remove();},260);});});};if(document.readyState==='complete'){setTimeout(hide,120);}else{window.addEventListener('load',function(){setTimeout(hide,120);},{once:true});}}}catch(e){}`,
+          }}
+        />
         <EmojiBlocker />
         <ViewportEnvironment />
         <MobileAppBridge />
