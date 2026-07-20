@@ -20,38 +20,6 @@ export function MobileAppBridge() {
 
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
-    const overlay = document.createElement("div");
-    overlay.className = "ccr-native-boot";
-    overlay.innerHTML = `
-      <div class="ccr-native-boot-card" aria-label="ContrataCR">
-        <img src="/logo-mark-transparent.png" alt="" />
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const startedAt = window.performance.now();
-    let hiding = false;
-    const hide = () => {
-      if (hiding) return;
-      hiding = true;
-      const elapsed = window.performance.now() - startedAt;
-      const wait = Math.max(0, 700 - elapsed);
-      window.setTimeout(() => {
-        overlay.classList.add("is-hiding");
-        window.setTimeout(() => overlay.remove(), 260);
-      }, wait);
-    };
-    const timer = window.setTimeout(hide, 2200);
-    window.addEventListener("load", hide, { once: true });
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("load", hide);
-      overlay.remove();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isNativeAppRuntime()) return;
     let haptics: typeof import("@capacitor/haptics")["Haptics"] | null = null;
 
     void import("@capacitor/haptics")

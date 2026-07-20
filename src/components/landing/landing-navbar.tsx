@@ -1275,12 +1275,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <span>{t("offerServices")}</span>
                 </Link>
               ) : null}
-              {!nativeApp && (
-                <Link href="/buscar" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  <DrawerIcon><Search /></DrawerIcon>
-                  <span>{t("searchProfessionals")}</span>
-                </Link>
-              )}
+              <Link href="/buscar" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+                <DrawerIcon><Search /></DrawerIcon>
+                <span>{t("searchProfessionals")}</span>
+              </Link>
               {!user && (
                 <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><UserRound /></DrawerIcon>
