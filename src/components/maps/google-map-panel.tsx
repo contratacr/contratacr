@@ -742,7 +742,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         <button
           type="button"
           onClick={searchThisArea}
-          className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+7rem)] z-40 inline-flex h-10 max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-[3px] border border-[#d8e2ea] bg-white px-3 text-sm font-semibold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 lg:hidden"
+          className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+4.25rem)] z-40 inline-flex h-10 max-w-[calc(100vw-12.5rem)] -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-[3px] border border-[#d8e2ea] bg-white px-3 text-sm font-semibold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 max-[374px]:px-2 max-[374px]:text-[13px] lg:hidden"
         >
           <Search className="h-4 w-4 shrink-0 text-[#008ce0]" />
           <span className="min-w-0 truncate">{locale === "en" ? "Search here" : "Buscar aquí"}</span>
