@@ -615,6 +615,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileLegalOpen, setMobileLegalOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
+  const [nativePendingHref, setNativePendingHref] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   useCustomCategories();
   // A picked category (so a chosen suggestion filters by id, not free text).
@@ -629,6 +630,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const navLocBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const compactSvcRef = useRef<HTMLDivElement>(null);
   const compactLocRef = useRef<HTMLDivElement>(null);
+  const nativePendingTimer = useRef<number | null>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
   const [isSmallScreen, setIsSmallScreen] = useState(true);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -686,6 +688,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     return () => window.clearTimeout(timeout);
   }, [pathname, primaryPanelHref, router, user]);
 
+  useEffect(() => {
+    if (!nativeApp || !user) return;
+    router.prefetch("/buscar");
+    router.prefetch("/mensajes");
+    router.prefetch(primaryPanelHref);
+    prefetchDashboardBootstrap(user.id);
+  }, [nativeApp, primaryPanelHref, router, user]);
+
   const visibleResourceLinks = useMemo(
     () => RESOURCES_LINKS.filter((link) => link.key !== "proTips" || !user || isPro),
     [isPro, user],
@@ -701,6 +711,28 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     setMobileHelpOpen(false);
     setMobileOpen(true);
   }, []);
+
+  const nativeBottomNavClass = useCallback(
+    (href: string) => {
+      const baseHref = href.split("?")[0] ?? href;
+      const isActive = nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
+      return cn(
+        "flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]",
+        isActive && "bg-[#eef9fd] text-[#009FD9]",
+      );
+    },
+    [nativePendingHref, panelHref, pathname],
+  );
+
+  const prepareNativeNavigation = useCallback(
+    (href: string) => {
+      if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
+      setNativePendingHref(href);
+      router.prefetch(href);
+      nativePendingTimer.current = window.setTimeout(() => setNativePendingHref(null), 1800);
+    },
+    [router],
+  );
 
   const compactSuggestions = matchCategories(searchQuery, 8, locale);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
@@ -719,6 +751,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     if (!mobileOpen) return;
     return lockBodyScroll();
   }, [mobileOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
+    };
+  }, []);
 
   async function handleSignOut() {
     // Go STRAIGHT home — `signOutToHome` flags the in-flight sign-out so protected
@@ -1400,15 +1438,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] backdrop-blur"
           >
             <div className="mx-auto grid max-w-[390px] grid-cols-4 gap-1">
-              <Link href={primaryPanelHref} className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]">
+              <Link href={primaryPanelHref} onPointerDown={() => prepareNativeNavigation(primaryPanelHref)} className={nativeBottomNavClass(primaryPanelHref)}>
                 <LayoutDashboard className="h-5 w-5" />
                 <span>Panel</span>
               </Link>
-              <Link href="/buscar" className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]">
+              <Link href="/buscar" onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
                 <Search className="h-5 w-5" />
                 <span>{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
-              <Link href="/mensajes" className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]">
+              <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} className={nativeBottomNavClass("/mensajes")}>
                 <MessageSquareText className="h-5 w-5" />
                 <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
               </Link>
