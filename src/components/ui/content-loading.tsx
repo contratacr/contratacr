@@ -7,13 +7,19 @@ export function Skeleton({ className }: { className: string }) {
   return <span aria-hidden className={`ccr-delayed-loading ccr-skeleton-shimmer block ${className}`} />;
 }
 
-export function PanelSectionLoading(_props: { rows?: number } = {}) {
-  void _props;
+export function BrandLoadingMark({ className, children }: { className?: string; children?: ReactNode } = {}) {
   return (
-    <div className="ccr-delayed-loading ccr-panel-section-loading flex min-h-24 items-center justify-center py-8" aria-busy="true" role="status">
-      <span className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent motion-reduce:animate-none" aria-label="Cargando" />
+    <div className={cn("ccr-delayed-loading grid place-items-center", className)} aria-busy="true" role="status">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo-mark-transparent.png" alt="" width={80} height={80} className="h-20 w-20 object-contain" />
+      {children ?? <span className="sr-only">Cargando</span>}
     </div>
   );
+}
+
+export function PanelSectionLoading(_props: { rows?: number } = {}) {
+  void _props;
+  return <BrandLoadingMark className="ccr-panel-section-loading min-h-24 py-8" />;
 }
 
 export function PanelEmptyState({

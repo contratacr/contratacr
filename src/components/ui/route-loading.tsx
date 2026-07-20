@@ -5,7 +5,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { GoogleMapPanel } from "@/components/maps/google-map-panel";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { useLocale } from "next-intl";
-import { Skeleton } from "@/components/ui/content-loading";
+import { BrandLoadingMark, Skeleton } from "@/components/ui/content-loading";
 
 function FilterSkeleton() {
   return (
@@ -54,13 +54,11 @@ function SearchResultsLoadingNotice({ locale }: { locale: string }) {
 function DashboardLoadingNotice({ locale }: { locale: string }) {
   const isEnglish = locale === "en";
   return (
-    <div className="ccr-delayed-loading flex min-h-[45vh] flex-col items-center justify-center gap-3 text-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-mark-transparent.png" alt="" width={72} height={72} className="h-[72px] w-[72px] object-contain" />
+    <BrandLoadingMark className="min-h-[45vh] text-center">
       <span className="sr-only">
         {isEnglish ? "Loading your panel..." : "Cargando tu panel..."}
       </span>
-    </div>
+    </BrandLoadingMark>
   );
 }
 
@@ -115,11 +113,11 @@ export function DashboardRouteLoading() {
   if (nativeApp) {
     return (
       <div className="grid min-h-screen place-items-center bg-[#f4f7fa]" aria-busy="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-mark-transparent.png" alt="" width={80} height={80} className="h-20 w-20 object-contain" />
-        <span className="sr-only">
-          {locale === "en" ? "Loading your panel..." : "Cargando tu panel..."}
-        </span>
+        <BrandLoadingMark className="min-h-0">
+          <span className="sr-only">
+            {locale === "en" ? "Loading your panel..." : "Cargando tu panel..."}
+          </span>
+        </BrandLoadingMark>
       </div>
     );
   }

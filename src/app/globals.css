@@ -164,7 +164,6 @@
 .ccr-native-boot-card {
   display: grid;
   place-items: center;
-  transform: translateY(-18px);
 }
 
 .ccr-native-boot-card img {
