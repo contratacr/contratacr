@@ -2555,6 +2555,7 @@
     "deleteAllBody": "Esta acción no se puede deshacer.",
     "cancel": "Cancelar",
     "noneList": "No tienes notificaciones.",
+    "emptySub": "Cuando haya novedades sobre solicitudes, propuestas o tu cuenta, aparecerán aquí.",
     "filterAll": "Todas",
     "filterUnread": "No leídas",
     "noUnread": "No tienes notificaciones sin leer.",

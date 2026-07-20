@@ -146,7 +146,12 @@ export default function ProfilePage() {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-[#009FD9] border-t-transparent rounded-full animate-spin" />
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" aria-hidden />
+            <p className="text-sm font-medium text-[#6b7280]">
+              {locale === "en" ? "Loading profile..." : "Cargando perfil..."}
+            </p>
+          </div>
         </main>
       </div>
     );
