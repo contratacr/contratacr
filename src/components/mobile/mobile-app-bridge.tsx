@@ -20,52 +20,6 @@ export function MobileAppBridge() {
 
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
-    const overlay = document.createElement("div");
-    overlay.className = "ccr-native-boot";
-    overlay.innerHTML = `
-      <div class="ccr-native-boot-card" aria-label="ContrataCR">
-        <img src="/logo-mark-transparent.png" alt="" />
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    let hiding = false;
-    let hideTimer: number | null = null;
-    const hide = () => {
-      if (hiding) return;
-      hiding = true;
-      hideTimer = window.setTimeout(() => {
-        overlay.classList.add("is-hiding");
-        window.setTimeout(() => overlay.remove(), 260);
-      }, 420);
-    };
-
-    const startedAt = window.performance.now();
-    const waitUntilReady = () => {
-      const elapsed = window.performance.now() - startedAt;
-      const appStillShowingBrandLoader = Boolean(document.querySelector(".ccr-brand-loading-mark"));
-      if ((!appStillShowingBrandLoader && elapsed > 650) || elapsed > 4500) {
-        hide();
-        return;
-      }
-      window.setTimeout(waitUntilReady, 120);
-    };
-
-    const readyFrame = window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(waitUntilReady);
-    });
-    const fallbackTimer = window.setTimeout(hide, 5200);
-
-    return () => {
-      window.cancelAnimationFrame(readyFrame);
-      window.clearTimeout(fallbackTimer);
-      if (hideTimer) window.clearTimeout(hideTimer);
-      overlay.remove();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isNativeAppRuntime()) return;
     let haptics: typeof import("@capacitor/haptics")["Haptics"] | null = null;
 
     void import("@capacitor/haptics")

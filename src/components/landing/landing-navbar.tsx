@@ -905,11 +905,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 )
               ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                {user && (
-                  <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
-                    <MessageSquareText className="h-5 w-5" />
-                  </HeaderIconLink>
-                )}
                 {user && <NotificationBell scope="all" />}
                 <Link
                   href={user ? primaryPanelHref : loginHref}
