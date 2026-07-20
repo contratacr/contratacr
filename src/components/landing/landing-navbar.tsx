@@ -712,6 +712,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-extrabold");
   const mobileDrawerSubItemClass =
     "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[15px] font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
+  const mobileDrawerSectionLabelClass = "px-2 pb-1 pt-4 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#8a97aa]";
 
   const openMobileMenu = useCallback(() => {
     setMobileLegalOpen(false);
@@ -1283,6 +1284,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
         >
           <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
             <nav className="flex flex-col gap-1">
+              <p className={mobileDrawerSectionLabelClass}>{locale === "en" ? "Shortcuts" : "Accesos"}</p>
               {user ? (
                 <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                   <DrawerIcon><LayoutDashboard /></DrawerIcon>
@@ -1298,35 +1300,43 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <DrawerIcon><Search /></DrawerIcon>
                 <span>{t("searchProfessionals")}</span>
               </Link>
+              {user && (
+                <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                  <DrawerIcon><MessageSquareText /></DrawerIcon>
+                  <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  window.dispatchEvent(new Event("contratacr:open-ai"));
+                }}
+                className={mobileDrawerItemClass}
+              >
+                <DrawerIcon><Bot /></DrawerIcon>
+                <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
+              </button>
               {!user && (
                 <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><UserRound /></DrawerIcon>
                   <span>{t("login")}</span>
                 </Link>
               )}
-              {nativeApp && user && !isPro && (
-                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+
+              <p className={mobileDrawerSectionLabelClass}>{locale === "en" ? "Services" : "Servicios"}</p>
+              {user && !isPro && (
+                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><Briefcase /></DrawerIcon>
                   <span>{t("offerServices")}</span>
                 </Link>
-              )}
-              {!nativeApp && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    window.dispatchEvent(new Event("contratacr:open-ai"));
-                  }}
-                  className={mobileDrawerItemClass}
-                >
-                  <DrawerIcon><Bot /></DrawerIcon>
-                  <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
-                </button>
               )}
               <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 <DrawerIcon><Wrench /></DrawerIcon>
                 <span>{t("categories")}</span>
               </Link>
+
+              <p className={mobileDrawerSectionLabelClass}>{locale === "en" ? "Help" : "Ayuda"}</p>
               <div className="mt-1">
                 <button
                   type="button"
@@ -1359,6 +1369,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   </div>
                 )}
               </div>
+
+              <p className={mobileDrawerSectionLabelClass}>{locale === "en" ? "Account" : "Cuenta"}</p>
               <button
                 type="button"
                 onClick={() => {
