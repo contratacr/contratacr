@@ -58,6 +58,7 @@
   min-height: 100svh;
   background: #f4f7fa;
   padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior-y: contain;
 }
 
 .ccr-native-app button,
@@ -68,6 +69,29 @@
 .ccr-native-app button:not([aria-label]),
 .ccr-native-app a[role="button"] {
   min-height: 44px;
+}
+
+.ccr-native-app button,
+.ccr-native-app a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ccr-native-app button:active,
+.ccr-native-app a:active {
+  transform: scale(0.99);
+}
+
+.ccr-native-app [role="dialog"] {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.ccr-native-app main {
+  min-height: calc(100svh - 64px);
+}
+
+.ccr-native-app .ccr-empty-state,
+.ccr-native-app [data-empty-state] {
+  min-height: min(420px, calc(100svh - 220px));
 }
 
 .ccr-native-refresh-indicator {

@@ -6,6 +6,7 @@ import { useLocale } from "next-intl";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
+import { useNativeApp } from "@/hooks/use-native-app";
 
 type DirectChatLauncherProps = {
   professionalId?: string;
@@ -48,8 +49,10 @@ export function DirectChatLauncher({
 }: DirectChatLauncherProps) {
   const locale = useLocale();
   const isEn = locale === "en";
+  const nativeApp = useNativeApp();
   const [loading, setLoading] = useState(false);
   const whatsappLabel = isEn ? "Contact on WhatsApp" : "Contactar por WhatsApp";
+  const nativeWhatsappLabel = isEn ? "Message on WhatsApp" : "Mensaje por WhatsApp";
 
   async function openChat() {
     if (isOwn) {
@@ -105,7 +108,7 @@ export function DirectChatLauncher({
       )}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <WhatsAppLogo />}
-      {buttonLabel || whatsappLabel}
+      {buttonLabel || (nativeApp ? nativeWhatsappLabel : whatsappLabel)}
     </button>
   );
 }

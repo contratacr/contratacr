@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass,
-  UserRound, LogOut,
+  UserRound, LogOut, FileText, ShieldCheck,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -19,6 +19,7 @@ import { SupportLink } from "@/components/support/support-link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
@@ -582,6 +583,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileLegalOpen, setMobileLegalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   useCustomCategories();
   // A picked category (so a chosen suggestion filters by id, not free text).
@@ -608,6 +610,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const alternateLocale = locale === "en" ? "es" : "en";
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
   const pathname = usePathname();
+  const nativeApp = useNativeApp();
   const { user, loading: authLoading } = useAuth();
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
@@ -661,6 +664,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-bold");
 
   const openMobileMenu = useCallback(() => {
+    setMobileLegalOpen(false);
     setMobileOpen(true);
   }, []);
 
@@ -1246,6 +1250,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <button
                   type="button"
                   onClick={() => {
+                    setMobileLegalOpen(false);
                     setMobileOpen(false);
                     void handleSignOut();
                   }}
@@ -1255,6 +1260,31 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 </button>
               )}
             </nav>
+            {nativeApp && (
+              <div className="mt-auto border-t border-gray-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setMobileLegalOpen((open) => !open)}
+                  className="flex w-full items-center justify-between rounded-xl px-1 py-2 text-left text-[13px] font-bold uppercase tracking-[0.14em] text-[#8a97aa]"
+                  aria-expanded={mobileLegalOpen}
+                >
+                  <span>{locale === "en" ? "Legal" : "Información legal"}</span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", mobileLegalOpen && "rotate-180")} />
+                </button>
+                {mobileLegalOpen && (
+                  <div className="mt-1 grid gap-1">
+                    <Link href="/terminos" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f4f7fa]">
+                      <FileText className="h-4 w-4 text-[#6b7a90]" />
+                      {locale === "en" ? "Terms and conditions" : "Términos y condiciones"}
+                    </Link>
+                    <Link href="/privacidad" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f4f7fa]">
+                      <ShieldCheck className="h-4 w-4 text-[#6b7a90]" />
+                      {locale === "en" ? "Privacy policy" : "Política de privacidad"}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
     </>
