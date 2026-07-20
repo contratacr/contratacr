@@ -225,14 +225,13 @@ export default function ProfilePage() {
   // A pro viewing their OWN public profile cannot request a service from themselves.
   const isOwn = !!viewerId && viewerId === professional.profileId;
 
-  // "Solicitar servicio" routing — mirrors the contact card's logic: only open the
-  // booking flow when the pro has public availability AND real published slots.
-  // If there are no hours yet, the service CTA coordinates directly by WhatsApp.
-  const hasBookableSlots = profileSlots.some((slot) => !slot.locationId?.startsWith("cov_"));
+  // "Ver disponibilidad" routing — keep service cards aligned with the contact card
+  // from the first paint. The live schedule panel confirms the exact slots, but if a
+  // profile has public availability enabled we should not briefly render the WhatsApp
+  // CTA while that confirmation is still loading.
   const canBookService =
     (professional.availabilityPublic ?? true) &&
-    (professional.contactPreference ?? "ambas") !== "solo_whatsapp" &&
-    hasBookableSlots;
+    (professional.contactPreference ?? "ambas") !== "solo_whatsapp";
   function requestService(cat: string) {
     if (!professional) return;
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
