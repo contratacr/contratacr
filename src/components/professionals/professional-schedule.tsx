@@ -13,8 +13,6 @@ import { Skeleton } from "@/components/ui/content-loading";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
-import { MessageLauncher } from "@/components/professionals/message-launcher";
-import { useNativeApp } from "@/hooks/use-native-app";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
 
@@ -92,7 +90,6 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
 export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
-  const nativeApp = useNativeApp();
   const scheduleRootRef = useRef<HTMLDivElement>(null);
   const [shouldAutoRefresh, setShouldAutoRefresh] = useState(stacked || !slotsInitiallyLoaded);
   const [liveData, setLiveData] = useState<{
@@ -715,20 +712,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   );
   const messageButtonClass = "w-full rounded-full py-2.5 text-[13px] font-semibold";
   const searchMessageButtonClass = `${messageButtonClass} bg-[#009FD9] hover:bg-[#0089bb] focus-visible:ring-[#009FD9]`;
-  const nativeWhatsappButtonClass = `${messageButtonClass} border border-[#d7f5e1] bg-white text-[#15803d] hover:bg-[#f0fdf4] focus-visible:ring-[#25d366]`;
   const contactButtons = (
     <>
-      {nativeApp && (
-        <MessageLauncher
-          professionalId={professional.id}
-          professionalName={professional.fullName}
-          contextTitle={categoryName}
-          isOwn={isOwn}
-          onSelfAction={() => setSelfMsg(SELF_MSG.request)}
-          className={searchMessageButtonClass}
-        />
-      )}
-      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={nativeApp ? nativeWhatsappButtonClass : searchMessageButtonClass} />
+      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} />
       {/* No-schedule state: filled on /buscar, outlined on the profile contact card. */}
       {showCall && renderCall(true)}
       {showEmail && (
@@ -745,24 +731,15 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   const profileContactButtons = (
     <>
-      {nativeApp && (
-        <MessageLauncher
-          professionalId={professional.id}
-          professionalName={professional.fullName}
-          contextTitle={categoryName}
-          isOwn={isOwn}
-          onSelfAction={() => setSelfMsg(SELF_MSG.request)}
-          className={messageButtonClass}
-        />
-      )}
       <DirectChatLauncher
         professionalId={professional.id}
         professionalName={professional.fullName}
+        contextTitle={categoryName}
         isOwn={isOwn}
         onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
         analyticsSource="profile"
         tone={hasSchedule ? "contrast" : "primary"}
-        className={nativeApp ? nativeWhatsappButtonClass : messageButtonClass}
+        className={messageButtonClass}
       />
       {(showCall || showEmail) && (
         <div className={`grid gap-2 ${showCall && showEmail ? "grid-cols-2" : "grid-cols-1"}`}>

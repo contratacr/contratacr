@@ -94,6 +94,45 @@
   min-height: min(420px, calc(100svh - 220px));
 }
 
+.ccr-native-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  background: #f4f7fa;
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+
+.ccr-native-boot.is-hiding {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ccr-native-boot-card {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transform: translateY(-18px);
+}
+
+.ccr-native-boot-card img {
+  height: 42px;
+  width: 42px;
+}
+
+.ccr-native-boot-card strong {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  color: #1a2744;
+}
+
+.ccr-native-boot-card strong span:last-child {
+  color: #009fd9;
+}
+
 .ccr-native-refresh-indicator {
   --ccr-pull-distance: 0px;
   position: fixed;
