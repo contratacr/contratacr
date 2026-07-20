@@ -185,7 +185,12 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             icon={Bell}
             title={t("noneList")}
             description={t("emptySub")}
-            className="min-h-[16rem] px-5 py-12 sm:min-h-[18rem]"
+            className={cn(
+              "px-5 py-12",
+              scope === "all"
+                ? "min-h-[calc(100dvh-13rem)] sm:min-h-[18rem]"
+                : "min-h-[16rem] sm:min-h-[18rem]",
+            )}
           />
         ) : (
           <ul>
