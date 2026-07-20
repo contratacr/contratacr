@@ -167,14 +167,14 @@
 }
 
 .ccr-native-boot-card img {
-  height: 72px;
-  width: 72px;
+  height: 60px;
+  width: 60px;
   object-fit: contain;
 }
 
 .ccr-brand-loading-mark {
-  height: 72px;
-  width: 72px;
+  height: 60px;
+  width: 60px;
   object-fit: contain;
   animation: ccr-brand-loading-glow 1.55s ease-in-out infinite;
 }
@@ -263,7 +263,7 @@ body {
 
 .ccr-delayed-loading {
   opacity: 0;
-  animation: ccr-loading-reveal 140ms ease-out 260ms forwards;
+  animation: ccr-loading-reveal 140ms ease-out 420ms forwards;
 }
 
 .ccr-skeleton-shimmer {

@@ -11,7 +11,7 @@ export function BrandLoadingMark({ className, children }: { className?: string; 
   return (
     <div className={cn("ccr-delayed-loading grid place-items-center", className)} aria-busy="true" role="status">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-mark-transparent.png" alt="" width={72} height={72} className="ccr-brand-loading-mark" />
+      <img src="/logo-mark-transparent.png" alt="" width={60} height={60} className="ccr-brand-loading-mark" />
       {children ?? <span className="sr-only">Cargando</span>}
     </div>
   );
