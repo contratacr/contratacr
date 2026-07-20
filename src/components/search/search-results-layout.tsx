@@ -195,7 +195,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
             scrolling card list. Desktop: `lg:contents` dissolves it so the card column
             (order-2) and the desktop map sit in the flex shell. */}
         <div
-          className="fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:shadow-none lg:contents"
+          className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:shadow-none lg:contents"
           // maxHeight keeps the navbar AND the map controls visible even when the sheet is
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
           // the filter/map affordances at the top of the mobile map.

@@ -81,6 +81,13 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
   transform: scale(0.99);
 }
 
+.ccr-native-app header button:active,
+.ccr-native-app header a:active,
+.ccr-native-app .ccr-native-bottom-nav button:active,
+.ccr-native-app .ccr-native-bottom-nav a:active {
+  transform: none;
+}
+
 .ccr-native-app [role="dialog"] {
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -91,6 +98,11 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
 
 .ccr-native-app .ccr-native-bottom-nav {
   padding-bottom: calc(env(safe-area-inset-bottom) + 0.35rem);
+}
+
+.ccr-native-app .ccr-search-bottom-sheet {
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  max-height: calc(100dvh - 228px) !important;
 }
 
 .ccr-native-app .ccr-panel-section-loading,

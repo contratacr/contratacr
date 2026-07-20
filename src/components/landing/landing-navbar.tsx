@@ -646,7 +646,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const nativeApp = useNativeApp();
   const nativeSearchRoute = /(^|\/)buscar(\/|$)/.test(pathname);
   const nativeHeaderShell = nativeApp;
-  const nativeBottomShell = nativeApp && !nativeSearchRoute;
+  const nativeBottomShell = nativeApp;
   const { user, loading: authLoading } = useAuth();
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
@@ -682,14 +682,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   // use Next's prefetched route payload instead of waiting after the click.
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      if (!nativeSearchRoute) router.prefetch("/buscar");
+      router.prefetch("/buscar");
       if (user && !pathname.startsWith("/dashboard/profesional")) {
         router.prefetch(primaryPanelHref);
         prefetchDashboardBootstrap(user.id);
       }
-    }, 900);
+    }, nativeApp ? 80 : 900);
     return () => window.clearTimeout(timeout);
-  }, [nativeSearchRoute, pathname, primaryPanelHref, router, user]);
+  }, [nativeApp, pathname, primaryPanelHref, router, user]);
 
   useEffect(() => {
     if (!nativeApp) return;

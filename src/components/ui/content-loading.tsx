@@ -3,6 +3,7 @@
 import type { ElementType, ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNativeApp } from "@/hooks/use-native-app";
 
 export function Skeleton({ className }: { className: string }) {
   return <span aria-hidden className={`ccr-delayed-loading ccr-skeleton-shimmer block ${className}`} />;
@@ -20,6 +21,15 @@ export function BrandLoadingMark({ className, children }: { className?: string; 
 
 export function PanelSectionLoading(_props: { rows?: number } = {}) {
   void _props;
+  const nativeApp = useNativeApp();
+  if (nativeApp) {
+    return (
+      <BrandLoadingMark className="ccr-panel-section-loading min-h-24 py-8">
+        <span className="sr-only">Cargando</span>
+      </BrandLoadingMark>
+    );
+  }
+
   return (
     <div className="ccr-delayed-loading ccr-panel-section-loading flex min-h-24 items-center justify-center py-8" aria-busy="true" role="status">
       <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-label="Cargando" />

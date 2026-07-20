@@ -12,7 +12,8 @@ import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 import { AppTooltip } from "@/components/ui/app-tooltip";
-import { PanelEmptyState } from "@/components/ui/content-loading";
+import { BrandLoadingMark, PanelEmptyState } from "@/components/ui/content-loading";
+import { useNativeApp } from "@/hooks/use-native-app";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
@@ -127,6 +128,7 @@ export function DirectChatInbox() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const nativeApp = useNativeApp();
   const initialPendingDraft = useMemo(() => buildPendingDraft(searchParams, user?.id, isEn), [isEn, searchParams, user?.id]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [pendingDraft, setPendingDraft] = useState<Conversation | null>(initialPendingDraft.conversation);
@@ -375,7 +377,17 @@ export function DirectChatInbox() {
     return isClientSide && item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null;
   }
 
-  if (loading) return <div className="flex min-h-[360px] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>;
+  if (loading) return (
+    <div className="flex min-h-[360px] items-center justify-center">
+      {nativeApp ? (
+        <BrandLoadingMark className="min-h-0">
+          <span className="sr-only">{isEn ? "Loading messages" : "Cargando mensajes"}</span>
+        </BrandLoadingMark>
+      ) : (
+        <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" />
+      )}
+    </div>
+  );
 
   if (!displayedConversations.length) return (
     <PanelEmptyState
@@ -465,7 +477,17 @@ export function DirectChatInbox() {
           )}
         </header>
         <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
-          {threadLoading ? <div className="grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
+          {threadLoading ? (
+            <div className="grid h-full place-items-center">
+              {nativeApp ? (
+                <BrandLoadingMark className="min-h-0">
+                  <span className="sr-only">{isEn ? "Loading conversation" : "Cargando conversacion"}</span>
+                </BrandLoadingMark>
+              ) : (
+                <Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" />
+              )}
+            </div>
+          ) : messages.map((message) => {
             const mine = message.sender_id === user?.id;
             return (
               <div key={message.id} className={cn("flex items-end gap-2", mine && "justify-end")}>

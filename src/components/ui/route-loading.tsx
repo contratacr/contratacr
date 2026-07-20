@@ -135,3 +135,28 @@ export function DashboardRouteLoading() {
     </div>
   );
 }
+
+export function NativeBrandRouteLoading({ label }: { label?: string } = {}) {
+  const locale = useLocale();
+  const nativeApp = useNativeApp();
+  if (nativeApp) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#f4f7fa]" aria-busy="true">
+        <BrandLoadingMark className="min-h-0">
+          <span className="sr-only">{label ?? "Cargando"}</span>
+        </BrandLoadingMark>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true">
+      <Navbar />
+      <main>
+        <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 sm:px-6 lg:px-8">
+          <DashboardLoadingNotice locale={locale} />
+        </div>
+      </main>
+    </div>
+  );
+}
