@@ -40,10 +40,21 @@ export function MobileAppBridge() {
       }, 420);
     };
 
+    const startedAt = window.performance.now();
+    const waitUntilReady = () => {
+      const elapsed = window.performance.now() - startedAt;
+      const appStillShowingBrandLoader = Boolean(document.querySelector(".ccr-brand-loading-mark"));
+      if ((!appStillShowingBrandLoader && elapsed > 650) || elapsed > 4500) {
+        hide();
+        return;
+      }
+      window.setTimeout(waitUntilReady, 120);
+    };
+
     const readyFrame = window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(hide);
+      window.requestAnimationFrame(waitUntilReady);
     });
-    const fallbackTimer = window.setTimeout(hide, 2600);
+    const fallbackTimer = window.setTimeout(hide, 5200);
 
     return () => {
       window.cancelAnimationFrame(readyFrame);

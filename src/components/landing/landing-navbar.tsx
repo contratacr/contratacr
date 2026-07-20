@@ -905,7 +905,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 )
               ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                {nativeApp && user && (
+                {user && (
                   <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
                     <MessageSquareText className="h-5 w-5" />
                   </HeaderIconLink>
@@ -1295,6 +1295,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <DrawerIcon><Briefcase /></DrawerIcon>
                   <span>{t("offerServices")}</span>
                 </Link>
+              )}
+              {!nativeApp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    window.dispatchEvent(new Event("contratacr:open-ai"));
+                  }}
+                  className={mobileDrawerItemClass}
+                >
+                  <DrawerIcon><Bot /></DrawerIcon>
+                  <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
+                </button>
               )}
               <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 <DrawerIcon><Wrench /></DrawerIcon>
