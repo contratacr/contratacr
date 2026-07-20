@@ -145,8 +145,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canBook = !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
   const awaitingProfileAvailability =
     stacked &&
+    !slotsInitiallyLoaded &&
     shouldAutoRefresh &&
     !forceContactOnly &&
+    liveAvailabilityPublic &&
     contactPreference !== "solo_whatsapp" &&
     liveData?.professionalId !== professional.id &&
     !hasInitialDisplayableSlots;
