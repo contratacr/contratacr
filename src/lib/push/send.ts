@@ -34,7 +34,6 @@ export async function sendUserPush({ userId, title, body, url = "/es/notificacio
     android: {
       priority: "high",
       notification: {
-        channelId: "default",
         clickAction: "OPEN_APP",
       },
     },

@@ -6,6 +6,7 @@ import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
+import { sendNotificationPush } from "@/lib/push/notify";
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     // No self-service: a professional cannot send a proposal to their OWN project.
     const { data: project } = await admin
-      .from("projects").select("client_id").eq("id", projectId).maybeSingle();
+      .from("projects").select("client_id, title").eq("id", projectId).maybeSingle();
     if (project?.client_id === session.user.id) {
       return NextResponse.json({ error: "No puedes enviar una propuesta a tu propia solicitud." }, { status: 400 });
     }
@@ -101,6 +102,20 @@ export async function POST(req: NextRequest) {
         proposal_id: data.id,
       },
     });
+
+    try {
+      if (project?.client_id) {
+        const pushData = { link: "/es/dashboard/profesional?tab=sent_projects", project_id: projectId, proposal_id: data.id };
+        await sendNotificationPush({
+          userId: project.client_id,
+          title: "Nueva propuesta recibida",
+          message: `${profile?.full_name ?? "Un profesional"} envio una propuesta para "${project.title ?? "tu solicitud"}".`,
+          data: pushData,
+        });
+      }
+    } catch (notifyErr) {
+      console.error("[POST /api/proposals] notify proposal failed:", notifyErr);
+    }
 
     return NextResponse.json({ id: data.id, success: true });
   } catch (err) {
