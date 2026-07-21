@@ -241,7 +241,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (section === "saved" || document.visibilityState !== "visible") return;
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     const elapsed = Date.now() - lastSilentRefreshRef.current;
-    const delay = elapsed < 900 ? 900 - elapsed : 350;
+    const delay = elapsed < 1600 ? 1600 - elapsed : 700;
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
       void fetchSection(false);
@@ -265,7 +265,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
         void fetchSection(false);
         if (section === "projects") void reloadLoadedProjectProposals();
       }
-    }, 5000);
+    }, 15000);
     return () => window.clearInterval(id);
   }, [fetchSection, loading, reloadLoadedProjectProposals, section, user]);
 

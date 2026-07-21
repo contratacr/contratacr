@@ -56,8 +56,8 @@ function canShowPermissionPrompt(pathname: string | null) {
 
 function promptDelayForPath(pathname: string | null) {
   const path = normalizePathname(pathname);
-  if (path.startsWith("/dashboard")) return 2600;
-  return 1400;
+  if (path.startsWith("/dashboard")) return 1800;
+  return 1200;
 }
 
 export function PushTokenManager() {

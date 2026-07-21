@@ -148,7 +148,7 @@ export function BookingRequests() {
     if (document.visibilityState !== "visible") return;
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     const elapsed = Date.now() - lastSilentRefreshRef.current;
-    const delay = elapsed < 900 ? 900 - elapsed : 350;
+    const delay = elapsed < 1600 ? 1600 - elapsed : 700;
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
       void loadBookings(true);
@@ -161,7 +161,7 @@ export function BookingRequests() {
     if (loading) return;
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") void loadBookings(true);
-    }, 5000);
+    }, 15000);
     return () => window.clearInterval(id);
   }, [loadBookings, loading]);
 

@@ -196,7 +196,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (document.visibilityState !== "visible") return;
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     const elapsed = Date.now() - lastSilentRefreshRef.current;
-    const delay = elapsed < 900 ? 900 - elapsed : 350;
+    const delay = elapsed < 1600 ? 1600 - elapsed : 700;
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
       if (view === "browse") void fetchOpenProjects(true);
@@ -222,7 +222,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         if (view === "browse") void fetchOpenProjects(true);
         else void fetchMyProposals(true);
       }
-    }, 5000);
+    }, 15000);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, loading]);
@@ -239,22 +239,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     };
   }, [loading, refreshSoon]);
-
-  // SILENTLY revalidate when the pro returns to the tab/window — so a project the client
-  // cancelled/deleted updates in the background, WITHOUT a jarring reload. The `silent` flag
-  // skips the loading state, so the current view (selection, expanded card, scroll) is
-  // preserved on refocus (the old non-silent refetch flashed the whole list as "loading").
-  useEffect(() => {
-    function onFocus() {
-      if (document.visibilityState === "visible") {
-        if (view === "browse") fetchOpenProjects(true); else fetchMyProposals(true);
-      }
-    }
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onFocus);
-    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onFocus); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view]);
 
   useEffect(() => {
     const projectId = searchParams.get("project");
