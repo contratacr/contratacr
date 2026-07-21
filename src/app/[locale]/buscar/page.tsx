@@ -42,7 +42,7 @@ interface SearchPageProps {
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAX_CARD_SLOTS_PER_PRO = 24;
-const RESULTS_PER_PAGE = 24;
+const RESULTS_PER_PAGE = 20;
 
 type SearchWorkplace = {
   id?: string;
@@ -205,10 +205,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resultOffset = (currentPage - 1) * RESULTS_PER_PAGE;
   const results = orderedResults.slice(resultOffset, resultOffset + RESULTS_PER_PAGE);
 
-  // Keep the map and the cards on the same page. Sending every professional to
-  // the browser made the unfiltered route substantially heavier than a filtered
-  // search and delayed navigation on both web and Capacitor.
-  const mapData = results.flatMap((pro) => {
+  // Cards are paginated, while the map receives every matching professional as
+  // lightweight pin data. This keeps "Buscar en esta area" truthful across all
+  // pages without rendering every full card in the browser.
+  const mapData = allResults.flatMap((pro) => {
     const base = {
       id: pro.id,
       proId: pro.id,
@@ -234,11 +234,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
     return [];
   });
-
-  // Number the cards on THIS page (1..N top-to-bottom) and pass the same numbers
-  // to the map so each pin shows its card's number (item 9, Hulihealth-style).
-  const numbering: Record<string, number> = {};
-  results.forEach((pro, i) => { numbering[pro.id] = resultOffset + i + 1; });
 
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const activeProvince = params.provincia && params.provincia !== "todas"
@@ -406,7 +401,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             mapData={mapData}
             apiKey={MAPS_API_KEY}
             locale={locale}
-            numbering={numbering}
             countLabel={subtitle}
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
