@@ -34,6 +34,32 @@ function promptSessionKey(userId: string) {
   return `ccr:push-permission-shown:${userId}`;
 }
 
+function normalizePathname(pathname: string | null) {
+  return (pathname ?? "/").replace(/^\/(es|en)(?=\/|$)/, "") || "/";
+}
+
+function canShowPermissionPrompt(pathname: string | null) {
+  const path = normalizePathname(pathname);
+  if (
+    path.startsWith("/login") ||
+    path.startsWith("/registro") ||
+    path.startsWith("/reset-password") ||
+    path.startsWith("/olvide-contrasena") ||
+    path.startsWith("/onboarding") ||
+    path.startsWith("/completar-perfil") ||
+    path.startsWith("/auth/")
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function promptDelayForPath(pathname: string | null) {
+  const path = normalizePathname(pathname);
+  if (path.startsWith("/dashboard")) return 2600;
+  return 1400;
+}
+
 export function PushTokenManager() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -154,7 +180,7 @@ export function PushTokenManager() {
       return;
     }
 
-    if (!isNativeMobile()) return;
+    if (!isNativeMobile() || !canShowPermissionPrompt(pathname)) return;
 
     let cancelled = false;
 
@@ -173,7 +199,7 @@ export function PushTokenManager() {
           window.sessionStorage.setItem(promptSessionKey(user.id), "1");
           promptTimerRef.current = setTimeout(() => {
             if (!cancelled) setPromptVisible(true);
-          }, 1600);
+          }, promptDelayForPath(pathname));
         } else {
           setPromptVisible(false);
         }
