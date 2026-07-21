@@ -20,6 +20,7 @@ interface SearchResultsLayoutProps {
   numbering?: Record<string, number>;
   hasActiveFilters?: boolean;
   mapFocusTarget?: MapFocusTarget | null;
+  resetKey?: string;
 }
 
 // Bottom-sheet snap points (fraction of the viewport height). PEEK = collapsed (map is the
@@ -45,9 +46,17 @@ const MAX = 0.74;
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, hasActiveFilters = false, mapFocusTarget = null }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, hasActiveFilters = false, mapFocusTarget = null, resetKey }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [heightFr, setHeightFr] = useState(PEEK);
+  const [dragging, setDragging] = useState(false);
+  const draggingRef = useRef(false);
+  const startRef = useRef({ y: 0, h: PEEK });
+  const curRef = useRef(PEEK);
+  const lastYRef = useRef(0);
+  const velRef = useRef(0); // px/move event; negative = moving up (sheet grows)
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -58,6 +67,12 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
       window.history.scrollRestoration = previousRestoration;
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    listRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [resetKey]);
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
   // dispatches `ccr:open-filters`; the drawer's in-card X dispatches `ccr:close-filters`.
@@ -73,14 +88,6 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   }, []);
 
   // ── Draggable bottom sheet (mobile) ──────────────────────────────────────────
-  const [heightFr, setHeightFr] = useState(PEEK);
-  const [dragging, setDragging] = useState(false);
-  const draggingRef = useRef(false);
-  const startRef = useRef({ y: 0, h: PEEK });
-  const curRef = useRef(PEEK);
-  const lastYRef = useRef(0);
-  const velRef = useRef(0); // px/move event; negative = moving up (sheet grows)
-
   function onHandleDown(e: React.PointerEvent) {
     draggingRef.current = true;
     setDragging(true);
@@ -220,7 +227,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div className="min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:flex-none lg:overflow-visible lg:overscroll-auto lg:px-0 lg:pb-0 lg:pt-0 lg:order-2 lg:w-[640px] lg:shrink-0 xl:w-[700px] 2xl:w-[820px]">
+          <div ref={listRef} className="min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:flex-none lg:overflow-visible lg:overscroll-auto lg:px-0 lg:pb-0 lg:pt-0 lg:order-2 lg:w-[640px] lg:shrink-0 xl:w-[700px] 2xl:w-[820px]">
             {children}
           </div>
         </div>

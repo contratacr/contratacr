@@ -2,7 +2,6 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
 import { MapPin, Minus, Plus, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -81,8 +80,6 @@ const MAP_CSS =
   ".ccr-pin .num{position:absolute;top:6px;left:0;right:0;text-align:center;color:#fff;font:700 12px/1 Inter,system-ui,sans-serif;}" +
   ".ccr-pin.is-active{transform:scale(1.15);}" +
   ".ccr-pin.is-active path{fill:" + PIN_HOVER + ";}" +
-  ".ccr-cluster{display:grid;width:38px;height:38px;place-items:center;border:3px solid #fff;border-radius:9999px;background:#162543;color:#fff;box-shadow:0 3px 10px rgba(15,23,42,.32);font:800 12px/1 Inter,system-ui,sans-serif;cursor:pointer;transition:transform .15s ease;}" +
-  ".ccr-cluster:hover{transform:scale(1.08);background:#009FD9;}" +
   ".ccr-popwrap{transform:translateY(-52px);pointer-events:none;}" +
   ".ccr-pop{pointer-events:auto;position:relative;width:240px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:12px;font-family:Inter,system-ui,sans-serif;text-decoration:none;display:block;}" +
   ".ccr-pop-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;background:transparent;color:#9ca3af;font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}" +
@@ -132,13 +129,6 @@ function teardropEl(num: string | number): HTMLDivElement {
   return el;
 }
 
-function clusterEl(count: number): HTMLDivElement {
-  const el = document.createElement("div");
-  el.className = "ccr-cluster";
-  el.textContent = String(count);
-  return el;
-}
-
 function jitter(seed: string): { dlat: number; dlng: number } {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
@@ -180,7 +170,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   const boundsRef = useRef<any>(null);
   const markerCountRef = useRef(0);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const clustererRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const popupRef = useRef<any>(null);
   // The key of the pro/cluster the popup is CURRENTLY showing. The hover preview is
@@ -346,79 +336,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     neutralizePopup(popupRef.current, wrap); // ← belt-and-suspenders: the popup also can't capture the pointer
   }
 
-  // CLUSTER preview — opened by hovering (desktop) or tapping (mobile) a cluster. A
-  // scrollable LIST of the grouped professionals, each row a link to that pro's profile
-  // (see + pick), so a cluster is never "dead". To separate the pins the user simply
-  // zooms in (wheel/pinch) — there is NO zoom button. Deduped by the cluster's position
-  // key so re-hovering the same cluster doesn't rebuild the card (no flicker).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function openClusterPopup(g: any, map: any, members: MapProfessional[], pos: { lat: number; lng: number }) {
-    const key = `cl:${pos.lat.toFixed(5)},${pos.lng.toFixed(5)}`;
-    if (popupRef.current && popupKeyRef.current === key) return; // already showing this cluster
-    closePopup();
-    popupKeyRef.current = key;
-    const head = `${members.length} ${locale === "en" ? "professionals here" : "profesionales aquí"}`;
-    const shown = members.slice(0, 6);
-    const more = members.length - shown.length;
-    const rows = shown.map((pro) => {
-      const href = `/${locale}/profesionales/${pro.slug}`;
-      const ver = pro.verified ? `<span class="ccr-ver">${locale === "en" ? "Verified" : "Verificado"}</span>` : "";
-      const price = pro.priceLabel ? ` · ${esc(pro.priceLabel)}` : "";
-      const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName, pro.publicBusinessNameOnly);
-      const primaryName = displayName.primaryDesktop;
-      const secondaryName = displayName.secondaryDesktop;
-      return (
-        `<a class="ccr-clrow" href="${href}">` +
-          `<div class="ccr-av ccr-av-sm">${esc(initials(primaryName || pro.fullName))}</div>` +
-          `<div style="min-width:0;flex:1;">` +
-            `<div class="ccr-clname">${esc(primaryName)}${ver}</div>` +
-            (secondaryName ? `<div class="ccr-clsub">${esc(secondaryName)}</div>` : "") +
-            `<div class="ccr-clmeta"><b>★ ${pro.ratingAvg.toFixed(1)}</b> (${pro.reviewCount})${price}</div>` +
-          `</div>` +
-        `</a>`
-      );
-    }).join("");
-    const wrap = document.createElement("div");
-    wrap.className = "ccr-popwrap";
-    wrap.innerHTML =
-      `<div class="ccr-clpop">` +
-        `<button class="ccr-pop-x" aria-label="${locale === "en" ? "Close" : "Cerrar"}">×</button>` +
-        `<div class="ccr-clpop-h">${esc(head)}</div>` +
-        `<div class="ccr-cllist">${rows}</div>` +
-        (more > 0 ? `<div class="ccr-clmore">+${more} ${locale === "en" ? "more" : "más"}</div>` : "") +
-      `</div>`;
-    wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
-    popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
-    popupContentElRef.current = wrap; // measured by the proximity-hide on mousemove
-    neutralizePopup(popupRef.current, wrap); // ← belt-and-suspenders: the popup also can't capture the pointer
-  }
-
-  // CLUSTER click/tap → ZOOM IN to separate the grouped pins (Airbnb / Google-Maps style). Frame
-  // the cluster's member positions and fit to them; if they're all at one point, step in +2. Always
-  // make progress (zoom IN) and never exceed maxZoom. Suppressed from the "Buscar en esta área" prompt.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function zoomToCluster(g: any, map: any, cluster: any) {
-    closePopup();
-    suppressMoveRef.current = true;
-    const done = () => { suppressMoveRef.current = false; };
-    const cur = map.getZoom?.() ?? 11;
-    const b = new g.LatLngBounds();
-    for (const m of (cluster?.markers ?? [])) { if (m?.position) b.extend(m.position); }
-    if (b.isEmpty()) {
-      if (cluster?.position) map.panTo(cluster.position);
-      map.setZoom(Math.min(18, cur + 2));
-      g.event.addListenerOnce(map, "idle", done);
-      return;
-    }
-    map.fitBounds(b, 96);
-    g.event.addListenerOnce(map, "idle", () => {
-      const z = map.getZoom();
-      if (z > 18) map.setZoom(18);
-      else if (z <= cur) map.setZoom(Math.min(18, cur + 2)); // guarantee we always zoom IN
-      done();
-    });
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function fitToMarkers(map: any, g: any, bounds: any, count: number) {
     // Programmatic move → suppress the "search this area" button until it settles.
@@ -546,36 +463,37 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   function renderMarkers() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const clusterer = (window as any).markerClusterer;
-    if (!g?.marker?.AdvancedMarkerElement || !clusterer) return;
+    if (!g?.marker?.AdvancedMarkerElement) return;
     const map = mapInstanceRef.current ?? ensureMap();
     if (!map) return;
 
     closePopup();
     setShowArea(false); // fresh results reflect the (just-searched) area
+    for (const marker of markersRef.current) marker.map = null;
+    markersRef.current = [];
     pinsByProRef.current = new Map();
     const canHover = typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches;
     canHoverRef.current = canHover; // so the proximity-hide (mousemove) runs on desktop only
     const bounds = new g.LatLngBounds();
+    const numberedPros = new Set<string>();
 
     const markers = professionals.map((pro) => {
       const pos = positionFor(pro);
       if (!pos) return null;
       bounds.extend(pos);
       const proId = pro.proId ?? pro.id;
-      const num = numbering?.[proId];
+      const visibleNumber = numbering?.[proId];
+      const num = visibleNumber && !numberedPros.has(proId) ? visibleNumber : undefined;
+      if (num) numberedPros.add(proId);
       const z = num ? 1000 - num : 1;
 
       const el = teardropEl(num ?? "");
       el.dataset.basez = String(z);
 
       const titleName = getProfessionalDisplayName(pro.fullName, pro.businessName, pro.publicBusinessNameOnly).primaryDesktop || pro.fullName;
-      const marker = new g.marker.AdvancedMarkerElement({ position: pos, content: el, zIndex: z, title: titleName });
+      const marker = new g.marker.AdvancedMarkerElement({ map, position: pos, content: el, zIndex: z, title: titleName });
       // Keep a back-ref so setPinActive can raise zIndex without a marker lookup.
       (el as unknown as { _marker: unknown })._marker = marker;
-      // Carry the pro on the marker so the cluster renderer can list its members.
-      (marker as unknown as { _pro: MapProfessional })._pro = pro;
       const list = pinsByProRef.current.get(proId) ?? [];
       list.push(el); pinsByProRef.current.set(proId, list);
 
@@ -611,54 +529,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       return marker;
     }).filter(Boolean);
 
-    // Clusters reuse the SAME shared teardrop (identical shape/size/color); only the number differs
-    // (here the count). DESKTOP HOVER → a stable combined mini-card listing the grouped pros (each
-    // row → that profile, so a 2-3 cluster lets you pick directly). CLICK/TAP (desktop + mobile) →
-    // ZOOM IN to separate the pins (Airbnb-style), after which the individual pins behave normally.
-    const renderer = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (cluster: any) => {
-        const { count, position, markers: members } = cluster;
-        const el = clusterEl(count);
-        const clMarker = new g.marker.AdvancedMarkerElement({ position, content: el, zIndex: 5000 + count });
-        // The grouped pros (deduped — a pro can have several workplace pins in one cluster).
-        const seen = new Set<string>();
-        const pros: MapProfessional[] = [];
-        for (const m of (members ?? []) as { _pro?: MapProfessional }[]) {
-          const p = m._pro;
-          if (!p) continue;
-          const key = p.proId ?? p.id;
-          if (seen.has(key)) continue;
-          seen.add(key); pros.push(p);
-        }
-        if (canHover) {
-          // Same model as pins: hovering a cluster switches the popup to its members-list; clear any
-          // highlighted pin. NO mouseleave-close (closes on map-leave/click instead → no flicker).
-          el.addEventListener("mouseenter", () => {
-            if (activePinRef.current) { setActive(activePinRef.current, false, false); activePinRef.current = null; }
-            activeAnchorElRef.current = el;
-            openClusterPopup(g, map, pros, position);
-          });
-        }
-        el.addEventListener("click", (e) => { e.stopPropagation(); zoomToCluster(g, map, cluster); });
-        return clMarker;
-      },
-    };
-
-    if (clustererRef.current) {
-      clustererRef.current.clearMarkers();
-      clustererRef.current.addMarkers(markers);
-    } else {
-      const algorithm = clusterer.SuperClusterAlgorithm
-        ? new clusterer.SuperClusterAlgorithm({
-            radius: 92,
-            maxZoom: 17,
-          })
-        : undefined;
-      // onClusterClick no-op → DISABLE the lib's default click-to-zoom; OUR el `click` handler does
-      // the zoom-to-separate (so it can't double-fire / fight the hover preview).
-      clustererRef.current = new clusterer.MarkerClusterer({ map, markers, renderer, algorithm, onClusterClick: () => {} });
-    }
+    markersRef.current = markers;
 
     boundsRef.current = bounds;
     markerCountRef.current = markers.length;
@@ -728,8 +599,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: MAP_CSS }} />
-      {/* MarkerClusterer (non-Google lib); the Maps JS API loads via the async loader. */}
-      <Script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js" strategy="afterInteractive" onLoad={renderMarkers} />
       {/* Wrapper is the positioning context; the map fills it and the floating
           "Buscar en esta área" button overlays on top (top-center, like Airbnb/Uber).
           `onMouseMove` hides the hover popup promptly once the cursor leaves the tight

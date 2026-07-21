@@ -416,6 +416,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             countLabel={subtitle}
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
+            resetKey={`${currentPage}:${paginationParams.toString()}`}
             filters={<Suspense fallback={filtersFallback}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
             drawerFilters={<Suspense fallback={filtersFallback}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
           >
