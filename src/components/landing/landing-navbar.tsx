@@ -711,7 +711,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
         router.prefetch(primaryPanelHref);
         prefetchDashboardBootstrap(user.id);
       }
-    }, nativeApp ? 80 : 900);
+    }, nativeApp ? 0 : 120);
     return () => window.clearTimeout(timeout);
   }, [nativeApp, pathname, primaryPanelHref, router, user]);
 
