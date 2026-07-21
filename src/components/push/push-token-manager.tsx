@@ -195,13 +195,15 @@ export function PushTokenManager() {
         }
         const dismissed = dismissKey ? window.localStorage.getItem(dismissKey) === "1" : false;
         const shownThisSession = window.sessionStorage.getItem(promptSessionKey(user.id)) === "1";
-        if (!dismissed && !shownThisSession) {
+        if (dismissed) {
+          setPromptVisible(false);
+          return;
+        }
+        if (!shownThisSession) {
           window.sessionStorage.setItem(promptSessionKey(user.id), "1");
           promptTimerRef.current = setTimeout(() => {
             if (!cancelled) setPromptVisible(true);
           }, promptDelayForPath(pathname));
-        } else {
-          setPromptVisible(false);
         }
       } catch (error) {
         console.error("[push] permission check failed", error);
