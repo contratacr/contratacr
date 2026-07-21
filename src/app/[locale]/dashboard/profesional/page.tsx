@@ -329,7 +329,7 @@ export default function DashboardPage() {
       .eq("profile_id", user.id)
       .maybeSingle();
 
-    setPro(data);
+    setPro((current) => JSON.stringify(current) === JSON.stringify(data) ? current : data);
     cacheDashboardBootstrap({ pro: data });
     if (data) {
       setNoProTries(0);
@@ -353,7 +353,7 @@ export default function DashboardPage() {
     const supabase = createClient();
     const { data } = await supabase.rpc("get_my_profile");
     if (data) {
-      setProfile(data);
+      setProfile((current) => JSON.stringify(current) === JSON.stringify(data) ? current : data);
       cacheDashboardBootstrap({ profile: data });
     }
   }, [cacheDashboardBootstrap, setProfile, user]);

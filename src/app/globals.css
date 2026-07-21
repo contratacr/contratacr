@@ -82,7 +82,7 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
 
 .ccr-native-app button:active,
 .ccr-native-app a:active {
-  transform: scale(0.99);
+  transform: none;
 }
 
 .ccr-native-app header button:active,

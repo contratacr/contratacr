@@ -303,7 +303,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card id={`booking-${booking.id}`} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
+      <Card id={`booking-${booking.id}`} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-[box-shadow,border-color] hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + relevant flags). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.

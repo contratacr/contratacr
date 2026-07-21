@@ -46,6 +46,7 @@ export function DirectChatLauncher({
   buttonLabel,
   initialMessage = "",
   onSelfAction,
+  tone = "primary",
   analyticsSource = "unknown",
 }: DirectChatLauncherProps) {
   const locale = useLocale();
@@ -69,6 +70,7 @@ export function DirectChatLauncher({
         buttonLabel={safeLabel}
         initialMessage={initialMessage}
         onSelfAction={onSelfAction}
+        tone={tone}
       />
     );
   }

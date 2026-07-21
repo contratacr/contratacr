@@ -20,6 +20,7 @@ type MessageLauncherProps = {
   buttonLabel?: string;
   initialMessage?: string;
   onSelfAction?: () => void;
+  tone?: "primary" | "contrast";
 };
 
 function buildDraftHref({
@@ -54,6 +55,7 @@ export function MessageLauncher(props: MessageLauncherProps) {
     buttonLabel,
     initialMessage = "",
     onSelfAction,
+    tone = "primary",
   } = props;
   const locale = useLocale();
   const isEn = locale === "en";
@@ -107,12 +109,12 @@ export function MessageLauncher(props: MessageLauncherProps) {
       disabled={loading}
       aria-busy={loading}
       className={cn(
-        buttonVariants({ variant: "default", size: "md" }),
-        "gap-1.5 bg-[#009FD9] text-white hover:bg-[#0089bb] focus-visible:ring-[#009FD9] disabled:opacity-60",
+        buttonVariants({ variant: tone === "contrast" ? "chat" : "default", size: "md" }),
+        "gap-1.5 disabled:opacity-60",
         className || "w-full rounded-full py-2.5 text-[13px] font-semibold",
       )}
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquareText className="h-4 w-4" />}
+      {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <MessageSquareText className="h-5 w-5 shrink-0" strokeWidth={2.25} />}
       {label}
     </button>
   );
