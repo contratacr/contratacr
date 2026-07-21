@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
 import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-followup";
+import { PushTokenManager } from "@/components/push/push-token-manager";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 
 type LocaleParams = {
@@ -149,6 +150,7 @@ export default async function LocaleLayout({
         <Suspense fallback={null}>
           <MetaPixel pixelId={META_PIXEL_ID} />
         </Suspense>
+        <PushTokenManager />
         {children}
         <WhatsAppReviewFollowUp />
         <AiConcierge />
