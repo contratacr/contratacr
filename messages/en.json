@@ -198,8 +198,10 @@
       "desc": "Try a different category or expand your search area."
     },
     "pagination": {
+      "label": "Results pagination",
       "prev": "Previous",
       "next": "Next",
+      "status": "Page {page} of {total}",
       "pageOf": "Page <b>{page}</b> of <b>{total}</b>"
     },
     "filters": {

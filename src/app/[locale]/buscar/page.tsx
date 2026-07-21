@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
@@ -35,11 +36,13 @@ interface SearchPageProps {
     s?: string;
     e?: string;
     w?: string;
+    page?: string;
   }>;
 }
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAX_CARD_SLOTS_PER_PRO = 24;
+const RESULTS_PER_PAGE = 24;
 
 type SearchWorkplace = {
   id?: string;
@@ -194,9 +197,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     });
   }
 
-  const results = orderedResults;
+  const requestedPage = Number.parseInt(params.page ?? "1", 10);
+  const totalPages = Math.max(1, Math.ceil(orderedResults.length / RESULTS_PER_PAGE));
+  const currentPage = Number.isFinite(requestedPage)
+    ? Math.min(Math.max(requestedPage, 1), totalPages)
+    : 1;
+  const resultOffset = (currentPage - 1) * RESULTS_PER_PAGE;
+  const results = orderedResults.slice(resultOffset, resultOffset + RESULTS_PER_PAGE);
 
-  const mapData = allResults.flatMap((pro) => {
+  // Keep the map and the cards on the same page. Sending every professional to
+  // the browser made the unfiltered route substantially heavier than a filtered
+  // search and delayed navigation on both web and Capacitor.
+  const mapData = results.flatMap((pro) => {
     const base = {
       id: pro.id,
       proId: pro.id,
@@ -226,7 +238,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // Number the cards on THIS page (1..N top-to-bottom) and pass the same numbers
   // to the map so each pin shows its card's number (item 9, Hulihealth-style).
   const numbering: Record<string, number> = {};
-  results.forEach((pro, i) => { numbering[pro.id] = i + 1; });
+  results.forEach((pro, i) => { numbering[pro.id] = resultOffset + i + 1; });
 
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const activeProvince = params.provincia && params.provincia !== "todas"
@@ -350,6 +362,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     (!!params.aseguradora && canFilterByInsurer) ||
     (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
     (!!params.modalidad && params.modalidad !== "any");
+  const paginationParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (key !== "page" && value) paginationParams.set(key, value);
+  }
+  const pageHref = (page: number) => {
+    const next = new URLSearchParams(paginationParams);
+    if (page > 1) next.set("page", String(page));
+    const query = next.toString();
+    return query ? `/buscar?${query}` : "/buscar";
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
@@ -424,7 +446,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             slotsInitiallyLoaded={sortBy === "availability"}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
-                            rank={i + 1}
+                            rank={resultOffset + i + 1}
                             forceContactOnly={shouldShowContactOnly(pro)}
                             preferredLocationId={shouldPreferVideoLocation(pro) ? "videoconsulta" : undefined}
                             restrictToPreferredLocation={shouldPreferVideoLocation(pro)}
@@ -434,6 +456,34 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </div>
                     )))}
                   </div>
+
+                  {totalPages > 1 && (
+                    <nav aria-label={t("pagination.label")} className="mt-5 flex items-center justify-center gap-3">
+                      {currentPage > 1 ? (
+                        <Link
+                          href={pageHref(currentPage - 1)}
+                          prefetch
+                          className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[#dbe3e9] bg-white px-3 text-sm font-semibold text-[#162543] transition hover:border-[#009FD9] hover:text-[#0089BB]"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          {t("pagination.prev")}
+                        </Link>
+                      ) : null}
+                      <span className="text-sm font-medium text-[#6b7280]">
+                        {t("pagination.status", { page: currentPage, total: totalPages })}
+                      </span>
+                      {currentPage < totalPages ? (
+                        <Link
+                          href={pageHref(currentPage + 1)}
+                          prefetch
+                          className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[#dbe3e9] bg-white px-3 text-sm font-semibold text-[#162543] transition hover:border-[#009FD9] hover:text-[#0089BB]"
+                        >
+                          {t("pagination.next")}
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
+                      ) : null}
+                    </nav>
+                  )}
 
                 </>
               )}

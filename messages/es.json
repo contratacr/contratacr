@@ -198,8 +198,10 @@
       "desc": "Intenta con otra categoría o amplía la zona de búsqueda."
     },
     "pagination": {
+      "label": "Paginación de resultados",
       "prev": "Anterior",
       "next": "Siguiente",
+      "status": "Página {page} de {total}",
       "pageOf": "Página <b>{page}</b> de <b>{total}</b>"
     },
     "filters": {
