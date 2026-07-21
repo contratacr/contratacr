@@ -134,6 +134,7 @@ export function BookingRequests() {
       const { bookings: rows } = await res.json();
       const next = rows ?? [];
       const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
+      if (silent && bookingsSnapshotRef.current === snapshot) return;
       bookingsSnapshotRef.current = snapshot;
       setBookings(next);
     } catch (error) {

@@ -247,7 +247,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                       {/* overflow-wrap:anywhere breaks long unbroken strings; line-clamp keeps
                           every row a uniform, compact height (full text on open). */}
                       <p className={cn("text-sm [overflow-wrap:anywhere] break-words line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{notificationTitle(n)}</p>
-                      <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">{n.message}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#6b7280] [overflow-wrap:anywhere] break-words">{n.message}</p>
                       <p className="text-xs text-[#9ca3af] mt-1">{notificationTime(n)}</p>
                     </div>
                   </div>
