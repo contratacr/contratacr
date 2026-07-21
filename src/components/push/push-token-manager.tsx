@@ -24,6 +24,11 @@ function safePostToken(payload: { token: string; platform: "android" | "ios"; de
   }).catch(() => null);
 }
 
+function normalizePushUrl(rawUrl: unknown) {
+  if (typeof rawUrl !== "string" || !rawUrl.startsWith("/")) return null;
+  return rawUrl.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
+}
+
 export function PushTokenManager() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -41,6 +46,36 @@ export function PushTokenManager() {
   }, []);
 
   const dismissKey = user ? `ccr:push-permission-dismissed:${user.id}` : null;
+
+  useEffect(() => {
+    if (!isNativeMobile()) return;
+    let cancelled = false;
+    let removeAction: (() => Promise<void> | void) | null = null;
+
+    const initActionListener = async () => {
+      try {
+        const actionListener = await PushNotifications.addListener("pushNotificationActionPerformed", (event) => {
+          const href = normalizePushUrl(event.notification.data?.url);
+          if (!href) return;
+          router.push(href);
+        });
+        if (cancelled) {
+          void actionListener.remove();
+          return;
+        }
+        removeAction = () => actionListener.remove();
+      } catch (error) {
+        console.error("[push] action listener failed", error);
+      }
+    };
+
+    void initActionListener();
+
+    return () => {
+      cancelled = true;
+      void removeAction?.();
+    };
+  }, [router]);
 
   const registerCurrentDevice = useCallback(async () => {
     if (!user || !isNativeMobile() || activeRef.current) return;
@@ -67,22 +102,16 @@ export function PushTokenManager() {
         void onToken(token);
       });
       const errListener = await PushNotifications.addListener("registrationError", onError);
-      const actionListener = await PushNotifications.addListener("pushNotificationActionPerformed", (event) => {
-        const rawUrl = event.notification.data?.url;
-        if (typeof rawUrl !== "string" || !rawUrl.startsWith("/")) return;
-        router.push(rawUrl);
-      });
 
       removersRef.current.push(() => regListener.remove());
       removersRef.current.push(() => errListener.remove());
-      removersRef.current.push(() => actionListener.remove());
 
       await PushNotifications.register();
     } catch (error) {
       activeRef.current = false;
       console.error("[push] init failed", error);
     }
-  }, [router, user]);
+  }, [user]);
 
   const requestNotifications = useCallback(async () => {
     if (!user || !isNativeMobile()) return;
