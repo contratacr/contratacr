@@ -41,7 +41,6 @@ export async function sendUserPush({ userId, title, body, url = "/es/notificacio
       notification: {
         icon: "ic_stat_contratacr",
         color: "#009FD9",
-        clickAction: "OPEN_APP",
       },
     },
   });

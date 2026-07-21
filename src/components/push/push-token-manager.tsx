@@ -29,6 +29,10 @@ function normalizePushUrl(rawUrl: unknown) {
   return rawUrl.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
 }
 
+function promptSessionKey(userId: string) {
+  return `ccr:push-permission-shown:${userId}`;
+}
+
 export function PushTokenManager() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -57,6 +61,7 @@ export function PushTokenManager() {
         const actionListener = await PushNotifications.addListener("pushNotificationActionPerformed", (event) => {
           const href = normalizePushUrl(event.notification.data?.url);
           if (!href) return;
+          window.sessionStorage.setItem("ccr:pending-push-url", href);
           router.push(href);
         });
         if (cancelled) {
@@ -155,7 +160,13 @@ export function PushTokenManager() {
           return;
         }
         const dismissed = dismissKey ? window.localStorage.getItem(dismissKey) === "1" : false;
-        setPromptVisible(!dismissed);
+        const shownThisSession = window.sessionStorage.getItem(promptSessionKey(user.id)) === "1";
+        if (!dismissed && !shownThisSession) {
+          window.sessionStorage.setItem(promptSessionKey(user.id), "1");
+          setPromptVisible(true);
+        } else {
+          setPromptVisible(false);
+        }
       } catch (error) {
         console.error("[push] permission check failed", error);
       }
@@ -168,9 +179,17 @@ export function PushTokenManager() {
     };
   }, [cleanupListeners, dismissKey, loading, registerCurrentDevice, user]);
 
+  useEffect(() => {
+    if (loading || !user || !isNativeMobile()) return;
+    const pendingHref = normalizePushUrl(window.sessionStorage.getItem("ccr:pending-push-url"));
+    if (!pendingHref) return;
+    window.sessionStorage.removeItem("ccr:pending-push-url");
+    router.push(pendingHref);
+  }, [loading, router, user]);
+
   useEffect(() => cleanupListeners, [cleanupListeners]);
 
-  if (!promptVisible || !user || !isNativeMobile()) return null;
+  if (loading || !promptVisible || !user || !isNativeMobile()) return null;
 
   const professional = user.user_metadata?.is_provider === true;
   const copy = professional
