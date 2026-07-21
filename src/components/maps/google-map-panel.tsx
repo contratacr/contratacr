@@ -475,16 +475,13 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const canHover = typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches;
     canHoverRef.current = canHover; // so the proximity-hide (mousemove) runs on desktop only
     const bounds = new g.LatLngBounds();
-    const numberedPros = new Set<string>();
 
     const markers = professionals.map((pro) => {
       const pos = positionFor(pro);
       if (!pos) return null;
       bounds.extend(pos);
       const proId = pro.proId ?? pro.id;
-      const visibleNumber = numbering?.[proId];
-      const num = visibleNumber && !numberedPros.has(proId) ? visibleNumber : undefined;
-      if (num) numberedPros.add(proId);
+      const num = numbering?.[proId];
       const z = num ? 1000 - num : 1;
 
       const el = teardropEl(num ?? "");

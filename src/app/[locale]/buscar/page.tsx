@@ -205,10 +205,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resultOffset = (currentPage - 1) * RESULTS_PER_PAGE;
   const results = orderedResults.slice(resultOffset, resultOffset + RESULTS_PER_PAGE);
 
-  // Cards are paginated, while the map receives every matching professional as
-  // lightweight pin data. This keeps "Buscar en esta area" truthful across all
-  // pages without rendering every full card in the browser.
-  const mapData = allResults.flatMap((pro) => {
+  // The map mirrors the current result page: only the professionals shown as
+  // cards get pins. Changing pages swaps the map to the next visible set.
+  const mapData = results.flatMap((pro) => {
     const base = {
       id: pro.id,
       proId: pro.id,
@@ -235,8 +234,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     return [];
   });
 
-  // Only professionals represented by visible cards get a position number.
-  // Remaining matching pins stay unnumbered until their card page is opened.
+  // Visible cards get numbers 1..20; if one professional has several pins,
+  // every pin repeats that same card number.
   const numbering: Record<string, number> = {};
   results.forEach((pro, index) => { numbering[pro.id] = index + 1; });
 
