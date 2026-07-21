@@ -2310,7 +2310,9 @@
     "emptySub": "Save the profiles you're interested in with the bookmark icon on their cards.",
     "searchPros": "Find professionals",
     "count": "{count, plural, one {# saved professional} other {# saved professionals}}",
-    "noReviews": "No reviews"
+    "noReviews": "No reviews",
+    "videoConsult": "Video consultation",
+    "locationUnavailable": "Location not specified"
   },
   "registerChoice": {
     "title": "Create your account",

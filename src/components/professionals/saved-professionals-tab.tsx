@@ -16,6 +16,8 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
   const tSaved = useTranslations("savedPros");
   const tCard = useTranslations("card");
   const locale = useLocale();
+  const locationLabel = [pro.cantonName, pro.provinceName].filter(Boolean).join(", ")
+    || (pro.videoconsulta || pro.coverage?.country ? tSaved("videoConsult") : tSaved("locationUnavailable"));
 
   return (
     <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-3 gap-y-4 p-4 transition-colors hover:bg-[#fafafa] sm:flex sm:items-center sm:gap-4">
@@ -46,7 +48,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
           </span>
           <span className="flex items-center gap-1 text-xs text-[#6b7280]">
             <MapPin className="h-3 w-3 shrink-0 text-[#374151]" />
-            {[pro.cantonName, pro.provinceName].filter(Boolean).join(", ")}
+            {locationLabel}
           </span>
         </div>
         <div className="flex items-center gap-1 mt-1">

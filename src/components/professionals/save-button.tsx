@@ -59,6 +59,8 @@ export type SavedPro = {
   reviewCount: number;
   hourlyRate?: number;
   isVerified: boolean;
+  videoconsulta?: boolean;
+  coverage?: { country?: boolean } | null;
 };
 
 export function getSavedPros(userId?: string): SavedPro[] {

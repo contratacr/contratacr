@@ -104,7 +104,7 @@ export function LeaveReviewModal({
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4"
+      className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4"
     >
       <style>{`
         @keyframes modalIn {

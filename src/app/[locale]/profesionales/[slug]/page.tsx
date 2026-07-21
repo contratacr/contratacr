@@ -288,6 +288,8 @@ export default function ProfilePage() {
     reviewCount: professional.reviewCount,
     hourlyRate: professional.hourlyRate,
     isVerified: professional.verificationStatus === "verified",
+    videoconsulta: professional.videoconsulta,
+    coverage: professional.coverage,
   };
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },

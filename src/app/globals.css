@@ -288,7 +288,15 @@ html[data-self-action-modal-open="true"] [data-save-button] {
      keeping user pinch-zoom enabled for accessibility. */
 @media (max-width: 640px) {
   .app-modal-screen.app-modal-screen {
-    padding-bottom: var(--app-keyboard-inset-bottom);
+    padding-bottom: 0;
+  }
+
+  html[data-keyboard-open] .app-modal-screen.app-modal-screen,
+  html[data-keyboard-open] [data-ai-concierge-dialog] {
+    top: var(--app-visual-viewport-top) !important;
+    bottom: auto !important;
+    height: var(--app-visual-viewport-height) !important;
+    max-height: var(--app-visual-viewport-height) !important;
   }
 
   .app-bottom-sheet.app-bottom-sheet {
