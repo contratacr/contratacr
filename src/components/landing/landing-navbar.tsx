@@ -1342,7 +1342,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   aria-expanded={mobileHelpOpen}
                 >
                   <DrawerIcon><HelpCircle /></DrawerIcon>
-                  <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Help and support" : "Ayuda y soporte"}</span>
+                  <span className="flex-1 whitespace-nowrap">{locale === "en" ? "Help and support" : "Ayuda y soporte"}</span>
                   <ChevronDown className={cn("h-5 w-5 shrink-0 text-[#64748b] transition-transform", mobileHelpOpen && "rotate-180")} />
                 </button>
                 {mobileHelpOpen && (
