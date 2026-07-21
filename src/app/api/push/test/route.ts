@@ -13,9 +13,9 @@ async function sendTestPush() {
 
     const result = await sendUserPush({
       userId: user.id,
-      title: "Notificacion de prueba",
-      body: "Notificacion de prueba recibida correctamente.",
-      url: "/es/notificaciones",
+      title: "Nueva propuesta recibida",
+      body: "Un profesional envio una propuesta para tu solicitud. Revisala desde tu panel.",
+      url: "/es/dashboard/profesional?tab=sent_projects",
     });
 
     if (result.sent === 0 && result.failed === 0) {
