@@ -21,7 +21,12 @@ export async function sendUserPush({ userId, title, body, url = "/es/notificacio
     .eq("user_id", userId)
     .eq("is_active", true);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    const detail = /user_push_tokens/i.test(error.message)
+      ? "push_tokens_table_missing_or_unavailable"
+      : "push_tokens_read_failed";
+    throw new Error(`${detail}: ${error.message}`);
+  }
 
   const rows = (data ?? []).filter((row) => typeof row.token === "string" && row.token.length > 10);
   if (rows.length === 0) return { sent: 0, failed: 0, inactive: 0 };
