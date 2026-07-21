@@ -13,7 +13,7 @@ async function sendTestPush() {
 
     const result = await sendUserPush({
       userId: user.id,
-      title: "ContrataCR",
+      title: "Notificacion de prueba",
       body: "Notificacion de prueba recibida correctamente.",
       url: "/es/notificaciones",
     });
