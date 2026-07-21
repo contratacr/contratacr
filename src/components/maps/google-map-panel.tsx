@@ -81,6 +81,8 @@ const MAP_CSS =
   ".ccr-pin .num{position:absolute;top:6px;left:0;right:0;text-align:center;color:#fff;font:700 12px/1 Inter,system-ui,sans-serif;}" +
   ".ccr-pin.is-active{transform:scale(1.15);}" +
   ".ccr-pin.is-active path{fill:" + PIN_HOVER + ";}" +
+  ".ccr-cluster{display:grid;width:38px;height:38px;place-items:center;border:3px solid #fff;border-radius:9999px;background:#162543;color:#fff;box-shadow:0 3px 10px rgba(15,23,42,.32);font:800 12px/1 Inter,system-ui,sans-serif;cursor:pointer;transition:transform .15s ease;}" +
+  ".ccr-cluster:hover{transform:scale(1.08);background:#009FD9;}" +
   ".ccr-popwrap{transform:translateY(-52px);pointer-events:none;}" +
   ".ccr-pop{pointer-events:auto;position:relative;width:240px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:12px;font-family:Inter,system-ui,sans-serif;text-decoration:none;display:block;}" +
   ".ccr-pop-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;background:transparent;color:#9ca3af;font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}" +
@@ -127,6 +129,13 @@ function teardropEl(num: string | number): HTMLDivElement {
   const el = document.createElement("div");
   el.className = "ccr-pin";
   el.innerHTML = pinSvg() + (num !== "" ? `<span class="num">${num}</span>` : "");
+  return el;
+}
+
+function clusterEl(count: number): HTMLDivElement {
+  const el = document.createElement("div");
+  el.className = "ccr-cluster";
+  el.textContent = String(count);
   return el;
 }
 
@@ -610,7 +619,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (cluster: any) => {
         const { count, position, markers: members } = cluster;
-        const el = teardropEl(count);
+        const el = clusterEl(count);
         const clMarker = new g.marker.AdvancedMarkerElement({ position, content: el, zIndex: 5000 + count });
         // The grouped pros (deduped — a pro can have several workplace pins in one cluster).
         const seen = new Set<string>();

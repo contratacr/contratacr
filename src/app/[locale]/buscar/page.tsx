@@ -235,6 +235,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     return [];
   });
 
+  // Only professionals represented by visible cards get a position number.
+  // Remaining matching pins stay unnumbered until their card page is opened.
+  const numbering: Record<string, number> = {};
+  results.forEach((pro, index) => { numbering[pro.id] = index + 1; });
+
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const activeProvince = params.provincia && params.provincia !== "todas"
     ? PROVINCES.find((p) => p.id === params.provincia)
@@ -367,6 +372,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     const query = next.toString();
     return query ? `/buscar?${query}` : "/buscar";
   };
+  const paginationPages: Array<number | "ellipsis"> = (() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
+    if (currentPage <= 3) return [1, 2, 3, "ellipsis", totalPages];
+    if (currentPage >= totalPages - 2) return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages];
+    return [1, "ellipsis", currentPage, "ellipsis", totalPages];
+  })();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
@@ -401,6 +412,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             mapData={mapData}
             apiKey={MAPS_API_KEY}
             locale={locale}
+            numbering={numbering}
             countLabel={subtitle}
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
@@ -440,7 +452,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             slotsInitiallyLoaded={sortBy === "availability"}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
-                            rank={resultOffset + i + 1}
+                            rank={i + 1}
                             forceContactOnly={shouldShowContactOnly(pro)}
                             preferredLocationId={shouldPreferVideoLocation(pro) ? "videoconsulta" : undefined}
                             restrictToPreferredLocation={shouldPreferVideoLocation(pro)}
@@ -452,30 +464,29 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   </div>
 
                   {totalPages > 1 && (
-                    <nav aria-label={t("pagination.label")} className="mt-5 flex items-center justify-center gap-3">
-                      {currentPage > 1 ? (
-                        <Link
-                          href={pageHref(currentPage - 1)}
-                          prefetch
-                          className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[#dbe3e9] bg-white px-3 text-sm font-semibold text-[#162543] transition hover:border-[#009FD9] hover:text-[#0089BB]"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          {t("pagination.prev")}
-                        </Link>
-                      ) : null}
-                      <span className="text-sm font-medium text-[#6b7280]">
-                        {t("pagination.status", { page: currentPage, total: totalPages })}
-                      </span>
-                      {currentPage < totalPages ? (
-                        <Link
-                          href={pageHref(currentPage + 1)}
-                          prefetch
-                          className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[#dbe3e9] bg-white px-3 text-sm font-semibold text-[#162543] transition hover:border-[#009FD9] hover:text-[#0089BB]"
-                        >
+                    <nav aria-label={t("pagination.label")} className="mt-5 flex flex-nowrap items-center justify-between gap-2 border-t border-[#e5e7eb] pt-4 sm:gap-3">
+                      <div className="flex min-w-0 items-center gap-1 sm:gap-1.5">
+                        {currentPage > 1 && (
+                          <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-[#374151] transition hover:bg-[#EBF5FB] hover:text-[#0089BB] sm:h-10 sm:w-10">
+                            <ChevronLeft className="h-4 w-4" />
+                          </Link>
+                        )}
+                        {paginationPages.map((page, index) => page === "ellipsis" ? (
+                          <span key={`ellipsis-${index}`} className="grid h-9 w-5 place-items-center text-sm text-[#9ca3af] sm:h-10 sm:w-7">...</span>
+                        ) : page === currentPage ? (
+                          <span key={page} aria-current="page" className="grid h-9 min-w-9 place-items-center rounded-md bg-[#009FD9] px-1.5 text-sm font-bold text-white sm:h-10 sm:min-w-10 sm:px-2">{page}</span>
+                        ) : (
+                          <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-9 min-w-9 place-items-center rounded-md px-1.5 text-sm font-medium text-[#6b7280] transition hover:bg-[#EBF5FB] hover:text-[#0089BB] sm:h-10 sm:min-w-10 sm:px-2">
+                            {page}
+                          </Link>
+                        ))}
+                      </div>
+                      {currentPage < totalPages && (
+                        <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-9 min-w-24 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-3 text-sm font-bold text-white transition hover:bg-[#0089BB] sm:h-10 sm:max-w-64 sm:gap-2 sm:px-5">
                           {t("pagination.next")}
                           <ChevronRight className="h-4 w-4" />
                         </Link>
-                      ) : null}
+                      )}
                     </nav>
                   )}
 
