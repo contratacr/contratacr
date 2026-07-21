@@ -129,9 +129,25 @@ export function syncSavedPros(userId: string, force = false): Promise<SavedPro[]
       .order("created_at", { ascending: false });
     if (error) return local;
 
-    const remote = (data ?? [])
+    let remote = (data ?? [])
       .map((row) => row.snapshot as SavedPro | null)
       .filter((pro): pro is SavedPro => Boolean(pro?.id && pro?.slug && pro?.fullName));
+    if (remote.length > 0) {
+      const { data: currentModes } = await supabase
+        .from("professionals")
+        .select("id, videoconsulta, coverage_country")
+        .in("id", remote.map((pro) => pro.id));
+      const modesById = new Map((currentModes ?? []).map((row) => [row.id, row]));
+      remote = remote.map((pro) => {
+        const current = modesById.get(pro.id);
+        if (!current) return pro;
+        return {
+          ...pro,
+          videoconsulta: Boolean(current.videoconsulta),
+          coverage: { ...pro.coverage, country: Boolean(current.coverage_country) },
+        };
+      });
+    }
     setSavedPros(remote, userId);
     localStorage.setItem(migrationKey, "1");
     lastSyncAt.set(userId, Date.now());
