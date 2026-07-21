@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success) return NextResponse.json({ error: "Payload inválido" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "Payload invalido" }, { status: 400 });
 
   const { token, platform, deviceId, appVersion } = parsed.data;
   const db = createAdminClient();

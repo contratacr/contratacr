@@ -5,7 +5,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Bot,
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Bot, Shield,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -26,6 +26,7 @@ import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
+import { createClient } from "@/lib/supabase/client";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
 export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
@@ -648,6 +649,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const nativeHeaderShell = nativeApp;
   const nativeBottomShell = nativeApp && !nativeSearchRoute;
   const { user, loading: authLoading } = useAuth();
+  const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
   const compactSearchExamples = useMemo(() => {
@@ -668,6 +670,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   // `isPro` = the account can OFFER services (Airbnb "host" capability). It only
   // controls menu LABELS/grouping now — everyone uses the ONE unified panel.
   const isPro = canOffer(user);
+  const isAdminUser = user?.user_metadata?.role === "admin" || (!!user && profileRole?.userId === user.id && profileRole.role === "admin");
   const { mode } = useMode(isPro);
 
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
@@ -676,6 +679,27 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const professionalPanelHref = `${panelHref}?mode=offer`;
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) return;
+    if (user.user_metadata?.role === "admin") return;
+
+    const loadRole = async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.rpc("get_my_profile");
+        if (!cancelled) setProfileRole({ userId: user.id, role: (data as { role?: string } | null)?.role ?? null });
+      } catch {
+        if (!cancelled) setProfileRole({ userId: user.id, role: null });
+      }
+    };
+    void loadRole();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // Warm the two most common destinations after the current page settles. This
   // keeps the initial render light while making the first panel/search transition
@@ -708,11 +732,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     [isPro, user],
   );
   const mobileDrawerItemClass =
-    "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[17px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
-  const mobileDrawerTextClass = "min-w-0 flex-1 truncate";
+    "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[16px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
+  const mobileDrawerTextClass = "min-w-0 flex-1 whitespace-normal break-words";
   const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-extrabold");
   const mobileDrawerSubItemClass =
-    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[15px] font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
+    "flex w-full items-center gap-2.5 rounded-xl px-2 py-2.5 text-left text-[14px] font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
 
   const openMobileMenu = useCallback(() => {
     setMobileLegalOpen(false);
@@ -1278,7 +1302,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[68vw] max-w-[300px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[76vw] max-w-[320px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -1295,6 +1319,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
                 </Link>
               ) : null}
+              {user && isAdminUser && (
+                <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                  <DrawerIcon><Shield /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
+                </Link>
+              )}
               <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 <DrawerIcon><Search /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
@@ -1342,7 +1372,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   aria-expanded={mobileHelpOpen}
                 >
                   <DrawerIcon><HelpCircle /></DrawerIcon>
-                  <span className="flex-1 whitespace-nowrap">{locale === "en" ? "Help and support" : "Ayuda y soporte"}</span>
+                  <span className="min-w-0 flex-1 whitespace-nowrap">{locale === "en" ? "Help and support" : "Ayuda y soporte"}</span>
                   <ChevronDown className={cn("h-5 w-5 shrink-0 text-[#64748b] transition-transform", mobileHelpOpen && "rotate-180")} />
                 </button>
                 {mobileHelpOpen && (
