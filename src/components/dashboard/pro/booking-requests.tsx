@@ -435,14 +435,14 @@ export function BookingRequests() {
               return (
                 <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
                   {isActive && (
-                    <DirectChatLauncher bookingId={booking.id} professionalName={booking.client_name || t("thePerson")} contextTitle={booking.service_description} buttonLabel={t("contact")} tone="contrast" className="min-h-9 min-w-[8rem] flex-1 rounded-lg px-4 text-sm font-bold sm:flex-none" />
+                    <DirectChatLauncher bookingId={booking.id} professionalName={booking.client_name || t("thePerson")} contextTitle={booking.service_description} buttonLabel={t("contact")} tone="contrast" className="min-h-10 min-w-[10rem] flex-1 rounded-lg px-4 text-sm font-bold sm:flex-none" />
                   )}
                   {isActive && (
                     <>
                       <Button
                         type="button"
                         size="sm"
-                        className="flex-1 rounded-lg px-4 sm:flex-none"
+                        className="min-h-10 min-w-[10rem] flex-1 rounded-lg px-4 text-sm font-bold sm:flex-none"
                         onClick={() => updateStatus(booking.id, "awaiting_confirmation")}
                       >
                         {t("markCompleted")}
@@ -451,7 +451,7 @@ export function BookingRequests() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="flex-1 rounded-lg border-[#fecaca] px-4 text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:flex-none"
+                        className="min-h-10 min-w-[10rem] flex-1 rounded-lg border-[#fecaca] px-4 text-sm font-bold text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:flex-none"
                         onClick={() => openAction(booking.id, "cancel")}
                       >
                         {t("cancel")}
@@ -463,7 +463,7 @@ export function BookingRequests() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="flex-1 rounded-lg border-red-100 px-4 text-red-600 hover:bg-red-50 sm:flex-none"
+                      className="min-h-10 min-w-[10rem] flex-1 rounded-lg border-red-100 px-4 text-sm font-bold text-red-600 hover:bg-red-50 sm:flex-none"
                       onClick={() => archiveBooking(booking.id)}
                     >
                       {t("archive")}
