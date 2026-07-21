@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PriceInput } from "@/components/ui/price-input";
@@ -844,17 +845,21 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
       {/* WITHDRAW proposal — clean on-brand confirm modal (replaces window.confirm). */}
       {withdrawTarget && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => !withdrawing && setWithdrawTarget(null)} aria-hidden />
-          <div role="dialog" aria-modal="true" aria-label={t("withdrawTitle")} className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]">
-            <h2 className="text-base font-bold text-[#111827]">{t("withdrawTitle")}</h2>
-            <p className="mt-1 text-sm text-[#6b7280]">{t("withdrawBody")}</p>
-            <div className="mt-4 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 rounded-lg" onClick={() => setWithdrawTarget(null)} disabled={withdrawing}>{t("back")}</Button>
-              <Button size="sm" className="flex-1 rounded-lg bg-red-600 hover:bg-red-700" onClick={confirmWithdraw} disabled={withdrawing} loading={withdrawing}>{t("withdrawConfirm")}</Button>
-            </div>
-          </div>
-        </div>
+        <Modal
+          onClose={() => { if (!withdrawing) setWithdrawTarget(null); }}
+          title={t("withdrawTitle")}
+          size="sm"
+          mobilePresentation="center"
+          footerClassName="justify-center sm:justify-end"
+          footer={(
+            <>
+              <Button variant="outline" size="sm" className="flex-1 rounded-lg sm:flex-none" onClick={() => setWithdrawTarget(null)} disabled={withdrawing}>{t("back")}</Button>
+              <Button size="sm" className="flex-1 rounded-lg bg-red-600 hover:bg-red-700 sm:flex-none" onClick={confirmWithdraw} disabled={withdrawing} loading={withdrawing}>{t("withdrawConfirm")}</Button>
+            </>
+          )}
+        >
+          <p className="text-sm leading-6 text-[#6b7280]">{t("withdrawBody")}</p>
+        </Modal>
       )}
     </div>
   );
