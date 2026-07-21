@@ -721,7 +721,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const searchMessageButtonClass = `${messageButtonClass} bg-[#009FD9] hover:bg-[#0089bb] focus-visible:ring-[#009FD9]`;
   const contactButtons = (
     <>
-      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} tone={hasSchedule ? "contrast" : "primary"} className={searchMessageButtonClass} />
+      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} />
       {/* No-schedule state: filled on /buscar, outlined on the profile contact card. */}
       {showCall && renderCall(true)}
       {showEmail && (
