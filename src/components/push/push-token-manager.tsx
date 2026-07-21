@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PushNotifications, type Token } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 import { Bell, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -36,8 +37,10 @@ function promptSessionKey(userId: string) {
 export function PushTokenManager() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const activeRef = useRef(false);
   const removersRef = useRef<Array<() => Promise<void> | void>>([]);
+  const promptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [promptVisible, setPromptVisible] = useState(false);
   const [requesting, setRequesting] = useState(false);
 
@@ -141,6 +144,11 @@ export function PushTokenManager() {
   }, [dismissKey]);
 
   useEffect(() => {
+    if (promptTimerRef.current) {
+      clearTimeout(promptTimerRef.current);
+      promptTimerRef.current = null;
+    }
+
     if (loading || !user) {
       cleanupListeners();
       return;
@@ -163,7 +171,9 @@ export function PushTokenManager() {
         const shownThisSession = window.sessionStorage.getItem(promptSessionKey(user.id)) === "1";
         if (!dismissed && !shownThisSession) {
           window.sessionStorage.setItem(promptSessionKey(user.id), "1");
-          setPromptVisible(true);
+          promptTimerRef.current = setTimeout(() => {
+            if (!cancelled) setPromptVisible(true);
+          }, 1600);
         } else {
           setPromptVisible(false);
         }
@@ -176,8 +186,12 @@ export function PushTokenManager() {
 
     return () => {
       cancelled = true;
+      if (promptTimerRef.current) {
+        clearTimeout(promptTimerRef.current);
+        promptTimerRef.current = null;
+      }
     };
-  }, [cleanupListeners, dismissKey, loading, registerCurrentDevice, user]);
+  }, [cleanupListeners, dismissKey, loading, pathname, registerCurrentDevice, user]);
 
   useEffect(() => {
     if (loading || !user || !isNativeMobile()) return;
