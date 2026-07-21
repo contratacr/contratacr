@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Archive, ArchiveRestore, ArrowLeft, Loader2, MessageSquareMore, Search, Send, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, FileText, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -25,7 +25,9 @@ type Conversation = {
   professionals?: { id?: string; slug?: string | null; business_name?: string | null; profiles?: Person | null } | null;
   context?: { type: "booking" | "project" | "proposal" | "profile"; title?: string | null; service_description?: string | null; status?: string | null; proposal_status?: string | null };
 };
-type DirectMessage = { id: string; sender_id: string; body: string; created_at: string };
+type DirectAttachment = { path?: string; name: string; type: string; size: number; url?: string | null };
+type DirectMessage = { id: string; sender_id: string; body: string; created_at: string; attachment_urls?: DirectAttachment[] };
+type SelectedAttachment = { id: string; file: File; previewUrl?: string };
 type PendingDraft = {
   professionalId?: string;
   bookingId?: string;
@@ -36,6 +38,9 @@ type PendingDraft = {
 };
 
 const DRAFT_CONVERSATION_ID = "__draft__";
+const MAX_ATTACHMENTS = 3;
+const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+const ALLOWED_ATTACHMENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 
 function timeLabel(value?: string | null, locale = "es") {
   if (!value) return "";
@@ -61,6 +66,15 @@ function resizeMessageTextarea(textarea: HTMLTextAreaElement | null) {
   const nextHeight = Math.min(textarea.scrollHeight, 144);
   textarea.style.height = `${nextHeight}px`;
   textarea.style.overflowY = textarea.scrollHeight > 144 ? "auto" : "hidden";
+}
+
+function attachmentLabel(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+function isImageAttachment(attachment: Pick<DirectAttachment, "type" | "name">) {
+  return attachment.type.startsWith("image/") || /\.(jpe?g|png|webp)$/i.test(attachment.name);
 }
 
 function buildPendingDraft(searchParams: URLSearchParams, userId: string | undefined, isEn: boolean): { conversation: Conversation | null; payload: PendingDraft | null } {
@@ -141,9 +155,13 @@ export function DirectChatInbox() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [attachmentError, setAttachmentError] = useState("");
+  const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const selectedAttachmentsRef = useRef<SelectedAttachment[]>([]);
   useContainedTouchScroll(scrollRef, mobileThread);
 
   useLayoutEffect(() => {
@@ -270,6 +288,14 @@ export function DirectChatInbox() {
     resizeMessageTextarea(textareaRef.current);
   }, [draft]);
   useEffect(() => {
+    selectedAttachmentsRef.current = selectedAttachments;
+  }, [selectedAttachments]);
+  useEffect(() => () => {
+    selectedAttachmentsRef.current.forEach((attachment) => {
+      if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+    });
+  }, []);
+  useEffect(() => {
     if (!user) return;
     const supabase = createClient();
     const channel = supabase.channel(`direct-chat-${user.id}`)
@@ -307,13 +333,84 @@ export function DirectChatInbox() {
     router.replace(`/mensajes${showArchived ? "?chatStatus=archived&" : "?"}conversation=${id}`, { scroll: false });
   }
 
+  function addAttachments(files: FileList | null) {
+    setAttachmentError("");
+    if (!files?.length) return;
+    if (activeId === DRAFT_CONVERSATION_ID) {
+      setAttachmentError(isEn ? "Send the first message before attaching files." : "Envia el primer mensaje antes de adjuntar archivos.");
+      return;
+    }
+    const next = [...selectedAttachments];
+    for (const file of Array.from(files)) {
+      if (next.length >= MAX_ATTACHMENTS) {
+        setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puedes adjuntar hasta 3 archivos por mensaje.");
+        break;
+      }
+      if (!ALLOWED_ATTACHMENT_TYPES.has(file.type)) {
+        setAttachmentError(isEn ? "Attach JPG, PNG, WEBP images or PDF files only." : "Adjunta solo imagenes JPG, PNG, WEBP o PDF.");
+        continue;
+      }
+      if (file.size > MAX_ATTACHMENT_BYTES) {
+        setAttachmentError(isEn ? "Each file must be 5 MB or less." : "Cada archivo debe pesar 5 MB o menos.");
+        continue;
+      }
+      next.push({
+        id: `${Date.now()}-${crypto.randomUUID()}`,
+        file,
+        previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+      });
+    }
+    setSelectedAttachments(next);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removeAttachment(id: string) {
+    setSelectedAttachments((current) => {
+      const attachment = current.find((item) => item.id === id);
+      if (attachment?.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+      return current.filter((item) => item.id !== id);
+    });
+  }
+
+  function clearSelectedAttachments() {
+    selectedAttachments.forEach((attachment) => {
+      if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+    });
+    setSelectedAttachments([]);
+  }
+
+  async function uploadSelectedAttachments(conversationId: string) {
+    const uploaded: DirectAttachment[] = [];
+    for (const attachment of selectedAttachments) {
+      const formData = new FormData();
+      formData.set("conversationId", conversationId);
+      formData.set("file", attachment.file);
+      const res = await fetch("/api/direct-chat/attachments", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Error");
+      uploaded.push(json.attachment);
+    }
+    return uploaded;
+  }
+
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!activeId || !draft.trim() || sending) return;
+    if (!activeId || sending || (!draft.trim() && !selectedAttachments.length)) return;
+    if (activeId === DRAFT_CONVERSATION_ID && selectedAttachments.length) {
+      setAttachmentError(isEn ? "Send the first message before attaching files." : "Envia el primer mensaje antes de adjuntar archivos.");
+      return;
+    }
     const body = draft.trim(); const optimisticId = `pending-${Date.now()}`;
-    setDraft(""); setSending(true); setError("");
-    setMessages((current) => [...current, { id: optimisticId, sender_id: user?.id || "", body, created_at: new Date().toISOString() }]);
+    const optimisticAttachments = selectedAttachments.map((attachment) => ({
+      name: attachment.file.name,
+      type: attachment.file.type,
+      size: attachment.file.size,
+      url: attachment.previewUrl ?? null,
+    }));
+    setDraft(""); setSending(true); setError(""); setAttachmentError("");
+    setMessages((current) => [...current, { id: optimisticId, sender_id: user?.id || "", body: body || (isEn ? "Attachment" : "Archivo adjunto"), attachment_urls: optimisticAttachments, created_at: new Date().toISOString() }]);
     try {
+      const attachmentUrls = activeId === DRAFT_CONVERSATION_ID ? [] : await uploadSelectedAttachments(activeId);
       const payload = activeId === DRAFT_CONVERSATION_ID
         ? {
           professionalId: pendingDraftPayload?.professionalId,
@@ -323,10 +420,11 @@ export function DirectChatInbox() {
           contextTitle: pendingDraftPayload?.contextTitle,
           message: body,
         }
-        : { conversationId: activeId, message: body };
+        : { conversationId: activeId, message: body, attachmentUrls };
       const res = await fetch("/api/direct-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
+      clearSelectedAttachments();
       if (activeId === DRAFT_CONVERSATION_ID && json.conversationId) {
         setPendingDraft(null);
         setPendingDraftPayload(null);
@@ -488,15 +586,88 @@ export function DirectChatInbox() {
                     ? "max-w-[86%] rounded-br-md bg-[#009FD9] font-medium text-white sm:max-w-[78%]"
                     : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d] sm:max-w-[72%]",
                 )}>
-                  <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                  {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+                  {!!message.attachment_urls?.length && (
+                    <div className={cn("mt-2 grid gap-2", message.body && "pt-1")}>
+                      {message.attachment_urls.map((attachment, index) => {
+                        const href = attachment.url ?? undefined;
+                        const image = isImageAttachment(attachment);
+                        return (
+                          <a
+                            key={`${message.id}-${attachment.path ?? attachment.name}-${index}`}
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={cn(
+                              "group overflow-hidden rounded-xl border text-left transition",
+                              mine ? "border-white/30 bg-white/10 hover:bg-white/15" : "border-[#dce8f0] bg-[#f7fbfd] hover:border-[#b9d8e8]",
+                            )}
+                          >
+                            {image && href ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={href} alt={attachment.name} className="max-h-52 w-full object-cover" />
+                            ) : (
+                              <span className="flex items-center gap-2 px-3 py-2.5">
+                                <FileText className={cn("h-4 w-4 shrink-0", mine ? "text-white" : "text-[#009FD9]")} />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-xs font-extrabold">{attachment.name}</span>
+                                  <span className={cn("block text-[10px]", mine ? "text-white/75" : "text-[#6b7a90]")}>{attachmentLabel(attachment.size)}</span>
+                                </span>
+                              </span>
+                            )}
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
                   <time className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/75" : "text-[#8996a8]")}>{timeLabel(message.created_at, locale)}</time>
                 </div>
               </div>
             );
           })}
         </div>
-        {error && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error}</p>}
-        <form onSubmit={submit} className="shrink-0 flex items-end gap-2 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+        {(error || attachmentError) && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error || attachmentError}</p>}
+        <form onSubmit={submit} className="shrink-0 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+          {!!selectedAttachments.length && (
+            <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
+              {selectedAttachments.map((attachment) => (
+                <div key={attachment.id} className="relative flex h-16 min-w-40 max-w-48 items-center gap-2 rounded-xl border border-[#d8e5ee] bg-[#f7fbfd] p-2 pr-8">
+                  {attachment.previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={attachment.previewUrl} alt={attachment.file.name} className="h-11 w-11 rounded-lg object-cover" />
+                  ) : (
+                    <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#e8f8ff] text-[#009FD9]"><FileText className="h-5 w-5" /></span>
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-extrabold text-[#162543]">{attachment.file.name}</span>
+                    <span className="block text-[10px] font-semibold text-[#6b7a90]">{attachmentLabel(attachment.file.size)}</span>
+                  </span>
+                  <button type="button" onClick={() => removeAttachment(attachment.id)} className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-[#526277] shadow-sm hover:text-red-600" aria-label={isEn ? "Remove attachment" : "Quitar adjunto"}>
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-end gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            multiple
+            className="hidden"
+            onChange={(event) => addAttachments(event.currentTarget.files)}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={sending || activeId === DRAFT_CONVERSATION_ID}
+            className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
+            aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
+            title={activeId === DRAFT_CONVERSATION_ID ? (isEn ? "Send the first message before attaching files." : "Envia el primer mensaje antes de adjuntar archivos.") : undefined}
+          >
+            <Paperclip className="h-5 w-5" />
+          </button>
           <textarea
             ref={textareaRef}
             rows={1}
@@ -516,12 +687,13 @@ export function DirectChatInbox() {
           />
           <button
             type="submit"
-            disabled={sending || !draft.trim()}
+            disabled={sending || (!draft.trim() && !selectedAttachments.length)}
             className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#d8e4e9] disabled:shadow-none"
             aria-label={isEn ? "Send" : "Enviar"}
           >
             {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </button>
+          </div>
         </form>
       </section>
     </div>
