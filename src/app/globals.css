@@ -101,6 +101,10 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
 }
 
 @media (max-width: 1023px) {
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main:not([data-messages-page-main]) {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-card {
     min-height: calc(100svh - 136px - env(safe-area-inset-bottom));
   }
