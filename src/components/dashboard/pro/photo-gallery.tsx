@@ -244,7 +244,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       )}
 
       {/* Agregar nuevo caso de éxito (dashed, full width). */}
-      <div className={cn(shownCases.length === 0 && "flex min-h-[18rem] items-center sm:min-h-[20rem]")}>
+      <div className={cn(shownCases.length === 0 && "ccr-empty-state flex min-h-[18rem] items-center sm:min-h-[20rem]")}>
         <button
           type="button"
           onClick={openAdd}

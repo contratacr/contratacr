@@ -44,7 +44,7 @@ export function PanelEmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex min-h-[20rem] flex-col items-center justify-center px-4 py-16 text-center sm:min-h-[22rem]", className)}>
+    <div className={cn("ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-4 py-16 text-center sm:min-h-[22rem]", className)}>
       <Icon className="mx-auto mb-3 h-12 w-12 text-[#e5e7eb]" />
       <p className="font-semibold text-[#374151]">{title}</p>
       {description && <p className="mt-1 max-w-sm text-sm text-[#6b7280]">{description}</p>}

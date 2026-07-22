@@ -92,12 +92,18 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.ccr-native-app {
+  --ccr-native-header-height: 64px;
+  --ccr-native-bottom-nav-height: 72px;
+  --ccr-native-panel-end-gap: 14px;
+}
+
 .ccr-native-app main {
-  min-height: calc(100svh - 64px - env(safe-area-inset-bottom));
+  min-height: calc(100svh - var(--ccr-native-header-height) - env(safe-area-inset-bottom));
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main {
-  min-height: calc(100svh - 136px - env(safe-area-inset-bottom));
+  min-height: calc(100svh - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height) - env(safe-area-inset-bottom));
 }
 
 @media (max-width: 1023px) {
@@ -107,7 +113,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main:not([data-messages-page-main]) {
-    height: calc(var(--app-visual-viewport-height) - 136px - env(safe-area-inset-bottom));
+    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height) - env(safe-area-inset-bottom));
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -121,12 +127,17 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content {
     min-height: calc(100% - 65px);
-    padding-bottom: 1.25rem;
-    scroll-padding-bottom: calc(88px + env(safe-area-inset-bottom));
+    padding-bottom: var(--ccr-native-panel-end-gap);
+    scroll-padding-bottom: var(--ccr-native-panel-end-gap);
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-safe-list-end {
-    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+    padding-bottom: var(--ccr-native-panel-end-gap);
+  }
+
+  .ccr-native-app .ccr-native-compact-page {
+    padding-bottom: 1rem;
+    padding-top: 1.5rem;
   }
 }
 
@@ -191,7 +202,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
 
 .ccr-native-app .ccr-empty-state,
 .ccr-native-app [data-empty-state] {
-  min-height: min(420px, calc(100svh - 220px));
+  min-height: min(280px, calc(100svh - 260px));
 }
 
 .ccr-brand-loading-mark {

@@ -102,7 +102,7 @@ export default function SoportePage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <LandingNavbar />
-      <main className="flex-1 py-16 px-4">
+      <main className="ccr-native-compact-page flex-1 px-4 py-16">
         <div className="mx-auto max-w-xl">
           {user && (
             <div className="mb-5">
