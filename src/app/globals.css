@@ -121,7 +121,12 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content {
     min-height: calc(100% - 65px);
-    padding-bottom: calc(1.75rem + env(safe-area-inset-bottom));
+    padding-bottom: 1.25rem;
+    scroll-padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-safe-list-end {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
   }
 }
 

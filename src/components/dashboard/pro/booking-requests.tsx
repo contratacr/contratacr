@@ -519,7 +519,7 @@ export function BookingRequests() {
       {filtered.length === 0 ? (
         <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>
       ) : (
-        <div className="flex flex-col gap-3.5">
+        <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
           {filtered.map((b) => <BookingCard key={b.id} booking={b} />)}
         </div>
       )}

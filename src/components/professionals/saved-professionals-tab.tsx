@@ -146,7 +146,7 @@ export function SavedProfessionalsTab() {
   }
 
   return (
-    <div>
+    <div className="ccr-native-safe-list-end">
       <p className="text-sm text-[#6b7280] mb-4">{t("count", { count: saved.length })}</p>
       {/* One container; saved pros are divider-separated rows inside it. */}
       <div className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden divide-y divide-[#f3f4f6]">

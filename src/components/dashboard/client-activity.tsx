@@ -611,7 +611,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               {filteredBookings.length === 0 ? (
                 <p className="text-sm text-[#6b7280] text-center py-8">{t("noBookingsView")}</p>
               ) : (
-                <div className="flex flex-col gap-3.5">
+                <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
                   {filteredBookings.map((b) => {
                     const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
                     return (
@@ -837,7 +837,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               action={<Button className="lg:hidden" onClick={() => setShowPublish(true)}>{t("publishProject")}</Button>}
             />
           ) : (
-            <div className="flex flex-col gap-3.5">
+            <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />
               {filteredProjects.length === 0 && (
                 <p className="text-sm text-[#6b7280] text-center py-8">{t("noProjectsView")}</p>

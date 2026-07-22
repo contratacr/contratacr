@@ -609,7 +609,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                   .sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a)));
                 if (list.length === 0) return <p className="text-sm text-[#6b7280] text-center py-12">{t("noneInView")}</p>;
                 return (
-                  <div className="flex flex-col gap-3">
+                  <div className="ccr-native-safe-list-end flex flex-col gap-3">
                     <div className="flex items-center justify-between px-1">
                       <p className="text-[13px] font-semibold text-[#162543]">{t("availableTitle")}</p>
                     </div>
@@ -656,7 +656,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
           {myProposals.length === 0 ? (
             <PanelEmptyState icon={Handshake} title={t("emptyMine")} description={t("emptyMineSub")} />
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="ccr-native-safe-list-end flex flex-col gap-4">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(myProposals.map((p) => proposalBucket(p.status, p.projects?.status)))} />
               {(() => {
                 const shown = myProposals.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
