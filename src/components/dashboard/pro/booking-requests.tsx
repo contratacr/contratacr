@@ -429,20 +429,22 @@ export function BookingRequests() {
               </p>
             )}
 
-            {/* Actions: keep the pro's common workflow visible (WhatsApp, mark completed,
-                cancel) and leave Reportar as the quiet flag action. */}
+            {/* Actions: primary row first, secondary row second. Mobile keeps a stable
+                2-column grid so the buttons do not jump between different widths. */}
             {!panelOpen && (() => {
+              const primaryActionClass = "min-h-10 w-full rounded-lg px-3 text-sm font-bold";
+              const secondaryActionClass = "min-h-10 w-full rounded-lg px-3 text-sm font-bold";
               return (
-                <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
+                <div className="grid grid-cols-2 gap-2 border-t border-[#eef2f6] pt-3 sm:flex sm:flex-wrap sm:items-center">
                   {isActive && (
-                    <DirectChatLauncher bookingId={booking.id} professionalName={booking.client_name || t("thePerson")} contextTitle={booking.service_description} buttonLabel={t("contact")} tone="contrast" className="min-h-10 min-w-[10rem] flex-1 rounded-lg px-4 text-sm font-bold sm:flex-none" />
+                    <DirectChatLauncher bookingId={booking.id} professionalName={booking.client_name || t("thePerson")} contextTitle={booking.service_description} buttonLabel={t("contact")} tone="contrast" className={`${primaryActionClass} sm:min-w-[10rem] sm:flex-1`} />
                   )}
                   {isActive && (
                     <>
                       <Button
                         type="button"
                         size="sm"
-                        className="min-h-10 min-w-[10rem] flex-1 rounded-lg px-4 text-sm font-bold sm:flex-none"
+                        className={`${primaryActionClass} sm:min-w-[10rem] sm:flex-1`}
                         onClick={() => updateStatus(booking.id, "awaiting_confirmation")}
                       >
                         {t("markCompleted")}
@@ -451,7 +453,7 @@ export function BookingRequests() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="min-h-10 min-w-[10rem] flex-1 rounded-lg border-[#fecaca] px-4 text-sm font-bold text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:flex-none"
+                        className={`${secondaryActionClass} border-[#fecaca] text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:min-w-[10rem] sm:flex-1`}
                         onClick={() => openAction(booking.id, "cancel")}
                       >
                         {t("cancel")}
@@ -463,18 +465,18 @@ export function BookingRequests() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="min-h-10 min-w-[10rem] flex-1 rounded-lg border-red-100 px-4 text-sm font-bold text-red-600 hover:bg-red-50 sm:flex-none"
+                      className={`${secondaryActionClass} border-red-100 text-red-600 hover:bg-red-50 sm:min-w-[10rem] sm:flex-1`}
                       onClick={() => archiveBooking(booking.id)}
                     >
                       {t("archive")}
                     </Button>
                   )}
-                  <AppTooltip label={t("reportClient")} className="ml-auto">
+                  <AppTooltip label={t("reportClient")} className="min-w-0 sm:ml-auto">
                     <button
                       type="button"
                       aria-label={t("reportClient")}
                       onClick={() => setReportFor(booking)}
-                      className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-md px-1.5 text-xs font-medium text-[#9ca3af] transition-colors hover:text-[#dc2626]"
+                      className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-[#9ca3af] transition-colors hover:bg-[#f9fafb] hover:text-[#dc2626] sm:w-auto sm:justify-start"
                     >
                       <Flag className="h-3.5 w-3.5" />
                       <span>{t("reportClient")}</span>
