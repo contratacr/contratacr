@@ -1485,7 +1485,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
           <nav
             ref={nativeBottomNavRef}
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
-            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] backdrop-blur"
+            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)]"
           >
             <div className="mx-auto grid max-w-[390px] grid-cols-4 gap-1">
               <Link href={primaryPanelHref} onPointerDown={() => prepareNativeNavigation(primaryPanelHref)} className={nativeBottomNavClass(primaryPanelHref)}>
