@@ -457,13 +457,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     } catch {
       /* Navigation still works when browser storage is unavailable. */
     }
-    router.push(destination);
-    window.setTimeout(() => {
-      if (window.location.pathname + window.location.search !== destination) {
-        window.location.assign(destination);
-      }
-    }, 650);
-    if (!embedded) window.setTimeout(() => setOpen(false), 80);
+    window.location.assign(destination);
   }
 
   function resetConversation() {
