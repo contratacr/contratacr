@@ -193,7 +193,12 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
         <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
           <Avatar className="h-14 w-14 rounded-full lg:h-16 lg:w-16">
             <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-            <AvatarFallback className="rounded-full bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
+            <AvatarFallback
+              delayMs={professional.avatarUrl ? 700 : 0}
+              className="rounded-full bg-[#EBF5FB] text-[#009FD9] font-bold data-[delayed-open]:animate-pulse"
+            >
+              {professional.avatarUrl ? "" : getInitials(professional.fullName)}
+            </AvatarFallback>
           </Avatar>
           {rank != null && (
             <span className="absolute -top-1.5 -left-1.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white">
