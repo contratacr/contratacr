@@ -677,9 +677,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     const observer = new ResizeObserver(updateHeight);
     observer.observe(nav);
     window.addEventListener("resize", updateHeight);
+    window.visualViewport?.addEventListener("resize", updateHeight);
+    window.visualViewport?.addEventListener("scroll", updateHeight);
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", updateHeight);
+      window.visualViewport?.removeEventListener("resize", updateHeight);
+      window.visualViewport?.removeEventListener("scroll", updateHeight);
       root.style.removeProperty("--ccr-native-bottom-nav-height");
     };
   }, [nativeBottomNavVisible]);
@@ -1345,16 +1349,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
                 </Link>
               ) : null}
+              <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+                <DrawerIcon><Search /></DrawerIcon>
+                <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
+              </Link>
               {user && isAdminUser && (
                 <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><Shield /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                 </Link>
               )}
-              <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                <DrawerIcon><Search /></DrawerIcon>
-                <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
-              </Link>
               {nativeApp && user && (
                 <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><MessageSquareText /></DrawerIcon>

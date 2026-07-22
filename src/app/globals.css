@@ -57,7 +57,6 @@
 .ccr-native-app body {
   min-height: 100svh;
   background: #f4f7fa;
-  padding-bottom: env(safe-area-inset-bottom);
   overscroll-behavior-y: contain;
 }
 
@@ -136,6 +135,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
   }
 
   .ccr-native-app .ccr-native-compact-page {
+    background: #fff;
     padding-bottom: 1rem;
     padding-top: 1.5rem;
   }
