@@ -649,6 +649,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const nativeHeaderShell = nativeApp;
   const nativeBottomShell = nativeApp && !nativeSearchRoute;
   const { user, loading: authLoading } = useAuth();
+  const nativeBottomNavVisible = nativeBottomShell && (Boolean(user) || authLoading);
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
@@ -657,6 +658,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
   }, [isSmallScreen, t]);
   const compactPlaceholder = useTypedPlaceholder(compactSearchExamples, effectiveCompact && !searchFocused && !searchQuery.trim());
+
+  useEffect(() => {
+    const roots = [document.documentElement, document.body];
+    roots.forEach((root) => root.classList.toggle("ccr-native-bottom-nav-visible", nativeBottomNavVisible));
+    return () => roots.forEach((root) => root.classList.remove("ccr-native-bottom-nav-visible"));
+  }, [nativeBottomNavVisible]);
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
   // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
@@ -1451,7 +1458,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             )}
           </div>
         </div>
-        {nativeBottomShell && (user || authLoading) && (
+        {nativeBottomNavVisible && (
           <nav
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] backdrop-blur"
