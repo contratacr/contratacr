@@ -158,6 +158,7 @@ export function DirectChatInbox() {
   const [attachmentError, setAttachmentError] = useState("");
   const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
+  const [threadCanScroll, setThreadCanScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -283,7 +284,26 @@ export function DirectChatInbox() {
 
   useEffect(() => { queueMicrotask(() => void loadConversations()); }, [loadConversations]);
   useEffect(() => { if (activeId) queueMicrotask(() => void loadThread(activeId)); }, [activeId, loadThread]);
-  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, threadLoading]);
+  const updateThreadScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setThreadCanScroll(el.scrollHeight > el.clientHeight + 1);
+  }, []);
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateThreadScrollState();
+    const observer = new ResizeObserver(updateThreadScrollState);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [updateThreadScrollState]);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateThreadScrollState();
+    if (el.scrollHeight > el.clientHeight + 1) el.scrollTo({ top: el.scrollHeight });
+    else el.scrollTo({ top: 0 });
+  }, [messages, threadLoading, selectedAttachments, updateThreadScrollState]);
   useEffect(() => {
     resizeMessageTextarea(textareaRef.current);
   }, [draft]);
@@ -567,7 +587,7 @@ export function DirectChatInbox() {
             </ChatActionButton>
           )}
         </header>
-        <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
+        <div ref={scrollRef} className={cn("min-h-0 flex-1 space-y-2 bg-[#f3f7fa] px-4 py-5 sm:px-6", threadCanScroll ? "overflow-y-auto overscroll-contain" : "overflow-hidden overscroll-none touch-none")}>
           {threadLoading ? <div className="ccr-delayed-loading grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
             const mine = message.sender_id === user?.id;
             return (
