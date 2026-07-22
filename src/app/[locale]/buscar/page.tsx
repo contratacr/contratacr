@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, Search } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -482,9 +482,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         ))}
                       </div>
                       {currentPage < totalPages && (
-                        <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-9 min-w-24 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-3 text-sm font-bold text-white transition hover:bg-[#0089BB] sm:h-10 sm:max-w-64 sm:gap-2 sm:px-5">
+                        <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-9 min-w-28 shrink-0 items-center justify-center rounded-full bg-[#009FD9] px-4 text-center text-sm font-bold text-white transition hover:bg-[#0089BB] sm:h-10 sm:min-w-40 sm:px-6">
                           {t("pagination.next")}
-                          <ChevronRight className="h-4 w-4" />
                         </Link>
                       )}
                     </nav>
