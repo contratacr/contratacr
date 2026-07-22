@@ -101,16 +101,27 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
 }
 
 @media (max-width: 1023px) {
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) {
+    height: 100svh;
+    overflow: hidden;
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main:not([data-messages-page-main]) {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    height: calc(var(--app-visual-viewport-height) - 136px - env(safe-area-inset-bottom));
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: 0;
+    -webkit-overflow-scrolling: touch;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-card {
-    min-height: calc(100svh - 136px - env(safe-area-inset-bottom));
+    min-height: 100%;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content {
-    min-height: calc(100svh - 201px - env(safe-area-inset-bottom));
+    min-height: calc(100% - 65px);
+    padding-bottom: calc(1.75rem + env(safe-area-inset-bottom));
   }
 }
 
