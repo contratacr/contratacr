@@ -7,6 +7,7 @@ import { assistantPageContext, CONTRATACR_PRODUCT_KNOWLEDGE } from "@/lib/ai/pro
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { primaryPricingLabel } from "@/lib/pricing";
 
 type Locale = "es" | "en";
 type Role = "assistant" | "user";
@@ -36,6 +37,23 @@ type AssistantPayload = {
   ctaLabel?: string | null;
   confidence?: number;
   selectedResultIndex?: number | null;
+};
+
+type AssistantProfessionalResult = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  service: string;
+  location: string;
+  verified: boolean;
+  rating: number | null;
+  reviewCount: number;
+  price: string | null;
+  profileHref: string;
+  requestHref: string;
+  actionHref: string;
+  actionLabel: string;
+  actionKind: "availability" | "message";
 };
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -1305,6 +1323,43 @@ function wantsVideoIntent(text: string) {
 
 type ProfessionalSearchResult = Awaited<ReturnType<typeof searchProfessionals>>[number];
 
+function assistantProfessionalResult(
+  professional: ProfessionalSearchResult,
+  locale: Locale,
+  serviceId?: string | null,
+): AssistantProfessionalResult {
+  const service =
+    serviceId ? getCategoryLabel(serviceId, locale) :
+    professional.categoryId ? getCategoryLabel(professional.categoryId, locale) :
+    locale === "en" ? "Professional service" : "Servicio profesional";
+  const location = professional.workplaces?.[0]?.name?.trim()
+    || [professional.cantonName, professional.provinceName].filter(Boolean).join(", ")
+    || (professional.videoconsulta ? (locale === "en" ? "Video consultation" : "Videoconsulta") : "Costa Rica");
+  const profileHref = `/${locale}/profesionales/${professional.slug}`;
+  const actionKind: "availability" | "message" =
+    professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp"
+      ? "availability"
+      : "message";
+  return {
+    id: professional.id,
+    name: professional.businessName?.trim() || professional.fullName,
+    avatarUrl: professional.avatarUrl || null,
+    service,
+    location,
+    verified: professional.verificationStatus === "verified",
+    rating: typeof professional.ratingAvg === "number" && professional.reviewCount > 0 ? professional.ratingAvg : null,
+    reviewCount: professional.reviewCount || 0,
+    price: primaryPricingLabel(professional.pricing, professional.hourlyRate, locale) || null,
+    profileHref,
+    requestHref: profileHref,
+    actionHref: profileHref,
+    actionLabel: actionKind === "availability"
+      ? locale === "en" ? "View availability" : "Ver disponibilidad"
+      : locale === "en" ? "Send message" : "Enviar mensaje",
+    actionKind,
+  };
+}
+
 async function realProfessionalMatches(payload: AssistantPayload, originalMessage: string, locale: Locale): Promise<ProfessionalSearchResult[]> {
   if (payload.action !== "search_professionals") return [];
   if (payload.confidence === 0 && !payload.serviceId) return [];
@@ -1469,6 +1524,10 @@ export async function POST(req: Request) {
     const resultCta = locale === "en"
       ? `See ${resultCount} ${resultCount === 1 ? "professional" : "professionals"}`
       : `Ver ${resultCount} ${resultCount === 1 ? "profesional" : "profesionales"}`;
+    const assistantProfessionals = hasResults
+      ? matchedProfessionals.slice(0, 3).map((professional) => assistantProfessionalResult(professional, locale, payload.serviceId))
+      : [];
+    const singleProfessionalHref = resultCount === 1 ? assistantProfessionals[0]?.profileHref ?? null : null;
     const servicePhrase = requestedServiceLabel || (locale === "en" ? "that service" : "ese servicio");
     const placePhrase = requestedPlaceLabel || "Costa Rica";
     const assistantAnswer = noResults
@@ -1495,11 +1554,11 @@ export async function POST(req: Request) {
       serviceId: payload.serviceId ?? null,
       searchHref: noResults
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
-        : searchHref,
+        : singleProfessionalHref ?? searchHref,
       ctaLabel: noResults
         ? locale === "en" ? "Publish request" : "Publicar solicitud"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),
-      professionals: [],
+      professionals: assistantProfessionals,
       suggestedService,
       selectedResultIndex: payload.action === "select_professional" && Number.isInteger(payload.selectedResultIndex)
         ? payload.selectedResultIndex

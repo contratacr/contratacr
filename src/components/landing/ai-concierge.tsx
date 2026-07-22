@@ -171,6 +171,15 @@ function actionIcon(kind?: string | null) {
   return <ArrowRight className="h-4 w-4" />;
 }
 
+function localizedDestination(href: string, lang: "es" | "en") {
+  const trimmed = href.trim();
+  if (!trimmed) return `/${lang}`;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const withSlash = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  const unlocalized = withSlash.replace(/^\/(?:es|en)(?=\/|\?|$)/, "") || "/";
+  return `/${lang}${unlocalized === "/" ? "" : unlocalized}`;
+}
+
 function ProfessionalResult({ result, copy, onNavigate }: {
   result: ResultCard;
   copy: typeof COPY.es | typeof COPY.en;
@@ -438,6 +447,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   function navigate(href: string) {
     const protectedDestination = href.includes("/publicar-proyecto") || href.includes("/dashboard/");
     if (!user && protectedDestination) storePendingIntent(href);
+    const destination = localizedDestination(href, lang);
     try {
       window.sessionStorage.setItem(`${SESSION_KEY_PREFIX}${lang}`, JSON.stringify({
         id: conversationId,
@@ -447,10 +457,13 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     } catch {
       /* Navigation still works when browser storage is unavailable. */
     }
-    if (!embedded) setOpen(false);
-    const alreadyLocalized = /^\/(es|en)(?=\/|\?|$)/.test(href);
-    const destination = alreadyLocalized ? href : `/${lang}${href.startsWith("/") ? href : `/${href}`}`;
     router.push(destination);
+    window.setTimeout(() => {
+      if (window.location.pathname + window.location.search !== destination) {
+        window.location.assign(destination);
+      }
+    }, 650);
+    if (!embedded) window.setTimeout(() => setOpen(false), 80);
   }
 
   function resetConversation() {
