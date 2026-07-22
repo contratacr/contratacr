@@ -61,10 +61,6 @@
   overscroll-behavior-y: contain;
 }
 
-body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) {
-  padding-bottom: calc(72px + env(safe-area-inset-bottom));
-}
-
 .ccr-native-app button,
 .ccr-native-app a {
   touch-action: manipulation;
