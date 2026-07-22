@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
-import { ChevronLeft, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -465,7 +465,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
                   {totalPages > 1 && (
                     <nav aria-label={t("pagination.label")} className="mt-5 flex flex-nowrap items-center justify-between gap-2 border-t border-[#e5e7eb] pt-4 sm:gap-3">
-                      <div className="flex min-w-0 items-center gap-1 sm:gap-1.5">
+                      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden sm:gap-1.5">
                         {currentPage > 1 && (
                           <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-[#374151] transition hover:bg-[#EBF5FB] hover:text-[#0089BB] sm:h-10 sm:w-10">
                             <ChevronLeft className="h-4 w-4" />
@@ -482,8 +482,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         ))}
                       </div>
                       {currentPage < totalPages && (
-                        <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-9 min-w-28 shrink-0 items-center justify-center rounded-full bg-[#009FD9] px-4 text-center text-sm font-bold text-white transition hover:bg-[#0089BB] sm:h-10 sm:min-w-40 sm:px-6">
-                          {t("pagination.next")}
+                        <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-9 min-w-[7.75rem] shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition hover:bg-[#0089BB] sm:h-10 sm:min-w-40 sm:gap-2 sm:px-6">
+                          <span className="leading-none">{t("pagination.next")}</span>
+                          <ChevronRight className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                         </Link>
                       )}
                     </nav>
