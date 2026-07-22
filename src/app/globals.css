@@ -103,7 +103,7 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main {
-  min-height: calc(100svh - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height) - env(safe-area-inset-bottom));
+  min-height: calc(100svh - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height));
 }
 
 @media (max-width: 1023px) {
@@ -113,7 +113,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main:not([data-messages-page-main]) {
-    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height) - env(safe-area-inset-bottom));
+    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height));
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;

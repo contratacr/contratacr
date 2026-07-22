@@ -34,6 +34,10 @@ function promptSessionKey(userId: string) {
   return `ccr:push-permission-shown:${userId}`;
 }
 
+function permissionGrantedKey(userId: string) {
+  return `ccr:push-permission-granted:${userId}`;
+}
+
 function normalizePathname(pathname: string | null) {
   return (pathname ?? "/").replace(/^\/(es|en)(?=\/|$)/, "") || "/";
 }
@@ -154,6 +158,7 @@ export function PushTokenManager() {
       const result = await PushNotifications.requestPermissions();
       if (result.receive === "granted") {
         setPromptVisible(false);
+        window.localStorage.setItem(permissionGrantedKey(user.id), "1");
         if (dismissKey) window.localStorage.removeItem(dismissKey);
         await registerCurrentDevice();
       }
@@ -183,6 +188,13 @@ export function PushTokenManager() {
     if (!isNativeMobile() || !canShowPermissionPrompt(pathname)) return;
 
     let cancelled = false;
+    const grantedKey = permissionGrantedKey(user.id);
+
+    // Do not flash the prompt while the native bridge verifies a permission that
+    // this user has already granted on this installation.
+    if (window.localStorage.getItem(grantedKey) === "1") {
+      setPromptVisible(false);
+    }
 
     const init = async () => {
       try {
@@ -190,9 +202,12 @@ export function PushTokenManager() {
         if (cancelled) return;
         if (permissions.receive === "granted") {
           setPromptVisible(false);
+          window.localStorage.setItem(grantedKey, "1");
+          if (dismissKey) window.localStorage.removeItem(dismissKey);
           await registerCurrentDevice();
           return;
         }
+        window.localStorage.removeItem(grantedKey);
         const dismissed = dismissKey ? window.localStorage.getItem(dismissKey) === "1" : false;
         const shownThisSession = window.sessionStorage.getItem(promptSessionKey(user.id)) === "1";
         if (dismissed) {

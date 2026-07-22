@@ -632,6 +632,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const compactSvcRef = useRef<HTMLDivElement>(null);
   const compactLocRef = useRef<HTMLDivElement>(null);
   const nativePendingTimer = useRef<number | null>(null);
+  const nativeBottomNavRef = useRef<HTMLElement>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
   const [isSmallScreen, setIsSmallScreen] = useState(true);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -663,6 +664,24 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     const roots = [document.documentElement, document.body];
     roots.forEach((root) => root.classList.toggle("ccr-native-bottom-nav-visible", nativeBottomNavVisible));
     return () => roots.forEach((root) => root.classList.remove("ccr-native-bottom-nav-visible"));
+  }, [nativeBottomNavVisible]);
+
+  useEffect(() => {
+    if (!nativeBottomNavVisible || !nativeBottomNavRef.current) return;
+    const nav = nativeBottomNavRef.current;
+    const root = document.documentElement;
+    const updateHeight = () => {
+      root.style.setProperty("--ccr-native-bottom-nav-height", `${Math.ceil(nav.getBoundingClientRect().height)}px`);
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(nav);
+    window.addEventListener("resize", updateHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeight);
+      root.style.removeProperty("--ccr-native-bottom-nav-height");
+    };
   }, [nativeBottomNavVisible]);
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
@@ -1460,6 +1479,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
         </div>
         {nativeBottomNavVisible && (
           <nav
+            ref={nativeBottomNavRef}
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] backdrop-blur"
           >
