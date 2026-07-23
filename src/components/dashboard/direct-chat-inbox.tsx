@@ -526,8 +526,8 @@ export function DirectChatInbox() {
       "direct-chat-shell grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
       mobileThread && "direct-chat-shell--thread",
     )}>
-      <aside className={cn("min-h-0 border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>
-        <div className="border-b border-[#e3ebf1] p-4">
+      <aside className={cn("flex min-h-0 flex-col border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>
+        <div className="shrink-0 border-b border-[#e3ebf1] p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-extrabold text-[#162543]">{showArchived ? (isEn ? "Archived" : "Archivados") : (isEn ? "Messages" : "Mensajes")}</h2>
             {showArchived && (
@@ -539,7 +539,7 @@ export function DirectChatInbox() {
           </div>
           <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>
         </div>
-        <div className="h-[calc(100%-105px)] overflow-y-auto">
+        <div className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
           {!showArchived && archivedCount > 0 && (
             <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e7eef3] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
@@ -587,7 +587,7 @@ export function DirectChatInbox() {
             </ChatActionButton>
           )}
         </header>
-        <div ref={scrollRef} className={cn("min-h-0 flex-1 space-y-2 bg-[#f3f7fa] px-4 py-5 sm:px-6", threadCanScroll ? "overflow-y-auto overscroll-contain" : "overflow-hidden overscroll-none touch-none")}>
+        <div ref={scrollRef} className={cn("ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 bg-[#f3f7fa] px-4 py-5 sm:px-6", threadCanScroll ? "overflow-y-auto overscroll-contain" : "overflow-hidden overscroll-none touch-none")}>
           {threadLoading ? <div className="ccr-delayed-loading grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
             const mine = message.sender_id === user?.id;
             return (
@@ -647,7 +647,7 @@ export function DirectChatInbox() {
           })}
         </div>
         {(error || attachmentError) && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error || attachmentError}</p>}
-        <form onSubmit={submit} className="shrink-0 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+        <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
           {!!selectedAttachments.length && (
             <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
               {selectedAttachments.map((attachment) => (

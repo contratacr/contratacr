@@ -134,6 +134,22 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
     min-height: 0 !important;
   }
 
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-list {
+    padding-bottom: var(--ccr-native-panel-end-gap);
+    scroll-padding-bottom: var(--ccr-native-panel-end-gap);
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    scroll-padding-top: 1rem;
+    scroll-padding-bottom: 1rem;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-composer {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)) !important;
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .dashboard-panel-content {
     min-height: 100%;
     padding-bottom: 0 !important;
