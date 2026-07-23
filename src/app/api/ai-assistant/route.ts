@@ -609,6 +609,10 @@ function freeTextSearchHref(message: string) {
   return `/buscar${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
+function userMessagePlace(message: string) {
+  return resolveLocationIntent(message);
+}
+
 function localAnswer(message: string, locale: Locale): AssistantPayload {
   const normalized = normalizeText(message);
   const { category, place } = resolveSearch(message, locale);
@@ -692,7 +696,9 @@ Rules:
 - If the message has a service but no location, ask which Costa Rica area. If it has a location but no service, ask which service.
 - Distinguish finding professionals from publishing a request. Words such as "busco", "profesional", "especialista", "opciones", "quienes hay" or a follow-up location mean search_professionals, not publish_request.
 - Never switch an existing professional search to publish_request unless the user explicitly asks to publish/create a request. Offering a request after zero results does not change the user's intent.
-- Preserve the most recent service and location in follow-up messages. A role word such as "especialista" must not replace an explicit trade such as "redes".
+- Preserve the most recent service only when the latest user message is a direct follow-up with a Costa Rica location. Do not invent, infer or reuse a location unless the latest user message explicitly mentions that location.
+- A fresh service-only message such as "limpieza" must ask for the Costa Rica area without naming any province or canton.
+- A role word such as "especialista" must not replace an explicit trade such as "redes".
 - For creating a request, collect only the missing service and Costa Rica location. Once both are known, set action=publish_request and offer to open the form; the form collects job details.
 - Never claim that you will create, publish, submit or complete a request for the person. Only the person can review and publish it from the form.
 - Use the matching navigation action when the person wants to open services, register, sign in, reset a password, open their dashboard, support or help.
@@ -766,7 +772,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
     const service = payload.serviceId
       ? { id: payload.serviceId }
       : resolveCategoryIntent(payload.searchQuery || originalMessage, locale);
-    const place = resolveLocationIntent(payload.locationText || "") ?? resolveLocationIntent(originalMessage);
+    const place = userMessagePlace(originalMessage);
     const params = new URLSearchParams({ mode: "use", tab: "sent_projects", openPublish: "1" });
     if (service?.id) params.set("categoria", service.id);
     if (place?.type === "province") params.set("provincia", place.id);
@@ -809,7 +815,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
     return freeTextSearchHref(payload.searchQuery);
   }
   const seed = payload.searchQuery || originalMessage;
-  return resolveSearch(seed, locale, payload.serviceId, payload.locationText).href;
+  return resolveSearch(seed, locale, payload.serviceId, null).href;
 }
 
 function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
@@ -856,9 +862,6 @@ function normalizePayload(
   const recentUserService = recentUserMessages
     .map((item) => safeCatalogCategoryMatch(item, locale, labels))
     .find(Boolean);
-  const recentUserPlace = recentUserMessages
-    .map((item) => resolveLocationIntent(item))
-    .find(Boolean) ?? null;
   const messageOnlyHasPlace = !!currentPlace && !!pendingServiceFromAssistant;
   const directService = (messageOnlyHasPlace ? pendingServiceFromAssistant : messageCategory)
     ?? (messageOnlyHasPlace && recentUserService ? { id: recentUserService } : null)
@@ -869,9 +872,7 @@ function normalizePayload(
       return payloadService ? { id: payloadService } : null;
     })()
     ?? (recentUserService ? { id: recentUserService } : null);
-  const directPlace = currentPlace
-    ?? resolveLocationIntent(payload.locationText || "")
-    ?? recentUserPlace;
+  const directPlace = currentPlace;
   const directPlaceLabel = formatPlaceLabel(directPlace);
   const publishDetailText = message.replace(PUBLISH_REQUEST_PHRASE_RE, " ");
   const publishDetailMeaning = meaningfulRequestText(publishDetailText);
@@ -1129,6 +1130,7 @@ function normalizePayload(
       ...payload,
       action: "answer",
       serviceId: directService.id,
+      locationText: null,
       answer: locale === "en"
         ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
         : `¿En qué zona de Costa Rica desea buscar ${serviceLabel}?`,
@@ -1364,9 +1366,9 @@ async function realProfessionalMatches(payload: AssistantPayload, originalMessag
   if (payload.action !== "search_professionals") return [];
   if (payload.confidence === 0 && !payload.serviceId) return [];
   const seed = payload.searchQuery || originalMessage;
-  const resolved = resolveSearch(payload.serviceId ? (payload.locationText || originalMessage) : originalMessage, locale, payload.serviceId, payload.locationText);
+  const resolved = resolveSearch(originalMessage, locale, payload.serviceId, null);
   const category = payload.serviceId ? { id: payload.serviceId } : resolved.category;
-  const place = resolved.place ?? resolveSearch(originalMessage, locale, null, payload.locationText).place;
+  const place = resolved.place;
   const videoIntent = wantsVideoIntent(`${originalMessage} ${payload.searchQuery ?? ""} ${payload.locationText ?? ""}`);
   let professionals = await searchProfessionals({
     categoryId: category?.id,
@@ -1448,7 +1450,7 @@ export async function POST(req: Request) {
     const missingServiceName = !resolvedCategory.id ? clearMissingServiceName(rawMessage) : null;
     if (payload.action === "suggest_service" && resolvedCategory.id && !explicitPublishIntent) {
       const serviceLabel = catalog.labels.get(resolvedCategory.id) || getCategoryLabel(resolvedCategory.id, locale);
-      const placeLabel = formatPlaceLabel(resolveLocationIntent(rawMessage) ?? resolveLocationIntent(payload.locationText || ""));
+      const placeLabel = formatPlaceLabel(userMessagePlace(rawMessage));
       payload.action = placeLabel ? "search_professionals" : "answer";
       payload.answer = placeLabel
         ? locale === "en"

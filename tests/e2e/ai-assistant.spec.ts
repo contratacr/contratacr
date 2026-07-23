@@ -110,6 +110,22 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
     }
   });
 
+  test("does not reuse an old location for a fresh service-only search", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const response = await ask(page, "limpieza", {
+      history: [
+        { role: "user", content: "Necesito un electricista en Siquirres" },
+        { role: "assistant", content: "Encontré profesionales de electricidad en Siquirres, Limón." },
+      ],
+    });
+
+    expect(response.status, JSON.stringify(response.body)).toBe(200);
+    expect(response.body.action, JSON.stringify(response.body)).toBe("answer");
+    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/zona|area|ubicaci/i);
+    expect(response.body.answer, JSON.stringify(response.body)).not.toMatch(/Siquirres|Lim[oó]n/i);
+    expect(response.body.searchHref ?? "", JSON.stringify(response.body)).not.toMatch(/provincia=|canton=/);
+  });
+
   test("does not turn emergencies or unsafe requests into service searches", async ({ page }) => {
     await gotoOK(page, "/es");
     const cases = [
