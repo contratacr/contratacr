@@ -113,7 +113,7 @@ const ES_SECTIONS: LegalSection[] = [
     h: "11. Cuenta, suspensión y eliminación",
     body: [
       { k: "p", text: "Debe mantener datos de contacto correctos y proteger sus credenciales. Notifique de inmediato cualquier acceso no autorizado." },
-      { k: "p", text: "Puede solicitar la eliminación de su cuenta mediante la opción disponible en Cuenta y seguridad o en la página pública de Eliminación de cuenta. La eliminación se gestiona conforme a la Política de Privacidad y puede excluir datos que debamos conservar temporalmente por seguridad, reclamos u obligación legal." },
+      { k: "p", text: "Puede solicitar la eliminación de su cuenta o de datos personales específicos mediante la opción disponible en Cuenta y seguridad o en la página pública de eliminación de cuenta o datos. La eliminación se gestiona conforme a la Política de Privacidad y puede excluir datos que debamos conservar temporalmente por seguridad, reclamos u obligación legal." },
       { k: "p", text: "ContrataCR puede suspender o cancelar una cuenta por incumplimiento, fraude, riesgo para terceros, inactividad prolongada, requerimiento legal o uso que perjudique el servicio." },
     ],
   },
@@ -196,7 +196,7 @@ const EN_SECTIONS: LegalSection[] = [
     { k: "ul", items: ["Reviews must describe genuine experiences respectfully.", "Users may report profiles, messages, reviews, or conduct.", "ContrataCR may investigate, limit visibility, remove content, warn, suspend, or terminate accounts for breach, risk, fraud, legal orders, or community protection.", "Where reasonably possible, Users may contact support to request review of an action."] },
   ] },
   { id: "account", h: "11. Account, suspension, and deletion", body: [
-    { k: "p", text: "Keep contact information accurate and credentials secure. Account deletion can be requested through Account & security or the public Account Deletion page. Some data may be temporarily retained for security, claims, or legal duties as explained in the Privacy Policy." },
+    { k: "p", text: "Keep contact information accurate and credentials secure. Account deletion or deletion of specific personal data can be requested through Account & security or the public account or data deletion page. Some data may be temporarily retained for security, claims, or legal duties as explained in the Privacy Policy." },
     { k: "p", text: "ContrataCR may suspend or terminate accounts for breach, fraud, risk to others, prolonged inactivity, legal requirements, or harmful use." },
   ] },
   { id: "third-parties", h: "12. Third-party services", body: [

@@ -114,7 +114,7 @@ const ES_SECTIONS: LegalSection[] = [
         "Los registros técnicos y analíticos se conservan durante períodos razonables para seguridad, diagnóstico y medición, y pueden anonimizarse.",
         "Las copias de respaldo pueden tardar un período adicional razonable en desaparecer.",
       ] },
-      { k: "p", text: "Cuando solicite eliminar su cuenta, eliminaremos o anonimizaremos los datos asociados, salvo la información que debamos conservar temporalmente por seguridad, prevención de fraude, atención de reclamos u obligación legal. También solicitaremos la eliminación aplicable a nuestros proveedores." },
+      { k: "p", text: "Cuando solicite eliminar su cuenta o datos personales específicos, eliminaremos o anonimizaremos la información aplicable, salvo la información que debamos conservar temporalmente por seguridad, prevención de fraude, atención de reclamos u obligación legal. También solicitaremos la eliminación aplicable a nuestros proveedores." },
     ],
   },
   {
@@ -123,7 +123,7 @@ const ES_SECTIONS: LegalSection[] = [
     body: [
       { k: "p", text: "Conforme a la Ley N.º 8968, puede solicitar acceso, rectificación, actualización, supresión o eliminación de sus datos y oponerse a determinados tratamientos cuando proceda." },
       { k: "p", text: "Puede actualizar varios datos desde su cuenta. Para otras solicitudes, escriba a **soporte@contratacr.com**. Podremos pedir información razonable para confirmar su identidad. Atenderemos la solicitud dentro del plazo legal aplicable." },
-      { k: "p", text: "La eliminación de cuenta y datos asociados puede solicitarse desde Cuenta y seguridad o mediante la página pública de eliminación de cuenta." },
+      { k: "p", text: "La eliminación de cuenta o datos personales específicos puede solicitarse desde Cuenta y seguridad o mediante la página pública de eliminación de cuenta o datos." },
     ],
   },
   {
@@ -190,11 +190,11 @@ const EN_SECTIONS: LegalSection[] = [
   ] },
   { id: "retention", h: "7. Retention and deletion", body: [
     { k: "p", text: "Account and profile data is retained while the account is active. Requests, messages, files, reviews, reports, and technical records are kept for the time reasonably needed to provide the service, maintain security, resolve disputes, or comply with legal duties. Backups may take additional reasonable time to expire." },
-    { k: "p", text: "Following an account deletion request, we delete or anonymize associated data except information temporarily retained for security, fraud prevention, claims, or legal compliance. We also request applicable deletion from our providers." },
+    { k: "p", text: "Following an account or specific personal data deletion request, we delete or anonymize the applicable information except data temporarily retained for security, fraud prevention, claims, or legal compliance. We also request applicable deletion from our providers." },
   ] },
   { id: "rights", h: "8. Your rights and requests", body: [
     { k: "p", text: "Under Costa Rican Law No. 8968, you may request access, correction, update, suppression or deletion, and object to certain processing where applicable." },
-    { k: "p", text: "Update available data from your account or contact **soporte@contratacr.com**. We may reasonably verify your identity and will respond within the applicable legal period. Account deletion can be requested from Account & security or through the public account deletion page." },
+    { k: "p", text: "Update available data from your account or contact **soporte@contratacr.com**. We may reasonably verify your identity and will respond within the applicable legal period. Account deletion or deletion of specific personal data can be requested from Account & security or through the public account or data deletion page." },
   ] },
   { id: "security", h: "9. Security and incidents", body: [
     { k: "p", text: "We use access controls, encryption in transit, restrictions on sensitive data, file validation, and other reasonable safeguards. No system is infallible. We will act under applicable law if an incident requires notice." },
@@ -227,8 +227,8 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
         ? "This Policy explains what data ContrataCR processes across the website and mobile applications, why it is used, who may process it, and how you can exercise your rights."
         : "Esta Política explica qué datos trata ContrataCR en el sitio web y las aplicaciones móviles, para qué se utilizan, quiénes pueden procesarlos y cómo puede ejercer sus derechos."}
       summary={en
-        ? ["We use data to operate the marketplace, messaging, support, AI, and notifications.", "Professional profiles are public and may appear in search engines.", "We do not sell personal data.", "You may request access, correction, or account deletion."]
-        : ["Usamos datos para operar el marketplace, mensajes, soporte, IA y notificaciones.", "Los perfiles profesionales son públicos y pueden aparecer en buscadores.", "No vendemos sus datos personales.", "Puede solicitar acceso, corrección o eliminación de su cuenta."]}
+        ? ["We use data to operate the marketplace, messaging, support, AI, and notifications.", "Professional profiles are public and may appear in search engines.", "We do not sell personal data.", "You may request access, correction, account deletion, or deletion of specific personal data."]
+        : ["Usamos datos para operar el marketplace, mensajes, soporte, IA y notificaciones.", "Los perfiles profesionales son públicos y pueden aparecer en buscadores.", "No vendemos sus datos personales.", "Puede solicitar acceso, corrección, eliminación de su cuenta o eliminación de datos específicos."]}
       sections={en ? EN_SECTIONS : ES_SECTIONS}
       footer={en ? (
         <div>

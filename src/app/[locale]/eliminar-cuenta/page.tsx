@@ -7,17 +7,17 @@ import { SUPPORT_EMAIL } from "@/lib/constants";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   return locale === "en"
-    ? { title: "Account deletion - ContrataCR", description: "Request deletion of your ContrataCR account and associated data." }
-    : { title: "Eliminación de cuenta - ContrataCR", description: "Solicite eliminar su cuenta de ContrataCR y los datos asociados." };
+    ? { title: "Account or data deletion - ContrataCR", description: "Request deletion of your ContrataCR account or specific personal data." }
+    : { title: "Eliminación de cuenta o datos - ContrataCR", description: "Solicite eliminar su cuenta de ContrataCR o datos personales específicos." };
 }
 
 export default async function DeleteAccountPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const en = locale === "en";
-  const subject = encodeURIComponent(en ? "ContrataCR account deletion request" : "Solicitud de eliminación de cuenta ContrataCR");
+  const subject = encodeURIComponent(en ? "ContrataCR account or data deletion request" : "Solicitud de eliminación de cuenta o datos ContrataCR");
   const body = encodeURIComponent(en
-    ? "Hello,\n\nI request the deletion of my ContrataCR account associated with this email address.\n\nFull name:\nAccount email:\n\nThank you."
-    : "Hola,\n\nSolicito eliminar mi cuenta de ContrataCR asociada con este correo electrónico.\n\nNombre completo:\nCorreo de la cuenta:\n\nGracias.");
+    ? "Hello,\n\nI request the deletion of my ContrataCR account or specific personal data associated with this email address.\n\nFull name:\nAccount email:\nRequest details:\n\nThank you."
+    : "Hola,\n\nSolicito eliminar mi cuenta de ContrataCR o datos personales específicos asociados con este correo electrónico.\n\nNombre completo:\nCorreo de la cuenta:\nDetalle de la solicitud:\n\nGracias.");
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f4f7fa]">
@@ -29,21 +29,22 @@ export default async function DeleteAccountPage({ params }: { params: Promise<{ 
               <Trash2 className="h-6 w-6" />
             </span>
             <h1 className="mt-5 text-3xl font-black text-[#162543] sm:text-4xl">
-              {en ? "Delete your account" : "Eliminar su cuenta"}
+              {en ? "Delete your account or data" : "Eliminar su cuenta o datos"}
             </h1>
             <p className="mx-auto mt-3 max-w-xl leading-7 text-[#6b7280]">
               {en
-                ? "You can request permanent deletion of your ContrataCR account and the personal data associated with it."
-                : "Puede solicitar la eliminación permanente de su cuenta de ContrataCR y los datos personales asociados."}
+                ? "You can request deletion of your ContrataCR account or specific personal data associated with it."
+                : "Puede solicitar la eliminación de su cuenta de ContrataCR o de datos personales específicos asociados."}
             </p>
           </header>
 
           <section className="mt-8 rounded-xl border border-[#dfe5eb] bg-white p-5 shadow-sm sm:p-7">
-            <h2 className="text-lg font-bold text-[#162543]">{en ? "Before requesting deletion" : "Antes de solicitarla"}</h2>
+            <h2 className="text-lg font-bold text-[#162543]">{en ? "Before requesting deletion" : "Antes de solicitarlo"}</h2>
             <ul className="mt-4 space-y-3 text-sm leading-6 text-[#4b5563]">
               {[
-                en ? "You will lose access to your profile, requests, saved items, and account history." : "Perderá acceso a su perfil, solicitudes, elementos guardados e historial de cuenta.",
-                en ? "Active service arrangements should be completed or canceled first." : "Primero debe finalizar o cancelar coordinaciones de servicio activas.",
+                en ? "If you request full account deletion, you will lose access to your profile, requests, saved items, and account history." : "Si solicita eliminar toda la cuenta, perderá acceso a su perfil, solicitudes, elementos guardados e historial de cuenta.",
+                en ? "You may also request deletion or correction of specific personal data without deleting the full account." : "También puede solicitar eliminar o corregir datos personales específicos sin eliminar toda la cuenta.",
+                en ? "Active service arrangements should be completed or canceled before full account deletion." : "Antes de eliminar toda la cuenta, debe finalizar o cancelar coordinaciones de servicio activas.",
                 en ? "Some information may be temporarily retained for security, fraud prevention, claims, or legal compliance." : "Cierta información puede conservarse temporalmente por seguridad, prevención de fraude, reclamos u obligación legal.",
               ].map((item) => (
                 <li key={item} className="flex gap-3">
@@ -69,7 +70,7 @@ export default async function DeleteAccountPage({ params }: { params: Promise<{ 
               className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089BB]"
             >
               <Mail className="h-4 w-4" />
-              {en ? "Request account deletion" : "Solicitar eliminación de cuenta"}
+              {en ? "Request account or data deletion" : "Solicitar eliminación de cuenta o datos"}
             </a>
             <p className="mt-3 text-center text-xs leading-5 text-[#708095]">
               {en ? "The request will be sent to" : "La solicitud se enviará a"} {SUPPORT_EMAIL}

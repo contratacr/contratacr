@@ -26,8 +26,10 @@ export interface LegalDocumentProps {
 
 const INTERNAL_LEGAL_LINKS = [
   { text: "página pública de Eliminación de cuenta", href: "/eliminar-cuenta" },
+  { text: "página pública de eliminación de cuenta o datos", href: "/eliminar-cuenta" },
   { text: "public Account Deletion page", href: "/eliminar-cuenta" },
   { text: "public account deletion page", href: "/eliminar-cuenta" },
+  { text: "public account or data deletion page", href: "/eliminar-cuenta" },
 ] as const;
 
 // Render a run of text: **bold** segments + legal contact/internal links.
