@@ -8,11 +8,13 @@ import {
   getCategoryLabel,
   NATURAL_SERVICE_SCENARIOS,
   resolveCategoryIntent,
+  resolveStrongCategoryIntent,
 } from "../../src/lib/data/categories";
 
 type AssistantResponse = {
   answer?: string;
   action?: string;
+  serviceId?: string | null;
   searchHref?: string | null;
   ctaLabel?: string | null;
   aiProvider?: "openai" | "local";
@@ -107,6 +109,52 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       expect(response.body.searchHref ?? null, prompt).toBeNull();
       expect(response.body.ctaLabel ?? null, prompt).toBeNull();
       expect(response.body.answer, prompt).toMatch(/se refiere|servicio/i);
+    }
+  });
+
+  test("understands more than 1,000 natural service requests with conversational wrappers", async () => {
+    const wrappers = [
+      (need: string) => need,
+      (need: string) => `Necesito ayuda porque ${need}`,
+      (need: string) => `Ocupo resolver esto: ${need}`,
+      (need: string) => `Busco a alguien porque ${need}`,
+      (need: string) => `¿Quién me puede ayudar? ${need}`,
+      (need: string) => `${need}, ¿qué servicio necesito?`,
+      (need: string) => `Necesito 2 opciones para esto: ${need}`,
+      (need: string) => `Es para mañana y ${need}`,
+    ];
+    let checked = 0;
+
+    for (const service of getAllCategories()) {
+      const naturalNeeds = NATURAL_SERVICE_SCENARIOS[service.id] ?? [];
+      expect(naturalNeeds.length, `${service.id} needs a natural customer scenario`).toBeGreaterThan(0);
+
+      for (const naturalNeed of naturalNeeds) {
+        for (const wrap of wrappers) {
+          const question = wrap(naturalNeed);
+          expect(resolveCategoryIntent(question, "es")?.id, question).toBe(service.id);
+          checked += 1;
+        }
+      }
+    }
+
+    expect(checked).toBeGreaterThanOrEqual(1_000);
+  });
+
+  test("keeps obvious first messages and follow-ups out of the uncertain fallback", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const prompts = [
+      ["Hola, mi casa esta muy sucia necesito limpiarla", "limpieza"],
+      ["limpieza", "limpieza"],
+      ["redes", "redes_internet"],
+    ] as const;
+
+    for (const [prompt, expectedService] of prompts) {
+      expect(resolveStrongCategoryIntent(prompt, "es")?.id, prompt).toBe(expectedService);
+      const response = await ask(page, prompt);
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
+      expect(response.body.serviceId, JSON.stringify(response.body)).toBe(expectedService);
+      expect(response.body.answer, JSON.stringify(response.body)).not.toMatch(/no tengo total certeza/i);
     }
   });
 

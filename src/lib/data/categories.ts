@@ -1006,7 +1006,7 @@ export function searchCategories(query: string, locale?: string): (CategoryItem 
 }
 
 const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
-  limpieza: ["limpiar mi casa", "limpiar casa", "limpiar el hogar", "limpieza de mi casa", "asear mi casa", "servicio domestico", "clean my house", "clean my home", "house cleaned", "home cleaned"],
+  limpieza: ["limpieza", "limpiar mi casa", "limpiar casa", "limpiar el hogar", "limpieza de mi casa", "asear mi casa", "servicio domestico", "clean my house", "clean my home", "house cleaned", "home cleaned"],
   limpieza_oficinas: ["limpiar oficina", "limpieza de oficina", "aseo de oficina", "limpiar local"],
   plomeria: ["arreglar fuga", "tengo una fuga", "arreglar tubo", "tuberia reventada", "se revento una tuberia", "revento una tuberia", "destapar inodoro", "destapar caneria", "arreglar lavamanos", "fix a water leak", "fix leak", "burst pipe", "water leak", "clogged toilet"],
   electricidad: ["arreglar luz", "poner enchufe", "instalar toma", "problema electrico", "se fue la luz", "no tengo luz en media casa", "cambiar breaker", "electricista", "electrician"],
@@ -1111,7 +1111,11 @@ export const NATURAL_SERVICE_SCENARIOS: Record<string, string[]> = {
   ingenieria_mecanica: ["ocupo revisar ventilacion y equipos mecanicos"],
   arquitectura: ["quiero disenar mi casa antes de construir"],
   topografia: ["necesito medir un terreno"],
-  limpieza: ["la casa ocupa aseo general"],
+  limpieza: [
+    "la casa ocupa aseo general",
+    "mi casa esta muy sucia necesito limpiarla",
+    "la casa esta muy sucia",
+  ],
   limpieza_oficinas: ["la oficina queda sucia todos los dias"],
   desinfeccion: ["quiero sanitizar el local"],
   lavado_alfombras: ["la alfombra tiene manchas"],
@@ -1288,6 +1292,59 @@ function termsForCategory(item: CategoryItem & { groupId: string; groupLabel: st
   ];
 }
 
+/**
+ * Resolve explicit service language without fuzzy scoring. Natural examples
+ * remain authoritative even when wrapped in a greeting, quantity or question.
+ */
+export function resolveStrongCategoryIntent(
+  query: string,
+  locale?: string,
+): (CategoryItem & { groupId: string; groupLabel: string }) | null {
+  const raw = query.trim();
+  if (raw.length < 2) return null;
+  const pool = getAllCategories();
+  const comparable = (value: string) =>
+    normalizeText(value).replace(/[^a-z0-9ñ\s]/g, " ").replace(/\s+/g, " ").trim();
+  const q = comparable(raw);
+
+  for (const item of pool) {
+    const labels = [item.label, getCategoryLabel(item.id, locale)];
+    if (labels.some((term) => comparable(term) === q)) return item;
+  }
+  for (const item of pool) {
+    const aliases = [...item.keywords, ...(NATURAL_QUERY_ALIASES[item.id] ?? [])];
+    if (aliases.some((term) => comparable(term) === q)) return item;
+  }
+  for (const item of pool) {
+    const scenarios = NATURAL_SERVICE_SCENARIOS[item.id] ?? [];
+    if (scenarios.some((term) => comparable(term) === q)) return item;
+  }
+
+  const paddedQuery = ` ${q} `;
+  const containedMatch = pool
+    .map((item) => {
+      const canonicalLabels = [item.label, getCategoryLabel(item.id, locale)].map(comparable);
+      const terms = [
+        ...canonicalLabels,
+        ...item.keywords.map(comparable),
+        ...(NATURAL_QUERY_ALIASES[item.id] ?? []).map(comparable),
+        ...(NATURAL_SERVICE_SCENARIOS[item.id] ?? []).map(comparable),
+      ].filter((term) =>
+        term.length >= 4
+        && (term.includes(" ") || canonicalLabels.includes(term))
+        && paddedQuery.includes(` ${term} `),
+      );
+      return { item, terms };
+    })
+    .filter((candidate) => candidate.terms.length > 0)
+    .sort((a, b) =>
+      Math.max(...b.terms.map((term) => term.length))
+      - Math.max(...a.terms.map((term) => term.length)),
+    )[0];
+
+  return containedMatch?.item ?? null;
+}
+
 export function resolveCategoryIntent(query: string, locale?: string): (CategoryItem & { groupId: string; groupLabel: string }) | null {
   const raw = query.trim();
   if (raw.length < 2) return null;
@@ -1302,6 +1359,9 @@ export function resolveCategoryIntent(query: string, locale?: string): (Category
     const firstInGroup = pool.find((item) => item.groupId === matchingGroup.id);
     if (firstInGroup) return firstInGroup;
   }
+
+  const strongIntent = resolveStrongCategoryIntent(raw, locale);
+  if (strongIntent) return strongIntent;
 
   // A canonical service label must always beat a keyword or alias owned by an
   // earlier item (for example, "Herrería" is also a Soldadura keyword).

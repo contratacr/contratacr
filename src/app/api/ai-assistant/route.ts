@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
-import { categorySearchScore, getAllCategories, getCategoryLabel, resolveCategoryIntent, searchCategories } from "@/lib/data/categories";
+import {
+  categorySearchScore,
+  getAllCategories,
+  getCategoryLabel,
+  resolveCategoryIntent,
+  resolveStrongCategoryIntent,
+  searchCategories,
+} from "@/lib/data/categories";
 import { allLocationSuggestions, resolveLocation } from "@/lib/data/location-search";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -388,6 +395,8 @@ function naturalCatalogOverride(text: string, labels: Map<string, string>) {
 function safeCatalogCategoryMatch(text: string, locale: Locale, labels: Map<string, string>) {
   const direct = exactCatalogPhraseMatch(text, labels) ?? naturalCatalogOverride(text, labels);
   if (direct) return direct;
+  const strongIntent = resolveStrongCategoryIntent(text, locale);
+  if (strongIntent && labels.has(strongIntent.id)) return strongIntent.id;
   const strong = strongCategoryMention([text], locale);
   if (strong && labels.has(strong)) return strong;
   const confident = confidentCategoryMatch(text, locale);
