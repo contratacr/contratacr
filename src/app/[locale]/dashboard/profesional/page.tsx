@@ -979,7 +979,7 @@ export default function DashboardPage() {
                     <HeaderSaveStatus />
                     <Card className={cn(
                       activeTab === "chat" && "overflow-hidden",
-                      (mobileFullScreenTab || mobileSectionOpen) && "dashboard-section-card min-h-[calc(100svh-64px)] rounded-none border-0 bg-white shadow-none lg:min-h-0 lg:rounded-xl lg:border lg:shadow-sm",
+                      (mobileFullScreenTab || mobileSectionOpen) && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:min-h-0 lg:rounded-xl lg:border lg:shadow-sm",
                     )}>
                       {activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
                         <div className="relative">
@@ -1016,7 +1016,7 @@ export default function DashboardPage() {
                       </CardHeader>}
                       <CardContent className={mobileFullScreenTab ? "min-h-[calc(100svh-88px)] p-0 sm:p-0" : cn(
                         "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6",
-                        mobileSectionOpen && "dashboard-section-content min-h-[calc(100svh-129px)] px-5 pb-8 pt-5 sm:px-6 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-1",
+                        mobileSectionOpen && "dashboard-section-content px-5 pb-8 pt-5 sm:px-6 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-1",
                       )}>
                         {activeTab === "home" && (
                           <>

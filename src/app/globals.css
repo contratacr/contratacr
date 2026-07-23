@@ -137,16 +137,19 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .dashboard-panel-content {
     min-height: 100%;
     padding-bottom: 0 !important;
+    background: #fff;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-card {
-    min-height: 100% !important;
+    min-height: calc(100% - 65px) !important;
+    background: #fff;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content {
-    min-height: calc(100% - 65px);
+    min-height: 100% !important;
     padding-bottom: var(--ccr-native-panel-end-gap) !important;
     scroll-padding-bottom: var(--ccr-native-panel-end-gap);
+    background: #fff;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-safe-list-end {
