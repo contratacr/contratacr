@@ -560,6 +560,18 @@ input::-ms-clear {
     overscroll-behavior: none;
   }
 
+  html.ccr-native-app.contratacr-chat-thread-open .direct-chat-shell--thread {
+    top: calc(var(--app-visual-viewport-top) + var(--ccr-native-header-height));
+    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height));
+  }
+
+  html.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-thread-scroll {
+    padding-top: 1rem !important;
+    padding-bottom: 1.25rem !important;
+    scroll-padding-top: 1rem;
+    scroll-padding-bottom: 1.25rem;
+  }
+
   .contratacr-chat-thread-open .direct-chat-shell--thread > section,
   .contratacr-ai-open [data-ai-concierge-dialog] {
     touch-action: pan-y;
