@@ -222,7 +222,7 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
   return (
     <LegalDocument
       title={en ? "Privacy Policy" : "Política de Privacidad"}
-      updated={en ? "July 23, 2026 · Version 2.0" : "23 de julio de 2026 · Versión 2.0"}
+      updated={en ? "July 23, 2026" : "23 de julio de 2026"}
       intro={en
         ? "This Policy explains what data ContrataCR processes across the website and mobile applications, why it is used, who may process it, and how you can exercise your rights."
         : "Esta Política explica qué datos trata ContrataCR en el sitio web y las aplicaciones móviles, para qué se utilizan, quiénes pueden procesarlos y cómo puede ejercer sus derechos."}
@@ -232,11 +232,11 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
       sections={en ? EN_SECTIONS : ES_SECTIONS}
       footer={en ? (
         <div>
-          Review our <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Terms and Conditions</Link> or <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">request account deletion</Link>.
+          Review our <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Terms and Conditions</Link> or the <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">account deletion</Link> page.
         </div>
       ) : (
         <div>
-          Revise nuestros <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Términos y Condiciones</Link> o <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">solicite eliminar su cuenta</Link>.
+          Revise nuestros <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Términos y Condiciones</Link> o la página de <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">eliminación de cuenta</Link>.
         </div>
       )}
     />

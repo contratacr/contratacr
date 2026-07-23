@@ -230,7 +230,7 @@ export default async function TerminosPage({ params }: { params: Promise<{ local
   return (
     <LegalDocument
       title={en ? "Terms and Conditions" : "Términos y Condiciones"}
-      updated={en ? "July 23, 2026 · Version 2.0" : "23 de julio de 2026 · Versión 2.0"}
+      updated={en ? "July 23, 2026" : "23 de julio de 2026"}
       intro={en
         ? "These Terms explain the rules for using ContrataCR as a Client or Professional across the website and mobile applications."
         : "Estos Términos explican las reglas para utilizar ContrataCR como Cliente o Profesional en el sitio web y las aplicaciones móviles."}
@@ -239,9 +239,9 @@ export default async function TerminosPage({ params }: { params: Promise<{ local
         : ["ContrataCR conecta Clientes y Profesionales, pero no realiza los servicios profesionales.", "La contratación y los pagos se acuerdan directamente entre Usuarios.", "Los Usuarios deben actuar de forma legal, veraz y respetuosa.", "Las cuentas y el contenido pueden limitarse ante fraude, abuso o incumplimientos."]}
       sections={en ? EN_SECTIONS : ES_SECTIONS}
       footer={en ? (
-        <>Review our <Link href="/privacidad" className="font-semibold text-[#0089BB] hover:underline">Privacy Policy</Link> or <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">request account deletion</Link>.</>
+        <>Review our <Link href="/privacidad" className="font-semibold text-[#0089BB] hover:underline">Privacy Policy</Link> or the <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">account deletion</Link> page.</>
       ) : (
-        <>Revise nuestra <Link href="/privacidad" className="font-semibold text-[#0089BB] hover:underline">Política de Privacidad</Link> o <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">solicite eliminar su cuenta</Link>.</>
+        <>Revise nuestra <Link href="/privacidad" className="font-semibold text-[#0089BB] hover:underline">Política de Privacidad</Link> o la página de <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">eliminación de cuenta</Link>.</>
       )}
     />
   );
