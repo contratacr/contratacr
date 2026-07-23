@@ -10,7 +10,7 @@ export async function ProsSection() {
   const t = await getTranslations("landing.carousel");
   const heroT = await getTranslations("landing.hero");
   return (
-    <section className="pt-24 pb-16 sm:py-24 bg-[#f4f7fa] overflow-hidden">
+    <section className="ccr-home-services-section pt-24 pb-16 sm:py-24 bg-[#f4f7fa] overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744] leading-tight">

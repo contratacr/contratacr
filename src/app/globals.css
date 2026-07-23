@@ -105,6 +105,11 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
   min-height: calc(100svh - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height));
 }
 
+body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
+  scroll-margin-top: calc(var(--ccr-native-header-height) + 1rem);
+  padding-top: calc(var(--ccr-native-header-height) + 2rem);
+}
+
 @media (max-width: 1023px) {
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) {
     height: 100svh;
