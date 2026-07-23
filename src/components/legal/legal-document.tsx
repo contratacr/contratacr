@@ -1,4 +1,5 @@
 import { getLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SUPPORT_EMAIL } from "@/lib/constants";
@@ -23,28 +24,51 @@ export interface LegalDocumentProps {
   footer: React.ReactNode;
 }
 
-// Render a run of text: **bold** segments + the support email as a mailto link.
+const INTERNAL_LEGAL_LINKS = [
+  { text: "página pública de Eliminación de cuenta", href: "/eliminar-cuenta" },
+  { text: "public Account Deletion page", href: "/eliminar-cuenta" },
+  { text: "public account deletion page", href: "/eliminar-cuenta" },
+] as const;
+
+// Render a run of text: **bold** segments + legal contact/internal links.
 function renderInline(text: string, keyBase: string): React.ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((part, i) => {
     const key = `${keyBase}-${i}`;
     if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={key} className="font-semibold text-[#111827]">{linkifyEmail(part.slice(2, -2), key)}</strong>;
+      return <strong key={key} className="font-semibold text-[#111827]">{linkifyLegalText(part.slice(2, -2), key)}</strong>;
     }
-    return <span key={key}>{linkifyEmail(part, key)}</span>;
+    return <span key={key}>{linkifyLegalText(part, key)}</span>;
   });
 }
 
-function linkifyEmail(text: string, keyBase: string): React.ReactNode {
-  if (!text.includes(SUPPORT_EMAIL)) return text;
-  const segs = text.split(SUPPORT_EMAIL);
-  return segs.flatMap((s, i) =>
-    i === 0
-      ? [s]
-      : [
-          <a key={`${keyBase}-m${i}`} href={`mailto:${SUPPORT_EMAIL}`} className="text-[#009FD9] hover:underline">{SUPPORT_EMAIL}</a>,
-          s,
-        ]
-  );
+function linkifyLegalText(text: string, keyBase: string): React.ReactNode[] {
+  const matches = [
+    ...INTERNAL_LEGAL_LINKS.map((link) => ({ ...link, type: "internal" as const })),
+    { text: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}`, type: "email" as const },
+  ]
+    .map((link) => ({ ...link, index: text.indexOf(link.text) }))
+    .filter((link) => link.index >= 0)
+    .sort((a, b) => a.index - b.index);
+
+  if (matches.length === 0) return [text];
+
+  const nodes: React.ReactNode[] = [];
+  let cursor = 0;
+  matches.forEach((match, index) => {
+    if (match.index < cursor) return;
+    if (match.index > cursor) nodes.push(text.slice(cursor, match.index));
+    const label = text.slice(match.index, match.index + match.text.length);
+    nodes.push(
+      match.type === "internal" ? (
+        <Link key={`${keyBase}-l${index}`} href={match.href} className="text-[#009FD9] hover:underline">{label}</Link>
+      ) : (
+        <a key={`${keyBase}-l${index}`} href={match.href} className="text-[#009FD9] hover:underline">{label}</a>
+      ),
+    );
+    cursor = match.index + match.text.length;
+  });
+  if (cursor < text.length) nodes.push(text.slice(cursor));
+  return nodes;
 }
 
 export async function LegalDocument({ title, updated, intro, summary, sections, footer }: LegalDocumentProps) {
