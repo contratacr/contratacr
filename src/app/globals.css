@@ -564,9 +564,9 @@ input::-ms-clear {
 
   html.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-thread-scroll {
     padding-top: 1rem !important;
-    padding-bottom: 1.25rem !important;
+    padding-bottom: 1.75rem !important;
     scroll-padding-top: 1rem;
-    scroll-padding-bottom: 1.25rem;
+    scroll-padding-bottom: 1.75rem;
   }
 
   .contratacr-chat-thread-open .direct-chat-shell--thread > section,
