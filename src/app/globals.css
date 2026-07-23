@@ -158,7 +158,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .dashboard-panel-content {
     min-height: 100%;
-    padding-bottom: 0 !important;
+    padding-bottom: var(--ccr-native-panel-end-gap) !important;
     background: #fff;
   }
 

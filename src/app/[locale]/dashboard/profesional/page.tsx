@@ -1021,13 +1021,13 @@ export default function DashboardPage() {
                         {activeTab === "home" && (
                           <>
                             <div className="lg:hidden">
-                              <div className="space-y-1 py-2">
+                              <div className="space-y-1 pt-1">
                                 {switchPanelButton({ mobile: true })}
                                 {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
                                 {mobileSectionTabs.map(mobileSectionButton)}
                               </div>
-                              <div className="my-4 border-t border-[#e5e7eb]" />
-                              <div className="space-y-1 pb-2">
+                              <div className="my-3 border-t border-[#e5e7eb]" />
+                              <div className="space-y-1 pb-1">
                                 {signOutButton({ mobile: true })}
                               </div>
                             </div>
