@@ -123,7 +123,7 @@ const ES_SECTIONS: LegalSection[] = [
     body: [
       { k: "p", text: "Conforme a la Ley N.º 8968, puede solicitar acceso, rectificación, actualización, supresión o eliminación de sus datos y oponerse a determinados tratamientos cuando proceda." },
       { k: "p", text: "Puede actualizar varios datos desde su cuenta. Para otras solicitudes, escriba a **soporte@contratacr.com**. Podremos pedir información razonable para confirmar su identidad. Atenderemos la solicitud dentro del plazo legal aplicable." },
-      { k: "p", text: "Para eliminar su cuenta y los datos asociados, utilice nuestra página de **Eliminación de cuenta** enlazada al final de este documento." },
+      { k: "p", text: "La eliminación de cuenta y datos asociados puede solicitarse desde Cuenta y seguridad o mediante la página pública de eliminación de cuenta." },
     ],
   },
   {
@@ -194,7 +194,7 @@ const EN_SECTIONS: LegalSection[] = [
   ] },
   { id: "rights", h: "8. Your rights and requests", body: [
     { k: "p", text: "Under Costa Rican Law No. 8968, you may request access, correction, update, suppression or deletion, and object to certain processing where applicable." },
-    { k: "p", text: "Update available data from your account or contact **soporte@contratacr.com**. We may reasonably verify your identity and will respond within the applicable legal period. Use the Account Deletion page linked below to request deletion." },
+    { k: "p", text: "Update available data from your account or contact **soporte@contratacr.com**. We may reasonably verify your identity and will respond within the applicable legal period. Account deletion can be requested from Account & security or through the public account deletion page." },
   ] },
   { id: "security", h: "9. Security and incidents", body: [
     { k: "p", text: "We use access controls, encryption in transit, restrictions on sensitive data, file validation, and other reasonable safeguards. No system is infallible. We will act under applicable law if an incident requires notice." },
@@ -232,11 +232,11 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
       sections={en ? EN_SECTIONS : ES_SECTIONS}
       footer={en ? (
         <div>
-          Review our <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Terms and Conditions</Link> or the <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">account deletion</Link> page.
+          Review our <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Terms and Conditions</Link>.
         </div>
       ) : (
         <div>
-          Revise nuestros <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Términos y Condiciones</Link> o la página de <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">eliminación de cuenta</Link>.
+          Revise nuestros <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Términos y Condiciones</Link>.
         </div>
       )}
     />

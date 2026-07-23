@@ -239,9 +239,9 @@ export default async function TerminosPage({ params }: { params: Promise<{ local
         : ["ContrataCR conecta Clientes y Profesionales, pero no realiza los servicios profesionales.", "La contratación y los pagos se acuerdan directamente entre Usuarios.", "Los Usuarios deben actuar de forma legal, veraz y respetuosa.", "Las cuentas y el contenido pueden limitarse ante fraude, abuso o incumplimientos."]}
       sections={en ? EN_SECTIONS : ES_SECTIONS}
       footer={en ? (
-        <>Review our <Link href="/privacidad" className="font-semibold text-[#0089BB] hover:underline">Privacy Policy</Link> or the <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">account deletion</Link> page.</>
+        <>Review our <Link href="/privacidad" className="font-semibold text-[#0089BB] hover:underline">Privacy Policy</Link>.</>
       ) : (
-        <>Revise nuestra <Link href="/privacidad" className="font-semibold text-[#0089BB] hover:underline">Política de Privacidad</Link> o la página de <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">eliminación de cuenta</Link>.</>
+        <>Revise nuestra <Link href="/privacidad" className="font-semibold text-[#0089BB] hover:underline">Política de Privacidad</Link>.</>
       )}
     />
   );
