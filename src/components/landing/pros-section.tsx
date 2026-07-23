@@ -10,14 +10,14 @@ export async function ProsSection() {
   const t = await getTranslations("landing.carousel");
   const heroT = await getTranslations("landing.hero");
   return (
-    <section className="py-16 sm:py-24 bg-[#f4f7fa] overflow-hidden">
+    <section className="pt-24 pb-16 sm:py-24 bg-[#f4f7fa] overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744] leading-tight">
             {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>
           </h2>
-          <div className="mt-5 flex justify-center">
-            <SmartRegisterLink className="inline-flex min-h-11 w-full max-w-[260px] items-center justify-center rounded-xl bg-[#009FD9] px-5 text-sm font-extrabold text-white shadow-[0_14px_32px_-20px_rgba(0,159,217,0.95)] transition-colors hover:bg-[#0089bb] sm:w-auto sm:max-w-none">
+          <div className="mt-4 flex justify-center">
+            <SmartRegisterLink className="inline-flex min-h-10 w-full max-w-[230px] items-center justify-center rounded-lg bg-[#009FD9] px-4 text-sm font-extrabold text-white shadow-[0_12px_28px_-20px_rgba(0,159,217,0.95)] transition-colors hover:bg-[#0089bb] sm:w-auto sm:max-w-none sm:px-5">
               {heroT("proCta")}
             </SmartRegisterLink>
           </div>
