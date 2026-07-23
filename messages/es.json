@@ -741,6 +741,7 @@
       "errPhoneIncomplete": "Ingresa un número de teléfono completo para el país seleccionado.",
       "errServiceType": "Selecciona al menos un tipo de servicio",
       "errWorkplace": "Agrega al menos una zona donde ofreces tus servicios, o Todo Costa Rica si atiendes por videoconsulta.",
+      "errWorkplaceInPerson": "Agrega al menos una zona donde ofreces tus servicios.",
       "errCoverage": "Agrega al menos una zona a la que te desplazas.",
       "errIdRequired": "Identificación requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.",
       "errCreateAccount": "No se pudo crear la cuenta.",

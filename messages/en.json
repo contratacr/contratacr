@@ -742,6 +742,7 @@
       "errPhoneIncomplete": "Enter a complete phone number for the selected country.",
       "errServiceType": "Select at least one service type",
       "errWorkplace": "Add at least one area where you offer your services, or All Costa Rica if you attend by video consultation.",
+      "errWorkplaceInPerson": "Add at least one area where you offer your services.",
       "errCoverage": "Add at least one area you travel to.",
       "errIdRequired": "ID required. CR: 9 digits · DIMEX: 11-12 · NITE: 10.",
       "errCreateAccount": "We couldn't create the account.",
