@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Archive, ArchiveRestore, ArrowLeft, FileText, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -157,12 +158,26 @@ export function DirectChatInbox() {
   const [error, setError] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
   const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
+  const [imagePreview, setImagePreview] = useState<DirectAttachment | null>(null);
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const selectedAttachmentsRef = useRef<SelectedAttachment[]>([]);
   useContainedTouchScroll(scrollRef, mobileThread);
+
+  useEffect(() => {
+    if (!imagePreview) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setImagePreview(null);
+    };
+    const releaseBodyScroll = lockBodyScroll();
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      releaseBodyScroll();
+    };
+  }, [imagePreview]);
 
   useLayoutEffect(() => {
     if (!mobileThread) return;
@@ -400,10 +415,6 @@ export function DirectChatInbox() {
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!activeId || sending || (!draft.trim() && !selectedAttachments.length)) return;
-    if (activeId === DRAFT_CONVERSATION_ID && selectedAttachments.length) {
-      setAttachmentError(isEn ? "Send the first message before attaching files." : "Envia el primer mensaje antes de adjuntar archivos.");
-      return;
-    }
     const body = draft.trim(); const optimisticId = `pending-${Date.now()}`;
     const optimisticAttachments = selectedAttachments.map((attachment) => ({
       name: attachment.file.name,
@@ -414,8 +425,26 @@ export function DirectChatInbox() {
     setDraft(""); setSending(true); setError(""); setAttachmentError("");
     setMessages((current) => [...current, { id: optimisticId, sender_id: user?.id || "", body: body || (isEn ? "Attachment" : "Archivo adjunto"), attachment_urls: optimisticAttachments, created_at: new Date().toISOString() }]);
     try {
-      const attachmentUrls = activeId === DRAFT_CONVERSATION_ID ? [] : await uploadSelectedAttachments(activeId);
-      const payload = activeId === DRAFT_CONVERSATION_ID
+      let targetConversationId = activeId;
+      if (activeId === DRAFT_CONVERSATION_ID && selectedAttachments.length) {
+        const openRes = await fetch("/api/direct-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            professionalId: pendingDraftPayload?.professionalId,
+            bookingId: pendingDraftPayload?.bookingId,
+            projectId: pendingDraftPayload?.projectId,
+            proposalId: pendingDraftPayload?.proposalId,
+            contextTitle: pendingDraftPayload?.contextTitle,
+            openConversation: true,
+          }),
+        });
+        const openJson = await openRes.json();
+        if (!openRes.ok || !openJson.conversationId) throw new Error(openJson.error || "Error");
+        targetConversationId = openJson.conversationId;
+      }
+      const attachmentUrls = selectedAttachments.length ? await uploadSelectedAttachments(targetConversationId) : [];
+      const payload = activeId === DRAFT_CONVERSATION_ID && !selectedAttachments.length
         ? {
           professionalId: pendingDraftPayload?.professionalId,
           bookingId: pendingDraftPayload?.bookingId,
@@ -424,7 +453,7 @@ export function DirectChatInbox() {
           contextTitle: pendingDraftPayload?.contextTitle,
           message: body,
         }
-        : { conversationId: activeId, message: body, attachmentUrls };
+        : { conversationId: targetConversationId, message: body, attachmentUrls };
       const res = await fetch("/api/direct-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
@@ -590,35 +619,54 @@ export function DirectChatInbox() {
                     ? "max-w-[86%] rounded-br-md bg-[#009FD9] font-medium text-white sm:max-w-[78%]"
                     : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d] sm:max-w-[72%]",
                 )}>
-                  {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+                  {message.body && !(message.attachment_urls?.length && (message.body === "Archivo adjunto" || message.body === "Attachment")) && (
+                    <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                  )}
                   {!!message.attachment_urls?.length && (
-                    <div className={cn("mt-2 grid gap-2", message.body && "pt-1")}>
+                    <div className={cn("grid gap-2", message.body && message.body !== "Archivo adjunto" && message.body !== "Attachment" && "mt-2 pt-1")}>
                       {message.attachment_urls.map((attachment, index) => {
                         const href = attachment.url ?? undefined;
                         const image = isImageAttachment(attachment);
-                        return (
+                        return image ? (
+                          <button
+                            key={`${message.id}-${attachment.path ?? attachment.name}-${index}`}
+                            type="button"
+                            onClick={() => href && setImagePreview(attachment)}
+                            disabled={!href}
+                            className={cn(
+                              "group relative min-h-36 overflow-hidden rounded-xl border text-left transition",
+                              mine ? "border-white/30 bg-white/10 hover:bg-white/15" : "border-[#dce8f0] bg-[#f7fbfd] hover:border-[#b9d8e8]",
+                            )}
+                            aria-label={isEn ? `Open ${attachment.name}` : `Abrir ${attachment.name}`}
+                          >
+                            {href ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={href} alt={attachment.name} className="max-h-72 min-h-36 w-full object-cover" />
+                            ) : (
+                              <span className="grid min-h-36 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></span>
+                            )}
+                          </button>
+                        ) : (
                           <a
                             key={`${message.id}-${attachment.path ?? attachment.name}-${index}`}
                             href={href}
                             target="_blank"
                             rel="noreferrer"
                             className={cn(
-                              "group overflow-hidden rounded-xl border text-left transition",
+                              "group flex min-w-[220px] items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-left transition",
                               mine ? "border-white/30 bg-white/10 hover:bg-white/15" : "border-[#dce8f0] bg-[#f7fbfd] hover:border-[#b9d8e8]",
                             )}
                           >
-                            {image && href ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={href} alt={attachment.name} className="max-h-52 w-full object-cover" />
-                            ) : (
-                              <span className="flex items-center gap-2 px-3 py-2.5">
-                                <FileText className={cn("h-4 w-4 shrink-0", mine ? "text-white" : "text-[#009FD9]")} />
-                                <span className="min-w-0 flex-1">
-                                  <span className="block truncate text-xs font-extrabold">{attachment.name}</span>
-                                  <span className={cn("block text-[10px]", mine ? "text-white/75" : "text-[#6b7a90]")}>{attachmentLabel(attachment.size)}</span>
-                                </span>
-                              </span>
-                            )}
+                            <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-lg", mine ? "bg-white/15 text-white" : "bg-white text-[#009FD9]")}>
+                              <FileText className="h-5 w-5" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-xs font-extrabold">{attachment.name}</span>
+                              <span className={cn("block text-[10px]", mine ? "text-white/75" : "text-[#6b7a90]")}>PDF · {attachmentLabel(attachment.size)}</span>
+                            </span>
+                            <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full", mine ? "bg-white/15" : "bg-white")}>
+                              <Download className="h-4 w-4" />
+                            </span>
                           </a>
                         );
                       })}
@@ -637,8 +685,20 @@ export function DirectChatInbox() {
               {selectedAttachments.map((attachment) => (
                 <div key={attachment.id} className="relative flex h-16 min-w-40 max-w-48 items-center gap-2 rounded-xl border border-[#d8e5ee] bg-[#f7fbfd] p-2 pr-8">
                   {attachment.previewUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={attachment.previewUrl} alt={attachment.file.name} className="h-11 w-11 rounded-lg object-cover" />
+                     <button
+                       type="button"
+                       onClick={() => setImagePreview({
+                         name: attachment.file.name,
+                         type: attachment.file.type,
+                         size: attachment.file.size,
+                         url: attachment.previewUrl,
+                       })}
+                       className="h-11 w-11 shrink-0 overflow-hidden rounded-lg"
+                       aria-label={isEn ? `Preview ${attachment.file.name}` : `Vista previa de ${attachment.file.name}`}
+                     >
+                       {/* eslint-disable-next-line @next/next/no-img-element */}
+                       <img src={attachment.previewUrl} alt={attachment.file.name} className="h-full w-full object-cover" />
+                     </button>
                   ) : (
                     <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#e8f8ff] text-[#009FD9]"><FileText className="h-5 w-5" /></span>
                   )}
@@ -665,10 +725,9 @@ export function DirectChatInbox() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={sending || activeId === DRAFT_CONVERSATION_ID}
+            disabled={sending || selectedAttachments.length >= MAX_ATTACHMENTS}
             className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
             aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
-            title={activeId === DRAFT_CONVERSATION_ID ? (isEn ? "Send the first message before attaching files." : "Envia el primer mensaje antes de adjuntar archivos.") : undefined}
           >
             <Paperclip className="h-5 w-5" />
           </button>
@@ -700,6 +759,45 @@ export function DirectChatInbox() {
           </div>
         </form>
       </section>
+      {imagePreview?.url && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[1000] flex flex-col bg-black/95 text-white" role="dialog" aria-modal="true" aria-label={imagePreview.name}>
+          <div className="flex min-h-16 shrink-0 items-center gap-3 px-3 pt-[env(safe-area-inset-top)] sm:px-5">
+            <button
+              type="button"
+              onClick={() => setImagePreview(null)}
+              className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/10"
+              aria-label={isEn ? "Close image" : "Cerrar imagen"}
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <strong className="block truncate text-sm">{imagePreview.name}</strong>
+              <span className="text-xs text-white/65">{attachmentLabel(imagePreview.size)}</span>
+            </div>
+            {imagePreview.path && (
+              <a
+                href={imagePreview.url}
+                target="_blank"
+                rel="noreferrer"
+                className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/10"
+                aria-label={isEn ? "Download image" : "Descargar imagen"}
+              >
+                <Download className="h-5 w-5" />
+              </a>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setImagePreview(null)}
+            className="flex min-h-0 flex-1 items-center justify-center p-3 sm:p-6"
+            aria-label={isEn ? "Close image" : "Cerrar imagen"}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imagePreview.url} alt={imagePreview.name} className="max-h-full max-w-full select-none object-contain" />
+          </button>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }
