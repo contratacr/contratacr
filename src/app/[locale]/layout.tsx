@@ -36,8 +36,8 @@ function buildMetadata(locale: string): Metadata {
     ? "Find electricians, plumbers, painters, tutors and more verified professionals in your canton."
     : "Encuentra electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.";
   const socialDescription = isEn
-    ? "Find and hire professionals in Costa Rica"
-    : "Encuentra y contrata profesionales en Costa Rica";
+    ? "Offer and find services in Costa Rica"
+    : "Ofrece y encuentra servicios en Costa Rica";
   const socialImage = `/${locale}/opengraph-image`;
 
   return {

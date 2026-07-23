@@ -142,7 +142,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
             </a>
 
             <p className="text-center text-sm italic text-[#9ca3af]">
-              ContrataCR - {en ? "Find and hire professionals in Costa Rica." : "Encuentra y contrata profesionales en Costa Rica."}
+              ContrataCR - {en ? "Offer and find services in Costa Rica." : "Ofrece y encuentra servicios en Costa Rica."}
             </p>
           </div>
         </div>

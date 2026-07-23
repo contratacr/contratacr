@@ -1,6 +1,5 @@
 import { Link } from "@/i18n/navigation";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
-import { PrivacyPreferences } from "@/components/legal/privacy-preferences";
 
 const ES_SECTIONS: LegalSection[] = [
   {
@@ -89,7 +88,7 @@ const ES_SECTIONS: LegalSection[] = [
         "**Firebase:** entrega de notificaciones push.",
         "**OpenAI:** procesamiento de consultas dirigidas al asistente.",
         "**Google y proveedores de mapas:** inicio de sesión, mapas, ubicación y servicios relacionados.",
-        "**Meta:** medición de campañas mediante Meta Pixel cuando esté habilitado.",
+        "**Meta:** medición de campañas mediante Meta Pixel para entender el rendimiento de nuestros anuncios.",
         "Proveedores de correo y otros servicios necesarios para comunicaciones, seguridad y soporte.",
       ] },
       { k: "p", text: "Algunos proveedores pueden procesar datos fuera de Costa Rica. Procuramos trabajar con proveedores que ofrecen medidas contractuales, técnicas y organizativas apropiadas. También podemos comunicar información a autoridades cuando exista una obligación legal." },
@@ -100,7 +99,7 @@ const ES_SECTIONS: LegalSection[] = [
     h: "6. Cookies, analítica y publicidad",
     body: [
       { k: "p", text: "Usamos cookies o almacenamiento local necesarios para mantener la sesión, recordar el idioma, conservar preferencias, proteger la cuenta y mejorar el rendimiento." },
-      { k: "p", text: "También podemos medir visitas y acciones para comprender el uso de ContrataCR y el rendimiento de campañas. Meta Pixel puede informar a Meta que una visita o acción ocurrió en ContrataCR. No recibe el contenido privado de sus mensajes. Cuando la legislación o la plataforma lo requieran, solicitaremos el consentimiento correspondiente." },
+      { k: "p", text: "También medimos visitas y acciones para comprender el uso de ContrataCR y el rendimiento de campañas. Meta Pixel puede informar a Meta que una visita o acción ocurrió en ContrataCR. No recibe el contenido privado de sus mensajes, solicitudes, propuestas ni conversaciones." },
       { k: "p", text: "Puede limitar cookies desde su navegador y gestionar permisos de ubicación y notificaciones desde el sistema operativo. Desactivar tecnologías necesarias puede afectar algunas funciones." },
     ],
   },
@@ -186,7 +185,7 @@ const EN_SECTIONS: LegalSection[] = [
     { k: "p", text: "Some providers may process data outside Costa Rica. We seek providers with appropriate contractual, technical, and organizational safeguards. We may also disclose information when legally required." },
   ] },
   { id: "cookies", h: "6. Cookies, analytics, and advertising", body: [
-    { k: "p", text: "We use cookies or local storage for session, language, preferences, security, and performance. We may also measure visits and actions. Meta Pixel may tell Meta that a visit or action occurred on ContrataCR, but it does not receive private message content." },
+    { k: "p", text: "We use cookies or local storage for session, language, preferences, security, and performance. We also measure visits and actions. Meta Pixel may tell Meta that a visit or action occurred on ContrataCR, but it does not receive private messages, requests, proposals, or conversation content." },
     { k: "p", text: "You can manage cookies in your browser and location or notification permissions in your operating system. Disabling necessary technologies may affect functionality." },
   ] },
   { id: "retention", h: "7. Retention and deletion", body: [
@@ -234,12 +233,10 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
       footer={en ? (
         <div>
           Review our <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Terms and Conditions</Link> or <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">request account deletion</Link>.
-          <PrivacyPreferences />
         </div>
       ) : (
         <div>
           Revise nuestros <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Términos y Condiciones</Link> o <Link href="/eliminar-cuenta" className="font-semibold text-[#0089BB] hover:underline">solicite eliminar su cuenta</Link>.
-          <PrivacyPreferences />
         </div>
       )}
     />

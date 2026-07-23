@@ -32,7 +32,7 @@ function shell(headline: string, bodyHtml: string, cta?: { href: string; label: 
       </td></tr>
       ${cta ? `<tr><td align="center" style="padding:22px 32px 4px 32px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#008ce0" style="border-radius:10px;"><a href="${cta.href}" target="_blank" style="display:inline-block;padding:13px 30px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;">${escapeHtml(cta.label)}</a></td></tr></table></td></tr>` : ""}
       <tr><td align="center" style="padding:22px 32px 30px 32px;font-family:Arial,Helvetica,sans-serif;">
-        <p style="font-size:12px;line-height:1.6;color:#9ca3af;margin:0;border-top:1px solid #eef1f5;padding-top:16px;"><strong style="color:#162543;">ContrataCR</strong> — Encuentra y contrata profesionales en Costa Rica</p>
+        <p style="font-size:12px;line-height:1.6;color:#9ca3af;margin:0;border-top:1px solid #eef1f5;padding-top:16px;"><strong style="color:#162543;">ContrataCR</strong> — Ofrece y encuentra servicios en Costa Rica</p>
       </td></tr>
     </table>
   </td></tr></table></body>`;

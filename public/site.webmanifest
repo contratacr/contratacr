@@ -2,7 +2,7 @@
   "id": "/",
   "name": "ContrataCR",
   "short_name": "ContrataCR",
-  "description": "Encuentra y contrata profesionales de servicios en Costa Rica.",
+  "description": "Ofrece y encuentra servicios en Costa Rica.",
   "start_url": "/es",
   "scope": "/",
   "icons": [
