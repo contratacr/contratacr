@@ -493,8 +493,9 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
+  const insideLegalDocument = /\/(terminos|privacidad|eliminar-cuenta)(\/|$)/.test(pathname);
 
-  if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
+  if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin") || (!embedded && insideLegalDocument)) return null;
   if (!embedded && nativeApp && !open) return null;
   if (!embedded && !open) {
     return (

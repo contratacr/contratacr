@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
+import { CheckCircle2, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,6 +9,7 @@ import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { Button } from "@/components/ui/button";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
+import { Link } from "@/i18n/navigation";
 
 /* Where each provider lets the user manage their account/email + sign-in security.
    Shown to OAuth users instead of fields that wouldn't work here. */
@@ -422,6 +423,25 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             </button>
           </div>
         )}
+      </div>
+
+      <div className="rounded-2xl border border-[#f3d5d5] bg-white p-5">
+        <div className="flex items-start gap-3">
+          <Trash2 className="mt-0.5 h-4 w-4 shrink-0 text-[#b42318]" />
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-semibold text-[#374151]">
+              {locale === "en" ? "Delete account" : "Eliminar cuenta"}
+            </h3>
+            <p className="mt-1 text-xs leading-5 text-[#6b7280]">
+              {locale === "en"
+                ? "Request permanent deletion of your account and associated personal data."
+                : "Solicite la eliminación permanente de su cuenta y los datos personales asociados."}
+            </p>
+            <Link href="/eliminar-cuenta" className="mt-3 inline-flex text-sm font-semibold text-[#b42318] hover:underline">
+              {locale === "en" ? "Review and request deletion" : "Revisar y solicitar eliminación"}
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
