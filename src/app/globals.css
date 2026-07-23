@@ -119,6 +119,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
+    background: #fff;
     padding-bottom: 0;
     -webkit-overflow-scrolling: touch;
   }
@@ -530,6 +531,7 @@ input::-ms-clear {
 
 @media (max-width: 1023px) {
   .contratacr-chat-thread-open .dashboard-mobile-nav,
+  .contratacr-chat-thread-open .ccr-app-header,
   .contratacr-chat-thread-open .ccr-native-bottom-nav,
   .contratacr-chat-thread-open [data-ai-concierge-button],
   .contratacr-ai-open .dashboard-mobile-nav {
@@ -558,11 +560,6 @@ input::-ms-clear {
     min-height: 0;
     border-radius: 0;
     overscroll-behavior: none;
-  }
-
-  html.ccr-native-app.contratacr-chat-thread-open .direct-chat-shell--thread {
-    top: calc(var(--app-visual-viewport-top) + var(--ccr-native-header-height));
-    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height));
   }
 
   html.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-thread-scroll {
