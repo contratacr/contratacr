@@ -25,6 +25,8 @@ type AssistantResponse = {
     verified: boolean;
     profileHref: string;
     requestHref: string;
+    actionLabel: string;
+    actionKind: "availability" | "message";
   }>;
 };
 
@@ -232,7 +234,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       ["necesito ayuda con redes sociales", "marketing_digital"],
       ["I need someone to fix a water leak", "plomeria"],
       ["My dog needs grooming", "peluqueria_canina"],
-      ["I want to learn English", "idiomas"],
+      ["I want to learn English", "clases_ingles"],
       ["My car will not start", "mecanica"],
       ["I need a lawyer in San Jose", "legal"],
     ] as const;
@@ -303,6 +305,32 @@ test.describe("@seeded ContrataCR AI", () => {
   test.afterAll(async () => {
     if (!professionalSnapshot || !seed?.professionalId) return;
     await regressionAdminClient().from("professionals").update(professionalSnapshot).eq("id", seed.professionalId);
+  });
+
+  test("does not promise availability when a matched professional has no public slots", async ({ page }) => {
+    const admin = regressionAdminClient();
+    await admin.from("availability_slots").delete().eq("professional_id", seed.professionalId);
+
+    try {
+      await gotoOK(page, "/es");
+      const response = await ask(page, "Necesito un plomero en Atenas, Alajuela");
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
+      expect(response.body.action).toBe("search_professionals");
+      const professional = response.body.professionals?.find((item) => item.id === seed.professionalId);
+      expect(professional, JSON.stringify(response.body.professionals)).toBeTruthy();
+      expect(professional?.actionKind).toBe("message");
+      expect(professional?.actionLabel).toBe("Enviar mensaje");
+      expect(professional?.actionLabel).not.toBe("Ver disponibilidad");
+    } finally {
+      const { error } = await admin.from("availability_slots").insert({
+        professional_id: seed.professionalId,
+        slot_date: seed.slotDate,
+        slot_time: seed.slotTime,
+        category_id: seed.categoryId,
+        location_id: "e2e-main",
+      });
+      if (error && error.code !== "23505") throw error;
+    }
   });
 
   test("answers product questions with stable, actionable destinations", async ({ page }) => {

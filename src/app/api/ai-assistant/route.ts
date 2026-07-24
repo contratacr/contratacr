@@ -1334,10 +1334,44 @@ function wantsVideoIntent(text: string) {
 
 type ProfessionalSearchResult = Awaited<ReturnType<typeof searchProfessionals>>[number];
 
+function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function assistantAvailabilityByProfessional(professionals: ProfessionalSearchResult[]) {
+  const ids = [...new Set(professionals.map((professional) => professional.id).filter(Boolean))];
+  const availability = new Map<string, boolean>();
+  if (ids.length === 0) return availability;
+
+  const potentiallyBookableIds = professionals
+    .filter((professional) => professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp")
+    .map((professional) => professional.id);
+  if (potentiallyBookableIds.length === 0) return availability;
+
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("availability_slots")
+      .select("professional_id")
+      .in("professional_id", potentiallyBookableIds)
+      .gte("slot_date", todayIsoDate())
+      .limit(200);
+    if (error) throw error;
+    for (const row of data ?? []) {
+      if (typeof row.professional_id === "string") availability.set(row.professional_id, true);
+    }
+  } catch (error) {
+    console.warn("[ai-assistant] availability check fallback", error);
+  }
+
+  return availability;
+}
+
 function assistantProfessionalResult(
   professional: ProfessionalSearchResult,
   locale: Locale,
   serviceId?: string | null,
+  hasPublicAvailability = false,
 ): AssistantProfessionalResult {
   const service =
     serviceId ? getCategoryLabel(serviceId, locale) :
@@ -1348,7 +1382,7 @@ function assistantProfessionalResult(
     || (professional.videoconsulta ? (locale === "en" ? "Video consultation" : "Videoconsulta") : "Costa Rica");
   const profileHref = `/${locale}/profesionales/${professional.slug}`;
   const actionKind: "availability" | "message" =
-    professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp"
+    hasPublicAvailability && professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp"
       ? "availability"
       : "message";
   return {
@@ -1535,9 +1569,13 @@ export async function POST(req: Request) {
     const resultCta = locale === "en"
       ? `See ${resultCount} ${resultCount === 1 ? "professional" : "professionals"}`
       : `Ver ${resultCount} ${resultCount === 1 ? "profesional" : "profesionales"}`;
-    const assistantProfessionals = hasResults
-      ? matchedProfessionals.slice(0, 3).map((professional) => assistantProfessionalResult(professional, locale, payload.serviceId))
-      : [];
+    const shownProfessionals = hasResults ? matchedProfessionals.slice(0, 3) : [];
+    const availabilityByProfessional = hasResults
+      ? await assistantAvailabilityByProfessional(shownProfessionals)
+      : new Map<string, boolean>();
+    const assistantProfessionals = shownProfessionals.map((professional) =>
+      assistantProfessionalResult(professional, locale, payload.serviceId, availabilityByProfessional.get(professional.id) === true)
+    );
     const singleProfessionalHref = resultCount === 1 ? assistantProfessionals[0]?.profileHref ?? null : null;
     const servicePhrase = requestedServiceLabel || (locale === "en" ? "that service" : "ese servicio");
     const placePhrase = requestedPlaceLabel || "Costa Rica";
