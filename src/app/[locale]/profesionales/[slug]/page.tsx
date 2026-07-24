@@ -516,7 +516,7 @@ export default function ProfilePage() {
             </aside>
 
             {/* ── TABBED CONTENT (LEFT on desktop; contact card is the right aside) ── */}
-            <div className="flex-1 min-w-0 lg:order-1">
+            <div id="resenas" className="flex-1 min-w-0 scroll-mt-24 lg:order-1">
               <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] overflow-hidden">
 
                 {/* Tab bar */}

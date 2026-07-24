@@ -324,13 +324,17 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {/* Rating + review count — DIRECTLY under the tags (only the count links out). */}
           <div className="basis-full lg:basis-auto">
             {professional.reviewCount > 0 ? (
-              <span className="inline-flex w-fit items-center gap-1.5">
+              <Link
+                href={`/profesionales/${professional.slug}?tab=resenas#resenas`}
+                className="relative z-10 inline-flex w-fit items-center gap-1.5 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+              >
                 <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
                 <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                <Link href={`/profesionales/${professional.slug}?tab=resenas`} className="relative z-10 text-[11px] font-medium text-[#9ca3af] hover:underline">
+                <span className="text-[11px] font-medium text-[#9ca3af] hover:underline">
                   ({tCard("reviewsCount", { count: professional.reviewCount })})
-                </Link>
-              </span>
+                </span>
+              </Link>
             ) : (
               <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
                 <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
