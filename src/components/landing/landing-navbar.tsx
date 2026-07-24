@@ -139,7 +139,7 @@ function LanguageMenu() {
       type="button"
       onClick={() => switchLang(nextLocale)}
       aria-label={locale === "en" ? "Cambiar a español" : "Switch to English"}
-      className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
+      className="relative z-[70] inline-flex h-10 min-w-10 shrink-0 items-center justify-center rounded-xl px-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
     >
       {label}
     </button>
@@ -1136,7 +1136,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               <div className={cn("flex-1", mobileInline && "hidden lg:block")} />
 
               {/* Right actions */}
-              <div className="hidden w-[340px] justify-end lg:flex items-center gap-2 shrink-0">
+              <div className="relative z-[60] hidden w-[340px] justify-end lg:flex items-center gap-2 shrink-0">
                 {authLoading && !user ? (
                   <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
                     <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
@@ -1332,8 +1332,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[76vw] max-w-[320px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
-            mobileOpen ? "translate-x-0" : "-translate-x-full"
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[76vw] max-w-[320px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-[transform,visibility] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            mobileOpen ? "visible translate-x-0 pointer-events-auto" : "invisible -translate-x-full pointer-events-none"
           )}
         >
           <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
@@ -1429,9 +1429,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
 
               <button
                 type="button"
-                onClick={() => {
-                  setMobileOpen(false);
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
                   switchLang(alternateLocale);
+                  setMobileOpen(false);
                 }}
                 className={mobileDrawerItemClass}
               >
