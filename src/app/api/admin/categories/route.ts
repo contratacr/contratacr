@@ -524,10 +524,33 @@ async function syncProfessionalServiceNames(
   }));
 }
 
+const REVIEW_REASON_MAX_LENGTH = 1000;
+const REVIEW_REASON_NOTIFICATION_PREVIEW_LENGTH = 180;
+
 function normalizeReviewReason(value: unknown): string | null {
   if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
+  const trimmed = value.replace(/\s+/g, " ").trim();
+  if (!trimmed) return null;
+  if (trimmed.length <= REVIEW_REASON_MAX_LENGTH) return trimmed;
+  return trimmed.slice(0, REVIEW_REASON_MAX_LENGTH).trimEnd();
+}
+
+function notificationReasonPreview(reason: string): string {
+  if (reason.length <= REVIEW_REASON_NOTIFICATION_PREVIEW_LENGTH) return reason;
+  return `${reason.slice(0, REVIEW_REASON_NOTIFICATION_PREVIEW_LENGTH - 1).trimEnd()}...`;
+}
+
+function notificationData(
+  decision: "approved" | "rejected",
+  serviceName: string,
+  reviewReason?: string | null
+) {
+  return {
+    link: "/dashboard/profesional?tab=notifications",
+    suggestion_decision: decision,
+    service_name: serviceName,
+    ...(reviewReason ? { review_reason: reviewReason } : {}),
+  };
 }
 
 function suggestionNotificationMessage(
@@ -542,7 +565,8 @@ function suggestionNotificationMessage(
     };
   }
 
-  const safeReason = reason && reason.trim() ? ` Motivo: ${reason.trim()}` : "";
+  const normalizedReason = normalizeReviewReason(reason);
+  const safeReason = normalizedReason ? ` Motivo: ${notificationReasonPreview(normalizedReason)}` : "";
   return {
     title: "Sugerencia rechazada",
     message: `Tu sugerencia "${name}" no fue aprobada.${safeReason}`,
@@ -570,9 +594,7 @@ async function notifySuggestionDecision(
     user_id: suggestionRow.suggested_by,
     title,
     message,
-    data: {
-      link: "/dashboard/profesional?tab=notifications",
-    },
+    data: notificationData(decision, serviceName, reviewReason),
   };
 
   const primary = await db.from("notifications").insert({

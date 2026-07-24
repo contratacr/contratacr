@@ -104,6 +104,8 @@ type AdminDialogState = {
   rejectSuggestionId?: string;
 };
 
+const REVIEW_REASON_MAX_LENGTH = 1000;
+
 function AdminDialog({
   dialog,
   busy,
@@ -147,6 +149,11 @@ function AdminDialog({
                 rows={3}
                 className="h-24 w-full rounded-xl border border-[#dbeafe] bg-white px-3 py-2 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/20"
               />
+              {dialog.input.maxLength && (
+                <p className="text-right text-[11px] font-medium text-[#9ca3af]">
+                  {dialog.input.value.length}/{dialog.input.maxLength}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -538,7 +545,7 @@ export function AdminCategories() {
       rejectReasonRefs.current[i.id] = existing;
       setDialog({
         title: "Rechazar sugerencia",
-        description: `Si quieres, agrega un motivo corto para ayudar a quien sugirió el servicio.`,
+        description: `Si quieres, agrega un motivo para ayudar a quien sugirió el servicio.`,
         detail: `Sugerencia: "${nameOf(i)}".`,
         confirmLabel: "Rechazar",
         cancelLabel: "Cancelar",
@@ -546,8 +553,8 @@ export function AdminCategories() {
         rejectSuggestionId: i.id,
         input: {
           label: "Motivo (opcional)",
-          placeholder: "Ej. Servicio duplicado",
-          maxLength: 160,
+          placeholder: "Ej. Servicio duplicado o no suficientemente específico",
+          maxLength: REVIEW_REASON_MAX_LENGTH,
           value: existing,
           onChange: (value) => {
             rejectReasonRefs.current[i.id] = value;

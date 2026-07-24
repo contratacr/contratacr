@@ -272,7 +272,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                           {/* No role tag — title + message already make the
                               context clear; clicking still routes correctly. */}
                           <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] break-words line-clamp-2">{notificationTitle(n)}</p>
-                          <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+                          <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#6b7280] [overflow-wrap:anywhere] break-words">
                             {n.message}
                           </p>
                           <p className="text-xs text-[#9ca3af] mt-1">
