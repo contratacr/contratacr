@@ -8,7 +8,7 @@ import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
-import { notificationHref, notificationInMode } from "@/lib/notification-link";
+import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
@@ -180,6 +180,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const role = user?.user_metadata?.role as string | undefined;
 
   function open(n: Notification) {
+    const href = notificationActionHref(n, role, locale);
     if (!n.read) {
       setNotificationState((prev) => {
         const next = prev.items.map((item) => (item.id === n.id ? { ...item, read: true } : item));
@@ -191,7 +192,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         window.dispatchEvent(new CustomEvent("notificationsChanged"));
       });
     }
-    router.push(notificationHref(n, role, locale));
+    if (href) router.push(href);
   }
 
   async function dismiss(e: React.MouseEvent, id: string) {
@@ -285,7 +286,10 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                       open(n);
                     }
                   }}
-                  className="w-full cursor-pointer text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors"
+                  className={cn(
+                    "w-full text-left px-4 py-3 pr-16 transition-colors",
+                    notificationActionHref(n, role, locale) ? "cursor-pointer hover:bg-[#f9fafb]" : "cursor-default",
+                  )}
                 >
                   {/* Per-type leading icon (grey circle) + a brand-blue unread dot at its corner. */}
                   <div className="flex items-start gap-3">

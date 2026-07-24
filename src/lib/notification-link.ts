@@ -135,6 +135,15 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
   return withLocale(withTargetParams(href, n.data), locale);
 }
 
+const NON_NAVIGABLE_TYPES = new Set([
+  "suggestion_rejected",
+]);
+
+export function notificationActionHref(n: NotificationLinkInput, role?: string, locale = "es"): string | null {
+  if (NON_NAVIGABLE_TYPES.has(n.type) && !n.data?.link) return null;
+  return notificationHref(n, role, locale);
+}
+
 export function notificationsCenterHref(locale = "es"): string {
   return withLocale("/notificaciones", locale);
 }

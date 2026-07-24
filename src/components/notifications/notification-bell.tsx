@@ -7,7 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationHref, notificationInMode } from "@/lib/notification-link";
+import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
@@ -193,7 +193,8 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       });
     }
     const role = user?.user_metadata?.role as string | undefined;
-    const href = notificationHref(n, role, locale);
+    const href = notificationActionHref(n, role, locale);
+    if (!href) return;
     if (user) await Promise.race([prefetchDashboardDataForNotification(user.id, n.type), wait(320)]);
     router.prefetch(href);
     router.push(href);
@@ -268,7 +269,12 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                   >
                     <button
                       onClick={() => openNotification(n)}
-                      className="w-full text-left px-4 py-3 pr-9 hover:bg-[#f3f4f6] transition-colors"
+                      className={cn(
+                        "w-full text-left px-4 py-3 pr-9 transition-colors",
+                        notificationActionHref(n, user?.user_metadata?.role as string | undefined, locale)
+                          ? "cursor-pointer hover:bg-[#f3f4f6]"
+                          : "cursor-default",
+                      )}
                     >
                       <div className="flex items-start gap-2.5">
                         <div className="relative shrink-0">
