@@ -130,6 +130,15 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           window.dispatchEvent(new CustomEvent("notificationsChanged"));
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const deleted = payload.old as Pick<Notification, "id">;
+          updateNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
+          window.dispatchEvent(new CustomEvent("notificationsChanged"));
+        }
+      )
       .subscribe();
 
     // Clean up on unmount / user change so the channel is removed exactly once

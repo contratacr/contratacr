@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
@@ -25,7 +25,12 @@ type Notification = {
   message: string;
   read: boolean;
   created_at: string;
-  data?: { link?: string; project_id?: string | null; project_created_at?: string | null } | null;
+  data?: {
+    link?: string;
+    project_id?: string | null;
+    project_created_at?: string | null;
+    review_reason?: string | null;
+  } | null;
 };
 
 // ONE consistent notification icon everywhere — the Bell, matching the panel-nav
@@ -53,6 +58,8 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     : (readCachedNotifications(user?.id) as Notification[] | null) ?? [];
   const [busy, setBusy] = useState(initialCache === null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const projectTimes = useNotificationProjectTimes(items);
 
   const loadNotifications = useCallback(() => {
@@ -91,19 +98,49 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   useEffect(() => {
     if (!user) return;
     function onChanged() { loadNotifications(); }
+    function onVisible() {
+      if (document.visibilityState === "visible") loadNotifications();
+    }
     window.addEventListener("notificationsChanged", onChanged);
+    window.addEventListener("focus", onChanged);
+    window.addEventListener("pageshow", onChanged);
+    document.addEventListener("visibilitychange", onVisible);
     const id = window.setInterval(onChanged, 5000);
     return () => {
       window.removeEventListener("notificationsChanged", onChanged);
+      window.removeEventListener("focus", onChanged);
+      window.removeEventListener("pageshow", onChanged);
+      document.removeEventListener("visibilitychange", onVisible);
       window.clearInterval(id);
     };
   }, [user, loadNotifications]);
+
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`notifications-list-${user.id}-${instanceId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => loadNotifications(),
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [instanceId, loadNotifications, user]);
 
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
   const notificationTitle = (n: Notification) =>
     n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
+  const notificationMessage = (n: Notification) => {
+    const fullReason = n.data?.review_reason?.trim();
+    if (!fullReason) return n.message;
+    if (/\bMotivo:/i.test(n.message)) return n.message.replace(/\bMotivo:[\s\S]*$/i, `Motivo: ${fullReason}`);
+    if (/\bReason:/i.test(n.message)) return n.message.replace(/\bReason:[\s\S]*$/i, `Reason: ${fullReason}`);
+    return n.message;
+  };
   const notificationTime = (n: Notification) => {
     const projectCreatedAt = getNotificationProjectCreatedAt(n, projectTimes);
     return projectCreatedAt
@@ -233,9 +270,23 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         ) : (
           <ul>
             {visible.map((n) => {
+              const message = notificationMessage(n);
+              const canExpand = message.length > 180;
+              const expanded = expandedIds.has(n.id);
               return (
               <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f3f9fd]")}>
-                <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => open(n)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      open(n);
+                    }
+                  }}
+                  className="w-full cursor-pointer text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors"
+                >
                   {/* Per-type leading icon (grey circle) + a brand-blue unread dot at its corner. */}
                   <div className="flex items-start gap-3">
                     <div className="relative shrink-0">
@@ -245,14 +296,34 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                       {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#009FD9] ring-2 ring-white" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      {/* overflow-wrap:anywhere breaks long unbroken strings; line-clamp keeps
-                          every row a uniform, compact height (full text on open). */}
                       <p className={cn("text-sm [overflow-wrap:anywhere] break-words line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{notificationTitle(n)}</p>
-                      <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#6b7280] [overflow-wrap:anywhere] break-words">{n.message}</p>
+                      <p className={cn(
+                        "mt-0.5 whitespace-pre-line text-xs leading-snug text-[#6b7280] [overflow-wrap:anywhere] break-words",
+                        !expanded && "line-clamp-3",
+                      )}>{message}</p>
+                      {canExpand && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setExpandedIds((current) => {
+                              const next = new Set(current);
+                              if (next.has(n.id)) next.delete(n.id);
+                              else next.add(n.id);
+                              return next;
+                            });
+                          }}
+                          className="mt-1 text-xs font-semibold text-[#009FD9] hover:underline"
+                        >
+                          {expanded
+                            ? (locale === "en" ? "Show less" : "Ver menos")
+                            : (locale === "en" ? "Show more" : "Ver más")}
+                        </button>
+                      )}
                       <p className="text-xs text-[#9ca3af] mt-1">{notificationTime(n)}</p>
                     </div>
                   </div>
-                </button>
+                </div>
                 {/* Two distinct actions, intentionally different icons so they're
                     never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
                 <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">

@@ -227,6 +227,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
         .from("notifications")
         .select("*")
         .eq("user_id", user!.id)
+        .eq("read", false)
         .order("created_at", { ascending: false })
         .limit(1);
       const latest = data?.[0] as Notification | undefined;

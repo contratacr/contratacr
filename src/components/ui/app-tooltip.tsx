@@ -27,7 +27,7 @@ export function AppTooltip({ label, children, className, tooltipClassName, side 
       <span
         role="tooltip"
         className={cn(
-          "pointer-events-none absolute z-50 max-w-[210px] rounded-lg bg-[#162543] px-2.5 py-1.5 text-center text-[11px] font-bold leading-tight text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100",
+          "pointer-events-none absolute z-50 max-w-[210px] rounded-lg bg-[#162543] px-2.5 py-1.5 text-center text-[11px] font-bold leading-tight text-white opacity-0 shadow-lg transition [@media(hover:hover)]:group-hover:opacity-100",
           sideClass,
           alignClass,
           tooltipClassName,
