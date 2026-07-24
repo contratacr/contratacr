@@ -17,6 +17,17 @@ function cleanTranslation(value: unknown) {
   return normalizeServiceDisplayName(typeof value === "string" ? value : "");
 }
 
+function cleanPlainTranslation(value: unknown) {
+  return typeof value === "string"
+    ? value
+        .replace(/&#39;/g, "'")
+        .replace(/&quot;/g, "\"")
+        .replace(/&amp;/g, "&")
+        .replace(/\s+/g, " ")
+        .trim()
+    : "";
+}
+
 export function normalizeServiceDisplayName(value: string) {
   const clean = value.trim().replace(/\s+/g, " ");
   if (!clean) return "";
@@ -112,6 +123,33 @@ async function translateWithApiKey(label: string, target: TranslateTarget, sourc
   return cleanTranslation(data?.data?.translations?.[0]?.translatedText);
 }
 
+async function translateTextWithApiKey(texts: string[], target: TranslateTarget, source?: TranslateTarget) {
+  const key = process.env.GOOGLE_TRANSLATE_API_KEY?.trim();
+  if (!key) return [];
+
+  const url = new URL(BASIC_TRANSLATE_URL);
+  url.searchParams.set("key", key);
+
+  const body: Record<string, string | string[]> = {
+    q: texts,
+    target,
+    format: "text",
+  };
+  if (source) body.source = source;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+
+  const data = await res.json();
+  const translations = Array.isArray(data?.data?.translations) ? data.data.translations : [];
+  return translations.map((item: { translatedText?: unknown }) => cleanPlainTranslation(item?.translatedText));
+}
+
 async function translateWithServiceAccount(label: string, projectId: string, target: TranslateTarget, source?: TranslateTarget) {
   const token = await getAccessToken();
   if (!token) return "";
@@ -141,6 +179,36 @@ async function translateWithServiceAccount(label: string, projectId: string, tar
   return cleanTranslation(data?.translations?.[0]?.translatedText);
 }
 
+async function translateTextWithServiceAccount(texts: string[], projectId: string, target: TranslateTarget, source?: TranslateTarget) {
+  const token = await getAccessToken();
+  if (!token) return [];
+
+  const location = process.env.GOOGLE_TRANSLATE_LOCATION?.trim() || DEFAULT_LOCATION;
+  const url = `https://translation.googleapis.com/v3/projects/${encodeURIComponent(projectId)}/locations/${encodeURIComponent(location)}:translateText`;
+
+  const body: Record<string, unknown> = {
+    contents: texts,
+    mimeType: "text/plain",
+    targetLanguageCode: target,
+  };
+  if (source) body.sourceLanguageCode = source;
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+
+  const data = await res.json();
+  const translations = Array.isArray(data?.translations) ? data.translations : [];
+  return translations.map((item: { translatedText?: unknown }) => cleanPlainTranslation(item?.translatedText));
+}
+
 export async function translateServiceLabel(label: string, target: TranslateTarget, source?: TranslateTarget): Promise<string> {
   const cleanLabel = normalizeServiceDisplayName(label);
   const fallback = localFallback(cleanLabel, target);
@@ -160,6 +228,22 @@ export async function translateServiceLabel(label: string, target: TranslateTarg
     return translated;
   } catch {
     return fallback;
+  }
+}
+
+export async function translatePlainTexts(texts: string[], target: TranslateTarget, source?: TranslateTarget): Promise<string[]> {
+  const cleanTexts = texts.map((text) => text.trim()).filter(Boolean).slice(0, 10);
+  if (cleanTexts.length === 0) return [];
+
+  try {
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID?.trim();
+    const translated = projectId
+      ? await translateTextWithServiceAccount(cleanTexts, projectId, target, source)
+      : await translateTextWithApiKey(cleanTexts, target, source);
+
+    return cleanTexts.map((original, index) => translated[index] || original);
+  } catch {
+    return cleanTexts;
   }
 }
 

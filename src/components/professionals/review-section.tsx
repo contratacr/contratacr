@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { Star } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,6 +43,52 @@ export function ReviewSection({
 }: ReviewSectionProps) {
   const t = useTranslations("profile");
   const locale = useLocale();
+  const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
+  const commentsToTranslate = useMemo(
+    () => reviews.filter((review) => review.comment.trim()).map((review) => ({ id: review.id, comment: review.comment.trim() })),
+    [reviews]
+  );
+
+  useEffect(() => {
+    let active = true;
+    if (locale !== "en" || commentsToTranslate.length === 0) {
+      setTranslatedComments({});
+      return;
+    }
+
+    async function translateComments() {
+      const missing = commentsToTranslate.filter((review) => !translatedComments[review.id]);
+      if (missing.length === 0) return;
+
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          texts: missing.map((review) => review.comment),
+          source: "es",
+          target: "en",
+        }),
+      }).catch(() => null);
+      if (!res?.ok) return;
+
+      const data = await res.json().catch(() => null);
+      const translations = Array.isArray(data?.translations) ? data.translations : [];
+      if (!active) return;
+
+      setTranslatedComments((prev) => {
+        const next = { ...prev };
+        missing.forEach((review, index) => {
+          const translated = typeof translations[index] === "string" ? translations[index].trim() : "";
+          if (translated) next[review.id] = translated;
+        });
+        return next;
+      });
+    }
+
+    translateComments();
+    return () => { active = false; };
+  }, [commentsToTranslate, locale, translatedComments]);
+
   return (
     <>
       <div className="flex items-center justify-between mb-5">
@@ -74,7 +121,7 @@ export function ReviewSection({
                 {jobTitle && (
                   <p className="text-xs text-[#9ca3af] mt-0.5">{t("reviewOf", { title: jobTitle })}</p>
                 )}
-                <p className="text-sm text-[#374151] leading-relaxed mt-1">{review.comment}</p>
+                <p className="text-sm text-[#374151] leading-relaxed mt-1">{translatedComments[review.id] ?? review.comment}</p>
               </div>
             </div>
           );

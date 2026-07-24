@@ -141,6 +141,17 @@ export default function ProfilePage() {
       .catch(() => setPanelHref(null));
   }, []);
 
+  useEffect(() => {
+    if (!professional || typeof window === "undefined") return;
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab !== "resenas") return;
+
+    setActiveTab("resenas");
+    window.setTimeout(() => {
+      document.getElementById("resenas")?.scrollIntoView({ block: "start" });
+    }, 0);
+  }, [professional]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
