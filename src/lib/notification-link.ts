@@ -140,7 +140,7 @@ const NON_NAVIGABLE_TYPES = new Set([
 ]);
 
 export function notificationActionHref(n: NotificationLinkInput, role?: string, locale = "es"): string | null {
-  if (NON_NAVIGABLE_TYPES.has(n.type) && !n.data?.link) return null;
+  if (NON_NAVIGABLE_TYPES.has(n.type)) return null;
   return notificationHref(n, role, locale);
 }
 
