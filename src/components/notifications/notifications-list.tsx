@@ -135,9 +135,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       cacheNotifications(user?.id, next);
       return { userId: user?.id, items: next };
     });
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").update({ read: true }).eq("id", id);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   const role = user?.user_metadata?.role as string | undefined;
@@ -150,8 +150,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         return { userId: user?.id, items: next };
       });
       const supabase = createClient();
-      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
-      window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {
+        window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      });
     }
     router.push(notificationHref(n, role, locale));
   }
@@ -163,9 +164,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       cacheNotifications(user?.id, next);
       return { userId: user?.id, items: next };
     });
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").delete().eq("id", id);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   async function doDeleteAll() {
@@ -178,9 +179,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       cacheNotifications(user.id, next);
       return { userId: user.id, items: next };
     });
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").delete().in("id", ids);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   return (

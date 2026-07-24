@@ -30,15 +30,18 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   const router = useRouter();
   const t = useTranslations("notifications");
   const locale = useLocale();
+  const initialCachedNotifications = readCachedNotifications(user?.id);
   const [notificationState, setNotificationState] = useState(() => ({
     userId: user?.id,
-    items: readCachedNotifications(user?.id) ?? [],
+    items: initialCachedNotifications ?? [],
   }));
+  const [hasSyncedNotifications, setHasSyncedNotifications] = useState(() => initialCachedNotifications !== null);
   const notifications = useMemo(
     () => notificationState.userId === user?.id ? notificationState.items : readCachedNotifications(user?.id) ?? [],
     [notificationState, user?.id],
   );
   const updateNotifications = useCallback((updater: (prev: Notification[]) => Notification[]) => {
+    setHasSyncedNotifications(true);
     setNotificationState((prev) => {
       const base = prev.userId === user?.id ? prev.items : readCachedNotifications(user?.id) ?? [];
       return { userId: user?.id, items: updater(base) };
@@ -64,7 +67,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     : scope === "use"
       ? notificationUnread.use + notificationUnread.neutral
       : notificationUnread.offer + notificationUnread.use + notificationUnread.neutral;
-  const unreadCount = cachedUnreadCount || serverUnreadCount;
+  const unreadCount = hasSyncedNotifications ? cachedUnreadCount : serverUnreadCount;
   const notificationTitle = (n: Notification) =>
     n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
 
@@ -83,12 +86,15 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         const next = uniqueNotifications(data ?? []);
         setNotificationState({ userId: user.id, items: next });
         cacheNotifications(user.id, next);
+        setHasSyncedNotifications(true);
       });
   }, [user]);
 
   useEffect(() => {
     queueMicrotask(() => {
-      setNotificationState({ userId: user?.id, items: readCachedNotifications(user?.id) ?? [] });
+      const cached = readCachedNotifications(user?.id);
+      setNotificationState({ userId: user?.id, items: cached ?? [] });
+      setHasSyncedNotifications(cached !== null);
     });
   }, [user?.id]);
 
@@ -172,9 +178,10 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     setOpen(false);
     if (!n.read) {
       const supabase = createClient();
-      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
       updateNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
-      window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {
+        window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      });
     }
     const role = user?.user_metadata?.role as string | undefined;
     const href = notificationHref(n, role, locale);
@@ -186,9 +193,9 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   async function dismiss(e: React.MouseEvent, id: string) {
     e.stopPropagation();
     updateNotifications((prev) => prev.filter((n) => n.id !== id));
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").delete().eq("id", id);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   if (!user) return null;
