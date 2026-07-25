@@ -526,8 +526,9 @@ export async function PATCH(req: NextRequest) {
     }
   } catch (e) { console.error("[PATCH /api/bookings] notify:", e); }
 
-  // When a booking is marked completed, prompt the client to leave a review.
-  if (status === "completed") {
+  // When a booking is truly completed for the first time, prompt the client to
+  // leave a review. This must never fire for retries or already-completed rows.
+  if (status === "completed" && bookingRow.status !== "completed" && bookingRow.client_id) {
     try {
       const { data: booking } = await admin
         .from("bookings")

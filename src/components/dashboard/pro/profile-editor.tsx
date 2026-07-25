@@ -596,11 +596,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // official name (it's locked; corrections go through admin review).
       const cleanFullName = limitText(fullName.trim(), NAME_MAX_LENGTH);
       if (cleanFullName && !nameLocked) {
-        await supabase.from("profiles").update({ full_name: cleanFullName }).eq("id", profileId);
+        const { error: nameError } = await supabase.from("profiles").update({ full_name: cleanFullName }).eq("id", profileId);
+        if (nameError) throw nameError;
         // Mirror into auth metadata so the header/menu (which read
         // user_metadata.full_name) update IMMEDIATELY — updateUser fires
         // onAuthStateChange (USER_UPDATED), which useAuth subscribes to. No reload.
-        await supabase.auth.updateUser({ data: { full_name: cleanFullName } });
+        const { error: authError } = await supabase.auth.updateUser({ data: { full_name: cleanFullName } });
+        if (authError) console.warn("[profile-editor] auth metadata sync failed:", authError.message);
       }
 
       // Core + locations succeeded → the profile is saved. ALWAYS clear `dirty` here so the

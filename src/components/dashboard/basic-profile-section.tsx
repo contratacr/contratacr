@@ -171,7 +171,8 @@ export function BasicProfileSection({
       }
     }
     if (!verified && cleanName) {
-      await supabase.auth.updateUser({ data: { full_name: cleanName } });
+      const { error: authError } = await supabase.auth.updateUser({ data: { full_name: cleanName } });
+      if (authError) console.warn("[basic-profile] auth metadata sync failed:", authError.message);
     }
     window.dispatchEvent(new Event("ccr:profile-updated"));
     if (isCurrentSave()) {
