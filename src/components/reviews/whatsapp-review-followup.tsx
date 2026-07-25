@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Clock3, Star, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,6 +29,7 @@ export function WhatsAppReviewFollowUp() {
   const [pendingCount, setPendingCount] = useState(0);
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const handledFollowUpId = useRef<string | null>(null);
 
   const act = useCallback(async (item: FollowUp, action: "hired" | "not_now" | "not_hired") => {
     const response = await fetch("/api/contact/follow-up", {
@@ -53,6 +54,10 @@ export function WhatsAppReviewFollowUp() {
       if (!active) return;
       setPendingCount(Number(payload.pendingCount ?? (item ? 1 : 0)));
       if (!item) {
+        setFollowUp(null);
+        return;
+      }
+      if (item.id === handledFollowUpId.current) {
         setFollowUp(null);
         return;
       }
@@ -101,6 +106,7 @@ export function WhatsAppReviewFollowUp() {
       if (result?.review) {
         setReviewTarget(result.review);
       } else {
+        handledFollowUpId.current = followUp.id;
         window.setTimeout(() => void checkFollowUp(true), 500);
       }
       setFollowUp(null);

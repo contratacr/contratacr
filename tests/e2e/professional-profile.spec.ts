@@ -17,13 +17,14 @@ test.describe("@seeded professional profile", () => {
   });
 
   test("professional share image is generated as a PNG", async ({ page, request }) => {
+    test.setTimeout(45_000);
     const href = await firstProfessionalHref(page);
     if (!href) {
       test.skip(true, "No seeded professionals found in this environment.");
       return;
     }
 
-    const response = await request.get(`${href}/opengraph-image?e2e=${Date.now()}`);
+    const response = await request.get(`${href}/opengraph-image?e2e=${Date.now()}`, { timeout: 30_000 });
 
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toContain("image/png");

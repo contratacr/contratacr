@@ -89,11 +89,13 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(page.getByTestId("panel-tab-proposals").filter({ visible: true })).toHaveCount(1);
     await expect(page.getByTestId("panel-tab-chat").filter({ visible: true })).toHaveCount(0);
     await expect(page.getByTestId("panel-tab-notifications").filter({ visible: true })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /Abrir asistente de ContrataCR|Open ContrataCR assistant/i })).toBeVisible();
-
     if (isMobileProject(testInfo)) {
       await expect(page).not.toHaveURL(/tab=bookings/);
       await expect(page.getByTestId("panel-tab-services").filter({ visible: true })).toHaveCount(1);
+      await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).click();
+      await expect(page.getByText(/Asistente|Assistant/i).filter({ visible: true }).first()).toBeVisible();
+    } else {
+      await expect(page.getByRole("button", { name: /Abrir asistente de ContrataCR|Open ContrataCR assistant/i })).toBeVisible();
     }
 
     await expectHealthyPage(page);
