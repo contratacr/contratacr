@@ -2747,7 +2747,8 @@
     "mecanica_bicicletas": "Bicycle Repair",
     "hojalateria": "Auto Body",
     "electricidad_automotriz": "Auto Electrical",
-    "tapiceria": "Upholstery",
+    "tapiceria": "Furniture Upholstery",
+    "tapiceria_automotriz": "Automotive Upholstery",
     "detailing": "Car Detailing",
     "cambio_llantas": "Tire Change"
   },
