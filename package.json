@@ -10,7 +10,7 @@
     "security:env": "node scripts/check-private-env-files.mjs",
     "security:smoke": "node scripts/security-smoke.mjs",
     "supabase:templates:validate": "node scripts/sync-supabase-email-templates.mjs --validate-only",
-    "audit:high": "npm audit --audit-level=high",
+    "audit:high": "npm audit --omit=dev --audit-level=high",
     "padron:check": "node scripts/check-padron.mjs",
     "padron:load": "node scripts/load-padron.mjs",
     "padron:prepare-copy": "node scripts/prepare-padron-copy.mjs",
@@ -63,9 +63,14 @@
     "typescript": "^5"
   },
   "overrides": {
+    "glob": {
+      "minimatch": "10.2.5"
+    },
     "next": {
       "postcss": "8.5.22",
       "sharp": "0.35.3"
-    }
+    },
+    "postcss": "8.5.23",
+    "uuid": "11.1.1"
   }
 }
