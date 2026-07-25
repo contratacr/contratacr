@@ -2,6 +2,13 @@ name: Regression Tests
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - test
+
+concurrency:
+  group: regression-test
+  cancel-in-progress: true
 
 jobs:
   e2e:
