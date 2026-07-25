@@ -1074,6 +1074,7 @@ const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   mecanica_bicicletas: ["arreglar bicicleta", "reparar bici", "mecanico de bicicletas", "taller de bicicletas", "arreglar cleta"],
   grua: ["ocupo grua", "carro varado", "remolcar carro", "asistencia en carretera"],
   polarizado: ["polarizar carro", "poner polarizado", "lamina solar carro"],
+  detailing: ["pulir el carro", "quiero pulir el carro", "pulir carro", "encerar el carro", "detallado de carro"],
   aire_acondicionado: ["arreglar aire acondicionado", "instalar aire acondicionado", "mantenimiento de aire"],
   soporte_tecnico: ["la compu no conecta"],
   fumigacion: ["hay cucarachas en la cocina"],

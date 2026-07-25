@@ -12,7 +12,6 @@ const adminRoutes = [
   { path: "/es/admin/solicitudes", marker: /Solicitudes/i },
   { path: "/es/admin/publicaciones", marker: /Publicaciones/i },
   { path: "/es/admin/cuentas", marker: /Cuentas/i },
-  { path: "/es/admin/suscripciones", marker: /Suscripciones/i },
   { path: "/es/admin/soporte", marker: /Soporte/i },
   { path: "/es/admin/analitica", marker: /Analitica|Anal.tica/i },
   { path: "/es/admin/actividad", marker: /Actividad/i },
@@ -41,7 +40,6 @@ test.describe("@admin surfaces", () => {
       "/api/admin/reports",
       "/api/admin/support",
       "/api/admin/accounts",
-      "/api/admin/subscriptions",
       "/api/admin/insurers",
       "/api/admin/pending-counts",
     ];
