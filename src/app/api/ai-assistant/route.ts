@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
-import { categorySearchScore, getAllCategories, getCategoryLabel, resolveCategoryIntent, searchCategories } from "@/lib/data/categories";
+import {
+  categorySearchScore,
+  getAllCategories,
+  getCategoryLabel,
+  resolveCategoryIntent,
+  resolveStrongCategoryIntent,
+  searchCategories,
+} from "@/lib/data/categories";
 import { allLocationSuggestions, resolveLocation } from "@/lib/data/location-search";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -7,6 +14,7 @@ import { assistantPageContext, CONTRATACR_PRODUCT_KNOWLEDGE } from "@/lib/ai/pro
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { primaryPricingLabel } from "@/lib/pricing";
 
 type Locale = "es" | "en";
 type Role = "assistant" | "user";
@@ -36,6 +44,23 @@ type AssistantPayload = {
   ctaLabel?: string | null;
   confidence?: number;
   selectedResultIndex?: number | null;
+};
+
+type AssistantProfessionalResult = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  service: string;
+  location: string;
+  verified: boolean;
+  rating: number | null;
+  reviewCount: number;
+  price: string | null;
+  profileHref: string;
+  requestHref: string;
+  actionHref: string;
+  actionLabel: string;
+  actionKind: "availability" | "message";
 };
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -256,6 +281,9 @@ function naturalCatalogOverride(text: string, labels: Map<string, string>) {
   if (has("tubo", "tuberia", "fuga de agua", "caneria", "inodoro", "lavamanos")) {
     return availableCategoryId(labels, ["plomeria"], ["plomeria"]);
   }
+  if (has("mantenimiento de aire", "aire acondicionado", "mini split", "minisplit")) {
+    return availableCategoryId(labels, ["aire_acondicionado"], ["aire acondicionado"]);
+  }
   if (
     has("lavadora", "secadora", "refrigeradora", "nevera", "cocina", "horno", "microondas", "lavaplatos") &&
     has("reparar", "arreglar", "no funciona", "no enciende", "dejo de funcionar")
@@ -367,6 +395,8 @@ function naturalCatalogOverride(text: string, labels: Map<string, string>) {
 function safeCatalogCategoryMatch(text: string, locale: Locale, labels: Map<string, string>) {
   const direct = exactCatalogPhraseMatch(text, labels) ?? naturalCatalogOverride(text, labels);
   if (direct) return direct;
+  const strongIntent = resolveStrongCategoryIntent(text, locale);
+  if (strongIntent && labels.has(strongIntent.id)) return strongIntent.id;
   const strong = strongCategoryMention([text], locale);
   if (strong && labels.has(strong)) return strong;
   const confident = confidentCategoryMatch(text, locale);
@@ -386,6 +416,49 @@ function genericUnclearRequest(text: string) {
     "necesito un profesional",
     "ocupo un profesional",
   ]);
+}
+
+const AMBIGUOUS_SERVICE_WORDS = new Set([
+  "ayuda",
+  "asesoria",
+  "mantenimiento",
+  "reparacion",
+  "reparar",
+  "arreglar",
+  "soporte",
+  "tecnico",
+]);
+
+const AMBIGUOUS_INTENT_WORDS = new Set([
+  "necesito",
+  "ocupo",
+  "quiero",
+  "busco",
+  "buscar",
+  "un",
+  "una",
+  "uno",
+  "de",
+  "del",
+  "para",
+  "con",
+  "en",
+  "por",
+  "favor",
+  "servicio",
+  "servicios",
+  "profesional",
+]);
+
+function ambiguousGenericServiceRequest(text: string) {
+  const normalized = normalizedPhrase(text);
+  if (AMBIGUOUS_SERVICE_WORDS.has(normalized)) return true;
+  const words = normalized.split(" ").filter(Boolean);
+  if (words.length === 0) return false;
+  const meaningfulWords = words.filter((word) => !AMBIGUOUS_INTENT_WORDS.has(word));
+  if (meaningfulWords.length === 0) return false;
+  if (!meaningfulWords.every((word) => AMBIGUOUS_SERVICE_WORDS.has(word))) return false;
+  return words.some((word) => AMBIGUOUS_SERVICE_WORDS.has(word));
 }
 
 function clearMissingServiceName(text: string) {
@@ -432,10 +505,11 @@ function confidentCategoryMatch(text: string, locale: Locale) {
 }
 
 function categoryClarification(text: string, locale: Locale, labels: Map<string, string>) {
-  const options = searchCategories(text, locale)
+  const tailored = ambiguousClarificationOptions(text, labels);
+  const options = (tailored.length > 0 ? tailored : searchCategories(text, locale)
     .slice(0, 3)
     .map((item) => labels.get(item.id) || getCategoryLabel(item.id, locale))
-    .filter(Boolean);
+    .filter(Boolean));
   if (options.length === 0) {
     return locale === "en"
       ? "Which service do you need? Please write the service name so I can search correctly."
@@ -447,6 +521,28 @@ function categoryClarification(text: string, locale: Locale, labels: Map<string,
     : `Para buscar correctamente, ¿se refiere a ${formatted}?`;
 }
 
+function ambiguousClarificationOptions(text: string, labels: Map<string, string>) {
+  if (!ambiguousGenericServiceRequest(text)) return [];
+  const normalized = normalizedPhrase(text);
+  const pick = (ids: string[]) => ids
+    .map((id) => labels.get(id))
+    .filter((label): label is string => Boolean(label));
+
+  if (normalized.includes("soporte") || normalized.includes("tecnico")) {
+    return pick(["soporte_tecnico", "reparacion_computadoras", "redes_internet"]);
+  }
+  if (normalized.includes("reparacion") || normalized.includes("reparar") || normalized.includes("arreglar")) {
+    return pick(["reparacion_computadoras", "reparacion_celulares", "reparacion_electrodomesticos"]);
+  }
+  if (normalized.includes("mantenimiento")) {
+    return pick(["aire_acondicionado", "jardineria", "limpieza_piscinas"]);
+  }
+  if (normalized.includes("asesoria") || normalized.includes("ayuda")) {
+    return pick(["asesoria_tributaria", "asesoria_financiera", "consultoria"]);
+  }
+  return [];
+}
+
 function resolveAssistantCategory(
   rawMessage: string,
   history: HistoryMessage[],
@@ -454,6 +550,8 @@ function resolveAssistantCategory(
   modelServiceId: string | null | undefined,
   labels: Map<string, string>,
 ) {
+  if (ambiguousGenericServiceRequest(rawMessage)) return { id: null, needsClarification: true };
+
   const rawPlace = resolveLocationIntent(rawMessage);
   const pendingServiceFromAssistant = rawPlace ? latestClarificationService(history, locale, labels) : null;
   if (pendingServiceFromAssistant) return { id: pendingServiceFromAssistant.id, needsClarification: false };
@@ -518,6 +616,10 @@ function freeTextSearchHref(message: string) {
   const query = message.trim();
   if (query) params.set("q", query);
   return `/buscar${params.toString() ? `?${params.toString()}` : ""}`;
+}
+
+function userMessagePlace(message: string) {
+  return resolveLocationIntent(message);
 }
 
 function localAnswer(message: string, locale: Locale): AssistantPayload {
@@ -603,7 +705,9 @@ Rules:
 - If the message has a service but no location, ask which Costa Rica area. If it has a location but no service, ask which service.
 - Distinguish finding professionals from publishing a request. Words such as "busco", "profesional", "especialista", "opciones", "quienes hay" or a follow-up location mean search_professionals, not publish_request.
 - Never switch an existing professional search to publish_request unless the user explicitly asks to publish/create a request. Offering a request after zero results does not change the user's intent.
-- Preserve the most recent service and location in follow-up messages. A role word such as "especialista" must not replace an explicit trade such as "redes".
+- Preserve the most recent service only when the latest user message is a direct follow-up with a Costa Rica location. Do not invent, infer or reuse a location unless the latest user message explicitly mentions that location.
+- A fresh service-only message such as "limpieza" must ask for the Costa Rica area without naming any province or canton.
+- A role word such as "especialista" must not replace an explicit trade such as "redes".
 - For creating a request, collect only the missing service and Costa Rica location. Once both are known, set action=publish_request and offer to open the form; the form collects job details.
 - Never claim that you will create, publish, submit or complete a request for the person. Only the person can review and publish it from the form.
 - Use the matching navigation action when the person wants to open services, register, sign in, reset a password, open their dashboard, support or help.
@@ -677,7 +781,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
     const service = payload.serviceId
       ? { id: payload.serviceId }
       : resolveCategoryIntent(payload.searchQuery || originalMessage, locale);
-    const place = resolveLocationIntent(payload.locationText || "") ?? resolveLocationIntent(originalMessage);
+    const place = userMessagePlace(originalMessage);
     const params = new URLSearchParams({ mode: "use", tab: "sent_projects", openPublish: "1" });
     if (service?.id) params.set("categoria", service.id);
     if (place?.type === "province") params.set("provincia", place.id);
@@ -720,7 +824,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
     return freeTextSearchHref(payload.searchQuery);
   }
   const seed = payload.searchQuery || originalMessage;
-  return resolveSearch(seed, locale, payload.serviceId, payload.locationText).href;
+  return resolveSearch(seed, locale, payload.serviceId, null).href;
 }
 
 function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
@@ -767,9 +871,6 @@ function normalizePayload(
   const recentUserService = recentUserMessages
     .map((item) => safeCatalogCategoryMatch(item, locale, labels))
     .find(Boolean);
-  const recentUserPlace = recentUserMessages
-    .map((item) => resolveLocationIntent(item))
-    .find(Boolean) ?? null;
   const messageOnlyHasPlace = !!currentPlace && !!pendingServiceFromAssistant;
   const directService = (messageOnlyHasPlace ? pendingServiceFromAssistant : messageCategory)
     ?? (messageOnlyHasPlace && recentUserService ? { id: recentUserService } : null)
@@ -780,9 +881,7 @@ function normalizePayload(
       return payloadService ? { id: payloadService } : null;
     })()
     ?? (recentUserService ? { id: recentUserService } : null);
-  const directPlace = currentPlace
-    ?? resolveLocationIntent(payload.locationText || "")
-    ?? recentUserPlace;
+  const directPlace = currentPlace;
   const directPlaceLabel = formatPlaceLabel(directPlace);
   const publishDetailText = message.replace(PUBLISH_REQUEST_PHRASE_RE, " ");
   const publishDetailMeaning = meaningfulRequestText(publishDetailText);
@@ -1040,6 +1139,7 @@ function normalizePayload(
       ...payload,
       action: "answer",
       serviceId: directService.id,
+      locationText: null,
       answer: locale === "en"
         ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
         : `¿En qué zona de Costa Rica desea buscar ${serviceLabel}?`,
@@ -1234,13 +1334,84 @@ function wantsVideoIntent(text: string) {
 
 type ProfessionalSearchResult = Awaited<ReturnType<typeof searchProfessionals>>[number];
 
+function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function assistantAvailabilityByProfessional(professionals: ProfessionalSearchResult[]) {
+  const ids = [...new Set(professionals.map((professional) => professional.id).filter(Boolean))];
+  const availability = new Map<string, boolean>();
+  if (ids.length === 0) return availability;
+
+  const potentiallyBookableIds = professionals
+    .filter((professional) => professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp")
+    .map((professional) => professional.id);
+  if (potentiallyBookableIds.length === 0) return availability;
+
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("availability_slots")
+      .select("professional_id")
+      .in("professional_id", potentiallyBookableIds)
+      .gte("slot_date", todayIsoDate())
+      .limit(200);
+    if (error) throw error;
+    for (const row of data ?? []) {
+      if (typeof row.professional_id === "string") availability.set(row.professional_id, true);
+    }
+  } catch (error) {
+    console.warn("[ai-assistant] availability check fallback", error);
+  }
+
+  return availability;
+}
+
+function assistantProfessionalResult(
+  professional: ProfessionalSearchResult,
+  locale: Locale,
+  serviceId?: string | null,
+  hasPublicAvailability = false,
+): AssistantProfessionalResult {
+  const service =
+    serviceId ? getCategoryLabel(serviceId, locale) :
+    professional.categoryId ? getCategoryLabel(professional.categoryId, locale) :
+    locale === "en" ? "Professional service" : "Servicio profesional";
+  const location = professional.workplaces?.[0]?.name?.trim()
+    || [professional.cantonName, professional.provinceName].filter(Boolean).join(", ")
+    || (professional.videoconsulta ? (locale === "en" ? "Video consultation" : "Videoconsulta") : "Costa Rica");
+  const profileHref = `/${locale}/profesionales/${professional.slug}`;
+  const actionKind: "availability" | "message" =
+    hasPublicAvailability && professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp"
+      ? "availability"
+      : "message";
+  return {
+    id: professional.id,
+    name: professional.businessName?.trim() || professional.fullName,
+    avatarUrl: professional.avatarUrl || null,
+    service,
+    location,
+    verified: professional.verificationStatus === "verified",
+    rating: typeof professional.ratingAvg === "number" && professional.reviewCount > 0 ? professional.ratingAvg : null,
+    reviewCount: professional.reviewCount || 0,
+    price: primaryPricingLabel(professional.pricing, professional.hourlyRate, locale) || null,
+    profileHref,
+    requestHref: profileHref,
+    actionHref: profileHref,
+    actionLabel: actionKind === "availability"
+      ? locale === "en" ? "View availability" : "Ver disponibilidad"
+      : locale === "en" ? "Send message" : "Enviar mensaje",
+    actionKind,
+  };
+}
+
 async function realProfessionalMatches(payload: AssistantPayload, originalMessage: string, locale: Locale): Promise<ProfessionalSearchResult[]> {
   if (payload.action !== "search_professionals") return [];
   if (payload.confidence === 0 && !payload.serviceId) return [];
   const seed = payload.searchQuery || originalMessage;
-  const resolved = resolveSearch(payload.serviceId ? (payload.locationText || originalMessage) : originalMessage, locale, payload.serviceId, payload.locationText);
+  const resolved = resolveSearch(originalMessage, locale, payload.serviceId, null);
   const category = payload.serviceId ? { id: payload.serviceId } : resolved.category;
-  const place = resolved.place ?? resolveSearch(originalMessage, locale, null, payload.locationText).place;
+  const place = resolved.place;
   const videoIntent = wantsVideoIntent(`${originalMessage} ${payload.searchQuery ?? ""} ${payload.locationText ?? ""}`);
   let professionals = await searchProfessionals({
     categoryId: category?.id,
@@ -1314,11 +1485,37 @@ export async function POST(req: Request) {
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
     const payload = safetyPayload ?? normalizePayload(aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history, catalog.labels);
-    const hasValidResolvedService = !!payload.serviceId && catalog.labels.has(payload.serviceId);
+    const needsGenericClarification = ambiguousGenericServiceRequest(rawMessage);
+    const hasValidResolvedService = !needsGenericClarification && !!payload.serviceId && catalog.labels.has(payload.serviceId);
     const resolvedCategory = hasValidResolvedService
       ? { id: payload.serviceId!, needsClarification: false }
       : resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
     const missingServiceName = !resolvedCategory.id ? clearMissingServiceName(rawMessage) : null;
+    if (payload.action === "suggest_service" && resolvedCategory.id && !explicitPublishIntent) {
+      const serviceLabel = catalog.labels.get(resolvedCategory.id) || getCategoryLabel(resolvedCategory.id, locale);
+      const placeLabel = formatPlaceLabel(userMessagePlace(rawMessage));
+      payload.action = placeLabel ? "search_professionals" : "answer";
+      payload.answer = placeLabel
+        ? locale === "en"
+          ? `I found professionals for ${serviceLabel} in ${placeLabel}.`
+          : `Encontré profesionales de ${serviceLabel} en ${placeLabel}.`
+        : locale === "en"
+          ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
+          : `¿En qué zona de Costa Rica desea buscar ${serviceLabel}?`;
+      payload.searchQuery = serviceLabel;
+      payload.serviceId = resolvedCategory.id;
+      payload.locationText = placeLabel;
+      payload.ctaLabel = null;
+      payload.confidence = 0.9;
+    }
+    if (needsGenericClarification && !explicitPublishIntent) {
+      payload.action = "answer";
+      payload.answer = categoryClarification(rawMessage, locale, catalog.labels);
+      payload.searchQuery = null;
+      payload.serviceId = null;
+      payload.locationText = null;
+      payload.ctaLabel = null;
+    }
     if (missingServiceName && !explicitPublishIntent) {
       payload.action = "suggest_service";
       payload.answer = locale === "en"
@@ -1372,6 +1569,14 @@ export async function POST(req: Request) {
     const resultCta = locale === "en"
       ? `See ${resultCount} ${resultCount === 1 ? "professional" : "professionals"}`
       : `Ver ${resultCount} ${resultCount === 1 ? "profesional" : "profesionales"}`;
+    const shownProfessionals = hasResults ? matchedProfessionals.slice(0, 3) : [];
+    const availabilityByProfessional = hasResults
+      ? await assistantAvailabilityByProfessional(shownProfessionals)
+      : new Map<string, boolean>();
+    const assistantProfessionals = shownProfessionals.map((professional) =>
+      assistantProfessionalResult(professional, locale, payload.serviceId, availabilityByProfessional.get(professional.id) === true)
+    );
+    const singleProfessionalHref = resultCount === 1 ? assistantProfessionals[0]?.profileHref ?? null : null;
     const servicePhrase = requestedServiceLabel || (locale === "en" ? "that service" : "ese servicio");
     const placePhrase = requestedPlaceLabel || "Costa Rica";
     const assistantAnswer = noResults
@@ -1398,11 +1603,11 @@ export async function POST(req: Request) {
       serviceId: payload.serviceId ?? null,
       searchHref: noResults
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
-        : searchHref,
+        : singleProfessionalHref ?? searchHref,
       ctaLabel: noResults
         ? locale === "en" ? "Publish request" : "Publicar solicitud"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),
-      professionals: [],
+      professionals: assistantProfessionals,
       suggestedService,
       selectedResultIndex: payload.action === "select_professional" && Number.isInteger(payload.selectedResultIndex)
         ? payload.selectedResultIndex

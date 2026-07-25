@@ -8,6 +8,7 @@ import { DirectChatLauncher } from "@/components/professionals/direct-chat-launc
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -240,7 +241,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (section === "saved" || document.visibilityState !== "visible") return;
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     const elapsed = Date.now() - lastSilentRefreshRef.current;
-    const delay = elapsed < 900 ? 900 - elapsed : 350;
+    const delay = elapsed < 1600 ? 1600 - elapsed : 700;
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
       void fetchSection(false);
@@ -264,7 +265,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
         void fetchSection(false);
         if (section === "projects") void reloadLoadedProjectProposals();
       }
-    }, 5000);
+    }, 15000);
     return () => window.clearInterval(id);
   }, [fetchSection, loading, reloadLoadedProjectProposals, section, user]);
 
@@ -610,7 +611,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               {filteredBookings.length === 0 ? (
                 <p className="text-sm text-[#6b7280] text-center py-8">{t("noBookingsView")}</p>
               ) : (
-                <div className="flex flex-col gap-3.5">
+                <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
                   {filteredBookings.map((b) => {
                     const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
                     return (
@@ -836,7 +837,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               action={<Button className="lg:hidden" onClick={() => setShowPublish(true)}>{t("publishProject")}</Button>}
             />
           ) : (
-            <div className="flex flex-col gap-3.5">
+            <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />
               {filteredProjects.length === 0 && (
                 <p className="text-sm text-[#6b7280] text-center py-8">{t("noProjectsView")}</p>
@@ -1180,17 +1181,21 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
       {/* DELETE publicación — clean on-brand confirm modal (replaces window.confirm). */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => !deleting && setDeleteTarget(null)} aria-hidden />
-          <div role="dialog" aria-modal="true" aria-label={t("deleteTitle")} className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]">
-            <h2 className="text-base font-bold text-[#111827]">{t("deleteTitle")}</h2>
-            <p className="mt-1 text-sm text-[#6b7280]">{t("deleteBody")}</p>
-            <div className="mt-4 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 rounded-lg" onClick={() => setDeleteTarget(null)} disabled={deleting}>{t("cancelBack")}</Button>
-              <Button size="sm" className="flex-1 rounded-lg bg-red-600 hover:bg-red-700" onClick={confirmDeleteProject} disabled={deleting} loading={deleting}>{t("delete")}</Button>
-            </div>
-          </div>
-        </div>
+        <Modal
+          onClose={() => { if (!deleting) setDeleteTarget(null); }}
+          title={t("deleteTitle")}
+          size="sm"
+          mobilePresentation="center"
+          footerClassName="justify-center sm:justify-end"
+          footer={(
+            <>
+              <Button variant="outline" size="sm" className="flex-1 rounded-lg sm:flex-none" onClick={() => setDeleteTarget(null)} disabled={deleting}>{t("cancelBack")}</Button>
+              <Button size="sm" className="flex-1 rounded-lg bg-red-600 hover:bg-red-700 sm:flex-none" onClick={confirmDeleteProject} disabled={deleting} loading={deleting}>{t("delete")}</Button>
+            </>
+          )}
+        >
+          <p className="text-sm leading-6 text-[#6b7280]">{t("deleteBody")}</p>
+        </Modal>
       )}
 
       {/* REPORT professional — clean on-brand modal (replaces window.prompt). */}

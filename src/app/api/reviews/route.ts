@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
+import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 
 // Per-finished-job reviews: a review is tied to a specific completed booking
 // (solicitud) OR project (proyecto). A client can review EACH finished item with
 // the same professional separately. The profile aggregates them.
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const { professionalId, rating, comment, bookingId, projectId, contactId } = await req.json();
 
   if (!professionalId || !rating) {
@@ -162,6 +163,18 @@ export async function POST(req: Request) {
       console.error("[reviews] failed to notify professional:", notificationError.message);
     }
   }
+  await recordServerInteraction(createAdminClient(), req, {
+    type: "review_created",
+    professionalId,
+    viewerUserId: user.id,
+    source: bookingId ? "booking" : projectId ? "project" : contactId ? "whatsapp_followup" : "profile",
+    metadata: {
+      booking_id: bookingId ?? null,
+      project_id: projectId ?? null,
+      whatsapp_contact_id: contactId ?? null,
+      rating: r,
+    },
+  });
   return NextResponse.json({ ok: true, edited: false });
 }
 

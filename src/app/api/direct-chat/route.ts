@@ -19,6 +19,27 @@ type ConversationRow = {
   professional_deleted_at?: string | null;
   [key: string]: unknown;
 };
+type DirectAttachment = {
+  path: string;
+  name: string;
+  type: string;
+  size: number;
+  url?: string | null;
+};
+type DirectMessageRow = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  attachment_urls?: unknown;
+  read_at?: string | null;
+  created_at: string;
+};
+
+const ATTACHMENT_BUCKET = "direct-message-attachments";
+const MAX_ATTACHMENTS = 3;
+const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+const ALLOWED_ATTACHMENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 
 async function currentUser() {
   const supabase = await createClient();
@@ -28,6 +49,33 @@ async function currentUser() {
 
 function participant(row: ConversationRow, userId: string) {
   return row.client_id === userId || row.professional_profile_id === userId;
+}
+
+function normalizeAttachments(value: unknown, conversationId: string, senderId: string): DirectAttachment[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, MAX_ATTACHMENTS).flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const raw = item as Record<string, unknown>;
+    const path = typeof raw.path === "string" ? raw.path : "";
+    const name = typeof raw.name === "string" ? raw.name.slice(0, 120) : "archivo";
+    const type = typeof raw.type === "string" ? raw.type : "";
+    const size = typeof raw.size === "number" ? raw.size : Number(raw.size ?? 0);
+    const expectedPrefix = `${conversationId}/${senderId}/`;
+    if (!path.startsWith(expectedPrefix) || !ALLOWED_ATTACHMENT_TYPES.has(type) || !Number.isFinite(size) || size <= 0 || size > MAX_ATTACHMENT_BYTES) return [];
+    return [{ path, name, type, size }];
+  });
+}
+
+async function signMessageAttachments(db: ReturnType<typeof createAdminClient>, rows: DirectMessageRow[]) {
+  return Promise.all(rows.map(async (row) => {
+    const refs = normalizeAttachments(row.attachment_urls, row.conversation_id, row.sender_id);
+    if (!refs.length) return { ...row, attachment_urls: [] };
+    const signed = await Promise.all(refs.map(async (attachment) => {
+      const { data } = await db.storage.from(ATTACHMENT_BUCKET).createSignedUrl(attachment.path, 60 * 60);
+      return { ...attachment, url: data?.signedUrl ?? null };
+    }));
+    return { ...row, attachment_urls: signed };
+  }));
 }
 
 function missingParticipantDeleteColumns(error: { code?: string; message?: string } | null | undefined) {
@@ -97,7 +145,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: readError?.message ?? unreadError?.message }, { status: 500 });
     }
     const [enriched] = await enrichConversations(db, [conversation]);
-    return NextResponse.json({ conversation: enriched, messages: messages ?? [] });
+    return NextResponse.json({ conversation: enriched, messages: await signMessageAttachments(db, (messages ?? []) as DirectMessageRow[]) });
   }
   const archived = searchParams.get("status") === "archived";
   const buildConversationsQuery = (filterDeleted: boolean) => {
@@ -138,7 +186,8 @@ export async function POST(req: Request) {
   const message = limitTrimmedText(body.message, 2000);
   const initialMessage = limitTrimmedText(body.initialMessage, 2000);
   const openConversation = body.openConversation === true;
-  if (!message && !openConversation) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
+  const hasRawAttachments = Array.isArray(body.attachmentUrls) && body.attachmentUrls.length > 0;
+  if (!message && !hasRawAttachments && !openConversation) return NextResponse.json({ error: "Escribe un mensaje o adjunta un archivo." }, { status: 400 });
   const db = createAdminClient();
   let conversation: ConversationRow | null = null;
   let conversationCreated = false;
@@ -228,16 +277,29 @@ export async function POST(req: Request) {
   if (openConversation && !message && !initialMessage) {
     return NextResponse.json({ ok: true, conversationId: conversation.id, created: conversationCreated });
   }
-  const messageToSend = message || initialMessage;
-  const { data: sentMessages, error: msgError } = await db.rpc("send_direct_message_atomic", {
+  const messageToSend = message || initialMessage || (hasRawAttachments ? "Archivo adjunto" : "");
+  const attachmentUrls = normalizeAttachments(body.attachmentUrls, conversation.id, user.id);
+  if (hasRawAttachments && !attachmentUrls.length) {
+    return NextResponse.json({ error: "No se pudieron validar los adjuntos." }, { status: 400 });
+  }
+  let { data: sentMessages, error: msgError } = await db.rpc("send_direct_message_atomic", {
     p_conversation_id: conversation.id,
     p_sender_id: user.id,
     p_body: messageToSend,
+    p_attachment_urls: attachmentUrls,
   });
+  if (msgError && !attachmentUrls.length && msgError.message?.includes("p_attachment_urls")) {
+    ({ data: sentMessages, error: msgError } = await db.rpc("send_direct_message_atomic", {
+      p_conversation_id: conversation.id,
+      p_sender_id: user.id,
+      p_body: messageToSend,
+    }));
+  }
   if (msgError) return NextResponse.json({ error: msgError.message }, { status: 500 });
   const msg = Array.isArray(sentMessages) ? sentMessages[0] : sentMessages;
   if (!msg) return NextResponse.json({ error: "No se pudo guardar el mensaje." }, { status: 500 });
-  return NextResponse.json({ ok: true, conversationId: conversation.id, message: msg, created: conversationCreated });
+  const [signedMessage] = await signMessageAttachments(db, [msg as DirectMessageRow]);
+  return NextResponse.json({ ok: true, conversationId: conversation.id, message: signedMessage, created: conversationCreated });
 }
 
 export async function PATCH(req: Request) {

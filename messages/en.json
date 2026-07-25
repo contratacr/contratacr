@@ -80,9 +80,9 @@
       "more": "More services"
     },
     "resourceLinks": {
-      "howItWorks": "How to use ContrataCR",
+      "howItWorks": "How to use",
       "helpCenter": "Help center",
-      "proTips": "For professionals",
+      "proTips": "Professional tips",
       "support": "Support"
     },
     "loginModal": {
@@ -198,8 +198,10 @@
       "desc": "Try a different category or expand your search area."
     },
     "pagination": {
+      "label": "Results pagination",
       "prev": "Previous",
       "next": "Next",
+      "status": "Page {page} of {total}",
       "pageOf": "Page <b>{page}</b> of <b>{total}</b>"
     },
     "filters": {
@@ -740,6 +742,7 @@
       "errPhoneIncomplete": "Enter a complete phone number for the selected country.",
       "errServiceType": "Select at least one service type",
       "errWorkplace": "Add at least one area where you offer your services, or All Costa Rica if you attend by video consultation.",
+      "errWorkplaceInPerson": "Add at least one area where you offer your services.",
       "errCoverage": "Add at least one area you travel to.",
       "errIdRequired": "ID required. CR: 9 digits · DIMEX: 11-12 · NITE: 10.",
       "errCreateAccount": "We couldn't create the account.",
@@ -830,12 +833,12 @@
     }
   },
   "footer": {
-    "tagline": "The services marketplace made for Costa Rica. Find the ideal professional and coordinate everything in ContrataCR.",
+    "tagline": "The services marketplace made for Costa Rica. Offer your services, find the right professional, and coordinate the details in ContrataCR.",
     "clients": {
       "title": "For clients",
       "search": "Find services",
       "categories": "Categories",
-      "howItWorks": "How to use ContrataCR",
+      "howItWorks": "How to use",
       "publish": "Post a request"
     },
     "pros": {
@@ -2308,7 +2311,9 @@
     "emptySub": "Save the profiles you're interested in with the bookmark icon on their cards.",
     "searchPros": "Find professionals",
     "count": "{count, plural, one {# saved professional} other {# saved professionals}}",
-    "noReviews": "No reviews"
+    "noReviews": "No reviews",
+    "videoConsult": "Video consultation",
+    "locationUnavailable": "Location not specified"
   },
   "registerChoice": {
     "title": "Create your account",
@@ -2742,7 +2747,8 @@
     "mecanica_bicicletas": "Bicycle Repair",
     "hojalateria": "Auto Body",
     "electricidad_automotriz": "Auto Electrical",
-    "tapiceria": "Upholstery",
+    "tapiceria": "Furniture Upholstery",
+    "tapiceria_automotriz": "Automotive Upholstery",
     "detailing": "Car Detailing",
     "cambio_llantas": "Tire Change"
   },

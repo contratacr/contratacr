@@ -19,6 +19,7 @@ import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
 import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-followup";
 import { PushTokenManager } from "@/components/push/push-token-manager";
+import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -35,8 +36,8 @@ function buildMetadata(locale: string): Metadata {
     ? "Find electricians, plumbers, painters, tutors and more verified professionals in your canton."
     : "Encuentra electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.";
   const socialDescription = isEn
-    ? "Find and hire professionals in Costa Rica"
-    : "Encuentra y contrata profesionales en Costa Rica";
+    ? "Offer and find services in Costa Rica"
+    : "Ofrece y encuentra servicios en Costa Rica";
   const socialImage = `/${locale}/opengraph-image`;
 
   return {
@@ -135,8 +136,14 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialNotificationUnread={initialNotificationUnread}>
         <DocumentLocale locale={locale} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add('ccr-native-app');document.body&&document.body.classList.add('ccr-native-app');}}catch(e){}`,
+          }}
+        />
         <EmojiBlocker />
         <ViewportEnvironment />
+        <MobileAppBridge />
         <CustomCategoriesLoader />
         <NotificationLiveToast scope="all" />
         <OperationalStatusBanner locale={locale} status={operationalStatus} />

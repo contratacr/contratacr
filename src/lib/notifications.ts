@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendNotificationPush } from "@/lib/push/notify";
 
 interface NewBookingArgs {
   professionalId: string;
@@ -61,12 +62,19 @@ export async function notifyNewBooking({
       ? `${clientName} solicitó '${serviceDescription}' para el ${whenText}.`
       : `${clientName} solicitó '${serviceDescription}'.`;
 
-    await admin.from("notifications").insert({
+    const notification = {
       user_id: pro.profile_id,
       type: "booking_received",
       title,
       message,
       data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: bookingId ?? null },
+    };
+    await admin.from("notifications").insert(notification);
+    await sendNotificationPush({
+      userId: notification.user_id as string,
+      title,
+      message,
+      data: notification.data,
     });
 
     await sendProWhatsApp(pro.whatsapp as string | undefined, firstName, clientName, serviceDescription, whenText);
@@ -117,12 +125,19 @@ export async function notifyBookingStatusChange(
       : `${proName} ${verb} tu solicitud de '${service}'.`) + reasonText;
 
     if (booking.client_id) {
-      await admin.from("notifications").insert({
+      const notification = {
         user_id: booking.client_id,
         type: status === "confirmed" ? "booking_confirmed" : "booking_cancelled",
         title,
         message,
         data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: bookingId },
+      };
+      await admin.from("notifications").insert(notification);
+      await sendNotificationPush({
+        userId: notification.user_id as string,
+        title,
+        message,
+        data: notification.data,
       });
     }
 
@@ -169,12 +184,19 @@ export async function notifyBookingRescheduled(bookingId: string): Promise<void>
       : `${clientFirst} cambió el horario de '${service}'. Coordina los detalles por WhatsApp.`;
 
     if (proId) {
-      await admin.from("notifications").insert({
+      const notification = {
         user_id: proId,
         type: "booking_rescheduled",
         title,
         message,
         data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: bookingId },
+      };
+      await admin.from("notifications").insert(notification);
+      await sendNotificationPush({
+        userId: notification.user_id,
+        title,
+        message,
+        data: notification.data,
       });
     }
 

@@ -348,7 +348,7 @@ export function ServicesEditor({
     <div className="flex flex-col gap-4">
       {professions.length === 0 ? (
         /* No services yet → a calm, actionable empty state. */
-        <div className="px-4 py-12 text-center sm:px-6">
+        <div className="ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[22rem] sm:px-6">
           <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
             <Plus className="h-6 w-6 text-[#009FD9]" />
           </span>

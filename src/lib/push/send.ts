@@ -13,6 +13,12 @@ const INVALID_TOKEN_ERRORS = new Set([
   "messaging/registration-token-not-registered",
 ]);
 
+function compactPushText(value: string, maxLength = 112) {
+  const text = value.replace(/\s+/g, " ").trim();
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
 export async function sendUserPush({ userId, title, body, url = "/es/notificaciones" }: SendUserPushOptions) {
   const db = createAdminClient();
   const { data, error } = await db
@@ -21,21 +27,29 @@ export async function sendUserPush({ userId, title, body, url = "/es/notificacio
     .eq("user_id", userId)
     .eq("is_active", true);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    const detail = /user_push_tokens/i.test(error.message)
+      ? "push_tokens_table_missing_or_unavailable"
+      : "push_tokens_read_failed";
+    throw new Error(`${detail}: ${error.message}`);
+  }
 
   const rows = (data ?? []).filter((row) => typeof row.token === "string" && row.token.length > 10);
   if (rows.length === 0) return { sent: 0, failed: 0, inactive: 0 };
 
   const messaging = getFirebaseMessaging();
+  const compactBody = compactPushText(body);
   const response = await messaging.sendEachForMulticast({
     tokens: rows.map((row) => row.token),
-    notification: { title, body },
+    notification: { title: compactPushText(title, 72), body: compactBody },
     data: { url },
     android: {
       priority: "high",
       notification: {
-        channelId: "default",
-        clickAction: "OPEN_APP",
+        icon: "ic_stat_contratacr",
+        color: "#009FD9",
+        body: compactBody,
+        notificationCount: 1,
       },
     },
   });

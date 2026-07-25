@@ -12,7 +12,9 @@ const VALID_SOURCES = new Set([
   "profile_service",
   "profile_social",
   "booking",
+  "project",
   "favorites",
+  "api",
   "unknown",
 ]);
 

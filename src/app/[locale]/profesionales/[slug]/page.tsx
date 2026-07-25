@@ -141,6 +141,17 @@ export default function ProfilePage() {
       .catch(() => setPanelHref(null));
   }, []);
 
+  useEffect(() => {
+    if (!professional || typeof window === "undefined") return;
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab !== "resenas") return;
+
+    setActiveTab("resenas");
+    window.setTimeout(() => {
+      document.getElementById("resenas")?.scrollIntoView({ block: "start" });
+    }, 0);
+  }, [professional]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -288,6 +299,8 @@ export default function ProfilePage() {
     reviewCount: professional.reviewCount,
     hourlyRate: professional.hourlyRate,
     isVerified: professional.verificationStatus === "verified",
+    videoconsulta: professional.videoconsulta,
+    coverage: professional.coverage,
   };
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
@@ -514,7 +527,7 @@ export default function ProfilePage() {
             </aside>
 
             {/* ── TABBED CONTENT (LEFT on desktop; contact card is the right aside) ── */}
-            <div className="flex-1 min-w-0 lg:order-1">
+            <div id="resenas" className="flex-1 min-w-0 scroll-mt-24 lg:order-1">
               <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] overflow-hidden">
 
                 {/* Tab bar */}

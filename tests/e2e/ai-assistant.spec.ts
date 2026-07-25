@@ -8,11 +8,13 @@ import {
   getCategoryLabel,
   NATURAL_SERVICE_SCENARIOS,
   resolveCategoryIntent,
+  resolveStrongCategoryIntent,
 } from "../../src/lib/data/categories";
 
 type AssistantResponse = {
   answer?: string;
   action?: string;
+  serviceId?: string | null;
   searchHref?: string | null;
   ctaLabel?: string | null;
   aiProvider?: "openai" | "local";
@@ -23,6 +25,8 @@ type AssistantResponse = {
     verified: boolean;
     profileHref: string;
     requestHref: string;
+    actionLabel: string;
+    actionKind: "availability" | "message";
   }>;
 };
 
@@ -96,6 +100,82 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
     }
   });
 
+  test("asks before guessing when the service word is too generic", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const genericRequests = ["soporte", "mantenimiento", "reparacion", "asesoria"];
+
+    for (const prompt of genericRequests) {
+      const response = await ask(page, prompt);
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
+      expect(response.body.action, prompt).toBe("answer");
+      expect(response.body.searchHref ?? null, prompt).toBeNull();
+      expect(response.body.ctaLabel ?? null, prompt).toBeNull();
+      expect(response.body.answer, prompt).toMatch(/se refiere|servicio/i);
+    }
+  });
+
+  test("understands more than 1,000 natural service requests with conversational wrappers", async () => {
+    const wrappers = [
+      (need: string) => need,
+      (need: string) => `Necesito ayuda porque ${need}`,
+      (need: string) => `Ocupo resolver esto: ${need}`,
+      (need: string) => `Busco a alguien porque ${need}`,
+      (need: string) => `¿Quién me puede ayudar? ${need}`,
+      (need: string) => `${need}, ¿qué servicio necesito?`,
+      (need: string) => `Necesito 2 opciones para esto: ${need}`,
+      (need: string) => `Es para mañana y ${need}`,
+    ];
+    let checked = 0;
+
+    for (const service of getAllCategories()) {
+      const naturalNeeds = NATURAL_SERVICE_SCENARIOS[service.id] ?? [];
+      expect(naturalNeeds.length, `${service.id} needs a natural customer scenario`).toBeGreaterThan(0);
+
+      for (const naturalNeed of naturalNeeds) {
+        for (const wrap of wrappers) {
+          const question = wrap(naturalNeed);
+          expect(resolveCategoryIntent(question, "es")?.id, question).toBe(service.id);
+          checked += 1;
+        }
+      }
+    }
+
+    expect(checked).toBeGreaterThanOrEqual(1_000);
+  });
+
+  test("keeps obvious first messages and follow-ups out of the uncertain fallback", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const prompts = [
+      ["Hola, mi casa esta muy sucia necesito limpiarla", "limpieza"],
+      ["limpieza", "limpieza"],
+      ["redes", "redes_internet"],
+    ] as const;
+
+    for (const [prompt, expectedService] of prompts) {
+      expect(resolveStrongCategoryIntent(prompt, "es")?.id, prompt).toBe(expectedService);
+      const response = await ask(page, prompt);
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
+      expect(response.body.serviceId, JSON.stringify(response.body)).toBe(expectedService);
+      expect(response.body.answer, JSON.stringify(response.body)).not.toMatch(/no tengo total certeza/i);
+    }
+  });
+
+  test("does not reuse an old location for a fresh service-only search", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const response = await ask(page, "limpieza", {
+      history: [
+        { role: "user", content: "Necesito un electricista en Siquirres" },
+        { role: "assistant", content: "Encontré profesionales de electricidad en Siquirres, Limón." },
+      ],
+    });
+
+    expect(response.status, JSON.stringify(response.body)).toBe(200);
+    expect(response.body.action, JSON.stringify(response.body)).toBe("answer");
+    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/zona|area|ubicaci/i);
+    expect(response.body.answer, JSON.stringify(response.body)).not.toMatch(/Siquirres|Lim[oó]n/i);
+    expect(response.body.searchHref ?? "", JSON.stringify(response.body)).not.toMatch(/provincia=|canton=/);
+  });
+
   test("does not turn emergencies or unsafe requests into service searches", async ({ page }) => {
     await gotoOK(page, "/es");
     const cases = [
@@ -129,6 +209,10 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       ["necesito revisar un contrato", "legal"],
       ["necesito pasar un documento a ingles", "traduccion"],
       ["quiero aprender ingles", "idiomas"],
+      ["necesito un airbnb", "alquiler_vacacional"],
+      ["necesito un aribnb", "alquiler_vacacional"],
+      ["busco hospedaje para vacaciones", "alquiler_vacacional"],
+      ["quiero una renta vacacional", "alquiler_vacacional"],
       ["veo borroso y necesito revisar la vista", "optometria"],
       ["necesito comprar lentes graduados", "optica_lentes"],
       ["quiero video de la boda", "videografia"],
@@ -142,12 +226,15 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       ["quiero pulir el carro", "detailing"],
       ["el carro quedo botado", "grua"],
       ["la compu no conecta", "soporte_tecnico"],
+      ["soporte de computadoras", "soporte_tecnico"],
+      ["mantenimiento de aire", "aire_acondicionado"],
+      ["asesoria tributaria", "asesoria_tributaria"],
       ["necesito un profesional en redes en Alajuela", "redes_internet"],
       ["I need a network specialist in Alajuela", "redes_internet"],
       ["necesito ayuda con redes sociales", "marketing_digital"],
       ["I need someone to fix a water leak", "plomeria"],
       ["My dog needs grooming", "peluqueria_canina"],
-      ["I want to learn English", "idiomas"],
+      ["I want to learn English", "clases_ingles"],
       ["My car will not start", "mecanica"],
       ["I need a lawyer in San Jose", "legal"],
     ] as const;
@@ -218,6 +305,32 @@ test.describe("@seeded ContrataCR AI", () => {
   test.afterAll(async () => {
     if (!professionalSnapshot || !seed?.professionalId) return;
     await regressionAdminClient().from("professionals").update(professionalSnapshot).eq("id", seed.professionalId);
+  });
+
+  test("does not promise availability when a matched professional has no public slots", async ({ page }) => {
+    const admin = regressionAdminClient();
+    await admin.from("availability_slots").delete().eq("professional_id", seed.professionalId);
+
+    try {
+      await gotoOK(page, "/es");
+      const response = await ask(page, "Necesito un plomero en Atenas, Alajuela");
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
+      expect(response.body.action).toBe("search_professionals");
+      const professional = response.body.professionals?.find((item) => item.id === seed.professionalId);
+      expect(professional, JSON.stringify(response.body.professionals)).toBeTruthy();
+      expect(professional?.actionKind).toBe("message");
+      expect(professional?.actionLabel).toBe("Enviar mensaje");
+      expect(professional?.actionLabel).not.toBe("Ver disponibilidad");
+    } finally {
+      const { error } = await admin.from("availability_slots").insert({
+        professional_id: seed.professionalId,
+        slot_date: seed.slotDate,
+        slot_time: seed.slotTime,
+        category_id: seed.categoryId,
+        location_id: "e2e-main",
+      });
+      if (error && error.code !== "23505") throw error;
+    }
   });
 
   test("answers product questions with stable, actionable destinations", async ({ page }) => {
@@ -330,6 +443,7 @@ test.describe("@seeded ContrataCR AI", () => {
     const naturalProblems = [
       ["Se me reventó una tubería", "plomeria"],
       ["Necesito traducir un contrato al inglés", "traduccion"],
+      ["Necesito un aribnb", "alquiler_vacacional"],
       ["Mi laptop no enciende", "reparacion_computadoras"],
       ["Quiero que bañen y le corten el pelo a mi perro", "peluqueria_canina"],
       ["Ocupo ayuda para declarar el IVA", "asesoria_tributaria"],

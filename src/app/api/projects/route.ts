@@ -12,6 +12,8 @@ import { isMinorFromDob } from "@/lib/age";
 import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
+import { recordServerInteraction } from "@/lib/analytics/server-interactions";
+import { sendNotificationPush } from "@/lib/push/notify";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -252,6 +254,17 @@ export async function POST(req: NextRequest) {
       metadata: { client_identity_status: clientIdentityStatus },
     });
 
+    await recordServerInteraction(admin, req, {
+      type: "project_published",
+      viewerUserId: uid,
+      source: "project",
+      categoryId: categoryId ?? null,
+      metadata: {
+        project_id: projectId,
+        has_location: Boolean(provinciaId),
+      },
+    });
+
     // Notify every professional whose profession matches the project category.
     // "Otro" is a FREEFORM catch-all: its custom text is not reliably comparable, so it
     // must never drive matching. An "Otro" project therefore notifies no one.
@@ -276,6 +289,12 @@ export async function POST(req: NextRequest) {
             data: { link: "/es/dashboard/profesional?tab=proposals", project_id: projectId, project_created_at: projectCreatedAt },
           }));
           await admin.from("notifications").insert(rows);
+          await Promise.all(rows.map((row) => sendNotificationPush({
+            userId: row.user_id,
+            title: row.title,
+            message: row.message,
+            data: row.data,
+          })));
         }
       } catch (notifyErr) {
         console.error("[POST /api/projects] notify pros failed:", notifyErr);
@@ -446,12 +465,19 @@ export async function PATCH(req: NextRequest) {
       afterData: { status: "awaiting_confirmation", accepted_professional_id: project.accepted_professional_id, title: project.title },
     });
     // Notify the client to confirm.
-    await admin.from("notifications").insert({
+    const notification = {
       user_id: project.client_id,
       type: "project_work_done",
       title: "Confirma la finalización del trabajo",
       message: `El profesional marcó "${project.title}" como realizado. Confirma para finalizarlo. Si no respondes en ${AUTO_CONFIRM_DAYS} días se confirma automáticamente.`,
       data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: id },
+    };
+    await admin.from("notifications").insert(notification);
+    await sendNotificationPush({
+      userId: notification.user_id,
+      title: notification.title,
+      message: notification.message,
+      data: notification.data,
     });
     return NextResponse.json({ success: true });
   }
@@ -481,12 +507,19 @@ export async function PATCH(req: NextRequest) {
     if (project.accepted_professional_id) {
       const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", project.accepted_professional_id).maybeSingle();
       if (pro?.profile_id) {
-        await admin.from("notifications").insert({
+        const notification = {
           user_id: pro.profile_id,
           type: "project_completed",
           title: "Oportunidad finalizada",
           message: `El cliente confirmó la finalización de "${project.title}". Buen trabajo.`,
           data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id },
+        };
+        await admin.from("notifications").insert(notification);
+        await sendNotificationPush({
+          userId: notification.user_id,
+          title: notification.title,
+          message: notification.message,
+          data: notification.data,
         });
       }
     }

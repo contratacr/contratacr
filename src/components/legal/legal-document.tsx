@@ -1,7 +1,7 @@
 import { getLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { Link } from "@/i18n/navigation";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
 // ── Content model ──────────────────────────────────────────────────────────
@@ -17,70 +17,114 @@ export type LegalSection = { id: string; h: string; body: LegalBlock[] };
 
 export interface LegalDocumentProps {
   title: string;
-  /** e.g. "14 de junio de 2026" (optionally with a suffix like "· Ley 8968"). */
   updated: string;
   intro: string;
+  summary: string[];
   sections: LegalSection[];
-  /** The "see also" line at the foot, e.g. the cross-link to the other document. */
   footer: React.ReactNode;
 }
 
-// Render a run of text: **bold** segments + the support email as a mailto link.
+const INTERNAL_LEGAL_LINKS = [
+  { text: "página pública de Eliminación de cuenta", href: "/eliminar-cuenta" },
+  { text: "página pública de eliminación de cuenta o datos", href: "/eliminar-cuenta" },
+  { text: "public Account Deletion page", href: "/eliminar-cuenta" },
+  { text: "public account deletion page", href: "/eliminar-cuenta" },
+  { text: "public account or data deletion page", href: "/eliminar-cuenta" },
+] as const;
+
+// Render a run of text: **bold** segments + legal contact/internal links.
 function renderInline(text: string, keyBase: string): React.ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((part, i) => {
     const key = `${keyBase}-${i}`;
     if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={key} className="font-semibold text-[#111827]">{linkifyEmail(part.slice(2, -2), key)}</strong>;
+      return <strong key={key} className="font-semibold text-[#111827]">{linkifyLegalText(part.slice(2, -2), key)}</strong>;
     }
-    return <span key={key}>{linkifyEmail(part, key)}</span>;
+    return <span key={key}>{linkifyLegalText(part, key)}</span>;
   });
 }
 
-function linkifyEmail(text: string, keyBase: string): React.ReactNode {
-  if (!text.includes(SUPPORT_EMAIL)) return text;
-  const segs = text.split(SUPPORT_EMAIL);
-  return segs.flatMap((s, i) =>
-    i === 0
-      ? [s]
-      : [
-          <a key={`${keyBase}-m${i}`} href={`mailto:${SUPPORT_EMAIL}`} className="text-[#009FD9] hover:underline">{SUPPORT_EMAIL}</a>,
-          s,
-        ]
-  );
+function linkifyLegalText(text: string, keyBase: string): React.ReactNode[] {
+  const matches = [
+    ...INTERNAL_LEGAL_LINKS.map((link) => ({ ...link, type: "internal" as const })),
+    { text: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}`, type: "email" as const },
+  ]
+    .map((link) => ({ ...link, index: text.indexOf(link.text) }))
+    .filter((link) => link.index >= 0)
+    .sort((a, b) => a.index - b.index);
+
+  if (matches.length === 0) return [text];
+
+  const nodes: React.ReactNode[] = [];
+  let cursor = 0;
+  matches.forEach((match, index) => {
+    if (match.index < cursor) return;
+    if (match.index > cursor) nodes.push(text.slice(cursor, match.index));
+    const label = text.slice(match.index, match.index + match.text.length);
+    nodes.push(
+      match.type === "internal" ? (
+        <Link key={`${keyBase}-l${index}`} href={match.href} className="text-[#009FD9] hover:underline">{label}</Link>
+      ) : (
+        <a key={`${keyBase}-l${index}`} href={match.href} className="text-[#009FD9] hover:underline">{label}</a>
+      ),
+    );
+    cursor = match.index + match.text.length;
+  });
+  if (cursor < text.length) nodes.push(text.slice(cursor));
+  return nodes;
 }
 
-export async function LegalDocument({ title, updated, intro, sections, footer }: LegalDocumentProps) {
+export async function LegalDocument({ title, updated, intro, summary, sections, footer }: LegalDocumentProps) {
   const locale = await getLocale();
+  const en = locale === "en";
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
-      <main className="flex-1 pt-28 pb-20 px-4">
+      <main id="top" className="flex-1 pt-28 pb-20 px-4">
         <div className="mx-auto max-w-3xl">
-          {/* Spanish-only notice for EN visitors — the legal version is in Spanish. */}
-          {locale === "en" && (
+          {en && (
             <div className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 py-3 text-sm text-[#6b7280]">
-              This document is the binding legal version and is available only in Spanish.
+              This English translation is provided for convenience. If there is any difference, the Spanish version prevails.
             </div>
           )}
 
           {/* Title */}
           <header className={locale === "en" ? "mt-6" : ""}>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-[#111827]">{title}</h1>
-            <p className="text-[#6b7280] mt-2">Última actualización: {updated}</p>
+            <p className="mt-2 text-[#6b7280]">{en ? "Last updated" : "Última actualización"}: {updated}</p>
           </header>
 
           {/* Intro */}
           <p className="mt-6 text-[#374151] leading-relaxed">{renderInline(intro, "intro")}</p>
 
-          {/* Table of contents — a balanced 2-column FLOW (CSS multi-columns), NOT a grid.
-              A grid couples each row's height, so a long item that wraps to two lines stretched
-              its row and left an empty gap below the short item paired with it. With multi-columns
-              each item takes only its own height and the spacing stays even, even when an item
-              wraps. `list-none` (the "N." prefix is already in the text); `break-inside-avoid`
-              keeps a link from splitting across the column break. */}
-          <nav aria-label="Contenido" className="mt-8 rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#9ca3af] mb-3">Contenido</p>
+          <section aria-labelledby="legal-summary" className="mt-8 rounded-xl border border-[#cfe6f1] bg-[#f4faff] p-5">
+            <h2 id="legal-summary" className="text-base font-bold text-[#162543]">{en ? "Key points" : "Lo más importante"}</h2>
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-[#374151]">
+              {summary.map((item, index) => (
+                <li key={index} className="flex gap-2.5">
+                  <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" />
+                  <span>{renderInline(item, `summary-${index}`)}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <details className="group mt-6 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] open:pb-1 sm:hidden">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 text-sm font-bold text-[#162543]">
+              {en ? "View contents" : "Ver contenido"}
+              <span aria-hidden="true" className="text-lg font-normal text-[#708095] transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <ol className="list-none border-t border-[#e5e7eb] px-4 py-3">
+              {sections.map((s) => (
+                <li key={s.id} className="mb-2 last:mb-0">
+                  <a href={`#${s.id}`} className="text-sm leading-snug text-[#0089BB] hover:underline">{s.h}</a>
+                </li>
+              ))}
+            </ol>
+          </details>
+
+          <nav aria-label={en ? "Contents" : "Contenido"} className="mt-6 hidden rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-5 sm:block">
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#9ca3af]">{en ? "Contents" : "Contenido"}</p>
             <ol className="list-none columns-1 sm:columns-2 gap-x-6">
               {sections.map((s) => (
                 <li key={s.id} className="mb-2 break-inside-avoid">
@@ -90,7 +134,6 @@ export async function LegalDocument({ title, updated, intro, sections, footer }:
             </ol>
           </nav>
 
-          {/* Sections */}
           <div className="mt-10 flex flex-col gap-10">
             {sections.map((s) => (
               <section key={s.id} id={s.id} className="scroll-mt-24">
@@ -120,8 +163,12 @@ export async function LegalDocument({ title, updated, intro, sections, footer }:
               {footer}
             </div>
 
+            <a href="#top" className="mx-auto text-sm font-semibold text-[#0089BB] hover:underline">
+              {en ? "Back to top" : "Volver arriba"}
+            </a>
+
             <p className="text-center text-sm italic text-[#9ca3af]">
-              ContrataCR — Encuentra y contrata profesionales en Costa Rica.
+              ContrataCR - {en ? "Offer and find services in Costa Rica." : "Ofrece y encuentra servicios en Costa Rica."}
             </p>
           </div>
         </div>

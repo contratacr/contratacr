@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrevoEmail } from "@/lib/email/send";
+import { sendNotificationPush } from "@/lib/push/notify";
 
 const PRO_LINK = "/es/dashboard/profesional?tab=profile&mode=offer&focus=verification";
 
@@ -111,12 +112,19 @@ export async function notifyVerificationDecision({
     }
 
     // 1. In-app (always)
-    await admin.from("notifications").insert({
+    const notification = {
       user_id: pro.profile_id,
       type,
       title,
       message,
       data: { link: PRO_LINK },
+    };
+    await admin.from("notifications").insert(notification);
+    await sendNotificationPush({
+      userId: notification.user_id as string,
+      title,
+      message,
+      data: notification.data,
     });
 
     // 2. Email (Resend) — skipped for "in_app" (e.g. at registration, where the
@@ -152,7 +160,15 @@ export async function notifyAppealReceived(
       message: `${providerName} apeló su revisión: "${appealMessage.slice(0, 120)}"`,
       data: { link: `/es/admin/proveedores/${professionalId}` },
     }));
-    if (rows.length > 0) await admin.from("notifications").insert(rows);
+    if (rows.length > 0) {
+      await admin.from("notifications").insert(rows);
+      await Promise.all(rows.map((row) => sendNotificationPush({
+        userId: row.user_id,
+        title: row.title,
+        message: row.message,
+        data: row.data,
+      })));
+    }
 
     const html = emailShell(
       "equipo",

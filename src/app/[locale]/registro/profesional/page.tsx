@@ -742,7 +742,7 @@ export default function RegisterProfessionalPage() {
     }
     // At least one work zone (provincia/cantón) is required — it drives /buscar.
     if (workplaces.length === 0 && !effectiveVideoCoverageCountry) {
-      setLocationError(t("errWorkplace"));
+      setLocationError(canOfferVideoConsult ? t("errWorkplace") : t("errWorkplaceInPerson"));
       return;
     }
     setLocationError(null);

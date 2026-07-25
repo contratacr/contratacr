@@ -49,6 +49,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "pintura", label: "Pintura", keywords: ["pintor", "pintura de paredes", "barniz", "repello", "pintura exterior", "empaste"] },
       { id: "carpinteria", label: "Carpintería", keywords: ["carpintero", "muebles de madera", "puertas", "marcos", "cocinas de madera", "closets"] },
       { id: "ebanisteria", label: "Ebanistería", keywords: ["ebanista", "muebles finos", "muebles a la medida", "madera fina", "ebanistero"] },
+      { id: "tapiceria", label: "Tapicería de muebles", keywords: ["tapicero", "tapiceria de muebles", "retapizar sillones", "sillones", "sillas", "sofas", "muebles tapizados", "cojines", "cabeceras"] },
       { id: "remodelacion", label: "Remodelación", keywords: ["renovacion", "ampliacion", "mejoras del hogar", "reforma", "renovar"] },
       { id: "techos", label: "Techos y cubiertas", keywords: ["techo", "cubierta", "zinc", "tejas", "goteras", "infiltraciones", "canal", "canaleta"] },
       { id: "pisos", label: "Pisos y revestimientos", keywords: ["piso", "ceramica", "porcelana", "madera", "laminado", "terrazo", "colocar piso"] },
@@ -218,7 +219,11 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
     emoji: "📚",
     items: [
       { id: "tutorias", label: "Tutorías académicas", keywords: ["tutor", "clases particulares", "apoyo escolar", "reforzamiento", "clases de apoyo", "profe particular"] },
-      { id: "idiomas", label: "Idiomas", keywords: ["ingles", "espanol", "frances", "mandarin", "profesor de idiomas", "clases de ingles", "English teacher"] },
+      { id: "idiomas", label: "Clases de inglés", keywords: ["ingles", "english", "english program", "profesor de ingles", "clases de ingles", "English teacher", "learn english"] },
+      { id: "clases_frances", label: "Clases de francés", keywords: ["frances", "francés", "profesor de frances", "clases de frances", "learn french", "french teacher"] },
+      { id: "clases_portugues", label: "Clases de portugués", keywords: ["portugues", "portugués", "profesor de portugues", "clases de portugues", "learn portuguese", "portuguese teacher"] },
+      { id: "clases_mandarin", label: "Clases de mandarín", keywords: ["mandarin", "mandarín", "chino", "profesor de mandarin", "clases de mandarin", "learn mandarin", "mandarin teacher"] },
+      { id: "clases_japones", label: "Clases de japonés", keywords: ["japones", "japonés", "profesor de japones", "clases de japones", "learn japanese", "japanese teacher"] },
       { id: "musica", label: "Clases de música", keywords: ["profesor de musica", "guitarra", "piano", "canto", "bateria", "violín", "clases de musica"] },
       { id: "matematicas", label: "Matemáticas y ciencias", keywords: ["matematicas", "fisica", "quimica", "ciencias", "profesor de mate", "algebra", "calculo"] },
       { id: "preparacion_universitaria", label: "Preparación universitaria", keywords: ["preparacion para la UCR", "TEC", "examen de admision", "PICCTT", "admision universitaria"] },
@@ -282,7 +287,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "mecanica_bicicletas", label: "Mecánica de bicicletas", keywords: ["bicicleta", "bicicletas", "bici", "bicis", "cleta", "cletas", "mecanico de bicicletas", "reparacion de bicicletas", "taller de bicicletas", "frenos de bicicleta", "cadena de bicicleta", "llantas de bicicleta", "mountain bike", "ciclismo", "bicycle", "bike", "bike repair", "bicycle repair", "bicycle mechanic", "bike mechanic"] },
       { id: "hojalateria", label: "Hojalatería y pintura de carros", keywords: ["hojalatero", "chapisteria", "enderezado y pintura", "latoneria", "carroceria", "abolladuras", "pintura de carro"] },
       { id: "electricidad_automotriz", label: "Electricidad automotriz", keywords: ["electrico automotriz", "bateria", "alternador", "luces del carro", "alarmas para carro"] },
-      { id: "tapiceria", label: "Tapicería", keywords: ["tapicero", "asientos", "tela de carro", "cuero", "tapizado"] },
+      { id: "tapiceria_automotriz", label: "Tapicería automotriz", keywords: ["tapicero automotriz", "asientos", "asientos de carro", "tela de carro", "cuero", "interior de carro", "tapizado automotriz", "techo de carro"] },
       { id: "detailing", label: "Detailing de autos", keywords: ["detailing", "pulidura", "encerado", "limpieza profunda de auto", "pulir carro"] },
       { id: "polarizado", label: "Polarizado", keywords: ["polarizado de carros", "polarizar", "lamina solar", "tinte de ventanas"] },
       { id: "cambio_llantas", label: "Cambio de llantas", keywords: ["llantas", "neumaticos", "cambio de caucho", "vulcanizadora", "rin", "goma"] },
@@ -297,7 +302,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "agencia_viajes", label: "Agencia de viajes", keywords: ["viajes", "paquetes turisticos", "boletos", "vacaciones", "tour"] },
       { id: "guia_turistico", label: "Guía turístico", keywords: ["guia turistico", "guia local", "tour guide", "excursiones", "recorridos"] },
       { id: "operador_turistico", label: "Operador turístico", keywords: ["operador de tours", "tours", "excursiones", "turismo aventura", "paquetes"] },
-      { id: "alquiler_vacacional", label: "Alquiler vacacional", keywords: ["casa de vacaciones", "cabina", "villa", "hospedaje vacacional", "airbnb"] },
+      { id: "alquiler_vacacional", label: "Alquiler vacacional", keywords: ["casa de vacaciones", "cabina", "villa", "hospedaje vacacional", "airbnb", "air bnb", "aribnb", "arbnb", "alojamiento", "hospedaje", "renta vacacional"] },
     ],
   },
   {
@@ -891,6 +896,42 @@ export function searchTextScore(term: string, query: string, exact: number, star
   return 0;
 }
 
+function damerauLevenshteinDistance(a: string, b: string): number {
+  const rows = a.length + 1;
+  const cols = b.length + 1;
+  const matrix = Array.from({ length: rows }, () => Array<number>(cols).fill(0));
+  for (let i = 0; i < rows; i += 1) matrix[i][0] = i;
+  for (let j = 0; j < cols; j += 1) matrix[0][j] = j;
+
+  for (let i = 1; i < rows; i += 1) {
+    for (let j = 1; j < cols; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost,
+      );
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        matrix[i][j] = Math.min(matrix[i][j], matrix[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return matrix[a.length][b.length];
+}
+
+function searchTypoScore(term: string, query: string, score: number): number {
+  const queryWords = normalizeText(query).split(/[^a-z0-9]+/).filter((word) => word.length >= 5);
+  if (queryWords.length !== 1) return 0;
+  const termWords = normalizeText(term).split(/[^a-z0-9]+/).filter((word) => word.length >= 5);
+  const queryWord = queryWords[0];
+  return termWords.some((word) => {
+    const lengthGap = Math.abs(word.length - queryWord.length);
+    if (lengthGap > 2) return false;
+    const maxDistance = Math.min(word.length, queryWord.length) >= 7 ? 2 : 1;
+    return damerauLevenshteinDistance(word, queryWord) <= maxDistance;
+  }) ? score : 0;
+}
+
 const SEARCH_WORD_SUFFIX_GROUPS = [
   ["eria", "ero", "era", "eros", "eras"],
   ["aria", "ario", "arias", "arios"],
@@ -948,10 +989,12 @@ export function categorySearchScore(
   const serviceScore = Math.max(0, ...serviceLabels.map((term) => Math.max(
     searchTextScore(term, q, 120, 90, 55),
     searchMorphologyScore(term, q, 82),
+    searchTypoScore(term, q, 76),
   )));
   const keywordScore = Math.max(0, ...item.keywords.map((term) => Math.max(
     searchTextScore(term, q, 110, 45, 28),
     searchMorphologyScore(term, q, 68),
+    searchTypoScore(term, q, 72),
   )));
   const groupScore = Math.max(0, ...groupLabels.map((term) => searchTextScore(term, q, 38, 28, 18)));
   return Math.max(serviceScore, keywordScore, groupScore);
@@ -968,7 +1011,7 @@ export function searchCategories(query: string, locale?: string): (CategoryItem 
 }
 
 const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
-  limpieza: ["limpiar mi casa", "limpiar casa", "limpiar el hogar", "limpieza de mi casa", "asear mi casa", "servicio domestico", "clean my house", "clean my home", "house cleaned", "home cleaned"],
+  limpieza: ["limpieza", "limpiar mi casa", "limpiar casa", "limpiar el hogar", "limpieza de mi casa", "asear mi casa", "servicio domestico", "clean my house", "clean my home", "house cleaned", "home cleaned"],
   limpieza_oficinas: ["limpiar oficina", "limpieza de oficina", "aseo de oficina", "limpiar local"],
   plomeria: ["arreglar fuga", "tengo una fuga", "arreglar tubo", "tuberia reventada", "se revento una tuberia", "revento una tuberia", "destapar inodoro", "destapar caneria", "arreglar lavamanos", "fix a water leak", "fix leak", "burst pipe", "water leak", "clogged toilet"],
   electricidad: ["arreglar luz", "poner enchufe", "instalar toma", "problema electrico", "se fue la luz", "no tengo luz en media casa", "cambiar breaker", "electricista", "electrician"],
@@ -1014,6 +1057,10 @@ const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
   clases_manejo: ["aprender a manejar", "clases de conducir", "clases de manejo"],
   clases_baile: ["aprender a bailar", "clases de salsa", "clases de bachata", "academia de baile"],
   idiomas: ["i want to learn english", "learn english"],
+  clases_frances: ["i want to learn french", "learn french"],
+  clases_portugues: ["i want to learn portuguese", "learn portuguese"],
+  clases_mandarin: ["i want to learn mandarin", "learn mandarin", "learn chinese"],
+  clases_japones: ["i want to learn japanese", "learn japanese"],
   tutorias: ["clases particulares", "ayuda con tareas", "tutor para mi hijo"],
   costura_y_arreglos_de_ropa: ["hacer ruedo", "arreglar pantalon", "costurera", "sastre", "ajustar vestido", "arreglos de ropa"],
   lavanderia: ["lavar ropa", "planchado", "lavaseco", "lavar edredon"],
@@ -1073,7 +1120,11 @@ export const NATURAL_SERVICE_SCENARIOS: Record<string, string[]> = {
   ingenieria_mecanica: ["ocupo revisar ventilacion y equipos mecanicos"],
   arquitectura: ["quiero disenar mi casa antes de construir"],
   topografia: ["necesito medir un terreno"],
-  limpieza: ["la casa ocupa aseo general"],
+  limpieza: [
+    "la casa ocupa aseo general",
+    "mi casa esta muy sucia necesito limpiarla",
+    "la casa esta muy sucia",
+  ],
   limpieza_oficinas: ["la oficina queda sucia todos los dias"],
   desinfeccion: ["quiero sanitizar el local"],
   lavado_alfombras: ["la alfombra tiene manchas"],
@@ -1128,7 +1179,8 @@ export const NATURAL_SERVICE_SCENARIOS: Record<string, string[]> = {
   mecanica_bicicletas: ["la bicicleta no frena"],
   hojalateria: ["choque y se dano la lata"],
   electricidad_automotriz: ["el carro no enciende por algo electrico"],
-  tapiceria: ["quiero retapizar los asientos"],
+  tapiceria: ["quiero retapizar un sillon"],
+  tapiceria_automotriz: ["quiero retapizar los asientos del carro"],
   detailing: ["quiero pulir y dejar bonito el carro"],
   polarizado: ["quiero poner lamina oscura a los vidrios"],
   cambio_llantas: ["se me poncho una llanta"],
@@ -1197,6 +1249,10 @@ export const NATURAL_SERVICE_SCENARIOS: Record<string, string[]> = {
   bartending: ["quiero tragos para la fiesta"],
   tutorias: ["mi hijo necesita ayuda en clases"],
   idiomas: ["quiero aprender ingles"],
+  clases_frances: ["quiero aprender frances"],
+  clases_portugues: ["quiero aprender portugues"],
+  clases_mandarin: ["quiero aprender mandarin", "quiero aprender chino"],
+  clases_japones: ["quiero aprender japones"],
   musica: ["quiero aprender guitarra"],
   matematicas: ["necesito ayuda con mate"],
   preparacion_universitaria: ["ocupo prepararme para examen de admision"],
@@ -1250,6 +1306,59 @@ function termsForCategory(item: CategoryItem & { groupId: string; groupLabel: st
   ];
 }
 
+/**
+ * Resolve explicit service language without fuzzy scoring. Natural examples
+ * remain authoritative even when wrapped in a greeting, quantity or question.
+ */
+export function resolveStrongCategoryIntent(
+  query: string,
+  locale?: string,
+): (CategoryItem & { groupId: string; groupLabel: string }) | null {
+  const raw = query.trim();
+  if (raw.length < 2) return null;
+  const pool = getAllCategories();
+  const comparable = (value: string) =>
+    normalizeText(value).replace(/[^a-z0-9ñ\s]/g, " ").replace(/\s+/g, " ").trim();
+  const q = comparable(raw);
+
+  for (const item of pool) {
+    const labels = [item.label, getCategoryLabel(item.id, locale)];
+    if (labels.some((term) => comparable(term) === q)) return item;
+  }
+  for (const item of pool) {
+    const aliases = [...item.keywords, ...(NATURAL_QUERY_ALIASES[item.id] ?? [])];
+    if (aliases.some((term) => comparable(term) === q)) return item;
+  }
+  for (const item of pool) {
+    const scenarios = NATURAL_SERVICE_SCENARIOS[item.id] ?? [];
+    if (scenarios.some((term) => comparable(term) === q)) return item;
+  }
+
+  const paddedQuery = ` ${q} `;
+  const containedMatch = pool
+    .map((item) => {
+      const canonicalLabels = [item.label, getCategoryLabel(item.id, locale)].map(comparable);
+      const terms = [
+        ...canonicalLabels,
+        ...item.keywords.map(comparable),
+        ...(NATURAL_QUERY_ALIASES[item.id] ?? []).map(comparable),
+        ...(NATURAL_SERVICE_SCENARIOS[item.id] ?? []).map(comparable),
+      ].filter((term) =>
+        term.length >= 4
+        && (term.includes(" ") || canonicalLabels.includes(term))
+        && paddedQuery.includes(` ${term} `),
+      );
+      return { item, terms };
+    })
+    .filter((candidate) => candidate.terms.length > 0)
+    .sort((a, b) =>
+      Math.max(...b.terms.map((term) => term.length))
+      - Math.max(...a.terms.map((term) => term.length)),
+    )[0];
+
+  return containedMatch?.item ?? null;
+}
+
 export function resolveCategoryIntent(query: string, locale?: string): (CategoryItem & { groupId: string; groupLabel: string }) | null {
   const raw = query.trim();
   if (raw.length < 2) return null;
@@ -1264,6 +1373,9 @@ export function resolveCategoryIntent(query: string, locale?: string): (Category
     const firstInGroup = pool.find((item) => item.groupId === matchingGroup.id);
     if (firstInGroup) return firstInGroup;
   }
+
+  const strongIntent = resolveStrongCategoryIntent(raw, locale);
+  if (strongIntent) return strongIntent;
 
   // A canonical service label must always beat a keyword or alias owned by an
   // earlier item (for example, "Herrería" is also a Soldadura keyword).
@@ -1396,7 +1508,10 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   lavanderia: "Laundry", zapateria: "Shoe repair", relojeria: "Watch repair",
   joyeria: "Jewelry repair",
   // Educación y clases
-  tutorias: "Academic tutoring", idiomas: "Languages", musica: "Music lessons",
+  tutorias: "Academic tutoring", idiomas: "English lessons",
+  clases_frances: "French lessons", clases_portugues: "Portuguese lessons",
+  clases_mandarin: "Mandarin lessons", clases_japones: "Japanese lessons",
+  musica: "Music lessons",
   matematicas: "Math & science", preparacion_universitaria: "University prep",
   clases_manejo: "Driving lessons", clases_baile: "Dance classes",
   clases_cocina: "Cooking & baking classes",
@@ -1430,7 +1545,8 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   // Vehículos y movilidad
   mecanica: "Auto mechanics", mecanica_bicicletas: "Bicycle repair",
   hojalateria: "Body work & car painting",
-  electricidad_automotriz: "Auto electrical", tapiceria: "Upholstery",
+  electricidad_automotriz: "Auto electrical", tapiceria: "Furniture upholstery",
+  tapiceria_automotriz: "Automotive upholstery",
   detailing: "Car detailing", polarizado: "Window tinting", cambio_llantas: "Tire change",
   grua: "Tow truck service",
   // Turismo
@@ -1555,7 +1671,7 @@ export const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
   "arquitectura", "ingenieria_civil", "ingenieria_electrica", "ingenieria_mecanica",
   "desarrollo_web", "diseno_grafico", "diseno_apps", "soporte_tecnico",
   "ciberseguridad", "consultoria_ti",
-  "tutorias", "idiomas", "musica", "matematicas",
+  "tutorias", "idiomas", "clases_frances", "clases_portugues", "clases_mandarin", "clases_japones", "musica", "matematicas",
   "preparacion_universitaria", "entrenamiento_personal",
 ]);
 

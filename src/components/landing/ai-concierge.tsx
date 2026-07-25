@@ -22,6 +22,7 @@ import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { cn, getInitials } from "@/lib/utils";
 import { AppTooltip } from "@/components/ui/app-tooltip";
@@ -170,6 +171,15 @@ function actionIcon(kind?: string | null) {
   return <ArrowRight className="h-4 w-4" />;
 }
 
+function localizedDestination(href: string, lang: "es" | "en") {
+  const trimmed = href.trim();
+  if (!trimmed) return `/${lang}`;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const withSlash = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  const unlocalized = withSlash.replace(/^\/(?:es|en)(?=\/|\?|$)/, "") || "/";
+  return `/${lang}${unlocalized === "/" ? "" : unlocalized}`;
+}
+
 function ProfessionalResult({ result, copy, onNavigate }: {
   result: ResultCard;
   copy: typeof COPY.es | typeof COPY.en;
@@ -209,6 +219,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
+  const nativeApp = useNativeApp();
   const lang = language(locale);
   const copy = COPY[lang];
   const [open, setOpen] = useState(embedded);
@@ -226,6 +237,13 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
   useContainedTouchScroll(scrollRef, open || embedded);
+
+  useEffect(() => {
+    if (embedded) return;
+    const openAssistant = () => setOpen(true);
+    window.addEventListener("contratacr:open-ai", openAssistant);
+    return () => window.removeEventListener("contratacr:open-ai", openAssistant);
+  }, [embedded]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -429,6 +447,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   function navigate(href: string) {
     const protectedDestination = href.includes("/publicar-proyecto") || href.includes("/dashboard/");
     if (!user && protectedDestination) storePendingIntent(href);
+    const destination = localizedDestination(href, lang);
     try {
       window.sessionStorage.setItem(`${SESSION_KEY_PREFIX}${lang}`, JSON.stringify({
         id: conversationId,
@@ -438,9 +457,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     } catch {
       /* Navigation still works when browser storage is unavailable. */
     }
-    if (!embedded) setOpen(false);
-    const alreadyLocalized = /^\/(es|en)(?=\/|\?|$)/.test(href);
-    const destination = alreadyLocalized ? href : `/${lang}${href.startsWith("/") ? href : `/${href}`}`;
     window.location.assign(destination);
   }
 
@@ -477,8 +493,8 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
-
   if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
+  if (!embedded && nativeApp && !open) return null;
   if (!embedded && !open) {
     return (
       <button
@@ -487,8 +503,10 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
         onClick={() => setOpen(true)}
         aria-label={copy.closedLabel}
         className={cn(
-          "group fixed right-3 z-[95] grid h-14 w-14 place-items-center overflow-visible bg-transparent transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 sm:bottom-6 sm:right-6 sm:h-[72px] sm:w-[72px]",
-          insideDashboard
+          "group fixed right-3 z-[95] hidden h-14 w-14 place-items-center overflow-visible bg-transparent transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 lg:grid sm:bottom-6 sm:right-6 sm:h-[72px] sm:w-[72px]",
+          nativeApp
+            ? "bottom-auto right-[-10px] top-[38svh] h-16 w-16 sm:bottom-auto sm:right-[-10px] sm:top-[38svh] sm:h-[72px] sm:w-[72px]"
+            : insideDashboard
             ? "bottom-[calc(1rem+env(safe-area-inset-bottom))] lg:bottom-6"
             : "bottom-[calc(0.85rem+env(safe-area-inset-bottom))]",
         )}

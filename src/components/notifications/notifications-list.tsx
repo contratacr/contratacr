@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
+import { useRouter } from "@/i18n/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
-import { notificationHref, notificationInMode } from "@/lib/notification-link";
+import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
@@ -15,6 +16,7 @@ import { NotificationSourceIcon } from "@/components/notifications/notification-
 import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
 import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
 import { AppTooltip } from "@/components/ui/app-tooltip";
+import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 
 type Notification = {
   id: string;
@@ -23,17 +25,13 @@ type Notification = {
   message: string;
   read: boolean;
   created_at: string;
-  data?: { link?: string; project_id?: string | null; project_created_at?: string | null } | null;
+  data?: {
+    link?: string;
+    project_id?: string | null;
+    project_created_at?: string | null;
+    review_reason?: string | null;
+  } | null;
 };
-
-function uniqueNotifications(items: Notification[]): Notification[] {
-  const seen = new Set<string>();
-  return items.filter((item) => {
-    if (seen.has(item.id)) return false;
-    seen.add(item.id);
-    return true;
-  });
-}
 
 // ONE consistent notification icon everywhere — the Bell, matching the panel-nav
 // "Notificaciones" item + the navbar bell (sprint 500). Replaces the per-type icons:
@@ -46,12 +44,22 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
+  const router = useRouter();
   // Per-mode (Airbnb full switch): the panel tab shows ONLY the active mode's
   // notifications, matching the navbar bell.
   const { mode } = useMode(canOffer(user));
-  const [items, setItems] = useState<Notification[]>([]);
-  const [busy, setBusy] = useState(true);
+  const initialCache = readCachedNotifications(user?.id) as Notification[] | null;
+  const [notificationState, setNotificationState] = useState(() => ({
+    userId: user?.id,
+    items: initialCache ?? [],
+  }));
+  const items = notificationState.userId === user?.id
+    ? notificationState.items
+    : (readCachedNotifications(user?.id) as Notification[] | null) ?? [];
+  const [busy, setBusy] = useState(initialCache === null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const projectTimes = useNotificationProjectTimes(items);
 
   const loadNotifications = useCallback(() => {
@@ -64,9 +72,22 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       .order("created_at", { ascending: false })
       .limit(100)
       .then(({ data }) => {
-        setItems(uniqueNotifications(data ?? []));
+        const next = uniqueNotifications(data ?? []);
+        setNotificationState({ userId: user.id, items: next });
+        cacheNotifications(user.id, next);
+        setBusy(false);
+      }, () => {
+        // Keep any cached result visible if the refresh fails.
         setBusy(false);
       });
+  }, [user]);
+
+  useEffect(() => {
+    const cached = readCachedNotifications(user?.id) as Notification[] | null;
+    queueMicrotask(() => {
+      setNotificationState({ userId: user?.id, items: cached ?? [] });
+      setBusy(!!user && cached === null);
+    });
   }, [user]);
 
   useEffect(() => {
@@ -77,19 +98,49 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   useEffect(() => {
     if (!user) return;
     function onChanged() { loadNotifications(); }
+    function onVisible() {
+      if (document.visibilityState === "visible") loadNotifications();
+    }
     window.addEventListener("notificationsChanged", onChanged);
+    window.addEventListener("focus", onChanged);
+    window.addEventListener("pageshow", onChanged);
+    document.addEventListener("visibilitychange", onVisible);
     const id = window.setInterval(onChanged, 5000);
     return () => {
       window.removeEventListener("notificationsChanged", onChanged);
+      window.removeEventListener("focus", onChanged);
+      window.removeEventListener("pageshow", onChanged);
+      document.removeEventListener("visibilitychange", onVisible);
       window.clearInterval(id);
     };
   }, [user, loadNotifications]);
+
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`notifications-list-${user.id}-${instanceId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => loadNotifications(),
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [instanceId, loadNotifications, user]);
 
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
   const notificationTitle = (n: Notification) =>
     n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
+  const notificationMessage = (n: Notification) => {
+    const fullReason = n.data?.review_reason?.trim();
+    if (!fullReason) return n.message;
+    if (/\bMotivo:/i.test(n.message)) return n.message.replace(/\bMotivo:[\s\S]*$/i, `Motivo: ${fullReason}`);
+    if (/\bReason:/i.test(n.message)) return n.message.replace(/\bReason:[\s\S]*$/i, `Reason: ${fullReason}`);
+    return n.message;
+  };
   const notificationTime = (n: Notification) => {
     const projectCreatedAt = getNotificationProjectCreatedAt(n, projectTimes);
     return projectCreatedAt
@@ -106,35 +157,54 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     if (ids.length === 0) return;
     const supabase = createClient();
     await supabase.from("notifications").update({ read: true }).in("id", ids);
-    setItems((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)));
+    setNotificationState((prev) => {
+      const next = prev.items.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n));
+      cacheNotifications(user.id, next);
+      return { userId: user.id, items: next };
+    });
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   async function markOneRead(e: React.MouseEvent, id: string) {
     e.stopPropagation();
-    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    setNotificationState((prev) => {
+      const next = prev.items.map((n) => (n.id === id ? { ...n, read: true } : n));
+      cacheNotifications(user?.id, next);
+      return { userId: user?.id, items: next };
+    });
     const supabase = createClient();
     await supabase.from("notifications").update({ read: true }).eq("id", id);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   const role = user?.user_metadata?.role as string | undefined;
 
   function open(n: Notification) {
+    const href = notificationActionHref(n, role, locale);
     if (!n.read) {
+      setNotificationState((prev) => {
+        const next = prev.items.map((item) => (item.id === n.id ? { ...item, read: true } : item));
+        cacheNotifications(user?.id, next);
+        return { userId: user?.id, items: next };
+      });
       const supabase = createClient();
-      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
-      window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {
+        window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      });
     }
-    window.location.assign(notificationHref(n, role, locale));
+    if (href) router.push(href);
   }
 
   async function dismiss(e: React.MouseEvent, id: string) {
     e.stopPropagation();
-    setItems((prev) => prev.filter((n) => n.id !== id));
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    setNotificationState((prev) => {
+      const next = prev.items.filter((n) => n.id !== id);
+      cacheNotifications(user?.id, next);
+      return { userId: user?.id, items: next };
+    });
     const supabase = createClient();
     await supabase.from("notifications").delete().eq("id", id);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   async function doDeleteAll() {
@@ -142,10 +212,14 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     if (!user || visible.length === 0) return;
     // Delete only the CURRENT mode's notifications (the list is per-mode).
     const ids = visible.map((n) => n.id);
-    setItems((prev) => prev.filter((n) => !ids.includes(n.id)));
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    setNotificationState((prev) => {
+      const next = prev.items.filter((n) => !ids.includes(n.id));
+      cacheNotifications(user.id, next);
+      return { userId: user.id, items: next };
+    });
     const supabase = createClient();
     await supabase.from("notifications").delete().in("id", ids);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   return (
@@ -179,7 +253,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       )}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
         {busy ? (
-          <PanelSectionLoading />
+          <PanelSectionLoading
+            className={scope === "all" ? "min-h-[calc(100dvh-13rem)] sm:min-h-[18rem]" : "min-h-[16rem] sm:min-h-[18rem]"}
+          />
         ) : visible.length === 0 ? (
           <PanelEmptyState
             icon={Bell}
@@ -195,9 +271,26 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         ) : (
           <ul>
             {visible.map((n) => {
+              const message = notificationMessage(n);
+              const canExpand = message.length > 180;
+              const expanded = expandedIds.has(n.id);
               return (
               <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f3f9fd]")}>
-                <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => open(n)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      open(n);
+                    }
+                  }}
+                  className={cn(
+                    "w-full text-left px-4 py-3 pr-16 transition-colors",
+                    notificationActionHref(n, role, locale) ? "cursor-pointer hover:bg-[#f9fafb]" : "cursor-default",
+                  )}
+                >
                   {/* Per-type leading icon (grey circle) + a brand-blue unread dot at its corner. */}
                   <div className="flex items-start gap-3">
                     <div className="relative shrink-0">
@@ -207,14 +300,34 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                       {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#009FD9] ring-2 ring-white" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      {/* overflow-wrap:anywhere breaks long unbroken strings; line-clamp keeps
-                          every row a uniform, compact height (full text on open). */}
                       <p className={cn("text-sm [overflow-wrap:anywhere] break-words line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{notificationTitle(n)}</p>
-                      <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">{n.message}</p>
+                      <p className={cn(
+                        "mt-0.5 whitespace-pre-line text-xs leading-snug text-[#6b7280] [overflow-wrap:anywhere] break-words",
+                        !expanded && "line-clamp-3",
+                      )}>{message}</p>
+                      {canExpand && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setExpandedIds((current) => {
+                              const next = new Set(current);
+                              if (next.has(n.id)) next.delete(n.id);
+                              else next.add(n.id);
+                              return next;
+                            });
+                          }}
+                          className="mt-1 text-xs font-semibold text-[#009FD9] hover:underline"
+                        >
+                          {expanded
+                            ? (locale === "en" ? "Show less" : "Ver menos")
+                            : (locale === "en" ? "Show more" : "Ver más")}
+                        </button>
+                      )}
                       <p className="text-xs text-[#9ca3af] mt-1">{notificationTime(n)}</p>
                     </div>
                   </div>
-                </button>
+                </div>
                 {/* Two distinct actions, intentionally different icons so they're
                     never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
                 <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">

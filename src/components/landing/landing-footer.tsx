@@ -75,7 +75,7 @@ export function LandingFooter() {
   const { user } = useAuth();
   const panelHref = canOffer(user) ? "/dashboard/profesional" : "/dashboard/profesional?mode=use";
   return (
-    <footer className="bg-[#111827] text-white">
+    <footer className="ccr-app-footer bg-[#111827] text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">
 
         {/* Main grid */}

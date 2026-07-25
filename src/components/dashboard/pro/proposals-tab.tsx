@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PriceInput } from "@/components/ui/price-input";
@@ -195,7 +196,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (document.visibilityState !== "visible") return;
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     const elapsed = Date.now() - lastSilentRefreshRef.current;
-    const delay = elapsed < 900 ? 900 - elapsed : 350;
+    const delay = elapsed < 1600 ? 1600 - elapsed : 700;
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
       if (view === "browse") void fetchOpenProjects(true);
@@ -221,7 +222,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         if (view === "browse") void fetchOpenProjects(true);
         else void fetchMyProposals(true);
       }
-    }, 5000);
+    }, 15000);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, loading]);
@@ -238,22 +239,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     };
   }, [loading, refreshSoon]);
-
-  // SILENTLY revalidate when the pro returns to the tab/window — so a project the client
-  // cancelled/deleted updates in the background, WITHOUT a jarring reload. The `silent` flag
-  // skips the loading state, so the current view (selection, expanded card, scroll) is
-  // preserved on refocus (the old non-silent refetch flashed the whole list as "loading").
-  useEffect(() => {
-    function onFocus() {
-      if (document.visibilityState === "visible") {
-        if (view === "browse") fetchOpenProjects(true); else fetchMyProposals(true);
-      }
-    }
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onFocus);
-    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onFocus); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view]);
 
   useEffect(() => {
     const projectId = searchParams.get("project");
@@ -624,7 +609,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                   .sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a)));
                 if (list.length === 0) return <p className="text-sm text-[#6b7280] text-center py-12">{t("noneInView")}</p>;
                 return (
-                  <div className="flex flex-col gap-3">
+                  <div className="ccr-native-safe-list-end flex flex-col gap-3">
                     <div className="flex items-center justify-between px-1">
                       <p className="text-[13px] font-semibold text-[#162543]">{t("availableTitle")}</p>
                     </div>
@@ -671,7 +656,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
           {myProposals.length === 0 ? (
             <PanelEmptyState icon={Handshake} title={t("emptyMine")} description={t("emptyMineSub")} />
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="ccr-native-safe-list-end flex flex-col gap-4">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(myProposals.map((p) => proposalBucket(p.status, p.projects?.status)))} />
               {(() => {
                 const shown = myProposals.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
@@ -844,17 +829,21 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
       {/* WITHDRAW proposal — clean on-brand confirm modal (replaces window.confirm). */}
       {withdrawTarget && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => !withdrawing && setWithdrawTarget(null)} aria-hidden />
-          <div role="dialog" aria-modal="true" aria-label={t("withdrawTitle")} className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]">
-            <h2 className="text-base font-bold text-[#111827]">{t("withdrawTitle")}</h2>
-            <p className="mt-1 text-sm text-[#6b7280]">{t("withdrawBody")}</p>
-            <div className="mt-4 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 rounded-lg" onClick={() => setWithdrawTarget(null)} disabled={withdrawing}>{t("back")}</Button>
-              <Button size="sm" className="flex-1 rounded-lg bg-red-600 hover:bg-red-700" onClick={confirmWithdraw} disabled={withdrawing} loading={withdrawing}>{t("withdrawConfirm")}</Button>
-            </div>
-          </div>
-        </div>
+        <Modal
+          onClose={() => { if (!withdrawing) setWithdrawTarget(null); }}
+          title={t("withdrawTitle")}
+          size="sm"
+          mobilePresentation="center"
+          footerClassName="justify-center sm:justify-end"
+          footer={(
+            <>
+              <Button variant="outline" size="sm" className="flex-1 rounded-lg sm:flex-none" onClick={() => setWithdrawTarget(null)} disabled={withdrawing}>{t("back")}</Button>
+              <Button size="sm" className="flex-1 rounded-lg bg-red-600 hover:bg-red-700 sm:flex-none" onClick={confirmWithdraw} disabled={withdrawing} loading={withdrawing}>{t("withdrawConfirm")}</Button>
+            </>
+          )}
+        >
+          <p className="text-sm leading-6 text-[#6b7280]">{t("withdrawBody")}</p>
+        </Modal>
       )}
     </div>
   );

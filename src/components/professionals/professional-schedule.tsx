@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { CalendarDays, ChevronLeft, ChevronRight, Mail, MapPin, Phone } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Mail, MapPin, Phone, Video } from "lucide-react";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { useAuth } from "@/hooks/use-auth";
@@ -145,8 +145,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canBook = !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
   const awaitingProfileAvailability =
     stacked &&
+    !slotsInitiallyLoaded &&
     shouldAutoRefresh &&
     !forceContactOnly &&
+    liveAvailabilityPublic &&
     contactPreference !== "solo_whatsapp" &&
     liveData?.professionalId !== professional.id &&
     !hasInitialDisplayableSlots;
@@ -357,12 +359,19 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const locTabs = hasRealLoc
     ? visibleLocationOptions
     : (placeFallback ? [{ id: "__fallback", label: placeFallback }] : []);
-  // Address under the tabs: the selected workplace's street address, else the
-  // province/cantón fallback. Home service is shown as a separate card chip, never
-  // as an address.
+  // Address under the tabs: follow the selected tab. If a workplace has no exact
+  // address, show that tab label instead of falling back to another location from
+  // the search result.
   const isVideoLocation = effectiveId === "videoconsulta";
   const workplaceAddr = hasRealLoc && effectiveId && !isVideoLocation ? locAddress(effectiveId) : "";
-  const addressLine = isVideoLocation ? "" : (workplaceAddr || placeAddress || "");
+  const selectedLocationLabel = hasRealLoc && effectiveId && !isVideoLocation
+    ? visibleLocationOptions.find((o) => o.id === effectiveId)?.label?.trim() ?? ""
+    : "";
+  const addressLine = isVideoLocation
+    ? ""
+    : hasRealLoc
+      ? (workplaceAddr || selectedLocationLabel)
+      : (placeAddress || "");
   const venueName = workplaceAddr ? businessName.trim() : "";
   // Show the chevron nav whenever the tab row actually OVERFLOWS its container (FIT-based, not a
   // fixed count) — so on a NARROW card (e.g. the profile contact rail) where the 3rd location is
@@ -445,6 +454,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         <div ref={locScrollRef} className={`-mx-1 flex min-w-0 flex-1 gap-3 ${reserveLocNav ? "overflow-x-auto" : "overflow-x-hidden"} overflow-y-hidden hide-scrollbar border-b border-[#e5e7eb] px-1`} role="tablist" aria-label={t("location")}>
           {locTabs.map((o) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
+            const isVideoTab = o.id === "videoconsulta" || (!hasRealLoc && (professional.videoconsulta || professional.coverage?.country));
             return (
               <button
                 key={o.id}
@@ -461,7 +471,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                     : "border-transparent text-[#6b7280] hover:border-[#ccecf8] hover:text-[#009FD9]"
                 }`}
               >
-                <MapPin className="h-3 w-3 shrink-0" />
+                {isVideoTab ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
                 {locTabLabel(o.label)}
               </button>
             );
@@ -712,7 +722,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const searchMessageButtonClass = `${messageButtonClass} bg-[#009FD9] hover:bg-[#0089bb] focus-visible:ring-[#009FD9]`;
   const contactButtons = (
     <>
-      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} />
+      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} />
       {/* No-schedule state: filled on /buscar, outlined on the profile contact card. */}
       {showCall && renderCall(true)}
       {showEmail && (
@@ -732,6 +742,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       <DirectChatLauncher
         professionalId={professional.id}
         professionalName={professional.fullName}
+        contextTitle={categoryName}
         isOwn={isOwn}
         onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
         analyticsSource="profile"

@@ -1,17 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationHref, notificationInMode } from "@/lib/notification-link";
+import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
 import { AppTooltip } from "@/components/ui/app-tooltip";
+import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 
 type Notification = {
   id: string;
@@ -24,47 +25,25 @@ type Notification = {
 };
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
-const NOTIFICATIONS_CACHE_PREFIX = "ccr:notifications:";
-
-function readCachedNotifications(userId: string | undefined): Notification[] {
-  if (!userId || typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(`${NOTIFICATIONS_CACHE_PREFIX}${userId}`);
-    return raw ? uniqueNotifications(JSON.parse(raw) as Notification[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function cacheNotifications(userId: string | undefined, items: Notification[]) {
-  if (!userId || typeof window === "undefined") return;
-  try {
-    localStorage.setItem(`${NOTIFICATIONS_CACHE_PREFIX}${userId}`, JSON.stringify(items.slice(0, 20)));
-  } catch { /* ignore */ }
-}
-
-function uniqueNotifications(items: Notification[]): Notification[] {
-  const seen = new Set<string>();
-  return items.filter((item) => {
-    if (seen.has(item.id)) return false;
-    seen.add(item.id);
-    return true;
-  });
-}
-
 export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "offer" }) {
   const { user, notificationUnread } = useAuth();
   const router = useRouter();
   const t = useTranslations("notifications");
   const locale = useLocale();
+  const initialCachedNotifications = readCachedNotifications(user?.id);
   const [notificationState, setNotificationState] = useState(() => ({
     userId: user?.id,
-    items: readCachedNotifications(user?.id),
+    items: initialCachedNotifications ?? [],
   }));
-  const notifications = notificationState.userId === user?.id ? notificationState.items : readCachedNotifications(user?.id);
+  const [hasSyncedNotifications, setHasSyncedNotifications] = useState(() => initialCachedNotifications !== null);
+  const notifications = useMemo(
+    () => notificationState.userId === user?.id ? notificationState.items : readCachedNotifications(user?.id) ?? [],
+    [notificationState, user?.id],
+  );
   const updateNotifications = useCallback((updater: (prev: Notification[]) => Notification[]) => {
+    setHasSyncedNotifications(true);
     setNotificationState((prev) => {
-      const base = prev.userId === user?.id ? prev.items : readCachedNotifications(user?.id);
+      const base = prev.userId === user?.id ? prev.items : readCachedNotifications(user?.id) ?? [];
       return { userId: user?.id, items: updater(base) };
     });
   }, [user?.id]);
@@ -88,7 +67,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     : scope === "use"
       ? notificationUnread.use + notificationUnread.neutral
       : notificationUnread.offer + notificationUnread.use + notificationUnread.neutral;
-  const unreadCount = cachedUnreadCount || serverUnreadCount;
+  const unreadCount = hasSyncedNotifications ? cachedUnreadCount : serverUnreadCount;
   const notificationTitle = (n: Notification) =>
     n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
 
@@ -107,12 +86,15 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         const next = uniqueNotifications(data ?? []);
         setNotificationState({ userId: user.id, items: next });
         cacheNotifications(user.id, next);
+        setHasSyncedNotifications(true);
       });
   }, [user]);
 
   useEffect(() => {
     queueMicrotask(() => {
-      setNotificationState({ userId: user?.id, items: readCachedNotifications(user?.id) });
+      const cached = readCachedNotifications(user?.id);
+      setNotificationState({ userId: user?.id, items: cached ?? [] });
+      setHasSyncedNotifications(cached !== null);
     });
   }, [user?.id]);
 
@@ -145,6 +127,15 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         (payload) => {
           const updated = payload.new as Notification;
           updateNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+          window.dispatchEvent(new CustomEvent("notificationsChanged"));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const deleted = payload.old as Pick<Notification, "id">;
+          updateNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
           window.dispatchEvent(new CustomEvent("notificationsChanged"));
         }
       )
@@ -196,12 +187,14 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     setOpen(false);
     if (!n.read) {
       const supabase = createClient();
-      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
       updateNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
-      window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {
+        window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      });
     }
     const role = user?.user_metadata?.role as string | undefined;
-    const href = notificationHref(n, role, locale);
+    const href = notificationActionHref(n, role, locale);
+    if (!href) return;
     if (user) await Promise.race([prefetchDashboardDataForNotification(user.id, n.type), wait(320)]);
     router.prefetch(href);
     router.push(href);
@@ -210,9 +203,9 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   async function dismiss(e: React.MouseEvent, id: string) {
     e.stopPropagation();
     updateNotifications((prev) => prev.filter((n) => n.id !== id));
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").delete().eq("id", id);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   if (!user) return null;
@@ -276,7 +269,12 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                   >
                     <button
                       onClick={() => openNotification(n)}
-                      className="w-full text-left px-4 py-3 pr-9 hover:bg-[#f3f4f6] transition-colors"
+                      className={cn(
+                        "w-full text-left px-4 py-3 pr-9 transition-colors",
+                        notificationActionHref(n, user?.user_metadata?.role as string | undefined, locale)
+                          ? "cursor-pointer hover:bg-[#f3f4f6]"
+                          : "cursor-default",
+                      )}
                     >
                       <div className="flex items-start gap-2.5">
                         <div className="relative shrink-0">
@@ -289,7 +287,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                           {/* No role tag — title + message already make the
                               context clear; clicking still routes correctly. */}
                           <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] break-words line-clamp-2">{notificationTitle(n)}</p>
-                          <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+                          <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#6b7280] [overflow-wrap:anywhere] break-words">
                             {n.message}
                           </p>
                           <p className="text-xs text-[#9ca3af] mt-1">

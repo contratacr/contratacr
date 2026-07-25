@@ -24,6 +24,9 @@ const reviewed = new Map([
   ["src/components/professionals/case-like-button.tsx", { count: 3, reason: "anonymous like guard; count persists in backend" }],
   ["src/components/notifications/notification-live-toast.tsx", { count: 3, reason: "notification presentation state; records persist in backend" }],
   ["src/components/notifications/notification-bell.tsx", { count: 2, reason: "backend notification render cache" }],
+  ["src/components/analytics/meta-pixel.tsx", { count: 1, reason: "measurement preference; no account-owned data" }],
+  ["src/components/push/push-token-manager.tsx", { count: 15, reason: "native push permission presentation, navigation handoff, and token deduplication; tokens persist in Supabase" }],
+  ["src/lib/notifications-cache.ts", { count: 2, reason: "backend notification render cache; Supabase remains the source of truth" }],
   ["src/app/[locale]/login/page.tsx", { count: 1, reason: "short-lived post-login presentation handoff" }],
   ["src/app/[locale]/dashboard/profesional/page.tsx", { count: 2, reason: "seen opportunity modal UI state" }],
 ]);

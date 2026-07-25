@@ -46,6 +46,244 @@
   --radius-2xl: 1.5rem;
 }
 
+.ccr-native-app .ccr-app-footer {
+  display: none;
+}
+
+.ccr-native-app {
+  background: #f4f7fa;
+}
+
+.ccr-native-app body {
+  min-height: 100svh;
+  background: #f4f7fa;
+  overscroll-behavior-y: contain;
+}
+
+.ccr-native-app button,
+.ccr-native-app a {
+  touch-action: manipulation;
+}
+
+body.ccr-native-app:not(.ccr-native-web-parity) button:not([aria-label]),
+body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
+  min-height: 44px;
+}
+
+.ccr-native-app button,
+.ccr-native-app a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ccr-native-app button:active,
+.ccr-native-app a:active {
+  transform: none;
+}
+
+.ccr-native-app header button:active,
+.ccr-native-app header a:active,
+.ccr-native-app .ccr-native-bottom-nav button:active,
+.ccr-native-app .ccr-native-bottom-nav a:active {
+  transform: none;
+}
+
+.ccr-native-app [role="dialog"] {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.ccr-native-app {
+  --ccr-native-header-height: 64px;
+  --ccr-native-bottom-nav-height: 72px;
+  --ccr-native-panel-end-gap: 14px;
+}
+
+.ccr-native-app main {
+  min-height: calc(100svh - var(--ccr-native-header-height) - env(safe-area-inset-bottom));
+}
+
+body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main {
+  min-height: calc(100svh - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height));
+}
+
+body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
+  scroll-margin-top: calc(var(--ccr-native-header-height) + 1rem);
+  padding-top: calc(var(--ccr-native-header-height) + 2rem);
+}
+
+@media (max-width: 1023px) {
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) {
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  html.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route),
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) {
+    background: #fff;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main {
+    position: fixed;
+    inset-inline: 0;
+    top: var(--ccr-native-header-height);
+    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height));
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: #fff;
+    padding-bottom: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) [data-messages-page-main] {
+    max-width: none;
+    padding: 0 !important;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) [data-messages-page-shell],
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .direct-chat-shell {
+    height: 100%;
+    min-height: 0 !important;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-list {
+    padding-bottom: var(--ccr-native-panel-end-gap);
+    scroll-padding-bottom: var(--ccr-native-panel-end-gap);
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    scroll-padding-top: 1rem;
+    scroll-padding-bottom: 1rem;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-composer {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .dashboard-panel-content {
+    min-height: 100%;
+    padding-bottom: var(--ccr-native-panel-end-gap) !important;
+    background: #fff;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-card {
+    min-height: calc(100% - 65px) !important;
+    background: #fff;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content {
+    min-height: 100% !important;
+    padding-bottom: var(--ccr-native-panel-end-gap) !important;
+    scroll-padding-bottom: var(--ccr-native-panel-end-gap);
+    background: #fff;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-safe-list-end {
+    padding-bottom: var(--ccr-native-panel-end-gap);
+  }
+
+  .ccr-native-app .ccr-native-compact-page {
+    background: #fff;
+    padding-bottom: 1rem;
+    padding-top: 1.5rem;
+  }
+}
+
+.ccr-native-app .ccr-native-bottom-nav {
+  isolation: isolate;
+  background: #fff;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.35rem);
+}
+
+.ccr-native-app .ccr-native-bottom-nav::before {
+  content: "";
+  position: absolute;
+  inset: -10px 0 0;
+  z-index: -1;
+  background: #fff;
+}
+
+.ccr-native-app .ccr-search-bottom-sheet {
+  bottom: env(safe-area-inset-bottom);
+  max-height: calc(100dvh - 164px - env(safe-area-inset-bottom)) !important;
+}
+
+.ccr-native-app .ccr-panel-section-loading {
+  min-height: min(360px, calc(var(--app-visual-viewport-height) - 220px));
+}
+
+.ccr-native-app .ccr-form-loading-state {
+  min-height: min(520px, calc(var(--app-visual-viewport-height) - 180px));
+}
+
+.ccr-native-app .direct-chat-shell {
+  height: calc(var(--app-visual-viewport-height) - 64px - 72px);
+  min-height: 0;
+  border-radius: 0;
+}
+
+.ccr-native-app [data-messages-page-main] {
+  max-width: none;
+  padding: 64px 0 0;
+}
+
+.ccr-native-app [data-messages-page-shell] {
+  min-height: calc(var(--app-visual-viewport-height) - 64px - 72px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ccr-native-app .app-modal-screen {
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+
+.ccr-native-app .app-bottom-sheet {
+  height: var(--app-visual-viewport-height);
+  max-height: var(--app-visual-viewport-height);
+  border-radius: 0;
+}
+
+@media (min-width: 640px) {
+  .ccr-native-app .app-modal-screen {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .ccr-native-app .app-bottom-sheet {
+    max-width: none;
+    border-radius: 0;
+  }
+}
+
+.ccr-native-app .ccr-empty-state,
+.ccr-native-app [data-empty-state] {
+  min-height: min(280px, calc(100svh - 260px));
+}
+
+.ccr-brand-loading-mark {
+  height: 60px;
+  width: 60px;
+  object-fit: contain;
+  animation: ccr-brand-loading-glow 1.55s ease-in-out infinite;
+}
+
+@keyframes ccr-brand-loading-glow {
+  0%, 100% {
+    filter: brightness(1);
+    opacity: 0.88;
+    transform: scale(0.985);
+  }
+  50% {
+    filter: brightness(1.12);
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -81,7 +319,7 @@ body {
 
 .ccr-delayed-loading {
   opacity: 0;
-  animation: ccr-loading-reveal 140ms ease-out 260ms forwards;
+  animation: ccr-loading-reveal 140ms ease-out 180ms forwards;
 }
 
 .ccr-skeleton-shimmer {
@@ -150,7 +388,15 @@ html[data-self-action-modal-open="true"] [data-save-button] {
      keeping user pinch-zoom enabled for accessibility. */
 @media (max-width: 640px) {
   .app-modal-screen.app-modal-screen {
-    padding-bottom: var(--app-keyboard-inset-bottom);
+    padding-bottom: 0;
+  }
+
+  html[data-keyboard-open] .app-modal-screen.app-modal-screen,
+  html[data-keyboard-open] [data-ai-concierge-dialog] {
+    top: var(--app-visual-viewport-top) !important;
+    bottom: auto !important;
+    height: var(--app-visual-viewport-height) !important;
+    max-height: var(--app-visual-viewport-height) !important;
   }
 
   .app-bottom-sheet.app-bottom-sheet {
@@ -304,6 +550,8 @@ input::-ms-clear {
 
 @media (max-width: 1023px) {
   .contratacr-chat-thread-open .dashboard-mobile-nav,
+  .contratacr-chat-thread-open .ccr-app-header,
+  .contratacr-chat-thread-open .ccr-native-bottom-nav,
   .contratacr-chat-thread-open [data-ai-concierge-button],
   .contratacr-ai-open .dashboard-mobile-nav {
     display: none !important;
@@ -331,6 +579,13 @@ input::-ms-clear {
     min-height: 0;
     border-radius: 0;
     overscroll-behavior: none;
+  }
+
+  html.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-thread-scroll {
+    padding-top: 1rem !important;
+    padding-bottom: 1.75rem !important;
+    scroll-padding-top: 1rem;
+    scroll-padding-bottom: 1.75rem;
   }
 
   .contratacr-chat-thread-open .direct-chat-shell--thread > section,

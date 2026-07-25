@@ -13,7 +13,7 @@
   "nav": {
     "search": "Buscar",
     "categories": "Servicios",
-    "howItWorks": "¿Cómo funciona?",
+    "howItWorks": "Cómo usar",
     "login": "Iniciar sesión",
     "register": "Registrarse",
     "searchProfessionals": "Buscar servicios",
@@ -21,7 +21,7 @@
   },
   "header": {
     "categories": "Servicios",
-    "howItWorks": "Cómo funciona",
+    "howItWorks": "Cómo usar",
     "resources": "Recursos",
     "viewAllCategories": "Ver todos los servicios",
     "searchServicePlaceholder": "Busca un servicio…",
@@ -80,7 +80,7 @@
       "more": "Más servicios"
     },
     "resourceLinks": {
-      "howItWorks": "Cómo usar ContrataCR",
+      "howItWorks": "Cómo usar",
       "helpCenter": "Centro de ayuda",
       "proTips": "Para profesionales",
       "support": "Soporte"
@@ -198,8 +198,10 @@
       "desc": "Intenta con otra categoría o amplía la zona de búsqueda."
     },
     "pagination": {
+      "label": "Paginación de resultados",
       "prev": "Anterior",
       "next": "Siguiente",
+      "status": "Página {page} de {total}",
       "pageOf": "Página <b>{page}</b> de <b>{total}</b>"
     },
     "filters": {
@@ -739,6 +741,7 @@
       "errPhoneIncomplete": "Ingresa un número de teléfono completo para el país seleccionado.",
       "errServiceType": "Selecciona al menos un tipo de servicio",
       "errWorkplace": "Agrega al menos una zona donde ofreces tus servicios, o Todo Costa Rica si atiendes por videoconsulta.",
+      "errWorkplaceInPerson": "Agrega al menos una zona donde ofreces tus servicios.",
       "errCoverage": "Agrega al menos una zona a la que te desplazas.",
       "errIdRequired": "Identificación requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.",
       "errCreateAccount": "No se pudo crear la cuenta.",
@@ -829,12 +832,12 @@
     }
   },
   "footer": {
-    "tagline": "El mercado de servicios hecho para Costa Rica. Encuentra al profesional ideal y coordina los detalles desde ContrataCR.",
+    "tagline": "El mercado de servicios hecho para Costa Rica. Ofrece tus servicios, encuentra al profesional ideal y coordina los detalles desde ContrataCR.",
     "clients": {
       "title": "Para clientes",
       "search": "Buscar servicios",
       "categories": "Categorías",
-      "howItWorks": "Cómo usar ContrataCR",
+      "howItWorks": "Cómo usar",
       "publish": "Publicar una solicitud"
     },
     "pros": {
@@ -2306,7 +2309,9 @@
     "emptySub": "Guarda los perfiles que te interesan con el ícono de marcador en sus tarjetas.",
     "searchPros": "Buscar profesionales",
     "count": "{count, plural, one {# profesional guardado} other {# profesionales guardados}}",
-    "noReviews": "Sin reseñas"
+    "noReviews": "Sin reseñas",
+    "videoConsult": "Videoconsulta",
+    "locationUnavailable": "Ubicación sin especificar"
   },
   "registerChoice": {
     "title": "Crear cuenta",
@@ -2740,7 +2745,8 @@
     "mecanica_bicicletas": "Mecánica de bicicletas",
     "hojalateria": "Hojalatería",
     "electricidad_automotriz": "Electricidad automotriz",
-    "tapiceria": "Tapicería",
+    "tapiceria": "Tapicería de muebles",
+    "tapiceria_automotriz": "Tapicería automotriz",
     "detailing": "Detailing",
     "cambio_llantas": "Cambio de llantas"
   },

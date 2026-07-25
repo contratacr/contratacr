@@ -20,6 +20,10 @@ export type ProfessionalInteraction = {
   phoneClicks: number;
   availabilityActions: number;
   favorites: number;
+  serviceRequestsCreated: number;
+  proposalsSent: number;
+  proposalsAccepted: number;
+  reviewsReceived: number;
   uniqueVisitors: number;
 };
 
@@ -174,6 +178,11 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       profile_share: "Perfiles compartidos",
       external_link_click: "Enlaces externos",
       service_request_started: "Solicitudes iniciadas",
+      service_request_created: "Solicitudes creadas",
+      project_published: "Publicaciones creadas",
+      proposal_sent: "Propuestas enviadas",
+      proposal_accepted: "Propuestas aceptadas",
+      review_created: "Reseñas recibidas",
     };
     empty.interactions.total = Number(payload.total) || 0;
     empty.interactions.uniqueVisitors = Number(payload.uniqueVisitors) || 0;
@@ -199,6 +208,10 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
         phoneClicks: Number(item.phone_clicks) || 0,
         availabilityActions: Number(item.availability_actions) || 0,
         favorites: Number(item.favorites) || 0,
+        serviceRequestsCreated: Number(item.service_requests_created) || 0,
+        proposalsSent: Number(item.proposals_sent) || 0,
+        proposalsAccepted: Number(item.proposals_accepted) || 0,
+        reviewsReceived: Number(item.reviews_received) || 0,
         uniqueVisitors: Number(item.unique_visitors) || 0,
       };
     });

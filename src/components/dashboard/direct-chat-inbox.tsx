@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Archive, ArchiveRestore, ArrowLeft, Loader2, MessageSquareMore, Search, Send, Trash2 } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -25,7 +26,9 @@ type Conversation = {
   professionals?: { id?: string; slug?: string | null; business_name?: string | null; profiles?: Person | null } | null;
   context?: { type: "booking" | "project" | "proposal" | "profile"; title?: string | null; service_description?: string | null; status?: string | null; proposal_status?: string | null };
 };
-type DirectMessage = { id: string; sender_id: string; body: string; created_at: string };
+type DirectAttachment = { path?: string; name: string; type: string; size: number; url?: string | null };
+type DirectMessage = { id: string; sender_id: string; body: string; created_at: string; attachment_urls?: DirectAttachment[] };
+type SelectedAttachment = { id: string; file: File; previewUrl?: string };
 type PendingDraft = {
   professionalId?: string;
   bookingId?: string;
@@ -36,6 +39,9 @@ type PendingDraft = {
 };
 
 const DRAFT_CONVERSATION_ID = "__draft__";
+const MAX_ATTACHMENTS = 3;
+const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+const ALLOWED_ATTACHMENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 
 function timeLabel(value?: string | null, locale = "es") {
   if (!value) return "";
@@ -61,6 +67,15 @@ function resizeMessageTextarea(textarea: HTMLTextAreaElement | null) {
   const nextHeight = Math.min(textarea.scrollHeight, 144);
   textarea.style.height = `${nextHeight}px`;
   textarea.style.overflowY = textarea.scrollHeight > 144 ? "auto" : "hidden";
+}
+
+function attachmentLabel(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+function isImageAttachment(attachment: Pick<DirectAttachment, "type" | "name">) {
+  return attachment.type.startsWith("image/") || /\.(jpe?g|png|webp)$/i.test(attachment.name);
 }
 
 function buildPendingDraft(searchParams: URLSearchParams, userId: string | undefined, isEn: boolean): { conversation: Conversation | null; payload: PendingDraft | null } {
@@ -141,10 +156,28 @@ export function DirectChatInbox() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [attachmentError, setAttachmentError] = useState("");
+  const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
+  const [imagePreview, setImagePreview] = useState<DirectAttachment | null>(null);
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const selectedAttachmentsRef = useRef<SelectedAttachment[]>([]);
   useContainedTouchScroll(scrollRef, mobileThread);
+
+  useEffect(() => {
+    if (!imagePreview) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setImagePreview(null);
+    };
+    const releaseBodyScroll = lockBodyScroll();
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      releaseBodyScroll();
+    };
+  }, [imagePreview]);
 
   useLayoutEffect(() => {
     if (!mobileThread) return;
@@ -265,10 +298,22 @@ export function DirectChatInbox() {
 
   useEffect(() => { queueMicrotask(() => void loadConversations()); }, [loadConversations]);
   useEffect(() => { if (activeId) queueMicrotask(() => void loadThread(activeId)); }, [activeId, loadThread]);
-  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, threadLoading]);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight });
+  }, [messages, threadLoading, selectedAttachments]);
   useEffect(() => {
     resizeMessageTextarea(textareaRef.current);
   }, [draft]);
+  useEffect(() => {
+    selectedAttachmentsRef.current = selectedAttachments;
+  }, [selectedAttachments]);
+  useEffect(() => () => {
+    selectedAttachmentsRef.current.forEach((attachment) => {
+      if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+    });
+  }, []);
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
@@ -307,14 +352,99 @@ export function DirectChatInbox() {
     router.replace(`/mensajes${showArchived ? "?chatStatus=archived&" : "?"}conversation=${id}`, { scroll: false });
   }
 
+  function addAttachments(files: FileList | null) {
+    setAttachmentError("");
+    if (!files?.length) return;
+    if (activeId === DRAFT_CONVERSATION_ID) {
+      setAttachmentError(isEn ? "Send the first message before attaching files." : "Envia el primer mensaje antes de adjuntar archivos.");
+      return;
+    }
+    const next = [...selectedAttachments];
+    for (const file of Array.from(files)) {
+      if (next.length >= MAX_ATTACHMENTS) {
+        setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puedes adjuntar hasta 3 archivos por mensaje.");
+        break;
+      }
+      if (!ALLOWED_ATTACHMENT_TYPES.has(file.type)) {
+        setAttachmentError(isEn ? "Attach JPG, PNG, WEBP images or PDF files only." : "Adjunta solo imagenes JPG, PNG, WEBP o PDF.");
+        continue;
+      }
+      if (file.size > MAX_ATTACHMENT_BYTES) {
+        setAttachmentError(isEn ? "Each file must be 5 MB or less." : "Cada archivo debe pesar 5 MB o menos.");
+        continue;
+      }
+      next.push({
+        id: `${Date.now()}-${crypto.randomUUID()}`,
+        file,
+        previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+      });
+    }
+    setSelectedAttachments(next);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removeAttachment(id: string) {
+    setSelectedAttachments((current) => {
+      const attachment = current.find((item) => item.id === id);
+      if (attachment?.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+      return current.filter((item) => item.id !== id);
+    });
+  }
+
+  function clearSelectedAttachments() {
+    selectedAttachments.forEach((attachment) => {
+      if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+    });
+    setSelectedAttachments([]);
+  }
+
+  async function uploadSelectedAttachments(conversationId: string) {
+    const uploaded: DirectAttachment[] = [];
+    for (const attachment of selectedAttachments) {
+      const formData = new FormData();
+      formData.set("conversationId", conversationId);
+      formData.set("file", attachment.file);
+      const res = await fetch("/api/direct-chat/attachments", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Error");
+      uploaded.push(json.attachment);
+    }
+    return uploaded;
+  }
+
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!activeId || !draft.trim() || sending) return;
+    if (!activeId || sending || (!draft.trim() && !selectedAttachments.length)) return;
     const body = draft.trim(); const optimisticId = `pending-${Date.now()}`;
-    setDraft(""); setSending(true); setError("");
-    setMessages((current) => [...current, { id: optimisticId, sender_id: user?.id || "", body, created_at: new Date().toISOString() }]);
+    const optimisticAttachments = selectedAttachments.map((attachment) => ({
+      name: attachment.file.name,
+      type: attachment.file.type,
+      size: attachment.file.size,
+      url: attachment.previewUrl ?? null,
+    }));
+    setDraft(""); setSending(true); setError(""); setAttachmentError("");
+    setMessages((current) => [...current, { id: optimisticId, sender_id: user?.id || "", body: body || (isEn ? "Attachment" : "Archivo adjunto"), attachment_urls: optimisticAttachments, created_at: new Date().toISOString() }]);
     try {
-      const payload = activeId === DRAFT_CONVERSATION_ID
+      let targetConversationId = activeId;
+      if (activeId === DRAFT_CONVERSATION_ID && selectedAttachments.length) {
+        const openRes = await fetch("/api/direct-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            professionalId: pendingDraftPayload?.professionalId,
+            bookingId: pendingDraftPayload?.bookingId,
+            projectId: pendingDraftPayload?.projectId,
+            proposalId: pendingDraftPayload?.proposalId,
+            contextTitle: pendingDraftPayload?.contextTitle,
+            openConversation: true,
+          }),
+        });
+        const openJson = await openRes.json();
+        if (!openRes.ok || !openJson.conversationId) throw new Error(openJson.error || "Error");
+        targetConversationId = openJson.conversationId;
+      }
+      const attachmentUrls = selectedAttachments.length ? await uploadSelectedAttachments(targetConversationId) : [];
+      const payload = activeId === DRAFT_CONVERSATION_ID && !selectedAttachments.length
         ? {
           professionalId: pendingDraftPayload?.professionalId,
           bookingId: pendingDraftPayload?.bookingId,
@@ -323,10 +453,11 @@ export function DirectChatInbox() {
           contextTitle: pendingDraftPayload?.contextTitle,
           message: body,
         }
-        : { conversationId: activeId, message: body };
+        : { conversationId: targetConversationId, message: body, attachmentUrls };
       const res = await fetch("/api/direct-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
+      clearSelectedAttachments();
       if (activeId === DRAFT_CONVERSATION_ID && json.conversationId) {
         setPendingDraft(null);
         setPendingDraftPayload(null);
@@ -375,7 +506,12 @@ export function DirectChatInbox() {
     return isClientSide && item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null;
   }
 
-  if (loading) return <div className="flex min-h-[360px] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>;
+  if (loading) return (
+    <div className="ccr-delayed-loading flex min-h-[calc(100dvh-153px)] flex-col items-center justify-center gap-2 px-4 text-center sm:min-h-[520px]" aria-busy="true" role="status">
+      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
+      <p className="text-sm font-extrabold text-[#162543]">{isEn ? "Loading" : "Cargando"}</p>
+    </div>
+  );
 
   if (!displayedConversations.length) return (
     <PanelEmptyState
@@ -403,8 +539,8 @@ export function DirectChatInbox() {
       "direct-chat-shell grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
       mobileThread && "direct-chat-shell--thread",
     )}>
-      <aside className={cn("min-h-0 border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>
-        <div className="border-b border-[#e3ebf1] p-4">
+      <aside className={cn("flex min-h-0 flex-col border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>
+        <div className="shrink-0 border-b border-[#e3ebf1] p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-extrabold text-[#162543]">{showArchived ? (isEn ? "Archived" : "Archivados") : (isEn ? "Messages" : "Mensajes")}</h2>
             {showArchived && (
@@ -416,7 +552,7 @@ export function DirectChatInbox() {
           </div>
           <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>
         </div>
-        <div className="h-[calc(100%-105px)] overflow-y-auto">
+        <div className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
           {!showArchived && archivedCount > 0 && (
             <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e7eef3] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
@@ -429,28 +565,28 @@ export function DirectChatInbox() {
           {filtered.map((item) => { const person = personFor(item); const summary = contextSummaryFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
             <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "bg-white shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block truncate text-xs font-bold text-[#0090c7]">{summary}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block line-clamp-2 text-xs font-bold leading-snug text-[#0090c7]">{summary}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>); })}
           {!filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
         </div>
       </aside>
 
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
-        <header className="flex min-h-[65px] items-center gap-3 border-b border-[#e3ebf1] px-3 py-3 sm:px-5">
-          <button type="button" onClick={() => setMobileThread(false)} className="grid h-9 w-9 place-items-center text-[#526277] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
+        <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e3ebf1] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
+          <button type="button" onClick={() => setMobileThread(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
           <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
-            <Avatar className="h-10 w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
+            <Avatar className="h-9 w-9 sm:h-10 sm:w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
           </button>
           <div className="min-w-0 flex-1">
             {activePerson?.profileHref ? (
-              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full truncate text-left text-sm font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline">
+              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full truncate text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline">
                 {activePerson.name}
               </button>
             ) : (
-              <p className="truncate text-sm font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
+              <p className="truncate text-[15px] font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
             )}
             {active && activeContext && activeContext.type !== "profile" && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
-            {activeContextTitle && <p className="mt-0.5 truncate text-xs font-semibold text-[#63748a]">{activeContextTitle}</p>}
+            {activeContextTitle && <p className="mt-0.5 line-clamp-1 text-xs font-semibold leading-snug text-[#63748a] sm:line-clamp-2">{activeContextTitle}</p>}
             {detailHref && (
               <button type="button" onClick={() => router.push(detailHref)} className="mt-0.5 block max-w-full truncate text-left text-xs font-extrabold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
                 {activeContextAction}
@@ -464,8 +600,8 @@ export function DirectChatInbox() {
             </ChatActionButton>
           )}
         </header>
-        <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
-          {threadLoading ? <div className="grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
+        <div ref={scrollRef} className="ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
+          {threadLoading ? <div className="ccr-delayed-loading grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
             const mine = message.sender_id === user?.id;
             return (
               <div key={message.id} className={cn("flex items-end gap-2", mine && "justify-end")}>
@@ -483,15 +619,118 @@ export function DirectChatInbox() {
                     ? "max-w-[86%] rounded-br-md bg-[#009FD9] font-medium text-white sm:max-w-[78%]"
                     : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d] sm:max-w-[72%]",
                 )}>
-                  <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                  {message.body && !(message.attachment_urls?.length && (message.body === "Archivo adjunto" || message.body === "Attachment")) && (
+                    <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                  )}
+                  {!!message.attachment_urls?.length && (
+                    <div className={cn("grid gap-2", message.body && message.body !== "Archivo adjunto" && message.body !== "Attachment" && "mt-2 pt-1")}>
+                      {message.attachment_urls.map((attachment, index) => {
+                        const href = attachment.url ?? undefined;
+                        const image = isImageAttachment(attachment);
+                        return image ? (
+                          <button
+                            key={`${message.id}-${attachment.path ?? attachment.name}-${index}`}
+                            type="button"
+                            onClick={() => href && setImagePreview(attachment)}
+                            disabled={!href}
+                            className={cn(
+                              "group relative min-h-36 overflow-hidden rounded-xl border text-left transition",
+                              mine ? "border-white/30 bg-white/10 hover:bg-white/15" : "border-[#dce8f0] bg-[#f7fbfd] hover:border-[#b9d8e8]",
+                            )}
+                            aria-label={isEn ? `Open ${attachment.name}` : `Abrir ${attachment.name}`}
+                          >
+                            {href ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={href} alt={attachment.name} className="max-h-72 min-h-36 w-full object-cover" />
+                            ) : (
+                              <span className="grid min-h-36 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></span>
+                            )}
+                          </button>
+                        ) : (
+                          <a
+                            key={`${message.id}-${attachment.path ?? attachment.name}-${index}`}
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={cn(
+                              "group flex min-w-[220px] items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-left transition",
+                              mine ? "border-white/30 bg-white/10 hover:bg-white/15" : "border-[#dce8f0] bg-[#f7fbfd] hover:border-[#b9d8e8]",
+                            )}
+                          >
+                            <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-lg", mine ? "bg-white/15 text-white" : "bg-white text-[#009FD9]")}>
+                              <FileText className="h-5 w-5" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-xs font-extrabold">{attachment.name}</span>
+                              <span className={cn("block text-[10px]", mine ? "text-white/75" : "text-[#6b7a90]")}>PDF · {attachmentLabel(attachment.size)}</span>
+                            </span>
+                            <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full", mine ? "bg-white/15" : "bg-white")}>
+                              <Download className="h-4 w-4" />
+                            </span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
                   <time className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/75" : "text-[#8996a8]")}>{timeLabel(message.created_at, locale)}</time>
                 </div>
               </div>
             );
           })}
         </div>
-        {error && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error}</p>}
-        <form onSubmit={submit} className="shrink-0 flex items-end gap-2 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+        {(error || attachmentError) && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error || attachmentError}</p>}
+        <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+          {!!selectedAttachments.length && (
+            <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
+              {selectedAttachments.map((attachment) => (
+                <div key={attachment.id} className="relative flex h-16 min-w-40 max-w-48 items-center gap-2 rounded-xl border border-[#d8e5ee] bg-[#f7fbfd] p-2 pr-8">
+                  {attachment.previewUrl ? (
+                     <button
+                       type="button"
+                       onClick={() => setImagePreview({
+                         name: attachment.file.name,
+                         type: attachment.file.type,
+                         size: attachment.file.size,
+                         url: attachment.previewUrl,
+                       })}
+                       className="h-11 w-11 shrink-0 overflow-hidden rounded-lg"
+                       aria-label={isEn ? `Preview ${attachment.file.name}` : `Vista previa de ${attachment.file.name}`}
+                     >
+                       {/* eslint-disable-next-line @next/next/no-img-element */}
+                       <img src={attachment.previewUrl} alt={attachment.file.name} className="h-full w-full object-cover" />
+                     </button>
+                  ) : (
+                    <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#e8f8ff] text-[#009FD9]"><FileText className="h-5 w-5" /></span>
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-extrabold text-[#162543]">{attachment.file.name}</span>
+                    <span className="block text-[10px] font-semibold text-[#6b7a90]">{attachmentLabel(attachment.file.size)}</span>
+                  </span>
+                  <button type="button" onClick={() => removeAttachment(attachment.id)} className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-[#526277] shadow-sm hover:text-red-600" aria-label={isEn ? "Remove attachment" : "Quitar adjunto"}>
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-end gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            multiple
+            className="hidden"
+            onChange={(event) => addAttachments(event.currentTarget.files)}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={sending || selectedAttachments.length >= MAX_ATTACHMENTS}
+            className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
+            aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
+          >
+            <Paperclip className="h-5 w-5" />
+          </button>
           <textarea
             ref={textareaRef}
             rows={1}
@@ -511,14 +750,54 @@ export function DirectChatInbox() {
           />
           <button
             type="submit"
-            disabled={sending || !draft.trim()}
+            disabled={sending || (!draft.trim() && !selectedAttachments.length)}
             className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#d8e4e9] disabled:shadow-none"
             aria-label={isEn ? "Send" : "Enviar"}
           >
             {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </button>
+          </div>
         </form>
       </section>
+      {imagePreview?.url && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[1000] flex flex-col bg-black/95 text-white" role="dialog" aria-modal="true" aria-label={imagePreview.name}>
+          <div className="flex min-h-16 shrink-0 items-center gap-3 px-3 pt-[env(safe-area-inset-top)] sm:px-5">
+            <button
+              type="button"
+              onClick={() => setImagePreview(null)}
+              className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/10"
+              aria-label={isEn ? "Close image" : "Cerrar imagen"}
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <strong className="block truncate text-sm">{imagePreview.name}</strong>
+              <span className="text-xs text-white/65">{attachmentLabel(imagePreview.size)}</span>
+            </div>
+            {imagePreview.path && (
+              <a
+                href={imagePreview.url}
+                target="_blank"
+                rel="noreferrer"
+                className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/10"
+                aria-label={isEn ? "Download image" : "Descargar imagen"}
+              >
+                <Download className="h-5 w-5" />
+              </a>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setImagePreview(null)}
+            className="flex min-h-0 flex-1 items-center justify-center p-3 sm:p-6"
+            aria-label={isEn ? "Close image" : "Cerrar imagen"}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imagePreview.url} alt={imagePreview.name} className="max-h-full max-w-full select-none object-contain" />
+          </button>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

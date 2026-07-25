@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deriveDisplayPricing } from "@/lib/pricing";
@@ -27,6 +28,7 @@ const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const NEAR_ME_RADIUS_KM = 25;
+const SEARCH_CACHE_SECONDS = 15;
 
 
 type LocationQueryMatch =
@@ -201,8 +203,17 @@ function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
 
 export async function searchProfessionals(filters: SearchFilters): Promise<ProfessionalCardData[]> {
   const normalized = normalizeSearchFilters(filters);
-  return searchProfessionalsUncached(normalized);
+  if (normalized.bounds || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number")) {
+    return searchProfessionalsUncached(normalized);
+  }
+  return searchProfessionalsCached(normalized);
 }
+
+const searchProfessionalsCached = unstable_cache(
+  async (filters: SearchFilters) => searchProfessionalsUncached(filters),
+  ["public-professional-search-v4"],
+  { revalidate: SEARCH_CACHE_SECONDS },
+);
 
 async function searchProfessionalsUncached(
   filters: SearchFilters

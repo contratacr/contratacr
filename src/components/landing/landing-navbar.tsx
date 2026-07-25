@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
-  LayoutDashboard, Briefcase, Compass,
-  UserRound, LogOut,
+  LayoutDashboard, Briefcase, Compass, Wrench,
+  UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Bot, Shield,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -19,11 +20,13 @@ import { SupportLink } from "@/components/support/support-link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
+import { createClient } from "@/lib/supabase/client";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
 export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
@@ -136,7 +139,7 @@ function LanguageMenu() {
       type="button"
       onClick={() => switchLang(nextLocale)}
       aria-label={locale === "en" ? "Cambiar a español" : "Switch to English"}
-      className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
+      className="relative z-[70] inline-flex h-10 min-w-10 shrink-0 items-center justify-center rounded-xl px-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
     >
       {label}
     </button>
@@ -163,6 +166,7 @@ function LanguageMenu() {
 
 // `key` resolves to header.resourceLinks.<key> for the translated label.
 const RESOURCES_LINKS: { key: string; href: string }[] = [
+  { key: "howItWorks", href: "/como-funciona" },
   { key: "helpCenter", href: "/ayuda" },
   { key: "proTips",    href: "/atraer-clientes" },
   { key: "support",    href: "/soporte" },
@@ -578,10 +582,41 @@ function PanelIconLink({ href, label }: { href: string; label: string }) {
   );
 }
 
+function HeaderIconLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      title={label}
+      className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function DrawerIcon({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#162543] [&>svg]:h-6 [&>svg]:w-6">
+      {children}
+    </span>
+  );
+}
+
+function ResourceIcon({ name, className = "h-5 w-5 text-[#64748b]" }: { name: string; className?: string }) {
+  if (name === "howItWorks") return <ListChecks className={className} />;
+  if (name === "helpCenter") return <HelpCircle className={className} />;
+  if (name === "proTips") return <Lightbulb className={className} />;
+  return <Headset className={className} />;
+}
+
 export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileLegalOpen, setMobileLegalOpen] = useState(false);
+  const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
+  const [nativePendingHref, setNativePendingHref] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   useCustomCategories();
   // A picked category (so a chosen suggestion filters by id, not free text).
@@ -596,6 +631,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const navLocBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const compactSvcRef = useRef<HTMLDivElement>(null);
   const compactLocRef = useRef<HTMLDivElement>(null);
+  const nativePendingTimer = useRef<number | null>(null);
+  const nativeBottomNavRef = useRef<HTMLElement>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
   const [isSmallScreen, setIsSmallScreen] = useState(true);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -608,7 +645,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const alternateLocale = locale === "en" ? "es" : "en";
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
   const pathname = usePathname();
+  const nativeApp = useNativeApp();
+  const nativeSearchRoute = /(^|\/)buscar(\/|$)/.test(pathname);
+  const nativeHeaderShell = nativeApp;
+  const nativeBottomShell = nativeApp && !nativeSearchRoute;
   const { user, loading: authLoading } = useAuth();
+  const nativeBottomNavVisible = nativeBottomShell && (Boolean(user) || authLoading);
+  const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
   const compactSearchExamples = useMemo(() => {
@@ -616,6 +659,34 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
   }, [isSmallScreen, t]);
   const compactPlaceholder = useTypedPlaceholder(compactSearchExamples, effectiveCompact && !searchFocused && !searchQuery.trim());
+
+  useEffect(() => {
+    const roots = [document.documentElement, document.body];
+    roots.forEach((root) => root.classList.toggle("ccr-native-bottom-nav-visible", nativeBottomNavVisible));
+    return () => roots.forEach((root) => root.classList.remove("ccr-native-bottom-nav-visible"));
+  }, [nativeBottomNavVisible]);
+
+  useEffect(() => {
+    if (!nativeBottomNavVisible || !nativeBottomNavRef.current) return;
+    const nav = nativeBottomNavRef.current;
+    const root = document.documentElement;
+    const updateHeight = () => {
+      root.style.setProperty("--ccr-native-bottom-nav-height", `${Math.ceil(nav.getBoundingClientRect().height)}px`);
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(nav);
+    window.addEventListener("resize", updateHeight);
+    window.visualViewport?.addEventListener("resize", updateHeight);
+    window.visualViewport?.addEventListener("scroll", updateHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeight);
+      window.visualViewport?.removeEventListener("resize", updateHeight);
+      window.visualViewport?.removeEventListener("scroll", updateHeight);
+      root.style.removeProperty("--ccr-native-bottom-nav-height");
+    };
+  }, [nativeBottomNavVisible]);
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
   // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
@@ -629,6 +700,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   // `isPro` = the account can OFFER services (Airbnb "host" capability). It only
   // controls menu LABELS/grouping now — everyone uses the ONE unified panel.
   const isPro = canOffer(user);
+  const isAdminUser = user?.user_metadata?.role === "admin" || (!!user && profileRole?.userId === user.id && profileRole.role === "admin");
   const { mode } = useMode(isPro);
 
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
@@ -638,31 +710,100 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) return;
+    if (user.user_metadata?.role === "admin") return;
+
+    const loadRole = async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.rpc("get_my_profile");
+        if (!cancelled) setProfileRole({ userId: user.id, role: (data as { role?: string } | null)?.role ?? null });
+      } catch {
+        if (!cancelled) setProfileRole({ userId: user.id, role: null });
+      }
+    };
+    void loadRole();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   // Warm the two most common destinations after the current page settles. This
   // keeps the initial render light while making the first panel/search transition
   // use Next's prefetched route payload instead of waiting after the click.
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      if (!pathname.startsWith("/buscar")) router.prefetch("/buscar");
+      router.prefetch("/buscar");
       if (user && !pathname.startsWith("/dashboard/profesional")) {
         router.prefetch(primaryPanelHref);
         prefetchDashboardBootstrap(user.id);
       }
-    }, 900);
+    }, nativeApp ? 0 : 120);
     return () => window.clearTimeout(timeout);
-  }, [pathname, primaryPanelHref, router, user]);
+  }, [nativeApp, pathname, primaryPanelHref, router, user]);
+
+  useEffect(() => {
+    if (!nativeApp) return;
+    router.prefetch("/buscar");
+  }, [nativeApp, router]);
+
+  useEffect(() => {
+    if (!nativeApp || !user) return;
+    router.prefetch("/mensajes");
+    router.prefetch(primaryPanelHref);
+    prefetchDashboardBootstrap(user.id);
+  }, [nativeApp, primaryPanelHref, router, user]);
 
   const visibleResourceLinks = useMemo(
     () => RESOURCES_LINKS.filter((link) => link.key !== "proTips" || !user || isPro),
     [isPro, user],
   );
   const mobileDrawerItemClass =
-    "block w-full py-2.5 text-left text-[17px] font-medium leading-snug text-[#1A2744] transition-colors hover:text-[#009FD9]";
-  const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-bold");
+    "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[16px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
+  const mobileDrawerTextClass = "min-w-0 flex-1 whitespace-normal break-words";
+  const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-extrabold");
+  const mobileDrawerSubItemClass =
+    "flex w-full items-center gap-2.5 rounded-xl px-2 py-2.5 text-left text-[14px] font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
 
   const openMobileMenu = useCallback(() => {
+    setMobileLegalOpen(false);
+    setMobileHelpOpen(false);
     setMobileOpen(true);
   }, []);
+
+  const nativeBottomNavClass = useCallback(
+    (href: string) => {
+      const baseHref = href.split("?")[0] ?? href;
+      const isActive = nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
+      return cn(
+        "flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]",
+        isActive && "bg-[#eef9fd] text-[#009FD9]",
+      );
+    },
+    [nativePendingHref, panelHref, pathname],
+  );
+
+  const prepareNativeNavigation = useCallback(
+    (href: string) => {
+      if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
+      setNativePendingHref(href);
+      router.prefetch(href);
+      nativePendingTimer.current = window.setTimeout(() => setNativePendingHref(null), 8000);
+    },
+    [router],
+  );
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setNativePendingHref(null), 0);
+    if (nativePendingTimer.current) {
+      window.clearTimeout(nativePendingTimer.current);
+      nativePendingTimer.current = null;
+    }
+    return () => window.clearTimeout(id);
+  }, [pathname]);
 
   const compactSuggestions = matchCategories(searchQuery, 8, locale);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
@@ -681,6 +822,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     if (!mobileOpen) return;
     return lockBodyScroll();
   }, [mobileOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
+    };
+  }, []);
 
   async function handleSignOut() {
     // Go STRAIGHT home — `signOutToHome` flags the in-flight sign-out so protected
@@ -821,28 +968,51 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80"
+        className="ccr-app-header fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80"
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="relative h-16">
-            <div className="absolute inset-0 flex items-center gap-2 lg:hidden">
+            <div className={cn(
+              "absolute inset-0 lg:hidden",
+              nativeHeaderShell
+                ? "grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-0"
+                : "flex items-center gap-2",
+            )}>
               <button
                 type="button"
                 onClick={openMobileMenu}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] transition-colors hover:bg-gray-50"
+                className={cn(
+                  "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] transition-colors hover:bg-gray-50",
+                  nativeHeaderShell && "justify-self-start",
+                )}
                 aria-label={t("openMenu")}
               >
                 <Menu className="h-5 w-5" />
               </button>
 
-              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+              <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "min-w-0 justify-self-center")}>
                 {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
               </Link>
 
-              {mobileInline && (
+              {!nativeHeaderShell && mobileInline && (
                 <div className="flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
               )}
 
+              {nativeHeaderShell ? (
+                user ? (
+                  <div className="grid h-10 w-10 justify-self-end place-items-center">
+                    <NotificationBell scope="all" />
+                  </div>
+                ) : (
+                  <Link
+                    href={loginHref}
+                    aria-label={t("login")}
+                    className="grid h-10 w-10 justify-self-end place-items-center rounded-xl text-[#1A2744] transition-colors active:bg-[#eef9fd] active:text-[#009FD9]"
+                  >
+                    <UserRound className="h-5 w-5" />
+                  </Link>
+                )
+              ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
                 {user && <NotificationBell scope="all" />}
                 <Link
@@ -853,13 +1023,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <UserRound className="h-5 w-5" />
                 </Link>
               </div>
+              )}
             </div>
 
             {/* ── Default row ── */}
-            <div
-              className="absolute inset-0 hidden items-center gap-4 transition-opacity duration-300 lg:flex"
-              style={{ opacity: effectiveCompact ? 0 : 1, pointerEvents: effectiveCompact ? "none" : "auto" }}
-            >
+            <div className="relative hidden h-full items-center gap-4 lg:flex">
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
                 {mobileInline ? (
                   <>
@@ -914,13 +1082,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   )}
                 </div>
 
-                <Link
-                  href="/como-funciona"
-                  className="relative text-sm font-medium px-3 py-2 text-[#1A2744] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#009FD9]"
-                >
-                  {t("resourceLinks.howItWorks")}
-                </Link>
-
                 {/* Recursos — simple dropdown */}
                 <div
                   className="relative"
@@ -938,7 +1099,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   </button>
                   {openMenu === "recursos" && (
                     <div
-                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-4 z-50 min-w-[220px]"
+                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-3 z-50 min-w-[280px]"
                       style={{ animation: "tab-cards-in 0.15s ease both" }}
                     >
                       <ul className="space-y-1">
@@ -947,16 +1108,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                             {link.key === "support" ? (
                               <SupportLink
                                 onNavigate={() => setOpenMenu(null)}
-                                className="block w-full text-left px-3 py-2 rounded-lg text-sm text-[#1A2744] hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
+                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
                               >
+                                <ResourceIcon name={link.key} />
                                 {t(`resourceLinks.${link.key}`)}
                               </SupportLink>
                             ) : (
                               <Link
                                 href={link.href}
                                 onClick={() => setOpenMenu(null)}
-                                className="block px-3 py-2 rounded-lg text-sm text-[#1A2744] hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
                               >
+                                <ResourceIcon name={link.key} />
                                 {t(`resourceLinks.${link.key}`)}
                               </Link>
                             )}
@@ -973,7 +1136,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               <div className={cn("flex-1", mobileInline && "hidden lg:block")} />
 
               {/* Right actions */}
-              <div className="hidden w-[340px] justify-end lg:flex items-center gap-2 shrink-0">
+              <div className="relative z-[60] hidden w-[340px] justify-end lg:flex items-center gap-2 shrink-0">
                 {authLoading && !user ? (
                   <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
                     <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
@@ -989,6 +1152,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                         <Briefcase className="h-4 w-4" />
                         {t("offerServices")}
                       </Link>
+                    )}
+                    {nativeApp && (
+                      <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
+                        <MessageSquareText className="h-5 w-5" />
+                      </HeaderIconLink>
                     )}
                     <NotificationBell scope="all" />
                     <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
@@ -1025,21 +1193,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               </button>
             </div>
 
-            {/* ── Compact row — brand mark + smart search (Thumbtack-style) ── */}
+            {/* ── Scroll search overlay — inserts search without moving the base navbar. ── */}
             <div
-              className="absolute inset-0 hidden items-center gap-2 px-4 transition-opacity duration-300 sm:gap-3 sm:px-6 lg:flex lg:px-8"
+              className="absolute inset-y-0 left-[320px] right-[390px] hidden items-center transition-opacity duration-200 lg:flex xl:left-[340px]"
               style={{ opacity: effectiveCompact ? 1 : 0, pointerEvents: effectiveCompact ? "auto" : "none" }}
             >
-              <Link
-                href="/"
-                aria-label="ContrataCR inicio"
-                className="relative z-20 shrink-0 -ml-1 grid place-items-center p-1 rounded-lg active:bg-gray-100 touch-manipulation"
-              >
-                <ContrataCRMark className="h-9 w-9" />
-              </Link>
               <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
-                <div className="relative w-full max-w-5xl">
-                  <div className="flex w-full items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
+                <div className="relative w-full max-w-3xl">
+                  <div className="flex w-full items-center h-11 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-4 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
                     <div ref={compactSvcRef} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
                       <Search className="hidden h-5 w-5 shrink-0 text-gray-300 sm:block" />
                       <input
@@ -1078,7 +1239,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     <button
                       type="submit"
                       aria-label={t("search")}
-                      className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-8 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
+                      className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-6 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
                     >
                       <Search className="h-4 w-4 sm:hidden" />
                       <span className="hidden sm:inline">{t("search")}</span>
@@ -1142,26 +1303,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 </div>
               </form>
 
-              {/* Desktop keeps bell + account menu in the compact row. On mobile,
-                  the hamburger is the single entry point so account options do not
-                  split across two menus. */}
-              <div className="hidden w-[156px] justify-end lg:flex items-center gap-0.5 sm:gap-1.5 shrink-0">
-                <LanguageMenu />
-                {user && <NotificationBell scope="all" />}
-                {user ? (
-                  <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
-                ) : (
-                  null
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={openMobileMenu}
-                className="lg:hidden ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
-                aria-label={t("openMenu")}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
             </div>
 
           </div>
@@ -1191,72 +1332,187 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[48vw] min-w-[180px] max-w-[230px] sm:w-[38vw] sm:max-w-[250px] bg-white shadow-[12px_0_28px_-18px_rgba(15,23,42,0.55)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
-            mobileOpen ? "translate-x-0" : "-translate-x-full"
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[76vw] max-w-[320px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-[transform,visibility] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            mobileOpen ? "visible translate-x-0 pointer-events-auto" : "invisible -translate-x-full pointer-events-none"
           )}
         >
-          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-14">
+          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
             <nav className="flex flex-col gap-1">
-              <Link href="/" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {locale === "en" ? "Home" : "Inicio"}
-              </Link>
               {user ? (
                 <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  {locale === "en" ? "My dashboard" : "Mi panel"}
+                  <DrawerIcon><LayoutDashboard /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                 </Link>
-              ) : (
+              ) : !user ? (
                 <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  {t("offerServices")}
+                  <DrawerIcon><Briefcase /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
+                </Link>
+              ) : null}
+              <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+                <DrawerIcon><Search /></DrawerIcon>
+                <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
+              </Link>
+              {user && isAdminUser && (
+                <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                  <DrawerIcon><Shield /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                 </Link>
               )}
-              <Link href="/buscar" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                {t("searchProfessionals")}
-              </Link>
-              {!user && (
-                <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                  {t("login")}
+              {nativeApp && user && (
+                <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                  <DrawerIcon><MessageSquareText /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
                 </Link>
               )}
-              <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("categories")}
-              </Link>
-              <Link href="/como-funciona" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("resourceLinks.howItWorks")}
-              </Link>
-              <Link href="/ayuda" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("resourceLinks.helpCenter")}
-              </Link>
-              <Link href="/atraer-clientes" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("resourceLinks.proTips")}
-              </Link>
-              <SupportLink onNavigate={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                {t("resourceLinks.support")}
-              </SupportLink>
               <button
                 type="button"
                 onClick={() => {
                   setMobileOpen(false);
-                  switchLang(alternateLocale);
+                  window.dispatchEvent(new Event("contratacr:open-ai"));
                 }}
                 className={mobileDrawerItemClass}
               >
-                {alternateLanguageLabel}
+                <DrawerIcon><Bot /></DrawerIcon>
+                <span className={mobileDrawerTextClass}>{locale === "en" ? "Assistant" : "Asistente"}</span>
               </button>
-              {user && (
+              {!user && (
+                <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                  <DrawerIcon><UserRound /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("login")}</span>
+                </Link>
+              )}
+
+              {user && !isPro && (
+                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                  <DrawerIcon><Briefcase /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
+                </Link>
+              )}
+              <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                <DrawerIcon><Wrench /></DrawerIcon>
+                <span className={mobileDrawerTextClass}>{t("categories")}</span>
+              </Link>
+
+              <div className="mt-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    void handleSignOut();
-                  }}
-                  className={mobileDrawerItemClass}
+                  onClick={() => setMobileHelpOpen((open) => !open)}
+                  className={cn(mobileDrawerItemClass, "gap-2")}
+                  aria-expanded={mobileHelpOpen}
                 >
-                  {t("signOut")}
+                  <DrawerIcon><HelpCircle /></DrawerIcon>
+                  <span className="min-w-0 flex-1 whitespace-nowrap">{locale === "en" ? "Help and support" : "Ayuda y soporte"}</span>
+                  <ChevronDown className={cn("h-5 w-5 shrink-0 text-[#64748b] transition-transform", mobileHelpOpen && "rotate-180")} />
                 </button>
-              )}
+                {mobileHelpOpen && (
+                  <div className="mt-1 grid gap-1 pl-[52px]">
+                    <Link href="/como-funciona" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <ResourceIcon name="howItWorks" />
+                      <span className={mobileDrawerTextClass}>{t("resourceLinks.howItWorks")}</span>
+                    </Link>
+                    <Link href="/ayuda" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <ResourceIcon name="helpCenter" />
+                      <span className={mobileDrawerTextClass}>{t("resourceLinks.helpCenter")}</span>
+                    </Link>
+                    <Link href="/atraer-clientes" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <ResourceIcon name="proTips" />
+                      <span className={mobileDrawerTextClass}>{t("resourceLinks.proTips")}</span>
+                    </Link>
+                    <SupportLink onNavigate={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <ResourceIcon name="support" />
+                      <span className={mobileDrawerTextClass}>{t("resourceLinks.support")}</span>
+                    </SupportLink>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  switchLang(alternateLocale);
+                  setMobileOpen(false);
+                }}
+                className={mobileDrawerItemClass}
+              >
+                <DrawerIcon><Globe2 /></DrawerIcon>
+                <span className={mobileDrawerTextClass}>{alternateLanguageLabel}</span>
+              </button>
             </nav>
+            {false && nativeApp && (
+              <div className="mt-auto border-t border-gray-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setMobileLegalOpen((open) => !open)}
+                  className="flex w-full items-center justify-between rounded-xl px-1 py-2 text-left text-[13px] font-bold uppercase tracking-[0.14em] text-[#8a97aa]"
+                  aria-expanded={mobileLegalOpen}
+                >
+                  <span>{locale === "en" ? "Legal" : "Información legal"}</span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", mobileLegalOpen && "rotate-180")} />
+                </button>
+                {mobileLegalOpen && (
+                  <div className="mt-1 grid gap-1">
+                    <Link href="/terminos" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f4f7fa]">
+                      <FileText className="h-4 w-4 text-[#6b7a90]" />
+                      {locale === "en" ? "Terms and conditions" : "Términos y condiciones"}
+                    </Link>
+                    <Link href="/privacidad" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f4f7fa]">
+                      <ShieldCheck className="h-4 w-4 text-[#6b7a90]" />
+                      {locale === "en" ? "Privacy policy" : "Política de privacidad"}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+            {user && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileLegalOpen(false);
+                  setMobileHelpOpen(false);
+                  setMobileOpen(false);
+                  void handleSignOut();
+                }}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#eef2f6] px-4 py-3.5 text-base font-extrabold text-[#162543] transition-colors hover:bg-[#e2e8f0]"
+              >
+                <LogOut className="h-5 w-5" />
+                {t("signOut")}
+              </button>
+            )}
           </div>
         </div>
+        {nativeBottomNavVisible && (
+          <nav
+            ref={nativeBottomNavRef}
+            aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
+            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)]"
+          >
+            <div className="mx-auto grid max-w-[390px] grid-cols-4 gap-1">
+              <Link href={primaryPanelHref} onPointerDown={() => prepareNativeNavigation(primaryPanelHref)} className={nativeBottomNavClass(primaryPanelHref)}>
+                <LayoutDashboard className="h-5 w-5" />
+                <span>Panel</span>
+              </Link>
+              <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
+                <Search className="h-5 w-5" />
+                <span>{locale === "en" ? "Search" : "Buscar"}</span>
+              </Link>
+              <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} className={nativeBottomNavClass("/mensajes")}>
+                <MessageSquareText className="h-5 w-5" />
+                <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
+                className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]"
+              >
+                <Bot className="h-5 w-5" />
+                <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
+              </button>
+            </div>
+          </nav>
+        )}
     </>
   );
 }

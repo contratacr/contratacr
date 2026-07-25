@@ -41,6 +41,10 @@ type Analytics = {
   availabilityActions: number;
   favorites: number;
   serviceRequestsStarted: number;
+  serviceRequestsCreated: number;
+  proposalsSent: number;
+  proposalsAccepted: number;
+  reviewsReceived: number;
   shares: number;
   lastInteractionAt: string | null;
   bySource: { label: string; value: number }[];
@@ -186,6 +190,10 @@ export function AdminUserProfile({
   const isIdentityPending = identityStatus === "pending";
   const isIdentityRejected = identityStatus === "rejected";
   const accountTypeLabel = pro ? "Profesional" : professionalSignupIncomplete ? "Profesional incompleto" : "Cliente";
+  const clientItems = [...projects, ...bookings];
+  const clientCompleted = clientItems.filter((item) => item.status === "completed").length;
+  const clientActive = clientItems.filter((item) => ["open", "pending", "confirmed", "in_progress", "awaiting_confirmation"].includes(item.status)).length;
+  const clientCancelled = clientItems.filter((item) => item.status === "cancelled").length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -399,6 +407,16 @@ export function AdminUserProfile({
         </div>
       </Section>
 
+      <Section icon={FolderOpen} title="Resumen como cliente">
+        <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-4">
+          <AnalyticsTile label="Solicitudes directas" value={bookings.length} />
+          <AnalyticsTile label="Publicaciones" value={projects.length} />
+          <AnalyticsTile label="Activas o en curso" value={clientActive} />
+          <AnalyticsTile label="Completadas" value={clientCompleted} />
+          <AnalyticsTile label="Canceladas" value={clientCancelled} />
+        </div>
+      </Section>
+
       {pro && (
         <Section icon={MousePointerClick} title="Analíticas del profesional">
           <div className="p-4">
@@ -422,7 +440,13 @@ export function AdminUserProfile({
                 </div>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                   <AnalyticsTile label="Solicitudes iniciadas" value={analytics.serviceRequestsStarted} />
+                  <AnalyticsTile label="Solicitudes creadas" value={analytics.serviceRequestsCreated} />
+                  <AnalyticsTile label="Reseñas recibidas" value={analytics.reviewsReceived} />
                   <AnalyticsTile label="Compartidos" value={analytics.shares} />
+                </div>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  <AnalyticsTile label="Propuestas enviadas" value={analytics.proposalsSent} />
+                  <AnalyticsTile label="Propuestas aceptadas" value={analytics.proposalsAccepted} />
                 </div>
                 {analytics.bySource.length > 0 && (
                   <div className="rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-3">

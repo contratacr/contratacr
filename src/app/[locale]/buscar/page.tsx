@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
@@ -35,11 +36,13 @@ interface SearchPageProps {
     s?: string;
     e?: string;
     w?: string;
+    page?: string;
   }>;
 }
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAX_CARD_SLOTS_PER_PRO = 24;
+const RESULTS_PER_PAGE = 20;
 
 type SearchWorkplace = {
   id?: string;
@@ -116,10 +119,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const earliestByPro: Record<string, string> = {};
   const videoMode = params.modalidad === "video";
   const publicIds = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
-  // Load the visible cards' schedule strips with the page render. This keeps the
-  // search page feeling like one load instead of showing per-card skeletons while
-  // users scroll through the results.
-  if (publicIds.length > 0) {
+  // Render the page and professional cards before availability finishes loading.
+  // Each card keeps its established schedule skeleton while it refreshes client-side.
+  // Availability sorting is the exception because slot timestamps determine order.
+  if (publicIds.length > 0 && sortBy === "availability") {
     try {
       const supabase = createAdminClient();
       const todayISO = crTodayISO();
@@ -194,9 +197,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     });
   }
 
-  const results = orderedResults;
+  const requestedPage = Number.parseInt(params.page ?? "1", 10);
+  const totalPages = Math.max(1, Math.ceil(orderedResults.length / RESULTS_PER_PAGE));
+  const currentPage = Number.isFinite(requestedPage)
+    ? Math.min(Math.max(requestedPage, 1), totalPages)
+    : 1;
+  const resultOffset = (currentPage - 1) * RESULTS_PER_PAGE;
+  const results = orderedResults.slice(resultOffset, resultOffset + RESULTS_PER_PAGE);
 
-  const mapData = allResults.flatMap((pro) => {
+  // The map mirrors the current result page: only the professionals shown as
+  // cards get pins. Changing pages swaps the map to the next visible set.
+  const mapData = results.flatMap((pro) => {
     const base = {
       id: pro.id,
       proId: pro.id,
@@ -223,10 +234,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     return [];
   });
 
-  // Number the cards on THIS page (1..N top-to-bottom) and pass the same numbers
-  // to the map so each pin shows its card's number (item 9, Hulihealth-style).
+  // Visible cards get numbers 1..20; if one professional has several pins,
+  // every pin repeats that same card number.
   const numbering: Record<string, number> = {};
-  results.forEach((pro, i) => { numbering[pro.id] = i + 1; });
+  results.forEach((pro, index) => { numbering[pro.id] = index + 1; });
 
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const activeProvince = params.provincia && params.provincia !== "todas"
@@ -350,6 +361,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     (!!params.aseguradora && canFilterByInsurer) ||
     (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
     (!!params.modalidad && params.modalidad !== "any");
+  const paginationParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (key !== "page" && value) paginationParams.set(key, value);
+  }
+  const pageHref = (page: number) => {
+    const next = new URLSearchParams(paginationParams);
+    if (page > 1) next.set("page", String(page));
+    const query = next.toString();
+    return query ? `/buscar?${query}` : "/buscar";
+  };
+  const paginationPages: Array<number | "ellipsis"> = (() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
+    if (currentPage <= 3) return [1, 2, 3, "ellipsis", totalPages];
+    if (currentPage >= totalPages - 2) return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages];
+    return [1, "ellipsis", currentPage, "ellipsis", totalPages];
+  })();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
@@ -388,6 +415,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             countLabel={subtitle}
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
+            resetKey={`${currentPage}:${paginationParams.toString()}`}
             filters={<Suspense fallback={filtersFallback}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
             drawerFilters={<Suspense fallback={filtersFallback}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
           >
@@ -421,7 +449,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           <ProfessionalCard
                             professional={pro}
                             slots={slotsByPro[pro.id] ?? []}
-                            slotsInitiallyLoaded
+                            slotsInitiallyLoaded={sortBy === "availability"}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={i + 1}
@@ -434,6 +462,33 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </div>
                     )))}
                   </div>
+
+                  {totalPages > 1 && (
+                    <nav aria-label={t("pagination.label")} className="mt-5 flex flex-nowrap items-center justify-between gap-2 border-t border-[#e5e7eb] pt-4 sm:gap-3">
+                      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden sm:gap-1.5">
+                        {currentPage > 1 && (
+                          <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-[#374151] transition hover:bg-[#EBF5FB] hover:text-[#0089BB] sm:h-10 sm:w-10">
+                            <ChevronLeft className="h-4 w-4" />
+                          </Link>
+                        )}
+                        {paginationPages.map((page, index) => page === "ellipsis" ? (
+                          <span key={`ellipsis-${index}`} className="grid h-9 w-5 place-items-center text-sm text-[#9ca3af] sm:h-10 sm:w-7">...</span>
+                        ) : page === currentPage ? (
+                          <span key={page} aria-current="page" className="grid h-9 min-w-9 place-items-center rounded-md bg-[#009FD9] px-1.5 text-sm font-bold text-white sm:h-10 sm:min-w-10 sm:px-2">{page}</span>
+                        ) : (
+                          <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-9 min-w-9 place-items-center rounded-md px-1.5 text-sm font-medium text-[#6b7280] transition hover:bg-[#EBF5FB] hover:text-[#0089BB] sm:h-10 sm:min-w-10 sm:px-2">
+                            {page}
+                          </Link>
+                        ))}
+                      </div>
+                      {currentPage < totalPages && (
+                        <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-9 min-w-[7.75rem] shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition hover:bg-[#0089BB] sm:h-10 sm:min-w-40 sm:gap-2 sm:px-6">
+                          <span className="leading-none">{t("pagination.next")}</span>
+                          <ChevronRight className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                        </Link>
+                      )}
+                    </nav>
+                  )}
 
                 </>
               )}

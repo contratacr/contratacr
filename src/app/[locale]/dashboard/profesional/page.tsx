@@ -99,8 +99,9 @@ const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
 const OFFER_TABS: Tab[] = [
   "bookings", "proposals", "services", "availability", "photos", "profile",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
+  "soporte",
 ];
-const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved"];
+const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved", "soporte"];
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 function compactDisplayName(name: string) {
@@ -328,7 +329,7 @@ export default function DashboardPage() {
       .eq("profile_id", user.id)
       .maybeSingle();
 
-    setPro(data);
+    setPro((current) => JSON.stringify(current) === JSON.stringify(data) ? current : data);
     cacheDashboardBootstrap({ pro: data });
     if (data) {
       setNoProTries(0);
@@ -352,7 +353,7 @@ export default function DashboardPage() {
     const supabase = createClient();
     const { data } = await supabase.rpc("get_my_profile");
     if (data) {
-      setProfile(data);
+      setProfile((current) => JSON.stringify(current) === JSON.stringify(data) ? current : data);
       cacheDashboardBootstrap({ profile: data });
     }
   }, [cacheDashboardBootstrap, setProfile, user]);
@@ -607,7 +608,7 @@ export default function DashboardPage() {
   }
 
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro)) {
-    return <DashboardRouteLoading />;
+    return <DashboardRouteLoading title="Cargando panel" />;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
@@ -835,7 +836,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      <main className="flex-1">
+      <main className="flex-1 min-h-[calc(100svh-88px)]">
         <div className={cn(
           "dashboard-panel-content mx-auto max-w-6xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8",
           mobileSectionOpen && "px-0 pt-0 sm:px-0 lg:px-8 lg:pt-8",
@@ -929,18 +930,17 @@ export default function DashboardPage() {
               )}
 
               {activeTab !== "home" && !mobileFullScreenTab && (
-                <div className="sticky top-0 z-20 flex min-h-16 items-center border-b border-[#e5e7eb] bg-white px-3 py-2 text-[#162543] lg:hidden">
+                <div className="sticky top-0 z-20 grid min-h-16 grid-cols-[64px_minmax(0,1fr)_64px] items-center border-b border-[#e5e7eb] bg-white px-2 py-2 text-[#162543] lg:hidden">
                   <button
                     type="button"
                     onClick={() => setTab("home")}
                     aria-label={t("backToPanel")}
-                    className="inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6]"
+                    className="inline-flex h-10 shrink-0 items-center gap-1 justify-self-start rounded-lg px-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6]"
                   >
                     <ArrowLeft className="h-5 w-5" />
-                    <span className="hidden min-[390px]:inline">{t("back")}</span>
                   </button>
-                  <h2 className="min-w-0 flex-1 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
-                  <div className="flex w-[74px] shrink-0 justify-end">
+                  <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                  <div className="flex shrink-0 justify-self-end">
                     {publicProfileHref && (
                       <Link
                         href={publicProfileHref}
@@ -979,7 +979,7 @@ export default function DashboardPage() {
                     <HeaderSaveStatus />
                     <Card className={cn(
                       activeTab === "chat" && "overflow-hidden",
-                      (mobileFullScreenTab || mobileSectionOpen) && "rounded-none border-0 bg-white shadow-none lg:rounded-xl lg:border lg:shadow-sm",
+                      (mobileFullScreenTab || mobileSectionOpen) && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:min-h-0 lg:rounded-xl lg:border lg:shadow-sm",
                     )}>
                       {activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
                         <div className="relative">
@@ -1014,20 +1014,20 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </CardHeader>}
-                      <CardContent className={mobileFullScreenTab ? "p-0 sm:p-0" : cn(
+                      <CardContent className={mobileFullScreenTab ? "min-h-[calc(100svh-88px)] p-0 sm:p-0" : cn(
                         "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6",
-                        mobileSectionOpen && "px-5 pb-7 pt-5 sm:px-6 lg:px-6 lg:pb-6 lg:pt-1",
+                        mobileSectionOpen && "dashboard-section-content px-5 pb-8 pt-5 sm:px-6 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-1",
                       )}>
                         {activeTab === "home" && (
                           <>
                             <div className="lg:hidden">
-                              <div className="space-y-1 py-2">
+                              <div className="space-y-1 pt-1">
                                 {switchPanelButton({ mobile: true })}
                                 {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
                                 {mobileSectionTabs.map(mobileSectionButton)}
                               </div>
-                              <div className="my-4 border-t border-[#e5e7eb]" />
-                              <div className="space-y-1 pb-2">
+                              <div className="my-3 border-t border-[#e5e7eb]" />
+                              <div className="space-y-1 pb-1">
                                 {signOutButton({ mobile: true })}
                               </div>
                             </div>

@@ -9,6 +9,11 @@ export const INTERACTION_EVENT_TYPES = [
   "profile_share",
   "external_link_click",
   "service_request_started",
+  "service_request_created",
+  "project_published",
+  "proposal_sent",
+  "proposal_accepted",
+  "review_created",
 ] as const;
 
 export type InteractionEventType = (typeof INTERACTION_EVENT_TYPES)[number];

@@ -6,7 +6,7 @@ import { Bell, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationHref, notificationInMode, notificationsCenterHref } from "@/lib/notification-link";
+import { notificationActionHref, notificationInMode, notificationsCenterHref } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
@@ -227,6 +227,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
         .from("notifications")
         .select("*")
         .eq("user_id", user!.id)
+        .eq("read", false)
         .order("created_at", { ascending: false })
         .limit(1);
       const latest = data?.[0] as Notification | undefined;
@@ -258,7 +259,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   const toastTargetHref = toast
     ? toast.count > 1
       ? notificationsCenterHref(locale)
-      : notificationHref(toast.latest, undefined, locale)
+      : notificationActionHref(toast.latest, undefined, locale)
     : null;
 
   useEffect(() => {
@@ -318,8 +319,9 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       : t(`types.${latest.type}`);
   const detailLabel = grouped
     ? locale === "en" ? "View notifications" : "Ver notificaciones"
-    : locale === "en" ? "View details" : "Ver detalles";
-  const targetHref = toastTargetHref ?? notificationsCenterHref(locale);
+    : toastTargetHref
+      ? locale === "en" ? "View details" : "Ver detalles"
+      : locale === "en" ? "Got it" : "Entendido";
 
   async function openToast() {
     if (!toast) return;
@@ -329,7 +331,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       if (!grouped) await createClient().from("notifications").update({ read: true }).eq("id", latest.id);
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     } catch {}
-    router.push(targetHref);
+    if (toastTargetHref) router.push(toastTargetHref);
   }
 
   return (
