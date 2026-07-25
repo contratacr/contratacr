@@ -148,9 +148,7 @@ test.describe("@seeded search results", () => {
       await expect(card).toContainText(/Videoconsulta|Video consultation/i);
       await expect(card).toContainText(/I\.V\.A\.I\.|VAT included/i);
       await expect(card).not.toContainText(/Atenas|Alajuela/i);
-      await expect(
-        card.getByRole("button", { name: seed.videoSecondSlotTime }).first(),
-      ).toBeVisible();
+      await expect(card.getByRole("button", { name: seed.videoSharedSlotTime }).first()).toBeVisible();
       await expect(card.locator('a[href*="/profesionales/"]').first()).toBeVisible();
       await expectHealthyPage(page);
     }
