@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, loginAs, resetAuth } from "./helpers";
+import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, isMobileProject, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { CONTRATACR_PRODUCT_KNOWLEDGE } from "../../src/lib/ai/product-knowledge";
 import {
@@ -613,12 +613,21 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(removed).toBeNull();
   });
 
-  test("assistant UI persists through navigation and stays out of other dialogs", async ({ page }) => {
+  test("assistant UI persists through navigation and stays out of other dialogs", async ({ page }, testInfo) => {
     await resetAuth(page);
     await gotoOK(page, "/es");
-    const launcher = page.getByRole("button", { name: /Abrir asistente de ContrataCR/i });
-    await expect(launcher).toBeVisible();
-    await launcher.click();
+    const openAssistant = async () => {
+      if (isMobileProject(testInfo)) {
+        await page.getByRole("button", { name: /Abrir men|Open menu/i }).click();
+        await page.getByRole("button", { name: /^(Asistente|Assistant)$/i }).click();
+        return;
+      }
+
+      const launcher = page.getByRole("button", { name: /Abrir asistente de ContrataCR/i });
+      await expect(launcher).toBeVisible();
+      await launcher.click();
+    };
+    await openAssistant();
     const dialog = page.getByRole("dialog", { name: /Asistente ContrataCR/i });
     await expect(dialog).toBeVisible();
     await dialog.getByRole("textbox", { name: /Pregunte o describa/i }).fill("¿Cómo funciona ContrataCR?");
@@ -628,7 +637,7 @@ test.describe("@seeded ContrataCR AI", () => {
     await dialog.getByRole("button", { name: /Ver cómo funciona/i }).click();
     await expect(page).toHaveURL(/\/es\/como-funciona/);
     expect(await page.evaluate(() => sessionStorage.getItem("contratacr:ai-session:es"))).toContain("¿Cómo funciona ContrataCR?");
-    await page.getByRole("button", { name: /Abrir asistente de ContrataCR/i }).click();
+    await openAssistant();
     await expect(page.getByRole("dialog", { name: /Asistente ContrataCR/i }).getByText("¿Cómo funciona ContrataCR?")).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expectHealthyPage(page);
