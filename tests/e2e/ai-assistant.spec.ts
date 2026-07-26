@@ -234,7 +234,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       ["necesito ayuda con redes sociales", "marketing_digital"],
       ["I need someone to fix a water leak", "plomeria"],
       ["My dog needs grooming", "peluqueria_canina"],
-      ["I want to learn English", "clases_ingles"],
+      ["I want to learn English", "idiomas"],
       ["My car will not start", "mecanica"],
       ["I need a lawyer in San Jose", "legal"],
     ] as const;
