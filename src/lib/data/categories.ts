@@ -1374,6 +1374,15 @@ export function resolveCategoryIntent(query: string, locale?: string): (Category
   const pool = getAllCategories();
   const q = normalizeText(raw);
 
+  // Translation actions must beat generic language terms. Without this
+  // disambiguation, "traducir un contrato al ingles" can match language
+  // lessons because the request also contains "ingles".
+  const requestsTranslation = /\b(traducir|traduccion|traductor|traductora|interpretar|interpretacion|interprete|translate|translation|translator|interpreter)\b/.test(q);
+  if (requestsTranslation) {
+    const translation = pool.find((item) => item.id === "traduccion");
+    if (translation) return translation;
+  }
+
   const matchingGroup = getAllCategoryGroups().find((group) => {
     const labels = [group.label, group.labelEn, getCategoryGroupLabel(group.id), getCategoryGroupLabel(group.id, "en")].filter(Boolean);
     return labels.some((label) => normalizeText(String(label)) === q);
