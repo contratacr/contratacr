@@ -421,7 +421,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                   </div>
                   {selectedGroup.items.length > 0 && (
                     <Link
-                      href={`/buscar?categoria=${selectedGroup.items[0].id}`}
+                      href="/servicios"
                       onClick={onNavigate}
                       className="shrink-0 text-xs font-bold text-[#009FD9] hover:underline"
                     >
