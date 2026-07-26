@@ -1,5 +1,8 @@
 // ─── Support contact — update these when the final number is confirmed ────────
 
+export const SUPPORT_WHATSAPP_NUMBER = "89624340";
+export const SUPPORT_WHATSAPP_DISPLAY = "+506 8962-4340";
+export const SUPPORT_WHATSAPP_URL = `https://wa.me/506${SUPPORT_WHATSAPP_NUMBER}`;
 export const SUPPORT_EMAIL            = "soporte@contratacr.com";
 
 // ─── How a professional wants to be contacted ────────────────────────────────
