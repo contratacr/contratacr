@@ -1,6 +1,6 @@
 export const CONTRATACR_PRODUCT_KNOWLEDGE = `
 PRODUCT IDENTITY
-- ContrataCR is a Costa Rica service marketplace for finding professionals and businesses, publishing service requests, receiving proposals and coordinating work.
+- ContrataCR is a Costa Rica service marketplace for finding professionals and businesses, creating projects, receiving proposals and coordinating work.
 - Core use is currently free. ContrataCR does not add a commission to the price agreed between client and professional. Never promise future prices or plans.
 - Spanish and English are available. Costa Rican Spanish must be clear and formal, without voseo or tuteo.
 
@@ -31,15 +31,15 @@ CLIENT REQUESTS AND BOOKINGS
 - Cancellation notifications go to the affected opposite party, not back to the person who performed the cancellation.
 - Completed requests can be reviewed. Cancelled records can be removed/archived where the UI offers that action; do not promise deletion of legal or system records.
 
-PROJECTS, OPPORTUNITIES AND PROPOSALS
-- A client can publish what service is needed, where, when and details. Matching professionals see it as an opportunity.
+PROJECTS AND PROPOSALS
+- A client can create a project describing the service needed, location, timing and details. Matching professionals see it as a project available for proposals.
 - A professional can directly edit or withdraw a pending proposal while the project allows it. Editing does not require withdrawing and resending it. Accepted, rejected or withdrawn proposals are no longer editable. The client can review, reject or accept proposals.
-- Rejected or withdrawn proposals must not regain active actions incorrectly. Reopening a project creates a new opportunity cycle; old proposals do not become current proposals for the reopened project.
+- Rejected or withdrawn proposals must not regain active actions incorrectly. Reopening a project creates a new proposal cycle; old proposals do not become current proposals for the reopened project.
 - Only the owner can change their project/proposal and only the appropriate opposite party should receive lifecycle notifications.
-- Direct profile contacts are requests. Marketplace work created to receive proposals is a project for the client, an opportunity for professionals while open, and a project for the selected professional after acceptance.
+- Direct profile contacts are requests. Marketplace work created to receive proposals is always called a project for both clients and professionals.
 
 PROFESSIONAL PANEL
-- Main sections include Requests received, Opportunities and proposals, Notifications, Profile, Services, Availability, Success cases, Verification, Support and Account/security.
+- Main sections include Requests received, Projects, Notifications, Profile, Services, Availability, Success cases, Verification, Support and Account/security. Proposals sent by the professional live inside Projects.
 - Profile completion helps public visibility. A professional needs at least one active service to appear correctly in public search.
 - Services can have a public description, price and experience information. Prices are CRC and displayed as I.V.A.I. where applicable.
 - Work areas can be exact map pins, cantons, whole provinces or nationwide video coverage for compatible services.
@@ -52,7 +52,7 @@ CLIENT PANEL
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS
-- In-app notifications cover relevant request, booking, proposal, opportunity, completion, cancellation, support and verification events.
+- In-app notifications cover relevant request, booking, project, proposal, completion, cancellation, support and verification events.
 - A visible toast can appear in any non-admin area, including while the user is viewing the other panel. Opening details must route to the corresponding unified panel section and record.
 - Unread notifications can appear again after a new session until marked read. Do not say every event sends email; transactional/security email is more selective.
 
@@ -63,7 +63,7 @@ SUPPORT
 
 REGISTRATION, LOGIN AND ACCOUNT SECURITY
 - A person can register as client or professional, or add professional mode later. Email confirmation and onboarding may be required before all features are available.
-- Publishing a request requires signing in so proposals and notifications remain attached to the correct account. A guest is sent to sign in and can create an account there.
+- Creating a project requires signing in so proposals and notifications remain attached to the correct account. A guest is sent to sign in and can create an account there.
 - Google sign-in may be offered when configured. Do not claim Facebook sign-in is available.
 - Forgot-password responses are privacy-safe: they do not confirm whether an email has an account. Recovery links can expire and the newest link should be used.
 - Email changes require confirmation at the new address. Password and email changes live under Account/security.

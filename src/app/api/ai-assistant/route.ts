@@ -703,13 +703,13 @@ Rules:
 - Ask one short clarification only when service or location is essential and missing. Otherwise act.
 - If the message contains both a service intent and a Costa Rica location, do not ask another question; set action=search_professionals.
 - If the message has a service but no location, ask which Costa Rica area. If it has a location but no service, ask which service.
-- Distinguish finding professionals from publishing a request. Words such as "busco", "profesional", "especialista", "opciones", "quienes hay" or a follow-up location mean search_professionals, not publish_request.
-- Never switch an existing professional search to publish_request unless the user explicitly asks to publish/create a request. Offering a request after zero results does not change the user's intent.
+- Distinguish finding professionals from creating a project. Words such as "busco", "profesional", "especialista", "opciones", "quienes hay" or a follow-up location mean search_professionals, not publish_request.
+- Never switch an existing professional search to publish_request unless the user explicitly asks to create a project. Offering a project after zero results does not change the user's intent.
 - Preserve the most recent service only when the latest user message is a direct follow-up with a Costa Rica location. Do not invent, infer or reuse a location unless the latest user message explicitly mentions that location.
 - A fresh service-only message such as "limpieza" must ask for the Costa Rica area without naming any province or canton.
 - A role word such as "especialista" must not replace an explicit trade such as "redes".
-- For creating a request, collect only the missing service and Costa Rica location. Once both are known, set action=publish_request and offer to open the form; the form collects job details.
-- Never claim that you will create, publish, submit or complete a request for the person. Only the person can review and publish it from the form.
+- For creating a project, collect only the missing service and Costa Rica location. Once both are known, set action=publish_request and offer to open the form; the form collects project details.
+- Never claim that you will create, publish, submit or complete a project for the person. Only the person can review and create it from the form.
 - Use the matching navigation action when the person wants to open services, register, sign in, reset a password, open their dashboard, support or help.
 - When prior assistant history includes "Resultados mostrados", action=select_professional and selectedResultIndex must identify requests such as "the second one". Never guess an index that was not shown.
 
@@ -1070,7 +1070,7 @@ function normalizePayload(
     };
   }
   if (includesAny(normalized, ["ver oportunidades", "donde veo oportunidades", "donde reviso oportunidades", "donde reviso las oportunidades", "mis oportunidades", "ver propuestas", "mis propuestas", "view opportunities", "my opportunities", "my proposals"])) {
-    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open opportunities" : "Ver oportunidades" };
+    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos" };
   }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {
     return { ...payload, action: "support", ctaLabel: locale === "en" ? "Open support" : "Ir a soporte" };
@@ -1116,7 +1116,7 @@ function normalizePayload(
   if (wantsProfessionalSearch && !directService && !directPlace && !wantsToPublish) {
     return uncertainSearchPayload(message, locale);
   }
-  // Search intent always wins over a model-suggested publication CTA. Publishing is
+  // Search intent always wins over a model-suggested project CTA. Project creation is
   // entered only through an explicit user request, never because a prior zero-result
   // answer happened to offer that alternative.
   if (wantsProfessionalSearch && directService && directPlace) {
@@ -1199,9 +1199,9 @@ function normalizePayload(
       searchQuery: serviceLabel,
       locationText: publishPlaceLabel,
       answer: locale === "en"
-        ? `I have the service (${serviceLabel}) and location (${publishPlaceLabel}). Open the form to add the job details, review the information and publish the request.`
-        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${publishPlaceLabel}). Abra el formulario para agregar los detalles del trabajo, revisar la información y publicar la solicitud.`,
-      ctaLabel: locale === "en" ? "Create request" : "Crear solicitud",
+        ? `I have the service (${serviceLabel}) and location (${publishPlaceLabel}). Open the form to add the job details, review the information and create the project.`
+        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${publishPlaceLabel}). Abra el formulario para agregar los detalles del trabajo, revisar la información y crear el proyecto.`,
+      ctaLabel: locale === "en" ? "Create project" : "Crear proyecto",
     };
   }
   if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "forgot my password", "reset password"])) {

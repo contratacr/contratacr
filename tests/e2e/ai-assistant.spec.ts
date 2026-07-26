@@ -468,7 +468,7 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "¿Cómo cambio de cliente a profesional?", action: "open_dashboard", href: "/es/dashboard/profesional", answer: /selector Cliente \/ Profesional/i },
       { prompt: "¿Cómo agrego otro servicio a mi perfil?", action: "open_dashboard", href: "tab=services", answer: /servicio/i },
       { prompt: "¿Cómo cambio mi contraseña?", action: "open_dashboard", href: "tab=cuenta", answer: /contraseña/i },
-      { prompt: "¿Dónde reviso las oportunidades para mis servicios?", action: "open_dashboard", href: "tab=proposals", answer: /oportunidades/i },
+      { prompt: "¿Dónde reviso las oportunidades para mis servicios?", action: "open_dashboard", href: "tab=proposals", answer: /proyectos/i },
     ];
 
     for (const item of cases) {
