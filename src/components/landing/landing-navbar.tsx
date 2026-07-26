@@ -1065,7 +1065,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     aria-expanded={openMenu === "categorias"}
                     onPointerEnter={() => openDropdown("categorias")}
                     onFocus={() => openDropdown("categorias")}
-                    onClick={() => openMenu === "categorias" ? closeDropdown() : openDropdown("categorias")}
+                    onClick={() => openDropdown("categorias")}
                     className={cn(
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
                       openMenu === "categorias"
@@ -1103,7 +1103,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     aria-expanded={openMenu === "recursos"}
                     onPointerEnter={() => openDropdown("recursos")}
                     onFocus={() => openDropdown("recursos")}
-                    onClick={() => openMenu === "recursos" ? closeDropdown() : openDropdown("recursos")}
+                    onClick={() => openDropdown("recursos")}
                     className={cn(
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
                       openMenu === "recursos" ? "text-[#1a2744] bg-gray-50 after:opacity-0" : "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
