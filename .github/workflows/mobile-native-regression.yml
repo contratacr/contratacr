@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: mobile-native-regression-manual-${{ github.event.inputs.mobile_ref }}
+  group: mobile-native-regression-${{ github.event.inputs.mobile_ref }}
   cancel-in-progress: true
 
 jobs:
