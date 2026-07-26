@@ -500,11 +500,17 @@ test.describe("@seeded ContrataCR AI", () => {
     const search = await ask(page, "Necesito un plomero en Atenas, Alajuela");
     expect(search.status, JSON.stringify(search.body)).toBe(200);
     expect(search.body.action).toBe("search_professionals");
-    expect(search.body.searchHref).toContain("categoria=plomeria");
-    expect(search.body.searchHref).toContain("provincia=al");
+    expect(search.body.serviceId).toBe("plomeria");
     expect(search.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);
     expect(search.body.answer).toMatch(/Encontré \d+ profesional(?:es)?/i);
-    expect(search.body.professionals).toEqual([]);
+    expect(search.body.answer).toMatch(/Atenas, Alajuela/i);
+
+    if (search.body.professionals?.length === 1) {
+      expect(search.body.searchHref).toBe(search.body.professionals[0].profileHref);
+    } else {
+      expect(search.body.searchHref).toContain("categoria=plomeria");
+      expect(search.body.searchHref).toContain("provincia=al");
+    }
   });
 
   test("keeps search intent, service and location across natural follow-ups", async ({ page }) => {
