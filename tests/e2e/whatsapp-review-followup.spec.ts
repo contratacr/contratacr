@@ -49,17 +49,17 @@ test("contact follow-up shows pending confirmations one at a time", async ({ pag
     { ...followUp, id: "00000000-0000-4000-8000-000000000201", professional_name: "SG Solutions" },
     { ...followUp, id: "00000000-0000-4000-8000-000000000202", professional_name: "Juan Electricidad", service_name: "Electricidad" },
   ];
-  let getCount = 0;
+  let queueIndex = 0;
   const actions: string[] = [];
 
   await page.route("**/api/contact/follow-up", async (route) => {
     if (route.request().method() === "GET") {
-      const item = queue[Math.min(getCount, queue.length - 1)] ?? null;
-      getCount += 1;
-      await route.fulfill({ json: { followUp: item, pendingCount: item ? queue.length - Math.min(getCount - 1, queue.length - 1) : 0, authenticated: false } });
+      const item = queue[queueIndex] ?? null;
+      await route.fulfill({ json: { followUp: item, pendingCount: item ? queue.length - queueIndex : 0, authenticated: false } });
       return;
     }
     actions.push(String((route.request().postDataJSON() as { action?: string }).action ?? ""));
+    queueIndex += 1;
     await route.fulfill({ json: { ok: true } });
   });
 
