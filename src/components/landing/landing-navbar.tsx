@@ -860,7 +860,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     setOpenMenu(id);
   }
   function closeDropdown() {
-    closeTimer.current = setTimeout(() => setOpenMenu(null), 120);
+    closeTimer.current = setTimeout(() => setOpenMenu(null), 220);
   }
 
 
@@ -1071,14 +1071,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   </button>
 
                   {openMenu === "categorias" && (
-                    <div
-                      data-testid="services-mega-menu"
-                      className="absolute top-full left-0 z-50 mt-1.5 flex max-h-[calc(100vh-5rem)] w-[840px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]"
-                      style={{ animation: "tab-cards-in 0.15s ease both" }}
-                    >
-                      {/* ONE container: typing in the search FILTERS the categories in place. */}
-                      <CategoriesMegaPanel onNavigate={() => setOpenMenu(null)} />
-                    </div>
+                    <>
+                      <div className="absolute left-0 top-full z-40 h-3 w-[840px] max-w-[calc(100vw-2rem)]" aria-hidden />
+                      <div
+                        data-testid="services-mega-menu"
+                        className="absolute top-full left-0 z-50 mt-1.5 flex max-h-[calc(100vh-5rem)] w-[840px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]"
+                        style={{ animation: "tab-cards-in 0.15s ease both" }}
+                      >
+                        {/* ONE container: typing in the search FILTERS the categories in place. */}
+                        <CategoriesMegaPanel onNavigate={() => setOpenMenu(null)} />
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -1098,35 +1101,38 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "recursos" && "rotate-180")} />
                   </button>
                   {openMenu === "recursos" && (
-                    <div
-                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-3 z-50 min-w-[280px]"
-                      style={{ animation: "tab-cards-in 0.15s ease both" }}
-                    >
-                      <ul className="space-y-1">
-                        {visibleResourceLinks.map((link) => (
-                          <li key={link.href}>
-                            {link.key === "support" ? (
-                              <SupportLink
-                                onNavigate={() => setOpenMenu(null)}
-                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
-                              >
-                                <ResourceIcon name={link.key} />
-                                {t(`resourceLinks.${link.key}`)}
-                              </SupportLink>
-                            ) : (
-                              <Link
-                                href={link.href}
-                                onClick={() => setOpenMenu(null)}
-                                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
-                              >
-                                <ResourceIcon name={link.key} />
-                                {t(`resourceLinks.${link.key}`)}
-                              </Link>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    <>
+                      <div className="absolute left-0 top-full z-40 h-3 min-w-[280px]" aria-hidden />
+                      <div
+                        className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-3 z-50 min-w-[280px]"
+                        style={{ animation: "tab-cards-in 0.15s ease both" }}
+                      >
+                        <ul className="space-y-1">
+                          {visibleResourceLinks.map((link) => (
+                            <li key={link.href}>
+                              {link.key === "support" ? (
+                                <SupportLink
+                                  onNavigate={() => setOpenMenu(null)}
+                                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
+                                >
+                                  <ResourceIcon name={link.key} />
+                                  {t(`resourceLinks.${link.key}`)}
+                                </SupportLink>
+                              ) : (
+                                <Link
+                                  href={link.href}
+                                  onClick={() => setOpenMenu(null)}
+                                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
+                                >
+                                  <ResourceIcon name={link.key} />
+                                  {t(`resourceLinks.${link.key}`)}
+                                </Link>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </>
                   )}
                 </div>
               </nav>
