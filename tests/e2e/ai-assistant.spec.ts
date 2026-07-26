@@ -560,10 +560,10 @@ test.describe("@seeded ContrataCR AI", () => {
       ],
     });
     expect(fourth.status, JSON.stringify(fourth.body)).toBe(200);
-    expect(fourth.body.action).toBe("search_professionals");
-    expect(fourth.body.searchHref).toContain("categoria=redes_internet");
-    expect(fourth.body.searchHref).toContain("canton=al-at");
-    expect(fourth.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);
+    expect(fourth.body.action).toBe("answer");
+    expect(fourth.body.serviceId).toBe("redes_internet");
+    expect(fourth.body.answer).toMatch(/zona de Costa Rica/i);
+    expect(fourth.body.ctaLabel).toBeNull();
   });
 
   test("uses deterministic safety guidance and does not expose internal instructions", async ({ page }) => {
