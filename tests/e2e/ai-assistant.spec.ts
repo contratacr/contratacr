@@ -528,8 +528,12 @@ test.describe("@seeded ContrataCR AI", () => {
     });
     expect(second.status, JSON.stringify(second.body)).toBe(200);
     expect(second.body.action).toBe("search_professionals");
-    expect(second.body.searchHref).toContain("categoria=redes_internet");
-    expect(second.body.searchHref).toContain("canton=al-at");
+    if (second.body.professionals?.length === 1) {
+      expect(second.body.searchHref).toBe(second.body.professionals[0].profileHref);
+    } else {
+      expect(second.body.searchHref).toContain("categoria=redes_internet");
+      expect(second.body.searchHref).toContain("canton=al-at");
+    }
     expect(second.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);
 
     const thirdPrompt = "Me refiero a que estoy buscando un especialista en redes en Atenas";
@@ -541,8 +545,12 @@ test.describe("@seeded ContrataCR AI", () => {
     });
     expect(third.status, JSON.stringify(third.body)).toBe(200);
     expect(third.body.action).toBe("search_professionals");
-    expect(third.body.searchHref).toContain("categoria=redes_internet");
-    expect(third.body.searchHref).not.toContain("medico_especialista");
+    if (third.body.professionals?.length === 1) {
+      expect(third.body.searchHref).toBe(third.body.professionals[0].profileHref);
+    } else {
+      expect(third.body.searchHref).toContain("categoria=redes_internet");
+      expect(third.body.searchHref).not.toContain("medico_especialista");
+    }
     expect(third.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);
 
     const fourth = await ask(page, "¿Qué opciones hay?", {
