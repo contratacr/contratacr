@@ -189,8 +189,8 @@ export function AdminProjects() {
         <div className="flex items-center gap-2">
           <ClipboardList className="h-5 w-5 text-[#009FD9]" />
           <div>
-            <h1 className="text-xl font-bold text-[#111827]">Publicaciones</h1>
-            <p className="mt-0.5 text-sm text-[#6b7280]">Solicitudes publicadas para recibir propuestas de profesionales.</p>
+            <h1 className="text-xl font-bold text-[#111827]">Proyectos</h1>
+            <p className="mt-0.5 text-sm text-[#6b7280]">Proyectos creados por clientes para recibir propuestas de profesionales.</p>
           </div>
         </div>
         {!loading && (
@@ -202,7 +202,7 @@ export function AdminProjects() {
 
       <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4">
         <label className="text-xs font-semibold text-[#6b7280]" htmlFor="admin-projects-search">
-          Buscar publicacion
+          Buscar proyecto
         </label>
         <div className="relative mt-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
@@ -214,7 +214,7 @@ export function AdminProjects() {
             className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#111827] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
           />
         </div>
-        <p className="mt-2 text-xs text-[#9ca3af]">Incluye publicaciones activas, finalizadas, canceladas y archivadas.</p>
+        <p className="mt-2 text-xs text-[#9ca3af]">Incluye proyectos activos, finalizados, cancelados y archivados.</p>
       </div>
 
       <AdminFilterTabs tabs={FILTERS} value={filter} onChange={changeFilter} counts={filterCounts} />
@@ -227,7 +227,7 @@ export function AdminProjects() {
         ) : items.length === 0 ? (
           <div className="py-16 text-center">
             <ClipboardList className="mx-auto mb-2 h-10 w-10 text-[#cbd5e1]" />
-            <p className="text-sm text-[#6b7280]">No hay publicaciones en esta vista.</p>
+            <p className="text-sm text-[#6b7280]">No hay proyectos en esta vista.</p>
           </div>
         ) : (
           <ul className="divide-y divide-[#f3f4f6]">

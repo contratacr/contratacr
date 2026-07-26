@@ -227,7 +227,7 @@ export function DirectChatInbox() {
     }, [isEn, user?.id]);
   const contextFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
-    const labels = isEn ? { booking: "Request", project: "Post", proposal: "Proposal", profile: "Profile" } : { booking: "Solicitud", project: "Publicación", proposal: "Propuesta", profile: "Perfil" };
+    const labels = isEn ? { booking: "Request", project: "Project", proposal: "Proposal", profile: "Profile" } : { booking: "Solicitud", project: "Proyecto", proposal: "Propuesta", profile: "Perfil" };
     return { type, label: labels[type], title: item.context?.service_description || item.context?.title || item.subject || (isEn ? "General inquiry" : "Consulta general") };
   }, [isEn]);
   const contextSummaryFor = useCallback((item: Conversation) => {
@@ -237,7 +237,7 @@ export function DirectChatInbox() {
   }, [contextFor]);
   const contextActionFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
-    const labels = isEn ? { booking: "View request", project: "View post", proposal: "View proposal", profile: "View profile" } : { booking: "Ver solicitud", project: "Ver publicación", proposal: "Ver propuesta", profile: "Ver perfil" };
+    const labels = isEn ? { booking: "View request", project: "View project", proposal: "View proposal", profile: "View profile" } : { booking: "Ver solicitud", project: "Ver proyecto", proposal: "Ver propuesta", profile: "Ver perfil" };
     return labels[type];
   }, [isEn]);
 

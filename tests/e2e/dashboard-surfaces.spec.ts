@@ -21,7 +21,7 @@ const clientTabs = [
   { tab: "home&mode=use", marker: /Panel cliente|Client panel/i },
   { tab: "profile&mode=use", marker: /Mi perfil|My profile/i },
   { tab: "sent_bookings", marker: /Mis solicitudes|My requests/i },
-  { tab: "sent_projects", marker: /Mis publicaciones|My posts/i },
+  { tab: "sent_projects", marker: /Mis proyectos|My projects/i },
   { tab: "saved", marker: /Mis favoritos|My favorites/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
   { tab: "chat&mode=use", marker: /Mensajes|Messages/i },

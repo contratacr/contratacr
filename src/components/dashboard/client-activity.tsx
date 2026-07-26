@@ -165,7 +165,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [projectFilter, setProjectFilter] = useState("activas");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   // Mis solicitudes is now a collapsible accordion too (sprint 440) — same card language
-  // as Solicitudes recibidas / Oportunidades / Mis publicaciones.
+  // as Solicitudes recibidas / Oportunidades / Mis proyectos.
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [showPublish, setShowPublish] = useState(false);
@@ -187,7 +187,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   // do not free a calendar slot, but professionals with proposals should still be warned.
   const [cancelProjectTarget, setCancelProjectTarget] = useState<string | null>(null);
   const [cancellingProject, setCancellingProject] = useState(false);
-  // Delete-publicación confirm dialog (clean modal, not a browser confirm()).
+  // Delete-project confirm dialog (clean modal, not a browser confirm()).
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   // "Reportar profesional" clean modal (replaces the old window.prompt), keyed by booking id.
@@ -1179,7 +1179,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
         />
       )}
 
-      {/* DELETE publicación — clean on-brand confirm modal (replaces window.confirm). */}
+      {/* DELETE project - clean on-brand confirm modal (replaces window.confirm). */}
       {deleteTarget && (
         <Modal
           onClose={() => { if (!deleting) setDeleteTarget(null); }}

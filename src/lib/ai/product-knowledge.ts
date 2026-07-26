@@ -31,12 +31,12 @@ CLIENT REQUESTS AND BOOKINGS
 - Cancellation notifications go to the affected opposite party, not back to the person who performed the cancellation.
 - Completed requests can be reviewed. Cancelled records can be removed/archived where the UI offers that action; do not promise deletion of legal or system records.
 
-PUBLICATIONS, OPPORTUNITIES AND PROPOSALS
+PROJECTS, OPPORTUNITIES AND PROPOSALS
 - A client can publish what service is needed, where, when and details. Matching professionals see it as an opportunity.
-- A professional can directly edit or withdraw a pending proposal while the publication allows it. Editing does not require withdrawing and resending it. Accepted, rejected or withdrawn proposals are no longer editable. The client can review, reject or accept proposals.
-- Rejected or withdrawn proposals must not regain active actions incorrectly. Republishing creates a new opportunity cycle; old proposals do not become current proposals for the new publication.
-- Only the owner can change their publication/proposal and only the appropriate opposite party should receive lifecycle notifications.
-- Completion and cancellation states must be described according to the side viewing them: client publication/request versus professional opportunity/proposal.
+- A professional can directly edit or withdraw a pending proposal while the project allows it. Editing does not require withdrawing and resending it. Accepted, rejected or withdrawn proposals are no longer editable. The client can review, reject or accept proposals.
+- Rejected or withdrawn proposals must not regain active actions incorrectly. Reopening a project creates a new opportunity cycle; old proposals do not become current proposals for the reopened project.
+- Only the owner can change their project/proposal and only the appropriate opposite party should receive lifecycle notifications.
+- Direct profile contacts are requests. Marketplace work created to receive proposals is a project for the client, an opportunity for professionals while open, and a project for the selected professional after acceptance.
 
 PROFESSIONAL PANEL
 - Main sections include Requests received, Opportunities and proposals, Notifications, Profile, Services, Availability, Success cases, Verification, Support and Account/security.
@@ -48,7 +48,7 @@ PROFESSIONAL PANEL
 - Verification uses the saved identity and may require manual review when the identification is not found in the Costa Rican registry.
 
 CLIENT PANEL
-- Main sections include My requests, My publications, Favorites, Notifications, Profile, Support and Account/security.
+- Main sections include My requests, My projects, Favorites, Notifications, Profile, Support and Account/security.
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS
@@ -77,7 +77,7 @@ PRIVACY, SAFETY AND LIMITS
 - ContrataCR cannot guarantee third-party delivery or uptime for email, Google OAuth, maps, Cloudinary or phone providers.
 
 NAVIGATION
-- /servicios browses the catalog; /buscar shows professionals; /publicar-proyecto starts a client publication; /como-funciona explains the platform; /ayuda provides guides; /soporte opens support.
+- /servicios browses the catalog; /buscar shows professionals; /publicar-proyecto creates a client project; /como-funciona explains the platform; /ayuda provides guides; /soporte opens support.
 - /registro/cliente creates a client account; /registro/profesional creates or starts a professional profile; /login signs in; /olvide-contrasena starts recovery.
 - Dashboard links must preserve the user's intended action after authentication when the app supports it.
 `.trim();
@@ -95,7 +95,7 @@ export function assistantPageContext(pathname: string, authenticated: boolean) {
           : path.includes("/servicios")
             ? "service catalog"
             : path.includes("/publicar-proyecto")
-              ? "publish request"
+              ? "create project"
               : path.includes("/soporte")
                 ? "support"
                 : "public site";

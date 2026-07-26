@@ -111,7 +111,7 @@ export async function GET(req: Request) {
 
     if (error) {
       console.error("[admin/projects] list error:", error);
-      return NextResponse.json({ error: "No se pudo cargar publicaciones." }, { status: 500 });
+      return NextResponse.json({ error: "No se pudieron cargar los proyectos." }, { status: 500 });
     }
 
     rows.push(...((data ?? []) as unknown as ProjectRow[]));

@@ -101,7 +101,7 @@ export function StatusFilterTabs({
 // proposals) all use **Activas · Finalizadas · Canceladas** — "Activas" replaces the
 // old "Confirmadas"/"Pendientes" (an active/ongoing item), so the names match the
 // auto-confirm reality and read the same across solicitudes recibidas, mis
-// publicaciones and oportunidades.
+// projects and opportunities.
 const STATUS_TABS: readonly FilterTab[] = [
   { id: "activas" },
   { id: "finalizadas" },

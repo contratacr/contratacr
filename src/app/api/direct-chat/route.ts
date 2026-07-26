@@ -214,7 +214,7 @@ export async function POST(req: Request) {
       clientId = project.client_id; resolvedProfessionalId = proposal.professional_id; resolvedProjectId = proposal.project_id; resolvedProposalId = proposal.id; subject = project.title;
     } else if (projectId && professionalId) {
       const { data: project } = await db.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
-      if (!project) return NextResponse.json({ error: "Publicación no encontrada." }, { status: 404 });
+      if (!project) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
       clientId = project.client_id; resolvedProjectId = project.id; subject = project.title;
     }
 

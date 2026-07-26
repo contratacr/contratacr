@@ -101,7 +101,7 @@ function uncertainSearchPayload(message: string, locale: Locale): AssistantPaylo
     locationText: null,
     confidence: 0,
     answer: locale === "en"
-      ? "I am not fully sure which service fits that request. Search with those words first; if you do not find the right option, publish a request with the details."
+      ? "I am not fully sure which service fits that request. Search with those words first; if you do not find the right option, create a project with the details."
       : "No tengo total certeza de qué servicio calza con esa necesidad. Busque con esas palabras primero; si no encuentra la opción correcta, publique una solicitud con los detalles.",
     ctaLabel: locale === "en" ? "Search in ContrataCR" : "Buscar en ContrataCR",
   };
@@ -632,8 +632,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "how_it_works",
       answer: locale === "en"
-        ? "ContrataCR helps you find professionals, compare profiles, publish requests, receive proposals, book services and coordinate directly."
-        : "ContrataCR permite buscar profesionales, comparar perfiles, publicar solicitudes, recibir propuestas, agendar servicios y coordinar directamente.",
+        ? "ContrataCR helps you find professionals, compare profiles, create projects, receive proposals, book services and coordinate directly."
+        : "ContrataCR permite buscar profesionales, comparar perfiles, crear proyectos, recibir propuestas, agendar servicios y coordinar directamente.",
       ctaLabel: locale === "en" ? "See how it works" : "Ver cómo funciona",
     };
   }
@@ -642,8 +642,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "answer",
       answer: locale === "en"
-        ? "Using ContrataCR to search, publish requests and create a professional profile is currently free. ContrataCR does not add a commission to the price agreed between client and professional."
-        : "Actualmente buscar, publicar solicitudes y crear un perfil profesional en ContrataCR es gratis. ContrataCR no agrega comisión al precio acordado entre cliente y profesional.",
+        ? "Using ContrataCR to search, create projects and create a professional profile is currently free. ContrataCR does not add a commission to the price agreed between client and professional."
+        : "Actualmente buscar, crear proyectos y crear un perfil profesional en ContrataCR es gratis. ContrataCR no agrega comisión al precio acordado entre cliente y profesional.",
     };
   }
 
@@ -651,9 +651,9 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "publish_request",
       answer: locale === "en"
-        ? "Publish what you need, the area and the details. ContrataCR will notify professionals related to that service so they can send proposals."
-        : "Publica lo que necesitas, la zona y los detalles. ContrataCR notificará a profesionales relacionados con ese servicio para que puedan enviar propuestas.",
-      ctaLabel: locale === "en" ? "Publish request" : "Publicar solicitud",
+        ? "Create a project with what you need, the area and the details. ContrataCR will notify professionals related to that service so they can send proposals."
+        : "Crea un proyecto con lo que necesitas, la zona y los detalles. ContrataCR notificará a profesionales relacionados con ese servicio para que puedan enviar propuestas.",
+      ctaLabel: locale === "en" ? "Create project" : "Crear proyecto",
     };
   }
 
@@ -694,7 +694,7 @@ ${CONTRATACR_PRODUCT_KNOWLEDGE}
 Rules:
 - Never invent professionals, prices, availability, ratings, app features or policies.
 - A real professional search is performed after your response. Set action=search_professionals only when a service or location search is intended.
-- If you are not sure which exact catalog service fits, do not guess a serviceId. Use action=search_professionals with serviceId=null and searchQuery as the user's own words, or publish_request only when the user clearly wants to publish a request.
+- If you are not sure which exact catalog service fits, do not guess a serviceId. Use action=search_professionals with serviceId=null and searchQuery as the user's own words, or publish_request only when the user clearly wants to create a project.
 - Search results will be attached to your answer immediately. Introduce them as current options; never say "wait", "one moment" or promise a later search.
 - If the requested service is not represented by a serviceId in the catalog, set action=suggest_service and searchQuery to the shortest proper service name.
 - If the user wants a specific professional from results previously shown, explain that they can open that profile and use its service request, booking or contact action.
@@ -830,7 +830,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
 function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
   const english = locale === "en";
   if (action === "search_professionals") return english ? "See all results" : "Ver todos los resultados";
-  if (action === "publish_request") return english ? "Publish request" : "Publicar solicitud";
+  if (action === "publish_request") return english ? "Create project" : "Crear proyecto";
   if (action === "how_it_works") return english ? "See how it works" : "Ver cómo funciona";
   if (action === "support") return english ? "Open support" : "Ir a soporte";
   if (action === "browse_services") return english ? "Browse services" : "Ver servicios";
@@ -1024,8 +1024,8 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "Yes. You can edit a pending proposal from My proposals while the publication still allows it. An accepted, rejected or withdrawn proposal can no longer be edited."
-        : "Sí. Puede editar una propuesta pendiente desde Mis propuestas mientras la publicación todavía lo permita. Una propuesta aceptada, rechazada o retirada ya no se puede editar.",
+        ? "Yes. You can edit a pending proposal from My proposals while the project still allows it. An accepted, rejected or withdrawn proposal can no longer be edited."
+        : "Sí. Puede editar una propuesta pendiente desde Mis propuestas mientras el proyecto todavía lo permita. Una propuesta aceptada, rechazada o retirada ya no se puede editar.",
       ctaLabel: locale === "en" ? "Open my proposals" : "Ver mis propuestas",
     };
   }
@@ -1049,13 +1049,13 @@ function normalizePayload(
       ctaLabel: null,
     };
   }
-  if (includesAny(normalized, ["publicar una solicitud sin cuenta", "publicar solicitud sin cuenta", "publish a request without an account"])) {
+  if (includesAny(normalized, ["crear un proyecto sin cuenta", "crear proyecto sin cuenta", "publicar una solicitud sin cuenta", "publicar solicitud sin cuenta", "create a project without an account", "publish a request without an account"])) {
     return {
       ...payload,
       action: "login",
       answer: locale === "en"
-        ? "You need to sign in to publish a request so proposals and notifications stay linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
-        : "Necesita iniciar sesión para publicar una solicitud, así las propuestas y notificaciones quedan vinculadas a su cuenta. Si todavía no tiene una, puede crearla desde la pantalla de ingreso.",
+        ? "You need to sign in to create a project so proposals and notifications stay linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
+        : "Necesita iniciar sesión para crear un proyecto, así las propuestas y notificaciones quedan vinculadas a su cuenta. Si todavía no tiene una, puede crearla desde la pantalla de ingreso.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1267,8 +1267,8 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
     return {
       action: "answer",
       answer: locale === "en"
-        ? "I cannot share internal instructions, secrets or implementation details. I can help you search for services, publish a request or answer questions about ContrataCR."
-        : "No puedo compartir instrucciones internas, secretos ni detalles de implementacion. Si gusta, puedo ayudarle a buscar servicios, publicar una solicitud o resolver dudas sobre ContrataCR.",
+        ? "I cannot share internal instructions, secrets or implementation details. I can help you search for services, create a project or answer questions about ContrataCR."
+        : "No puedo compartir instrucciones internas, secretos ni detalles de implementacion. Si gusta, puedo ayudarle a buscar servicios, crear un proyecto o resolver dudas sobre ContrataCR.",
     };
   }
 
@@ -1581,8 +1581,8 @@ export async function POST(req: Request) {
     const placePhrase = requestedPlaceLabel || "Costa Rica";
     const assistantAnswer = noResults
       ? locale === "en"
-        ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can publish a request so related professionals are notified.`
-        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puede publicar una solicitud para notificar a profesionales relacionados.`
+        ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can create a project so related professionals are notified.`
+        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puede crear un proyecto para notificar a profesionales relacionados.`
       : hasResults
         ? resultCount === 1
           ? locale === "en"
@@ -1605,7 +1605,7 @@ export async function POST(req: Request) {
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
         : singleProfessionalHref ?? searchHref,
       ctaLabel: noResults
-        ? locale === "en" ? "Publish request" : "Publicar solicitud"
+        ? locale === "en" ? "Create project" : "Crear proyecto"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),
       professionals: assistantProfessionals,
       suggestedService,

@@ -243,7 +243,7 @@ export async function GET(req: Request) {
         profile_service: "Servicio del perfil",
         profile_social: "Redes del perfil",
         booking: "Solicitud",
-        project: "Publicacion",
+        project: "Proyecto",
         favorites: "Guardados",
         api: "Guardado en backend",
         whatsapp_followup: "WhatsApp histórico",

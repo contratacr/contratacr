@@ -179,7 +179,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       external_link_click: "Enlaces externos",
       service_request_started: "Solicitudes iniciadas",
       service_request_created: "Solicitudes creadas",
-      project_published: "Publicaciones creadas",
+      project_published: "Proyectos creados",
       proposal_sent: "Propuestas enviadas",
       proposal_accepted: "Propuestas aceptadas",
       review_created: "Reseñas recibidas",

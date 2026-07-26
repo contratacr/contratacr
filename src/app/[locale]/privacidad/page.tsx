@@ -22,7 +22,7 @@ const ES_SECTIONS: LegalSection[] = [
       ] },
       { k: "sub", text: "2.2 Actividad como Cliente" },
       { k: "ul", items: [
-        "Solicitudes, publicaciones, propuestas recibidas, citas, reseñas y profesionales guardados.",
+        "Solicitudes, proyectos, propuestas recibidas, citas, reseñas y profesionales guardados.",
         "Información incluida por usted en descripciones, notas, reportes y conversaciones.",
         "Zona, ubicación o punto geográfico cuando lo proporciona o autoriza.",
       ] },

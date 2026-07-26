@@ -72,7 +72,7 @@ export function AdminShell({
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: counts.verificacion ?? 0 },
     { id: "usuarios", label: "Usuarios", icon: Users, href: "/admin/usuarios", badge: 0 },
     { id: "solicitudes", label: "Solicitudes", icon: CalendarCheck, href: "/admin/solicitudes", badge: 0 },
-    { id: "publicaciones", label: "Publicaciones", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
+    { id: "publicaciones", label: "Proyectos", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },

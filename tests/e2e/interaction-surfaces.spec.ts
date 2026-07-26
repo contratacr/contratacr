@@ -30,15 +30,15 @@ test.describe("@seeded interaction surfaces", () => {
     await expectHealthyPage(page);
   });
 
-  test("publish request modal opens from client publications without submitting", async ({ page }) => {
+  test("create project modal opens from client projects without submitting", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects");
 
-    const publish = page.getByRole("button", { name: /Publicar una solicitud|Publicar|Post a request|Post/i }).first();
+    const publish = page.getByRole("button", { name: /Crear un proyecto|Crear|Create a project|Create/i }).first();
     await expect(publish).toBeVisible();
     await publish.click();
 
-    const dialog = page.getByRole("dialog", { name: /Publicar una solicitud|Post a request/i });
+    const dialog = page.getByRole("dialog", { name: /Crear un proyecto|Create a project/i });
     await expect(dialog).toBeVisible();
     await expectVisibleText(
       dialog,

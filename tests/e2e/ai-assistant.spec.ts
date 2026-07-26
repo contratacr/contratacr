@@ -77,7 +77,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
     expect(response.body.searchHref, JSON.stringify(response.body)).toBeTruthy();
     expect(response.body.searchHref, JSON.stringify(response.body)).not.toContain("categoria=");
     expect(response.body.searchHref, JSON.stringify(response.body)).toMatch(/\/buscar\?q=|openPublish=1/);
-    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/no tengo total certeza|publique una solicitud|publicar una solicitud/i);
+    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/no tengo total certeza|cree un proyecto|crear un proyecto/i);
   });
 
   test("keeps unclear Spanish and English requests as free-text searches", async ({ page }) => {
@@ -96,7 +96,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       expect(response.body.searchHref, prompt).toBeTruthy();
       expect(response.body.searchHref, prompt).not.toContain("categoria=");
       expect(response.body.searchHref, prompt).toMatch(/\/buscar\?q=|openPublish=1/);
-      expect(response.body.answer, prompt).toMatch(/no tengo total certeza|buscar|publique una solicitud|publish a request/i);
+      expect(response.body.answer, prompt).toMatch(/no tengo total certeza|buscar|cree un proyecto|create a project/i);
     }
   });
 
@@ -378,7 +378,7 @@ test.describe("@seeded ContrataCR AI", () => {
       expect(response.body.searchHref).toBe(item.href);
     }
 
-    const requestStart = await ask(page, "Quiero publicar una solicitud");
+    const requestStart = await ask(page, "Quiero crear un proyecto");
     expect(requestStart.status).toBe(200);
     expect(requestStart.body.action).toBe("answer");
     expect(requestStart.body.answer).toMatch(/servicio/i);
@@ -387,7 +387,7 @@ test.describe("@seeded ContrataCR AI", () => {
 
     const requestReady = await ask(page, "carpinteria, Orotina", {
       history: [
-        { role: "user", content: "Quiero publicar una solicitud" },
+        { role: "user", content: "Quiero crear un proyecto" },
         { role: "assistant", content: requestStart.body.answer },
       ],
     });
@@ -415,7 +415,7 @@ test.describe("@seeded ContrataCR AI", () => {
     const requiredContracts = [
       /search|buscar/i,
       /booking|solicitud/i,
-      /publication|publicacion/i,
+      /project|proyecto/i,
       /proposal|propuesta/i,
       /availability|disponibilidad/i,
       /video consultation|videoconsulta/i,
@@ -462,7 +462,7 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /no garantiza|no\. la verificación/i },
       { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "tab=proposals", answer: /puede editar/i },
       { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /cliente reprograma|no\. el cliente/i },
-      { prompt: "¿Puedo publicar una solicitud sin cuenta?", action: "login", href: "/es/login", answer: /iniciar sesión/i },
+      { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/es/login", answer: /iniciar sesión/i },
       { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },
       { prompt: "¿Qué hago si un profesional cancela mi cita?", action: "answer", answer: /no se puede reprogramar/i },
       { prompt: "¿Cómo cambio de cliente a profesional?", action: "open_dashboard", href: "/es/dashboard/profesional", answer: /selector Cliente \/ Profesional/i },
@@ -523,7 +523,7 @@ test.describe("@seeded ContrataCR AI", () => {
     const second = await ask(page, secondPrompt, {
       history: [
         { role: "user", content: firstPrompt },
-        { role: "assistant", content: first.body.answer || "Puede publicar una solicitud." },
+        { role: "assistant", content: first.body.answer || "Puede crear un proyecto." },
       ],
     });
     expect(second.status, JSON.stringify(second.body)).toBe(200);

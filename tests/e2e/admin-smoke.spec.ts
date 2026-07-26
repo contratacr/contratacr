@@ -10,7 +10,7 @@ const adminRoutes = [
   { path: "/es/admin/aseguradoras", marker: /Aseguradoras/i },
   { path: "/es/admin/servicios", marker: /Servicios/i },
   { path: "/es/admin/solicitudes", marker: /Solicitudes/i },
-  { path: "/es/admin/publicaciones", marker: /Publicaciones/i },
+  { path: "/es/admin/publicaciones", marker: /Proyectos/i },
   { path: "/es/admin/cuentas", marker: /Cuentas/i },
   { path: "/es/admin/soporte", marker: /Soporte/i },
   { path: "/es/admin/analitica", marker: /Analitica|Anal.tica/i },
