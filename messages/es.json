@@ -40,8 +40,8 @@
     "searchProfessionals": "Buscar servicios",
     "myAccount": "Mi cuenta",
     "account": "Cuenta",
-    "sentRequests": "Solicitudes",
-    "myRequests": "Solicitudes",
+    "sentRequests": "Mis solicitudes",
+    "myRequests": "Mis solicitudes",
     "publishedProjects": "Mis proyectos",
     "myProjects": "Mis proyectos",
     "favorites": "Mis favoritos",
@@ -1184,7 +1184,7 @@
     "tabs": {
       "home": "Panel",
       "profile": "Mi perfil",
-      "services": "Mis servicios",
+      "services": "Servicios",
       "photos": "Casos de éxito",
       "availability": "Disponibilidad",
       "chat": "Mensajes",
@@ -1193,7 +1193,7 @@
       "proposals": "Proyectos",
       "verificacion": "Verificación",
       "suscripcion": "Suscripción",
-      "sent_bookings": "Solicitudes",
+      "sent_bookings": "Mis solicitudes",
       "sent_projects": "Mis proyectos",
       "saved": "Mis favoritos",
       "notifications": "Notificaciones",
@@ -1268,7 +1268,7 @@
           "body": "Encuentre servicios por categoría, ubicación o nombre."
         },
         "myRequests": {
-          "title": "Solicitudes",
+          "title": "Mis solicitudes",
           "body": "Revise servicios que solicitó y su estado."
         },
         "saved": {
@@ -1284,7 +1284,7 @@
           "body": "Revise proyectos de clientes que coinciden con sus servicios."
         },
         "services": {
-          "title": "Mis servicios",
+          "title": "Servicios",
           "body": "Actualice lo que ofrece, precios y detalles."
         },
         "photos": {
@@ -1313,7 +1313,7 @@
         }
       }
     },
-    "servicesHeading": "Mis servicios",
+    "servicesHeading": "Servicios",
     "subtitles": {
       "bookings": "Solicitudes que te enviaron tus clientes.",
       "proposals": "Proyectos de clientes a los que puedes enviar propuestas.",
@@ -1401,7 +1401,7 @@
       "bookings": "Solicitudes",
       "proposals": "Proyectos",
       "verificacion": "Verificación",
-      "sent_bookings": "Solicitudes",
+      "sent_bookings": "Mis solicitudes",
       "sent_projects": "Proyectos",
       "notifications": "Notificaciones",
       "soporte": "Soporte",
@@ -2138,7 +2138,7 @@
     "subtitle": "Tu panel en ContrataCR",
     "searchPros": "Buscar servicios",
     "signOut": "Salir",
-    "tabBookings": "Solicitudes",
+    "tabBookings": "Mis solicitudes",
     "tabProjects": "Proyectos",
     "tabSaved": "Guardados",
     "tabNotifications": "Notificaciones",
@@ -2146,7 +2146,7 @@
     "tabProfile": "Mi perfil",
     "tabAccount": "Cuenta y seguridad",
     "savedHeading": "Profesionales guardados",
-    "bookingsHeading": "Solicitudes",
+    "bookingsHeading": "Mis solicitudes",
     "bookingsSubtitle": "Servicios que solicitaste.",
     "projectsHeading": "Mis proyectos",
     "projectsSubtitle": "Proyectos que creaste para recibir propuestas.",

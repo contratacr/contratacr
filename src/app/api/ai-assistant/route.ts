@@ -1034,8 +1034,8 @@ function normalizePayload(
       ...payload,
       action: "answer",
       answer: locale === "en"
-        ? "No. The client reschedules an active appointment from Requests in client mode. The professional can cancel it with an optional reason and coordinate another time through WhatsApp, but cannot move the appointment unilaterally."
-        : "No. El cliente reprograma una cita activa desde Solicitudes en modo cliente. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por WhatsApp, pero no puede mover la cita unilateralmente.",
+        ? "No. The client reschedules an active appointment from My requests in client mode. The professional can cancel it with an optional reason and coordinate another time through WhatsApp, but cannot move the appointment unilaterally."
+        : "No. El cliente reprograma una cita activa desde Mis solicitudes en modo cliente. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por WhatsApp, pero no puede mover la cita unilateralmente.",
       ctaLabel: null,
     };
   }
@@ -1104,7 +1104,7 @@ function normalizePayload(
     return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open availability" : "Ir a disponibilidad" };
   }
   if (includesAny(normalized, ["editar mis servicios", "administrar mis servicios", "servicios que ofrezco", "agregar otro servicio", "agregar un servicio", "agrego otro servicio", "agrego un servicio", "anadir otro servicio", "anadir un servicio", "anado otro servicio", "anado un servicio", "edit my services", "manage my services", "add another service", "add a service"])) {
-    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open my services" : "Ir a mis servicios" };
+    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open services" : "Ir a servicios" };
   }
   const wantsToPublish = publishConversation || hasExplicitPublishIntent(message);
   if (userSaysServiceIsUnclear && !wantsToPublish) {

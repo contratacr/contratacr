@@ -40,8 +40,8 @@
     "searchProfessionals": "Find services",
     "myAccount": "My account",
     "account": "Account",
-    "sentRequests": "Requests",
-    "myRequests": "Requests",
+    "sentRequests": "My requests",
+    "myRequests": "My requests",
     "publishedProjects": "My projects",
     "myProjects": "My projects",
     "favorites": "My favorites",
@@ -1185,7 +1185,7 @@
     "tabs": {
       "home": "Panel",
       "profile": "My profile",
-      "services": "My services",
+      "services": "Services",
       "photos": "Success stories",
       "availability": "Availability",
       "chat": "Messages",
@@ -1194,7 +1194,7 @@
       "proposals": "Projects",
       "verificacion": "Verification",
       "suscripcion": "Subscription",
-      "sent_bookings": "Requests",
+      "sent_bookings": "My requests",
       "sent_projects": "My projects",
       "saved": "My favorites",
       "notifications": "Notifications",
@@ -1269,7 +1269,7 @@
           "body": "Find services by category, location or name."
         },
         "myRequests": {
-          "title": "Requests",
+          "title": "My requests",
           "body": "Review services you requested and their status."
         },
         "saved": {
@@ -1285,7 +1285,7 @@
           "body": "Review client projects that match your services."
         },
         "services": {
-          "title": "My services",
+          "title": "Services",
           "body": "Update what you offer, prices and details."
         },
         "photos": {
@@ -1314,7 +1314,7 @@
         }
       }
     },
-    "servicesHeading": "My services",
+    "servicesHeading": "Services",
     "subtitles": {
       "bookings": "Requests your clients sent you.",
       "proposals": "Client projects you can send proposals to.",
@@ -1402,7 +1402,7 @@
       "bookings": "Requests",
       "proposals": "Projects",
       "verificacion": "Verification",
-      "sent_bookings": "Requests",
+      "sent_bookings": "My requests",
       "sent_projects": "Projects",
       "notifications": "Notifications",
       "soporte": "Support",
@@ -2140,7 +2140,7 @@
     "subtitle": "Your ContrataCR dashboard",
     "searchPros": "Find services",
     "signOut": "Sign out",
-    "tabBookings": "Requests",
+    "tabBookings": "My requests",
     "tabProjects": "Projects",
     "tabSaved": "Saved",
     "tabNotifications": "Notifications",
@@ -2148,7 +2148,7 @@
     "tabProfile": "My profile",
     "tabAccount": "Account & security",
     "savedHeading": "Saved professionals",
-    "bookingsHeading": "Requests",
+    "bookingsHeading": "My requests",
     "bookingsSubtitle": "Services you requested.",
     "projectsHeading": "My projects",
     "projectsSubtitle": "Projects you created to receive proposals.",

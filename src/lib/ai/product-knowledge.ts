@@ -24,7 +24,7 @@ PROFESSIONAL PROFILES AND CONTACT
 CLIENT REQUESTS AND BOOKINGS
 - A client can request a service from a professional profile, choose the relevant service/location/date/time when available and see the request in the client panel.
 - A professional receives the request, can manage it from Requests and the parties receive the applicable in-app notifications.
-- Only the client can reschedule an active appointment from Requests in client mode. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time through WhatsApp.
+- Only the client can reschedule an active appointment from My requests in client mode. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time through WhatsApp.
 - A cancelled appointment cannot be rescheduled. The client must book a new available time or coordinate another time with the professional through WhatsApp.
 - The system prevents double booking. A video consultation may share configured availability with one physical workplace, but once a time is booked it blocks that capacity in both modalities.
 - A professional marks work as completed; the client confirms finalization. The app may automatically confirm after the displayed waiting period.
@@ -48,7 +48,7 @@ PROFESSIONAL PANEL
 - Verification uses the saved identity and may require manual review when the identification is not found in the Costa Rican registry.
 
 CLIENT PANEL
-- Main sections include Requests, My projects, Favorites, Notifications, Profile, Support and Account/security.
+- Main sections include My requests, My projects, Favorites, Notifications, Profile, Support and Account/security.
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS
