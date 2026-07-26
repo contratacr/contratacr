@@ -630,7 +630,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     if (didBook) router.refresh();
   }
 
-  // "Ver mi solicitud" → the client's Mis solicitudes, where the just-created request sits
+  // "Ver mi solicitud" → the client's Solicitudes section, where the just-created request sits
   // at the top (newest first). Do not use resetAndClose here: that path refreshes the
   // current profile/search page, which can race the navigation and leave the user there.
   function goToMyRequest() {
@@ -1733,7 +1733,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
             {step === "success" && (
               <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0 flex flex-col gap-2.5">
-                {/* Lead to the just-made request (it's at the top of Mis solicitudes), not a
+                {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
                 <Button size="md" className="w-full" onClick={goToMyRequest}>
                   {t("success.viewRequest")}

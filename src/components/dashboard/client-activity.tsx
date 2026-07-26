@@ -164,8 +164,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [bookingFilter, setBookingFilter] = useState("activas");
   const [projectFilter, setProjectFilter] = useState("activas");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
-  // Mis solicitudes is now a collapsible accordion too (sprint 440) — same card language
-  // as Solicitudes recibidas / Oportunidades / Mis proyectos.
+  // Solicitudes is now a collapsible accordion too (sprint 440) — same card language
+  // as the professional Solicitudes / Proyectos sections and Mis proyectos.
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [showPublish, setShowPublish] = useState(false);

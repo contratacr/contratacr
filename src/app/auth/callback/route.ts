@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/es/onboarding`);
       }
 
-      // The "Publicar proyecto" CTA carries ?next=projects → land on "Mis solicitudes
+      // The "Publicar proyecto" CTA carries ?next=projects → land on "Solicitudes
       // publicadas" after authenticating. Everyone lands on the ONE unified panel; it
       // opens in the right mode itself.
       // "sent_projects" is a use-mode tab, so it works for any account.

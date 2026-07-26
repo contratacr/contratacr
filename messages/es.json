@@ -40,8 +40,8 @@
     "searchProfessionals": "Buscar servicios",
     "myAccount": "Mi cuenta",
     "account": "Cuenta",
-    "sentRequests": "Mis solicitudes enviadas",
-    "myRequests": "Mis solicitudes",
+    "sentRequests": "Solicitudes",
+    "myRequests": "Solicitudes",
     "publishedProjects": "Mis proyectos",
     "myProjects": "Mis proyectos",
     "favorites": "Mis favoritos",
@@ -114,7 +114,7 @@
     "modeClientShort": "Cliente",
     "modeProShort": "Profesional",
     "modeSwitchAria": "Cambiar entre modo cliente y modo profesional",
-    "receivedRequests": "Solicitudes recibidas",
+    "receivedRequests": "Solicitudes",
     "myProposals": "Mis propuestas"
   },
   "home": {
@@ -1056,7 +1056,7 @@
         "noServices": "Todavía no hay servicios agregados."
       },
       "bookings": {
-        "title": "Solicitudes recibidas",
+        "title": "Solicitudes",
         "empty": "No tienes solicitudes todavía",
         "emptyHint": "Cuando los clientes te contacten, aparecerán aquí.",
         "from": "De",
@@ -1107,7 +1107,7 @@
         "profile": "Mi perfil"
       },
       "bookings": {
-        "title": "Mis solicitudes",
+        "title": "Solicitudes",
         "upcoming": "Próximas",
         "past": "Historial",
         "empty": "No tienes solicitudes todavía",
@@ -1189,11 +1189,11 @@
       "availability": "Disponibilidad",
       "chat": "Mensajes",
       "assistant": "Asistente",
-      "bookings": "Solicitudes recibidas",
+      "bookings": "Solicitudes",
       "proposals": "Proyectos",
       "verificacion": "Verificación",
       "suscripcion": "Suscripción",
-      "sent_bookings": "Mis solicitudes",
+      "sent_bookings": "Solicitudes",
       "sent_projects": "Mis proyectos",
       "saved": "Mis favoritos",
       "notifications": "Notificaciones",
@@ -1268,7 +1268,7 @@
           "body": "Encuentre servicios por categoría, ubicación o nombre."
         },
         "myRequests": {
-          "title": "Mis solicitudes",
+          "title": "Solicitudes",
           "body": "Revise servicios que solicitó y su estado."
         },
         "saved": {
@@ -1276,7 +1276,7 @@
           "body": "Vuelva rápido a profesionales que guardó."
         },
         "requests": {
-          "title": "Solicitudes recibidas",
+          "title": "Solicitudes",
           "body": "Vea clientes que le contactaron directamente."
         },
         "opportunities": {
@@ -2146,7 +2146,7 @@
     "tabProfile": "Mi perfil",
     "tabAccount": "Cuenta y seguridad",
     "savedHeading": "Profesionales guardados",
-    "bookingsHeading": "Mis solicitudes",
+    "bookingsHeading": "Solicitudes",
     "bookingsSubtitle": "Servicios que solicitaste.",
     "projectsHeading": "Mis proyectos",
     "projectsSubtitle": "Proyectos que creaste para recibir propuestas.",
@@ -2995,7 +2995,7 @@
     "faq4Q": "¿Cómo coordino el servicio?",
     "faq4A": "Si buscas directamente, abre el perfil y usa una de las opciones de contacto habilitadas. Si creas un proyecto, compara las propuestas y coordina con el profesional que elijas. El precio, la fecha y los detalles se acuerdan directamente.",
     "faq5Q": "¿Cómo dejo una reseña?",
-    "faq5A": "Después de completar un servicio, puedes dejar una reseña desde tu panel, en Modo cliente → Mis solicitudes. Solo clientes que realmente contrataron ese servicio pueden dejar reseñas — así se garantiza que son auténticas.",
+    "faq5A": "Después de completar un servicio, puedes dejar una reseña desde tu panel, en Modo cliente → Solicitudes. Solo clientes que realmente contrataron ese servicio pueden dejar reseñas — así se garantiza que son auténticas.",
     "faq6Q": "¿Qué es crear un proyecto?",
     "faq6A": "Crear un proyecto es una alternativa a buscar directamente. Describes lo que necesitas (por ejemplo: “pintura de sala 4x4 m, presupuesto ₡80.000”), y los profesionales que ofrecen ese servicio en tu zona te envían propuestas con su precio. Tú eliges con quién trabajar.",
     "faq7Q": "¿Mi información personal está segura?",

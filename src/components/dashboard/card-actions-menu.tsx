@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 /**
  * Shared "··· / Acciones" overflow menu for the panel list cards (sprint 441).
  * Keeps cards clean: ONE primary action stays visible next to this; the SECONDARY
- * actions live here. Used identically by Solicitudes recibidas, Mis solicitudes and
+ * actions live here. Used identically by the professional and client Solicitudes sections and
  * Mis proyectos. Opens UPWARD (the footer sits at the card bottom) so it stays in
  * view, and the cards no longer use `overflow-hidden` (rounded button corners fix the
  * hover-clip instead) so this dropdown is never clipped.

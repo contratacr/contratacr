@@ -23,8 +23,8 @@ PROFESSIONAL PROFILES AND CONTACT
 
 CLIENT REQUESTS AND BOOKINGS
 - A client can request a service from a professional profile, choose the relevant service/location/date/time when available and see the request in the client panel.
-- A professional receives the request, can manage it from Requests received and the parties receive the applicable in-app notifications.
-- Only the client can reschedule an active appointment from My requests. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time through WhatsApp.
+- A professional receives the request, can manage it from Requests and the parties receive the applicable in-app notifications.
+- Only the client can reschedule an active appointment from Requests in client mode. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time through WhatsApp.
 - A cancelled appointment cannot be rescheduled. The client must book a new available time or coordinate another time with the professional through WhatsApp.
 - The system prevents double booking. A video consultation may share configured availability with one physical workplace, but once a time is booked it blocks that capacity in both modalities.
 - A professional marks work as completed; the client confirms finalization. The app may automatically confirm after the displayed waiting period.
@@ -39,7 +39,7 @@ PROJECTS AND PROPOSALS
 - Direct profile contacts are requests. Marketplace work created to receive proposals is always called a project for both clients and professionals.
 
 PROFESSIONAL PANEL
-- Main sections include Requests received, Projects, Notifications, Profile, Services, Availability, Success cases, Verification, Support and Account/security. Proposals sent by the professional live inside Projects.
+- Main sections include Requests, Projects, Notifications, Profile, Services, Availability, Success cases, Verification, Support and Account/security. Proposals sent by the professional live inside Projects.
 - Profile completion helps public visibility. A professional needs at least one active service to appear correctly in public search.
 - Services can have a public description, price and experience information. Prices are CRC and displayed as I.V.A.I. where applicable.
 - Work areas can be exact map pins, cantons, whole provinces or nationwide video coverage for compatible services.
@@ -48,7 +48,7 @@ PROFESSIONAL PANEL
 - Verification uses the saved identity and may require manual review when the identification is not found in the Costa Rican registry.
 
 CLIENT PANEL
-- Main sections include My requests, My projects, Favorites, Notifications, Profile, Support and Account/security.
+- Main sections include Requests, My projects, Favorites, Notifications, Profile, Support and Account/security.
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS

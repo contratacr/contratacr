@@ -1034,8 +1034,8 @@ function normalizePayload(
       ...payload,
       action: "answer",
       answer: locale === "en"
-        ? "No. The client reschedules an active appointment from My requests. The professional can cancel it with an optional reason and coordinate another time through WhatsApp, but cannot move the appointment unilaterally."
-        : "No. El cliente reprograma una cita activa desde Mis solicitudes. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por WhatsApp, pero no puede mover la cita unilateralmente.",
+        ? "No. The client reschedules an active appointment from Requests in client mode. The professional can cancel it with an optional reason and coordinate another time through WhatsApp, but cannot move the appointment unilaterally."
+        : "No. El cliente reprograma una cita activa desde Solicitudes en modo cliente. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por WhatsApp, pero no puede mover la cita unilateralmente.",
       ctaLabel: null,
     };
   }
