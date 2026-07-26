@@ -361,10 +361,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     (!!params.aseguradora && canFilterByInsurer) ||
     (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
     (!!params.modalidad && params.modalidad !== "any");
-  const paginationParams = new URLSearchParams();
+  const searchReturnParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (key !== "page" && value) paginationParams.set(key, value);
+    if (value) searchReturnParams.set(key, value);
   }
+  const searchReturnQuery = searchReturnParams.toString();
+  const searchReturnHref = searchReturnQuery ? `/buscar?${searchReturnQuery}` : "/buscar";
+
+  const paginationParams = new URLSearchParams(searchReturnParams);
+  paginationParams.delete("page");
   const pageHref = (page: number) => {
     const next = new URLSearchParams(paginationParams);
     if (page > 1) next.set("page", String(page));
@@ -457,6 +462,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             preferredLocationId={shouldPreferVideoLocation(pro) ? "videoconsulta" : undefined}
                             restrictToPreferredLocation={shouldPreferVideoLocation(pro)}
                             syncScheduleWithSearchLoading
+                            searchReturnHref={searchReturnHref}
                           />
                         </SaveableCard>
                       </div>

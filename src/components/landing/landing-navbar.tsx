@@ -736,6 +736,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   // use Next's prefetched route payload instead of waiting after the click.
   useEffect(() => {
     const timeout = window.setTimeout(() => {
+      router.prefetch("/");
       router.prefetch("/buscar");
       if (user && !pathname.startsWith("/dashboard/profesional")) {
         router.prefetch(primaryPanelHref);
@@ -995,7 +996,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <Menu className="h-5 w-5" />
               </button>
 
-              <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "min-w-0 justify-self-center")}>
+              <Link
+                href="/"
+                aria-label="ContrataCR inicio"
+                onTouchStart={() => prepareNativeNavigation("/")}
+                onPointerDown={() => prepareNativeNavigation("/")}
+                className={cn("shrink-0", nativeHeaderShell && "min-w-0 justify-self-center")}
+              >
                 {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
               </Link>
 
@@ -1033,7 +1040,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
 
             {/* ── Default row ── */}
             <div className="relative hidden h-full items-center gap-4 lg:flex">
-              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+              <Link
+                href="/"
+                aria-label="ContrataCR inicio"
+                onTouchStart={() => prepareNativeNavigation("/")}
+                onPointerDown={() => prepareNativeNavigation("/")}
+                className="shrink-0"
+              >
                 {mobileInline ? (
                   <>
                     {/* Compact mark on mobile ONLY when the inline search is present (it needs the

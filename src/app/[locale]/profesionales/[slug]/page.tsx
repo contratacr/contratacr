@@ -56,6 +56,17 @@ function searchParamFromUrl(key: string): string | null {
   if (typeof window === "undefined") return null;
   return new URLSearchParams(window.location.search).get(key);
 }
+function safeSearchReturnHref(value: string | null): string {
+  if (!value) return "/buscar";
+  let href = value;
+  try {
+    href = decodeURIComponent(value);
+  } catch {
+    href = value;
+  }
+  const path = href.split("?")[0] ?? href;
+  return path === "/buscar" ? href : "/buscar";
+}
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
@@ -74,6 +85,7 @@ export default function ProfilePage() {
   // stranded. `null` = logged out (that screen then shows only "Buscar profesionales").
   const [panelHref, setPanelHref] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>(() => initialTabFromUrl());
+  const [searchReturnHref] = useState(() => safeSearchReturnHref(searchParamFromUrl("from")));
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
   // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
@@ -146,7 +158,6 @@ export default function ProfilePage() {
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tab !== "resenas") return;
 
-    setActiveTab("resenas");
     window.setTimeout(() => {
       document.getElementById("resenas")?.scrollIntoView({ block: "start" });
     }, 0);
@@ -326,7 +337,7 @@ export default function ProfilePage() {
               </Link>
             </div>
           ) : (
-            <Link href="/buscar" className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
+            <Link href={searchReturnHref} className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
               <ArrowLeft className="h-4 w-4" />
               {t("back")}
             </Link>
