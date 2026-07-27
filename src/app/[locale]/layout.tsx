@@ -45,7 +45,7 @@ function buildMetadata(locale: string): Metadata {
     title,
     description,
     applicationName: "ContrataCR",
-    manifest: "/site.webmanifest?v=original-flat-icon-20260726",
+    manifest: "/site.webmanifest?v=flat-home-icon-20260726",
     appleWebApp: {
       capable: true,
       title: "ContrataCR",
@@ -54,9 +54,9 @@ function buildMetadata(locale: string): Metadata {
     icons: {
       icon: [
         { url: "/favicon.ico?v=vector-mark-20260715", sizes: "any" },
-        { url: "/favicon-96x96.png?v=original-flat-icon-20260726", type: "image/png", sizes: "96x96" },
+        { url: "/favicon-96x96.png?v=flat-home-icon-20260726", type: "image/png", sizes: "96x96" },
       ],
-      apple: [{ url: "/apple-touch-icon.png?v=original-flat-icon-20260726", sizes: "180x180" }],
+      apple: [{ url: "/apple-touch-icon-flat.png?v=20260726", sizes: "180x180" }],
     },
     openGraph: {
       type: "website",
