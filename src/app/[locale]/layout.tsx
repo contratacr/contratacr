@@ -56,11 +56,11 @@ function buildMetadata(locale: string): Metadata {
         { url: "/favicon.ico?v=vector-mark-20260715", sizes: "any" },
         { url: "/favicon-96x96.png?v=vector-mark-20260715", type: "image/png", sizes: "96x96" },
       ],
-      apple: [{ url: "/apple-touch-icon-flat.png", sizes: "180x180" }],
+      apple: [{ url: "/apple-touch-icon-black-test.png", sizes: "180x180" }],
       other: [
         {
           rel: "apple-touch-icon-precomposed",
-          url: "/apple-touch-icon-precomposed.png",
+          url: "/apple-touch-icon-black-test-precomposed.png",
           sizes: "180x180",
         },
       ],
