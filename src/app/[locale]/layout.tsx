@@ -52,8 +52,8 @@ function buildMetadata(locale: string): Metadata {
     },
     icons: {
       icon: [
-        { url: "/favicon.ico?v=vector-mark-20260715", sizes: "any" },
-        { url: "/favicon-96x96.png?v=vector-mark-20260715", type: "image/png", sizes: "96x96" },
+        { url: "/favicon.ico?v=tab-tile-20260727", sizes: "any" },
+        { url: "/favicon-96x96.png?v=tab-tile-20260727", type: "image/png", sizes: "96x96" },
       ],
       apple: [{ url: "/apple-touch-icon.png?v=apple-safe-color-20260727", sizes: "180x180" }],
       other: [

@@ -310,11 +310,9 @@ export default function DashboardPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, onChanged)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, onChanged)
       .subscribe();
-    const id = window.setInterval(onChanged, 30000);
     return () => {
       stopped = true;
       window.removeEventListener("notificationsChanged", onChanged);
-      window.clearInterval(id);
       void supabase.removeChannel(channel);
     };
   }, [user]);
@@ -399,12 +397,10 @@ export default function DashboardPage() {
 
     window.addEventListener("focus", refreshVerificationState);
     document.addEventListener("visibilitychange", onVisible);
-    const id = window.setInterval(refreshVerificationState, 15000);
     return () => {
       stopped = true;
       window.removeEventListener("focus", refreshVerificationState);
       document.removeEventListener("visibilitychange", onVisible);
-      window.clearInterval(id);
     };
   }, [user, fetchPro, fetchProfile]);
 
@@ -431,10 +427,8 @@ export default function DashboardPage() {
       });
     loadUnread();
     window.addEventListener("notificationsChanged", loadUnread);
-    const id = window.setInterval(loadUnread, 3000);
     return () => {
       window.removeEventListener("notificationsChanged", loadUnread);
-      window.clearInterval(id);
     };
   }, [user, mode]);
 
@@ -453,10 +447,8 @@ export default function DashboardPage() {
       .then(({ count }) => setSupportUnread(count ?? 0));
     loadSupportUnread();
     window.addEventListener("notificationsChanged", loadSupportUnread);
-    const id = window.setInterval(loadSupportUnread, 3000);
     return () => {
       window.removeEventListener("notificationsChanged", loadSupportUnread);
-      window.clearInterval(id);
     };
   }, [user]);
 

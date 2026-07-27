@@ -159,14 +159,6 @@ export function BookingRequests() {
 
   useEffect(() => {
     if (loading) return;
-    const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") void loadBookings(true);
-    }, 15000);
-    return () => window.clearInterval(id);
-  }, [loadBookings, loading]);
-
-  useEffect(() => {
-    if (loading) return;
     window.addEventListener("notificationsChanged", refreshSoon);
     window.addEventListener("focus", refreshSoon);
     document.addEventListener("visibilitychange", refreshSoon);
