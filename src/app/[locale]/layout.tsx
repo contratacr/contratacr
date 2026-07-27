@@ -57,6 +57,13 @@ function buildMetadata(locale: string): Metadata {
         { url: "/favicon-96x96.png?v=vector-mark-20260715", type: "image/png", sizes: "96x96" },
       ],
       apple: [{ url: "/apple-touch-icon-flat.png", sizes: "180x180" }],
+      other: [
+        {
+          rel: "apple-touch-icon-precomposed",
+          url: "/apple-touch-icon-precomposed.png",
+          sizes: "180x180",
+        },
+      ],
     },
     openGraph: {
       type: "website",
