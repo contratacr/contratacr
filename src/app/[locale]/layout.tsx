@@ -19,7 +19,6 @@ import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
 import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-followup";
 import { PushTokenManager } from "@/components/push/push-token-manager";
-import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -150,7 +149,6 @@ export default async function LocaleLayout({
         />
         <EmojiBlocker />
         <ViewportEnvironment />
-        <MobileAppBridge />
         <CustomCategoriesLoader />
         <NotificationLiveToast scope="all" />
         <OperationalStatusBanner locale={locale} status={operationalStatus} />
