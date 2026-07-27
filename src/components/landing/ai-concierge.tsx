@@ -185,6 +185,32 @@ function ProfessionalResult({ result, copy, onNavigate }: {
   copy: typeof COPY.es | typeof COPY.en;
   onNavigate: (href: string) => void;
 }) {
+  const locale = useLocale();
+  const [openingWhatsApp, setOpeningWhatsApp] = useState(false);
+
+  async function openWhatsApp() {
+    setOpeningWhatsApp(true);
+    try {
+      const response = await fetch("/api/contact/whatsapp-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          professionalId: result.id,
+          professionalName: result.name,
+          contextTitle: result.service,
+          locale,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.href) throw new Error("whatsapp_unavailable");
+      window.open(String(payload.href), "_blank", "noopener,noreferrer");
+    } catch {
+      window.alert(locale === "en" ? "No WhatsApp number is available for this contact." : "No hay un numero de WhatsApp disponible para este contacto.");
+    } finally {
+      setOpeningWhatsApp(false);
+    }
+  }
+
   return (
     <article className="overflow-hidden rounded-xl border border-[#dce8ef] bg-white shadow-[0_4px_16px_-12px_rgba(15,35,60,0.35)]">
       <button type="button" onClick={() => onNavigate(result.profileHref)} className="flex w-full gap-3 p-3 text-left">
@@ -208,7 +234,16 @@ function ProfessionalResult({ result, copy, onNavigate }: {
       </button>
       <div className="grid grid-cols-2 border-t border-[#edf2f5]">
         <button type="button" onClick={() => onNavigate(result.profileHref)} className="h-10 text-xs font-bold text-[#526277] hover:bg-[#f7fafc]">{copy.viewProfile}</button>
-        <button type="button" onClick={() => onNavigate(result.actionHref)} className="h-10 border-l border-[#edf2f5] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{result.actionLabel}</button>
+        <button
+          type="button"
+          onClick={() => result.actionKind === "message" ? void openWhatsApp() : onNavigate(result.actionHref)}
+          disabled={openingWhatsApp}
+          aria-label={result.actionLabel}
+          className="inline-flex h-10 min-w-0 items-center justify-center gap-1.5 border-l border-[#edf2f5] bg-[#009FD9] px-3 text-xs font-extrabold text-white hover:bg-[#008fca] disabled:opacity-70"
+        >
+          {openingWhatsApp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+          <span className="truncate">{result.actionKind === "message" ? "WhatsApp" : result.actionLabel}</span>
+        </button>
       </div>
     </article>
   );
