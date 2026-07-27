@@ -68,12 +68,14 @@ function remapClientLink(link: string): string {
 
 function withTargetParams(link: string, data?: NotificationLinkInput["data"]): string {
   if (!data?.booking_id && !data?.project_id) return link;
-  const [path, query = ""] = link.split("?");
+  const [base, hash = ""] = link.split("#");
+  const [path, query = ""] = base.split("?");
   const params = new URLSearchParams(query);
   if (data.booking_id) params.set("booking", data.booking_id);
   if (data.project_id) params.set("project", data.project_id);
   const qs = params.toString();
-  return qs ? `${path}?${qs}` : path;
+  const target = qs ? `${path}?${qs}` : path;
+  return hash ? `${target}#${hash}` : target;
 }
 
 function withLocale(link: string, locale: string): string {
@@ -85,9 +87,18 @@ function withLocale(link: string, locale: string): string {
   return link;
 }
 
+function withReviewTarget(link: string): string {
+  const [base, hash = ""] = link.split("#");
+  const [path, query = ""] = base.split("?");
+  const params = new URLSearchParams(query);
+  params.set("tab", "resenas");
+  return `${path}?${params.toString()}#${hash || "resenas"}`;
+}
+
 export function notificationHref(n: NotificationLinkInput, _role?: string, locale = "es"): string {
   if (n.data?.link && n.data.link.startsWith("/")) {
-    return withLocale(withTargetParams(remapClientLink(n.data.link), n.data), locale);
+    const link = n.type === "review_received" ? withReviewTarget(n.data.link) : n.data.link;
+    return withLocale(withTargetParams(remapClientLink(link), n.data), locale);
   }
 
   let href: string;

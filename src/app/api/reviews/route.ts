@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
       title: "Nueva reseña recibida",
       message: `${clientName} te dejó una reseña de ${stars} estrellas.`,
       data: {
-        link: `/es/profesionales/${targetPro.slug}`,
+        link: `/es/profesionales/${targetPro.slug}?tab=resenas#resenas`,
         professional_id: professionalId,
         review_id: insertedReview.id,
       },
