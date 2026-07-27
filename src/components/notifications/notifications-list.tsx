@@ -105,13 +105,11 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     window.addEventListener("focus", onChanged);
     window.addEventListener("pageshow", onChanged);
     document.addEventListener("visibilitychange", onVisible);
-    const id = window.setInterval(onChanged, 5000);
     return () => {
       window.removeEventListener("notificationsChanged", onChanged);
       window.removeEventListener("focus", onChanged);
       window.removeEventListener("pageshow", onChanged);
       document.removeEventListener("visibilitychange", onVisible);
-      window.clearInterval(id);
     };
   }, [user, loadNotifications]);
 

@@ -471,13 +471,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       }
     }
 
-    const interval = window.setInterval(refreshPublicAvailability, 8000);
     window.addEventListener("focus", refreshPublicAvailability);
     window.addEventListener("ccr:availability-changed", refreshPublicAvailability);
     void refreshPublicAvailability();
     return () => {
       active = false;
-      window.clearInterval(interval);
       window.removeEventListener("focus", refreshPublicAvailability);
       window.removeEventListener("ccr:availability-changed", refreshPublicAvailability);
     };

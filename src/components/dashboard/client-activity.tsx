@@ -260,17 +260,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
   useEffect(() => {
     if (!user || section === "saved" || loading) return;
-    const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") {
-        void fetchSection(false);
-        if (section === "projects") void reloadLoadedProjectProposals();
-      }
-    }, 15000);
-    return () => window.clearInterval(id);
-  }, [fetchSection, loading, reloadLoadedProjectProposals, section, user]);
-
-  useEffect(() => {
-    if (!user || section === "saved" || loading) return;
     window.addEventListener("notificationsChanged", refreshSoon);
     window.addEventListener("focus", refreshSoon);
     document.addEventListener("visibilitychange", refreshSoon);

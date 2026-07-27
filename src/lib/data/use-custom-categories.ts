@@ -9,14 +9,11 @@ import {
 } from "./categories";
 
 const CATEGORY_CATALOG_EVENT = "contratacr:category-catalog-updated";
-const REFRESH_INTERVAL_MS = 60_000;
 const MIN_REFRESH_GAP_MS = 4_000;
 
 let inFlight: Promise<void> | null = null;
 let lastRefreshAt = 0;
 let lastPayloadKey = "";
-let activeHooks = 0;
-let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 function payloadKey(d: unknown): string {
   try {
@@ -57,26 +54,11 @@ export function notifyCategoryCatalogChanged() {
   window.dispatchEvent(new CustomEvent(CATEGORY_CATALOG_EVENT));
 }
 
-function startSharedRefresh() {
-  if (pollTimer || typeof window === "undefined") return;
-  pollTimer = setInterval(() => {
-    if (document.visibilityState === "visible") void refreshCustomCategories();
-  }, REFRESH_INTERVAL_MS);
-}
-
-function stopSharedRefresh() {
-  if (!pollTimer || activeHooks > 0) return;
-  clearInterval(pollTimer);
-  pollTimer = null;
-}
-
 /** Trigger the one-time load and subscribe to registry updates. Returns the
  *  current custom categories (kept fresh via the subscription). */
 export function useCustomCategories() {
   const [, bump] = useState(0);
   useEffect(() => {
-    activeHooks += 1;
-    startSharedRefresh();
     void refreshCustomCategories({ force: !lastRefreshAt });
 
     const unsubscribe = subscribeCustomCategories(() => bump((n) => n + 1));
@@ -93,8 +75,6 @@ export function useCustomCategories() {
       window.removeEventListener(CATEGORY_CATALOG_EVENT, onCatalogChanged);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("focus", onCatalogChanged);
-      activeHooks = Math.max(0, activeHooks - 1);
-      stopSharedRefresh();
     };
   }, []);
   return getCustomCategories();

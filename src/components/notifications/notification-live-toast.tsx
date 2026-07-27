@@ -239,8 +239,6 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       }
     }
     void loadLatest();
-    const id = window.setInterval(loadLatest, 3000);
-    return () => window.clearInterval(id);
   }, [user, maybeShow, scope]);
 
   useEffect(() => {

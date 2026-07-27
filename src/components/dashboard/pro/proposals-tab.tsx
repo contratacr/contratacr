@@ -217,18 +217,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
   useEffect(() => {
     if (loading) return;
-    const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") {
-        if (view === "browse") void fetchOpenProjects(true);
-        else void fetchMyProposals(true);
-      }
-    }, 15000);
-    return () => window.clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, loading]);
-
-  useEffect(() => {
-    if (loading) return;
     window.addEventListener("notificationsChanged", refreshSoon);
     window.addEventListener("focus", refreshSoon);
     document.addEventListener("visibilitychange", refreshSoon);

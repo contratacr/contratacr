@@ -31,7 +31,7 @@ interface SearchPageProps {
     lat?: string;
     lng?: string;
     ubicacion?: string;
-    // "Buscar en esta área" — the map's visible bounds (N/S/E/W).
+    // "Buscar en esta area" - the map's visible bounds (N/S/E/W).
     n?: string;
     s?: string;
     e?: string;
@@ -73,12 +73,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const nearLat = typeof parsedNearLat === "number" && Number.isFinite(parsedNearLat) ? parsedNearLat : undefined;
   const nearLng = typeof parsedNearLng === "number" && Number.isFinite(parsedNearLng) ? parsedNearLng : undefined;
 
-  // Who is viewing — so we can hide self-service actions on a pro's OWN card.
+  // Who is viewing - so we can hide self-service actions on a pro's OWN card.
   // safeGetUser never throws on a stale session (would otherwise crash this
   // public page for returning users with an expired token).
   const viewerPromise = createClient().then((supabaseViewer) => safeGetUser(supabaseViewer));
 
-  // "Buscar en esta área" → filter to the map's visible viewport (ADDS to the active
+  // "Buscar en esta area" filters to the map's visible viewport (ADDS to the active
   // filters; the map sends N/S/E/W when the user searches the moved area).
   const parsedMapBounds = params.n && params.s && params.e && params.w
     ? { north: Number(params.n), south: Number(params.s), east: Number(params.e), west: Number(params.w) }
@@ -107,22 +107,21 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   ]);
   const viewerProfileId = viewer?.id;
 
-  // "Disponibilidad inmediata" sort — order pros by their SOONEST upcoming bookable
+  // "Disponibilidad inmediata" sort - order pros by their SOONEST upcoming bookable
   // slot (those with no upcoming slots go last). Done here (not in the SQL query)
   // because slots live in a separate table; best-effort, falls back to default order.
   let orderedResults = allResults;
 
   // Fetch upcoming published slots for the professionals on THIS page so each
   // card can show inline availability (Hulihealth-style). Private pros are
-  // skipped — their slots must not appear.
+  // skipped - their slots must not appear.
   const slotsByPro: Record<string, ScheduleSlot[]> = {};
   const earliestByPro: Record<string, string> = {};
   const videoMode = params.modalidad === "video";
   const publicIds = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
-  // Render the page and professional cards before availability finishes loading.
-  // Each card keeps its established schedule skeleton while it refreshes client-side.
-  // Availability sorting is the exception because slot timestamps determine order.
-  if (publicIds.length > 0 && sortBy === "availability") {
+  // Resolve availability in one grouped read. Fetching it card-by-card caused one
+  // serverless invocation per professional every time search results rendered.
+  if (publicIds.length > 0) {
     try {
       const supabase = createAdminClient();
       const todayISO = crTodayISO();
@@ -178,7 +177,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         });
       }
     } catch {
-      /* best-effort — cards just render without the strip */
+      /* best-effort - cards just render without the strip */
     }
   }
 
@@ -405,10 +404,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <LandingNavbar forceCompactSearch />
       <div className="h-16" aria-hidden />
 
-      {/* Top bar — title + subtitle. Background MATCHES the page/results area (#f4f7fa)
+      {/* Top bar - title + subtitle. Background MATCHES the page/results area (#f4f7fa)
           and is FLUSH with it: no shadow, divider or raised band, so the title reads as
           part of one continuous page. A brand accent bar sits to the left of the title.
-          HIDDEN on mobile (Yelp layout) so the map gets full prominence — the in-sheet
+          HIDDEN on mobile (Yelp layout) so the map gets full prominence - the in-sheet
           count carries the result total there. */}
       <div className="hidden lg:block bg-[#f4f7fa]">
         <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-4">
@@ -424,7 +423,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </div>
 
-      {/* Main content — 3-column shell (filters · results · map). On mobile the padding is
+      {/* Main content - 3-column shell (filters / results / map). On mobile the padding is
           zeroed so the Yelp map + bottom sheet go edge-to-edge; desktop keeps its gutters. */}
       <main className="flex-1">
         <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:py-4">
@@ -441,7 +440,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             drawerFilters={<Suspense fallback={filtersFallback}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
           >
 
-            {/* ── Results list ── */}
+            {/* Results list */}
             <div className="min-w-0">
               {allResults.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-2xl border border-[#e5e7eb]">
@@ -455,12 +454,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </div>
               ) : (
                 <>
-                  {/* SINGLE vertical column — one card per row. On MOBILE/tablet the card is
+                  {/* SINGLE vertical column - one card per row. On MOBILE/tablet the card is
                       a single stacked column capped for readability (`max-w-[520px]`); on
                       DESKTOP (lg+) the card goes TWO-column (info | schedule) and fills the
                       wider results column (`lg:max-w-none`), which hugs the card width while
                       the map takes the rest (see search-results-layout). Content-driven
-                      height — one card per row, each grows to its content. */}
+                      height - one card per row, each grows to its content. */}
                   <div className="flex flex-col gap-3">
                     {await Promise.all(results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
@@ -470,7 +469,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           <ProfessionalCard
                             professional={pro}
                             slots={slotsByPro[pro.id] ?? []}
-                            slotsInitiallyLoaded={sortBy === "availability"}
+                            slotsInitiallyLoaded
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={i + 1}
@@ -486,55 +485,68 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   </div>
 
                   {totalPages > 1 && (
-                    <>
-                      <nav aria-label={t("pagination.label")} className="mt-5 flex items-center justify-between gap-3 border-t border-[#e5e7eb] pt-4 sm:hidden">
+                    <nav aria-label={t("pagination.label")} className="mt-5 border-t border-[#e5e7eb] pt-4">
+                      <div className="flex items-center justify-between gap-3 sm:hidden">
                         {currentPage > 1 ? (
-                          <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#d7e2ea] bg-white text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
+                          <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-4 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
                             <ChevronLeft className="h-4 w-4" />
+                            <span>{t("pagination.prev")}</span>
                           </Link>
                         ) : (
-                          <span aria-hidden className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e5e7eb] bg-white text-[#cbd5e1]">
+                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
                             <ChevronLeft className="h-4 w-4" />
+                            <span>{t("pagination.prev")}</span>
                           </span>
                         )}
-                        <span className="min-w-0 text-center text-sm font-semibold text-[#1A2744]">
-                          {locale === "en" ? `Page ${currentPage} of ${totalPages}` : `Página ${currentPage} de ${totalPages}`}
+                        <span className="min-w-0 text-center text-xs font-bold uppercase tracking-[0.08em] text-[#64748b]">
+                          {currentPage} / {totalPages}
                         </span>
                         {currentPage < totalPages ? (
-                          <Link href={pageHref(currentPage + 1)} prefetch aria-label={t("pagination.next")} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white shadow-sm transition hover:bg-[#0089BB]">
+                          <Link href={pageHref(currentPage + 1)} prefetch aria-label={t("pagination.next")} className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
+                            <span>{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4" />
                           </Link>
                         ) : (
-                          <span aria-hidden className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e5e7eb] bg-white text-[#cbd5e1]">
+                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
+                            <span>{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4" />
                           </span>
                         )}
-                      </nav>
-                      <nav aria-label={t("pagination.label")} className="mt-5 hidden flex-nowrap items-center justify-between gap-3 border-t border-[#e5e7eb] pt-4 sm:flex">
-                        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                      </div>
+                      <div className="hidden flex-nowrap items-center justify-between gap-4 sm:flex">
+                        <p className="hidden min-w-40 text-sm font-medium text-[#64748b] lg:block">
+                          {currentPage} / {totalPages}
+                        </p>
+                        <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-hidden">
                           {currentPage > 1 && (
-                            <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-[#374151] transition hover:bg-[#EBF5FB] hover:text-[#0089BB]">
+                            <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-4 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
                               <ChevronLeft className="h-4 w-4" />
+                              <span>{t("pagination.prev")}</span>
                             </Link>
                           )}
+                          <div className="mx-1 flex items-center gap-1 rounded-full bg-[#f3f7fb] p-1">
                           {paginationPages.map((page, index) => page === "ellipsis" ? (
-                            <span key={`ellipsis-${index}`} className="grid h-10 w-7 place-items-center text-sm text-[#9ca3af]">...</span>
+                            <span key={`ellipsis-${index}`} className="grid h-9 w-8 place-items-center text-sm font-semibold text-[#9ca3af]">...</span>
                           ) : page === currentPage ? (
-                            <span key={page} aria-current="page" className="grid h-10 min-w-10 place-items-center rounded-md bg-[#009FD9] px-2 text-sm font-bold text-white">{page}</span>
+                            <span key={page} aria-current="page" className="grid h-9 min-w-9 place-items-center rounded-full bg-[#009FD9] px-3 text-sm font-bold text-white shadow-sm">{page}</span>
                           ) : (
-                            <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-10 min-w-10 place-items-center rounded-md px-2 text-sm font-medium text-[#6b7280] transition hover:bg-[#EBF5FB] hover:text-[#0089BB]">
+                            <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-9 min-w-9 place-items-center rounded-full px-3 text-sm font-bold text-[#526174] transition hover:bg-white hover:text-[#0089BB] hover:shadow-sm">
                               {page}
                             </Link>
                           ))}
+                          </div>
                         </div>
                         {currentPage < totalPages && (
-                          <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 min-w-40 shrink-0 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white transition hover:bg-[#0089BB]">
+                          <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
                             <span className="leading-none">{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4 shrink-0" />
                           </Link>
                         )}
-                      </nav>
-                    </>
+                        <span className="hidden min-w-40 text-right text-sm font-medium text-[#64748b] md:block">
+                          {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
+                        </span>
+                      </div>
+                    </nav>
                   )}
 
                 </>
@@ -545,7 +557,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </main>
 
-      {/* Footer hidden on mobile — the Yelp map + bottom sheet fill the screen (no scroll). */}
+      {/* Footer hidden on mobile - the Yelp map + bottom sheet fill the screen (no scroll). */}
       <div className="hidden lg:block">
         <LandingFooter />
       </div>

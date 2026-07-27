@@ -7,7 +7,6 @@ import {
   BadgeCheck,
   CheckCheck,
   ClipboardList,
-  History,
   Loader2,
   MapPin,
   Minus,
@@ -15,7 +14,6 @@ import {
   Send,
   Sparkles,
   Star,
-  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import { useLocale } from "next-intl";
@@ -63,13 +61,6 @@ type StoredAssistantSession = {
   messages: ChatMessage[];
 };
 
-type SavedConversation = {
-  id: string;
-  title: string;
-  messages: ChatMessage[];
-  updated_at: string;
-};
-
 const SESSION_KEY_PREFIX = "contratacr:ai-session:";
 const PENDING_INTENT_KEY = "contratacr:pending-intent";
 const MAX_STORED_MESSAGES = 30;
@@ -110,15 +101,12 @@ const COPY = {
     thinking: "Buscando la mejor respuesta...",
     viewProfile: "Ver perfil",
     verified: "Verificado",
-    history: "Historial",
-    emptyHistory: "Todavía no hay conversaciones guardadas.",
     suggest: "Sugerir servicio",
     suggesting: "Enviando...",
     suggested: "Sugerencia enviada",
     error: "No pude responder en este momento. Inténtelo nuevamente.",
     notice: "La IA puede equivocarse. Revise los detalles antes de continuar.",
     reset: "Iniciar una conversación nueva",
-    deleteConversation: "Eliminar conversación",
   },
   en: {
     closedLabel: "Open ContrataCR assistant",
@@ -130,15 +118,12 @@ const COPY = {
     thinking: "Finding the best answer...",
     viewProfile: "View profile",
     verified: "Verified",
-    history: "History",
-    emptyHistory: "There are no saved conversations yet.",
     suggest: "Suggest service",
     suggesting: "Sending...",
     suggested: "Suggestion sent",
     error: "I could not answer right now. Please try again.",
     notice: "AI can be wrong. Review the details before continuing.",
     reset: "Start a new conversation",
-    deleteConversation: "Delete conversation",
   },
 } as const;
 
@@ -262,10 +247,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState("");
-  const [showHistory, setShowHistory] = useState(false);
-  const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([]);
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -314,7 +296,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
       previousPathnameRef.current = pathname;
       const frame = requestAnimationFrame(() => {
         if (!embedded) setOpen(false);
-        setShowHistory(false);
       });
       return () => cancelAnimationFrame(frame);
     }
@@ -343,40 +324,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   }, [embedded, open]);
 
   useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    void fetch("/api/ai-assistant/history")
-      .then((response) => response.json())
-      .then((payload) => {
-        if (!cancelled && Array.isArray(payload.conversations)) setSavedConversations(payload.conversations);
-      })
-      .catch(() => undefined);
-    return () => { cancelled = true; };
-  }, [user]);
-
-  useEffect(() => {
-    if (!user || !conversationId || !sessionHydratedRef.current || messages.length < 2) return;
-    const timer = window.setTimeout(() => {
-      const firstUserMessage = messages.find((message) => message.role === "user")?.body || copy.history;
-      void fetch("/api/ai-assistant/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: conversationId,
-          title: firstUserMessage.slice(0, 70),
-          messages: messages.slice(-MAX_STORED_MESSAGES),
-        }),
-      }).then(() => fetch("/api/ai-assistant/history"))
-        .then((response) => response.json())
-        .then((payload) => {
-          if (Array.isArray(payload.conversations)) setSavedConversations(payload.conversations);
-        })
-        .catch(() => undefined);
-    }, 500);
-    return () => window.clearTimeout(timer);
-  }, [conversationId, copy.history, messages, user]);
-
-  useEffect(() => {
     if (authLoading || !user || user.user_metadata?.onboarding_completed !== true) return;
     const frame = requestAnimationFrame(() => {
       try {
@@ -401,20 +348,13 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
       });
     });
     return () => cancelAnimationFrame(frame);
-  }, [messages, loading, open, showHistory]);
+  }, [messages, loading, open]);
 
   async function ask(prefilled?: string) {
     const text = (prefilled ?? input).trim();
     if (!text || loading) return;
-    const startedFromHistory = showHistory;
-    const previous = startedFromHistory
-      ? [{ role: "assistant" as const, body: copy.intro, createdAt: new Date().toISOString() }]
-      : messages;
+    const previous = messages;
     setInput("");
-    if (startedFromHistory) {
-      setConversationId(crypto.randomUUID());
-      setShowHistory(false);
-    }
     setMessages([...previous, { role: "user", body: text, createdAt: new Date().toISOString() }]);
     setLoading(true);
     try {
@@ -498,33 +438,8 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   function resetConversation() {
     setConversationId(crypto.randomUUID());
     setMessages([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
-    setShowHistory(false);
     setInput("");
     requestAnimationFrame(() => inputRef.current?.focus());
-  }
-
-  function openConversation(conversation: SavedConversation) {
-    setConversationId(conversation.id);
-    setMessages(conversation.messages);
-    setShowHistory(false);
-  }
-
-  async function deleteConversation(id: string) {
-    if (deletingId) return;
-    setDeletingId(id);
-    try {
-      const response = await fetch(`/api/ai-assistant/history?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("delete_failed");
-      const remainingConversations = savedConversations.filter((conversation) => conversation.id !== id);
-      setSavedConversations(remainingConversations);
-      if (remainingConversations.length === 0) resetConversation();
-      else if (conversationId === id) setShowHistory(true);
-    } catch {
-      setMessages((current) => [...current, { role: "assistant", body: copy.error, createdAt: new Date().toISOString() }]);
-      setShowHistory(true);
-    } finally {
-      setDeletingId(null);
-    }
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
@@ -592,11 +507,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             <h2 className="whitespace-nowrap text-[15px] font-black text-[#102746] sm:text-lg">{copy.title}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {user && (
-              <AppTooltip label={copy.history}>
-                <button type="button" onClick={() => setShowHistory((current) => !current)} aria-label={copy.history} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><History className="h-4 w-4 sm:h-5 sm:w-5" /></button>
-              </AppTooltip>
-            )}
             <AppTooltip label={copy.reset}>
               <button type="button" onClick={resetConversation} aria-label={copy.reset} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" /></button>
             </AppTooltip>
@@ -608,27 +518,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           </div>
         </header>
 
-        {showHistory ? (
-          <div className="min-h-0 flex-1 overflow-y-auto bg-[#fbfdff] px-4 py-5 sm:px-6">
-            <h3 className="text-base font-extrabold text-[#162543]">{copy.history}</h3>
-            <div className="mt-4 space-y-2">
-              {savedConversations.length === 0 && <p className="rounded-xl border border-[#dce8ef] bg-white p-4 text-sm text-[#708095]">{copy.emptyHistory}</p>}
-              {savedConversations.map((conversation) => (
-                <div key={conversation.id} className="flex items-center gap-2 rounded-xl border border-[#dce8ef] bg-white p-2 transition hover:border-[#8ed7ee] hover:bg-[#f4fbfe]">
-                  <button type="button" onClick={() => openConversation(conversation)} className="min-w-0 flex-1 px-2 py-1 text-left">
-                    <span className="block truncate text-sm font-bold text-[#162543]">{conversation.title}</span>
-                    <span className="mt-1 block text-xs text-[#718096]">{messageTime(conversation.updated_at)}</span>
-                  </button>
-                  <AppTooltip label={copy.deleteConversation}>
-                    <button type="button" disabled={deletingId === conversation.id} onClick={() => void deleteConversation(conversation.id)} aria-label={copy.deleteConversation} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#708095] hover:bg-[#fff1f1] hover:text-[#b42318] disabled:opacity-50">
-                      {deletingId === conversation.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                    </button>
-                  </AppTooltip>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
         <div ref={scrollRef} className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-[linear-gradient(180deg,#fbfdff_0%,#ffffff_100%)] px-4 py-5 overscroll-contain sm:px-6">
           {messages.map((message, index) => (
             <div key={`${message.role}-${index}`} className={cn("flex items-end gap-2 sm:items-start sm:gap-3", message.role === "user" && "justify-end")}>
@@ -681,7 +570,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             </div>
           )}
         </div>
-        )}
 
         <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-4">
           <form onSubmit={submit} className="flex items-end gap-2 rounded-[24px] border-2 border-[#009FD9] bg-white p-2 pl-4 shadow-[0_10px_30px_-18px_rgba(0,159,217,0.48)] focus-within:ring-4 focus-within:ring-[#009FD9]/10">

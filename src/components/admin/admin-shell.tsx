@@ -49,13 +49,11 @@ export function AdminShell({
         .catch(() => {});
     };
     fetchCounts();
-    const id = setInterval(fetchCounts, 8000);
     const onFocus = () => fetchCounts();
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onFocus);
     return () => {
       alive = false;
-      clearInterval(id);
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onFocus);
     };
