@@ -377,10 +377,26 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     return query ? `/buscar?${query}` : "/buscar";
   };
   const paginationPages: Array<number | "ellipsis"> = (() => {
-    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
-    if (currentPage <= 3) return [1, 2, 3, "ellipsis", totalPages];
-    if (currentPage >= totalPages - 2) return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages];
-    return [1, "ellipsis", currentPage, "ellipsis", totalPages];
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+
+    const pages = new Set<number>([1, totalPages]);
+    for (let page = currentPage - 1; page <= currentPage + 1; page += 1) {
+      if (page > 1 && page < totalPages) pages.add(page);
+    }
+    if (currentPage <= 3) {
+      pages.add(2);
+      pages.add(3);
+      pages.add(4);
+    }
+    if (currentPage >= totalPages - 2) {
+      pages.add(totalPages - 3);
+      pages.add(totalPages - 2);
+      pages.add(totalPages - 1);
+    }
+
+    return [...pages]
+      .sort((a, b) => a - b)
+      .flatMap((page, index, list) => (index > 0 && page - list[index - 1] > 1 ? ["ellipsis" as const, page] : [page]));
   })();
 
   return (
