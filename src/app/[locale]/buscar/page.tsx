@@ -486,30 +486,55 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   </div>
 
                   {totalPages > 1 && (
-                    <nav aria-label={t("pagination.label")} className="mt-5 flex flex-nowrap items-center justify-between gap-2 border-t border-[#e5e7eb] pt-4 sm:gap-3">
-                      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden sm:gap-1.5">
-                        {currentPage > 1 && (
-                          <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-[#374151] transition hover:bg-[#EBF5FB] hover:text-[#0089BB] sm:h-10 sm:w-10">
+                    <>
+                      <nav aria-label={t("pagination.label")} className="mt-5 flex items-center justify-between gap-3 border-t border-[#e5e7eb] pt-4 sm:hidden">
+                        {currentPage > 1 ? (
+                          <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#d7e2ea] bg-white text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
                             <ChevronLeft className="h-4 w-4" />
                           </Link>
-                        )}
-                        {paginationPages.map((page, index) => page === "ellipsis" ? (
-                          <span key={`ellipsis-${index}`} className="grid h-9 w-5 place-items-center text-sm text-[#9ca3af] sm:h-10 sm:w-7">...</span>
-                        ) : page === currentPage ? (
-                          <span key={page} aria-current="page" className="grid h-9 min-w-9 place-items-center rounded-md bg-[#009FD9] px-1.5 text-sm font-bold text-white sm:h-10 sm:min-w-10 sm:px-2">{page}</span>
                         ) : (
-                          <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-9 min-w-9 place-items-center rounded-md px-1.5 text-sm font-medium text-[#6b7280] transition hover:bg-[#EBF5FB] hover:text-[#0089BB] sm:h-10 sm:min-w-10 sm:px-2">
-                            {page}
+                          <span aria-hidden className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e5e7eb] bg-white text-[#cbd5e1]">
+                            <ChevronLeft className="h-4 w-4" />
+                          </span>
+                        )}
+                        <span className="min-w-0 text-center text-sm font-semibold text-[#1A2744]">
+                          {locale === "en" ? `Page ${currentPage} of ${totalPages}` : `Página ${currentPage} de ${totalPages}`}
+                        </span>
+                        {currentPage < totalPages ? (
+                          <Link href={pageHref(currentPage + 1)} prefetch aria-label={t("pagination.next")} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white shadow-sm transition hover:bg-[#0089BB]">
+                            <ChevronRight className="h-4 w-4" />
                           </Link>
-                        ))}
-                      </div>
-                      {currentPage < totalPages && (
-                        <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-9 min-w-[7.75rem] shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition hover:bg-[#0089BB] sm:h-10 sm:min-w-40 sm:gap-2 sm:px-6">
-                          <span className="leading-none">{t("pagination.next")}</span>
-                          <ChevronRight className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-                        </Link>
-                      )}
-                    </nav>
+                        ) : (
+                          <span aria-hidden className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e5e7eb] bg-white text-[#cbd5e1]">
+                            <ChevronRight className="h-4 w-4" />
+                          </span>
+                        )}
+                      </nav>
+                      <nav aria-label={t("pagination.label")} className="mt-5 hidden flex-nowrap items-center justify-between gap-3 border-t border-[#e5e7eb] pt-4 sm:flex">
+                        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                          {currentPage > 1 && (
+                            <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-[#374151] transition hover:bg-[#EBF5FB] hover:text-[#0089BB]">
+                              <ChevronLeft className="h-4 w-4" />
+                            </Link>
+                          )}
+                          {paginationPages.map((page, index) => page === "ellipsis" ? (
+                            <span key={`ellipsis-${index}`} className="grid h-10 w-7 place-items-center text-sm text-[#9ca3af]">...</span>
+                          ) : page === currentPage ? (
+                            <span key={page} aria-current="page" className="grid h-10 min-w-10 place-items-center rounded-md bg-[#009FD9] px-2 text-sm font-bold text-white">{page}</span>
+                          ) : (
+                            <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-10 min-w-10 place-items-center rounded-md px-2 text-sm font-medium text-[#6b7280] transition hover:bg-[#EBF5FB] hover:text-[#0089BB]">
+                              {page}
+                            </Link>
+                          ))}
+                        </div>
+                        {currentPage < totalPages && (
+                          <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 min-w-40 shrink-0 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white transition hover:bg-[#0089BB]">
+                            <span className="leading-none">{t("pagination.next")}</span>
+                            <ChevronRight className="h-4 w-4 shrink-0" />
+                          </Link>
+                        )}
+                      </nav>
+                    </>
                   )}
 
                 </>
