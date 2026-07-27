@@ -322,8 +322,9 @@ test.describe("@seeded ContrataCR AI", () => {
       const professional = response.body.professionals?.find((item) => item.id === seed.professionalId);
       expect(professional, JSON.stringify(response.body.professionals)).toBeTruthy();
       expect(professional?.actionKind).toBe("message");
-      expect(professional?.actionLabel).toBe("Enviar mensaje");
+      expect(professional?.actionLabel).toBe("Contactar por WhatsApp");
       expect(professional?.actionLabel).not.toBe("Ver disponibilidad");
+      expect(professional?.actionLabel).not.toBe("Enviar mensaje");
     } finally {
       const { error } = await admin.from("availability_slots").insert({
         professional_id: seed.professionalId,
@@ -510,6 +511,7 @@ test.describe("@seeded ContrataCR AI", () => {
     } else {
       expect(search.body.searchHref).toContain("categoria=plomeria");
       expect(search.body.searchHref).toContain("provincia=al");
+      expect(search.body.searchHref).toContain("canton=al-at");
     }
   });
 

@@ -821,10 +821,17 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
   }
   if (payload.action === "help") return `/${locale}/ayuda`;
   if (payload.action === "search_professionals" && !payload.serviceId && payload.searchQuery) {
-    return freeTextSearchHref(payload.searchQuery);
+    const place = userMessagePlace(originalMessage) ?? resolveLocationIntent(payload.locationText || "");
+    if (!place) return freeTextSearchHref(payload.searchQuery);
+    const params = new URLSearchParams({ q: payload.searchQuery });
+    if (place.type === "province") params.set("provincia", place.id);
+    if (place.type === "canton") {
+      params.set("provincia", place.provinceId);
+      params.set("canton", place.id);
+    }
+    return `/buscar?${params.toString()}`;
   }
-  const seed = payload.searchQuery || originalMessage;
-  return resolveSearch(seed, locale, payload.serviceId, null).href;
+  return resolveSearch(originalMessage, locale, payload.serviceId, payload.locationText).href;
 }
 
 function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
@@ -1400,7 +1407,7 @@ function assistantProfessionalResult(
     actionHref: profileHref,
     actionLabel: actionKind === "availability"
       ? locale === "en" ? "View availability" : "Ver disponibilidad"
-      : locale === "en" ? "Send message" : "Enviar mensaje",
+      : locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
     actionKind,
   };
 }
