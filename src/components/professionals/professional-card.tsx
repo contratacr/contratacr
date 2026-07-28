@@ -98,9 +98,11 @@ interface ProfessionalCardProps {
   restrictToPreferredLocation?: boolean;
   /** Search page: align the schedule skeleton with the initial map/filter hydration. */
   syncScheduleWithSearchLoading?: boolean;
+  /** Search page return URL used by profile/review links for "Volver a resultados". */
+  searchReturnHref?: string;
 }
 
-export async function ProfessionalCard({ professional, className, slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false }: ProfessionalCardProps) {
+export async function ProfessionalCard({ professional, className, slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false, searchReturnHref }: ProfessionalCardProps) {
   const tCard = await getTranslations("card");
   const tSchedule = await getTranslations("schedule");
   const locale = await getLocale();
@@ -146,6 +148,13 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix, isColones: priceIsColones } = splitPricingLabel(priceLabel);
   const priceBoxClass = priceUnit || priceTaxSuffix ? "max-w-[38%] sm:max-w-[40%]" : "w-[74px] sm:w-[86px]";
   const isVerified = professional.verificationStatus === "verified";
+  const profileHref = `/profesionales/${professional.slug}`;
+  const profileHrefWithReturn = searchReturnHref
+    ? `${profileHref}?from=${encodeURIComponent(searchReturnHref)}`
+    : profileHref;
+  const reviewsHref = searchReturnHref
+    ? `${profileHref}?tab=resenas&from=${encodeURIComponent(searchReturnHref)}#resenas`
+    : `${profileHref}?tab=resenas#resenas`;
   const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
   const wideDesktopExtraProfessions = allProfessions.length - wideDesktopProfessionList.length;
@@ -190,7 +199,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           PRICE is right-aligned on the company-name line only. The mobile `pr-8` keeps the
           price clear of the inside top-right bookmark (`lg:pr-0` on desktop). */}
       <div className="flex flex-wrap items-start gap-x-3 gap-y-1 lg:flex-nowrap">
-        <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
+        <Link href={profileHrefWithReturn} className="relative z-10 shrink-0">
           <Avatar className="h-14 w-14 rounded-full lg:h-16 lg:w-16">
             <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
             <AvatarFallback
@@ -213,7 +222,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
                   Verificado, then the personal name = first name + first surname. */}
-              <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
+              <Link href={profileHrefWithReturn} className="relative z-10 min-w-0">
                 <h3 title={businessName ? businessName : professional.fullName} className="line-clamp-2 font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
                   <span className="lg:hidden">{displayName.primaryMobile}</span>
                   <span className="hidden lg:inline">{displayName.primaryDesktop}</span>
@@ -260,7 +269,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
               ))}
               {mobileExtraProfessions > 0 && (
                 <Link
-                  href={`/profesionales/${professional.slug}`}
+                  href={profileHrefWithReturn}
                   title={tCard("moreProfessions")}
                   aria-label={tCard("moreProfessions")}
                   data-testid="professional-card-more-services"
@@ -278,7 +287,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
               ))}
               {desktopExtraProfessions > 0 && (
                 <Link
-                  href={`/profesionales/${professional.slug}`}
+                  href={profileHrefWithReturn}
                   title={tCard("moreProfessions")}
                   aria-label={tCard("moreProfessions")}
                   className={moreProfessionsClass}
@@ -295,7 +304,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
               ))}
               {wideDesktopExtraProfessions > 0 && (
                 <Link
-                  href={`/profesionales/${professional.slug}`}
+                  href={profileHrefWithReturn}
                   title={tCard("moreProfessions")}
                   aria-label={tCard("moreProfessions")}
                   className={moreProfessionsClass}
@@ -310,7 +319,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           <div className="basis-full lg:basis-auto">
             {professional.reviewCount > 0 ? (
               <Link
-                href={`/profesionales/${professional.slug}?tab=resenas#resenas`}
+                href={reviewsHref}
                 className="relative z-10 inline-flex w-fit items-center gap-1.5 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
                 aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
               >
@@ -362,7 +371,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           `relative z-10` and keep working; the favorite bookmark (z-20, SaveableCard) stays
           clickable. Keyboard/SR users use the focusable logo/name links (overlay aria-hidden). */}
       <Link
-        href={`/profesionales/${professional.slug}`}
+        href={profileHrefWithReturn}
         className="absolute inset-0 z-0"
         tabIndex={-1}
         aria-hidden
