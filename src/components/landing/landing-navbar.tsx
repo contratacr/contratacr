@@ -652,6 +652,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const nativeBottomShell = nativeApp && !nativeSearchRoute;
   const { user, loading: authLoading } = useAuth();
   const nativeBottomNavVisible = nativeBottomShell && (Boolean(user) || authLoading);
+  const centerMobileLogo = !nativeHeaderShell && !mobileInline;
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
@@ -1021,7 +1022,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 aria-label="ContrataCR inicio"
                 onTouchStart={() => prepareNativeNavigation("/")}
                 onPointerDown={() => prepareNativeNavigation("/")}
-                className={cn("shrink-0", nativeHeaderShell && "min-w-0 justify-self-center")}
+                className={cn(
+                  "shrink-0",
+                  nativeHeaderShell && "min-w-0 justify-self-center",
+                  centerMobileLogo && "absolute left-1/2 -translate-x-1/2",
+                )}
               >
                 {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
               </Link>

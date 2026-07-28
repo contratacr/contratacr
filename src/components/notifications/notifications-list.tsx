@@ -59,6 +59,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const [busy, setBusy] = useState(initialCache === null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
+  const [itemMenuOpenId, setItemMenuOpenId] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const projectTimes = useNotificationProjectTimes(items);
@@ -154,6 +155,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     if (!user) return;
     const ids = visible.filter((n) => !n.read).map((n) => n.id);
     if (ids.length === 0) return;
+    setBulkMenuOpen(false);
     const supabase = createClient();
     await supabase.from("notifications").update({ read: true }).in("id", ids);
     setNotificationState((prev) => {
@@ -166,6 +168,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   async function markOneRead(e: React.MouseEvent, id: string) {
     e.stopPropagation();
+    setItemMenuOpenId(null);
     setNotificationState((prev) => {
       const next = prev.items.map((n) => (n.id === id ? { ...n, read: true } : n));
       cacheNotifications(user?.id, next);
@@ -196,6 +199,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   async function dismiss(e: React.MouseEvent, id: string) {
     e.stopPropagation();
+    setItemMenuOpenId(null);
     setNotificationState((prev) => {
       const next = prev.items.filter((n) => n.id !== id);
       cacheNotifications(user?.id, next);
@@ -208,6 +212,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   async function doDeleteAll() {
     setConfirmDelete(false);
+    setBulkMenuOpen(false);
     if (!user || visible.length === 0) return;
     // Delete only the CURRENT mode's notifications (the list is per-mode).
     const ids = visible.map((n) => n.id);
@@ -224,9 +229,17 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   return (
     <div className="ccr-notifications-list flex min-h-0 flex-1 flex-col">
       {visible.length > 0 && (
-        <div className="ccr-notifications-toolbar relative mb-3 flex shrink-0 items-center justify-end gap-2">
+        <div className="ccr-notifications-toolbar relative mb-3 flex shrink-0 items-center justify-between gap-3 px-1 sm:justify-end sm:px-0">
+          <div className="min-w-0 sm:hidden">
+            <p className="text-sm font-semibold text-[#162543]">{t("title")}</p>
+            {unread > 0 && (
+              <p className="text-xs text-[#6b7280]">
+                {unread} {locale === "en" ? "unread" : "sin leer"}
+              </p>
+            )}
+          </div>
           {unread > 0 && (
-            <button onClick={markAllRead} className="flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#009FD9] hover:bg-[#eef8fc]">
+            <button onClick={markAllRead} className="hidden min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#009FD9] hover:bg-[#eef8fc] sm:flex">
               <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
             </button>
           )}
@@ -236,14 +249,24 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           <button
             type="button"
             onClick={() => setBulkMenuOpen((open) => !open)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e5e7eb] text-[#526174] hover:bg-[#f5f8fb] sm:hidden"
-            aria-label={t("deleteAll")}
+            className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#dfe8f0] bg-white text-[#526174] shadow-sm hover:bg-[#f5f8fb] sm:hidden"
+            aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
             aria-expanded={bulkMenuOpen}
           >
             <MoreHorizontal className="h-5 w-5" />
           </button>
           {bulkMenuOpen && (
-            <div className="absolute right-0 top-11 z-20 min-w-44 rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-lg sm:hidden">
+            <div className="absolute right-1 top-11 z-20 min-w-52 rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-lg sm:hidden">
+              {unread > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#009FD9] hover:bg-[#eef8fc]"
+                >
+                  <CheckCheck className="h-4 w-4" />
+                  {t("markAllRead")}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -354,15 +377,52 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                 {/* Two distinct actions, intentionally different icons so they're
                     never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
                 <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setItemMenuOpenId((current) => (current === n.id ? null : n.id));
+                    }}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#718096] hover:bg-[#eef3f8] sm:hidden"
+                    aria-label={locale === "en" ? "Notification actions" : "Opciones de notificación"}
+                    aria-expanded={itemMenuOpenId === n.id}
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                  {itemMenuOpenId === n.id && (
+                    <div
+                      className="absolute right-0 top-9 z-20 min-w-44 rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-lg sm:hidden"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {!n.read && (
+                        <button
+                          type="button"
+                          onClick={(event) => markOneRead(event, n.id)}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#15803d] hover:bg-[#dcfce7]"
+                        >
+                          <Check className="h-4 w-4" />
+                          {t("markRead")}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(event) => dismiss(event, n.id)}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {t("delete")}
+                      </button>
+                    </div>
+                  )}
                   {!n.read && (
                     <AppTooltip label={t("markRead")}>
-                      <button onClick={(e) => markOneRead(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#dcfce7] hover:text-[#15803d] transition-colors" aria-label={t("markRead")}>
+                      <button onClick={(e) => markOneRead(e, n.id)} className="hidden rounded-md p-1 text-[#9ca3af] transition-colors hover:bg-[#dcfce7] hover:text-[#15803d] sm:flex" aria-label={t("markRead")}>
                         <Check className="h-3.5 w-3.5" />
                       </button>
                     </AppTooltip>
                   )}
                   <AppTooltip label={t("delete")}>
-                    <button onClick={(e) => dismiss(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label={t("delete")}>
+                    <button onClick={(e) => dismiss(e, n.id)} className="hidden rounded-md p-1 text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500 sm:flex" aria-label={t("delete")}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </AppTooltip>
