@@ -303,6 +303,14 @@ export function DirectChatInbox() {
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight });
   }, [messages, threadLoading, selectedAttachments]);
+  const keepComposerVisible = useCallback(() => {
+    if (!mobileThread) return;
+    window.setTimeout(() => {
+      const scroller = scrollRef.current;
+      if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+      textareaRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }, 120);
+  }, [mobileThread]);
   useEffect(() => {
     resizeMessageTextarea(textareaRef.current);
   }, [draft]);
@@ -563,7 +571,7 @@ export function DirectChatInbox() {
             </button>
           )}
           {filtered.map((item) => { const person = personFor(item); const summary = contextSummaryFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
-            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "bg-white shadow-[inset_3px_0_0_#009FD9]")}>
+            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "lg:bg-white lg:shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
               <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block line-clamp-2 text-xs font-bold leading-snug text-[#0090c7]">{summary}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>); })}
@@ -738,7 +746,9 @@ export function DirectChatInbox() {
             onChange={(e) => {
               setDraft(e.target.value.slice(0, 2000));
               resizeMessageTextarea(e.currentTarget);
+              keepComposerVisible();
             }}
+            onFocus={keepComposerVisible}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();

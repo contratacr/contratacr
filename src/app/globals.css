@@ -244,14 +244,31 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 }
 
 .ccr-native-app .ccr-search-bottom-sheet {
-  bottom: env(safe-area-inset-bottom);
-  max-height: calc(var(--app-visual-viewport-height) - 164px - env(safe-area-inset-bottom)) !important;
-  padding-bottom: max(env(safe-area-inset-bottom), 10px);
+  bottom: 0;
+  z-index: 80 !important;
+  max-height: calc(var(--app-visual-viewport-height) - 164px) !important;
+  overflow: hidden;
+  isolation: isolate;
+  background: #fff;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.ccr-native-app .ccr-search-bottom-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: #fff;
+  pointer-events: none;
 }
 
 .ccr-native-app .ccr-search-sheet-scroll {
-  padding-bottom: calc(2.75rem + env(safe-area-inset-bottom)) !important;
-  scroll-padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)) !important;
+  scroll-padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
 }
 
 .ccr-native-app .ccr-panel-section-loading {
@@ -654,6 +671,15 @@ input::-ms-clear {
     scroll-padding-bottom: 1.75rem;
   }
 
+  html.ccr-native-app.contratacr-chat-thread-open[data-keyboard-open] .ccr-direct-chat-thread-scroll {
+    padding-bottom: calc(1.75rem + var(--app-keyboard-inset-bottom, 0px)) !important;
+    scroll-padding-bottom: calc(1.75rem + var(--app-keyboard-inset-bottom, 0px));
+  }
+
+  html.ccr-native-app.contratacr-chat-thread-open[data-keyboard-open] .ccr-direct-chat-composer {
+    padding-bottom: calc(0.75rem + var(--app-keyboard-inset-bottom, 0px) + env(safe-area-inset-bottom)) !important;
+  }
+
   .contratacr-chat-thread-open .direct-chat-shell--thread > section,
   .contratacr-ai-open [data-ai-concierge-dialog] {
     touch-action: pan-y;
@@ -665,6 +691,24 @@ input::-ms-clear {
     right: auto;
     height: var(--app-visual-viewport-height);
     width: var(--app-visual-viewport-width);
+  }
+
+  html.ccr-native-app.contratacr-ai-open [data-ai-concierge-dialog] {
+    inset: 0 !important;
+    top: var(--app-visual-viewport-top) !important;
+    left: var(--app-visual-viewport-left) !important;
+    z-index: 120 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  html.ccr-native-app.contratacr-ai-open [data-ai-concierge-dialog] > div {
+    width: var(--app-visual-viewport-width) !important;
+    height: var(--app-visual-viewport-height) !important;
+    max-height: var(--app-visual-viewport-height) !important;
+    border-radius: 0 !important;
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
@@ -60,6 +60,8 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
   const [itemMenuOpenId, setItemMenuOpenId] = useState<string | null>(null);
+  const bulkMenuRef = useRef<HTMLDivElement | null>(null);
+  const itemMenuRef = useRef<HTMLDivElement | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const projectTimes = useNotificationProjectTimes(items);
@@ -129,6 +131,30 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     return () => { void supabase.removeChannel(channel); };
   }, [instanceId, loadNotifications, user]);
 
+  useEffect(() => {
+    if (!bulkMenuOpen && !itemMenuOpenId) return;
+
+    function closeMenus(event: PointerEvent) {
+      const target = event.target as Node | null;
+      if (target && (bulkMenuRef.current?.contains(target) || itemMenuRef.current?.contains(target))) return;
+      setBulkMenuOpen(false);
+      setItemMenuOpenId(null);
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setBulkMenuOpen(false);
+      setItemMenuOpenId(null);
+    }
+
+    document.addEventListener("pointerdown", closeMenus);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeMenus);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [bulkMenuOpen, itemMenuOpenId]);
+
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
@@ -152,10 +178,11 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   // como leídas", the list is mode-scoped + short, and each title makes its type obvious.
 
   async function markAllRead() {
+    setBulkMenuOpen(false);
+    setItemMenuOpenId(null);
     if (!user) return;
     const ids = visible.filter((n) => !n.read).map((n) => n.id);
     if (ids.length === 0) return;
-    setBulkMenuOpen(false);
     const supabase = createClient();
     await supabase.from("notifications").update({ read: true }).in("id", ids);
     setNotificationState((prev) => {
@@ -182,6 +209,8 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const role = user?.user_metadata?.role as string | undefined;
 
   function open(n: Notification) {
+    setBulkMenuOpen(false);
+    setItemMenuOpenId(null);
     const href = notificationActionHref(n, role, locale);
     if (!n.read) {
       setNotificationState((prev) => {
@@ -213,6 +242,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   async function doDeleteAll() {
     setConfirmDelete(false);
     setBulkMenuOpen(false);
+    setItemMenuOpenId(null);
     if (!user || visible.length === 0) return;
     // Delete only the CURRENT mode's notifications (the list is per-mode).
     const ids = visible.map((n) => n.id);
@@ -246,40 +276,45 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           <button onClick={() => setConfirmDelete(true)} className="hidden min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-red-500 hover:bg-red-50 sm:flex">
             <Trash2 className="h-4 w-4" /> {t("deleteAll")}
           </button>
-          <button
-            type="button"
-            onClick={() => setBulkMenuOpen((open) => !open)}
-            className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#dfe8f0] bg-white text-[#526174] shadow-sm hover:bg-[#f5f8fb] sm:hidden"
-            aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
-            aria-expanded={bulkMenuOpen}
-          >
-            <MoreHorizontal className="h-5 w-5" />
-          </button>
-          {bulkMenuOpen && (
-            <div className="absolute right-1 top-11 z-20 min-w-52 rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-lg sm:hidden">
-              {unread > 0 && (
+          <div ref={bulkMenuRef} className="relative ml-auto sm:hidden">
+            <button
+              type="button"
+              onClick={() => {
+                setItemMenuOpenId(null);
+                setBulkMenuOpen((open) => !open);
+              }}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#dfe8f0] bg-white text-[#526174] shadow-sm hover:bg-[#f5f8fb]"
+              aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
+              aria-expanded={bulkMenuOpen}
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+            {bulkMenuOpen && (
+              <div className="absolute right-0 top-11 z-20 min-w-52 rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-lg">
+                {unread > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllRead}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#009FD9] hover:bg-[#eef8fc]"
+                  >
+                    <CheckCheck className="h-4 w-4" />
+                    {t("markAllRead")}
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={markAllRead}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#009FD9] hover:bg-[#eef8fc]"
+                  onClick={() => {
+                    setBulkMenuOpen(false);
+                    setConfirmDelete(true);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50"
                 >
-                  <CheckCheck className="h-4 w-4" />
-                  {t("markAllRead")}
+                  <Trash2 className="h-4 w-4" />
+                  {t("deleteAll")}
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setBulkMenuOpen(false);
-                  setConfirmDelete(true);
-                }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4" />
-                {t("deleteAll")}
-              </button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -376,11 +411,12 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                 </div>
                 {/* Two distinct actions, intentionally different icons so they're
                     never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
-                <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
+                <div ref={itemMenuOpenId === n.id ? itemMenuRef : null} className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
                   <button
                     type="button"
                     onClick={(event) => {
                       event.stopPropagation();
+                      setBulkMenuOpen(false);
                       setItemMenuOpenId((current) => (current === n.id ? null : n.id));
                     }}
                     className="flex h-8 w-8 items-center justify-center rounded-full text-[#718096] hover:bg-[#eef3f8] sm:hidden"
