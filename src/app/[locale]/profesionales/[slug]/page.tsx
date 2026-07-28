@@ -158,9 +158,22 @@ export default function ProfilePage() {
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tab !== "resenas") return;
 
-    window.setTimeout(() => {
+    const scrollToReviews = () => {
       document.getElementById("resenas")?.scrollIntoView({ block: "start" });
+    };
+    let secondFrame: number | null = null;
+    const activateReviews = window.setTimeout(() => {
+      setActiveTab("resenas");
+      secondFrame = window.requestAnimationFrame(scrollToReviews);
     }, 0);
+    const firstFrame = window.requestAnimationFrame(scrollToReviews);
+    const fallback = window.setTimeout(scrollToReviews, 250);
+    return () => {
+      window.clearTimeout(activateReviews);
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame !== null) window.cancelAnimationFrame(secondFrame);
+      window.clearTimeout(fallback);
+    };
   }, [professional]);
 
   if (loading) {

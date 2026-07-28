@@ -343,7 +343,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
               >
                 <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
-                <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
+                <span className="text-[13px] font-bold text-[#111827] transition-colors group-hover:text-[#0089BB]">{professional.ratingAvg.toFixed(1)}</span>
                 <span className="text-[11px] font-medium text-[#9ca3af] hover:underline">
                   ({tCard("reviewsCount", { count: professional.reviewCount })})
                 </span>
