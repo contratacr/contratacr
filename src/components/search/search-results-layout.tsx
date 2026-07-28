@@ -223,7 +223,11 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
             <div className="flex justify-center pb-1 pt-2.5">
               <span className="h-1.5 w-10 rounded-full bg-[#d1d5db]" />
             </div>
-            {countLabel && <p className="px-4 pb-2.5 pt-0.5 text-[13px] font-semibold text-[#111827]">{countLabel}</p>}
+            {countLabel && (
+              <div className="px-4 pb-3 pt-1">
+                <p className="text-[18px] font-extrabold leading-tight text-[#111827]">{countLabel}</p>
+              </div>
+            )}
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
