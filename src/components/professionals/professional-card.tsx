@@ -239,7 +239,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           </div>
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
-          {(displayProfessions.length > 0 || professional.isFeatured) && (
+          {displayProfessions.length > 0 && (
             <>
             <div
               className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:hidden"
@@ -269,11 +269,6 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   +{mobileExtraProfessions}
                 </Link>
               )}
-              {professional.isFeatured && (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                  {tCard("featured")}
-                </span>
-              )}
             </div>
             <div className="hidden w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:flex 2xl:hidden">
               {desktopProfessionList.map((cat) => (
@@ -291,11 +286,6 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   +{desktopExtraProfessions}
                 </Link>
               )}
-              {professional.isFeatured && (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                  {tCard("featured")}
-                </span>
-              )}
             </div>
             <div className="hidden w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden 2xl:flex">
               {wideDesktopProfessionList.map((cat) => (
@@ -312,11 +302,6 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 >
                   +{wideDesktopExtraProfessions}
                 </Link>
-              )}
-              {professional.isFeatured && (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                  {tCard("featured")}
-                </span>
               )}
             </div>
             </>

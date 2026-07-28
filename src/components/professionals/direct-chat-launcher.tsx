@@ -52,10 +52,11 @@ export function DirectChatLauncher({
   const locale = useLocale();
   const isEn = locale === "en";
   const nativeApp = useNativeApp();
+  const directMessagesEnabled = process.env.NEXT_PUBLIC_ENABLE_DIRECT_MESSAGES !== "false";
   const [loading, setLoading] = useState(false);
   const whatsappLabel = isEn ? "Contact on WhatsApp" : "Contactar por WhatsApp";
 
-  if (nativeApp) {
+  if (nativeApp || directMessagesEnabled) {
     const safeLabel = buttonLabel && !/whatsapp/i.test(buttonLabel) ? buttonLabel : undefined;
     return (
       <MessageLauncher
