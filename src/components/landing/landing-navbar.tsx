@@ -26,6 +26,7 @@ import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
+import { APP_RESUME_EVENT } from "@/components/util/app-resume-recovery";
 import { createClient } from "@/lib/supabase/client";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
@@ -823,6 +824,25 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     if (!mobileOpen) return;
     return lockBodyScroll();
   }, [mobileOpen]);
+
+  useEffect(() => {
+    const resetTransientNavigation = () => {
+      setMobileOpen(false);
+      setMobileLegalOpen(false);
+      setMobileHelpOpen(false);
+      setOpenMenu(null);
+      setNavLocOpen(false);
+      setSearchFocused(false);
+      setNativePendingHref(null);
+      if (nativePendingTimer.current) {
+        window.clearTimeout(nativePendingTimer.current);
+        nativePendingTimer.current = null;
+      }
+    };
+
+    window.addEventListener(APP_RESUME_EVENT, resetTransientNavigation);
+    return () => window.removeEventListener(APP_RESUME_EVENT, resetTransientNavigation);
+  }, []);
 
   useEffect(() => {
     return () => {
