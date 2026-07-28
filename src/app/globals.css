@@ -162,21 +162,55 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .dashboard-panel-content {
-    min-height: 100%;
+    min-height: 0;
     padding-bottom: var(--ccr-native-panel-end-gap) !important;
     background: #fff;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-card {
-    min-height: calc(100% - 65px) !important;
+    min-height: 0 !important;
     background: #fff;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content {
-    min-height: 100% !important;
+    min-height: 0 !important;
     padding-bottom: var(--ccr-native-panel-end-gap) !important;
     scroll-padding-bottom: var(--ccr-native-panel-end-gap);
     background: #fff;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
+    padding-bottom: var(--ccr-native-panel-end-gap);
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-page-main {
+    position: fixed;
+    inset-inline: 0;
+    top: var(--ccr-native-header-height);
+    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height));
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 !important;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-page-panel {
+    height: 100%;
+    min-height: 0;
+    padding: 0.75rem 1rem var(--ccr-native-panel-end-gap) !important;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-list {
+    height: 100%;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-scroll {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-items {
+    padding-bottom: var(--ccr-native-panel-end-gap);
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-safe-list-end {
@@ -205,8 +239,14 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 }
 
 .ccr-native-app .ccr-search-bottom-sheet {
-  bottom: env(safe-area-inset-bottom);
-  max-height: calc(100dvh - 164px - env(safe-area-inset-bottom)) !important;
+  bottom: 0;
+  max-height: calc(var(--app-visual-viewport-height) - 164px) !important;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.ccr-native-app .ccr-search-sheet-scroll {
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom)) !important;
+  scroll-padding-bottom: calc(1rem + env(safe-area-inset-bottom));
 }
 
 .ccr-native-app .ccr-panel-section-loading {
@@ -245,6 +285,22 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
   height: var(--app-visual-viewport-height);
   max-height: var(--app-visual-viewport-height);
   border-radius: 0;
+}
+
+body.ccr-native-app.ccr-availability-modal-open .ccr-native-bottom-nav,
+body.ccr-native-app.ccr-availability-modal-open [data-ai-concierge-button] {
+  display: none !important;
+}
+
+.ccr-native-app .ccr-availability-modal {
+  height: var(--app-visual-viewport-height);
+}
+
+.ccr-native-app .ccr-availability-modal-panel {
+  height: var(--app-visual-viewport-height);
+  max-height: var(--app-visual-viewport-height) !important;
+  padding-top: max(env(safe-area-inset-top), 1rem);
+  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
 }
 
 @media (min-width: 640px) {
@@ -401,6 +457,11 @@ html[data-self-action-modal-open="true"] [data-save-button] {
 
   .app-bottom-sheet.app-bottom-sheet {
     max-height: min(92dvh, calc(var(--app-visual-viewport-height) - 0.75rem));
+  }
+
+  .ccr-native-app .ccr-availability-modal-panel.ccr-availability-modal-panel {
+    height: var(--app-visual-viewport-height);
+    max-height: var(--app-visual-viewport-height) !important;
   }
 
   .app-centered-modal.app-centered-modal {

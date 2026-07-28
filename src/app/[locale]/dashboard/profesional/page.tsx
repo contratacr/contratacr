@@ -1012,7 +1012,7 @@ export default function DashboardPage() {
                       )}>
                         {activeTab === "home" && (
                           <>
-                            <div className="lg:hidden">
+                            <div className="ccr-dashboard-mobile-home lg:hidden">
                               <div className="space-y-1 pt-1">
                                 {switchPanelButton({ mobile: true })}
                                 {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}

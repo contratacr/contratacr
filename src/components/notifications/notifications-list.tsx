@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
@@ -58,6 +58,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     : (readCachedNotifications(user?.id) as Notification[] | null) ?? [];
   const [busy, setBusy] = useState(initialCache === null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const projectTimes = useNotificationProjectTimes(items);
@@ -221,17 +222,41 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   }
 
   return (
-    <div>
+    <div className="ccr-notifications-list flex min-h-0 flex-1 flex-col">
       {visible.length > 0 && (
-        <div className="mb-3 flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+        <div className="ccr-notifications-toolbar relative mb-3 flex shrink-0 items-center justify-end gap-2">
           {unread > 0 && (
-            <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
+            <button onClick={markAllRead} className="flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#009FD9] hover:bg-[#eef8fc]">
               <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
             </button>
           )}
-          <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
+          <button onClick={() => setConfirmDelete(true)} className="hidden min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-red-500 hover:bg-red-50 sm:flex">
             <Trash2 className="h-4 w-4" /> {t("deleteAll")}
           </button>
+          <button
+            type="button"
+            onClick={() => setBulkMenuOpen((open) => !open)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e5e7eb] text-[#526174] hover:bg-[#f5f8fb] sm:hidden"
+            aria-label={t("deleteAll")}
+            aria-expanded={bulkMenuOpen}
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+          {bulkMenuOpen && (
+            <div className="absolute right-0 top-11 z-20 min-w-44 rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-lg sm:hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setBulkMenuOpen(false);
+                  setConfirmDelete(true);
+                }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t("deleteAll")}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -249,7 +274,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           </div>
         </div>
       )}
-      <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
+      <div className="ccr-notifications-scroll min-h-0 flex-1 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
         {busy ? (
           <PanelSectionLoading
             className={scope === "all" ? "min-h-[calc(100dvh-13rem)] sm:min-h-[18rem]" : "min-h-[16rem] sm:min-h-[18rem]"}
@@ -267,7 +292,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             )}
           />
         ) : (
-          <ul>
+          <ul className="ccr-notifications-items">
             {visible.map((n) => {
               const message = notificationMessage(n);
               const canExpand = message.length > 180;
