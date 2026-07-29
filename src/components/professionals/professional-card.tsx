@@ -164,6 +164,17 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
+  const profileHref = (() => {
+    const params = new URLSearchParams();
+    if (searchReturnHref) params.set("from", searchReturnHref);
+    const query = params.toString();
+    return query ? `/profesionales/${professional.slug}?${query}` : `/profesionales/${professional.slug}`;
+  })();
+  const reviewsHref = (() => {
+    const params = new URLSearchParams({ tab: "resenas" });
+    if (searchReturnHref) params.set("from", searchReturnHref);
+    return `/profesionales/${professional.slug}?${params.toString()}#resenas`;
+  })();
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
@@ -248,7 +259,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           </div>
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
-          {displayProfessions.length > 0 && (
+          {(displayProfessions.length > 0 || professional.isFeatured) && (
             <>
             <div
               className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:hidden"
@@ -278,6 +289,11 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   +{mobileExtraProfessions}
                 </Link>
               )}
+              {professional.isFeatured && (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                  {tCard("featured")}
+                </span>
+              )}
             </div>
             <div className="hidden w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:flex 2xl:hidden">
               {desktopProfessionList.map((cat) => (
@@ -294,6 +310,11 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 >
                   +{desktopExtraProfessions}
                 </Link>
+              )}
+              {professional.isFeatured && (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                  {tCard("featured")}
+                </span>
               )}
             </div>
             <div className="hidden w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden 2xl:flex">
@@ -312,6 +333,11 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   +{wideDesktopExtraProfessions}
                 </Link>
               )}
+              {professional.isFeatured && (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                  {tCard("featured")}
+                </span>
+              )}
             </div>
             </>
           )}
@@ -324,7 +350,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
               >
                 <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
-                <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
+                <span className="text-[13px] font-bold text-[#111827] transition-colors group-hover:text-[#0089BB]">{professional.ratingAvg.toFixed(1)}</span>
                 <span className="text-[11px] font-medium text-[#9ca3af] hover:underline">
                   ({tCard("reviewsCount", { count: professional.reviewCount })})
                 </span>

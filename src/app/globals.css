@@ -94,7 +94,7 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
 .ccr-native-app {
   --ccr-native-header-height: 64px;
   --ccr-native-bottom-nav-height: 72px;
-  --ccr-native-panel-end-gap: 14px;
+  --ccr-native-panel-end-gap: 20px;
 }
 
 .ccr-native-app main {
@@ -594,11 +594,26 @@ input::-ms-clear {
   }
 
   .contratacr-ai-open [data-ai-concierge-dialog] {
+    position: fixed !important;
     top: var(--app-visual-viewport-top);
+    bottom: auto !important;
     left: var(--app-visual-viewport-left);
-    right: auto;
-    height: var(--app-visual-viewport-height);
-    width: var(--app-visual-viewport-width);
+    right: auto !important;
+    height: var(--app-visual-viewport-height) !important;
+    width: var(--app-visual-viewport-width) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .contratacr-ai-open [data-ai-concierge-dialog] > div {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    border: 0 !important;
   }
 }
 
