@@ -649,7 +649,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const nativeSearchRoute = /(^|\/)buscar(\/|$)/.test(pathname);
   const nativeHeaderShell = nativeApp;
   const nativeBottomShell = nativeApp && !nativeSearchRoute;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const nativeBottomNavVisible = nativeBottomShell;
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
   const compactEnabled = !pathname.startsWith("/dashboard");
@@ -710,7 +710,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
   const nativePanelHref = user ? primaryPanelHref : loginHref;
-  const nativeMessagesHref = user ? "/mensajes" : "/login?redirect=/mensajes";
+  const nativeMessagesHref = "/mensajes";
 
   useEffect(() => {
     let cancelled = false;
@@ -1500,10 +1500,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <Search className="h-5 w-5" />
                 <span>{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
-              <Link href={nativeMessagesHref} onPointerDown={() => prepareNativeNavigation(nativeMessagesHref)} className={nativeBottomNavClass(nativeMessagesHref)}>
-                <MessageSquareText className="h-5 w-5" />
-                <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
-              </Link>
+              {user && (
+                <Link href={nativeMessagesHref} onPointerDown={() => prepareNativeNavigation(nativeMessagesHref)} className={nativeBottomNavClass(nativeMessagesHref)}>
+                  <MessageSquareText className="h-5 w-5" />
+                  <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
