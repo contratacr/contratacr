@@ -103,12 +103,6 @@ function hasActiveService(services: unknown): boolean {
   return activeServices(services).length > 0;
 }
 
-function hasLegacyPublicProfession(categoryId: unknown, professions: unknown, services: unknown): boolean {
-  if (hasCategorizedServices(services)) return false;
-  if (typeof categoryId === "string" && categoryId.trim()) return true;
-  return Array.isArray(professions) && professions.some((profession) => typeof profession === "string" && profession.trim());
-}
-
 function activeServices(services: unknown): ProService[] {
   if (!Array.isArray(services)) return [];
   return services
@@ -228,9 +222,9 @@ async function searchProfessionalsUncached(
     try {
       const supabase = createAdminClient();
 
-      // Built as a closure so we can retry without the `is_banned` filter if that
-      // column hasn't been migrated yet (migration 029) â€” search never breaks.
-      // modern = use is_banned + location-aware search arrays (migrations 029/030).
+      // Built as a closure so we can retry without location-aware search arrays if
+      // those columns have not been migrated yet.
+      // modern = use location-aware search arrays (migrations 029/030).
       // legacy = fall back to the old single provincia_id/canton_id columns.
       const build = (modern: boolean) => {
         let query = supabase
@@ -245,12 +239,8 @@ async function searchProfessionalsUncached(
              cantones(id, name)`
           );
 
-        if (modern) query = query.eq("is_banned", false);
-        // Unverified professionals (no_cr_id / pending / under appeal) ARE listed â€”
-        // shown with an explicit "Identidad sin verificar" label and ranked BELOW
-        // verified ones (see the verified-first pass below). Only rejected profiles
-        // are never visible.
-        if (modern) query = query.neq("verification_status", "rejected");
+        // Verified and unverified professionals are listed. Search visibility is
+        // controlled by active services and disabled profile status.
         const includeVideoNationwide =
           filters.modality !== "in_person" &&
           (filters.modality === "video" ||
@@ -395,7 +385,7 @@ async function searchProfessionalsUncached(
       };
 
       let { data, error } = await build(true);
-      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|certifications|call_phone|public_business_name_only|column/i.test(error.message)) {
+      if (error && /search_provincias|search_cantones|coverage_|no_cr_id|certifications|call_phone|public_business_name_only|column/i.test(error.message)) {
         ({ data, error } = await build(false)); // pre-migration fallback
       }
       if (error) throw error;
@@ -405,10 +395,9 @@ async function searchProfessionalsUncached(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((row: any) => !row.profiles?.is_disabled)
         // Modern profiles must have at least one active service. Legacy profiles
-        // created before services were normalized may still only have
-        // category_id/professions; keep those visible until they edit their services.
+        // A professional is public-searchable only while at least one service is active.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .filter((row: any) => hasActiveService(row.services) || hasLegacyPublicProfession(row.category_id, row.professions, row.services))
+        .filter((row: any) => hasActiveService(row.services))
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((row: any) => {
           const rowActiveServices = activeServices(row.services);
@@ -592,12 +581,12 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
       supabase
         .from("professionals")
         .select(
-          `provincia_id, canton_id${modern ? ", search_provincias, search_cantones, coverage_provincias, coverage_country, is_banned" : ""}, verification_status, profiles(is_disabled)`
+          `services, provincia_id, canton_id${modern ? ", search_provincias, search_cantones, coverage_provincias, coverage_country" : ""}, profiles(is_disabled)`
         );
 
-    let res = await select(true).eq("is_banned", false).neq("verification_status", "rejected");
-    if (res.error && /is_banned|search_|coverage_|column/i.test(res.error.message)) {
-      res = await select(false).neq("verification_status", "rejected");
+    let res = await select(true);
+    if (res.error && /search_|coverage_|column/i.test(res.error.message)) {
+      res = await select(false);
     }
     if (res.error || !res.data) return empty;
 
@@ -611,6 +600,7 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
 
     for (const row of res.data as unknown as Record<string, unknown>[]) {
       if ((row.profiles as { is_disabled?: boolean } | null)?.is_disabled) continue;
+      if (!hasActiveService(row.services)) continue;
 
       add(row.provincia_id as string, row.canton_id as string);
 
