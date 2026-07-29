@@ -215,7 +215,9 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-safe-list-end {
-    padding-bottom: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+    min-height: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+    padding-bottom: 0;
+    flex: 0 0 auto;
   }
 
   .ccr-native-app .ccr-native-compact-page {
@@ -240,8 +242,34 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 }
 
 .ccr-native-app .ccr-search-bottom-sheet {
-  bottom: env(safe-area-inset-bottom);
-  max-height: calc(100dvh - 164px - env(safe-area-inset-bottom)) !important;
+  bottom: 0;
+  z-index: 80 !important;
+  max-height: calc(var(--app-visual-viewport-height) - 164px) !important;
+  overflow: hidden;
+  isolation: isolate;
+  background: #fff;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.ccr-native-app .ccr-search-bottom-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: #fff;
+  pointer-events: none;
+}
+
+.ccr-native-app .ccr-search-bottom-sheet > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ccr-native-app .ccr-search-sheet-scroll {
+  background: #fff;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom)) !important;
+  scroll-padding-bottom: calc(1rem + env(safe-area-inset-bottom));
 }
 
 .ccr-native-app .ccr-panel-section-loading {
@@ -628,6 +656,8 @@ input::-ms-clear {
     touch-action: pan-y;
   }
 
+  html.ccr-native-app.contratacr-ai-open [data-ai-concierge-dialog],
+  html.ccr-native-app body.contratacr-ai-open [data-ai-concierge-dialog],
   body.ccr-native-app.contratacr-ai-open [data-ai-concierge-dialog] {
     position: fixed !important;
     top: var(--app-visual-viewport-top, 0px) !important;
@@ -646,6 +676,16 @@ input::-ms-clear {
     backdrop-filter: none !important;
   }
 
+  html.ccr-native-app.contratacr-ai-open .ccr-native-bottom-nav,
+  html.ccr-native-app body.contratacr-ai-open .ccr-native-bottom-nav,
+  body.ccr-native-app.contratacr-ai-open .ccr-native-bottom-nav {
+    display: none !important;
+  }
+
+  html.ccr-native-app.contratacr-ai-open [data-ai-concierge-panel],
+  html.ccr-native-app.contratacr-ai-open [data-ai-concierge-dialog] > div,
+  html.ccr-native-app body.contratacr-ai-open [data-ai-concierge-panel],
+  html.ccr-native-app body.contratacr-ai-open [data-ai-concierge-dialog] > div,
   body.ccr-native-app.contratacr-ai-open [data-ai-concierge-panel],
   body.ccr-native-app.contratacr-ai-open [data-ai-concierge-dialog] > div {
     width: 100% !important;
