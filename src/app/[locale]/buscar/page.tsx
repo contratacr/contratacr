@@ -296,10 +296,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // Area-aware count label: exact map bounds -> "esta area"; otherwise canton
   // (most specific) -> province -> generic "en Costa Rica".
   const areaName = mapBounds ? t("thisArea") : params.ubicacion ?? activeCanton?.name ?? activeProvince?.name;
-  const showcaseResultCount = 114;
   const subtitle = areaName
-    ? t("resultsIn", { count: showcaseResultCount, location: areaName })
-    : t("resultsInCR", { count: showcaseResultCount });
+    ? t("resultsIn", { count: allResults.length, location: areaName })
+    : t("resultsInCR", { count: allResults.length });
   const filterInitialValues = {
     q: params.q,
     categoria: params.categoria,
@@ -443,10 +442,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
             {/* Results list */}
             <div className="min-w-0">
-              <div className="mb-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3 shadow-sm lg:hidden">
-                <h1 className="text-[15px] font-bold leading-tight text-[#111827]">{pageTitle}</h1>
-                <p className="mt-0.5 text-[13px] font-semibold leading-tight text-[#6b7280]">{subtitle}</p>
-              </div>
               {allResults.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-2xl border border-[#e5e7eb]">
                   <div className="flex justify-center mb-4">

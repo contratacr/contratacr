@@ -236,16 +236,16 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   if (openId) {
     return (
       <>
-      <div>
-        <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#374151] hover:text-[#009FD9] mb-4">
+      <div className="ccr-support-thread flex min-h-0 flex-1 flex-col">
+        <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="mb-3 inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-[#374151] hover:text-[#009FD9]">
           <ArrowLeft className="h-4 w-4" /> {t("backToTickets")}
         </button>
 
         {threadLoading || !ticket ? (
           <PanelSectionLoading rows={2} />
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-            <div className="px-4 py-4 border-b border-[#e5e7eb] sm:px-5">
+          <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+            <div className="shrink-0 border-b border-[#e5e7eb] px-4 py-4 sm:px-5">
               <div className="flex items-start gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
                   <Headset className="h-[18px] w-[18px]" />
@@ -265,7 +265,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
               </div>
             </div>
 
-            <div className="p-4 sm:p-5 flex flex-col gap-3 max-h-[460px] overflow-y-auto bg-[#f9fafb]">
+            <div className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f9fafb] p-4 sm:p-5">
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.sender_role === "user" ? "bg-[#009FD9] text-white" : "bg-white border border-[#e5e7eb] text-[#374151]"}`}>
@@ -281,7 +281,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
 
             {/* Resolved → user confirms the fix or asks to reopen */}
             {ticket.status === "resolved" && !ticket.user_confirmed && (
-              <div className="px-4 py-3 border-t border-[#e5e7eb] bg-[#f0fdf4]">
+              <div className="shrink-0 border-t border-[#e5e7eb] bg-[#f0fdf4] px-4 py-3">
                 <p className="text-sm font-medium text-[#166534] mb-2">{t("resolvedAsk")}</p>
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => ticketAction("confirm")} disabled={sending} className="inline-flex items-center gap-1.5 rounded-lg bg-[#16a34a] text-white text-sm font-medium px-3 py-1.5 hover:bg-[#15803d] disabled:opacity-50">
@@ -294,12 +294,12 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
               </div>
             )}
             {ticket.status === "resolved" && ticket.user_confirmed && (
-              <div className="px-4 py-2.5 border-t border-[#e5e7eb] bg-[#f0fdf4] text-sm text-[#166534]">
+              <div className="shrink-0 border-t border-[#e5e7eb] bg-[#f0fdf4] px-4 py-2.5 text-sm text-[#166534]">
                 {t("confirmedResolved")}
               </div>
             )}
 
-            <div className="p-4 border-t border-[#e5e7eb]">
+            <div className="ccr-support-thread-composer shrink-0 border-t border-[#e5e7eb] p-4">
               <textarea
                 value={reply}
                 onChange={(e) => setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH))}

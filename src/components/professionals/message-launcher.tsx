@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, MessageSquareText } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -61,7 +60,6 @@ export function MessageLauncher(props: MessageLauncherProps) {
   const isEn = locale === "en";
   const router = useRouter();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
   const label = buttonLabel || (isEn ? "Send message" : "Enviar mensaje");
 
   async function openMessage() {
@@ -76,45 +74,20 @@ export function MessageLauncher(props: MessageLauncherProps) {
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await fetch("/api/direct-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          professionalId,
-          bookingId,
-          projectId,
-          proposalId,
-          contextTitle,
-          initialMessage,
-          openConversation: true,
-        }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (response.ok && payload.conversationId) {
-        router.push(`/mensajes?conversation=${encodeURIComponent(String(payload.conversationId))}`);
-        return;
-      }
-      router.push(draftHref);
-    } finally {
-      setLoading(false);
-    }
+    router.push(draftHref);
   }
 
   return (
     <button
       type="button"
       onClick={() => void openMessage()}
-      disabled={loading}
-      aria-busy={loading}
       className={cn(
         buttonVariants({ variant: tone === "contrast" ? "chat" : "default", size: "md" }),
         "gap-1.5 disabled:opacity-60",
         className || "w-full rounded-full py-2.5 text-[13px] font-semibold",
       )}
     >
-      {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <MessageSquareText className="h-5 w-5 shrink-0" strokeWidth={2.25} />}
+      <MessageSquareText className="h-5 w-5 shrink-0" strokeWidth={2.25} />
       {label}
     </button>
   );

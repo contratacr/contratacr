@@ -481,7 +481,12 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             <AppTooltip label={copy.reset}>
               <button type="button" onClick={resetConversation} aria-label={copy.reset} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" /></button>
             </AppTooltip>
-            {!embedded && (
+            {!embedded && nativeApp && (
+              <AppTooltip label={lang === "en" ? "Back to panel" : "Volver al panel"}>
+                <button type="button" onClick={() => setOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={lang === "en" ? "Back to panel" : "Volver al panel"}><ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6" /></button>
+              </AppTooltip>
+            )}
+            {!embedded && !nativeApp && (
               <AppTooltip label={copy.minimize}>
                 <button type="button" onClick={() => setOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>
               </AppTooltip>

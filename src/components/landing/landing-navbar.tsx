@@ -646,9 +646,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
   const pathname = usePathname();
   const nativeApp = useNativeApp();
-  const nativeSearchRoute = /(^|\/)buscar(\/|$)/.test(pathname);
   const nativeHeaderShell = nativeApp;
-  const nativeBottomShell = nativeApp && !nativeSearchRoute;
+  const nativeBottomShell = nativeApp;
   const { user, loading: authLoading } = useAuth();
   const nativeBottomNavVisible = nativeBottomShell;
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
@@ -1491,7 +1490,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)]"
           >
-            <div className="mx-auto grid max-w-[390px] grid-cols-4 gap-1">
+            <div className={cn("mx-auto grid max-w-[390px] gap-1", user ? "grid-cols-4" : "grid-cols-3")}>
               <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
                 <LayoutDashboard className="h-5 w-5" />
                 <span>Panel</span>

@@ -69,11 +69,9 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   }, []);
 
   useEffect(() => {
-    if (!resetKey) return;
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    }
-    listRef.current?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    listRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [resetKey]);
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
@@ -146,7 +144,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   }, []);
 
   return (
-    <div className="flex h-[calc(100dvh-64px)] flex-col overflow-hidden lg:block lg:h-auto lg:overflow-visible">
+    <div className="ccr-search-results-layout flex h-[calc(100dvh-64px)] flex-col overflow-hidden lg:block lg:h-auto lg:overflow-visible">
       {/* Controls bar — "Filtros" drawer button ONLY at lg–xl (xl+ uses the sidebar). */}
       <div className="hidden lg:flex xl:hidden sticky top-16 z-30 mb-4 items-center gap-2">
         <button
@@ -204,7 +202,6 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
             scrolling card list. Desktop: `lg:contents` dissolves it so the card column
             (order-2) and the desktop map sit in the flex shell. */}
         <div
-          key={resetKey ?? "search-results-sheet"}
           className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:shadow-none lg:contents"
           // maxHeight keeps the navbar AND the map controls visible even when the sheet is
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
@@ -226,11 +223,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
             <div className="flex justify-center pb-1 pt-2.5">
               <span className="h-1.5 w-10 rounded-full bg-[#d1d5db]" />
             </div>
-            {countLabel && (
-              <div className="px-4 pb-3 pt-1">
-                <p className="text-[18px] font-extrabold leading-tight text-[#111827]">{countLabel}</p>
-              </div>
-            )}
+            {countLabel && <p className="px-4 pb-2.5 pt-0.5 text-[13px] font-semibold text-[#111827]">{countLabel}</p>}
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}

@@ -147,6 +147,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const locale = useLocale();
   const customCategories = useCustomCategories();
   void customCategories;
+  const paramsKey = params.toString();
 
   // ONE unified service control: the search field IS the category picker. Free text and a
   // picked category are MUTUALLY EXCLUSIVE (`q` XOR `categoria`), so on load we seed the
@@ -210,6 +211,57 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [insurerOptions, setInsurerOptions] = useState<{ id: string; label: string }[]>(
     INSURERS.filter(isRealInsurer)
   );
+
+  useEffect(() => {
+    const nextCategory = params.get("categoria") ?? initialValues?.categoria ?? "";
+    const nextQuery = params.get("q") ?? initialValues?.q ?? "";
+    const nextProvince = params.get("provincia") ?? initialValues?.provincia ?? "";
+    const nextCanton = params.get("canton") ?? initialValues?.canton ?? "";
+    const nextSort = params.get("sortBy") ?? initialValues?.sortBy ?? "";
+    const nextModality = params.get("modalidad") ?? initialValues?.modalidad ?? ANY_MODALITY;
+    const nextInsurer = params.get("aseguradora") ?? initialValues?.aseguradora ?? "";
+    const nextLanguage = params.get("idioma") ?? initialValues?.idioma ?? "";
+    const nextLat = params.get("lat") ?? initialValues?.lat ?? "";
+    const nextLng = params.get("lng") ?? initialValues?.lng ?? "";
+    const nextLocation = params.get("ubicacion") ?? initialValues?.ubicacion ?? "";
+
+    setCategory(nextCategory);
+    setQuery(nextQuery || (nextCategory && nextCategory !== "todas" ? getCategoryLabel(nextCategory, locale) : ""));
+    setProvince(nextProvince);
+    setCanton(nextCanton);
+    setSortBy(nextSort && nextSort !== "cercania" ? nextSort : "rating");
+    setModality(supportsVideoConsultCategory(nextCategory) ? nextModality : ANY_MODALITY);
+    setAseguradora(isHealthCategory(nextCategory) ? nextInsurer : "");
+    setLanguage(nextLanguage);
+    setLocationQuery(
+      nextLocation
+        ? nextLocation
+        : nextLat && nextLng
+        ? t("filters.nearMeActive")
+        : locationFilterLabel(nextProvince, nextCanton)
+    );
+    setSearchOpen(false);
+    setSearchActive(-1);
+    setLocationOpen(false);
+    setLocationActiveIndex(-1);
+    setAddressSuggestions([]);
+  }, [
+    paramsKey,
+    initialValues?.aseguradora,
+    initialValues?.canton,
+    initialValues?.categoria,
+    initialValues?.idioma,
+    initialValues?.lat,
+    initialValues?.lng,
+    initialValues?.modalidad,
+    initialValues?.provincia,
+    initialValues?.q,
+    initialValues?.sortBy,
+    initialValues?.ubicacion,
+    locale,
+    t,
+  ]);
+
   useEffect(() => {
     (async () => {
       try {
