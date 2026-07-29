@@ -103,6 +103,12 @@ function hasActiveService(services: unknown): boolean {
   return activeServices(services).length > 0;
 }
 
+function hasLegacyPublicProfession(categoryId: unknown, professions: unknown, services: unknown): boolean {
+  if (hasCategorizedServices(services)) return false;
+  if (typeof categoryId === "string" && categoryId.trim()) return true;
+  return Array.isArray(professions) && professions.some((profession) => typeof profession === "string" && profession.trim());
+}
+
 function activeServices(services: unknown): ProService[] {
   if (!Array.isArray(services)) return [];
   return services
@@ -398,11 +404,11 @@ async function searchProfessionalsUncached(
         // Hide soft-disabled accounts (item 17). undefined (pre-migration) â†’ shown.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((row: any) => !row.profiles?.is_disabled)
-        // A professional must have at least one active service to appear in public
-        // search. If they removed all services by mistake, the dashboard shows the
-        // empty state and profile-completion prompt instead of listing a wrong card.
+        // Modern profiles must have at least one active service. Legacy profiles
+        // created before services were normalized may still only have
+        // category_id/professions; keep those visible until they edit their services.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .filter((row: any) => hasActiveService(row.services))
+        .filter((row: any) => hasActiveService(row.services) || hasLegacyPublicProfession(row.category_id, row.professions, row.services))
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((row: any) => {
           const rowActiveServices = activeServices(row.services);
