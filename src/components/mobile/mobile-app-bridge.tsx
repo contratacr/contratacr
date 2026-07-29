@@ -36,11 +36,11 @@ export function MobileAppBridge() {
 
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
-    const webParity = isSearchPath(pathname);
-    document.documentElement.classList.toggle("ccr-native-search-route", webParity);
-    document.body.classList.toggle("ccr-native-search-route", webParity);
-    document.documentElement.classList.toggle("ccr-native-web-parity", webParity);
-    document.body.classList.toggle("ccr-native-web-parity", webParity);
+    const isSearchRoute = isSearchPath(pathname);
+    document.documentElement.classList.toggle("ccr-native-search-route", isSearchRoute);
+    document.body.classList.toggle("ccr-native-search-route", isSearchRoute);
+    document.documentElement.classList.remove("ccr-native-web-parity");
+    document.body.classList.remove("ccr-native-web-parity");
     return () => {
       document.documentElement.classList.remove("ccr-native-search-route");
       document.body.classList.remove("ccr-native-search-route");
