@@ -251,13 +251,13 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                   <Headset className="h-[18px] w-[18px]" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
+                  <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                    <span className="w-fit max-w-full rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">
                       {t("caseRef", { ref: supportTicketRef(ticket.id, ticket.created_at, ticket.case_number) })}
                     </span>
-                    <h3 className="text-[15px] font-bold leading-snug text-[#162543] sm:text-base">{ticketSubject(ticket)}</h3>
+                    <h3 className="min-w-0 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{ticketSubject(ticket)}</h3>
                     {ticket.status !== filter && (
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
+                      <span className={`w-fit text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
                     )}
                   </div>
                   <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{statusHelp(ticket.status)}</p>
@@ -391,16 +391,16 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                     <Headset className="h-[18px] w-[18px]" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
+                    <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                      <span className="w-fit max-w-full rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">
                         {t("caseRef", { ref: supportTicketRef(tk.id, tk.created_at, tk.case_number) })}
                       </span>
-                      <p className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{ticketSubject(tk)}</p>
+                      <p className="min-w-0 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:flex-1">{ticketSubject(tk)}</p>
                       {tk.status !== filter && (
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[tk.status] ?? ""}`}>{statusLabel(tk.status)}</span>
+                        <span className={`w-fit text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[tk.status] ?? ""}`}>{statusLabel(tk.status)}</span>
                       )}
                       {hasNew && (
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">{t("newReply")}</span>
+                        <span className="w-fit text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">{t("newReply")}</span>
                       )}
                     </div>
                     <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{statusHelp(tk.status)}</p>
@@ -408,7 +408,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                       <Clock3 className="h-3.5 w-3.5" />
                       {t("updated", { date: fmt(tk.last_reply_at || tk.created_at) })}
                     </p>
-                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#4b5563]">{tk.message}</p>
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{tk.message}</p>
                     <span className="mt-3 inline-flex text-sm font-semibold text-[#009FD9] group-hover:underline">{hasNew ? t("viewReply") : t("openConversation")}</span>
                   </div>
                 </div>
