@@ -168,6 +168,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
     min-height: 0;
     padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem) !important;
     background: #fff;
+    overscroll-behavior-y: none;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-card {
@@ -180,6 +181,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
     padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem) !important;
     scroll-padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem);
     background: #fff;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
@@ -265,7 +268,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 
 .ccr-native-app .ccr-search-bottom-sheet {
   bottom: var(--ccr-native-bottom-nav-total, 0);
-  z-index: 80 !important;
+  z-index: 30;
   max-height: calc(var(--app-visual-viewport-height) - 164px) !important;
   overflow: hidden;
   isolation: isolate;
@@ -635,19 +638,27 @@ input::-ms-clear {
 
 @media (max-width: 1023px) {
   .contratacr-chat-thread-open .dashboard-mobile-nav,
+  .contratacr-support-thread-open .dashboard-mobile-nav,
   .contratacr-chat-thread-open .ccr-app-header,
+  .contratacr-support-thread-open .ccr-app-header,
   .contratacr-chat-thread-open .ccr-native-bottom-nav,
+  .contratacr-support-thread-open .ccr-native-bottom-nav,
   .contratacr-chat-thread-open [data-ai-concierge-button],
+  .contratacr-support-thread-open [data-ai-concierge-button],
   .contratacr-ai-open .dashboard-mobile-nav {
     display: none !important;
   }
 
-  .contratacr-chat-thread-open .dashboard-panel-content {
+  .contratacr-chat-thread-open .dashboard-panel-content,
+  .contratacr-support-thread-open .dashboard-panel-content {
     padding-bottom: max(env(safe-area-inset-bottom), 0.75rem) !important;
   }
 
   html.contratacr-chat-thread-open,
-  html.contratacr-chat-thread-open body {
+  html.contratacr-chat-thread-open body,
+  html.contratacr-support-thread-open,
+  html.contratacr-support-thread-open body,
+  body.contratacr-support-thread-open {
     overflow: hidden;
     overscroll-behavior: none;
   }
@@ -664,6 +675,44 @@ input::-ms-clear {
     min-height: 0;
     border-radius: 0;
     overscroll-behavior: none;
+  }
+
+  html.ccr-native-app.contratacr-support-thread-open .ccr-support-thread,
+  html.ccr-native-app body.contratacr-support-thread-open .ccr-support-thread,
+  body.ccr-native-app.contratacr-support-thread-open .ccr-support-thread {
+    position: fixed;
+    top: var(--app-visual-viewport-top);
+    right: auto;
+    bottom: auto;
+    left: var(--app-visual-viewport-left);
+    z-index: 115;
+    height: var(--app-visual-viewport-height);
+    width: var(--app-visual-viewport-width);
+    min-height: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: #fff;
+    padding-top: max(env(safe-area-inset-top), 0.75rem);
+  }
+
+  html.ccr-native-app.contratacr-support-thread-open .ccr-support-thread > button,
+  html.ccr-native-app body.contratacr-support-thread-open .ccr-support-thread > button,
+  body.ccr-native-app.contratacr-support-thread-open .ccr-support-thread > button {
+    margin: 0;
+    min-height: 52px;
+    border-bottom: 1px solid #e3ebf1;
+    padding: 0 1rem;
+    background: #fff;
+  }
+
+  html.ccr-native-app.contratacr-support-thread-open .ccr-support-thread-card,
+  html.ccr-native-app body.contratacr-support-thread-open .ccr-support-thread-card,
+  body.ccr-native-app.contratacr-support-thread-open .ccr-support-thread-card {
+    flex: 1 1 auto;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   html.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-thread-scroll {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, Send, User, Shield, Plus, Clock3 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -194,6 +194,17 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
       openTicket(initialTicketId);
     }
   }, [initialTicketId, openTicket]);
+
+  useLayoutEffect(() => {
+    if (!openId) return;
+    const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
+    if (!shouldLockScroll) return;
+    const roots = [document.documentElement, document.body];
+    roots.forEach((root) => root.classList.add("contratacr-support-thread-open"));
+    return () => {
+      roots.forEach((root) => root.classList.remove("contratacr-support-thread-open"));
+    };
+  }, [openId]);
 
   async function sendReply() {
     if (!reply.trim() || !openId) return;
