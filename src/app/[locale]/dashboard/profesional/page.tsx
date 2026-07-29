@@ -691,7 +691,7 @@ export default function DashboardPage() {
         onClick={() => signOutToHome(locale)}
         className={cn(
           "w-full flex items-center rounded-xl text-left font-medium transition-colors",
-          mobile ? "gap-4 px-4 py-4 text-base font-semibold" : "gap-3 px-3 py-2.5 text-sm",
+          mobile ? "min-h-[68px] gap-4 px-4 py-4 text-base font-semibold" : "gap-3 px-3 py-2.5 text-sm",
           "text-[#374151] hover:bg-[#f3f4f6] hover:text-[#111827]",
         )}
       >
