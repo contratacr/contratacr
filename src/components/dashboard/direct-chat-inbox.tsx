@@ -263,7 +263,8 @@ export function DirectChatInbox() {
         setActiveId(existingDraftConversation.id);
         router.replace(`/mensajes?conversation=${existingDraftConversation.id}`, { scroll: false });
       } else {
-        setActiveId((current) => current || (pendingDraft ? DRAFT_CONVERSATION_ID : rows[0]?.id || null));
+        const firstDesktopConversation = window.matchMedia("(min-width: 1024px)").matches ? rows[0]?.id || null : null;
+        setActiveId((current) => current || (pendingDraft ? DRAFT_CONVERSATION_ID : firstDesktopConversation));
       }
       if (showArchived) {
         setArchivedCount(json.conversations?.length ?? 0);
@@ -350,6 +351,25 @@ export function DirectChatInbox() {
     setActiveId(id); setMobileThread(true); setError("");
     if (id === DRAFT_CONVERSATION_ID) return;
     router.replace(`/mensajes${showArchived ? "?chatStatus=archived&" : "?"}conversation=${id}`, { scroll: false });
+  }
+
+  function closeMobileThread() {
+    setMobileThread(false);
+    setActiveId(null);
+    setMessages([]);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("conversation");
+    params.delete("draftChat");
+    params.delete("professionalId");
+    params.delete("professionalName");
+    params.delete("bookingId");
+    params.delete("projectId");
+    params.delete("proposalId");
+    params.delete("contextTitle");
+    params.delete("draftMessage");
+    const qs = params.toString();
+    router.replace(`/mensajes${qs ? `?${qs}` : ""}`, { scroll: false });
   }
 
   function addAttachments(files: FileList | null) {
@@ -573,7 +593,7 @@ export function DirectChatInbox() {
 
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
         <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e3ebf1] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
-          <button type="button" onClick={() => setMobileThread(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
+          <button type="button" onClick={closeMobileThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
           <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
             <Avatar className="h-9 w-9 sm:h-10 sm:w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
           </button>
