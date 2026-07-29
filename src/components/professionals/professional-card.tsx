@@ -164,18 +164,6 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
-  const profileHref = (() => {
-    const params = new URLSearchParams();
-    if (searchReturnHref) params.set("from", searchReturnHref);
-    const query = params.toString();
-    return query ? `/profesionales/${professional.slug}?${query}` : `/profesionales/${professional.slug}`;
-  })();
-  const reviewsHref = (() => {
-    const params = new URLSearchParams({ tab: "resenas" });
-    if (searchReturnHref) params.set("from", searchReturnHref);
-    return `/profesionales/${professional.slug}?${params.toString()}#resenas`;
-  })();
-
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
   // panel/dashboard, for cross-surface consistency. Sits on its OWN line between the

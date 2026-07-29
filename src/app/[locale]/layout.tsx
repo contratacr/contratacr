@@ -19,6 +19,8 @@ import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
 import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-followup";
 import { PushTokenManager } from "@/components/push/push-token-manager";
+import { AppResumeRecovery } from "@/components/util/app-resume-recovery";
+import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -144,11 +146,13 @@ export default async function LocaleLayout({
         <DocumentLocale locale={locale} />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add('ccr-native-app');document.body&&document.body.classList.add('ccr-native-app');}}catch(e){}`,
+            __html: `try{var h=window.location&&window.location.hostname;var m=h==='test.contratacr.com'||h==='contratacr-mobile-test.vercel.app'||/\\.contratacr-mobile-test\\.vercel\\.app$/.test(h||'');var n=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(m||n){document.documentElement.classList.add('ccr-native-app');document.body&&document.body.classList.add('ccr-native-app');}}catch(e){}`,
           }}
         />
         <EmojiBlocker />
         <ViewportEnvironment />
+        <AppResumeRecovery />
+        <MobileAppBridge />
         <CustomCategoriesLoader />
         <NotificationLiveToast scope="all" />
         <OperationalStatusBanner locale={locale} status={operationalStatus} />
