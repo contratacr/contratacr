@@ -94,7 +94,8 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
 .ccr-native-app {
   --ccr-native-header-height: 64px;
   --ccr-native-bottom-nav-height: 72px;
-  --ccr-native-panel-end-gap: 28px;
+  --ccr-native-bottom-nav-total: calc(var(--ccr-native-bottom-nav-height) + env(safe-area-inset-bottom));
+  --ccr-native-panel-end-gap: 36px;
 }
 
 .ccr-native-app main {
@@ -102,7 +103,7 @@ body.ccr-native-app:not(.ccr-native-web-parity) a[role="button"] {
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main {
-  min-height: calc(100svh - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height));
+  min-height: calc(100svh - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total));
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
@@ -125,13 +126,14 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
     position: fixed;
     inset-inline: 0;
     top: var(--ccr-native-header-height);
-    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height));
+    bottom: var(--ccr-native-bottom-nav-total);
+    height: auto;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     background: #fff;
-    padding-bottom: 0;
-    scroll-padding-bottom: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+    padding-bottom: var(--ccr-native-panel-end-gap) !important;
+    scroll-padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem);
     -webkit-overflow-scrolling: touch;
   }
 
@@ -147,8 +149,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-list {
-    padding-bottom: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
-    scroll-padding-bottom: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem);
+    scroll-padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem);
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll {
@@ -164,7 +166,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .dashboard-panel-content {
     min-height: 0;
-    padding-bottom: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem) !important;
     background: #fff;
   }
 
@@ -175,20 +177,21 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content {
     min-height: 0 !important;
-    padding-bottom: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom)) !important;
-    scroll-padding-bottom: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem) !important;
+    scroll-padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem);
     background: #fff;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
-    padding-bottom: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem);
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-page-main {
     position: fixed;
     inset-inline: 0;
     top: var(--ccr-native-header-height);
-    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-height));
+    bottom: var(--ccr-native-bottom-nav-total);
+    height: auto;
     min-height: 0;
     overflow: hidden;
     padding: 0 !important;
@@ -197,7 +200,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-page-panel {
     height: 100%;
     min-height: 0;
-    padding: 0.75rem 1rem calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom)) !important;
+    padding: 0.75rem 1rem calc(var(--ccr-native-panel-end-gap) + 1rem) !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-list {
@@ -211,11 +214,11 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-items {
-    padding-bottom: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--ccr-native-panel-end-gap) + 1rem);
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-safe-list-end {
-    min-height: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+    min-height: calc(var(--ccr-native-panel-end-gap) + 1rem);
     padding-bottom: 0;
     flex: 0 0 auto;
   }
@@ -268,8 +271,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 
 .ccr-native-app .ccr-search-sheet-scroll {
   background: #fff;
-  padding-bottom: calc(2rem + env(safe-area-inset-bottom)) !important;
-  scroll-padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)) !important;
+  scroll-padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
 }
 
 .ccr-native-app .ccr-panel-section-loading {
@@ -656,6 +659,20 @@ input::-ms-clear {
     touch-action: pan-y;
   }
 
+  html.ccr-native-app.contratacr-ai-open,
+  html.ccr-native-app.contratacr-ai-open body,
+  html.ccr-native-app body.contratacr-ai-open,
+  body.ccr-native-app.contratacr-ai-open {
+    height: 100svh !important;
+    overflow: hidden !important;
+    background: #fff !important;
+  }
+
+  body.ccr-native-app.contratacr-ai-open main,
+  html.ccr-native-app body.contratacr-ai-open main {
+    overflow: hidden !important;
+  }
+
   html.ccr-native-app.contratacr-ai-open [data-ai-concierge-dialog],
   html.ccr-native-app body.contratacr-ai-open [data-ai-concierge-dialog],
   body.ccr-native-app.contratacr-ai-open [data-ai-concierge-dialog] {
@@ -695,6 +712,22 @@ input::-ms-clear {
     border-radius: 0 !important;
     border: 0 !important;
     box-shadow: none !important;
+  }
+
+  html.ccr-native-app.contratacr-ai-open [data-ai-concierge-panel],
+  html.ccr-native-app body.contratacr-ai-open [data-ai-concierge-panel],
+  body.ccr-native-app.contratacr-ai-open [data-ai-concierge-panel] {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  html.ccr-native-app.contratacr-ai-open [data-ai-concierge-messages],
+  html.ccr-native-app body.contratacr-ai-open [data-ai-concierge-messages],
+  body.ccr-native-app.contratacr-ai-open [data-ai-concierge-messages] {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
   }
 }
 

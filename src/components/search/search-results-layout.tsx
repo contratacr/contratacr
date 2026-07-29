@@ -69,9 +69,11 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    listRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    if (!resetKey) return;
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    }
+    listRef.current?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, [resetKey]);
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
@@ -232,7 +234,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} className="min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:flex-none lg:overflow-visible lg:overscroll-auto lg:px-0 lg:pb-0 lg:pt-0 lg:order-2 lg:w-[640px] lg:shrink-0 xl:w-[700px] 2xl:w-[820px]">
+          <div ref={listRef} className="ccr-search-sheet-scroll min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
             {children}
           </div>
         </div>
