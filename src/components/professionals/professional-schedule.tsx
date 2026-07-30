@@ -839,6 +839,15 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                         {slot.time}
                       </button>
                     ))}
+                    {Array.from({ length: Math.max(0, 3 - day.items.length) }).map((_, index) => (
+                      <span
+                        key={`empty-${day.key}-${index}`}
+                        aria-hidden="true"
+                        className="block w-full rounded-md py-1 text-[11px] font-semibold leading-none opacity-0"
+                      >
+                        00:00
+                      </span>
+                    ))}
                     {extra > 0 && (
                       <button
                         onClick={(e) => { e.stopPropagation(); pick(day.items[3]); }}
