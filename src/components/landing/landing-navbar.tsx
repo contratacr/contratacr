@@ -650,7 +650,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const nativeHeaderShell = hydrated && nativeApp;
   const nativeBottomShell = hydrated && nativeApp;
   const { user, loading: authLoading } = useAuth();
-  const nativeBottomNavVisible = nativeBottomShell;
+  const nativeBottomNavVisible = nativeBottomShell && !!user;
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
   const compactEnabled = !pathname.startsWith("/dashboard");
   const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
@@ -1495,7 +1495,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-1.5 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] min-[360px]:px-2"
           >
-            <div className={cn("mx-auto grid w-full max-w-[430px] gap-0.5 min-[360px]:gap-1", user ? "grid-cols-[repeat(4,minmax(0,1fr))]" : "grid-cols-[repeat(3,minmax(0,1fr))]")}>
+            <div className="mx-auto grid w-full max-w-[430px] grid-cols-[repeat(4,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
               <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
                 <LayoutDashboard className="h-5 w-5" />
                 <span className="max-w-full truncate">Panel</span>
@@ -1504,12 +1504,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <Search className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
-              {user && (
-                <Link href={nativeMessagesHref} onPointerDown={() => prepareNativeNavigation(nativeMessagesHref)} className={nativeBottomNavClass(nativeMessagesHref)}>
-                  <MessageSquareText className="h-5 w-5" />
-                  <span className="max-w-full truncate">{locale === "en" ? "Messages" : "Mensajes"}</span>
-                </Link>
-              )}
+              <Link href={nativeMessagesHref} onPointerDown={() => prepareNativeNavigation(nativeMessagesHref)} className={nativeBottomNavClass(nativeMessagesHref)}>
+                <MessageSquareText className="h-5 w-5" />
+                <span className="max-w-full truncate">{locale === "en" ? "Messages" : "Mensajes"}</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
