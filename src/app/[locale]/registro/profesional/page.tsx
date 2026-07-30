@@ -951,6 +951,11 @@ export default function RegisterProfessionalPage() {
   const stepLabels = [t("steps.identity"), t("steps.service"), t("steps.profile")];
   const indicatorStep = step;
   const hasBusinessName = businessName.trim().length > 0;
+  const businessNameOnlyLabel = locale === "en" ? "Show only business name" : "Mostrar solo nombre comercial";
+  const businessNameOnlyHelp =
+    locale === "en"
+      ? "Your public profile will hide your personal name and show only the business."
+      : "En tu perfil publico se ocultara tu nombre personal y se mostrara solo el negocio.";
   const businessNameField = (
     <div className="space-y-2.5">
       <Input
@@ -967,16 +972,16 @@ export default function RegisterProfessionalPage() {
       {hasBusinessName && (
         <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-[#111827]">{t("businessNameOnly")}</p>
+            <p className="text-sm font-medium text-[#111827]">{businessNameOnlyLabel}</p>
             <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">
-              {t("businessNameOnlyHelp")}
+              {businessNameOnlyHelp}
             </p>
           </div>
           <button
             type="button"
             onClick={() => setPublicBusinessNameOnly((value) => !value)}
             className={cn("relative h-6 w-11 shrink-0 rounded-full transition-all", publicBusinessNameOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label={t("businessNameOnly")}
+            aria-label={businessNameOnlyLabel}
             aria-pressed={publicBusinessNameOnly}
           >
             <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", publicBusinessNameOnly ? "left-5" : "left-0.5")} />
