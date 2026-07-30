@@ -488,8 +488,8 @@ export default function ProfilePage() {
           <div className="flex flex-col lg:flex-row gap-6">
 
             {/* ── LEFT STICKY CARD ── */}
-            <aside className="w-full shrink-0 lg:order-2 lg:w-80">
-              <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] p-5 lg:sticky lg:top-24 flex flex-col gap-4">
+            <aside className="w-full shrink-0 lg:order-2 lg:w-[360px]">
+              <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] p-4 sm:p-5 lg:sticky lg:top-24 flex flex-col gap-4">
 
                 {/* "Desde" price — mirrors the right side of the /buscar card. Identity
                     (avatar/name/verificado/rating/location) now lives in the HEADER card

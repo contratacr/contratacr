@@ -144,7 +144,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   }, []);
 
   return (
-    <div className="ccr-search-results-layout flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-[#f4f7fa] lg:block lg:h-auto lg:overflow-visible">
+    <div className="ccr-search-results-layout flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-[#f4f7fa] lg:block lg:h-auto lg:overflow-visible lg:bg-transparent">
       {/* Controls bar — "Filtros" drawer button ONLY at lg–xl (xl+ uses the sidebar). */}
       <div className="hidden lg:flex xl:hidden sticky top-16 z-30 mb-4 items-center gap-2">
         <button
@@ -174,7 +174,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
 
       {/* ONE flex container: mobile = the map fills the remaining height (the sheet floats
           over it); desktop = the 3-column shell (filters · cards · map) via `lg:order-*`. */}
-      <div className="relative flex min-h-0 flex-1 flex-col gap-0 bg-[#f4f7fa] lg:flex-row lg:gap-5">
+      <div className="relative flex min-h-0 flex-1 flex-col gap-0 bg-[#f4f7fa] lg:flex-row lg:gap-5 lg:bg-transparent">
         {/* Filters sidebar — desktop xl+ only (order-1). Hidden on mobile + lg–xl (drawer). */}
         <aside className="hidden xl:block lg:order-1 w-64 shrink-0">
           <div className="sticky top-20">{filters}</div>
@@ -227,7 +227,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} className="ccr-search-sheet-scroll min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-[#f4f7fa] lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
+          <div ref={listRef} className="ccr-search-sheet-scroll min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
             {children}
           </div>
         </div>
