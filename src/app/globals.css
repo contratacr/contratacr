@@ -298,7 +298,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 }
 
 .ccr-native-app .ccr-search-bottom-sheet {
-  bottom: var(--ccr-native-bottom-nav-total, 0);
+  bottom: var(--ccr-native-bottom-nav-height, 0);
   z-index: 30;
   max-height: calc(var(--app-visual-viewport-height) - 164px) !important;
   overflow: hidden;
