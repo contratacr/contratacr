@@ -40,6 +40,56 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 
+const CONTRATACR_PROFILE_DEMO = {
+  bio: [
+    "Soy Isaac S\u00e1nchez Monge, fundador de ContrataCR y desarrollador web. Trabajo creando productos digitales pr\u00e1cticos para negocios reales: sitios que explican bien lo que se vende, aplicaciones que ordenan procesos y paneles que reducen trabajo manual.",
+    "Mi enfoque mezcla dise\u00f1o, programaci\u00f3n y criterio comercial. Antes de escribir c\u00f3digo, ordeno el objetivo: qu\u00e9 necesita hacer el usuario, qu\u00e9 datos debe capturar el negocio y cu\u00e1l es la acci\u00f3n principal que debe quedar clara en celular.",
+    "He construido flujos con autenticaci\u00f3n, perfiles p\u00fablicos, b\u00fasqueda, mapas, disponibilidad, solicitudes, propuestas, mensajer\u00eda, soporte, notificaciones, anal\u00edtica, integraciones con Supabase, almacenamiento de archivos y asistentes con IA.",
+    "ContrataCR es el ejemplo m\u00e1s completo de mi trabajo: una plataforma para Costa Rica con experiencia web, mobile, iOS y Android, pensada para conectar clientes con profesionales y mostrar informaci\u00f3n clara antes de iniciar una conversaci\u00f3n.",
+  ].join("\n\n"),
+  service: {
+    id: "contratacr-desarrollo-web",
+    name: "Desarrollo web",
+    category: "desarrollo_web",
+    active: true,
+    price: "Consultar precio",
+    priceType: "a_convenir" as const,
+    modalities: ["video" as const],
+    description: [
+      "Dise\u00f1o y desarrollo sitios web, landing pages, paneles internos y aplicaciones web completas para negocios que necesitan vender, atender mejor y operar con m\u00e1s orden.",
+      "Puedo ayudarle desde una p\u00e1gina comercial sencilla hasta una plataforma con usuarios, perfiles, formularios, reservas, mensajes, notificaciones, mapas, pagos, anal\u00edtica, panel administrativo e integraciones con servicios externos.",
+      "El trabajo incluye definici\u00f3n del flujo, estructura de contenido, dise\u00f1o responsive, desarrollo, pruebas en celular, configuraci\u00f3n de dominio, despliegue, medici\u00f3n b\u00e1sica y soporte para dejar el proyecto listo para usarse.",
+      "Cada entrega se piensa primero para mobile: textos claros, llamadas a la acci\u00f3n visibles, carga r\u00e1pida, formularios simples y una experiencia que no dependa de que el cliente est\u00e9 en computadora.",
+    ].join("\n\n"),
+  },
+  cases: [
+    { id: "contratacr-buscador-perfiles", serviceId: "contratacr-desarrollo-web", profession: "desarrollo_web", title: "Buscador y perfiles profesionales de ContrataCR", description: "Dise\u00f1o y desarrollo del buscador de profesionales con filtros, mapa, cards de resultados, horarios visibles, perfiles p\u00fablicos, rese\u00f1as, casos de \u00e9xito y llamadas a la acci\u00f3n para coordinar desde la misma plataforma.", recipient: "ContrataCR", date: "2026", photos: ["/og-image.png", "/web-app-manifest-flat-logo-v3-512x512.png"], likes: 18 },
+    { id: "contratacr-mobile-ios-android", serviceId: "contratacr-desarrollo-web", profession: "desarrollo_web", title: "Experiencia mobile, iOS y Android", description: "Adaptaci\u00f3n de ContrataCR para uso mobile con navegaci\u00f3n inferior, paneles que respetan safe areas, pantallas full screen, asistente IA optimizado para celular y vistas listas para capturas de App Store, Play Store y publicidad.", recipient: "ContrataCR mobile", date: "2026", photos: ["/apple-touch-icon-flat-logo-v3.png", "/android-chrome-512x512.png"], likes: 12 },
+    { id: "contratacr-mensajes-soporte", serviceId: "contratacr-desarrollo-web", profession: "desarrollo_web", title: "Mensajes, soporte y conversaciones internas", description: "Construcci\u00f3n de mensajer\u00eda interna, conversaciones por contexto, soporte tipo chat, estados de no le\u00eddo, archivado y composer mobile inspirado en patrones modernos para que el usuario pueda coordinar sin salir de ContrataCR.", recipient: "ContrataCR", date: "2026", photos: ["/logo-wordmark-transparent.png", "/brand/ai-assistant-robot.png"], likes: 9 },
+    { id: "contratacr-panel-operativo", serviceId: "contratacr-desarrollo-web", profession: "desarrollo_web", title: "Panel profesional y flujo de solicitudes", description: "Desarrollo de paneles para clientes y profesionales con solicitudes recibidas, oportunidades, propuestas, disponibilidad, notificaciones y datos demo reales para validar el producto en escenarios de captura y uso comercial.", recipient: "ContrataCR operaciones", date: "2026", photos: ["/logo-mark-transparent.png", "/logo-wordmark-transparent.png"], likes: 11 },
+  ],
+};
+
+function withContrataCrDemoProfile(pro: ProfessionalDetail): ProfessionalDetail {
+  if (pro.slug !== "contratacr-desarrollo-web-atenas") return pro;
+  return {
+    ...pro,
+    businessName: "ContrataCR",
+    bio: CONTRATACR_PROFILE_DEMO.bio,
+    categoryId: "desarrollo_web",
+    professions: ["desarrollo_web"],
+    services: [CONTRATACR_PROFILE_DEMO.service],
+    portfolioItems: CONTRATACR_PROFILE_DEMO.cases,
+    portfolioUrls: CONTRATACR_PROFILE_DEMO.cases.flatMap((item) => item.photos).slice(0, 5),
+    yearsExperience: Math.max(pro.yearsExperience ?? 0, 1),
+    ratingAvg: Math.max(pro.ratingAvg ?? 0, 5),
+    reviewCount: Math.max(pro.reviewCount ?? 0, 5),
+    videoconsulta: true,
+    availabilityPublic: true,
+    contactPreference: "ambas",
+  };
+}
+
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
 // ─── Tab types ────────────────────────────────────────────────────────────────
@@ -78,6 +128,27 @@ export default function ProfilePage() {
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
   // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
   const [previewMode] = useState(() => searchParamFromUrl("preview") === "1");
+  const [searchReturnHref] = useState(() => {
+    const from = searchParamFromUrl("from");
+    if (from && from.startsWith("/") && !from.startsWith("//")) return from;
+    if (typeof document !== "undefined") {
+      try {
+        const referrer = new URL(document.referrer);
+        if (referrer.origin === window.location.origin) {
+          const localizedSearchPrefix = `/${locale}/buscar`;
+          const searchHref = `${referrer.pathname}${referrer.search}`;
+          if (referrer.pathname === localizedSearchPrefix) return searchHref.replace(`/${locale}`, "") || "/buscar";
+          if (referrer.pathname === "/buscar") return searchHref;
+        }
+      } catch {
+        // Ignore missing/invalid referrer and use the default search route.
+      }
+    }
+    return "/buscar";
+  });
+  const localizedSearchReturnHref = searchReturnHref === `/${locale}` || searchReturnHref.startsWith(`/${locale}/`)
+    ? searchReturnHref
+    : `/${locale}${searchReturnHref}`;
   // The profession the client searched/filtered by (?categoria=) — passed to the
   // booking modal so, for a multi-specialty pro, that service is pre-selected and we
   // know up front whether it's a health service (DOB) without re-asking.
@@ -104,8 +175,9 @@ export default function ProfilePage() {
       setSlug(routeSlug);
       const res = await fetch(`/api/professionals/${routeSlug}`);
       if (!res.ok) { setProNotFound(true); setLoading(false); return; }
-      const pro: ProfessionalDetail | null = await res.json();
-      if (!pro) { setProNotFound(true); setLoading(false); return; }
+      const fetchedPro: ProfessionalDetail | null = await res.json();
+      if (!fetchedPro) { setProNotFound(true); setLoading(false); return; }
+      const pro = withContrataCrDemoProfile(fetchedPro);
       setProfessional(pro);
       setLoading(false);
 
@@ -326,10 +398,10 @@ export default function ProfilePage() {
               </Link>
             </div>
           ) : (
-            <Link href="/buscar" className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
+            <a href={localizedSearchReturnHref} className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
               <ArrowLeft className="h-4 w-4" />
               {t("back")}
-            </Link>
+            </a>
           )}
 
           {/* No unverified-identity notice in the client preview: the ABSENCE of the

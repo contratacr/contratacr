@@ -161,6 +161,74 @@ const demoLocations = {
 };
 
 const isaacLocation = ["Atenas, Alajuela", 9.9796, -84.3781, "al", "al-at"];
+const contratacrWebService = {
+  id: "contratacr-desarrollo-web",
+  name: "Desarrollo web",
+  category: "desarrollo_web",
+  active: true,
+  price: "Consultar precio",
+  priceType: "a_convenir",
+  modalities: ["video"],
+  description: [
+    "Dise\u00f1o y desarrollo sitios web, landing pages, paneles internos y aplicaciones web completas para negocios que necesitan vender, atender mejor y operar con m\u00e1s orden.",
+    "Puedo ayudarle desde una p\u00e1gina comercial sencilla hasta una plataforma con usuarios, perfiles, formularios, reservas, mensajes, notificaciones, mapas, pagos, anal\u00edtica, panel administrativo e integraciones con servicios externos.",
+    "El trabajo incluye definici\u00f3n del flujo, estructura de contenido, dise\u00f1o responsive, desarrollo, pruebas en celular, configuraci\u00f3n de dominio, despliegue, medici\u00f3n b\u00e1sica y soporte para dejar el proyecto listo para usarse.",
+    "Cada entrega se piensa primero para mobile: textos claros, llamadas a la acci\u00f3n visibles, carga r\u00e1pida, formularios simples y una experiencia que no dependa de que el cliente est\u00e9 en computadora."
+  ].join("\n\n"),
+};
+const contratacrBio = [
+  "Soy Isaac S\u00e1nchez Monge, fundador de ContrataCR y desarrollador web. Trabajo creando productos digitales pr\u00e1cticos para negocios reales: sitios que explican bien lo que se vende, aplicaciones que ordenan procesos y paneles que reducen trabajo manual.",
+  "Mi enfoque mezcla dise\u00f1o, programaci\u00f3n y criterio comercial. Antes de escribir c\u00f3digo, ordeno el objetivo: qu\u00e9 necesita hacer el usuario, qu\u00e9 datos debe capturar el negocio y cu\u00e1l es la acci\u00f3n principal que debe quedar clara en celular.",
+  "He construido flujos con autenticaci\u00f3n, perfiles p\u00fablicos, b\u00fasqueda, mapas, disponibilidad, solicitudes, propuestas, mensajer\u00eda, soporte, notificaciones, anal\u00edtica, integraciones con Supabase, almacenamiento de archivos y asistentes con IA.",
+  "ContrataCR es el ejemplo m\u00e1s completo de mi trabajo: una plataforma para Costa Rica con experiencia web, mobile, iOS y Android, pensada para conectar clientes con profesionales y mostrar informaci\u00f3n clara antes de iniciar una conversaci\u00f3n."
+].join("\n\n");
+const contratacrPortfolioItems = [
+  {
+    id: "contratacr-buscador-perfiles",
+    serviceId: contratacrWebService.id,
+    profession: "desarrollo_web",
+    title: "Buscador y perfiles profesionales de ContrataCR",
+    description: "Dise\u00f1o y desarrollo del buscador de profesionales con filtros, mapa, cards de resultados, horarios visibles, perfiles p\u00fablicos, rese\u00f1as, casos de \u00e9xito y llamadas a la acci\u00f3n para coordinar desde la misma plataforma.",
+    recipient: "ContrataCR",
+    date: "2026",
+    photos: [`${appUrl}/og-image.png`, `${appUrl}/web-app-manifest-flat-logo-v3-512x512.png`],
+    likes: 18
+  },
+  {
+    id: "contratacr-mobile-ios-android",
+    serviceId: contratacrWebService.id,
+    profession: "desarrollo_web",
+    title: "Experiencia mobile, iOS y Android",
+    description: "Adaptaci\u00f3n de ContrataCR para uso mobile con navegaci\u00f3n inferior, paneles que respetan safe areas, pantallas full screen, asistente IA optimizado para celular y vistas listas para capturas de App Store, Play Store y publicidad.",
+    recipient: "ContrataCR mobile",
+    date: "2026",
+    photos: [`${appUrl}/apple-touch-icon-flat-logo-v3.png`, `${appUrl}/android-chrome-512x512.png`],
+    likes: 12
+  },
+  {
+    id: "contratacr-mensajes-soporte",
+    serviceId: contratacrWebService.id,
+    profession: "desarrollo_web",
+    title: "Mensajes, soporte y conversaciones internas",
+    description: "Construcci\u00f3n de mensajer\u00eda interna, conversaciones por contexto, soporte tipo chat, estados de no le\u00eddo, archivado y composer mobile inspirado en patrones modernos para que el usuario pueda coordinar sin salir de ContrataCR.",
+    recipient: "ContrataCR",
+    date: "2026",
+    photos: [`${appUrl}/logo-wordmark-transparent.png`, `${appUrl}/brand/ai-assistant-robot.png`],
+    likes: 9
+  },
+  {
+    id: "contratacr-panel-operativo",
+    serviceId: contratacrWebService.id,
+    profession: "desarrollo_web",
+    title: "Panel profesional y flujo de solicitudes",
+    description: "Desarrollo de paneles para clientes y profesionales con solicitudes recibidas, oportunidades, propuestas, disponibilidad, notificaciones y datos demo reales para validar el producto en escenarios de captura y uso comercial.",
+    recipient: "ContrataCR operaciones",
+    date: "2026",
+    photos: [`${appUrl}/logo-mark-transparent.png`, `${appUrl}/logo-wordmark-transparent.png`],
+    likes: 11
+  }
+];
+const contratacrPortfolioUrls = contratacrPortfolioItems.flatMap((item) => item.photos).slice(0, 5);
 
 function demoPlace(slug, professional, location = demoLocations[slug] || isaacLocation) {
   const [name, lat, lng, provinciaIdOverride, cantonIdOverride] = location;
@@ -199,6 +267,19 @@ async function main() {
 
   await must("isaac professional demo location", supabase.from("professionals").update({
     business_name: "ContrataCR",
+    bio: contratacrBio,
+    services: [contratacrWebService],
+    professions: ["desarrollo_web"],
+    category_id: "desarrollo_web",
+    portfolio_items: contratacrPortfolioItems,
+    portfolio_urls: contratacrPortfolioUrls,
+    years_experience: 1,
+    rating_avg: 5,
+    review_count: 5,
+    videoconsulta: true,
+    availability_public: true,
+    contact_preference: "ambas",
+    allow_phone_call: true,
     provincia_id: isaacPlace.provinciaId,
     canton_id: isaacPlace.cantonId,
     lat: isaacPlace.lat,

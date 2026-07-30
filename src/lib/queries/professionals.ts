@@ -158,7 +158,18 @@ function isExactWorkplacePin(workplace: ProfessionalWorkplace | undefined): work
 }
 
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
-export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
+export type PortfolioItem = {
+  url?: string;
+  serviceId?: string;
+  profession?: string;
+  id?: string;
+  title?: string;
+  description?: string;
+  recipient?: string;
+  date?: string;
+  photos?: string[];
+  likes?: number;
+};
 
 // Optional website/social links. Social networks are stored as usernames; the
 // website is stored as a normalized URL. Additive to "casos de ?xito" photos.

@@ -328,6 +328,25 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
   scroll-padding-bottom: 1.5rem;
 }
 
+@media (min-width: 1024px) {
+  .ccr-native-app .ccr-search-bottom-sheet {
+    max-height: none !important;
+    overflow: visible;
+    background: transparent;
+    padding-bottom: 0;
+  }
+
+  .ccr-native-app .ccr-search-bottom-sheet::before {
+    background: transparent;
+  }
+
+  .ccr-native-app .ccr-search-sheet-scroll {
+    background: #f4f7fa;
+    padding-bottom: 0 !important;
+    scroll-padding-bottom: 0;
+  }
+}
+
 .ccr-native-app .ccr-panel-section-loading {
   min-height: min(360px, calc(var(--app-visual-viewport-height) - 220px));
 }

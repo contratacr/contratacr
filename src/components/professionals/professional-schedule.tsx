@@ -666,6 +666,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canPrev = effOffset > 0;
   const canNext = effOffset + COLS < availableDays.length;
   const dayColsClass = "grid-cols-3"; // always 3 columns (availability days + "No disponible" padding)
+  const scheduleOuterGap = "gap-1";
+  const dayGridGap = "gap-2";
+  const dayColumnGap = "gap-1.5";
+  const dayLabelClass = "text-center text-[11px] font-semibold leading-tight truncate text-[#6b7280]";
+  const timePillClass = "w-full rounded-md py-1 text-[11px] font-semibold text-[#0089bb] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors leading-none";
+  const emptyTimePillClass = "block w-full rounded-md py-1 text-[11px] font-semibold leading-none opacity-0";
+  const extraPillClass = "w-full rounded-md py-1 text-[10px] font-bold leading-none text-[#0089bb] border border-dashed border-[#bfdbfe] hover:bg-[#EBF5FB] transition-colors";
 
   // Action buttons live IN the right column (HuliHealth style), full-width PILLS of that
   // column — NOT a separate bottom strip. CONDITIONAL on availability (logic unchanged):
@@ -796,10 +803,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     <div className="flex w-full flex-col gap-3" aria-label={locale === "en" ? "Loading availability" : "Cargando horarios"} aria-busy="true">
       <div className="flex w-full items-start gap-1">
         <span className="flex w-4 shrink-0 self-center" aria-hidden />
-        <div className="grid flex-1 grid-cols-3 gap-2">
+        <div className={`grid flex-1 grid-cols-3 ${dayGridGap}`}>
           {days.slice(0, COLS).map((day) => (
-            <div key={day.key} className="flex min-w-0 flex-col gap-1.5">
-              <p className="truncate text-center text-[11px] font-semibold leading-tight text-[#6b7280]">{day.label}</p>
+            <div key={day.key} className={`flex min-w-0 flex-col ${dayColumnGap}`}>
+              <p className={dayLabelClass}>{day.label}</p>
               <Skeleton className="h-6 w-full rounded-md" />
               <Skeleton className="h-6 w-full rounded-md" />
               <Skeleton className="h-6 w-full rounded-md" />
@@ -826,7 +833,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     scheduleBody = scheduleNote(otherLocationHasTimes ? t("noTimesAtLocation") : t("availabilityHiddenNote"));
   } else {
     scheduleBody = (
-      <div className="flex w-full items-start gap-1">
+      <div className={`flex w-full items-start ${scheduleOuterGap}`}>
         <button
           type="button"
           disabled={!canPrev}
@@ -837,12 +844,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <ChevronLeft className="h-[15px] w-[15px]" />
         </button>
 
-        <div className={`grid flex-1 gap-2 ${dayColsClass}`}>
+        <div className={`grid flex-1 ${dayGridGap} ${dayColsClass}`}>
           {windowDays.map((day) => {
             const extra = day.items.length - 3;
             return (
-              <div key={day.key} className="flex flex-col gap-1.5 min-w-0">
-                <p className="text-center text-[11px] font-semibold leading-tight truncate text-[#6b7280]">{day.label}</p>
+              <div key={day.key} className={`flex min-w-0 flex-col ${dayColumnGap}`}>
+                <p className={dayLabelClass}>{day.label}</p>
                 {day.items.length === 0 ? (
                   <p className="text-center text-[10px] leading-tight text-[#cbd5e1] py-1.5">{t("dayUnavailable")}</p>
                 ) : (
@@ -851,7 +858,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                       <button
                         key={`${slot.time}-${slot.locationId ?? ""}`}
                         onClick={(e) => { e.stopPropagation(); pick(slot); }}
-                        className="w-full rounded-md py-1 text-[11px] font-semibold text-[#0089bb] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors leading-none"
+                        aria-label={`${day.label}, ${slot.time}`}
+                        className={timePillClass}
                       >
                         {slot.time}
                       </button>
@@ -860,7 +868,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                       <span
                         key={`empty-${day.key}-${index}`}
                         aria-hidden="true"
-                        className="block w-full rounded-md py-1 text-[11px] font-semibold leading-none opacity-0"
+                        className={emptyTimePillClass}
                       >
                         00:00
                       </span>
@@ -869,7 +877,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                       <button
                         onClick={(e) => { e.stopPropagation(); pick(day.items[3]); }}
                         title={t("viewFullSchedule")}
-                        className="w-full rounded-md py-1 text-[10px] font-bold leading-none text-[#0089bb] border border-dashed border-[#bfdbfe] hover:bg-[#EBF5FB] transition-colors"
+                        aria-label={`${t("viewFullSchedule")}: ${day.label}`}
+                        className={extraPillClass}
                       >
                         +{extra}
                       </button>

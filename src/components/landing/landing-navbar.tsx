@@ -785,7 +785,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
       const baseHref = href.split("?")[0] ?? href;
       const isActive = nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
       return cn(
-        "flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]",
+        "flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]",
         isActive && "bg-[#eef9fd] text-[#009FD9]",
       );
     },
@@ -1493,30 +1493,30 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
           <nav
             ref={nativeBottomNavRef}
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
-            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)]"
+            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-1.5 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] min-[360px]:px-2"
           >
-            <div className={cn("mx-auto grid max-w-[390px] gap-1", user ? "grid-cols-4" : "grid-cols-3")}>
+            <div className={cn("mx-auto grid w-full max-w-[430px] gap-0.5 min-[360px]:gap-1", user ? "grid-cols-[repeat(4,minmax(0,1fr))]" : "grid-cols-[repeat(3,minmax(0,1fr))]")}>
               <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
                 <LayoutDashboard className="h-5 w-5" />
-                <span>Panel</span>
+                <span className="max-w-full truncate">Panel</span>
               </Link>
               <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
                 <Search className="h-5 w-5" />
-                <span>{locale === "en" ? "Search" : "Buscar"}</span>
+                <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
               {user && (
                 <Link href={nativeMessagesHref} onPointerDown={() => prepareNativeNavigation(nativeMessagesHref)} className={nativeBottomNavClass(nativeMessagesHref)}>
                   <MessageSquareText className="h-5 w-5" />
-                  <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
+                  <span className="max-w-full truncate">{locale === "en" ? "Messages" : "Mensajes"}</span>
                 </Link>
               )}
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
-                className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]"
+                className="flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]"
               >
                 <Bot className="h-5 w-5" />
-                <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
+                <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>
               </button>
             </div>
           </nav>

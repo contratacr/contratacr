@@ -158,14 +158,10 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
   const profileHref = (() => {
-    const params = new URLSearchParams();
-    if (searchReturnHref) params.set("from", searchReturnHref);
-    const query = params.toString();
-    return query ? `/profesionales/${professional.slug}?${query}` : `/profesionales/${professional.slug}`;
+    return `/profesionales/${professional.slug}`;
   })();
   const reviewsHref = (() => {
     const params = new URLSearchParams({ tab: "resenas" });
-    if (searchReturnHref) params.set("from", searchReturnHref);
     return `/profesionales/${professional.slug}?${params.toString()}#resenas`;
   })();
 

@@ -425,8 +425,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Main content - 3-column shell (filters / results / map). On mobile the padding is
           zeroed so the Yelp map + bottom sheet go edge-to-edge; desktop keeps its gutters. */}
-      <main className="flex-1">
-        <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:py-4">
+      <main className="flex-1 bg-[#f4f7fa]">
+        <div className="mx-auto max-w-[1920px] bg-[#f4f7fa] px-0 py-0 lg:px-8 lg:py-4">
           <SearchResultsLayout
             mapData={mapData}
             apiKey={MAPS_API_KEY}
