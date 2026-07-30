@@ -42,7 +42,7 @@ export default async function DeleteAccountPage({ params }: { params: Promise<{ 
             <h2 className="text-lg font-bold text-[#162543]">{en ? "Before requesting deletion" : "Antes de solicitarlo"}</h2>
             <ul className="mt-4 space-y-3 text-sm leading-6 text-[#4b5563]">
               {[
-                en ? "If you request full account deletion, you will lose access to your profile, requests, saved items, and account history." : "Si solicita eliminar toda la cuenta, perderá acceso a su perfil, solicitudes, elementos guardados e historial de cuenta.",
+                en ? "If you request full account deletion, you will lose access to your profile, requests, saved items, following relationships, and account history." : "Si solicita eliminar toda la cuenta, perderá acceso a su perfil, solicitudes, elementos guardados, relaciones de seguimiento e historial de cuenta.",
                 en ? "You may also request deletion or correction of specific personal data without deleting the full account." : "También puede solicitar eliminar o corregir datos personales específicos sin eliminar toda la cuenta.",
                 en ? "Active service arrangements should be completed or canceled before full account deletion." : "Antes de eliminar toda la cuenta, debe finalizar o cancelar coordinaciones de servicio activas.",
                 en ? "Some information may be temporarily retained for security, fraud prevention, claims, or legal compliance." : "Cierta información puede conservarse temporalmente por seguridad, prevención de fraude, reclamos u obligación legal.",

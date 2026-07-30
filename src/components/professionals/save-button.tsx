@@ -61,6 +61,7 @@ export type SavedPro = {
   isVerified: boolean;
   videoconsulta?: boolean;
   coverage?: { country?: boolean } | null;
+  followerCount?: number;
 };
 
 export function getSavedPros(userId?: string): SavedPro[] {

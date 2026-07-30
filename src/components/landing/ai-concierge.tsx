@@ -107,7 +107,8 @@ const COPY = {
     suggested: "Sugerencia enviada",
     error: "No pude responder en este momento. Inténtelo nuevamente.",
     notice: "La IA puede equivocarse. Revise los detalles antes de continuar.",
-    reset: "Iniciar una conversación nueva",
+    reset: "Nuevo chat",
+    resetHint: "Limpia esta conversacion y empieza de cero.",
   },
   en: {
     closedLabel: "Open ContrataCR assistant",
@@ -124,7 +125,8 @@ const COPY = {
     suggested: "Suggestion sent",
     error: "I could not answer right now. Please try again.",
     notice: "AI can be wrong. Review the details before continuing.",
-    reset: "Start a new conversation",
+    reset: "New chat",
+    resetHint: "Clear this conversation and start fresh.",
   },
 } as const;
 
@@ -485,20 +487,21 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             : "max-h-full h-[min(820px,calc(var(--app-visual-viewport-height)_-_0.5rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
         )}
       >
-        <header className="relative flex shrink-0 items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
+        <header className="relative flex shrink-0 items-center gap-1.5 border-b border-[#e3ebf1] bg-white px-2.5 py-3 sm:gap-3 sm:px-5 sm:py-4">
           {(embedded || nativeApp) && (
             <button
               type="button"
               onClick={embedded ? onBack : () => setOpen(false)}
               aria-label={lang === "en" ? "Back" : "Atrás"}
-              className="ccr-ai-back-action grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#102f5b] transition hover:bg-[#eef7ff]"
+              className="ccr-ai-back-action grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#102f5b] transition hover:bg-[#eef7ff] sm:h-10 sm:w-10"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <div className="-my-2 -ml-1 h-[68px] w-[68px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
+          <div className="-my-2 -ml-1.5 h-[58px] w-[58px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
-            <h2 className="truncate text-[15px] font-black text-[#102746] sm:text-lg">{copy.title}</h2>
+            <h2 className="truncate text-[14px] font-black text-[#102746] min-[380px]:text-[15px] sm:text-lg">{copy.title}</h2>
+            <p className="ccr-ai-mobile-header-notice mt-0.5 hidden truncate text-[11px] font-semibold text-[#7d8fa8]">{copy.notice}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <div ref={menuRef} className="relative ccr-ai-reset-action">
@@ -506,10 +509,15 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                 <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-label={lang === "en" ? "Assistant options" : "Opciones del asistente"} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><MoreHorizontal className="h-5 w-5" /></button>
               </AppTooltip>
               {menuOpen && (
-                <div className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-xl border border-[#cfe3f4] bg-white py-1.5 text-sm font-bold text-[#173052] shadow-xl">
-                  <button type="button" onClick={resetConversation} className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left transition hover:bg-[#eef7ff]">
-                    <RotateCcw className="h-4 w-4" />
-                    <span>{copy.reset}</span>
+                <div className="absolute right-0 top-full z-40 mt-2 w-[260px] overflow-hidden rounded-2xl border border-[#d8e6f0] bg-white p-1.5 text-sm text-[#173052] shadow-[0_18px_48px_-22px_rgba(15,45,80,0.45)]">
+                  <button type="button" onClick={resetConversation} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#f4f8fb] active:bg-[#eef9fd]">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[#009FD9]">
+                      <RotateCcw className="h-[18px] w-[18px]" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[14px] font-extrabold leading-tight text-[#102746]">{copy.reset}</span>
+                      <span className="mt-0.5 block text-[12px] font-semibold leading-snug text-[#6b7a90]">{copy.resetHint}</span>
+                    </span>
                   </button>
                 </div>
               )}
@@ -596,7 +604,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </button>
           </form>
-          <p className="mt-3 text-center text-[11px] font-medium leading-tight text-[#7d8fa8]">{copy.notice}</p>
+          <p className="ccr-ai-footer-notice mt-3 text-center text-[11px] font-medium leading-tight text-[#7d8fa8]">{copy.notice}</p>
         </footer>
       </div>
     </section>

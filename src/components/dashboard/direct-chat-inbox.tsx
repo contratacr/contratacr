@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Loader2, MessageSquareMore, MoreHorizontal, Plus, Search, SendHorizontal, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, ChevronLeft, Download, FileText, Loader2, MessageSquareMore, MoreHorizontal, Plus, Search, SendHorizontal, Trash2, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -46,9 +46,18 @@ const ALLOWED_ATTACHMENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp
 function timeLabel(value?: string | null, locale = "es") {
   if (!value) return "";
   const date = new Date(value);
-  const today = new Date();
-  if (date.toDateString() === today.toDateString()) return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
-  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(date);
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) {
+    return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
+  }
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const daysAgo = Math.floor((startOfToday - startOfDate) / 86_400_000);
+  if (daysAgo === 1) return locale === "en" ? "Yesterday" : "Ayer";
+  if (daysAgo >= 1 && daysAgo < 7) {
+    return new Intl.DateTimeFormat(locale, { weekday: "long" }).format(date);
+  }
+  return new Intl.DateTimeFormat(locale, { month: "numeric", day: "numeric", year: "2-digit" }).format(date);
 }
 
 function messageTimeLabel(value?: string | null, locale = "es") {
@@ -163,6 +172,20 @@ function findExistingDraftConversation(rows: Conversation[], payload: PendingDra
 function demoConversations(userId: string | undefined): Conversation[] {
   const currentUserId = userId || "__current_user__";
   const now = Date.now();
+  const demoOffsets = [
+    35 * 60 * 1000,
+    4 * 60 * 60 * 1000,
+    26 * 60 * 60 * 1000,
+    2 * 24 * 60 * 60 * 1000,
+    4 * 24 * 60 * 60 * 1000,
+    6 * 24 * 60 * 60 * 1000,
+    8 * 24 * 60 * 60 * 1000,
+    12 * 24 * 60 * 60 * 1000,
+    18 * 24 * 60 * 60 * 1000,
+    31 * 24 * 60 * 60 * 1000,
+    45 * 24 * 60 * 60 * 1000,
+    75 * 24 * 60 * 60 * 1000,
+  ];
   const items = [
     ["demo-chat-electricidad", "Electro Vargas", "Mañana puedo revisar el tablero y enviarle el diagnóstico.", "Electricidad residencial"],
     ["demo-chat-limpieza", "Limpieza Brisa", "Sí, podemos coordinar una limpieza profunda para esta semana.", "Limpieza profunda"],
@@ -184,7 +207,7 @@ function demoConversations(userId: string | undefined): Conversation[] {
     professional_profile_id: `${id}-profile`,
     subject,
     last_message: message,
-    last_message_at: new Date(now - (index + 3) * 36 * 60 * 1000).toISOString(),
+    last_message_at: new Date(now - (demoOffsets[index] ?? (index + 3) * 36 * 60 * 1000)).toISOString(),
     status: "open",
     client_unread_count: index === 1 || index === 6 ? 1 : 0,
     professional_unread_count: 0,
@@ -289,6 +312,7 @@ export function DirectChatInbox() {
     [conversations, pendingDraft, showArchived, user?.id],
   );
   const active = useMemo(() => displayedConversations.find((item) => item.id === activeId) ?? null, [activeId, displayedConversations]);
+  const backConversationCount = displayedConversations.length;
 
   useEffect(() => {
     const next = buildPendingDraft(searchParams, user?.id, isEn);
@@ -671,7 +695,7 @@ export function DirectChatInbox() {
   const activePersonName = activePerson?.name || "";
   return (
     <div className={cn(
-      "direct-chat-shell grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[calc(100dvh-190px)] lg:min-h-0 lg:grid-cols-[310px_minmax(0,1fr)] lg:gap-3 lg:bg-transparent xl:grid-cols-[330px_minmax(0,1fr)] 2xl:grid-cols-[330px_minmax(0,1fr)_300px]",
+      "direct-chat-shell grid h-full w-full min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:min-h-0 lg:grid-cols-[310px_minmax(0,1fr)] lg:gap-3 lg:bg-transparent xl:grid-cols-[330px_minmax(0,1fr)] 2xl:grid-cols-[330px_minmax(0,1fr)_300px]",
       mobileThread && "direct-chat-shell--thread",
     )}>
       <aside className={cn("flex min-h-0 flex-col border-r border-[#e3ebf1] bg-[#f8fbfd] lg:overflow-hidden lg:rounded-xl lg:border lg:border-[#dfe8f0] lg:bg-white lg:shadow-sm", mobileThread && "hidden lg:block")}>
@@ -698,9 +722,9 @@ export function DirectChatInbox() {
             </button>
           )}
           {filtered.map((item) => { const person = personFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; const highlighted = item.id === activeId; const hasUnread = !!unread; return (
-            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3.5 border-b border-[#e7eef3] px-4 py-4 text-left transition hover:bg-white lg:gap-4 lg:py-5", hasUnread && "bg-[#e4f7ff] font-semibold", highlighted && "lg:bg-white lg:shadow-[inset_3px_0_0_#009FD9]", highlighted && mobileThread && "bg-white")}>
+            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3.5 border-b border-[#e7eef3] bg-white px-4 py-4 text-left transition hover:bg-[#f8fbfd] lg:gap-4 lg:py-5", highlighted && "lg:bg-white lg:shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-12 w-12 lg:h-[54px] lg:w-[54px]"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-base font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
-              <span className="min-w-0 flex-1 pt-0.5"><span className="flex items-center gap-2"><strong className={cn("min-w-0 flex-1 truncate text-[15px] font-extrabold leading-tight text-[#162543] lg:text-base", hasUnread && "font-black")}>{person.name}</strong><time className={cn("shrink-0 text-[11px] font-semibold text-[#8492a5]", hasUnread && "font-extrabold text-[#009FD9]")}>{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-1.5 flex items-center gap-2"><span className={cn("min-w-0 flex-1 truncate text-[13px] leading-snug text-[#6b7a90]", hasUnread && "font-extrabold text-[#162543]")}>{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-extrabold text-white shadow-sm shadow-[#009FD9]/30">{unread}</span>}</span></span>
+              <span className="min-w-0 flex-1 pt-0.5"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-[15px] font-extrabold leading-tight text-[#162543] lg:text-base">{person.name}</strong><time className={cn("shrink-0 text-[11px] font-semibold text-[#8492a5]", hasUnread && "font-extrabold text-[#102746]")}>{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-1.5 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-[13px] leading-snug text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#102746] px-1.5 text-[11px] font-extrabold text-white shadow-sm shadow-[#102746]/20">{unread}</span>}</span></span>
             </button>); })}
           {!filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
         </div>
@@ -708,7 +732,18 @@ export function DirectChatInbox() {
 
       <section className={cn("min-h-0 flex-col bg-white lg:overflow-hidden lg:rounded-xl lg:border lg:border-[#dfe8f0] lg:shadow-sm", mobileThread ? "flex" : "hidden lg:flex")}>
         <header className="ccr-direct-chat-thread-header grid min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)_42px] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)_44px] sm:gap-3 sm:px-5 lg:flex lg:min-h-[65px] lg:justify-between">
-          <button type="button" onClick={closeMobileThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
+          <button
+            type="button"
+            onClick={closeMobileThread}
+            className={cn(
+              "grid shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden",
+              backConversationCount > 1 ? "h-14 w-14 grid-cols-[19px_auto] gap-0 bg-[#eef9fd] pr-1.5 font-extrabold text-[#102746]" : "h-10 w-10",
+            )}
+            aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}
+          >
+            {backConversationCount > 1 ? <ChevronLeft className="h-7 w-7 translate-x-1" strokeWidth={2.6} /> : <ArrowLeft className="h-5 w-5" />}
+            {backConversationCount > 1 && <span className="text-[19px] leading-none">{backConversationCount}</span>}
+          </button>
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
               <Avatar className="h-10 w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>

@@ -135,7 +135,28 @@ export function ServicesEditor({
     return items.length === 0 ? true : items.some((s) => s.active !== false);
   }
 
-  async function persist(nextProfessions: string[], nextServices: ProService[]) {
+  function effectiveCategoryForState(service: ProService, fallbackPrimary: string | undefined): string {
+    return service.category ?? fallbackPrimary ?? "";
+  }
+
+  function activeServiceCountForState(nextProfessions: string[], nextServices: ProService[]): number {
+    const fallbackPrimary = nextProfessions[0];
+    return nextProfessions.filter((prof) => {
+      const items = nextServices.filter((service) => effectiveCategoryForState(service, fallbackPrimary) === prof);
+      return items.length === 0 ? true : items.some((service) => service.active !== false);
+    }).length;
+  }
+
+  function ensureAtLeastOneActiveService(nextProfessions: string[], nextServices: ProService[]): boolean {
+    if (activeServiceCountForState(nextProfessions, nextServices) > 0) return true;
+    setSaved(false);
+    setFormError("Debe mantener al menos un servicio activo.");
+    return false;
+  }
+
+  async function persist(nextProfessions: string[], nextServices: ProService[]): Promise<boolean> {
+    if (!ensureAtLeastOneActiveService(nextProfessions, nextServices)) return false;
+    setFormError(null);
     setSaving(true);
     const supabase = createClient();
     const supportsVideoConsult = anyVideoConsultCategory(nextProfessions);
@@ -158,6 +179,7 @@ export function ServicesEditor({
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
     onSaved?.();
+    return true;
   }
 
   // Add a service from the catalog picker → then go STRAIGHT to editing its information
@@ -186,17 +208,17 @@ export function ServicesEditor({
     if (professions[0] === id) return;
     const next = [id, ...professions.filter((p) => p !== id)];
     setProfessions(next);
-    persist(next, services);
+    void persist(next, services);
   }
 
-  // Remove a service entirely (the category + its info). If it was the last one,
-  // the profile becomes incomplete and is hidden from public search until one is added.
+  // Remove a service entirely (the category + its info), while keeping at least one active service.
   function removeService(id: string) {
     const next = professions.filter((p) => p !== id);
     const nextServices = services.filter((s) => effectiveCategory(s) !== id);
+    if (!ensureAtLeastOneActiveService(next, nextServices)) return;
     setProfessions(next);
     setServices(nextServices);
-    persist(next, nextServices);
+    void persist(next, nextServices);
   }
 
   // Toggle a service active/inactive (inactive = paused, hidden from clients). Stored on
@@ -210,8 +232,9 @@ export function ServicesEditor({
     } else {
       next = services.map((s) => (effectiveCategory(s) === prof ? { ...s, active: nextActive } : s));
     }
+    if (!ensureAtLeastOneActiveService(professions, next)) return;
     setServices(next);
-    persist(professions, next);
+    void persist(professions, next);
   }
 
   // Open the info editor for a service, pre-filled from its current info.
@@ -297,10 +320,11 @@ export function ServicesEditor({
       }),
       info,
     ];
+    const didSave = await persist(nextProfessions, next);
+    if (!didSave) return;
     setProfessions(nextProfessions);
     setServices(next);
     cancelForm();
-    await persist(nextProfessions, next);
   }
 
   // Services available to add (taxonomy minus the ones already added), filtered by the
@@ -346,6 +370,10 @@ export function ServicesEditor({
 
   return (
     <div className="flex flex-col gap-4">
+      {formError && !formOpen ? (
+        <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">{formError}</p>
+      ) : null}
+
       {professions.length === 0 ? (
         /* No services yet → a calm, actionable empty state. */
         <div className="ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[22rem] sm:px-6">

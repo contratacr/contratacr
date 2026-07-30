@@ -48,7 +48,7 @@
     "notifications": "Notificaciones",
     "supportTickets": "Soporte",
     "accountSecurity": "Cuenta y seguridad",
-    "signOut": "Cerrar sesión",
+    "signOut": "Salir",
     "hireServices": "Busco servicios",
     "language": "Idioma / Language",
     "servicePlaceholder": "Busca un servicio",
@@ -763,6 +763,8 @@
       "usesAccountId": "{name}",
       "yourAccount": "Tu cuenta",
       "businessName": "Nombre comercial o de tu empresa",
+      "businessNameOnly": "Mostrar solo nombre comercial",
+      "businessNameOnlyHelp": "En tu perfil público se ocultará tu nombre personal y se mostrará solo el negocio.",
       "businessPlaceholder": "Ejemplo: SG Solutions",
       "servicesSectionTitle": "Servicios",
       "professionPrincipal": "Tu servicio principal",
@@ -1196,7 +1198,9 @@
       "sent_bookings": "Mis solicitudes",
       "sent_projects": "Mis publicaciones",
       "saved": "Mis favoritos",
+      "network": "Seguidos y seguidores",
       "notifications": "Notificaciones",
+      "guides": "Guías rápidas",
       "soporte": "Soporte",
       "cuenta": "Cuenta y seguridad"
     },
@@ -1314,7 +1318,165 @@
       }
     },
     "servicesHeading": "Mis servicios",
+    "guides": {
+      "headerButton": "Guías rápidas",
+      "modalTitle": "Guías rápidas",
+      "modalSubtitle": "Guías paso a paso para usar ContrataCR como cliente o profesional.",
+      "heroEyebrow": "Guía paso a paso",
+      "heroTitle": "Usa tu panel con ejemplos reales",
+      "heroBody": "Esta guía toma como referencia el perfil de ContrataCR para mostrar qué ve un cliente, qué debe completar un profesional y cómo dar seguimiento sin perder orden.",
+      "exampleProfile": {
+        "verified": "Verificado",
+        "service": "Desarrollo web",
+        "reviews": "reseñas",
+        "cases": "casos",
+        "year": "año"
+      },
+      "examples": {
+        "search": {
+          "title": "Cómo te ve un cliente en /buscar",
+          "body": "El card debe responder rápido: quién eres, qué haces, dónde trabajas, reseñas y cómo contactarte.",
+          "reviewCount": "(5 reseñas)",
+          "priceLine1": "Consultar",
+          "priceLine2": "precio",
+          "location": "Atenas, Alajuela"
+        },
+        "messages": {
+          "title": "Cómo coordinar después del contacto",
+          "body": "Mensajes mantiene la conversación clara. Si vienes de una solicitud o propuesta, escribe el contexto en el primer mensaje.",
+          "client": "Hola, vi tu perfil y necesito una landing page para mi negocio.",
+          "pro": "Claro, puedo revisar el alcance y enviarte una propuesta inicial."
+        }
+      },
+      "clientPanel": {
+        "title": "Panel cliente",
+        "body": "Para buscar, contratar y dar seguimiento.",
+        "points": [
+          "Busca profesionales por servicio, zona o nombre.",
+          "Guarda perfiles para compararlos después.",
+          "Envía solicitudes o mensajes cuando necesites coordinar.",
+          "Revisa tus solicitudes, publicaciones y conversaciones desde el panel."
+        ]
+      },
+      "proPanel": {
+        "title": "Panel profesional",
+        "body": "Para ofrecer servicios y construir confianza.",
+        "points": [
+          "Completa tu perfil, servicios, cobertura y disponibilidad.",
+          "Sube casos de éxito para mostrar trabajos reales.",
+          "Responde solicitudes y oportunidades desde un solo lugar.",
+          "También conservas el panel cliente para contratar otros servicios."
+        ]
+      },
+      "providerNoteTitle": "Si eres profesional:",
+      "providerNoteBody": "tienes ambos paneles. Puedes ofrecer tus servicios y, cuando necesites contratar a alguien, cambiar al panel cliente sin crear otra cuenta.",
+      "sectionListTitle": "Secciones",
+      "selectedEyebrow": "Paso a paso",
+      "previewTitle": "Ejemplo visual",
+      "preview": {
+        "profile": {
+          "body": "Un perfil completo muestra identidad, servicio principal, reseñas, casos de éxito, cobertura y formas de contacto."
+        },
+        "services": {
+          "title": "Servicios en tu panel",
+          "badge": "Activo",
+          "desc": "Describe qué incluye, precio y alcance.",
+          "detail": "Usa servicios separados para que te encuentren mejor."
+        },
+        "availability": {
+          "title": "Horarios visibles para clientes",
+          "cta": "Ver disponibilidad"
+        },
+        "cases": {
+          "title": "Casos de éxito",
+          "caseTitle": "Buscador y perfiles de ContrataCR",
+          "body": "Cada caso debe mostrar qué hiciste, para quién y el resultado logrado."
+        },
+        "requests": {
+          "title": "Solicitud recibida",
+          "body": "Landing page para clínica dental con formulario y botón de contacto.",
+          "cta": "Responder"
+        },
+        "opportunities": {
+          "title": "Oportunidad abierta",
+          "project": "Sitio web para negocio local",
+          "body": "Publicación de cliente esperando propuestas de profesionales.",
+          "cta": "Enviar propuesta"
+        }
+      },
+      "items": {
+        "profile": {
+          "title": "Completar tu perfil",
+          "short": "Identidad, foto y confianza",
+          "body": "Ayuda a que clientes y profesionales entiendan quién eres antes de contactarte.",
+          "steps": [
+            "Agrega una foto clara o logo si representa mejor tu negocio.",
+            "Revisa tu nombre, teléfono y datos principales.",
+            "Si ofreces servicios, escribe una descripción breve y confiable.",
+            "Verifica tu identidad cuando esté disponible para mostrar más confianza."
+          ],
+          "cta": "Ir a mi perfil"
+        },
+        "services": {
+          "title": "Agregar servicios",
+          "short": "Qué ofreces y cómo te encuentran",
+          "body": "Mientras más claro sea lo que ofreces, más fácil es que te encuentren.",
+          "steps": [
+            "Agrega cada servicio por separado.",
+            "Escribe una descripción concreta de lo que incluye.",
+            "Indica precio, modalidad y lugares donde trabajas.",
+            "Guarda cambios antes de pasar a otra sección."
+          ],
+          "cta": "Ir a mis servicios"
+        },
+        "availability": {
+          "title": "Configurar disponibilidad",
+          "short": "Horarios y formas de contacto",
+          "body": "Define cuándo pueden contactarte o reservar contigo.",
+          "steps": [
+            "Elige si atiendes por ubicación, videconsulta o ambas.",
+            "Marca horarios reales por día.",
+            "Usa cambios puntuales para feriados o días especiales."
+          ],
+          "cta": "Ir a disponibilidad"
+        },
+        "successCases": {
+          "title": "Subir casos de éxito",
+          "short": "Trabajos reales y evidencia",
+          "body": "Muestra trabajos reales para que nuevos clientes confíen más rápido.",
+          "steps": [
+            "Selecciona el servicio relacionado.",
+            "Sube hasta 5 fotos claras por caso.",
+            "Explica qué hiciste, para quién y cuándo fue."
+          ],
+          "cta": "Ir a casos de éxito"
+        },
+        "requests": {
+          "title": "Responder solicitudes",
+          "short": "Clientes que te contactan",
+          "body": "Mantén ordenadas las solicitudes que llegan directamente a tu perfil.",
+          "steps": [
+            "Revisa el detalle antes de responder.",
+            "Coordina por mensaje si necesitas aclarar algo.",
+            "Actualiza el estado para no perder seguimiento."
+          ],
+          "cta": "Ir a solicitudes"
+        },
+        "opportunities": {
+          "title": "Enviar propuestas",
+          "short": "Publicaciones abiertas",
+          "body": "Encuentra publicaciones abiertas que coinciden con tus servicios.",
+          "steps": [
+            "Filtra por servicio para ver oportunidades relevantes.",
+            "Envía una propuesta clara con precio y alcance.",
+            "Da seguimiento desde mensajes si el cliente responde."
+          ],
+          "cta": "Ir a oportunidades"
+        }
+      }
+    },
     "subtitles": {
+      "network": "Administra los profesionales que sigues y las personas que siguen tu perfil.",
       "bookings": "Solicitudes que te enviaron tus clientes.",
       "proposals": "Oportunidades a las que puedes enviar propuestas.",
       "sent_bookings": "Servicios que tú solicitaste.",
@@ -1525,7 +1687,7 @@
     "uploadError": "No se pudo subir la foto.",
     "uploadTooLarge": "La foto es muy pesada. Elige una foto más liviana o toma una nueva.",
     "uploadUnsupported": "No pudimos preparar esa foto. Usa JPG, PNG, WEBP, HEIC o HEIF.",
-    "introCases": "Hasta {perProf} casos por servicio, con hasta {perCase} fotos cada uno.",
+    "introCases": "Puedes agregar casos de éxito ilimitados. Cada caso puede tener hasta {perCase} fotos.",
     "filterAll": "Todos",
     "photosCount": "{count, plural, one {# foto} other {# fotos}}",
     "addCase": "Agregar nuevo caso de éxito",

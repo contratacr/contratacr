@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink,
+  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, CheckCircle2, Search, Star, MapPin, FileText,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -26,6 +26,9 @@ import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
+import { applyPendingFollow } from "@/components/professionals/follow-button";
+import { FollowNetworkTab } from "@/components/professionals/follow-network-tab";
+import { FollowNetworkSummaryLink } from "@/components/professionals/follow-network-summary-link";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
@@ -40,6 +43,7 @@ import { canOffer } from "@/lib/auth/capabilities";
 import { anyVideoConsultCategory } from "@/lib/data/categories";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
+import { Modal } from "@/components/ui/modal";
 import { notificationContext } from "@/lib/notification-link";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -60,7 +64,7 @@ import {
 type Tab =
   | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "suscripcion"
-  | "sent_bookings" | "sent_projects" | "saved"
+  | "sent_bookings" | "sent_projects" | "saved" | "network"
   | "chat" | "assistant" | "notifications" | "soporte" | "cuenta";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,6 +83,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   sent_bookings: <CalendarClock className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
+  network: <Users className="h-4 w-4" />,
   chat: <MessageSquareMore className="h-4 w-4" />,
   assistant: <Bot className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
@@ -87,7 +92,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 };
 
 // Tabs that show a one-line context note under the section title.
-const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings", "sent_projects", "saved"]);
+const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_projects", "saved", "network"]);
 
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
@@ -103,6 +108,21 @@ const OFFER_TABS: Tab[] = [
 ];
 const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved", "soporte"];
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
+
+type GuideItem = {
+  id: string;
+  actionTab: Tab;
+  stepCount: number;
+};
+
+const GUIDE_ITEMS: GuideItem[] = [
+  { id: "profile", actionTab: "profile", stepCount: 4 },
+  { id: "services", actionTab: "services", stepCount: 4 },
+  { id: "availability", actionTab: "availability", stepCount: 3 },
+  { id: "successCases", actionTab: "photos", stepCount: 3 },
+  { id: "requests", actionTab: "bookings", stepCount: 3 },
+  { id: "opportunities", actionTab: "proposals", stepCount: 3 },
+];
 
 function compactDisplayName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -141,6 +161,296 @@ function rememberSeenOpportunityKeys(userId: string, keys: string[]) {
   }
 }
 
+function QuickGuidesModal({
+  open,
+  onClose,
+  isProvider,
+  onGo,
+}: {
+  open: boolean;
+  onClose: () => void;
+  isProvider: boolean;
+  onGo: (tab: Tab) => void;
+}) {
+  const t = useTranslations("proPanel.guides");
+  const visibleGuides = isProvider ? GUIDE_ITEMS : GUIDE_ITEMS.filter((guide) => guide.id === "profile");
+  const [selectedGuideId, setSelectedGuideId] = useState(visibleGuides[0]?.id ?? "profile");
+  const selectedGuide = visibleGuides.find((guide) => guide.id === selectedGuideId) ?? visibleGuides[0];
+
+  if (!open) return null;
+
+  const go = (tab: Tab) => {
+    onClose();
+    onGo(tab);
+  };
+
+  return (
+    <Modal
+      onClose={onClose}
+      title={t("modalTitle")}
+      subtitle={t("modalSubtitle")}
+      size="xl"
+      mobilePresentation="center"
+      bodyClassName="bg-[#f8fbfd] px-4 py-4 sm:px-6 sm:py-5"
+    >
+      <div>
+        <section className="hidden overflow-hidden rounded-2xl border border-[#dbeafe] bg-white shadow-sm">
+          <div className="grid gap-0 md:grid-cols-[1.05fr_0.95fr]">
+            <div className="p-4 sm:p-5">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold text-[#0089bb]">
+                <BookOpen className="h-3.5 w-3.5" />
+                {t("heroEyebrow")}
+              </div>
+              <h3 className="text-xl font-bold leading-tight text-[#162543]">{t("heroTitle")}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[#526277]">{t("heroBody")}</p>
+              {isProvider && (
+                <p className="mt-3 rounded-xl bg-[#f8fbfd] p-3 text-sm leading-relaxed text-[#526277]">
+                  <strong className="font-bold text-[#162543]">{t("providerNoteTitle")}</strong>{" "}
+                  {t("providerNoteBody")}
+                </p>
+              )}
+            </div>
+            <div className="border-t border-[#eef2f6] bg-[#f8fbfd] p-4 md:border-l md:border-t-0">
+              <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo-mark.png" alt="" className="h-14 w-14 rounded-xl object-contain ring-1 ring-[#eef2f6]" />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-base font-bold text-[#111827]">ContrataCR</p>
+                      <Badge variant="verified">{t("exampleProfile.verified")}</Badge>
+                    </div>
+                    <p className="text-sm text-[#526277]">Isaac Sanchez Monge</p>
+                    <p className="mt-1 inline-flex rounded-full bg-[#f3f4f6] px-2 py-0.5 text-xs font-semibold text-[#6b7280]">{t("exampleProfile.service")}</p>
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-[#526277]">
+                  <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">5.0<br /><span className="font-medium">{t("exampleProfile.reviews")}</span></span>
+                  <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">4<br /><span className="font-medium">{t("exampleProfile.cases")}</span></span>
+                  <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">1<br /><span className="font-medium">{t("exampleProfile.year")}</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="hidden grid gap-4 md:grid-cols-2">
+          <article className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
+                <Search className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-base font-bold text-[#162543]">{t("examples.search.title")}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("examples.search.body")}</p>
+              </div>
+            </div>
+            <div className="mt-4 rounded-2xl border border-[#e5e7eb] p-3">
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-mark.png" alt="" className="h-11 w-11 rounded-lg object-contain" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-[#111827]">ContrataCR</p>
+                  <p className="truncate text-xs text-[#6b7280]">{t("exampleProfile.service")}</p>
+                  <div className="mt-1 flex items-center gap-1 text-xs font-bold text-[#162543]"><Star className="h-3.5 w-3.5 fill-[#fb923c] text-[#fb923c]" />5.0 <span className="font-medium text-[#9ca3af]">{t("examples.search.reviewCount")}</span></div>
+                </div>
+                <span className="text-right text-sm font-bold text-[#009FD9]">{t("examples.search.priceLine1")}<br />{t("examples.search.priceLine2")}</span>
+              </div>
+              <div className="mt-3 flex items-center gap-1 border-t border-[#eef2f6] pt-3 text-xs font-semibold text-[#009FD9]"><MapPin className="h-3.5 w-3.5" /> {t("examples.search.location")}</div>
+            </div>
+          </article>
+
+          <article className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
+                <MessageSquareMore className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-base font-bold text-[#162543]">{t("examples.messages.title")}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("examples.messages.body")}</p>
+              </div>
+            </div>
+            <div className="mt-4 space-y-2 rounded-2xl border border-[#e5e7eb] bg-[#f8fbfd] p-3">
+              <div className="max-w-[82%] rounded-2xl bg-white px-3 py-2 text-sm text-[#162543] shadow-sm">{t("examples.messages.client")}</div>
+              <div className="ml-auto max-w-[82%] rounded-2xl bg-[#009FD9] px-3 py-2 text-sm font-medium text-white shadow-sm">{t("examples.messages.pro")}</div>
+            </div>
+          </article>
+        </div>
+
+        <section className="overflow-hidden rounded-2xl border border-[#dbeafe] bg-white shadow-sm">
+          <div className="grid min-h-[560px] gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <aside className="border-b border-[#eef2f6] bg-[#f8fbfd] p-3 lg:border-b-0 lg:border-r">
+              <div className="mb-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#eef2f6]">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold text-[#0089bb]">
+                  <BookOpen className="h-3.5 w-3.5" />
+                  {t("heroEyebrow")}
+                </div>
+                <h3 className="text-base font-extrabold leading-tight text-[#162543]">{t("heroTitle")}</h3>
+                <p className="mt-2 text-sm leading-5 text-[#526277]">{t("heroBody")}</p>
+              </div>
+              <p className="px-2 pb-2 text-xs font-bold uppercase tracking-[0.08em] text-[#8a97aa]">{t("sectionListTitle")}</p>
+              <div className="space-y-1.5">
+                {visibleGuides.map((guide, index) => (
+                  <button
+                    key={guide.id}
+                    type="button"
+                    onClick={() => setSelectedGuideId(guide.id)}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition",
+                      selectedGuide?.id === guide.id ? "bg-white text-[#0089bb] shadow-sm ring-1 ring-[#c7e8f5]" : "text-[#526277] hover:bg-white/80",
+                    )}
+                  >
+                    <span className={cn(
+                      "grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold",
+                      selectedGuide?.id === guide.id ? "bg-[#009FD9] text-white" : "bg-white text-[#64748b]",
+                    )}>
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-bold">{t(`items.${guide.id}.title`)}</span>
+                      <span className="mt-0.5 block truncate text-xs text-[#8a97aa]">{t(`items.${guide.id}.short`)}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_330px]">
+              <div className="p-4 sm:p-5">
+                {selectedGuide && (
+                  <>
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#009FD9]">{t("selectedEyebrow")}</p>
+                    <h3 className="mt-1 text-xl font-bold text-[#162543]">{t(`items.${selectedGuide.id}.title`)}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-[#526277]">{t(`items.${selectedGuide.id}.body`)}</p>
+                    <ol className="mt-5 space-y-3">
+                      {Array.from({ length: selectedGuide.stepCount }, (_, index) => (
+                        <li key={index} className="flex gap-3 rounded-xl bg-[#f8fbfd] p-3 text-sm leading-relaxed text-[#374151]">
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
+                          <span>{t(`items.${selectedGuide.id}.steps.${index}`)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    <Button type="button" className="mt-5 rounded-full px-5" onClick={() => go(selectedGuide.actionTab)}>
+                      {t(`items.${selectedGuide.id}.cta`)}
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              <div className="border-t border-[#eef2f6] bg-[#f8fbfd] p-4 md:border-l md:border-t-0">
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-[#8a97aa]">{t("previewTitle")}</p>
+                <GuidePreview id={selectedGuide?.id ?? "profile"} t={t} />
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </Modal>
+  );
+}
+
+function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslations<"proPanel.guides">> }) {
+  if (id === "services") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h4 className="font-bold text-[#162543]">{t("preview.services.title")}</h4>
+          <span className="rounded-full bg-[#EBF5FB] px-2 py-1 text-xs font-bold text-[#0089bb]">{t("preview.services.badge")}</span>
+        </div>
+        <div className="space-y-3">
+          <div className="rounded-xl border border-[#e5e7eb] p-3">
+            <p className="font-bold text-[#111827]">Desarrollo web</p>
+            <p className="mt-1 text-xs text-[#6b7280]">{t("preview.services.desc")}</p>
+            <div className="mt-3 h-2 rounded-full bg-[#EBF5FB]" />
+          </div>
+          <div className="rounded-xl border border-[#e5e7eb] p-3">
+            <p className="font-bold text-[#111827]">Automatizaciones</p>
+            <p className="mt-1 text-xs text-[#6b7280]">{t("preview.services.detail")}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (id === "availability") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-[#162543]">{t("preview.availability.title")}</h4>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+          {["Mañana", "31 jul", "1 ago"].map((day) => (
+            <div key={day}>
+              <p className="mb-2 font-bold text-[#6b7280]">{day}</p>
+              {["09:00", "14:00"].map((time) => (
+                <div key={time} className="mb-2 rounded-lg bg-[#EBF5FB] px-2 py-1.5 font-bold text-[#0089bb]">{time}</div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 rounded-full bg-[#009FD9] py-2 text-center text-sm font-bold text-white">{t("preview.availability.cta")}</div>
+      </div>
+    );
+  }
+
+  if (id === "successCases") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-[#162543]">{t("preview.cases.title")}</h4>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="aspect-square rounded-xl bg-[#EBF5FB] p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.png" alt="" className="h-full w-full object-contain" />
+          </div>
+          <div className="aspect-square rounded-xl bg-[#eef2f6] p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/ai-assistant-robot.png" alt="" className="h-full w-full object-contain" />
+          </div>
+        </div>
+        <p className="mt-3 text-sm font-bold text-[#111827]">{t("preview.cases.caseTitle")}</p>
+        <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{t("preview.cases.body")}</p>
+      </div>
+    );
+  }
+
+  if (id === "requests" || id === "opportunities") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-[#162543]">{id === "requests" ? t("preview.requests.title") : t("preview.opportunities.title")}</h4>
+        <div className="mt-4 space-y-3">
+          <div className="rounded-xl border border-[#e5e7eb] p-3">
+            <p className="text-sm font-bold text-[#111827]">{id === "requests" ? "Gerardo Solís" : t("preview.opportunities.project")}</p>
+            <p className="mt-1 text-xs text-[#6b7280]">{id === "requests" ? t("preview.requests.body") : t("preview.opportunities.body")}</p>
+          </div>
+          <div className="rounded-xl bg-[#009FD9] px-3 py-2 text-center text-sm font-bold text-white">{id === "requests" ? t("preview.requests.cta") : t("preview.opportunities.cta")}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-mark.png" alt="" className="h-16 w-16 rounded-xl object-contain ring-1 ring-[#eef2f6]" />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-lg font-bold text-[#111827]">ContrataCR</p>
+            <Badge variant="verified">{t("exampleProfile.verified")}</Badge>
+          </div>
+          <p className="text-sm text-[#526277]">Isaac Alberto Sanchez Monge</p>
+          <p className="mt-1 inline-flex rounded-full bg-[#f3f4f6] px-2 py-0.5 text-xs font-semibold text-[#6b7280]">{t("exampleProfile.service")}</p>
+        </div>
+      </div>
+      <p className="mt-4 text-xs leading-relaxed text-[#526277]">{t("preview.profile.body")}</p>
+      <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-[#526277]">
+        <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">5.0<br /><span className="font-medium">{t("exampleProfile.reviews")}</span></span>
+        <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">4<br /><span className="font-medium">{t("exampleProfile.cases")}</span></span>
+        <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">1<br /><span className="font-medium">{t("exampleProfile.year")}</span></span>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -167,6 +477,8 @@ export default function DashboardPage() {
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [guidesOpen, setGuidesOpen] = useState(false);
+  const [networkModal, setNetworkModal] = useState<"following" | "followers" | null>(null);
   const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
@@ -259,6 +571,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (authLoading || !user) return;
     applyPendingSavedPro();
+    applyPendingFollow(user.id);
   }, [authLoading, user]);
 
   useEffect(() => {
@@ -651,7 +964,7 @@ export default function DashboardPage() {
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = modeTabs;
   const mobileSectionTabs = sidebarTabs;
-  const mobileFullScreenTab = false;
+  const mobileFullScreenTab = activeTab === "network";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
   const profileCompletionPercent = proForCompletion ? computeCompletion(proForCompletion).percent : null;
   const showProfileCompletion =
@@ -684,6 +997,34 @@ export default function DashboardPage() {
     );
   }
 
+  function topNavButton(tab: Tab) {
+    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
+    return (
+      <button
+        key={tab}
+        type="button"
+        data-testid={`panel-tab-${tab}`}
+        onClick={() => setTab(tab)}
+        className={cn(
+          "relative inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-bold transition",
+          activeTab === tab
+            ? "bg-[#EBF5FB] text-[#0089bb] shadow-sm ring-1 ring-inset ring-[#b9e4f2]"
+            : "text-[#526277] hover:bg-[#f3f7fa] hover:text-[#162543]",
+        )}
+      >
+        <span className="relative inline-flex shrink-0">
+          {TAB_ICONS[tab]}
+          {badge > 0 && (
+            <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
+              {badge > 9 ? "9+" : badge}
+            </span>
+          )}
+        </span>
+        <span className="whitespace-nowrap">{t(`tabs.${tab}`)}</span>
+      </button>
+    );
+  }
+
   function signOutButton({ mobile = false }: { mobile?: boolean } = {}) {
     return (
       <button
@@ -703,6 +1044,47 @@ export default function DashboardPage() {
         </span>
         {t("signOut")}
       </button>
+    );
+  }
+
+  function desktopSwitchPanelButton() {
+    if (!isProvider) return null;
+    const nextMode: Mode = mode === "offer" ? "use" : "offer";
+    return (
+      <button
+        type="button"
+        onClick={() => handleSwitchMode(nextMode)}
+        className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border border-[#dfe8f0] bg-white px-3.5 text-sm font-bold text-[#162543] shadow-sm transition hover:border-[#b9ddea] hover:bg-[#f8fbfd]"
+      >
+        <Repeat2 className="h-4 w-4 text-[#64748b]" />
+        {mode === "offer" ? t("switchToClientPanel") : t("switchToProfessionalPanel")}
+      </button>
+    );
+  }
+
+  function desktopPanelNav() {
+    if (mobileFullScreenTab) return null;
+    return (
+      <div className="mb-6 hidden lg:block">
+        <div className="rounded-2xl border border-[#dfe8f0] bg-white p-2 shadow-sm">
+          <div className="flex min-w-0 items-center gap-2">
+            {desktopSwitchPanelButton()}
+            {isProvider && <div className="h-7 w-px shrink-0 bg-[#e5edf3]" />}
+            <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-1 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {sidebarTabs.map(topNavButton)}
+            </nav>
+            <div className="h-7 w-px shrink-0 bg-[#e5edf3]" />
+            <button
+              type="button"
+              onClick={() => signOutToHome(locale)}
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#162543]"
+            >
+              <LogOut className="h-4 w-4 text-[#64748b]" />
+              {t("signOut")}
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -789,6 +1171,23 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
+      <QuickGuidesModal
+        open={guidesOpen}
+        onClose={() => setGuidesOpen(false)}
+        isProvider={isProvider}
+        onGo={(nextTab) => setTab(nextTab)}
+      />
+      {networkModal && (
+        <Modal
+          onClose={() => setNetworkModal(null)}
+          title={networkModal === "followers" ? t("tabs.network") : t("tabs.network")}
+          size="xl"
+          mobilePresentation="sheet"
+          bodyClassName="bg-[#f3f7fa] p-0"
+        >
+          <FollowNetworkTab initialView={networkModal} onBack={() => setNetworkModal(null)} />
+        </Modal>
+      )}
       {opportunityWelcomeCount !== null && (
         <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#0f172a]/45 p-0 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
           <div
@@ -830,14 +1229,14 @@ export default function DashboardPage() {
       )}
       <main className="flex-1 min-h-[calc(100svh-88px)]">
         <div className={cn(
-          "dashboard-panel-content mx-auto max-w-6xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8",
+          "dashboard-panel-content mx-auto max-w-7xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8",
           mobileSectionOpen && "px-0 pt-0 sm:px-0 lg:px-8 lg:pt-8",
           mobileFullScreenTab && "max-w-none px-0 pb-0 pt-0 sm:px-0 lg:max-w-7xl lg:px-8 lg:pb-8 lg:pt-8",
         )}>
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
               ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
               the content by a single hairline divider. No gradient/decoration. */}
-          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:flex" : "flex")}>
+          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-center sm:justify-between", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:flex" : "flex")}>
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <ImagePreviewDialog
                 src={headerAvatar}
@@ -862,9 +1261,18 @@ export default function DashboardPage() {
                 </h1>
                 <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-2">
                   {identityBadge()}
+                  <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                 </div>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setGuidesOpen(true)}
+              className="inline-flex shrink-0 items-center justify-center gap-2 px-1 py-2 text-sm font-bold text-[#162543] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+            >
+              <FileText className="h-5 w-5" />
+              {t("guides.headerButton")}
+            </button>
           </div>
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
@@ -921,6 +1329,8 @@ export default function DashboardPage() {
                 </div>
               )}
 
+              {desktopPanelNav()}
+
               {activeTab !== "home" && !mobileFullScreenTab && (
                 <div className="sticky top-0 z-20 grid min-h-16 grid-cols-[64px_minmax(0,1fr)_64px] items-center border-b border-[#e5e7eb] bg-white px-2 py-2 text-[#162543] lg:hidden">
                   <button
@@ -946,24 +1356,7 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Sidebar nav (desktop only); mobile renders the same sections as full-screen entries. */}
-                <nav className="hidden lg:block lg:w-60 shrink-0 space-y-3">
-                  <Card>
-                    <CardContent className="p-2">
-                      {switchPanelButton()}
-                      {isProvider && <div className="my-2 border-t border-[#f3f4f6]" />}
-                      <div>{sidebarTabs.map(navButton)}</div>
-                      <div className="my-2 border-t border-[#f3f4f6] pt-2">
-                        {signOutButton()}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* The "Ofrecer mis servicios" invitation lives at the END of "Mi perfil"
-                      (BasicProfileSection) for a client-only account — not here in the sidebar. */}
-                </nav>
-
+              <div className="flex flex-col">
                 {/* Main content — min-w-0 so a long unbroken string inside a card can't
                     grow this flex column past the available width and break the page. */}
                 <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
@@ -971,7 +1364,8 @@ export default function DashboardPage() {
                     <HeaderSaveStatus />
                     <Card className={cn(
                       activeTab === "chat" && "overflow-hidden",
-                      (mobileFullScreenTab || mobileSectionOpen) && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:min-h-0 lg:rounded-xl lg:border lg:shadow-sm",
+                      mobileFullScreenTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none",
+                      !mobileFullScreenTab && mobileSectionOpen && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:min-h-0 lg:rounded-xl lg:border lg:shadow-sm",
                     )}>
                       {activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
                         <div className="relative">
@@ -1128,6 +1522,7 @@ export default function DashboardPage() {
                         {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
+                        {activeTab === "network" && <FollowNetworkTab onBack={() => setTab("home")} />}
                         {activeTab === "notifications" && <NotificationsList />}
                         {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
                         {activeTab === "cuenta" && (

@@ -7,13 +7,14 @@ import { useReportSaveStatus } from "@/components/dashboard/save-status-context"
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { cldThumb } from "@/lib/cloudinary";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { casoProfession, type ServiceLike } from "@/lib/services";
+import { CASE_PHOTOS_PER_CASE, casoProfession, type ServiceLike } from "@/lib/services";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 
@@ -34,8 +35,8 @@ export type SuccessCase = {
 // Legacy item shape (photos-only) — read for back-compat so nothing is lost.
 type LegacyItem = { url?: string; serviceId?: string; profession?: string };
 
-export const MAX_CASES_PER_PROFESSION = 3;
-export const MAX_PHOTOS_PER_CASE = 3;
+export const MAX_CASES_PER_PROFESSION = Number.POSITIVE_INFINITY;
+export const MAX_PHOTOS_PER_CASE = CASE_PHOTOS_PER_CASE;
 
 interface PhotoGalleryProps {
   professionalId: string;
@@ -173,8 +174,6 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-sm text-[#6b7280]">{t.rich("introCases", { ...rich, perProf: MAX_CASES_PER_PROFESSION, perCase: MAX_PHOTOS_PER_CASE })}</p>
-
       {professions.length === 0 && (
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">{t.rich("noServices", rich)}</div>
       )}
@@ -269,6 +268,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           onClose={() => setDraft(null)}
           title={draftIsEdit ? t("editCase") : t("newCase")}
           closeLabel={t("cancel")}
+          mobilePresentation="center"
           footer={
             <>
               <Button type="button" variant="outline" onClick={() => setDraft(null)}>{t("cancel")}</Button>
@@ -280,9 +280,14 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             {professions.length > 1 && (
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseProfession")}</label>
-                <select value={draft.profession} onChange={(e) => setDraft((d) => (d ? { ...d, profession: e.target.value } : d))} className={cn(inputClass, "cursor-pointer")}>
-                  {professions.map((p) => <option key={p} value={p}>{label(p)}</option>)}
-                </select>
+                <Select value={draft.profession} onValueChange={(value) => setDraft((d) => (d ? { ...d, profession: value } : d))}>
+                  <SelectTrigger className="border-[#e5e7eb] px-3.5 text-[#111827] focus-visible:ring-2 focus-visible:ring-[#009FD9]/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {professions.map((p) => <SelectItem key={p} value={p}>{label(p)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 

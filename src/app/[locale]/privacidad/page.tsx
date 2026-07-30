@@ -22,7 +22,7 @@ const ES_SECTIONS: LegalSection[] = [
       ] },
       { k: "sub", text: "2.2 Actividad como Cliente" },
       { k: "ul", items: [
-        "Solicitudes, publicaciones, propuestas recibidas, citas, reseñas y profesionales guardados.",
+        "Solicitudes, publicaciones, propuestas recibidas, citas, reseñas, profesionales guardados y relaciones de seguimiento.",
         "Información incluida por usted en descripciones, notas, reportes y conversaciones.",
         "Zona, ubicación o punto geográfico cuando lo proporciona o autoriza.",
       ] },
@@ -166,7 +166,7 @@ const EN_SECTIONS: LegalSection[] = [
     { k: "sub", text: "2.1 Account and identity" },
     { k: "ul", items: ["Name, email, phone number, and basic data shared by sign-in providers such as Google.", "Credentials securely managed by our authentication provider. ContrataCR does not keep your password in readable text.", "Identification number when you choose to provide it or when needed for a request, plus the protected verification result."] },
     { k: "sub", text: "2.2 Client and Professional activity" },
-    { k: "ul", items: ["Requests, posts, appointments, proposals, reviews, saved professionals, and related activity.", "Professional profile data, services, location, work areas, portfolio, availability, and contact details.", "Content you include in descriptions, notes, reports, and conversations."] },
+    { k: "ul", items: ["Requests, posts, appointments, proposals, reviews, saved professionals, following relationships, and related activity.", "Professional profile data, services, location, work areas, portfolio, availability, and contact details.", "Content you include in descriptions, notes, reports, and conversations."] },
     { k: "sub", text: "2.3 Messages, files, support, and AI" },
     { k: "ul", items: ["Private messages and the data needed to identify participants and conversation context.", "Images and PDF documents attached to messages or support requests.", "AI assistant prompts, responses, and saved history when you are signed in. Do not submit unnecessary sensitive information."] },
     { k: "sub", text: "2.4 Device, location, and usage" },

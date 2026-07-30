@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
-  Share2, Flag, Award, SearchX, FileText, Globe,
+  Share2, Flag, Award, SearchX, FileText, Globe, Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
@@ -19,7 +19,7 @@ import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, proDisplayName, cn } from "@/lib/utils";
 import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
-import { casoProfession, countCases } from "@/lib/services";
+import { CASE_PHOTOS_PER_CASE, casoProfession, countCases } from "@/lib/services";
 import { addTaxIncludedToPriceLabel, formatServicePrice, primaryPricingLabel, splitPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
@@ -35,6 +35,7 @@ import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
+import { FollowButton } from "@/components/professionals/follow-button";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
@@ -197,6 +198,19 @@ export default function ProfilePage() {
     }
     load();
   }, [locale, routeSlug]);
+
+  useEffect(() => {
+    if (!professional?.id) return;
+    const onFollowChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ professionalId?: string; delta?: number }>).detail;
+      if (detail?.professionalId !== professional.id || !detail.delta) return;
+      setProfessional((current) => current
+        ? { ...current, followerCount: Math.max(0, (current.followerCount ?? 0) + detail.delta!) }
+        : current);
+    };
+    window.addEventListener("professionalFollowsChanged", onFollowChange);
+    return () => window.removeEventListener("professionalFollowsChanged", onFollowChange);
+  }, [professional?.id]);
 
   // Resolve the viewer's role-aware panel route up front (parallel, non-blocking) so the
   // "Profesional no encontrado" screen can offer "Volver a mi panel" even though load()
@@ -373,6 +387,7 @@ export default function ProfilePage() {
     isVerified: professional.verificationStatus === "verified",
     videoconsulta: professional.videoconsulta,
     coverage: professional.coverage,
+    followerCount: professional.followerCount,
   };
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
@@ -451,11 +466,14 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
+                  <div className="mt-3">
+                    <FollowButton professionalId={professional.id} isOwn={isOwn} initialFollowers={professional.followerCount ?? 0} />
+                  </div>
                 </div>
               </div>
 
               {/* Stats strip — rating · años de exp · casos de éxito. */}
-              <div className="flex items-center gap-5 self-start shrink-0 sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-3 self-start shrink-0 sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5">
                 <button type="button" onClick={() => setActiveTab("resenas")} className="text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
@@ -481,6 +499,17 @@ export default function ProfilePage() {
                     <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statCasos")}</p>
                   </button>
                 )}
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Users className="h-4 w-4 text-[#009FD9]" />
+                    <span className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-[#9ca3af]">
+                    {locale === "en"
+                      ? ((professional.followerCount ?? 0) === 1 ? "follower" : "followers")
+                      : ((professional.followerCount ?? 0) === 1 ? "seguidor" : "seguidores")}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -603,12 +632,14 @@ export default function ProfilePage() {
               <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] overflow-hidden">
 
                 {/* Tab bar */}
-                <div className="flex border-b border-[#e5e7eb] overflow-x-auto">
+                <div className="hide-scrollbar flex overflow-x-auto border-b border-[#e5e7eb]" role="tablist" aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}>
                   {TABS.map(tab => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className="relative shrink-0 px-5 py-4 text-sm font-semibold transition-colors"
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
+                      className="relative shrink-0 px-5 py-4 text-sm font-semibold transition-colors hover:bg-[#f8fbfd]"
                       style={{ color: activeTab === tab.id ? "#009FD9" : "#6b7280" }}
                     >
                       {tab.label}
@@ -757,7 +788,7 @@ export default function ProfilePage() {
                             }
                           }
                           for (const [prof, photos] of legacyByProf) {
-                            for (let i = 0; i < photos.length; i += 3) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
+                            for (let i = 0; i < photos.length; i += CASE_PHOTOS_PER_CASE) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + CASE_PHOTOS_PER_CASE) });
                           }
                           // Client-facing showcase: profession filter + a polished case-card grid.
                           return <CaseShowcase professionalId={professional.id} cases={caseList} professions={profsOrder} isOwn={isOwn} />;

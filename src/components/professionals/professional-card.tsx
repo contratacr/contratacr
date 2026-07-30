@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { Star } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, Star, Users } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -51,6 +51,8 @@ export type ProfessionalCardData = {
   videoconsulta?: boolean;
   /** Count of "casos de éxito" (portfolio photos) — drives the preview link. */
   portfolioCount?: number;
+  /** Public follower count for the professional profile. */
+  followerCount?: number;
   /** Count of certifications — drives the compact "Ver certificaciones (N)" link. */
   certificationCount?: number;
   /** Insurance networks (aseguradoras) the pro belongs to. */
@@ -164,6 +166,22 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
     const params = new URLSearchParams({ tab: "resenas" });
     return `/profesionales/${professional.slug}?${params.toString()}#resenas`;
   })();
+  const casesHref = (() => {
+    const params = new URLSearchParams({ tab: "casos" });
+    return `/profesionales/${professional.slug}?${params.toString()}#casos`;
+  })();
+  const portfolioCount = professional.portfolioCount ?? 0;
+  const followerCount = professional.followerCount ?? 0;
+  const yearsExperience = professional.yearsExperience ?? 0;
+  const casesLabel = locale === "en"
+    ? `${portfolioCount} success ${portfolioCount === 1 ? "case" : "cases"}`
+    : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
+  const followersLabel = locale === "en"
+    ? `${followerCount} ${followerCount === 1 ? "follower" : "followers"}`
+    : `${followerCount} ${followerCount === 1 ? "seguidor" : "seguidores"}`;
+  const experienceLabel = locale === "en"
+    ? `${yearsExperience} ${yearsExperience === 1 ? "yr exp." : "yrs exp."}`
+    : `${yearsExperience} ${yearsExperience === 1 ? "año exp." : "años exp."}`;
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
@@ -333,21 +351,37 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {/* Rating + review count — DIRECTLY under the tags (only the count links out). */}
           <div className="basis-full lg:basis-auto">
             {professional.reviewCount > 0 ? (
-              <Link
-                href={reviewsHref}
-                className="relative z-10 inline-flex w-fit items-center gap-1.5 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-                aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
-              >
-                <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
-                <span className="text-[13px] font-bold text-[#111827] transition-colors group-hover:text-[#0089BB]">{professional.ratingAvg.toFixed(1)}</span>
-                <span className="text-[11px] font-medium text-[#9ca3af] hover:underline">
-                  ({tCard("reviewsCount", { count: professional.reviewCount })})
-                </span>
-              </Link>
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-[#8a97a8]">
+                <Link
+                  href={reviewsHref}
+                  className="relative z-10 inline-flex w-fit items-center gap-1.5 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                  aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+                >
+                  <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
+                  <span className="text-[13px] font-bold text-[#111827] transition-colors group-hover:text-[#0089BB]">{professional.ratingAvg.toFixed(1)}</span>
+                  <span className="font-medium text-[#9ca3af] hover:underline">
+                    ({tCard("reviewsCount", { count: professional.reviewCount })})
+                  </span>
+                </Link>
+                <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                  <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                  <span className="truncate">{casesLabel}</span>
+                </Link>
+                {yearsExperience > 0 && <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5 text-[#9ca3af]" />{experienceLabel}</span>}
+                <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5 text-[#9ca3af]" />{followersLabel}</span>
+              </div>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
-                <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
-              </span>
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-[#9ca3af]">
+                <span className="inline-flex items-center gap-1.5">
+                  <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
+                </span>
+                <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                  <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{casesLabel}</span>
+                </Link>
+                {yearsExperience > 0 && <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{experienceLabel}</span>}
+                <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" />{followersLabel}</span>
+              </div>
             )}
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -81,6 +82,7 @@ function setPostLoginPrompt(userId = "") {
 export default function LoginPage() {
   const t = useTranslations("auth.login");
   const locale = useLocale();
+  const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
@@ -89,6 +91,8 @@ export default function LoginPage() {
   // When a manual login fails because the email is a Google-only account, highlight
   // the provider button and show a specific message.
   const [socialHint, setSocialHint] = useState<"google" | null>(null);
+  const registerRedirect = searchParams.get("redirect");
+  const registerHref = registerRedirect ? `/registro?redirect=${encodeURIComponent(registerRedirect)}` : "/registro";
 
   // Built inside the component so the validation messages are localized.
   const schema = useMemo(
@@ -324,7 +328,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
             {t("noAccount")}{" "}
-            <Link href="/registro" className="text-[#009FD9] font-medium hover:underline">
+            <Link href={registerHref} className="text-[#009FD9] font-medium hover:underline">
               {t("signUp")}
             </Link>
           </p>

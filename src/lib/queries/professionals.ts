@@ -512,6 +512,23 @@ async function searchProfessionalsUncached(
       // "Cerca de mí" is a real location filter: exact professional pins or
       // exact workplace pins inside a short radius count first. For video-compatible
       // services, keep nationwide videoconsulta pros as remote results after that.
+      if (mapped.length > 0) {
+        try {
+          const { data: follows } = await supabase
+            .from("professional_follows")
+            .select("professional_id")
+            .in("professional_id", mapped.map((p) => p.id));
+          const counts = new Map<string, number>();
+          for (const row of follows ?? []) {
+            const id = (row as { professional_id?: string }).professional_id;
+            if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+          }
+          mapped = mapped.map((p) => ({ ...p, followerCount: counts.get(p.id) ?? 0 }));
+        } catch {
+          mapped = mapped.map((p) => ({ ...p, followerCount: 0 }));
+        }
+      }
+
       if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
         const { nearLat, nearLng } = filters;
         const includeVideoNationwideForNear =
@@ -793,6 +810,14 @@ export async function getProfessionalBySlug(
       const visibleServices = activeServices(rawServices);
       const legacyProfessions = (proRow.professions as string[]) ?? (proRow.category_id ? [proRow.category_id] : []);
       const publicProfessions = publicProfessionsFromServices(rawServices, legacyProfessions);
+      let followerCount = 0;
+      try {
+        const { count } = await supabase
+          .from("professional_follows")
+          .select("id", { count: "exact", head: true })
+          .eq("professional_id", proRow.id);
+        followerCount = count ?? 0;
+      } catch { /* table not migrated yet */ }
 
       return {
         id: proRow.id,
@@ -811,6 +836,7 @@ export async function getProfessionalBySlug(
         cantonName: (proRow.cantones as any)?.name ?? "",
         ratingAvg: Number(proRow.rating_avg ?? 0),
         reviewCount: proRow.review_count ?? 0,
+        followerCount,
         yearsExperience: proRow.years_experience,
         hourlyRate: proRow.hourly_rate,
         isVerified: proRow.is_verified ?? false,

@@ -196,6 +196,46 @@ export async function GET(req: Request) {
       userMetadata.is_provider !== true &&
       !professional;
 
+    const [followingRowsResult, followerRowsResult] = await Promise.all([
+      db
+        .from("professional_follows")
+        .select("id, professional_id, created_at")
+        .eq("follower_id", profileId)
+        .order("created_at", { ascending: false }),
+      professional
+        ? db
+            .from("professional_follows")
+            .select("id, follower_id, created_at")
+            .eq("professional_id", professional.id)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const followingRows = followingRowsResult.data ?? [];
+    const followerRows = followerRowsResult.data ?? [];
+    const followedProfessionalIds = followingRows.map((row) => row.professional_id);
+    const followerProfileIds = followerRows.map((row) => row.follower_id);
+    const [followedProsResult, followerProfilesResult] = await Promise.all([
+      followedProfessionalIds.length > 0
+        ? db
+            .from("professionals")
+            .select("id, slug, business_name, profile_id, profiles(full_name, avatar_url)")
+            .in("id", followedProfessionalIds)
+        : Promise.resolve({ data: [] }),
+      followerProfileIds.length > 0
+        ? db
+            .from("profiles")
+            .select("id, full_name, avatar_url, professionals(id, slug, business_name)")
+            .in("id", followerProfileIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+    const followedPros = new Map((followedProsResult.data ?? []).map((item) => [item.id, item]));
+    const followerProfiles = new Map((followerProfilesResult.data ?? []).map((item) => [item.id, item]));
+    const followNetwork = {
+      following: followingRows.map((row) => ({ ...row, professional: followedPros.get(row.professional_id) ?? null })),
+      followers: followerRows.map((row) => ({ ...row, profile: followerProfiles.get(row.follower_id) ?? null })),
+    };
+
     const { data: tickets } = await db
       .from("support_tickets")
       .select("*")
@@ -282,6 +322,7 @@ export async function GET(req: Request) {
       appeals,
       reports,
       analytics,
+      followNetwork,
     });
   }
 

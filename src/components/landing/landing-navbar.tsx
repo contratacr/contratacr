@@ -785,8 +785,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
       const baseHref = href.split("?")[0] ?? href;
       const isActive = nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
       return cn(
-        "flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]",
-        isActive && "bg-[#eef9fd] text-[#009FD9]",
+        "flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#526277] transition-colors active:bg-[#eef9fd] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]",
+        isActive && "bg-[#eef9fd] text-[#102746]",
       );
     },
     [nativePendingHref, panelHref, pathname],
@@ -1511,7 +1511,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
-                className="flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]"
+                className="flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#526277] transition-colors active:bg-[#eef9fd] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]"
               >
                 <Bot className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>

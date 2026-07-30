@@ -1596,6 +1596,18 @@ export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   restaurantes: "Restaurants & food",
 };
 
+function repairCategoryLabel(label: string): string {
+  return label
+    .replace(/\bJardiner\?a\b/gi, "Jardiner\u00eda")
+    .replace(/\bPlomer\?a\b/gi, "Plomer\u00eda")
+    .replace(/\bCategor\?a\b/gi, "Categor\u00eda")
+    .replace(/\bRevisi\?n\b/gi, "Revisi\u00f3n")
+    .replace(/\bCl\?nica\b/gi, "Cl\u00ednica")
+    .replace(/\bp\?gina\b/gi, "p\u00e1gina")
+    .replace(/\bdise\?o\b/gi, "dise\u00f1o")
+    .replace(/\brese\?a\b/gi, "rese\u00f1a");
+}
+
 /* ─── Get category label from ID (locale-aware) ─── */
 export function getCategoryLabel(id: string, locale?: string): string {
   const override = CATEGORY_CATALOG_OVERRIDES.get(id);
@@ -1615,10 +1627,10 @@ export function getCategoryLabel(id: string, locale?: string): string {
   // that prefix before de-slugging (e.g. "sg_vendedor_de_botellas" → "Vendedor de
   // botellas") for back-compat — this is the server-side fallback when the dynamic
   // registry isn't loaded.
-  return id
+  return repairCategoryLabel(id
     .replace(/^sg_/, "")
     .replace(/_/g, " ")
-    .replace(/^\w/, (c) => c.toUpperCase());
+    .replace(/^\w/, (c) => c.toUpperCase()));
 }
 
 /* ─── Get category GROUP label from group ID (locale-aware) ─── */

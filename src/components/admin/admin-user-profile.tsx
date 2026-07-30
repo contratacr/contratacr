@@ -5,6 +5,7 @@ import {
   ArrowLeft, Loader2, ExternalLink, ShieldCheck, Headset, Flag, FolderOpen,
   CalendarDays, Ban, ShieldOff, Mail, Phone, IdCard, BadgeCheck, History,
   CheckCircle2, RotateCcw, XCircle, Clock3, MousePointerClick,
+  Users,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getInitials } from "@/lib/utils";
@@ -49,6 +50,22 @@ type Analytics = {
   lastInteractionAt: string | null;
   bySource: { label: string; value: number }[];
 };
+type FollowNetworkItem = {
+  id: string;
+  created_at: string;
+  professional?: {
+    id: string;
+    slug: string;
+    business_name: string | null;
+    profiles?: { full_name: string | null; avatar_url: string | null } | Array<{ full_name: string | null; avatar_url: string | null }>;
+  } | null;
+  profile?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    professionals?: { id: string; slug: string; business_name: string | null } | Array<{ id: string; slug: string; business_name: string | null }>;
+  } | null;
+};
 
 type Data = {
   profile: Profile;
@@ -61,6 +78,7 @@ type Data = {
   appeals: Appeal[];
   reports: Report[];
   analytics: Analytics | null;
+  followNetwork?: { following: FollowNetworkItem[]; followers: FollowNetworkItem[] };
 };
 
 function fmt(d?: string | null) {
@@ -184,7 +202,7 @@ export function AdminUserProfile({
     );
   }
 
-  const { profile, professional: pro, professionalSignupIncomplete, tickets, projects, bookings, verificationLog, appeals, reports, analytics } = data;
+  const { profile, professional: pro, professionalSignupIncomplete, tickets, projects, bookings, verificationLog, appeals, reports, analytics, followNetwork } = data;
   const identityStatus = accountVerificationStatus(profile, pro);
   const isIdentityVerified = identityStatus === "verified";
   const isIdentityPending = identityStatus === "pending";
@@ -465,6 +483,57 @@ export function AdminUserProfile({
           </div>
         </Section>
       )}
+
+      <Section icon={Users} title="Seguidos y seguidores">
+        <div className="grid gap-4 p-4 lg:grid-cols-2">
+          {([
+            { key: "following" as const, label: "Seguidos", items: followNetwork?.following ?? [] },
+            { key: "followers" as const, label: "Seguidores", items: followNetwork?.followers ?? [] },
+          ]).map((group) => (
+            <div key={group.key} className="overflow-hidden rounded-xl border border-[#e5e7eb]">
+              <div className="flex items-center justify-between border-b border-[#edf1f4] bg-[#f8fafc] px-3 py-2.5">
+                <h3 className="text-sm font-bold text-[#334155]">{group.label}</h3>
+                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[#526277] ring-1 ring-[#dce5ec]">
+                  {group.items.length}
+                </span>
+              </div>
+              {group.items.length === 0 ? (
+                <p className="px-3 py-6 text-center text-sm text-[#94a3b8]">Sin relaciones registradas.</p>
+              ) : (
+                <div className="max-h-72 overflow-y-auto">
+                  {group.items.map((item) => {
+                    const followedProfile = item.professional
+                      ? (Array.isArray(item.professional.profiles) ? item.professional.profiles[0] : item.professional.profiles)
+                      : null;
+                    const followerProfessional = item.profile
+                      ? (Array.isArray(item.profile.professionals) ? item.profile.professionals[0] : item.profile.professionals)
+                      : null;
+                    const name = group.key === "following"
+                      ? item.professional?.business_name || followedProfile?.full_name || "Profesional"
+                      : followerProfessional?.business_name || item.profile?.full_name || "Usuario";
+                    const accountId = group.key === "following"
+                      ? item.professional?.id
+                      : item.profile?.id;
+                    return (
+                      <div key={item.id} className="flex items-center justify-between gap-3 border-b border-[#edf1f4] px-3 py-2.5 last:border-b-0">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[#162543]">{name}</p>
+                          <p className="text-[11px] text-[#8492a5]">Desde {fmtDate(item.created_at)}</p>
+                        </div>
+                        {accountId && (
+                          <Link href={`/admin/usuarios/${accountId}`} className="shrink-0 text-xs font-bold text-[#0089bb] hover:underline">
+                            Ver cuenta
+                          </Link>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </Section>
 
       {/* ── Support tickets ── */}
       <Section icon={Headset} title="Tickets de soporte" count={tickets.length}>

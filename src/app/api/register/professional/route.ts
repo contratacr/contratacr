@@ -132,6 +132,7 @@ export async function POST(req: Request) {
       cedula: bodyCedula,
       photoUrl,
       businessName: bodyBusinessName,
+      publicBusinessNameOnly: bodyPublicBusinessNameOnly,
       workplaces: bodyWorkplaces,
       coverageAreas: bodyCoverage,
       searchProvincias: bodySearchProv,
@@ -148,6 +149,7 @@ export async function POST(req: Request) {
     }
     const safeBio = limitTrimmedText(bio, PROFILE_BIO_MAX_LENGTH);
     const businessName = limitTrimmedText(bodyBusinessName, NAME_MAX_LENGTH) || null;
+    const publicBusinessNameOnly = !!businessName && bodyPublicBusinessNameOnly === true;
     // Workplaces: [{ id, name, address, lat, lng, provinciaId, cantonId, distrito }]
     // — fixed-location pins (single source of truth). Coverage = travel areas.
     const workplaces = Array.isArray(bodyWorkplaces) ? bodyWorkplaces : [];
@@ -167,6 +169,7 @@ export async function POST(req: Request) {
     // migrated yet, retry the write without them instead of failing registration.
     const optionalProFields: Record<string, unknown> = {
       business_name: businessName,
+      public_business_name_only: publicBusinessNameOnly,
       workplaces,
       coverage_areas: coverageAreas,
       search_provincias: searchProvincias,
@@ -181,7 +184,7 @@ export async function POST(req: Request) {
       ...(noCrId ? { verification_status: "pending" } : {}),
     };
     const isUnknownColumn = (msg?: string) =>
-      !!msg && /account_type|business_name|affiliations|workplaces|coverage_areas|search_provincias|search_cantones|coverage_provincias|coverage_country|videoconsulta|no_cr_id|id_document_note|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
+      !!msg && /account_type|business_name|public_business_name_only|affiliations|workplaces|coverage_areas|search_provincias|search_cantones|coverage_provincias|coverage_country|videoconsulta|no_cr_id|id_document_note|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
 
     // ── 1. Identify the user ──────────────────────────────────────────────────
     //    Two cases:

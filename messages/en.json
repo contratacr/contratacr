@@ -48,7 +48,7 @@
     "notifications": "Notifications",
     "supportTickets": "Support",
     "accountSecurity": "Account & security",
-    "signOut": "Sign out",
+    "signOut": "Exit",
     "hireServices": "Looking for services",
     "language": "Idioma / Language",
     "servicePlaceholder": "Search service",
@@ -764,6 +764,8 @@
       "usesAccountId": "{name}",
       "yourAccount": "Your account",
       "businessName": "Business or company name",
+      "businessNameOnly": "Show only business name",
+      "businessNameOnlyHelp": "Your public profile will hide your personal name and show only the business.",
       "businessPlaceholder": "Example: SG Solutions",
       "servicesSectionTitle": "Services",
       "professionPrincipal": "Your main service",
@@ -1197,7 +1199,9 @@
       "sent_bookings": "My requests",
       "sent_projects": "My posts",
       "saved": "My favorites",
+      "network": "Following and followers",
       "notifications": "Notifications",
+      "guides": "Quick guides",
       "soporte": "Support",
       "cuenta": "Account & security"
     },
@@ -1315,7 +1319,165 @@
       }
     },
     "servicesHeading": "My services",
+    "guides": {
+      "headerButton": "Quick guides",
+      "modalTitle": "Quick guides",
+      "modalSubtitle": "Step-by-step guides to use ContrataCR as a client or professional.",
+      "heroEyebrow": "Step-by-step guide",
+      "heroTitle": "Use your panel with real examples",
+      "heroBody": "This guide uses ContrataCR's profile as a reference to show what a client sees, what a professional should complete and how to follow up without losing order.",
+      "exampleProfile": {
+        "verified": "Verified",
+        "service": "Web development",
+        "reviews": "reviews",
+        "cases": "stories",
+        "year": "year"
+      },
+      "examples": {
+        "search": {
+          "title": "How a client sees you in /buscar",
+          "body": "The card should answer quickly: who you are, what you do, where you work, reviews and how to contact you.",
+          "reviewCount": "(5 reviews)",
+          "priceLine1": "Request",
+          "priceLine2": "price",
+          "location": "Atenas, Alajuela"
+        },
+        "messages": {
+          "title": "How to coordinate after contact",
+          "body": "Messages keeps the conversation clear. If you come from a request or proposal, write the context in the first message.",
+          "client": "Hi, I saw your profile and need a landing page for my business.",
+          "pro": "Sure, I can review the scope and send you an initial proposal."
+        }
+      },
+      "clientPanel": {
+        "title": "Client panel",
+        "body": "For searching, hiring and following up.",
+        "points": [
+          "Search professionals by service, area or name.",
+          "Save profiles so you can compare them later.",
+          "Send requests or messages when you need to coordinate.",
+          "Review your requests, posts and conversations from the panel."
+        ]
+      },
+      "proPanel": {
+        "title": "Professional panel",
+        "body": "For offering services and building trust.",
+        "points": [
+          "Complete your profile, services, coverage and availability.",
+          "Upload success stories to show real work.",
+          "Reply to requests and opportunities from one place.",
+          "You also keep the client panel to hire other services."
+        ]
+      },
+      "providerNoteTitle": "If you are a professional:",
+      "providerNoteBody": "you have both panels. You can offer your services and, when you need to hire someone, switch to the client panel without creating another account.",
+      "sectionListTitle": "Sections",
+      "selectedEyebrow": "Step by step",
+      "previewTitle": "Visual example",
+      "preview": {
+        "profile": {
+          "body": "A complete profile shows identity, main service, reviews, success stories, coverage and contact options."
+        },
+        "services": {
+          "title": "Services in your panel",
+          "badge": "Active",
+          "desc": "Describe what it includes, price and scope.",
+          "detail": "Use separate services so clients can find you better."
+        },
+        "availability": {
+          "title": "Hours visible to clients",
+          "cta": "View availability"
+        },
+        "cases": {
+          "title": "Success stories",
+          "caseTitle": "ContrataCR search and profiles",
+          "body": "Each story should show what you did, who it was for and the result achieved."
+        },
+        "requests": {
+          "title": "Received request",
+          "body": "Landing page for a dental clinic with form and contact button.",
+          "cta": "Reply"
+        },
+        "opportunities": {
+          "title": "Open opportunity",
+          "project": "Website for a local business",
+          "body": "Client post waiting for proposals from professionals.",
+          "cta": "Send proposal"
+        }
+      },
+      "items": {
+        "profile": {
+          "title": "Complete your profile",
+          "short": "Identity, photo and trust",
+          "body": "Help clients and professionals understand who you are before contacting you.",
+          "steps": [
+            "Add a clear photo or logo if it represents your business better.",
+            "Review your name, phone number and main details.",
+            "If you offer services, write a short and trustworthy description.",
+            "Verify your identity when available to show more trust."
+          ],
+          "cta": "Go to my profile"
+        },
+        "services": {
+          "title": "Add services",
+          "short": "What you offer and how clients find you",
+          "body": "The clearer your offer is, the easier it is for clients to find you.",
+          "steps": [
+            "Add each service separately.",
+            "Write a concrete description of what it includes.",
+            "Set price, modality and the places where you work.",
+            "Save changes before moving to another section."
+          ],
+          "cta": "Go to my services"
+        },
+        "availability": {
+          "title": "Set availability",
+          "short": "Hours and contact options",
+          "body": "Define when clients can contact or book you.",
+          "steps": [
+            "Choose whether you work by location, videoconsultation or both.",
+            "Set real hours for each day.",
+            "Use one-day changes for holidays or special dates."
+          ],
+          "cta": "Go to availability"
+        },
+        "successCases": {
+          "title": "Upload success stories",
+          "short": "Real work and evidence",
+          "body": "Show real work so new clients can trust you faster.",
+          "steps": [
+            "Select the related service.",
+            "Upload up to 5 clear photos per story.",
+            "Explain what you did, who it was for and when it happened."
+          ],
+          "cta": "Go to success stories"
+        },
+        "requests": {
+          "title": "Reply to requests",
+          "short": "Clients who contact you",
+          "body": "Keep requests that arrive directly to your profile organized.",
+          "steps": [
+            "Review the details before replying.",
+            "Coordinate by message if you need to clarify anything.",
+            "Update the status so you do not lose track."
+          ],
+          "cta": "Go to requests"
+        },
+        "opportunities": {
+          "title": "Send proposals",
+          "short": "Open client posts",
+          "body": "Find open posts that match your services.",
+          "steps": [
+            "Filter by service to see relevant opportunities.",
+            "Send a clear proposal with price and scope.",
+            "Follow up from messages if the client replies."
+          ],
+          "cta": "Go to opportunities"
+        }
+      }
+    },
     "subtitles": {
+      "network": "Manage the professionals you follow and the people who follow your profile.",
       "bookings": "Requests your clients sent you.",
       "proposals": "Opportunities you can send proposals to.",
       "sent_bookings": "Services you requested.",
@@ -1526,7 +1688,7 @@
     "uploadError": "Couldn't upload the photo.",
     "uploadTooLarge": "The photo is too large. Choose a lighter photo or take a new one.",
     "uploadUnsupported": "We couldn't prepare that photo. Use JPG, PNG, WEBP, HEIC, or HEIF.",
-    "introCases": "Up to {perProf} cases per service, with up to {perCase} photos each.",
+    "introCases": "You can add unlimited success stories. Each story can have up to {perCase} photos.",
     "filterAll": "All",
     "photosCount": "{count, plural, one {# photo} other {# photos}}",
     "addCase": "Add a new success story",

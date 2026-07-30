@@ -222,6 +222,10 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   return (
     <div>
+      <div className="mb-3 hidden sm:block">
+        <h3 className="text-lg font-extrabold text-[#162543]">{t("title")}</h3>
+      </div>
+
       {visible.length > 0 && (
         <div className="mb-3 flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
           {unread > 0 && (

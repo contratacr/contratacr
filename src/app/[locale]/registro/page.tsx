@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -9,6 +10,9 @@ import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 
 export default function RegisterPage() {
   const t = useTranslations("registerChoice");
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
+  const redirectSuffix = redirect ? `?redirect=${encodeURIComponent(redirect)}` : "";
   // A logged-in user with an existing account must never see the "choose account
   // type" screen — send them to their panel. Genuinely-new visitors see the chooser.
   const { checking } = useRedirectIfRegistered();
@@ -34,7 +38,7 @@ export default function RegisterPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Client */}
             <Link
-              href="/registro/cliente"
+              href={`/registro/cliente${redirectSuffix}`}
               className="group order-2 flex flex-col items-center gap-5 p-8 bg-white border-2 border-[#e5e7eb] rounded-2xl hover:border-[#009FD9] hover:shadow-lg transition-all duration-200 text-center sm:order-1"
             >
               <div className="h-16 w-16 rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20 shadow-[0_10px_30px_-10px_rgba(0,159,217,0.5)] flex items-center justify-center group-hover:bg-[#009FD9] group-hover:shadow-[0_12px_34px_-10px_rgba(0,159,217,0.7)] transition-all duration-200 shrink-0">
@@ -53,7 +57,7 @@ export default function RegisterPage() {
 
             {/* Professional */}
             <Link
-              href="/registro/profesional"
+              href={`/registro/profesional${redirectSuffix}`}
               className="group order-1 flex flex-col items-center gap-5 p-8 bg-white border-2 border-[#e5e7eb] rounded-2xl hover:border-[#009FD9] hover:shadow-lg transition-all duration-200 text-center sm:order-2"
             >
               <div className="h-16 w-16 rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20 shadow-[0_10px_30px_-10px_rgba(0,159,217,0.5)] flex items-center justify-center group-hover:bg-[#009FD9] group-hover:shadow-[0_12px_34px_-10px_rgba(0,159,217,0.7)] transition-all duration-200 shrink-0">

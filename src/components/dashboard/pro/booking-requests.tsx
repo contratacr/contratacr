@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -48,7 +48,7 @@ type Booking = {
   beneficiary_phone?: string | null;
 };
 
-// ONE shared status→colour mapping (sprint 440), identical to the client side:
+// ONE shared statusâ†’colour mapping (sprint 440), identical to the client side:
 // active/upcoming + awaiting confirmation = brand-blue (default), finished = green,
 // cancelled = red, reprogramada = grey.
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
@@ -65,7 +65,7 @@ function PendingStatusText({ label }: { label: string }) {
   return <Badge variant="default" className="shrink-0 text-[11px] font-semibold">{label}</Badge>;
 }
 
-// "50688888888" / "88888888" → "+506 8888 8888" (readable). Non-standard → as-is.
+// "50688888888" / "88888888" â†’ "+506 8888 8888" (readable). Non-standard â†’ as-is.
 function formatPhoneCR(raw?: string | null): string | null {
   if (!raw) return null;
   const d = String(raw).replace(/\D/g, "");
@@ -74,7 +74,7 @@ function formatPhoneCR(raw?: string | null): string | null {
   return String(raw);
 }
 
-// "13:00" → "1:00 pm" (12-hour, matches the prototype).
+// "13:00" â†’ "1:00 pm" (12-hour, matches the prototype).
 function to12h(time?: string): string | null {
   if (!time) return null;
   const [hRaw, mRaw] = time.split(":");
@@ -84,6 +84,19 @@ function to12h(time?: string): string | null {
   const ap = h < 12 ? "am" : "pm";
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:${String(Number.isNaN(m) ? 0 : m).padStart(2, "0")} ${ap}`;
+}
+
+function cleanVisibleSpanishText(value?: string | null): string | null {
+  if (!value) return null;
+  return String(value)
+    .replace(/\bJardiner\?a\b/gi, "Jardiner\u00eda")
+    .replace(/\bPlomer\?a\b/gi, "Plomer\u00eda")
+    .replace(/\bCategor\?a\b/gi, "Categor\u00eda")
+    .replace(/\bRevisi\?n\b/gi, "Revisi\u00f3n")
+    .replace(/\bCl\?nica\b/gi, "Cl\u00ednica")
+    .replace(/\bp\?gina\b/gi, "p\u00e1gina")
+    .replace(/\bdise\?o\b/gi, "dise\u00f1o")
+    .replace(/\brese\?a\b/gi, "rese\u00f1a");
 }
 
 export function BookingRequests() {
@@ -115,7 +128,7 @@ export function BookingRequests() {
   // "Reportar cliente" clean modal (replaces the old window.prompt), one at a time.
   const [reportFor, setReportFor] = useState<Booking | null>(null);
 
-  // Inline cancel-with-reason panel — the pro's only exception tool (the pro does NOT
+  // Inline cancel-with-reason panel â€” the pro's only exception tool (the pro does NOT
   // reschedule; sprint 433). One open at a time, keyed by booking id.
   const [actionFor, setActionFor] = useState<{ id: string; mode: "cancel" } | null>(null);
   const [reason, setReason] = useState("");
@@ -205,7 +218,7 @@ export function BookingRequests() {
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
   }
 
-  // Cancel WITH a reason — the client is notified with the motivo. This is the pro's
+  // Cancel WITH a reason â€” the client is notified with the motivo. This is the pro's
   // clean way to decline ANY booking (incl. an unverified client). Frees the slot.
   async function submitCancel(id: string) {
     setSubmitting(true);
@@ -258,7 +271,7 @@ export function BookingRequests() {
   const filtered = bookings.filter((b) => solicitudBucket(b.status, b.scheduled_date) === filter);
 
   function BookingCard({ booking }: { booking: Booking }) {
-    // Appointment date — "Mar, 23 jun · 1:00 pm" (capitalised weekday, 12-hour time),
+    // Appointment date â€” "Mar, 23 jun Â· 1:00 pm" (capitalised weekday, 12-hour time),
     // distinct from the REQUEST date in the status header.
     const dateStr = (() => {
       if (!booking.scheduled_date) return booking.preferred_date_text || null;
@@ -268,14 +281,14 @@ export function BookingRequests() {
       const wd = wdRaw.charAt(0).toUpperCase() + wdRaw.slice(1);
       const dm = dt.toLocaleDateString(dateLocale, { day: "numeric", month: "short" }).replace(".", "");
       const time = to12h(booking.scheduled_time);
-      return `${wd}, ${dm}${time ? ` · ${time}` : ""}`;
+      return `${wd}, ${dm}${time ? ` Â· ${time}` : ""}`;
     })();
 
-    const category = booking.category_id ? getCategoryLabel(booking.category_id, locale) : null;
-    const location = booking.slot_location_label || null;
+    const category = cleanVisibleSpanishText(booking.category_id ? getCategoryLabel(booking.category_id, locale) : null);
+    const location = cleanVisibleSpanishText(booking.slot_location_label);
 
     // First name for the friendly WhatsApp greeting (the requester is the only contact).
-    // The BOOKER's identification (always the client who reserved — never the beneficiary,
+    // The BOOKER's identification (always the client who reserved â€” never the beneficiary,
     // who only has name + DOB). Keep it inside the expanded details so the closed card
     // stays scannable; absent ID reads as "Sin verificar" in the same field.
     const cedulaFmt = booking.client_cedula ? formatId(String(booking.client_cedula)) : null;
@@ -296,11 +309,11 @@ export function BookingRequests() {
 
     return (
       <Card id={`booking-${booking.id}`} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-[box-shadow,border-color] hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
-        {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
+        {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who Â· when Â·
             status + relevant flags). Tapping reveals the full identity, the "para otra persona"
-            callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
+            callout, servicioÂ·zona, the note, and the management ACTIONS. Zero icons; text labels.
             The button gets the card's rounded corners (rounded-2xl collapsed / rounded-t when
-            expanded) so its hover bg never squares off the corners — sprint 441 (no overflow-hidden,
+            expanded) so its hover bg never squares off the corners â€” sprint 441 (no overflow-hidden,
             which would clip the actions menu). */}
         <button
           type="button"
@@ -312,8 +325,8 @@ export function BookingRequests() {
             <CalendarCheck className="h-[18px] w-[18px]" />
           </div>
           {/* INBOX ROW (Superhuman/Gmail hierarchy): bold name (+ pills) and the status on line 1,
-              the APPOINTMENT date prominent on line 2 (no "Fecha:" label — the date speaks for
-              itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
+              the APPOINTMENT date prominent on line 2 (no "Fecha:" label â€” the date speaks for
+              itself), and a muted "servicio Â· nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <span className="min-w-0 flex flex-1 items-center gap-2 flex-wrap text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">
@@ -478,7 +491,7 @@ export function BookingRequests() {
               );
             })()}
 
-          {/* Cancel-with-reason panel — preset chips fill the note; the client is
+          {/* Cancel-with-reason panel â€” preset chips fill the note; the client is
               notified with the motivo; the slot is freed. */}
           {actionFor?.id === booking.id && actionFor.mode === "cancel" && (
             <div className="rounded-xl border border-[#e5e7eb] bg-[#fafafa] p-3 flex flex-col gap-2.5">

@@ -16,6 +16,7 @@ const SIZES = {
   sm: "sm:max-w-sm",
   md: "sm:max-w-lg",
   lg: "sm:max-w-2xl",
+  xl: "sm:max-w-5xl",
 } as const;
 
 interface ModalProps {
@@ -67,6 +68,7 @@ export function Modal({
     <div
       className={cn(
         "app-modal-screen fixed inset-0 z-[100] flex justify-center",
+        centeredMobile && "app-centered-modal-screen",
         centeredMobile ? "items-center p-4" : "items-end sm:items-center sm:p-4"
       )}
     >
@@ -80,7 +82,7 @@ export function Modal({
         className={cn(
           "relative z-10 flex w-full flex-col overflow-hidden bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
           centeredMobile
-            ? "max-h-[calc(var(--app-visual-viewport-height)-2rem)] rounded-2xl"
+            ? "app-centered-modal max-h-[calc(var(--app-visual-viewport-height)-2rem)] rounded-2xl"
             : "max-h-[92vh] rounded-t-2xl",
           "app-bottom-sheet min-h-0",
           SIZES[size]

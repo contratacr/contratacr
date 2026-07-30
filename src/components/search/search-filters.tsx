@@ -190,6 +190,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     ? t("sort.availability")
     : t("sort.rating");
   const [modality, setModality] = useState(initialParam("modalidad") || ANY_MODALITY);
+  const modalityLabel = modality === "video"
+    ? t("filters.attentionVideo")
+    : modality === "in_person"
+    ? t("filters.attentionInPerson")
+    : t("filters.attentionAny");
   const [aseguradora, setAseguradora] = useState(() =>
     isHealthCategory(initialCategory) ? initialParam("aseguradora") : ""
   );
@@ -386,7 +391,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
       if (vals.canton && vals.canton !== "todos" && vals.provincia) next.set("canton", vals.canton);
       if (vals.sortBy && vals.sortBy !== "rating") next.set("sortBy", vals.sortBy);
-      if (showVideoFilter && vals.modalidad && vals.modalidad !== ANY_MODALITY) next.set("modalidad", vals.modalidad);
+      if (supportsVideoConsultCategory(vals.categoria) && vals.modalidad && vals.modalidad !== ANY_MODALITY) next.set("modalidad", vals.modalidad);
       if (isHealthCategory(vals.categoria) && vals.aseguradora && vals.aseguradora !== "todas") next.set("aseguradora", vals.aseguradora);
       if (vals.idioma && vals.idioma !== "todos") next.set("idioma", vals.idioma);
       // Carry the geolocation coords so changing another filter keeps proximity.
@@ -926,7 +931,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <div>
             <label className={fieldLabel}>{t("filters.attention")}</label>
             <Select value={modality} onValueChange={(v) => { setModality(v); applyFilters({ modalidad: v }); }}>
-            <SelectTrigger className={FILTER_TRIGGER}><SelectValue>{sortLabel}</SelectValue></SelectTrigger>
+            <SelectTrigger className={FILTER_TRIGGER}><SelectValue>{modalityLabel}</SelectValue></SelectTrigger>
               <SelectContent className={FILTER_CONTENT}>
                 <SelectItem value={ANY_MODALITY}>{t("filters.attentionAny")}</SelectItem>
                 <SelectItem value="in_person">{t("filters.attentionInPerson")}</SelectItem>
