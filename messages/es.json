@@ -1913,6 +1913,7 @@
     "optional": "(opcional)",
     "businessPlaceholder": "Ejemplo: SG Solutions",
     "businessNameOnly": "Mostrar solo nombre comercial",
+    "businessNameOnlyHelp": "Tu perfil y tus cards mostrarán el nombre comercial como principal.",
     "businessHelp": "El nombre de tu empresa, marca o negocio, si trabajas bajo uno. Aparece junto a tu nombre en tu perfil.",
     "description": "Descripción",
     "descPlaceholder": "Describe tu experiencia, especialidades y qué te diferencia…",

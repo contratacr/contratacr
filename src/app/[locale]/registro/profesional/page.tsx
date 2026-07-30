@@ -471,6 +471,7 @@ export default function RegisterProfessionalPage() {
   const [primaryServicePickerOpen, setPrimaryServicePickerOpen] = useState(false);
   const [extraServicePickerOpen, setExtraServicePickerOpen] = useState(false);
   const [businessName, setBusinessName] = useState("");
+  const [publicBusinessNameOnly, setPublicBusinessNameOnly] = useState(false);
 
   const form1 = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -827,6 +828,7 @@ export default function RegisterProfessionalPage() {
           email: userEmail,
           fullName,
           businessName: limitText(businessName.trim(), NAME_MAX_LENGTH) || null,
+          publicBusinessNameOnly: !!businessName.trim() && publicBusinessNameOnly,
           cedula: skipCedula ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (accountCedula || oauthCedula ? (accountCedula || oauthCedula).replace(/\D/g, "") : null)),
           // Skipping the cédula (noCrId) is a normal unverified registration — NOT a
           // review case. Only "¿No es tu información?" (identityMismatch) routes to
@@ -948,14 +950,40 @@ export default function RegisterProfessionalPage() {
 
   const stepLabels = [t("steps.identity"), t("steps.service"), t("steps.profile")];
   const indicatorStep = step;
+  const hasBusinessName = businessName.trim().length > 0;
   const businessNameField = (
-    <Input
-      label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optionalParen")}</span></>}
-      placeholder={t("businessPlaceholder")}
-      value={businessName}
-      maxLength={NAME_MAX_LENGTH}
-      onChange={(e) => setBusinessName(limitText(e.target.value, NAME_MAX_LENGTH))}
-    />
+    <div className="space-y-2.5">
+      <Input
+        label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optionalParen")}</span></>}
+        placeholder={t("businessPlaceholder")}
+        value={businessName}
+        maxLength={NAME_MAX_LENGTH}
+        onChange={(e) => {
+          const next = limitText(e.target.value, NAME_MAX_LENGTH);
+          setBusinessName(next);
+          if (!next.trim()) setPublicBusinessNameOnly(false);
+        }}
+      />
+      {hasBusinessName && (
+        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-[#111827]">{t("businessNameOnly")}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">
+              {t("businessNameOnlyHelp")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPublicBusinessNameOnly((value) => !value)}
+            className={cn("relative h-6 w-11 shrink-0 rounded-full transition-all", publicBusinessNameOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+            aria-label={t("businessNameOnly")}
+            aria-pressed={publicBusinessNameOnly}
+          >
+            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", publicBusinessNameOnly ? "left-5" : "left-0.5")} />
+          </button>
+        </div>
+      )}
+    </div>
   );
 
   return (

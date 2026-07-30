@@ -1914,6 +1914,7 @@
     "optional": "(optional)",
     "businessPlaceholder": "example: GAM Electrical Services",
     "businessNameOnly": "Show only business name",
+    "businessNameOnlyHelp": "Your profile and cards will show the business name as the main name.",
     "businessHelp": "Your company, brand or business name, if you work under one. It appears next to your name on your profile.",
     "description": "Description",
     "descPlaceholder": "Describe your experience, specialties and what sets you apart…",
