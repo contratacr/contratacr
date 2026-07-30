@@ -8,7 +8,8 @@ export function isMobileAppHost(hostname?: string): boolean {
   if (typeof window === "undefined" && !hostname) return false;
 
   const host = (hostname ?? window.location.hostname).toLowerCase();
-  return MOBILE_APP_HOSTS.has(host) || host.endsWith(".contratacr-mobile-test.vercel.app");
+  const localDevHost = process.env.NODE_ENV !== "production" && (host === "localhost" || host === "127.0.0.1" || host === "::1");
+  return localDevHost || MOBILE_APP_HOSTS.has(host) || host.endsWith(".contratacr-mobile-test.vercel.app");
 }
 
 export function isNativeAppRuntime(): boolean {

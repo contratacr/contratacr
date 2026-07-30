@@ -146,7 +146,7 @@ export default async function LocaleLayout({
         <DocumentLocale locale={locale} />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var h=window.location&&window.location.hostname;var m=h==='test.contratacr.com'||h==='contratacr-mobile-test.vercel.app'||/\\.contratacr-mobile-test\\.vercel\\.app$/.test(h||'');var n=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(m||n){document.documentElement.classList.add('ccr-native-app');document.body&&document.body.classList.add('ccr-native-app');}}catch(e){}`,
+            __html: `try{var h=window.location&&window.location.hostname;var l=${process.env.NODE_ENV !== "production"}&&(h==='localhost'||h==='127.0.0.1'||h==='::1');var m=l||h==='test.contratacr.com'||h==='contratacr-mobile-test.vercel.app'||/\\.contratacr-mobile-test\\.vercel\\.app$/.test(h||'');var n=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(m||n){document.documentElement.classList.add('ccr-native-app');document.body&&document.body.classList.add('ccr-native-app');}}catch(e){}`,
           }}
         />
         <EmojiBlocker />

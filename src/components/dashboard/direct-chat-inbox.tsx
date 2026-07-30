@@ -582,36 +582,40 @@ export function DirectChatInbox() {
               <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>
             </button>
           )}
-          {filtered.map((item) => { const person = personFor(item); const summary = contextSummaryFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; const highlighted = item.id === activeId; return (
-            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", !!unread && "bg-[#eef9fd]", highlighted && "lg:bg-white lg:shadow-[inset_3px_0_0_#009FD9]", highlighted && mobileThread && "bg-white shadow-[inset_3px_0_0_#009FD9]")}>
+          {filtered.map((item) => { const person = personFor(item); const summary = contextSummaryFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; const highlighted = item.id === activeId; const hasUnread = !!unread; return (
+            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", hasUnread && "bg-[#e8f8ff] shadow-[inset_4px_0_0_#009FD9]", highlighted && "lg:bg-white lg:shadow-[inset_3px_0_0_#009FD9]", highlighted && mobileThread && "bg-white shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block line-clamp-2 text-xs font-bold leading-snug text-[#0090c7]">{summary}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className={cn("min-w-0 flex-1 truncate text-sm text-[#162543]", hasUnread && "font-extrabold")}>{person.name}</strong><time className={cn("shrink-0 text-[11px] text-[#8492a5]", hasUnread && "font-extrabold text-[#009FD9]")}>{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block line-clamp-2 text-xs font-bold leading-snug text-[#0090c7]">{summary}</span><span className="mt-1 flex items-center gap-2"><span className={cn("min-w-0 flex-1 truncate text-xs text-[#6b7a90]", hasUnread && "font-extrabold text-[#162543]")}>{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-extrabold text-white shadow-sm shadow-[#009FD9]/30">{unread}</span>}</span></span>
             </button>); })}
           {!filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
         </div>
       </aside>
 
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
-        <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e3ebf1] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
+        <header className="ccr-direct-chat-thread-header grid min-h-[90px] shrink-0 grid-cols-[40px_minmax(0,1fr)_42px] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:min-h-[92px] sm:grid-cols-[44px_minmax(0,1fr)_44px] sm:gap-3 sm:px-5 sm:py-3 lg:flex lg:min-h-[65px]">
           <button type="button" onClick={closeMobileThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
-          <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
-            <Avatar className="h-9 w-9 sm:h-10 sm:w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
-          </button>
-          <div className="min-w-0 flex-1">
-            {activePerson?.profileHref ? (
-              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full truncate text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline">
-                {activePerson.name}
-              </button>
-            ) : (
-              <p className="truncate text-[15px] font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
-            )}
-            {active && activeContext && activeContext.type !== "profile" && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
-            {activeContextTitle && <p className="mt-0.5 line-clamp-1 text-xs font-semibold leading-snug text-[#63748a] sm:line-clamp-2">{activeContextTitle}</p>}
-            {detailHref && (
-              <button type="button" onClick={() => router.push(detailHref)} className="mt-0.5 block max-w-full truncate text-left text-xs font-extrabold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
-                {activeContextAction}
-              </button>
-            )}
+          <div className="grid min-w-0 grid-cols-[54px_minmax(0,1fr)] items-center gap-3 lg:flex">
+            <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("row-span-2 shrink-0 rounded-full self-center", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
+              <Avatar className="h-[52px] w-[52px] lg:h-10 lg:w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
+            </button>
+            <div className="min-w-0 flex-1">
+              {activePerson?.profileHref ? (
+                <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full truncate text-left text-base font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline lg:text-[15px]">
+                  {activePerson.name}
+                </button>
+              ) : (
+                <p className="truncate text-base font-extrabold leading-tight text-[#162543] lg:text-[15px]">{activePerson?.name}</p>
+              )}
+              <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                {active && activeContext && activeContext.type !== "profile" && <span className="shrink-0 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#008fc4] sm:text-[11px]">{activeContext.label}</span>}
+                {activeContextTitle && <span className="min-w-0 flex-1 truncate text-xs font-semibold leading-snug text-[#63748a]">{activeContextTitle}</span>}
+              </div>
+              {detailHref && (
+                <button type="button" onClick={() => router.push(detailHref)} className="mt-2 block max-w-full truncate text-left text-xs font-extrabold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
+                  <span className="truncate">{activeContextAction}</span>
+                </button>
+              )}
+            </div>
           </div>
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
           {showArchived && (
