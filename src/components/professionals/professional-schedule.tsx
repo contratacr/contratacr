@@ -275,7 +275,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (!id || id === "general") return "General";
     if (id === "videoconsulta") return t("videoconsulta");
     if (id.startsWith("cov_")) return t("atHome");
-    return professional.workplaces?.find((w) => w.id === id)?.name ?? t("location");
+    const workplace = professional.workplaces?.find((w) => w.id === id);
+    const workplaceLabel = typeof (workplace as { label?: unknown } | undefined)?.label === "string"
+      ? ((workplace as { label?: string }).label ?? "").trim()
+      : "";
+    return workplace?.name?.trim() || workplaceLabel || t("location");
   }
   function locTabLabel(label: string): string {
     return label
@@ -302,16 +306,24 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // slots-only derivation.
   const locationOptions = useMemo(() => {
     const map = new Map<string, string>(); // id -> label, insertion-ordered
+    const videoLabel = t("videoconsulta");
+    const normalizedVideoLabel = videoLabel.trim().toLocaleLowerCase();
     for (const w of professional.workplaces ?? []) {
-      if (w.id && w.name?.trim()) map.set(w.id, w.name.trim());
+      const rawLabel = (w as { label?: unknown }).label;
+      const label = w.name?.trim() || (typeof rawLabel === "string" ? rawLabel.trim() : "");
+      const isVideoWorkplace = label.trim().toLocaleLowerCase() === normalizedVideoLabel || (w as { type?: unknown }).type === "video";
+      const id = isVideoWorkplace ? "videoconsulta" : (w.id || (professional.workplaces?.length === 1 ? "general" : ""));
+      if (id && label) map.set(id, label);
     }
     for (const s of slots) {
       const id = s.locationId;
       if (id?.startsWith("cov_")) continue;
-      if (id && id !== "general" && !map.has(id)) map.set(id, locLabel(id));
+      const label = id && id !== "general" ? locLabel(id) : "";
+      if (id && id !== "general" && label && label !== t("location") && !map.has(id)) map.set(id, label);
     }
-    if ((professional.videoconsulta || professional.coverage?.country) && !map.has("videoconsulta")) {
-      map.set("videoconsulta", t("videoconsulta"));
+    const hasVideoOption = map.has("videoconsulta") || Array.from(map.values()).some((label) => label.trim().toLocaleLowerCase() === normalizedVideoLabel);
+    if ((professional.videoconsulta || professional.coverage?.country) && !hasVideoOption) {
+      map.set("videoconsulta", videoLabel);
     }
     return Array.from(map, ([id, label]) => ({ id, label }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -342,11 +354,16 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // honest "no upcoming times" state (it doesn't borrow another location's hours).
   const filteredSlots = useMemo(() => {
     if (!effectiveId) return slots;
+    const knownLocationIds = new Set(visibleLocationOptions.map((o) => o.id));
+    const defaultPhysicalLocationId = visibleLocationOptions.find((o) => o.id !== "videoconsulta")?.id ?? visibleLocationOptions[0]?.id ?? null;
     return slots.filter((s) => {
       const loc = s.locationId ?? "general";
+      const unknownFixedLocation = loc !== "general" && !loc.startsWith("cov_") && !knownLocationIds.has(loc);
+      if (unknownFixedLocation && effectiveId === defaultPhysicalLocationId) return true;
+      if (visibleLocationOptions.length === 1 && !visibleLocationOptions.some((o) => o.id === loc) && !loc.startsWith("cov_")) return true;
       return loc === effectiveId || loc === "general";
     });
-  }, [slots, effectiveId]);
+  }, [slots, effectiveId, visibleLocationOptions]);
 
   // ── LOCATION control (LEFT column, under the rating) — a HORIZONTAL TAB ROW on a
   // hairline divider, then the selected place's ADDRESS. Built ONCE and ALWAYS shown

@@ -30,15 +30,21 @@ function buildDraftHref({
   proposalId,
   contextTitle,
   initialMessage,
-}: MessageLauncherProps) {
+}: MessageLauncherProps, isEn: boolean) {
   const params = new URLSearchParams({ draftChat: "1" });
+  const contextKind = bookingId ? "booking" : proposalId ? "proposal" : projectId ? "project" : "profile";
+  const defaultDraftMessage = initialMessage || (contextTitle && contextKind !== "profile"
+    ? isEn
+      ? `Hi, I am writing about the ${contextKind === "booking" ? "request" : contextKind === "proposal" ? "proposal" : "post"}: ${contextTitle}.`
+      : `Hola, te escribo por ${contextKind === "booking" ? "la solicitud" : contextKind === "proposal" ? "la propuesta" : "la publicación"}: ${contextTitle}.`
+    : "");
   if (professionalId) params.set("professionalId", professionalId);
   if (professionalName) params.set("professionalName", professionalName);
   if (bookingId) params.set("bookingId", bookingId);
   if (projectId) params.set("projectId", projectId);
   if (proposalId) params.set("proposalId", proposalId);
   if (contextTitle) params.set("contextTitle", contextTitle);
-  if (initialMessage) params.set("draftMessage", initialMessage);
+  if (defaultDraftMessage) params.set("draftMessage", defaultDraftMessage);
   return `/mensajes?${params.toString()}`;
 }
 
@@ -68,7 +74,7 @@ export function MessageLauncher(props: MessageLauncherProps) {
       return;
     }
 
-    const draftHref = buildDraftHref(props);
+    const draftHref = buildDraftHref(props, isEn);
     if (!user) {
       router.push(`/login?redirect=${encodeURIComponent(draftHref)}`);
       return;

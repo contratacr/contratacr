@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Headset, ArrowLeft, Send, User, Shield, Plus, Clock3 } from "lucide-react";
+import { Headset, ArrowLeft, SendHorizontal, User, Shield, Plus, Clock3 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
@@ -248,38 +248,32 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     return (
       <>
       <div className="ccr-support-thread flex min-h-0 flex-1 flex-col">
-        <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="mb-3 inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-[#374151] hover:text-[#009FD9]">
-          <ArrowLeft className="h-4 w-4" /> {t("backToTickets")}
-        </button>
-
         {threadLoading || !ticket ? (
           <PanelSectionLoading rows={2} />
         ) : (
-          <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-            <div className="shrink-0 border-b border-[#e5e7eb] px-4 py-4 sm:px-5">
-              <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
-                  <Headset className="h-[18px] w-[18px]" />
+          <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white shadow-sm">
+            <header className="grid min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5">
+              <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-sm">
+                  <Headset className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-                    <span className="w-fit max-w-full rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">
-                      {t("caseRef", { ref: supportTicketRef(ticket.id, ticket.created_at, ticket.case_number) })}
-                    </span>
-                    <h3 className="min-w-0 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{ticketSubject(ticket)}</h3>
-                    {ticket.status !== filter && (
-                      <span className={`w-fit text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
-                    )}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <h3 className="min-w-0 flex-1 truncate text-base font-extrabold leading-tight text-[#162543]">{ticketSubject(ticket)}</h3>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
                   </div>
-                  <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{statusHelp(ticket.status)}</p>
+                  <p className="mt-0.5 truncate text-xs font-semibold text-[#6b7280]">{t("caseRef", { ref: supportTicketRef(ticket.id, ticket.created_at, ticket.case_number) })}</p>
                 </div>
               </div>
-            </div>
+            </header>
 
-            <div className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f9fafb] p-4 sm:p-5">
+            <div className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain bg-[#f3f7fa] p-4 sm:p-5">
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.sender_role === "user" ? "bg-[#009FD9] text-white" : "bg-white border border-[#e5e7eb] text-[#374151]"}`}>
+                  <div className={`max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)] sm:max-w-[78%] ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] font-medium text-white" : "rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d]"}`}>
                     <div className="flex items-center gap-1.5 mb-1 text-[11px] opacity-70">
                       {m.sender_role === "admin" ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
                       {m.sender_role === "admin" ? t("supportName") : t("you")} · {fmt(m.created_at)}
@@ -310,18 +304,18 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
               </div>
             )}
 
-            <div className="ccr-support-thread-composer shrink-0 border-t border-[#e5e7eb] p-4">
-              <textarea
-                value={reply}
-                onChange={(e) => setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH))}
-                maxLength={LONG_TEXT_MAX_LENGTH}
-                rows={3}
-                placeholder={t("messagePlaceholder")}
-                className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-              />
-              <div className="flex justify-end mt-2">
-                <button onClick={sendReply} disabled={sending || !reply.trim()} className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-medium px-4 py-2 hover:bg-[#0089bb] disabled:opacity-50">
-                  <Send className="h-4 w-4" /> {sending ? t("sending") : t("send")}
+            <div className="ccr-support-thread-composer shrink-0 border-t border-[#e3ebf1] bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 sm:px-4 sm:pb-4">
+              <div className="flex items-end gap-2.5">
+                <textarea
+                  value={reply}
+                  onChange={(e) => setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH))}
+                  maxLength={LONG_TEXT_MAX_LENGTH}
+                  rows={1}
+                  placeholder={t("messagePlaceholder")}
+                  className="min-h-11 min-w-0 flex-1 resize-none rounded-[22px] border border-[#d8e5ee] bg-white px-4 py-2.5 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+                />
+                <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-11 w-11 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#cfdde5] disabled:shadow-none" aria-label={sending ? t("sending") : t("send")}>
+                  {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-[22px] w-[22px]" />}
                 </button>
               </div>
             </div>
@@ -336,10 +330,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   // ── List view ──
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <p className="max-w-2xl text-sm leading-relaxed text-[#6b7280]">{t("inboxBody")}</p>
-        </div>
+      <div className="flex justify-end">
         {/* Header action shows ONLY once tickets have loaded AND there's at least one
             (the persistent action above the list). It must NOT render while loading
             (that flashed the "has tickets" treatment before data arrived) nor in the
@@ -420,7 +411,6 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                       {t("updated", { date: fmt(tk.last_reply_at || tk.created_at) })}
                     </p>
                     <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{tk.message}</p>
-                    <span className="mt-3 inline-flex text-sm font-semibold text-[#009FD9] group-hover:underline">{hasNew ? t("viewReply") : t("openConversation")}</span>
                   </div>
                 </div>
               </button>

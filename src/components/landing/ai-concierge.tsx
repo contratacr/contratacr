@@ -10,6 +10,7 @@ import {
   Loader2,
   MapPin,
   Minus,
+  MoreHorizontal,
   RotateCcw,
   Send,
   Sparkles,
@@ -213,9 +214,11 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState("");
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
   useContainedTouchScroll(scrollRef, open || embedded);
@@ -274,6 +277,25 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     window.addEventListener("keydown", minimizeOnEscape);
     return () => window.removeEventListener("keydown", minimizeOnEscape);
   }, [embedded, open]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function closeOnOutside(event: MouseEvent | TouchEvent) {
+      if (menuRef.current?.contains(event.target as Node)) return;
+      setMenuOpen(false);
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", closeOnOutside);
+    document.addEventListener("touchstart", closeOnOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutside);
+      document.removeEventListener("touchstart", closeOnOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -404,6 +426,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   }
 
   function resetConversation() {
+    setMenuOpen(false);
     setConversationId(crypto.randomUUID());
     setMessages([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
     setInput("");
@@ -478,9 +501,19 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             <h2 className="truncate text-[15px] font-black text-[#102746] sm:text-lg">{copy.title}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <AppTooltip label={copy.reset} className="ccr-ai-reset-action">
-              <button type="button" onClick={resetConversation} aria-label={copy.reset} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" /></button>
-            </AppTooltip>
+            <div ref={menuRef} className="relative ccr-ai-reset-action">
+              <AppTooltip label={lang === "en" ? "Assistant options" : "Opciones del asistente"}>
+                <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-label={lang === "en" ? "Assistant options" : "Opciones del asistente"} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><MoreHorizontal className="h-5 w-5" /></button>
+              </AppTooltip>
+              {menuOpen && (
+                <div className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-xl border border-[#cfe3f4] bg-white py-1.5 text-sm font-bold text-[#173052] shadow-xl">
+                  <button type="button" onClick={resetConversation} className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left transition hover:bg-[#eef7ff]">
+                    <RotateCcw className="h-4 w-4" />
+                    <span>{copy.reset}</span>
+                  </button>
+                </div>
+              )}
+            </div>
             {!embedded && !nativeApp && (
               <AppTooltip label={copy.minimize}>
                 <button type="button" onClick={() => setOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>

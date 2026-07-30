@@ -101,6 +101,7 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
   --ccr-native-bottom-nav-total: calc(var(--ccr-native-bottom-nav-height) + env(safe-area-inset-bottom));
   --ccr-native-panel-end-gap: 10px;
   --ccr-native-content-end-gap: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+  --ccr-native-content-height: calc(var(--app-visual-viewport-height, 100svh) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total));
 }
 
 .ccr-native-app main {
@@ -151,6 +152,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .direct-chat-shell {
     height: 100%;
     min-height: 0 !important;
+    max-height: 100%;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-list {
@@ -335,18 +337,22 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 }
 
 .ccr-native-app .direct-chat-shell {
-  height: calc(var(--app-visual-viewport-height) - 64px - 72px);
+  height: var(--ccr-native-content-height);
   min-height: 0;
+  max-height: var(--ccr-native-content-height);
   border-radius: 0;
 }
 
 .ccr-native-app [data-messages-page-main] {
   max-width: none;
+  min-height: var(--ccr-native-content-height);
   padding: 64px 0 0;
 }
 
 .ccr-native-app [data-messages-page-shell] {
-  min-height: calc(var(--app-visual-viewport-height) - 64px - 72px);
+  min-height: 0;
+  height: var(--ccr-native-content-height);
+  max-height: var(--ccr-native-content-height);
   border: 0;
   border-radius: 0;
   box-shadow: none;
@@ -505,6 +511,24 @@ textarea:focus-visible,
 select:focus-visible {
   outline: none;
   outline-offset: 0;
+}
+
+.ccr-direct-chat-textarea {
+  scrollbar-gutter: stable;
+}
+
+.ccr-direct-chat-textarea::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ccr-direct-chat-textarea::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 10px 0;
+}
+
+.ccr-direct-chat-textarea::-webkit-scrollbar-thumb {
+  background: #c5d4df;
+  border-radius: 999px;
 }
 
 [data-ui="select-trigger"]:focus-visible,
@@ -769,11 +793,13 @@ input::-ms-clear {
     box-shadow: none;
   }
 
-  html.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-thread-scroll {
+  html.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-thread-scroll,
+  html.ccr-native-app body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll,
+  body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll {
     padding-top: 1rem !important;
-    padding-bottom: 1.75rem !important;
+    padding-bottom: 0 !important;
     scroll-padding-top: 1rem;
-    scroll-padding-bottom: 1.75rem;
+    scroll-padding-bottom: 0;
   }
 
   .contratacr-chat-thread-open .direct-chat-shell--thread > section,

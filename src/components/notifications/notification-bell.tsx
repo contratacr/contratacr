@@ -30,12 +30,11 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   const router = useRouter();
   const t = useTranslations("notifications");
   const locale = useLocale();
-  const initialCachedNotifications = readCachedNotifications(user?.id);
   const [notificationState, setNotificationState] = useState(() => ({
     userId: user?.id,
-    items: initialCachedNotifications ?? [],
+    items: [] as Notification[],
   }));
-  const [hasSyncedNotifications, setHasSyncedNotifications] = useState(() => initialCachedNotifications !== null);
+  const [hasSyncedNotifications, setHasSyncedNotifications] = useState(false);
   const notifications = useMemo(
     () => notificationState.userId === user?.id ? notificationState.items : readCachedNotifications(user?.id) ?? [],
     [notificationState, user?.id],

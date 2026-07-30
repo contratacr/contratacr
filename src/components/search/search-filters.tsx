@@ -21,11 +21,11 @@ import { useCustomCategories } from "@/lib/data/use-custom-categories";
 // the fields read the same whether a service filter is active or not.
 const FILTER_TRIGGER = "text-sm";
 // Open menu = EXACTLY the trigger's width, flush-aligned (left+right edges line up with
-// the field) â€” like the "Servicio" autocomplete. By default Radix popper content sizes to
+// the field) - like the "Servicio" autocomplete. By default Radix popper content sizes to
 // its OPTIONS (with a min-w), so a short list (e.g. Aseguradora) opens narrower than its
 // full-width trigger and misaligns. `--radix-select-trigger-width` is the trigger's width
 // (exposed on popper content); `min-w-0` drops the shared `min-w-[8rem]` so the match is
-// exact even for a narrow trigger. Filters only â€” the shared Select is untouched.
+// exact even for a narrow trigger. Filters only - the shared Select is untouched.
 const FILTER_CONTENT = "min-w-0 w-[var(--radix-select-trigger-width)]";
 // Sentinel for the in-dropdown "Cualquier aseguradora" reset item (Radix Select forbids
 // an empty-string value, so we map this back to "" = no insurer filter).
@@ -194,14 +194,14 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     isHealthCategory(initialCategory) ? initialParam("aseguradora") : ""
   );
   const [language, setLanguage] = useState(initialParam("idioma"));
-  // Geolocation ("cerca de mÃ­") â€” opt-in, requested only when the user taps the
-  // control, never auto-popped. Denied/unavailable â†’ text search still works.
+  // Geolocation ("cerca de m?") - opt-in, requested only when the user taps the
+  // control, never auto-popped. Denied/unavailable -> text search still works.
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const geoActive = !!params.get("lat") && !!params.get("lng");
 
   // Official list = static INSURERS + admin-approved additions from the DB.
-  // The filter never offers a "Ninguna / Todas / sin seguros" entry â€” those are a
+  // The filter never offers a "Ninguna / Todas / sin seguros" entry - those are a
   // pro attribute or a stray placeholder, NOT a way to filter clients. Default is
   // simply no insurer selected (unfiltered). Excluded by id AND by label so a DB
   // row like "Ninguna" can't leak in regardless of its id.
@@ -354,7 +354,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     (overrides: Record<string, string> = {}) => {
       const next = new URLSearchParams();
       // In CHIPS mode the search input lives in a SEPARATE component (MobileServiceSearch),
-      // so take `q` from the URL â€” never from this instance's stale local `query` â€” to
+      // so take `q` from the URL - never from this instance's stale local `query` - to
       // avoid clobbering what the search bar set. The sidebar keeps using its own input.
       const vals = {
         q: variant === "chips" ? (params.get("q") ?? "") : query,
@@ -405,11 +405,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     [query, category, province, canton, sortBy, modality, aseguradora, language, params, router, pathname, variant, showVideoFilter]
   );
 
-  // Request geolocation on demand (item 11). Granted â†’ proximity sort + autofill
-  // the nearest provincia. Denied/unavailable â†’ keep the text-based search.
+  // Request geolocation on demand (item 11). Granted -> proximity sort + autofill
+  // the nearest provincia. Denied/unavailable -> keep the text-based search.
   function requestMyLocation(nextSortBy = sortBy) {
     if (geoActive) {
-      // Toggle OFF â€” drop the proximity sort + coords, keep other filters.
+      // Toggle OFF - drop the proximity sort + coords, keep other filters.
       setGeoError(null);
       setLocationQuery("");
       const fallbackSort = sortBy === "cercania" ? "rating" : sortBy;
@@ -460,7 +460,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     }
   }
 
-  // Picking a category suggestion â†’ set `categoria`, clear the free-text `q`, and cancel
+  // Picking a category suggestion -> set `categoria`, clear the free-text `q`, and cancel
   // any pending free-text debounce (so it can't fire afterward and wipe the category).
   function pickCategory(id: string) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -609,8 +609,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     router.push(pathname);
   }
 
-  // The unified service field (free text OR a picked category) counts as ONE filter â€” not
-  // two â€” even though it's backed by `q` XOR `categoria`.
+  // The unified service field (free text OR a picked category) counts as ONE filter - not
+  // two - even though it's backed by `q` XOR `categoria`.
   const serviceActive = !!(query.trim() || (category && category !== "todas"));
   const locationDisplay = params.get("ubicacion") ?? (geoActive ? t("filters.nearMeActive") : locationFilterLabel(province, canton));
   const locationFilterActive = geoActive || !!locationDisplay;
@@ -622,9 +622,9 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     (showInsurerFilter && aseguradora ? 1 : 0) +
     (language ? 1 : 0);
 
-  // â”€â”€ MOBILE chips variant â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- MOBILE chips variant --------------------------------------------------
   // A single horizontally-scrollable row of pill controls (NO vertical sidebar, NO
-  // search input â€” that's the separate MobileServiceSearch). Reuses every handler above,
+  // search input - that's the separate MobileServiceSearch). Reuses every handler above,
   // so the filtering/URL logic is identical; only the presentation differs.
   if (variant === "chips") {
     const pill = `${FILTER_TRIGGER} h-9 w-full rounded-full bg-white`;
@@ -715,11 +715,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
 
   const fieldLabel = "mb-1 block text-[11px] font-semibold text-[#6b7280]";
   // `hideHeader` = rendered inside the mobile filter sheet, which supplies its own
-  // chrome (title bar / padding) â€” so drop the card border/rounding/padding here.
+  // chrome (title bar / padding) - so drop the card border/rounding/padding here.
   const inDrawer = hideHeader;
   return (
     <div className={inDrawer ? "" : "rounded-2xl border border-[#e5e7eb] bg-white p-4"}>
-      {/* Header â€” "Filtros" + a live active-count (inline clear when any are on) + an
+      {/* Header - "Filtros" + a live active-count (inline clear when any are on) + an
           optional close X. `closable` is set ONLY for the mobile drawer instance, so the
           X lives INSIDE this white container's header; the desktop sidebar has no X. */}
       {!hideHeader && (
@@ -727,7 +727,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <h2 className="text-sm font-bold text-[#111827]">{t("filters.title")}</h2>
           <div className="flex items-center gap-1.5">
             {activeCount > 0 && (
-              // CLEAR = a LABELLED text link "Limpiar filtros (N)" â€” NOT a bare X (which read
+              // CLEAR = a LABELLED text link "Limpiar filtros (N)" - NOT a bare X (which read
               // like a close). A modern, unambiguous "clear all filters" affordance, visually
               // distinct from the panel-close X beside it (sprint 333).
               <button onClick={clearAll} className="text-[12px] font-semibold text-[#009FD9] hover:underline transition-colors whitespace-nowrap">
@@ -735,7 +735,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               </button>
             )}
             {closable && (
-              // CLOSE the whole filters panel â€” a distinct, LARGER FILLED circle X button, so
+              // CLOSE the whole filters panel - a distinct, LARGER FILLED circle X button, so
               // it never reads like the labelled "Limpiar filtros" clear action beside it.
               <button
                 type="button"
@@ -750,16 +750,16 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         </div>
       )}
 
-      {/* Vertical stack â€” EVERY filter is the SAME field shape: a `fieldLabel` + an
+      {/* Vertical stack - EVERY filter is the SAME field shape: a `fieldLabel` + an
           `h-10 w-full rounded-xl border px-4` box, so all five line up identically (the
           user wants them all the exact size of Aseguradora). The unified service/category
-          control is the FIRST field â€” a search INPUT, but boxed + padded to match the
+          control is the FIRST field - a search INPUT, but boxed + padded to match the
           Select triggers EXACTLY (it used to be a label-less, icon-indented `pl-9` input,
           which read as a different size next to the px-4 dropdowns). */}
       <div className="flex flex-col gap-3">
-        {/* Service/category â€” free text OR a picked category. Same box as the Selects:
+        {/* Service/category - free text OR a picked category. Same box as the Selects:
             label + h-10 w-full px-4 (NO left search icon, so its text starts at the same
-            x as Provincia/CantÃ³n/Ordenar/Aseguradora). */}
+            x as Provincia/Cant?n/Ordenar/Aseguradora). */}
         {!hideSearch && (
           <div>
             <label className={fieldLabel}>{t("filters.service")}</label>
@@ -775,7 +775,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                     if (e.key === "ArrowDown") { e.preventDefault(); setSearchActive((i) => Math.min(i + 1, searchSug.length - 1)); return; }
                     if (e.key === "ArrowUp") { e.preventDefault(); setSearchActive((i) => Math.max(i - 1, 0)); return; }
                     // Enter resolves the partial term to the highlighted OR the FIRST (best)
-                    // match and searches THAT (e.g. "electrici" â†’ "electricista").
+                    // match and searches THAT (e.g. "electrici" -> "electricista").
                     if (e.key === "Enter") {
                       e.preventDefault();
                       pickCategory(searchSug[searchActive >= 0 ? searchActive : 0].id);
@@ -791,13 +791,13 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 aria-autocomplete="list"
                 // EXACT same box as the Select triggers: h-10 w-full rounded-xl border, px-4
                 // left, and pr-9 ALWAYS so the right glyph sits exactly where the dropdowns'
-                // chevron does â€” so this field is indistinguishable in size + layout.
+                // chevron does - so this field is indistinguishable in size + layout.
                 className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
               />
               {/* Right-side glyph: a Search icon at rest (matches the Select chevron spot/
-                  size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field â€” a
+                  size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field - a
                   tiny icon in a hover-only circle, deliberately quieter + smaller than the
-                  filled close-panel button so "clear my text" â‰  "close the panel" (sprint 327). */}
+                  filled close-panel button so "clear my text" != "close the panel" (sprint 327). */}
               {query ? (
                 <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
                   <X className="h-3.5 w-3.5" />
@@ -828,10 +828,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           </div>
         )}
 
-        {/* Provincia + CantÃ³n â€” FULL-WIDTH stacked, exactly like every other filter
-            (CategorÃ­a / Ordenar / Aseguradora). The old 2-column row made each box too
+        {/* Provincia + Cant?n - FULL-WIDTH stacked, exactly like every other filter
+            (Categor?a / Ordenar / Aseguradora). The old 2-column row made each box too
             narrow for "Todas las provincias"/"Todos los cantones" (overflow) and put the
-            disabled-CantÃ³n faded border right next to Provincia â€” visually inconsistent. */}
+            disabled-Cant?n faded border right next to Provincia - visually inconsistent. */}
         <div>
           <label className={fieldLabel}>{t("filters.location")}</label>
           <div ref={locationFieldRef} className="relative">
@@ -958,10 +958,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <div>
           <label className={fieldLabel}>{t("filters.insurer")}</label>
           {/* Non-filtering default: nothing selected shows "Cualquier aseguradora"
-              (greyed, like a placeholder, so it reads as NOT an active filter â€” most
+              (greyed, like a placeholder, so it reads as NOT an active filter - most
               pros don't work with insurers). Pick one to filter. Clearing is the
               in-dropdown "Cualquier aseguradora" item (shown only when one is picked) so
-              the field stays the SAME full-width size as every other filter â€” an external
+              the field stays the SAME full-width size as every other filter - an external
               X button used to shrink this control ~40px narrower than the rest. */}
           <Select
             value={aseguradora || undefined}
@@ -986,7 +986,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   );
 }
 
-// â”€â”€ MOBILE "Filtros" icon-button (in the single-line /buscar header) â”€â”€
+// -- MOBILE "Filtros" icon-button (in the single-line /buscar header) --
 // Compact icon-only trigger; dispatches `ccr:open-filters`, which `SearchResultsLayout`
 // listens for to open the full-filter drawer. A brand-blue dot marks active filters.
 export function MobileFiltersButton() {
@@ -1013,11 +1013,11 @@ export function MobileFiltersButton() {
   );
 }
 
-// â”€â”€ MOBILE service-search bar (the "Busca un servicioâ€¦" field, pinned at the top) â”€â”€
+// -- MOBILE service-search bar (the "Busca un servicio..." field, pinned at the top) --
 // Self-contained: manages the `q` param (PRESERVING every other param), AND autocompletes
-// against OUR professions/categories taxonomy (`searchCategories`) â€” typing shows matching
+// against OUR professions/categories taxonomy (`searchCategories`) - typing shows matching
 // services; picking one filters by `categoria` (clears `q`). Same debounced free-text search
-// on Enter / blur. The taxonomy is the same one the "CategorÃ­a" filter + hero use.
+// on Enter / blur. The taxonomy is the same one the "Categor?a" filter + hero use.
 export function MobileServiceSearch() {
   const router = useRouter();
   const pathname = usePathname();
@@ -1070,11 +1070,11 @@ export function MobileServiceSearch() {
       if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => Math.min(i + 1, suggestions.length - 1)); return; }
       if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); return; }
       // Enter resolves the partial term to the highlighted OR the FIRST (best) matching service
-      // and searches THAT â€” e.g. "electrici" â†’ "electricista" (not a literal `q=electrici`).
+      // and searches THAT - e.g. "electrici" -> "electricista" (not a literal `q=electrici`).
       if (e.key === "Enter") { e.preventDefault(); if (debounceRef.current) clearTimeout(debounceRef.current); pickCategory(suggestions[active >= 0 ? active : 0].id); return; }
       if (e.key === "Escape") { setOpen(false); return; }
     }
-    // No taxonomy match â†’ fall back to a literal text search (graceful).
+    // No taxonomy match -> fall back to a literal text search (graceful).
     if (e.key === "Enter") { if (debounceRef.current) clearTimeout(debounceRef.current); setOpen(false); pushQuery(q); }
   }
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); if (blurRef.current) clearTimeout(blurRef.current); }, []);

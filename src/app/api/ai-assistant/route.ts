@@ -1520,7 +1520,7 @@ export async function POST(req: Request) {
       payload.action = "suggest_service";
       payload.answer = locale === "en"
         ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-        : "Ese servicio todavÃ­a no estÃ¡ en el catÃ¡logo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
+        : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
       payload.searchQuery = missingServiceName;
       payload.serviceId = null;
       payload.locationText = null;
@@ -1530,7 +1530,7 @@ export async function POST(req: Request) {
       payload.action = "answer";
       payload.answer = locale === "en"
         ? "Which service do you need? For example: plumbing, electricity, cleaning, repair or consulting."
-        : "Â¿QuÃ© tipo de servicio necesita? Por ejemplo: plomerÃ­a, electricidad, limpieza, reparaciÃ³n o asesorÃ­a.";
+        : "¿Qué tipo de servicio necesita? Por ejemplo: plomería, electricidad, limpieza, reparación o asesoría.";
       payload.searchQuery = null;
       payload.serviceId = null;
       payload.locationText = null;

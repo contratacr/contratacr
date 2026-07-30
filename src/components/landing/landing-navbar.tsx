@@ -646,8 +646,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
   const pathname = usePathname();
   const nativeApp = useNativeApp();
-  const nativeHeaderShell = nativeApp;
-  const nativeBottomShell = nativeApp;
+  const [hydrated, setHydrated] = useState(false);
+  const nativeHeaderShell = hydrated && nativeApp;
+  const nativeBottomShell = hydrated && nativeApp;
   const { user, loading: authLoading } = useAuth();
   const nativeBottomNavVisible = nativeBottomShell;
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
@@ -658,6 +659,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
   }, [isSmallScreen, t]);
   const compactPlaceholder = useTypedPlaceholder(compactSearchExamples, effectiveCompact && !searchFocused && !searchQuery.trim());
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     const roots = [document.documentElement, document.body];
