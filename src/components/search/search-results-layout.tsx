@@ -144,7 +144,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   }, []);
 
   return (
-    <div className="ccr-search-results-layout flex h-[calc(100dvh-64px)] flex-col overflow-hidden lg:block lg:h-auto lg:overflow-visible">
+    <div className="ccr-search-results-layout flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-transparent lg:block lg:h-auto lg:overflow-visible">
       {/* Controls bar — "Filtros" drawer button ONLY at lg–xl (xl+ uses the sidebar). */}
       <div className="hidden lg:flex xl:hidden sticky top-16 z-30 mb-4 items-center gap-2">
         <button
@@ -174,7 +174,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
 
       {/* ONE flex container: mobile = the map fills the remaining height (the sheet floats
           over it); desktop = the 3-column shell (filters · cards · map) via `lg:order-*`. */}
-      <div className="relative flex min-h-0 flex-1 flex-col gap-0 lg:flex-row lg:gap-5">
+      <div className="relative flex min-h-0 flex-1 flex-col gap-0 bg-transparent lg:flex-row lg:gap-5">
         {/* Filters sidebar — desktop xl+ only (order-1). Hidden on mobile + lg–xl (drawer). */}
         <aside className="hidden xl:block lg:order-1 w-64 shrink-0">
           <div className="sticky top-20">{filters}</div>
@@ -183,7 +183,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
         {/* Map — mobile: full-bleed BACKGROUND, flex-fills the area under the header (the sheet
             overlays its lower part). Desktop: the sticky right column (order-3). ONE instance. */}
         <aside className="min-h-0 min-w-0 flex-1 lg:order-3">
-          <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-white lg:sticky lg:top-20">
+          <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:sticky lg:top-20 lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-transparent">
             <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />
             <button
               type="button"

@@ -485,7 +485,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             : "max-h-full h-[min(820px,calc(var(--app-visual-viewport-height)_-_0.5rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
         )}
       >
-        <header className="relative flex shrink-0 items-center gap-2 border-b border-[#cfe3f4] bg-[linear-gradient(120deg,#ffffff_0%,#f3f9ff_100%)] px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
+        <header className="relative flex shrink-0 items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
           {(embedded || nativeApp) && (
             <button
               type="button"
