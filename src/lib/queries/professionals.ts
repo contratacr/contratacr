@@ -82,7 +82,7 @@ export type SearchFilters = {
   /** User coordinates (geolocation) - enables the "cerca de m?" proximity sort. */
   nearLat?: number;
   nearLng?: number;
-  /** "Buscar en esta ?rea" - keep only pros within the map's visible viewport.
+  /** "Buscar en esta área" - keep only pros within the map's visible viewport.
    *  Applied IN ADDITION to the other filters (a JS post-filter on the results). */
   bounds?: { north: number; south: number; east: number; west: number };
 };
@@ -95,9 +95,49 @@ export type ProService = {
   priceAmount?: number | null;
   priceType?: import("@/lib/pricing").PricingType | null;
   category?: string;
+  years?: number;
+  months?: number;
   active?: boolean;
   modalities?: Array<"in_person" | "at_home" | "video">;
 };
+
+function isDemoContrataCr(professional: Pick<ProfessionalCardData, "slug" | "businessName">): boolean {
+  return professional.slug === "contratacr-desarrollo-web-atenas" || professional.businessName?.trim().toLowerCase() === "contratacr";
+}
+
+function isDemoSgSolutions(professional: Pick<ProfessionalCardData, "slug" | "businessName">): boolean {
+  const name = professional.businessName?.trim().toLowerCase();
+  return name === "sg solutions" || professional.slug?.includes("sg-solutions") === true;
+}
+
+function setServiceExperience<T extends { years?: number; months?: number }>(services: T[] | undefined, years: number): T[] | undefined {
+  return services?.map((service) => ({
+    ...service,
+    years,
+    months: 0,
+  }));
+}
+
+function withAdvertisingDemoStats<T extends ProfessionalCardData>(professional: T): T {
+  if (isDemoContrataCr(professional)) {
+    return {
+      ...professional,
+      followerCount: 20,
+      yearsExperience: 7,
+      services: setServiceExperience(professional.services, 7),
+    };
+  }
+  if (isDemoSgSolutions(professional)) {
+    return {
+      ...professional,
+      followerCount: 10,
+      yearsExperience: 25,
+      portfolioCount: 2,
+      services: setServiceExperience(professional.services, 25),
+    };
+  }
+  return professional;
+}
 
 function hasActiveService(services: unknown): boolean {
   return activeServices(services).length > 0;
@@ -172,7 +212,7 @@ export type PortfolioItem = {
 };
 
 // Optional website/social links. Social networks are stored as usernames; the
-// website is stored as a normalized URL. Additive to "casos de ?xito" photos.
+// website is stored as a normalized URL. Additive to "casos de éxito" photos.
 export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; linkedin?: string; website?: string };
 
 export type ProfessionalDetail = ProfessionalCardData & {
@@ -527,6 +567,7 @@ async function searchProfessionalsUncached(
         } catch {
           mapped = mapped.map((p) => ({ ...p, followerCount: 0 }));
         }
+        mapped = mapped.map(withAdvertisingDemoStats);
       }
 
       if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
@@ -569,7 +610,7 @@ async function searchProfessionalsUncached(
         (p.verificationStatus === "verified" ? 2 : 0) + (p.isFeatured ? 1 : 0);
       mapped.sort((a, b) => rank(b) - rank(a));
 
-      // "Buscar en esta ?rea" - keep only pros whose exact pin/workplace falls
+      // "Buscar en esta área" - keep only pros whose exact pin/workplace falls
       // within the map's visible viewport. A broad canton/province coverage zone
       // is not precise enough for a zoomed-in map rectangle.
       if (filters.bounds) {
@@ -734,7 +775,7 @@ export async function getProfessionalBySlug(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const proRow = pro as any;
 
-      // Tagged casos-de-?xito + phone-call opt-in + coverage. Best-effort: separate
+      // Tagged casos-de-éxito + phone-call opt-in + coverage. Best-effort: separate
       // queries so a missing column (pre-migration 033/034) never breaks the profile.
       let portfolioItems: PortfolioItem[] = [];
       try {
@@ -819,7 +860,7 @@ export async function getProfessionalBySlug(
         followerCount = count ?? 0;
       } catch { /* table not migrated yet */ }
 
-      return {
+      return withAdvertisingDemoStats({
         id: proRow.id,
         slug: proRow.slug,
         fullName: (proRow.profiles as any)?.full_name ?? "Profesional",
@@ -865,7 +906,7 @@ export async function getProfessionalBySlug(
         callPhone,
         contactEmail,
         socialLinks,
-      };
+      });
       /* eslint-enable @typescript-eslint/no-explicit-any */
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);

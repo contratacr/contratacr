@@ -51,14 +51,14 @@ export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "followin
       <button
         type="button"
         onClick={() => onOpen?.("following")}
-        className="whitespace-nowrap transition hover:text-[#009FD9]"
+        className="whitespace-nowrap rounded-md transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
       >
         <strong className="text-[#162543]">{counts.following}</strong> {es ? "seguidos" : "following"}
       </button>
       <button
         type="button"
         onClick={() => onOpen?.("followers")}
-        className="whitespace-nowrap transition hover:text-[#009FD9]"
+        className="whitespace-nowrap rounded-md transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
       >
         <strong className="text-[#162543]">{counts.followers}</strong> {es ? "seguidores" : "followers"}
       </button>

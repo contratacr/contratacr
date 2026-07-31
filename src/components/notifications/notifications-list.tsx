@@ -224,6 +224,11 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     <div>
       <div className="mb-3 hidden sm:block">
         <h3 className="text-lg font-extrabold text-[#162543]">{t("title")}</h3>
+        {unread > 0 && (
+          <p className="mt-0.5 text-xs text-[#6b7280]">
+            {unread} {locale === "en" ? "unread" : "sin leer"}
+          </p>
+        )}
       </div>
 
       {visible.length > 0 && (

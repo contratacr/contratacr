@@ -66,3 +66,34 @@ export function lockBodyScroll(): () => void {
     }
   };
 }
+
+export function recoverBodyScrollLock(): void {
+  if (typeof document === "undefined" || !document.body) return;
+
+  const state = getState();
+  if (state.locks.size === 0) return;
+
+  const hasVisibleModal = Boolean(
+    document.querySelector(
+      [
+        '[role="dialog"][aria-modal="true"]',
+        "[data-ai-concierge-dialog]",
+        ".app-bottom-sheet",
+      ].join(","),
+    ),
+  );
+
+  if (hasVisibleModal) return;
+
+  state.locks.clear();
+  document.body.style.overflow = state.previousOverflow;
+  document.body.style.position = state.previousPosition;
+  document.body.style.top = state.previousTop;
+  document.body.style.width = state.previousWidth;
+  if (state.scrollY > 0) window.scrollTo({ top: state.scrollY, left: 0, behavior: "instant" });
+  state.previousOverflow = "";
+  state.previousPosition = "";
+  state.previousTop = "";
+  state.previousWidth = "";
+  state.scrollY = 0;
+}

@@ -1,9 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { Briefcase, BriefcaseBusiness, Star, Users } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -33,6 +32,7 @@ export type ProfessionalCardData = {
   ratingAvg: number;
   reviewCount: number;
   yearsExperience?: number;
+  monthsExperience?: number;
   hourlyRate?: number;
   isVerified: boolean;
   isFeatured: boolean;
@@ -67,6 +67,8 @@ export type ProfessionalCardData = {
     price?: string;
     priceAmount?: number | null;
     priceType?: import("@/lib/pricing").PricingType | null;
+    years?: number;
+    months?: number;
     active?: boolean;
     category?: string;
     modalities?: Array<"in_person" | "at_home" | "video">;
@@ -172,16 +174,38 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   })();
   const portfolioCount = professional.portfolioCount ?? 0;
   const followerCount = professional.followerCount ?? 0;
-  const yearsExperience = professional.yearsExperience ?? 0;
+  const candidateExperienceServices = activeCategory
+    ? professional.services?.filter((service) => service.category === activeCategory)
+    : professional.services;
+  const serviceExperience = candidateExperienceServices?.find((service) => {
+    const years = typeof service.years === "number" ? service.years : 0;
+    const months = typeof service.months === "number" ? service.months : 0;
+    return years > 0 || months > 0;
+  });
+  const yearsExperience = Math.max(0, Math.floor(serviceExperience?.years ?? professional.yearsExperience ?? 0));
+  const monthsExperience = Math.max(0, Math.min(11, Math.floor(serviceExperience?.months ?? professional.monthsExperience ?? 0)));
+  const hasExperience = yearsExperience > 0 || monthsExperience > 0;
+  const formatExperienceLabel = (years: number, months: number) => {
+    if (locale === "en") {
+      const parts = [
+        years > 0 ? `${years} ${years === 1 ? "year" : "years"}` : "",
+        months > 0 ? `${months} ${months === 1 ? "month" : "months"}` : "",
+      ].filter(Boolean);
+      return `${parts.length ? parts.join(" ") : "0 years"} experience`;
+    }
+    const parts = [
+      years > 0 ? `${years} ${years === 1 ? "año" : "años"}` : "",
+      months > 0 ? `${months} ${months === 1 ? "mes" : "meses"}` : "",
+    ].filter(Boolean);
+    return `${parts.length ? parts.join(" ") : "0 años"} experiencia`;
+  };
   const casesLabel = locale === "en"
     ? `${portfolioCount} success ${portfolioCount === 1 ? "case" : "cases"}`
     : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
   const followersLabel = locale === "en"
     ? `${followerCount} ${followerCount === 1 ? "follower" : "followers"}`
     : `${followerCount} ${followerCount === 1 ? "seguidor" : "seguidores"}`;
-  const experienceLabel = locale === "en"
-    ? `${yearsExperience} ${yearsExperience === 1 ? "yr exp." : "yrs exp."}`
-    : `${yearsExperience} ${yearsExperience === 1 ? "año exp." : "años exp."}`;
+  const experienceLabel = formatExperienceLabel(yearsExperience, monthsExperience);
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
@@ -348,39 +372,40 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             </div>
             </>
           )}
-          {/* Rating + review count — DIRECTLY under the tags (only the count links out). */}
+          {/* Trust metrics: social proof first, then proof-of-work. */}
           <div className="basis-full lg:basis-auto">
             {professional.reviewCount > 0 ? (
-              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-[#8a97a8]">
-                <Link
-                  href={reviewsHref}
-                  className="relative z-10 inline-flex w-fit items-center gap-1.5 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-                  aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
-                >
-                  <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
-                  <span className="text-[13px] font-bold text-[#111827] transition-colors group-hover:text-[#0089BB]">{professional.ratingAvg.toFixed(1)}</span>
-                  <span className="font-medium text-[#9ca3af] hover:underline">
-                    ({tCard("reviewsCount", { count: professional.reviewCount })})
-                  </span>
-                </Link>
-                <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
-                  <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                  <span className="truncate">{casesLabel}</span>
-                </Link>
-                {yearsExperience > 0 && <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5 text-[#9ca3af]" />{experienceLabel}</span>}
-                <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5 text-[#9ca3af]" />{followersLabel}</span>
+              <div className={cn(
+                "w-fit max-w-full min-w-0 gap-x-5 gap-y-1 text-[11px] font-semibold leading-tight text-[#8a97a8]",
+                hasExperience ? "grid grid-cols-[auto_auto]" : "flex flex-wrap items-center",
+              )}>
+                  <Link
+                    href={reviewsHref}
+                    className="relative z-10 inline-flex w-fit items-center gap-1 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                    aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+                  >
+                    <span className="text-[13px] font-bold text-[#6f7d90] transition-colors group-hover:text-[#0089BB]">{professional.ratingAvg.toFixed(1)}</span>
+                    <span className="font-semibold text-[#8a97a8] hover:underline">
+                      {tCard("reviewsCount", { count: professional.reviewCount })}
+                    </span>
+                  </Link>
+                  <span className="whitespace-nowrap">{followersLabel}</span>
+                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                    <span className="truncate">{casesLabel}</span>
+                  </Link>
+                  {hasExperience && <span className="whitespace-nowrap">{experienceLabel}</span>}
               </div>
             ) : (
-              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-[#9ca3af]">
-                <span className="inline-flex items-center gap-1.5">
-                  <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
-                </span>
-                <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
-                  <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{casesLabel}</span>
-                </Link>
-                {yearsExperience > 0 && <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{experienceLabel}</span>}
-                <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" />{followersLabel}</span>
+              <div className={cn(
+                "w-fit max-w-full min-w-0 gap-x-5 gap-y-1 text-[11px] font-semibold leading-tight text-[#9ca3af]",
+                hasExperience ? "grid grid-cols-[auto_auto]" : "flex flex-wrap items-center",
+              )}>
+                  <span className="whitespace-nowrap">{tCard("noReviews")}</span>
+                  <span className="whitespace-nowrap">{followersLabel}</span>
+                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                    <span className="truncate">{casesLabel}</span>
+                  </Link>
+                  {hasExperience && <span className="whitespace-nowrap">{experienceLabel}</span>}
               </div>
             )}
           </div>

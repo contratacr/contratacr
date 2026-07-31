@@ -42,8 +42,8 @@
     "account": "Account",
     "sentRequests": "My sent requests",
     "myRequests": "My requests",
-    "publishedProjects": "My posts",
-    "myProjects": "My posts",
+    "publishedProjects": "My projects",
+    "myProjects": "My projects",
     "favorites": "My favorites",
     "notifications": "Notifications",
     "supportTickets": "Support",
@@ -1104,7 +1104,7 @@
       "title": "Client dashboard",
       "nav": {
         "bookings": "Requests",
-        "projects": "Posts",
+        "projects": "Projects",
         "saved": "Saved",
         "notifications": "Notifications",
         "profile": "My profile"
@@ -1127,10 +1127,10 @@
         }
       },
       "projects": {
-        "title": "My posts",
-        "publish": "Post a request",
-        "empty": "You haven't posted any requests yet",
-        "emptyHint": "Post a request to receive proposals.",
+        "title": "My projects",
+        "publish": "New project",
+        "empty": "You haven't created any projects yet",
+        "emptyHint": "Create a project to receive proposals.",
         "proposals": "proposal(s)",
         "noProposals": "No proposals yet",
         "accept": "Accept proposal",
@@ -1193,15 +1193,15 @@
       "chat": "Messages",
       "assistant": "Assistant",
       "bookings": "Requests received",
-      "proposals": "Opportunities",
+      "proposals": "Projects received",
       "verificacion": "Verification",
       "suscripcion": "Subscription",
       "sent_bookings": "My requests",
-      "sent_projects": "My posts",
+      "sent_projects": "My projects",
       "saved": "My favorites",
       "network": "Following and followers",
       "notifications": "Notifications",
-      "guides": "Quick guides",
+      "guides": "Guides",
       "soporte": "Support",
       "cuenta": "Account & security"
     },
@@ -1321,8 +1321,10 @@
     "servicesHeading": "My services",
     "guides": {
       "headerButton": "Quick guides",
-      "modalTitle": "Quick guides",
-      "modalSubtitle": "Step-by-step guides to use ContrataCR as a client or professional.",
+      "modalTitle": "Step-by-step guides",
+      "modalSubtitle": "Choose a section and review the main steps.",
+      "modalQuestion": "Need help? Start here",
+      "close": "Close",
       "heroEyebrow": "Step-by-step guide",
       "heroTitle": "Use your panel with real examples",
       "heroBody": "This guide uses ContrataCR's profile as a reference to show what a client sees, what a professional should complete and how to follow up without losing order.",
@@ -1370,7 +1372,15 @@
         ]
       },
       "providerNoteTitle": "If you are a professional:",
-      "providerNoteBody": "you have both panels. You can offer your services and, when you need to hire someone, switch to the client panel without creating another account.",
+      "providerNoteBody": "As a professional, you can also use the client panel with the same account.",
+      "clientNoteTitle": "If you only use ContrataCR as a client:",
+      "clientNoteBody": "The professional guide stays available if you later want to offer services.",
+      "activateProfessionalCta": "Create professional profile",
+      "sections": {
+        "client": "For clients",
+        "shared": "Shared features",
+        "professional": "For professionals"
+      },
       "sectionListTitle": "Sections",
       "selectedEyebrow": "Step by step",
       "previewTitle": "Visual example",
@@ -1406,8 +1416,90 @@
         }
       },
       "items": {
+        "clientPanel": {
+          "title": "Client panel",
+          "short": "My requests, My projects and My favorites",
+          "body": "Use the client panel to follow up on what you want to hire.",
+          "steps": [
+            "In My requests, review services you requested directly from a professional.",
+            "In My projects, review projects you created to receive proposals.",
+            "In My favorites, save profiles to compare or contact later.",
+            "From the same panel, open support if you need help."
+          ],
+          "cta": "Go to client panel"
+        },
+        "searchServices": {
+          "title": "Search",
+          "short": "Compare professionals",
+          "body": "Search helps you compare professionals by service, location, reviews, success stories and availability.",
+          "steps": [
+            "Open Search and type the service you need.",
+            "Use service, location and mode filters to narrow results.",
+            "Review the professional card: name, verification, reviews, success stories and contact options.",
+            "Open the profile to see more information before messaging or booking.",
+            "If the professional does not show times, use Send message to coordinate."
+          ],
+          "cta": "Go to search"
+        },
+        "searchFilters": {
+          "title": "Use search filters",
+          "short": "Service, location and mode",
+          "body": "Filters narrow results so you can find options closer to what you need.",
+          "steps": [
+            "Filter by service to see related professionals.",
+            "Add location if you want results near a province or canton.",
+            "Use mode to separate in-person, video consultation or both."
+          ],
+          "cta": "Open filters"
+        },
+        "messages": {
+          "title": "Messages",
+          "short": "Coordinate in order",
+          "body": "Messages centralizes conversations with professionals, clients and support so context is not lost.",
+          "steps": [
+            "Open a conversation from a profile, request, project or proposal.",
+            "If you come from a project or request, review the context before replying.",
+            "Conversations only stay active once messages are sent.",
+            "Use search to find older conversations."
+          ],
+          "cta": "Go to messages"
+        },
+        "assistantGuide": {
+          "title": "Assistant",
+          "short": "Quick help inside the app",
+          "body": "The assistant helps you navigate ContrataCR, draft messages and understand which section to use.",
+          "steps": [
+            "Ask what you need to do and the assistant guides you.",
+            "Always review the answer before sending important information.",
+            "Start a new chat when you want to change topics."
+          ],
+          "cta": "Open assistant"
+        },
+        "supportGuide": {
+          "title": "Support",
+          "short": "Help with your account",
+          "body": "Support lets you open tickets and continue conversations with the ContrataCR team.",
+          "steps": [
+            "Open Support from the client or professional panel.",
+            "Choose the topic and describe the problem.",
+            "Continue the ticket from the same conversation when you receive a reply."
+          ],
+          "cta": "Go to support"
+        },
+        "professionalPanel": {
+          "title": "Professional panel",
+          "short": "Requests received, Projects received and profile",
+          "body": "The professional panel is for receiving requests, replying to projects and keeping your offer complete.",
+          "steps": [
+            "Check Requests received when a client contacts you directly.",
+            "In Projects received, review opportunities where you can send proposals.",
+            "Keep services, availability and success stories updated.",
+            "You still keep the client panel to hire other services."
+          ],
+          "cta": "Go to professional panel"
+        },
         "profile": {
-          "title": "Complete your profile",
+          "title": "My profile",
           "short": "Identity, photo and trust",
           "body": "Help clients and professionals understand who you are before contacting you.",
           "steps": [
@@ -1419,7 +1511,7 @@
           "cta": "Go to my profile"
         },
         "services": {
-          "title": "Add services",
+          "title": "My services",
           "short": "What you offer and how clients find you",
           "body": "The clearer your offer is, the easier it is for clients to find you.",
           "steps": [
@@ -1431,7 +1523,7 @@
           "cta": "Go to my services"
         },
         "availability": {
-          "title": "Set availability",
+          "title": "Availability",
           "short": "Hours and contact options",
           "body": "Define when clients can contact or book you.",
           "steps": [
@@ -1442,7 +1534,7 @@
           "cta": "Go to availability"
         },
         "successCases": {
-          "title": "Upload success stories",
+          "title": "Success stories",
           "short": "Real work and evidence",
           "body": "Show real work so new clients can trust you faster.",
           "steps": [
@@ -1453,7 +1545,7 @@
           "cta": "Go to success stories"
         },
         "requests": {
-          "title": "Reply to requests",
+          "title": "Requests received",
           "short": "Clients who contact you",
           "body": "Keep requests that arrive directly to your profile organized.",
           "steps": [
@@ -1461,18 +1553,18 @@
             "Coordinate by message if you need to clarify anything.",
             "Update the status so you do not lose track."
           ],
-          "cta": "Go to requests"
+          "cta": "Go to requests received"
         },
         "opportunities": {
-          "title": "Send proposals",
-          "short": "Open client posts",
-          "body": "Find open posts that match your services.",
+          "title": "Projects received",
+          "short": "Projects where you can send proposals",
+          "body": "Find published projects that match your services.",
           "steps": [
             "Filter by service to see relevant opportunities.",
             "Send a clear proposal with price and scope.",
             "Follow up from messages if the client replies."
           ],
-          "cta": "Go to opportunities"
+          "cta": "Go to projects received"
         }
       }
     },
@@ -1481,7 +1573,7 @@
       "bookings": "Requests your clients sent you.",
       "proposals": "Opportunities you can send proposals to.",
       "sent_bookings": "Services you requested.",
-      "sent_projects": "Requests you published to receive proposals.",
+      "sent_projects": "Projects you created to receive proposals.",
       "saved": "Profiles you saved to hire later."
     },
     "profileSections": {
@@ -1512,7 +1604,7 @@
       "services": "Add the services you offer",
       "servicesBenefit": "Clients search by service: without services you barely show up.",
       "serviceInfo": "Complete your service details",
-      "serviceInfoBenefit": "Add price and description so clients understand what you offer.",
+      "serviceInfoBenefit": "Add price and experience for each service.",
       "location": "Set your location or coverage",
       "locationBenefit": "So clients in your area can find you.",
       "whatsapp": "Confirm your contact number",
@@ -1565,7 +1657,7 @@
       "proposals": "Opportunities",
       "verificacion": "Verification",
       "sent_bookings": "Requests",
-      "sent_projects": "Posts",
+      "sent_projects": "Projects",
       "notifications": "Notifications",
       "soporte": "Support",
       "cuenta": "Account",
@@ -1843,6 +1935,8 @@
     "newService": "New price · {profession}",
     "nameRequired": "The name is required.",
     "priceRequired": "Enter a price or check \"Ask price\".",
+    "yearsRequired": "Add the years of experience for this service.",
+    "experienceRequired": "Add the experience for this service.",
     "nameLabel": "Service name *",
     "namePlaceholder": "example: Residential electrical installation",
     "description": "Description",
@@ -1850,8 +1944,13 @@
     "descPlaceholder": "Briefly describe what this service involves...",
     "price": "Price",
     "willShowAs": "Will show as: {price}",
-    "yearsLabel": "Years of experience in this service",
+    "experienceLabel": "Experience in this service",
+    "yearsLabel": "Years",
+    "yearsShort": "Years",
     "yearsPlaceholder": "example: 5",
+    "monthsLabel": "Months",
+    "monthsShort": "Months",
+    "monthsPlaceholder": "example: 6",
     "saving": "Saving…",
     "saveChanges": "Save changes",
     "addServiceBtn": "Add price",
@@ -2232,8 +2331,8 @@
     "report": "Report",
     "pEmpty": "You haven't published any requests yet",
     "pEmptySub": "Post what you need and receive several proposals.",
-    "publishProject": "Post a request",
-    "publishShort": "Post",
+    "publishProject": "Create a project",
+    "publishShort": "Create",
     "noProjectsView": "No requests in this view.",
     "projAssigned": "Assigned",
     "projAwaiting": "To confirm",
@@ -2312,7 +2411,7 @@
     "savedHeading": "Saved professionals",
     "bookingsHeading": "My requests",
     "bookingsSubtitle": "Services you requested.",
-    "projectsHeading": "My posts",
+    "projectsHeading": "My projects",
     "projectsSubtitle": "Requests you posted to receive proposals.",
     "notificationsHeading": "Notifications",
     "supportHeading": "Support",
@@ -2665,18 +2764,18 @@
     "phoneLabel": "Contact phone",
     "phoneHelp": "You can keep this number or change it. If you change it, it will update your contact number.",
     "loadingProfile": "Loading your details...",
-    "errPublish": "Error publishing the request. Try again.",
+    "errPublish": "Error creating the project. Try again.",
     "errUnexpected": "Unexpected error. Try again.",
-    "successTitle": "Request published!",
-    "successBody": "The professionals who offer that service in your area will see your request and can send you proposals.",
-    "viewProjects": "View my posts",
+    "successTitle": "Project created!",
+    "successBody": "The professionals who offer that service in your area will see your project and can send you proposals.",
+    "viewProjects": "View my projects",
     "goToPanel": "Go to my dashboard",
-    "title": "Post a request",
+    "title": "Create project",
     "subtitle": "Describe what you need and receive proposals from your area.",
     "category": "Service",
     "categoryHelp": "This routes your request to the professionals who offer that service.",
     "categoryPlaceholder": "Type or choose a service",
-    "projectTitle": "Request title",
+    "projectTitle": "Project title",
     "titlePlaceholder": "example: Painting living and dining room, 50m²",
     "description": "Description",
     "descriptionPlaceholder": "Tell us briefly what you need. Example: Paint the living room and dining room, about 50 m².",
@@ -2687,8 +2786,8 @@
     "noCedula": "I don't have an ID",
     "noCedulaNotice": "You'll send your request <strong>without a verified ID</strong>. The professional will see that and decide whether to contact you.",
     "haveCedula": "I have an ID",
-    "identityPendingNotice": "Request published. Your ID is pending review and professionals will see that status.",
-    "identityUnverifiedNotice": "Request published. We could not confirm that ID in the registry; your identity will appear as unverified.",
+    "identityPendingNotice": "Project created. Your ID is pending review and professionals will see that status.",
+    "identityUnverifiedNotice": "Project created. We could not confirm that ID in the registry; your identity will appear as unverified.",
     "provincia": "Province",
     "optional": "(optional)",
     "allF": "All",
@@ -2746,7 +2845,7 @@
       "booking_update": "Request update",
       "project_proposal_accepted": "Proposal accepted!",
       "project_proposal_declined": "Proposal not selected",
-      "new_project": "New opportunity",
+      "new_project": "New project",
       "project_work_done": "Confirm job completion",
       "project_completed": "Opportunity completed",
       "project_cancelled": "Request cancelled",
@@ -2781,13 +2880,13 @@
       "flexible": "I'm flexible",
       "planning": "I'm planning ahead"
     },
-    "submit": "Post a request",
-    "submitting": "Posting...",
+    "submit": "Create project",
+    "submitting": "Creating...",
     "cancel": "Cancel",
     "success": {
-      "title": "Request posted!",
-      "desc": "The professionals who offer that service in your area will see your request and can send you proposals.",
-      "dashboard": "View my posts"
+      "title": "Project created!",
+      "desc": "The professionals who offer that service in your area will see your project and can send you proposals.",
+      "dashboard": "View my projects"
     }
   },
   "categories": {

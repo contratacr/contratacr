@@ -17,6 +17,7 @@ type FollowButtonProps = {
   className?: string;
   showCount?: boolean;
   initialFollowers?: number;
+  labelOverride?: string;
 };
 
 function writePendingFollow(professionalId: string) {
@@ -74,7 +75,7 @@ export async function applyPendingFollow(userId?: string): Promise<boolean> {
   return true;
 }
 
-export function FollowButton({ professionalId, isOwn = false, compact = false, className, showCount = false, initialFollowers = 0 }: FollowButtonProps) {
+export function FollowButton({ professionalId, isOwn = false, compact = false, className, showCount = false, initialFollowers = 0, labelOverride }: FollowButtonProps) {
   const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
   const [following, setFollowing] = useState(false);
@@ -132,7 +133,7 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
     setBusy(false);
   }
 
-  const label = following ? (es ? "Siguiendo" : "Following") : (es ? "Seguir" : "Follow");
+  const label = labelOverride ?? (following ? (es ? "Siguiendo" : "Following") : (es ? "Seguir" : "Follow"));
   const countLabel = es
     ? `${followers} ${followers === 1 ? "seguidor" : "seguidores"}`
     : `${followers} ${followers === 1 ? "follower" : "followers"}`;
@@ -147,30 +148,33 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
         aria-pressed={following}
         title={`${label} · ${countLabel}`}
         className={cn(
-          "flex h-7 min-w-7 items-center justify-center gap-1 rounded-full px-1.5 text-[11px] font-extrabold transition-colors disabled:opacity-60",
-          following ? "bg-[#e9f7fc] text-[#007eae]" : "bg-white text-[#7c8ba0] hover:bg-[#eef9fd] hover:text-[#0089bb]",
+          "inline-flex h-8 min-w-[96px] items-center justify-center rounded-lg px-4 text-sm font-bold transition-colors disabled:opacity-60",
+          following || labelOverride
+            ? "bg-[#f0f2f5] text-[#111827] hover:bg-[#e5e9ee]"
+            : "bg-[#102746] text-white hover:bg-[#1b365d]",
           className,
         )}
       >
-        {following ? <UserCheck className="h-[17px] w-[17px]" /> : <UserPlus className="h-[17px] w-[17px]" />}
-        <span className="tabular-nums">{followers}</span>
+        {label}
       </button>
     );
   }
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-3", className)}>
+    <div className={cn("flex flex-wrap items-center gap-2.5", className)}>
       <button
         type="button"
         onClick={toggle}
         disabled={busy}
         aria-pressed={following}
         className={cn(
-          "inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-colors disabled:opacity-60",
-          following ? "border border-[#b8e3f2] bg-[#eef9fd] text-[#007eae]" : "bg-[#102746] text-white hover:bg-[#1b365d]",
+          "inline-flex h-8 items-center justify-center gap-1.5 rounded-full px-3.5 text-[13px] font-extrabold transition-colors disabled:opacity-60",
+          following
+            ? "border border-[#d7e3ec] bg-white text-[#162543] hover:bg-[#f5f8fb]"
+            : "bg-[#102746] text-white shadow-sm hover:bg-[#1b365d]",
         )}
       >
-        {following ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+        {following ? <UserCheck className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
         {label}
       </button>
       {showCount && <span className="text-sm font-semibold text-[#526277]">{countLabel}</span>}

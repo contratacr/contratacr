@@ -27,6 +27,16 @@ function hasLen(v: unknown): boolean {
   return Array.isArray(v) && v.length > 0;
 }
 
+function hasCompleteServiceInfo(v: unknown): boolean {
+  if (!Array.isArray(v) || v.length === 0) return false;
+  return v.every((service) => {
+    if (!service || typeof service !== "object") return false;
+    const years = (service as { years?: unknown }).years;
+    const months = (service as { months?: unknown }).months;
+    return (typeof years === "number" && years > 0) || (typeof months === "number" && months > 0);
+  });
+}
+
 export function computeCompletion(pro: ProRecord): {
   percent: number;
   items: CompletionItem[];
@@ -47,7 +57,7 @@ export function computeCompletion(pro: ProRecord): {
     !!pro.provincia_id ||
     !!pro.canton_id;
   const hasSelectedServices = hasLen(pro.professions) || !!pro.category_id;
-  const hasServiceInfo = hasLen(pro.services);
+  const hasServiceInfo = hasCompleteServiceInfo(pro.services);
 
   const items: CompletionItem[] = [
     { key: "photo", done: hasProfilePhoto, tab: "profile" },

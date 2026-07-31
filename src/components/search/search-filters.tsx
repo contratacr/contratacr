@@ -764,7 +764,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       <div className="flex flex-col gap-3">
         {/* Service/category - free text OR a picked category. Same box as the Selects:
             label + h-10 w-full px-4 (NO left search icon, so its text starts at the same
-            x as Provincia/Cant?n/Ordenar/Aseguradora). */}
+            x as Provincia/Canton/Ordenar/Aseguradora). */}
         {!hideSearch && (
           <div>
             <label className={fieldLabel}>{t("filters.service")}</label>
@@ -833,10 +833,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           </div>
         )}
 
-        {/* Provincia + Cant?n - FULL-WIDTH stacked, exactly like every other filter
-            (Categor?a / Ordenar / Aseguradora). The old 2-column row made each box too
+        {/* Provincia + Canton - FULL-WIDTH stacked, exactly like every other filter
+            (Categoria / Ordenar / Aseguradora). The old 2-column row made each box too
             narrow for "Todas las provincias"/"Todos los cantones" (overflow) and put the
-            disabled-Cant?n faded border right next to Provincia - visually inconsistent. */}
+            disabled-Canton faded border right next to Provincia - visually inconsistent. */}
         <div>
           <label className={fieldLabel}>{t("filters.location")}</label>
           <div ref={locationFieldRef} className="relative">
@@ -1022,7 +1022,7 @@ export function MobileFiltersButton() {
 // Self-contained: manages the `q` param (PRESERVING every other param), AND autocompletes
 // against OUR professions/categories taxonomy (`searchCategories`) - typing shows matching
 // services; picking one filters by `categoria` (clears `q`). Same debounced free-text search
-// on Enter / blur. The taxonomy is the same one the "Categor?a" filter + hero use.
+// on Enter / blur. The taxonomy is the same one the "Categoria" filter + hero use.
 export function MobileServiceSearch() {
   const router = useRouter();
   const pathname = usePathname();

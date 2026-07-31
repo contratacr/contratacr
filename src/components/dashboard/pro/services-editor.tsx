@@ -25,7 +25,8 @@ export type ProService = {
   price?: string;          // display string (kept in sync from amount+type)
   priceAmount?: number;    // colones (optional)
   priceType?: PricingType; // por_hora | por_proyecto | …
-  years?: number;          // years of experience in THIS service (optional)
+  years?: number;          // years of experience in THIS service
+  months?: number;         // extra months of experience in THIS service
   // Which service (category id) this info belongs to. The model is SERVICES-ONLY:
   // each service the pro offers = one catalog category, with ONE info object.
   category?: string;
@@ -58,12 +59,15 @@ interface ServiceFormState {
   priceAmount: string;
   aConsultar: boolean;      // "Consultar precio" → persists as priceType a_convenir
   years: string;
+  months: string;
 }
 
-const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "" };
+const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "", months: "" };
 const SERVICE_DESCRIPTION_MAX_LENGTH = 600;
 const SERVICE_YEARS_MAX_LENGTH = 2;
 const SERVICE_YEARS_MAX = 99;
+const SERVICE_MONTHS_MAX_LENGTH = 2;
+const SERVICE_MONTHS_MAX = 11;
 
 export function ServicesEditor({
   professionalId,
@@ -247,6 +251,7 @@ export function ServicesEditor({
       priceAmount: rep?.priceAmount != null ? String(rep.priceAmount) : "",
       aConsultar: isAsk,
       years: rep?.years != null ? String(rep.years) : "",
+      months: rep?.months != null ? String(rep.months) : "",
     });
     setFormError(null);
     if (professions.includes(prof)) setPendingNewCategory(null);
@@ -294,6 +299,13 @@ export function ServicesEditor({
     const yearsRaw = form.years.replace(/\D/g, "").slice(0, SERVICE_YEARS_MAX_LENGTH);
     const yearsValue = yearsRaw ? Math.min(Number(yearsRaw), SERVICE_YEARS_MAX) : undefined;
     const years = yearsValue && yearsValue > 0 ? yearsValue : undefined;
+    const monthsRaw = form.months.replace(/\D/g, "").slice(0, SERVICE_MONTHS_MAX_LENGTH);
+    const monthsValue = monthsRaw ? Math.min(Number(monthsRaw), SERVICE_MONTHS_MAX) : undefined;
+    const months = monthsValue && monthsValue > 0 ? monthsValue : undefined;
+    if (!years && !months) {
+      setFormError(t("experienceRequired"));
+      return;
+    }
 
     // Consolidate this service's category to exactly ONE info object — preserving the
     // existing id (caso de éxito linkage) and active state. The display name comes
@@ -307,6 +319,7 @@ export function ServicesEditor({
       priceType,
       price: priceDisplay,
       years,
+      months,
       category: editCategory,
       active: rep?.active ?? true,
     };
@@ -573,16 +586,34 @@ export function ServicesEditor({
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">
-                {t("yearsLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                {t("experienceLabel")} <span className="text-red-500">*</span>
               </label>
-              <input
-                className={inputClass}
-                inputMode="numeric"
-                placeholder={t("yearsPlaceholder")}
-                value={form.years}
-                maxLength={SERVICE_YEARS_MAX_LENGTH}
-                onChange={(e) => setForm((f) => ({ ...f, years: e.target.value.replace(/\D/g, "").slice(0, SERVICE_YEARS_MAX_LENGTH) }))}
-              />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <input
+                    className={inputClass}
+                    inputMode="numeric"
+                    aria-label={t("yearsLabel")}
+                    placeholder={t("yearsPlaceholder")}
+                    value={form.years}
+                    maxLength={SERVICE_YEARS_MAX_LENGTH}
+                    onChange={(e) => setForm((f) => ({ ...f, years: e.target.value.replace(/\D/g, "").slice(0, SERVICE_YEARS_MAX_LENGTH) }))}
+                  />
+                  <p className="mt-1 text-xs font-medium text-[#6b7280]">{t("yearsShort")}</p>
+                </div>
+                <div>
+                  <input
+                    className={inputClass}
+                    inputMode="numeric"
+                    aria-label={t("monthsLabel")}
+                    placeholder={t("monthsPlaceholder")}
+                    value={form.months}
+                    maxLength={SERVICE_MONTHS_MAX_LENGTH}
+                    onChange={(e) => setForm((f) => ({ ...f, months: e.target.value.replace(/\D/g, "").slice(0, SERVICE_MONTHS_MAX_LENGTH) }))}
+                  />
+                  <p className="mt-1 text-xs font-medium text-[#6b7280]">{t("monthsShort")}</p>
+                </div>
+              </div>
             </div>
           </div>
         </Modal>

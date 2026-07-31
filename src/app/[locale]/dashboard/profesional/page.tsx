@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, CheckCircle2, Search, Star, MapPin, FileText,
+  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, CheckCircle2, FileText, Search,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -102,32 +102,76 @@ const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
-  "bookings", "proposals", "services", "availability", "photos", "profile",
+  "bookings", "proposals", "photos", "availability", "services", "profile",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
   "soporte",
 ];
-const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved", "soporte"];
+const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "saved", "profile", "soporte"];
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 type GuideItem = {
   id: string;
-  actionTab: Tab;
+  section: "client" | "shared" | "professional";
+  actionTab?: Tab;
+  href?: string;
+  targetMode?: Mode;
   stepCount: number;
 };
 
 const GUIDE_ITEMS: GuideItem[] = [
-  { id: "profile", actionTab: "profile", stepCount: 4 },
-  { id: "services", actionTab: "services", stepCount: 4 },
-  { id: "availability", actionTab: "availability", stepCount: 3 },
-  { id: "successCases", actionTab: "photos", stepCount: 3 },
-  { id: "requests", actionTab: "bookings", stepCount: 3 },
-  { id: "opportunities", actionTab: "proposals", stepCount: 3 },
+  { id: "clientPanel", section: "client", actionTab: "home", targetMode: "use", stepCount: 4 },
+  { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
+  { id: "messages", section: "shared", href: "/mensajes", stepCount: 4 },
+  { id: "assistantGuide", section: "shared", actionTab: "assistant", stepCount: 3 },
+  { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
+  { id: "profile", section: "shared", actionTab: "profile", stepCount: 4 },
+  { id: "professionalPanel", section: "professional", actionTab: "home", targetMode: "offer", stepCount: 4 },
+  { id: "requests", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 3 },
+  { id: "opportunities", section: "professional", actionTab: "proposals", targetMode: "offer", stepCount: 3 },
+  { id: "successCases", section: "professional", actionTab: "photos", targetMode: "offer", stepCount: 3 },
+  { id: "availability", section: "professional", actionTab: "availability", targetMode: "offer", stepCount: 3 },
+  { id: "services", section: "professional", actionTab: "services", targetMode: "offer", stepCount: 4 },
 ];
+
+function guideIcon(id: string) {
+  switch (id) {
+    case "clientPanel":
+    case "professionalPanel":
+      return <Home className="h-4 w-4" />;
+    case "searchServices":
+    case "searchFilters":
+      return <Search className="h-4 w-4" />;
+    case "messages":
+      return <MessageSquareMore className="h-4 w-4" />;
+    case "assistantGuide":
+      return <Bot className="h-4 w-4" />;
+    case "supportGuide":
+      return <Headset className="h-4 w-4" />;
+    case "services":
+      return <Wrench className="h-4 w-4" />;
+    case "availability":
+      return <CalendarDays className="h-4 w-4" />;
+    case "successCases":
+      return <Award className="h-4 w-4" />;
+    case "requests":
+      return <CalendarCheck className="h-4 w-4" />;
+    case "opportunities":
+      return <Handshake className="h-4 w-4" />;
+    default:
+      return <User className="h-4 w-4" />;
+  }
+}
 
 function compactDisplayName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (name.length <= 29 || parts.length < 4) return name;
   return [parts[0], ...parts.slice(-2)].join(" ");
+}
+
+function compactMobileDisplayName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 4) return [parts[0], ...parts.slice(-2)].join(" ");
+  return name;
 }
 
 type OpportunityProjectSummary = { id?: string | null };
@@ -170,18 +214,35 @@ function QuickGuidesModal({
   open: boolean;
   onClose: () => void;
   isProvider: boolean;
-  onGo: (tab: Tab) => void;
+  onGo: (guide: GuideItem) => void;
 }) {
   const t = useTranslations("proPanel.guides");
-  const visibleGuides = isProvider ? GUIDE_ITEMS : GUIDE_ITEMS.filter((guide) => guide.id === "profile");
-  const [selectedGuideId, setSelectedGuideId] = useState(visibleGuides[0]?.id ?? "profile");
-  const selectedGuide = visibleGuides.find((guide) => guide.id === selectedGuideId) ?? visibleGuides[0];
+  const locale = useLocale();
+  const guideSections = [
+    { id: "client", title: t("sections.client"), guides: GUIDE_ITEMS.filter((guide) => guide.section === "client") },
+    { id: "professional", title: t("sections.professional"), guides: GUIDE_ITEMS.filter((guide) => guide.section === "professional") },
+    { id: "shared", title: t("sections.shared"), guides: GUIDE_ITEMS.filter((guide) => guide.section === "shared") },
+  ];
+  const [selectedGuideId, setSelectedGuideId] = useState<string | null>(null);
+  const selectedGuide = selectedGuideId ? GUIDE_ITEMS.find((guide) => guide.id === selectedGuideId) : null;
+
+  useEffect(() => {
+    if (open) setSelectedGuideId(null);
+  }, [open]);
 
   if (!open) return null;
 
-  const go = (tab: Tab) => {
+  const go = (guide: GuideItem) => {
     onClose();
-    onGo(tab);
+    if (!isProvider && guide.section === "professional") {
+      window.location.assign(`/${locale}/registro/profesional`);
+      return;
+    }
+    if (guide.href) {
+      window.location.assign(`/${locale}${guide.href}`);
+      return;
+    }
+    if (guide.actionTab) onGo(guide);
   };
 
   return (
@@ -189,162 +250,68 @@ function QuickGuidesModal({
       onClose={onClose}
       title={t("modalTitle")}
       subtitle={t("modalSubtitle")}
-      size="xl"
+      size="lg"
       mobilePresentation="center"
-      bodyClassName="bg-[#f8fbfd] px-4 py-4 sm:px-6 sm:py-5"
+      bodyClassName="bg-white px-5 py-5 sm:px-7 sm:py-6"
     >
-      <div>
-        <section className="hidden overflow-hidden rounded-2xl border border-[#dbeafe] bg-white shadow-sm">
-          <div className="grid gap-0 md:grid-cols-[1.05fr_0.95fr]">
-            <div className="p-4 sm:p-5">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold text-[#0089bb]">
-                <BookOpen className="h-3.5 w-3.5" />
-                {t("heroEyebrow")}
+      <div className="mx-auto max-w-[620px]">
+        <p className="mx-auto max-w-[520px] text-center text-xs font-semibold leading-relaxed text-[#7c8ba0]">
+          {isProvider ? (
+            <>
+              {t("providerNoteBody")}
+            </>
+          ) : (
+            <>
+              {t("clientNoteBody")}
+            </>
+          )}
+        </p>
+
+        <div className="mt-5 overflow-hidden rounded-lg border border-[#dfe5ec]">
+          {guideSections.map((section) => (
+            <div key={section.id} className="border-b border-[#dfe5ec] last:border-b-0">
+              <div className="bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.06em] text-[#7c8ba0]">
+                {section.title}
               </div>
-              <h3 className="text-xl font-bold leading-tight text-[#162543]">{t("heroTitle")}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#526277]">{t("heroBody")}</p>
-              {isProvider && (
-                <p className="mt-3 rounded-xl bg-[#f8fbfd] p-3 text-sm leading-relaxed text-[#526277]">
-                  <strong className="font-bold text-[#162543]">{t("providerNoteTitle")}</strong>{" "}
-                  {t("providerNoteBody")}
-                </p>
-              )}
-            </div>
-            <div className="border-t border-[#eef2f6] bg-[#f8fbfd] p-4 md:border-l md:border-t-0">
-              <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/logo-mark.png" alt="" className="h-14 w-14 rounded-xl object-contain ring-1 ring-[#eef2f6]" />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-base font-bold text-[#111827]">ContrataCR</p>
-                      <Badge variant="verified">{t("exampleProfile.verified")}</Badge>
-                    </div>
-                    <p className="text-sm text-[#526277]">Isaac Sanchez Monge</p>
-                    <p className="mt-1 inline-flex rounded-full bg-[#f3f4f6] px-2 py-0.5 text-xs font-semibold text-[#6b7280]">{t("exampleProfile.service")}</p>
+              {section.guides.map((guide, guideIndex) => {
+                const selected = selectedGuide?.id === guide.id;
+                return (
+                  <div key={guide.id} className="border-t border-white first:border-t-0">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedGuideId(selected ? "" : guide.id)}
+                      className={cn(
+                        "flex w-full items-center gap-3 bg-[#e9edf2] px-4 py-2.5 text-left text-sm font-semibold text-[#162543] transition hover:bg-[#dfe5ec]",
+                        selected && "bg-[#dfe5ec]",
+                      )}
+                    >
+                      <span className="w-7 shrink-0 text-right tabular-nums">{guideIndex + 1} -</span>
+                      <span className="min-w-0 flex-1 truncate">{t(`items.${guide.id}.title`)}</span>
+                    </button>
+                    {selected && (
+                      <div className="bg-white px-4 py-4">
+                        <p className="text-sm leading-relaxed text-[#526277]">{t(`items.${guide.id}.body`)}</p>
+                        <ol className="mt-3 space-y-2">
+                          {Array.from({ length: guide.stepCount }, (_, stepIndex) => (
+                            <li key={stepIndex} className="flex gap-2 text-sm leading-relaxed text-[#374151]">
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
+                              <span>{t(`items.${guide.id}.steps.${stepIndex}`)}</span>
+                            </li>
+                          ))}
+                        </ol>
+                        <Button type="button" className="mt-4 rounded-full px-5" onClick={() => go(guide)}>
+                          {!isProvider && guide.section === "professional" ? t("activateProfessionalCta") : t(`items.${guide.id}.cta`)}
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-[#526277]">
-                  <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">5.0<br /><span className="font-medium">{t("exampleProfile.reviews")}</span></span>
-                  <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">4<br /><span className="font-medium">{t("exampleProfile.cases")}</span></span>
-                  <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">1<br /><span className="font-medium">{t("exampleProfile.year")}</span></span>
-                </div>
-              </div>
+                );
+              })}
             </div>
-          </div>
-        </section>
-
-        <div className="hidden grid gap-4 md:grid-cols-2">
-          <article className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
-            <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
-                <Search className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <h3 className="text-base font-bold text-[#162543]">{t("examples.search.title")}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("examples.search.body")}</p>
-              </div>
-            </div>
-            <div className="mt-4 rounded-2xl border border-[#e5e7eb] p-3">
-              <div className="flex items-center gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo-mark.png" alt="" className="h-11 w-11 rounded-lg object-contain" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-[#111827]">ContrataCR</p>
-                  <p className="truncate text-xs text-[#6b7280]">{t("exampleProfile.service")}</p>
-                  <div className="mt-1 flex items-center gap-1 text-xs font-bold text-[#162543]"><Star className="h-3.5 w-3.5 fill-[#fb923c] text-[#fb923c]" />5.0 <span className="font-medium text-[#9ca3af]">{t("examples.search.reviewCount")}</span></div>
-                </div>
-                <span className="text-right text-sm font-bold text-[#009FD9]">{t("examples.search.priceLine1")}<br />{t("examples.search.priceLine2")}</span>
-              </div>
-              <div className="mt-3 flex items-center gap-1 border-t border-[#eef2f6] pt-3 text-xs font-semibold text-[#009FD9]"><MapPin className="h-3.5 w-3.5" /> {t("examples.search.location")}</div>
-            </div>
-          </article>
-
-          <article className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
-            <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
-                <MessageSquareMore className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <h3 className="text-base font-bold text-[#162543]">{t("examples.messages.title")}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("examples.messages.body")}</p>
-              </div>
-            </div>
-            <div className="mt-4 space-y-2 rounded-2xl border border-[#e5e7eb] bg-[#f8fbfd] p-3">
-              <div className="max-w-[82%] rounded-2xl bg-white px-3 py-2 text-sm text-[#162543] shadow-sm">{t("examples.messages.client")}</div>
-              <div className="ml-auto max-w-[82%] rounded-2xl bg-[#009FD9] px-3 py-2 text-sm font-medium text-white shadow-sm">{t("examples.messages.pro")}</div>
-            </div>
-          </article>
+          ))}
         </div>
 
-        <section className="overflow-hidden rounded-2xl border border-[#dbeafe] bg-white shadow-sm">
-          <div className="grid min-h-[560px] gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
-            <aside className="border-b border-[#eef2f6] bg-[#f8fbfd] p-3 lg:border-b-0 lg:border-r">
-              <div className="mb-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#eef2f6]">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold text-[#0089bb]">
-                  <BookOpen className="h-3.5 w-3.5" />
-                  {t("heroEyebrow")}
-                </div>
-                <h3 className="text-base font-extrabold leading-tight text-[#162543]">{t("heroTitle")}</h3>
-                <p className="mt-2 text-sm leading-5 text-[#526277]">{t("heroBody")}</p>
-              </div>
-              <p className="px-2 pb-2 text-xs font-bold uppercase tracking-[0.08em] text-[#8a97aa]">{t("sectionListTitle")}</p>
-              <div className="space-y-1.5">
-                {visibleGuides.map((guide, index) => (
-                  <button
-                    key={guide.id}
-                    type="button"
-                    onClick={() => setSelectedGuideId(guide.id)}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition",
-                      selectedGuide?.id === guide.id ? "bg-white text-[#0089bb] shadow-sm ring-1 ring-[#c7e8f5]" : "text-[#526277] hover:bg-white/80",
-                    )}
-                  >
-                    <span className={cn(
-                      "grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold",
-                      selectedGuide?.id === guide.id ? "bg-[#009FD9] text-white" : "bg-white text-[#64748b]",
-                    )}>
-                      {index + 1}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-bold">{t(`items.${guide.id}.title`)}</span>
-                      <span className="mt-0.5 block truncate text-xs text-[#8a97aa]">{t(`items.${guide.id}.short`)}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </aside>
-
-            <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_330px]">
-              <div className="p-4 sm:p-5">
-                {selectedGuide && (
-                  <>
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#009FD9]">{t("selectedEyebrow")}</p>
-                    <h3 className="mt-1 text-xl font-bold text-[#162543]">{t(`items.${selectedGuide.id}.title`)}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-[#526277]">{t(`items.${selectedGuide.id}.body`)}</p>
-                    <ol className="mt-5 space-y-3">
-                      {Array.from({ length: selectedGuide.stepCount }, (_, index) => (
-                        <li key={index} className="flex gap-3 rounded-xl bg-[#f8fbfd] p-3 text-sm leading-relaxed text-[#374151]">
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
-                          <span>{t(`items.${selectedGuide.id}.steps.${index}`)}</span>
-                        </li>
-                      ))}
-                    </ol>
-                    <Button type="button" className="mt-5 rounded-full px-5" onClick={() => go(selectedGuide.actionTab)}>
-                      {t(`items.${selectedGuide.id}.cta`)}
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              <div className="border-t border-[#eef2f6] bg-[#f8fbfd] p-4 md:border-l md:border-t-0">
-                <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-[#8a97aa]">{t("previewTitle")}</p>
-                <GuidePreview id={selectedGuide?.id ?? "profile"} t={t} />
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
     </Modal>
   );
@@ -924,6 +891,7 @@ export default function DashboardPage() {
     user.email?.split("@")[0] ||
     "";
   const compactHeaderName = compactDisplayName(displayName);
+  const compactMobileHeaderName = compactMobileDisplayName(displayName);
   const headerAvatar = profile?.avatar_url || proProfile?.avatar_url || null;
   const proForCompletion = pro && headerAvatar && !proProfile?.avatar_url
     ? { ...pro, profiles: { ...(proProfile ?? {}), avatar_url: headerAvatar } }
@@ -1008,7 +976,7 @@ export default function DashboardPage() {
         className={cn(
           "relative inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-bold transition",
           activeTab === tab
-            ? "bg-[#EBF5FB] text-[#0089bb] shadow-sm ring-1 ring-inset ring-[#b9e4f2]"
+            ? "text-[#0089bb]"
             : "text-[#526277] hover:bg-[#f3f7fa] hover:text-[#162543]",
         )}
       >
@@ -1025,28 +993,6 @@ export default function DashboardPage() {
     );
   }
 
-  function signOutButton({ mobile = false }: { mobile?: boolean } = {}) {
-    return (
-      <button
-        type="button"
-        onClick={() => signOutToHome(locale)}
-        className={cn(
-          "w-full flex items-center rounded-xl text-left font-medium transition-colors",
-          mobile ? "min-h-[68px] gap-4 px-4 py-4 text-base font-semibold" : "gap-3 px-3 py-2.5 text-sm",
-          "text-[#374151] hover:bg-[#f3f4f6] hover:text-[#111827]",
-        )}
-      >
-        <span className={cn(
-          "relative inline-flex shrink-0 items-center justify-center text-[#64748b]",
-          mobile ? "h-9 w-9 [&>svg]:h-6 [&>svg]:w-6" : "mr-1.5",
-        )}>
-          <LogOut className="h-4 w-4" />
-        </span>
-        {t("signOut")}
-      </button>
-    );
-  }
-
   function desktopSwitchPanelButton() {
     if (!isProvider) return null;
     const nextMode: Mode = mode === "offer" ? "use" : "offer";
@@ -1054,7 +1000,7 @@ export default function DashboardPage() {
       <button
         type="button"
         onClick={() => handleSwitchMode(nextMode)}
-        className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border border-[#dfe8f0] bg-white px-3.5 text-sm font-bold text-[#162543] shadow-sm transition hover:border-[#b9ddea] hover:bg-[#f8fbfd]"
+        className="inline-flex h-11 shrink-0 items-center gap-2 px-3 text-sm font-bold text-[#526277] transition-colors hover:text-[#162543]"
       >
         <Repeat2 className="h-4 w-4 text-[#64748b]" />
         {mode === "offer" ? t("switchToClientPanel") : t("switchToProfessionalPanel")}
@@ -1067,21 +1013,12 @@ export default function DashboardPage() {
     return (
       <div className="mb-6 hidden lg:block">
         <div className="rounded-2xl border border-[#dfe8f0] bg-white p-2 shadow-sm">
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain pr-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {desktopSwitchPanelButton()}
             {isProvider && <div className="h-7 w-px shrink-0 bg-[#e5edf3]" />}
-            <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-1 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <nav className="flex min-w-max flex-1 flex-nowrap items-center gap-1 px-1 py-0.5 pr-4">
               {sidebarTabs.map(topNavButton)}
             </nav>
-            <div className="h-7 w-px shrink-0 bg-[#e5edf3]" />
-            <button
-              type="button"
-              onClick={() => signOutToHome(locale)}
-              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#162543]"
-            >
-              <LogOut className="h-4 w-4 text-[#64748b]" />
-              {t("signOut")}
-            </button>
           </div>
         </div>
       </div>
@@ -1175,18 +1112,13 @@ export default function DashboardPage() {
         open={guidesOpen}
         onClose={() => setGuidesOpen(false)}
         isProvider={isProvider}
-        onGo={(nextTab) => setTab(nextTab)}
+        onGo={(guide) => {
+          if (guide.targetMode) setMode(guide.targetMode);
+          setTab(guide.actionTab ?? "home");
+        }}
       />
       {networkModal && (
-        <Modal
-          onClose={() => setNetworkModal(null)}
-          title={networkModal === "followers" ? t("tabs.network") : t("tabs.network")}
-          size="xl"
-          mobilePresentation="sheet"
-          bodyClassName="bg-[#f3f7fa] p-0"
-        >
-          <FollowNetworkTab initialView={networkModal} onBack={() => setNetworkModal(null)} />
-        </Modal>
+        <FollowNetworkTab initialView={networkModal} onBack={() => setNetworkModal(null)} />
       )}
       {opportunityWelcomeCount !== null && (
         <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#0f172a]/45 p-0 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
@@ -1236,14 +1168,14 @@ export default function DashboardPage() {
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
               ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
               the content by a single hairline divider. No gradient/decoration. */}
-          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-center sm:justify-between", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:flex" : "flex")}>
-            <div className="flex min-w-0 flex-1 items-center gap-4">
+          <div className={cn("mb-6 items-start justify-between gap-3 border-b border-[#e5e7eb] pb-5 sm:items-center sm:gap-4", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:flex" : "flex")}>
+            <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <ImagePreviewDialog
                 src={headerAvatar}
                 alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
                 openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
               >
-                <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb]">
+                <Avatar className="h-12 w-12 shrink-0 ring-1 ring-[#e5e7eb] sm:h-16 sm:w-16">
                   <AvatarImage src={headerAvatar ?? undefined} />
                   <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
                     {getInitials(displayName || "?")}
@@ -1251,28 +1183,46 @@ export default function DashboardPage() {
                 </Avatar>
               </ImagePreviewDialog>
               <div className="min-w-0 flex-1">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
+                <p className="mb-1 truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
                   {mode === "offer" ? t("panelProfessional") : t("panelClient")}
                 </p>
                 {/* Keep the account name on one line in responsive; very long names truncate
                     instead of pushing the header into two lines. */}
                 <h1 className="truncate whitespace-nowrap text-lg font-bold leading-tight text-[#162543] sm:text-2xl" title={displayName}>
-                  {compactHeaderName}
+                  <span className="hidden min-[430px]:inline sm:hidden">{displayName}</span>
+                  <span className="min-[430px]:hidden sm:hidden">{compactMobileHeaderName}</span>
+                  <span className="hidden sm:inline">{compactHeaderName}</span>
                 </h1>
-                <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-2">
-                  {identityBadge()}
-                  <FollowNetworkSummaryLink onOpen={setNetworkModal} />
+                <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-x-3 gap-y-1">
+                  <div className="shrink-0">{identityBadge()}</div>
+                  <div>
+                    <FollowNetworkSummaryLink onOpen={setNetworkModal} />
+                  </div>
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setGuidesOpen(true)}
-              className="inline-flex shrink-0 items-center justify-center gap-2 px-1 py-2 text-sm font-bold text-[#162543] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
-            >
-              <FileText className="h-5 w-5" />
-              {t("guides.headerButton")}
-            </button>
+            <div className="hidden shrink-0 items-center gap-4 sm:flex">
+              <button
+                type="button"
+                onClick={() => setGuidesOpen(true)}
+                aria-label={locale === "en" ? "Guides" : "Guías"}
+                title={locale === "en" ? "Guides" : "Guías"}
+                className="inline-flex items-center justify-center gap-2 px-1 py-2 text-sm font-bold text-[#162543] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+              >
+                <FileText className="h-5 w-5" />
+                <span>{locale === "en" ? "Guides" : "Guías"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => signOutToHome(locale)}
+                aria-label={locale === "en" ? "Exit" : "Salir"}
+                title={locale === "en" ? "Exit" : "Salir"}
+                className="inline-flex items-center justify-center gap-2 px-1 py-2 text-sm font-bold text-[#162543] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>{locale === "en" ? "Exit" : "Salir"}</span>
+              </button>
+            </div>
           </div>
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
@@ -1411,10 +1361,27 @@ export default function DashboardPage() {
                                 {switchPanelButton({ mobile: true })}
                                 {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
                                 {mobileSectionTabs.map(mobileSectionButton)}
-                              </div>
-                              <div className="my-3 border-t border-[#e5e7eb]" />
-                              <div className="space-y-1 pb-1">
-                                {signOutButton({ mobile: true })}
+                                <button
+                                  type="button"
+                                  onClick={() => setGuidesOpen(true)}
+                                  className="flex min-h-[68px] w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-base font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827]"
+                                >
+                                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-6 [&>svg]:w-6">
+                                    <FileText className="h-4 w-4" />
+                                  </span>
+                                  {locale === "en" ? "Guides" : "Guías"}
+                                </button>
+                                <div className="my-3 border-t border-[#e5e7eb]" />
+                                <button
+                                  type="button"
+                                  onClick={() => signOutToHome(locale)}
+                                  className="flex min-h-[68px] w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-base font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827]"
+                                >
+                                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-6 [&>svg]:w-6">
+                                    <LogOut className="h-4 w-4" />
+                                  </span>
+                                  {locale === "en" ? "Exit" : "Salir"}
+                                </button>
                               </div>
                             </div>
                           </>

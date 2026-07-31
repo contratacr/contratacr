@@ -3,6 +3,7 @@
 import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { APP_RESUME_EVENT } from "@/lib/app-events";
 
 // Resolve once the image is decoded (or fails / times out — never hangs). Used to keep
 // the avatar skeleton up until the photo can paint INSTANTLY, so the navbar never shows
@@ -178,19 +179,29 @@ function useAuthState(
     // new photo), code dispatches `ccr:profile-updated` — re-pull the user so the
     // header name/avatar update IMMEDIATELY even if the metadata change came from a
     // different Supabase client instance that didn't fire our onAuthStateChange.
-    const onProfileUpdated = () => {
+    const refreshUser = () => {
       supabase.auth.getUser().then(({ data }) => {
         const u = data.user ?? null;
-        if (u) { setUser(u); syncAvatar(u); }
+        setUser(u);
+        cacheUser(u);
+        if (u) {
+          syncAvatar(u);
+        } else {
+          setAvatarUrl(null);
+          setAvatarReady(true);
+        }
       }).catch(() => { /* ignore */ });
     };
+    const onProfileUpdated = () => refreshUser();
     window.addEventListener("ccr:profile-updated", onProfileUpdated);
+    window.addEventListener(APP_RESUME_EVENT, refreshUser);
 
     return () => {
       mounted = false;
       window.clearTimeout(sessionTimeout);
       subscription.unsubscribe();
       window.removeEventListener("ccr:profile-updated", onProfileUpdated);
+      window.removeEventListener(APP_RESUME_EVENT, refreshUser);
     };
   }, []);
 

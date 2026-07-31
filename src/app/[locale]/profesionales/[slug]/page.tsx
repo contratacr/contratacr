@@ -55,6 +55,8 @@ const CONTRATACR_PROFILE_DEMO = {
     active: true,
     price: "Consultar precio",
     priceType: "a_convenir" as const,
+    years: 7,
+    months: 0,
     modalities: ["video" as const],
     description: [
       "Dise\u00f1o y desarrollo sitios web, landing pages, paneles internos y aplicaciones web completas para negocios que necesitan vender, atender mejor y operar con m\u00e1s orden.",
@@ -82,7 +84,8 @@ function withContrataCrDemoProfile(pro: ProfessionalDetail): ProfessionalDetail 
     services: [CONTRATACR_PROFILE_DEMO.service],
     portfolioItems: CONTRATACR_PROFILE_DEMO.cases,
     portfolioUrls: CONTRATACR_PROFILE_DEMO.cases.flatMap((item) => item.photos).slice(0, 5),
-    yearsExperience: Math.max(pro.yearsExperience ?? 0, 1),
+    followerCount: 20,
+    yearsExperience: 7,
     ratingAvg: Math.max(pro.ratingAvg ?? 0, 5),
     reviewCount: Math.max(pro.reviewCount ?? 0, 5),
     videoconsulta: true,
@@ -466,9 +469,12 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
-                  <div className="mt-3">
-                    <FollowButton professionalId={professional.id} isOwn={isOwn} initialFollowers={professional.followerCount ?? 0} />
-                  </div>
+                  <FollowButton
+                    professionalId={professional.id}
+                    isOwn={isOwn}
+                    initialFollowers={professional.followerCount ?? 0}
+                    className="mt-3"
+                  />
                 </div>
               </div>
 
