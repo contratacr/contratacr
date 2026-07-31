@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { CalendarDays, Star, Trophy, Users } from "lucide-react";
+import { BriefcaseBusiness, Camera, Star, Users } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -194,8 +194,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const experienceLabel = locale === "en"
     ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"} experience`
     : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
-  const metricIconClass = "grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#0089bb]";
-  const mobileMetricClass = "flex min-w-0 items-center justify-center gap-2 px-1 py-2 text-center";
+  const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#0089bb]";
+  const mobileMetricClass = "flex min-w-0 items-center justify-center gap-1 px-1 py-2 text-center";
   const metricNumberClass = "text-[15px] font-bold leading-none text-[#162543]";
   const metricTextClass = "min-w-0 truncate text-[11px] font-semibold leading-none text-[#6b7280]";
 
@@ -376,27 +376,27 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   className={cn(mobileMetricClass, hasExperience && "border-r border-b border-[#e5e7eb]")}
                   aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                 >
-                  <span className={metricIconClass}><Star className="h-4 w-4 fill-current" /></span>
+                  <Star className={`${metricIconClass} fill-current`} />
                   <span className={metricNumberClass}>{professional.ratingAvg.toFixed(1)}</span>
                   <span className={metricTextClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
                 </Link>
               ) : (
                 <span className={cn(mobileMetricClass, hasExperience && "border-r border-b border-[#e5e7eb]")}>
-                  <span className={metricIconClass}><Star className="h-4 w-4" /></span>
+                  <Star className={metricIconClass} />
                   <span className={metricTextClass}>{tCard("noReviews")}</span>
                 </span>
               )}
               <span className={cn(mobileMetricClass, hasExperience ? "border-b border-[#e5e7eb]" : "border-x border-[#e5e7eb]")}>
-                <span className={metricIconClass}><Users className="h-4 w-4" /></span>
+                <Users className={metricIconClass} />
                 <span className={metricTextClass}>{followersLabel}</span>
               </span>
               <Link href={casesHref} className={cn(mobileMetricClass, hasExperience && "border-r border-[#e5e7eb]")}>
-                <span className={metricIconClass}><Trophy className="h-4 w-4" /></span>
+                <Camera className={metricIconClass} />
                 <span className={metricTextClass}>{casesLabel}</span>
               </Link>
               {hasExperience && (
                 <span className={mobileMetricClass}>
-                  <span className={metricIconClass}><CalendarDays className="h-4 w-4" /></span>
+                  <BriefcaseBusiness className={metricIconClass} />
                   <span className={metricTextClass}>{experienceLabel}</span>
                 </span>
               )}
