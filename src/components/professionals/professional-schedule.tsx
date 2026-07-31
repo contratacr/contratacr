@@ -949,7 +949,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             TOP band so the favorites bookmark (top-right of the card) sits cleanly in the
             corner ABOVE the content — instead of reserving a side gutter (which left an ugly
             blank strip beside the full-width buttons). Content stays full-width. */}
-        <div className="relative z-10 flex min-w-0 flex-col gap-3 border-t border-[#e5e7eb] pt-3 lg:justify-center lg:border-t-0 lg:border-l lg:border-[#e5e7eb] lg:pt-6 lg:pl-4">
+        <div className="relative z-10 flex min-w-0 flex-col gap-3 lg:justify-center lg:border-l lg:border-[#e5e7eb] lg:pt-6 lg:pl-4">
           {scheduleBody}
           {/* A pro who enabled "Permitir contacto por llamada" should ALWAYS surface a
               "Llamar" option on their /buscar card — even when a bookable schedule funnels
