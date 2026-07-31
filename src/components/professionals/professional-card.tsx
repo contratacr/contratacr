@@ -194,8 +194,9 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const experienceLabel = locale === "en"
     ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"} experience`
     : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
-  const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#0077b6]";
-  const mobileMetricClass = "flex min-w-0 items-center justify-start gap-1 px-3 py-2 text-left";
+  const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#009FD9]";
+  const mobileMetricClass = "flex min-w-0 items-center justify-center px-1 py-2 text-left";
+  const mobileMetricInnerClass = "flex min-w-0 w-[108px] items-center justify-start gap-1";
   const metricNumberClass = "text-[15px] font-bold leading-none text-[#162543]";
   const metricTextClass = "min-w-0 truncate text-[11px] font-semibold leading-none text-[#6b7280]";
 
@@ -273,7 +274,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
                 capped width so a long price wraps instead of crowding the name. */}
             {priceLabel && (
-              <div className={`ml-auto shrink-0 text-right leading-tight ${priceBoxClass}`}>
+              <div className={`ml-auto shrink-0 pt-5 text-right leading-tight lg:pt-0 ${priceUnit || priceTaxSuffix ? priceBoxClass : "w-[58px] sm:w-[74px] lg:w-[86px]"}`}>
                 <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
                 {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
                 {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
@@ -388,28 +389,38 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   className={mobileMetricClass}
                   aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                 >
-                  <Star className={`${metricIconClass} fill-current`} />
-                  <span className={metricNumberClass}>{professional.ratingAvg.toFixed(1)}</span>
-                  <span className={metricTextClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
+                  <span className={mobileMetricInnerClass}>
+                    <Star className={`${metricIconClass} fill-current`} />
+                    <span className={metricNumberClass}>{professional.ratingAvg.toFixed(1)}</span>
+                    <span className={metricTextClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
+                  </span>
                 </Link>
               ) : (
                 <span className={mobileMetricClass}>
-                  <Star className={metricIconClass} />
-                  <span className={metricTextClass}>{tCard("noReviews")}</span>
+                  <span className={mobileMetricInnerClass}>
+                    <Star className={metricIconClass} />
+                    <span className={metricTextClass}>{tCard("noReviews")}</span>
+                  </span>
                 </span>
               )}
               <span className={mobileMetricClass}>
-                <Users className={metricIconClass} />
-                <span className={metricTextClass}>{followersLabel}</span>
+                <span className={mobileMetricInnerClass}>
+                  <Users className={metricIconClass} />
+                  <span className={metricTextClass}>{followersLabel}</span>
+                </span>
               </span>
               <Link href={casesHref} className={mobileMetricClass}>
-                <Camera className={metricIconClass} />
-                <span className={metricTextClass}>{casesLabel}</span>
+                <span className={mobileMetricInnerClass}>
+                  <Camera className={metricIconClass} />
+                  <span className={metricTextClass}>{casesLabel}</span>
+                </span>
               </Link>
               {hasExperience && (
                 <span className={mobileMetricClass}>
-                  <BriefcaseBusiness className={metricIconClass} />
-                  <span className={metricTextClass}>{experienceLabel}</span>
+                  <span className={mobileMetricInnerClass}>
+                    <BriefcaseBusiness className={metricIconClass} />
+                    <span className={metricTextClass}>{experienceLabel}</span>
+                  </span>
                 </span>
               )}
             </div>
