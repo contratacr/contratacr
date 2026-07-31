@@ -200,6 +200,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const mobileMetricInnerClass = "flex min-w-0 items-center justify-start gap-1";
   const metricNumberClass = "text-[15px] font-bold leading-none text-[#162543]";
   const metricTextClass = "whitespace-nowrap text-[11px] font-semibold leading-none text-[#5f6f86]";
+  const desktopMetricClass = "relative z-10 inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
+  const desktopMetricNumberClass = "text-[13px] font-bold text-[#162543]";
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
@@ -442,48 +444,54 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             </div>
             {professional.reviewCount > 0 ? (
               <div className={cn(
-                "hidden w-full max-w-full min-w-0 gap-x-2.5 gap-y-1.5 text-center text-[11px] font-semibold leading-tight text-[#8a97a8] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1 sm:text-left",
+                "hidden w-full max-w-full min-w-0 divide-x divide-[#edf2f7] text-center sm:flex sm:flex-wrap sm:items-center sm:text-left",
                 hasExperience ? "grid-cols-2" : "grid-cols-3",
               )}>
                   <Link
                     href={reviewsHref}
-                    className="relative z-10 inline-flex min-w-0 items-center justify-center gap-1 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 sm:justify-start"
+                    className={desktopMetricClass}
                     aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                   >
-                    <span className="text-[13px] font-bold text-[#6f7d90]">{professional.ratingAvg.toFixed(1)}</span>
-                    <span className="truncate font-semibold text-[#8a97a8] hover:underline">
-                      {tCard("reviewsCount", { count: professional.reviewCount })}
-                    </span>
+                    <Star className={`${reviewIconClass} fill-current`} />
+                    <span className={desktopMetricNumberClass}>{professional.ratingAvg.toFixed(1)}</span>
+                    <span>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
                   </Link>
-                  <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
-                    <span className="truncate">{followersLabel}</span>
+                  <span className={desktopMetricClass}>
+                    <Users className={metricIconClass} />
+                    <span>{followersLabel}</span>
                   </span>
-                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center justify-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 sm:justify-start">
-                    <span className="truncate">{casesLabel}</span>
+                  <Link href={casesHref} className={desktopMetricClass}>
+                    <Camera className={metricIconClass} />
+                    <span>{casesLabel}</span>
                   </Link>
                   {hasExperience && (
-                    <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
-                      <span className="truncate">{experienceLabel}</span>
+                    <span className={desktopMetricClass}>
+                      <BriefcaseBusiness className={metricIconClass} />
+                      <span>{experienceLabel}</span>
                     </span>
                   )}
               </div>
             ) : (
               <div className={cn(
-                "hidden w-full max-w-full min-w-0 gap-x-2.5 gap-y-1.5 text-center text-[11px] font-semibold leading-tight text-[#9ca3af] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1 sm:text-left",
+                "hidden w-full max-w-full min-w-0 divide-x divide-[#edf2f7] text-center sm:flex sm:flex-wrap sm:items-center sm:text-left",
                 hasExperience ? "grid-cols-2" : "grid-cols-3",
               )}>
-                  <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
-                    <span className="truncate">{tCard("noReviews")}</span>
+                  <span className={desktopMetricClass}>
+                    <Star className={reviewIconClass} />
+                    <span>{tCard("noReviews")}</span>
                   </span>
-                  <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
-                    <span className="truncate">{followersLabel}</span>
+                  <span className={desktopMetricClass}>
+                    <Users className={metricIconClass} />
+                    <span>{followersLabel}</span>
                   </span>
-                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center justify-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 sm:justify-start">
-                    <span className="truncate">{casesLabel}</span>
+                  <Link href={casesHref} className={desktopMetricClass}>
+                    <Camera className={metricIconClass} />
+                    <span>{casesLabel}</span>
                   </Link>
                   {hasExperience && (
-                    <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
-                      <span className="truncate">{experienceLabel}</span>
+                    <span className={desktopMetricClass}>
+                      <BriefcaseBusiness className={metricIconClass} />
+                      <span>{experienceLabel}</span>
                     </span>
                   )}
               </div>
