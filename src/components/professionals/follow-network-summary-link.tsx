@@ -47,7 +47,7 @@ export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "followin
   if (!user) return null;
 
   return (
-    <div className="inline-flex items-center gap-3 text-xs font-semibold text-[#526277]">
+    <div className="inline-flex items-baseline gap-1.5 text-xs font-semibold leading-none text-[#526277] sm:gap-2">
       <button
         type="button"
         onClick={() => onOpen?.("following")}

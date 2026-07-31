@@ -181,6 +181,44 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
   }
 
+  const ratingTieBreak = (a: (typeof allResults)[number], b: (typeof allResults)[number]) =>
+    (b.ratingAvg ?? 0) - (a.ratingAvg ?? 0) ||
+    (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
+  const experienceMonths = (professional: (typeof allResults)[number]) => {
+    const service = professional.services?.find((item) => {
+      if (typeof item.startedAt === "string" && item.startedAt.trim()) return true;
+      const years = typeof item.years === "number" ? item.years : 0;
+      const months = typeof item.months === "number" ? item.months : 0;
+      return years > 0 || months > 0;
+    });
+    if (service?.startedAt && /^\d{4}-\d{2}$/.test(service.startedAt)) {
+      const [yearRaw, monthRaw] = service.startedAt.split("-");
+      const year = Number(yearRaw);
+      const month = Number(monthRaw);
+      if (Number.isFinite(year) && Number.isFinite(month) && month >= 1 && month <= 12) {
+        const now = new Date();
+        return Math.max(0, (now.getFullYear() * 12 + now.getMonth()) - (year * 12 + (month - 1)));
+      }
+    }
+    const years = typeof service?.years === "number" ? service.years : professional.yearsExperience ?? 0;
+    const months = typeof service?.months === "number" ? service.months : professional.monthsExperience ?? 0;
+    return Math.max(0, years) * 12 + Math.max(0, Math.min(11, months));
+  };
+
+  if (sortBy === "successCases") {
+    orderedResults = [...allResults].sort((a, b) =>
+      (b.portfolioCount ?? 0) - (a.portfolioCount ?? 0) || ratingTieBreak(a, b)
+    );
+  } else if (sortBy === "experience") {
+    orderedResults = [...allResults].sort((a, b) =>
+      experienceMonths(b) - experienceMonths(a) || ratingTieBreak(a, b)
+    );
+  } else if (sortBy === "followers") {
+    orderedResults = [...allResults].sort((a, b) =>
+      (b.followerCount ?? 0) - (a.followerCount ?? 0) || ratingTieBreak(a, b)
+    );
+  }
+
   // Map pins only represent exact workplace pins marked on the map. Broad
   // province/canton coverage and legacy professional coordinates stay card-only.
   // "Disponibilidad inmediata" sort: order by the soonest bookable slot, reusing
@@ -192,7 +230,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       if (ea && eb) return ea < eb ? -1 : ea > eb ? 1 : 0;
       if (ea) return -1;
       if (eb) return 1;
-      return 0;
+      return ratingTieBreak(a, b);
     });
   }
 
@@ -513,18 +551,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </span>
                         )}
                       </div>
-                      <div className="hidden flex-nowrap items-center justify-between gap-4 sm:flex">
-                        <p className="hidden min-w-40 text-sm font-medium text-[#64748b] lg:block">
+                      <div className="relative hidden min-h-10 items-center justify-center sm:flex">
+                        <p className="absolute left-0 hidden text-sm font-medium text-[#64748b] lg:block">
                           {currentPage} / {totalPages}
                         </p>
-                        <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-hidden">
+                        <div className="flex max-w-full items-center justify-center gap-1.5 overflow-x-auto overflow-y-visible px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                           {currentPage > 1 && (
-                            <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-4 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
+                            <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-5 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
                               <ChevronLeft className="h-4 w-4" />
                               <span>{t("pagination.prev")}</span>
                             </Link>
                           )}
-                          <div className="mx-1 flex items-center gap-1 rounded-full bg-[#f3f7fb] p-1">
+                          <div className="mx-1 flex shrink-0 items-center gap-1 rounded-full bg-[#f3f7fb] p-1">
                           {paginationPages.map((page, index) => page === "ellipsis" ? (
                             <span key={`ellipsis-${index}`} className="grid h-9 w-8 place-items-center text-sm font-semibold text-[#9ca3af]">...</span>
                           ) : page === currentPage ? (
@@ -537,12 +575,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </div>
                         </div>
                         {currentPage < totalPages && (
-                          <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
+                          <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
                             <span className="leading-none">{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4 shrink-0" />
                           </Link>
                         )}
-                        <span className="hidden min-w-40 text-right text-sm font-medium text-[#64748b] md:block">
+                        <span className="absolute right-0 hidden text-right text-sm font-medium text-[#64748b] md:block">
                           {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
                         </span>
                       </div>

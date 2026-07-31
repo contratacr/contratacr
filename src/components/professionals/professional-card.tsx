@@ -203,12 +203,23 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const experienceMetric = splitMetricLabel(experienceLabel);
   const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#009FD9]";
   const reviewIconClass = "h-3.5 w-3.5 shrink-0 text-[#f59e0b]";
-  const mobileMetricClass = "flex min-w-0 items-center justify-center px-1 py-2 text-left";
-  const mobileMetricInnerClass = "grid min-w-0 grid-cols-[14px_auto_auto] items-center justify-start gap-1";
-  const metricNumberClass = "text-[15px] font-bold leading-none text-[#162543]";
-  const metricTextClass = "whitespace-nowrap text-[11px] font-semibold leading-none text-[#5f6f86]";
-  const desktopMetricClass = "relative z-10 grid min-w-0 grid-cols-[14px_auto_auto] items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
-  const desktopMetricNumberClass = "text-[13px] font-bold text-[#162543]";
+  const mobileMetricClass = "flex min-w-0 items-center justify-center px-0 py-2 text-center";
+  const mobileMetricWideClass = "flex w-[9.55rem] min-w-0 items-center justify-center px-0 py-2 text-center";
+  const mobileMetricCompactClass = "flex w-[6.9rem] min-w-0 items-center justify-center px-0 py-2 text-center";
+  const mobileMetricInnerWideClass = "inline-flex w-[9.15rem] max-w-full items-center justify-start gap-0.5 pl-[0.9rem]";
+  const mobileMetricInnerCompactClass = "inline-flex w-[6.6rem] max-w-full items-center justify-start gap-0.5";
+  const metricIconWrapClass = "inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center";
+  const metricNumberClass = "shrink-0 text-[15px] font-bold leading-none tabular-nums text-[#162543]";
+  const metricTextClass = "min-w-0 whitespace-nowrap text-[11px] font-semibold leading-none text-[#5f6f86]";
+  const metricTextCompactClass = "min-w-0 whitespace-nowrap text-[11px] font-semibold leading-none text-[#5f6f86]";
+  const desktopMetricTextClass = "min-w-0 whitespace-nowrap text-[11px] font-medium leading-none text-[#5f6f86]";
+  const desktopMetricClass = "relative z-10 inline-flex min-w-0 max-w-full items-center justify-center gap-0.5 px-1.5 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
+  const desktopMetricNumberClass = "shrink-0 text-[13px] font-semibold tabular-nums text-[#162543]";
+  const desktopMetricDividerClass = "hidden sm:block h-4 w-px shrink-0 bg-[#ecf2f7]";
+  const desktopMetricCompactClass = "relative z-10 inline-flex w-[8.9rem] min-w-0 items-center justify-center gap-0.5 px-1.5 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
+  const desktopMetricDividerLeftClass = "hidden -ml-4 sm:block h-4 w-px shrink-0 bg-[#ecf2f7]";
+  const desktopMetricDividerRightClass = "hidden -ml-4 sm:block h-4 w-px shrink-0 bg-[#ecf2f7]";
+  const mobileMetricDividerClass = "my-auto block h-4 w-px shrink-0 bg-[#edf2f7] sm:hidden";
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
@@ -391,8 +402,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {/* Trust metrics: social proof first, then proof-of-work. */}
           <div className="-ml-[68px] w-[calc(100%+68px)] basis-full lg:-ml-[76px] lg:w-[calc(100%+76px)] lg:basis-auto">
             <div className={cn(
-              "relative grid w-full max-w-full min-w-0 overflow-hidden sm:hidden",
-              hasExperience ? "grid-cols-2" : "grid-cols-3",
+              "relative mx-auto min-w-0 overflow-hidden sm:hidden",
+              hasExperience ? "grid w-fit max-w-full grid-cols-2" : "flex w-fit max-w-full items-center justify-center",
             )}>
               {hasExperience ? (
                 <>
@@ -402,135 +413,149 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 </>
               ) : (
                 <>
-                  <span className="pointer-events-none absolute bottom-2 left-1/3 top-2 w-px bg-[#edf2f7]" aria-hidden />
-                  <span className="pointer-events-none absolute bottom-2 left-2/3 top-2 w-px bg-[#edf2f7]" aria-hidden />
+                  <span className="pointer-events-none absolute bottom-[0.68rem] left-[30.4%] top-[0.68rem] w-px bg-[#edf2f7]" aria-hidden />
+                  <span className="pointer-events-none absolute bottom-[0.68rem] left-[63.2%] top-[0.68rem] w-px bg-[#edf2f7]" aria-hidden />
                 </>
               )}
               {professional.reviewCount > 0 ? (
                 <Link
                   href={reviewsHref}
-                  className={mobileMetricClass}
+                  className={hasExperience ? mobileMetricWideClass : mobileMetricCompactClass}
                   aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                 >
-                  <span className={mobileMetricInnerClass}>
-                    <Star className={`${reviewIconClass} fill-current`} />
+                  <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
+                    <span className={metricIconWrapClass}>
+                      <Star className={`${reviewIconClass} fill-current`} />
+                    </span>
                     <span className={metricNumberClass}>{professional.ratingAvg.toFixed(1)}</span>
-                    <span className={metricTextClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
+                    <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
                   </span>
                 </Link>
               ) : (
-                <span className={mobileMetricClass}>
-                  <span className={mobileMetricInnerClass}>
-                    <Star className={reviewIconClass} />
-                    <span className={`${metricTextClass} col-span-2`}>{tCard("noReviews")}</span>
+                <span className={hasExperience ? mobileMetricWideClass : mobileMetricCompactClass}>
+                  <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
+                    <span className={metricIconWrapClass}>
+                      <Star className={reviewIconClass} />
+                    </span>
+                    <span className={`${metricNumberClass} invisible`}>0</span>
+                    <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{tCard("noReviews")}</span>
                   </span>
                 </span>
               )}
-              <span className={mobileMetricClass}>
-                <span className={mobileMetricInnerClass}>
-                  <Users className={metricIconClass} />
+              <span className={hasExperience ? mobileMetricWideClass : mobileMetricCompactClass}>
+                <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
+                  <span className={metricIconWrapClass}>
+                    <Users className={metricIconClass} />
+                  </span>
                   <span className={metricNumberClass}>{followersMetric.value}</span>
-                  <span className={metricTextClass}>{followersMetric.text}</span>
+                  <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{followersMetric.text}</span>
                 </span>
               </span>
-              <Link href={casesHref} className={mobileMetricClass}>
-                <span className={mobileMetricInnerClass}>
-                  <Camera className={metricIconClass} />
+              <Link href={casesHref} className={hasExperience ? mobileMetricWideClass : mobileMetricCompactClass}>
+                <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
+                  <span className={metricIconWrapClass}>
+                    <Camera className={metricIconClass} />
+                  </span>
                   <span className={metricNumberClass}>{casesMetric.value}</span>
-                  <span className={metricTextClass}>{casesMetric.text}</span>
+                  <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{casesMetric.text}</span>
                 </span>
               </Link>
               {hasExperience && (
-                <span className={mobileMetricClass}>
-                  <span className={mobileMetricInnerClass}>
-                    <BriefcaseBusiness className={metricIconClass} />
+                <span className={mobileMetricWideClass}>
+                  <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
+                    <span className={metricIconWrapClass}>
+                      <BriefcaseBusiness className={metricIconClass} />
+                    </span>
                     <span className={metricNumberClass}>{experienceMetric.value}</span>
-                    <span className={metricTextClass}>{experienceMetric.text}</span>
+                    <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{experienceMetric.text}</span>
                   </span>
                 </span>
               )}
             </div>
             {professional.reviewCount > 0 ? (
               <div className={cn(
-                "relative hidden w-full max-w-full min-w-0 overflow-hidden text-center sm:grid sm:items-center sm:text-left",
-                hasExperience ? "grid-cols-2" : "grid-cols-3",
+                "relative hidden w-full max-w-full min-w-0 items-center justify-center overflow-hidden text-center sm:flex sm:flex-nowrap sm:text-left",
+                hasExperience ? "sm:gap-x-1" : "sm:gap-x-0.5",
               )}>
-                  {hasExperience ? (
-                    <>
-                      <span className="pointer-events-none absolute left-4 right-[calc(50%+0.75rem)] top-1/2 h-px bg-[#edf2f7]" aria-hidden />
-                      <span className="pointer-events-none absolute left-[calc(50%+0.75rem)] right-4 top-1/2 h-px bg-[#edf2f7]" aria-hidden />
-                      <span className="pointer-events-none absolute bottom-1 left-1/2 top-1 w-px bg-[#edf2f7]" aria-hidden />
-                    </>
-                  ) : (
-                    <>
-                      <span className="pointer-events-none absolute bottom-1 left-1/3 top-1 w-px bg-[#edf2f7]" aria-hidden />
-                      <span className="pointer-events-none absolute bottom-1 left-2/3 top-1 w-px bg-[#edf2f7]" aria-hidden />
-                    </>
-                  )}
                   <Link
                     href={reviewsHref}
-                    className={desktopMetricClass}
+                    className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}
                     aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                   >
-                    <Star className={`${reviewIconClass} fill-current`} />
+                    <span className={metricIconWrapClass}>
+                      <Star className={`${reviewIconClass} fill-current`} />
+                    </span>
                     <span className={desktopMetricNumberClass}>{professional.ratingAvg.toFixed(1)}</span>
-                    <span>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
+                    <span className={desktopMetricTextClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
                   </Link>
-                  <span className={desktopMetricClass}>
-                    <Users className={metricIconClass} />
+                  <span aria-hidden className={hasExperience ? desktopMetricDividerClass : desktopMetricDividerLeftClass} />
+                  <span className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
+                    <span className={metricIconWrapClass}>
+                      <Users className={metricIconClass} />
+                    </span>
                     <span className={desktopMetricNumberClass}>{followersMetric.value}</span>
-                    <span>{followersMetric.text}</span>
+                    <span className={desktopMetricTextClass}>{followersMetric.text}</span>
                   </span>
-                  <Link href={casesHref} className={desktopMetricClass}>
-                    <Camera className={metricIconClass} />
+                  <span aria-hidden className={hasExperience ? desktopMetricDividerClass : desktopMetricDividerRightClass} />
+                  <Link href={casesHref} className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
+                    <span className={metricIconWrapClass}>
+                      <Camera className={metricIconClass} />
+                    </span>
                     <span className={desktopMetricNumberClass}>{casesMetric.value}</span>
-                    <span>{casesMetric.text}</span>
+                    <span className={desktopMetricTextClass}>{casesMetric.text}</span>
                   </Link>
                   {hasExperience && (
+                    <>
+                      <span aria-hidden className={desktopMetricDividerClass} />
                     <span className={desktopMetricClass}>
-                      <BriefcaseBusiness className={metricIconClass} />
-                      <span className={desktopMetricNumberClass}>{experienceMetric.value}</span>
-                      <span>{experienceMetric.text}</span>
-                    </span>
+                        <span className={metricIconWrapClass}>
+                          <BriefcaseBusiness className={metricIconClass} />
+                        </span>
+                        <span className={desktopMetricNumberClass}>{experienceMetric.value}</span>
+                        <span className={desktopMetricTextClass}>{experienceMetric.text}</span>
+                      </span>
+                    </>
                   )}
               </div>
             ) : (
               <div className={cn(
-                "relative hidden w-full max-w-full min-w-0 overflow-hidden text-center sm:grid sm:items-center sm:text-left",
-                hasExperience ? "grid-cols-2" : "grid-cols-3",
+                "relative hidden w-full max-w-full min-w-0 items-center justify-center overflow-hidden text-center sm:flex sm:flex-nowrap sm:text-left",
+                hasExperience ? "sm:gap-x-1" : "sm:gap-x-0.5",
               )}>
-                  {hasExperience ? (
-                    <>
-                      <span className="pointer-events-none absolute left-4 right-[calc(50%+0.75rem)] top-1/2 h-px bg-[#edf2f7]" aria-hidden />
-                      <span className="pointer-events-none absolute left-[calc(50%+0.75rem)] right-4 top-1/2 h-px bg-[#edf2f7]" aria-hidden />
-                      <span className="pointer-events-none absolute bottom-1 left-1/2 top-1 w-px bg-[#edf2f7]" aria-hidden />
-                    </>
-                  ) : (
-                    <>
-                      <span className="pointer-events-none absolute bottom-1 left-1/3 top-1 w-px bg-[#edf2f7]" aria-hidden />
-                      <span className="pointer-events-none absolute bottom-1 left-2/3 top-1 w-px bg-[#edf2f7]" aria-hidden />
-                    </>
-                  )}
-                  <span className={desktopMetricClass}>
-                    <Star className={reviewIconClass} />
-                    <span className="col-span-2">{tCard("noReviews")}</span>
+                  <span className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
+                    <span className={metricIconWrapClass}>
+                      <Star className={reviewIconClass} />
+                    </span>
+                    <span className={`${desktopMetricNumberClass} invisible`}>0</span>
+                    <span className={desktopMetricTextClass}>{tCard("noReviews")}</span>
                   </span>
-                  <span className={desktopMetricClass}>
-                    <Users className={metricIconClass} />
+                  <span aria-hidden className={hasExperience ? desktopMetricDividerClass : desktopMetricDividerLeftClass} />
+                  <span className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
+                    <span className={metricIconWrapClass}>
+                      <Users className={metricIconClass} />
+                    </span>
                     <span className={desktopMetricNumberClass}>{followersMetric.value}</span>
-                    <span>{followersMetric.text}</span>
+                    <span className={desktopMetricTextClass}>{followersMetric.text}</span>
                   </span>
-                  <Link href={casesHref} className={desktopMetricClass}>
-                    <Camera className={metricIconClass} />
+                  <span aria-hidden className={hasExperience ? desktopMetricDividerClass : desktopMetricDividerRightClass} />
+                  <Link href={casesHref} className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
+                    <span className={metricIconWrapClass}>
+                      <Camera className={metricIconClass} />
+                    </span>
                     <span className={desktopMetricNumberClass}>{casesMetric.value}</span>
-                    <span>{casesMetric.text}</span>
+                    <span className={desktopMetricTextClass}>{casesMetric.text}</span>
                   </Link>
                   {hasExperience && (
-                    <span className={desktopMetricClass}>
-                      <BriefcaseBusiness className={metricIconClass} />
-                      <span className={desktopMetricNumberClass}>{experienceMetric.value}</span>
-                      <span>{experienceMetric.text}</span>
-                    </span>
+                    <>
+                      <span aria-hidden className={desktopMetricDividerClass} />
+                      <span className={desktopMetricClass}>
+                        <span className={metricIconWrapClass}>
+                          <BriefcaseBusiness className={metricIconClass} />
+                        </span>
+                        <span className={desktopMetricNumberClass}>{experienceMetric.value}</span>
+                        <span className={desktopMetricTextClass}>{experienceMetric.text}</span>
+                      </span>
+                    </>
                   )}
               </div>
             )}

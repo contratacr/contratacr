@@ -473,7 +473,7 @@ export default function ProfilePage() {
                     professionalId={professional.id}
                     isOwn={isOwn}
                     initialFollowers={professional.followerCount ?? 0}
-                    className="mt-3"
+                    className="mt-3 w-fit"
                   />
                 </div>
               </div>
@@ -493,7 +493,10 @@ export default function ProfilePage() {
                       <Briefcase className="h-4 w-4 text-[#009FD9]" />
                       <span className="text-[15px] font-bold text-[#111827]">{expYears}</span>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statYears")}</p>
+                    <p className="mt-0.5 text-[11px] text-[#9ca3af]">
+                      <span className="sm:hidden">{locale === "en" ? "yrs exp" : "años exp"}</span>
+                      <span className="hidden sm:inline">{locale === "en" ? "years experience" : "años experiencia"}</span>
+                    </p>
                   </div>
                 )}
                 {hasCasos && (
@@ -706,7 +709,7 @@ export default function ProfilePage() {
                                     <p className="min-h-[44px] text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:min-h-[22px]">{title}</p>
                                     <div className="mt-2 h-[92px]">
                                       {description ? (
-                                        <>
+                                        <div className="flex h-full flex-col justify-start">
                                         <p className="line-clamp-3 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{description}</p>
                                           <button
                                             type="button"
@@ -714,13 +717,13 @@ export default function ProfilePage() {
                                             aria-hidden={!hasFullDescription}
                                             tabIndex={hasFullDescription ? 0 : -1}
                                             className={cn(
-                                              "mt-1.5 text-left text-[13px] font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]",
-                                              !hasFullDescription && "invisible pointer-events-none"
-                                            )}
-                                          >
+                                               "mt-1 text-left text-[12px] font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]",
+                                               !hasFullDescription && "invisible pointer-events-none"
+                                             )}
+                                           >
                                             {t("readFullDescription")}
                                           </button>
-                                        </>
+                                        </div>
                                       ) : (
                                         <>
                                           <p className="text-[13px] leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
@@ -728,7 +731,7 @@ export default function ProfilePage() {
                                         </>
                                       )}
                                     </div>
-                                    <div className="mt-3 min-h-[46px] space-y-1.5 text-[14px]">
+                                    <div className="mt-3.5 min-h-[46px] space-y-1.5 text-[14px]">
                                       {serviceYears ? (
                                         <p className="flex items-center gap-2 text-[#374151]">
                                           <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />

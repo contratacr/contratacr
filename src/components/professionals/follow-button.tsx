@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
-import { UserCheck, UserPlus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -146,7 +145,6 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
         disabled={busy}
         aria-label={`${label}. ${countLabel}`}
         aria-pressed={following}
-        title={`${label} · ${countLabel}`}
         className={cn(
           "inline-flex h-8 min-w-[96px] items-center justify-center rounded-lg px-4 text-sm font-bold transition-colors disabled:opacity-60",
           following || labelOverride
@@ -161,21 +159,20 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
   }
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-2.5", className)}>
+    <div className={cn("inline-flex w-fit flex-wrap items-center gap-2.5", className)}>
       <button
         type="button"
         onClick={toggle}
         disabled={busy}
         aria-pressed={following}
         className={cn(
-          "inline-flex h-8 items-center justify-center gap-1.5 rounded-full px-3.5 text-[13px] font-extrabold transition-colors disabled:opacity-60",
+          "inline-flex h-7 min-w-[72px] items-center justify-center rounded-full px-2.5 text-center text-[12px] font-extrabold transition-colors disabled:opacity-60 sm:min-w-[78px] sm:px-3",
           following
             ? "border border-[#d7e3ec] bg-white text-[#162543] hover:bg-[#f5f8fb]"
             : "bg-[#102746] text-white shadow-sm hover:bg-[#1b365d]",
         )}
       >
-        {following ? <UserCheck className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
-        {label}
+        <span className="w-full text-center">{label}</span>
       </button>
       {showCount && <span className="text-sm font-semibold text-[#526277]">{countLabel}</span>}
     </div>

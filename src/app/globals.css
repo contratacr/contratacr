@@ -335,6 +335,41 @@ body.ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav {
   box-shadow: none !important;
 }
 
+body.ccr-native-app.ccr-booking-modal-open .ccr-search-bottom-sheet,
+html.ccr-native-app body.ccr-booking-modal-open .ccr-search-bottom-sheet {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.ccr-native-app.ccr-booking-modal-open .ccr-native-bottom-nav,
+html.ccr-native-app body.ccr-booking-modal-open .ccr-native-bottom-nav {
+  display: none !important;
+}
+
+body.ccr-search-filters-open .ccr-search-bottom-sheet,
+html body.ccr-search-filters-open .ccr-search-bottom-sheet {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+@media (max-width: 640px) {
+  body.ccr-booking-modal-open .ccr-booking-modal-panel,
+  html body.ccr-booking-modal-open .ccr-booking-modal-panel,
+  body.ccr-native-app.ccr-booking-modal-open .ccr-booking-modal-panel,
+  html.ccr-native-app body.ccr-booking-modal-open .ccr-booking-modal-panel {
+    inset-inline: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    top: calc(env(safe-area-inset-top) + 4.2rem) !important;
+    bottom: 0 !important;
+    width: calc(100vw - 0.15rem) !important;
+    max-width: none !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 4.2rem) !important;
+    border-radius: 26px 26px 0 0 !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
 @media (min-width: 1024px) {
   .ccr-native-app .ccr-search-bottom-sheet {
     max-height: none !important;
@@ -430,11 +465,6 @@ body.ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav {
     max-height: var(--app-visual-viewport-height);
     border-radius: 0;
   }
-}
-
-body.ccr-native-app.ccr-availability-modal-open .ccr-native-bottom-nav,
-body.ccr-native-app.ccr-availability-modal-open [data-ai-concierge-button] {
-  display: none !important;
 }
 
 .ccr-native-app .ccr-availability-modal {

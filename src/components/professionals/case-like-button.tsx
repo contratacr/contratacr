@@ -54,7 +54,6 @@ export function CaseLikeButton({
       disabled={liked || busy}
       aria-pressed={liked}
       aria-label={label}
-      title={label}
       className={cn("transition-colors", !liked && !busy && "cursor-pointer", className)}
     >
       <Heart className={cn("h-5 w-5 transition-transform", liked && "fill-current text-[#e11d48]")} />

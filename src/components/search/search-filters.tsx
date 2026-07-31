@@ -33,6 +33,7 @@ const ANY_INSURER = "__any__";
 const ANY_LANGUAGE = "__any_language__";
 const ANY_MODALITY = "any";
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+const SORT_OPTIONS = ["rating", "successCases", "experience", "followers", "availability", "priceAsc"] as const;
 
 type AddressSuggestion = {
   type: "address";
@@ -184,11 +185,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const sessionTokenRef = useRef<any>(null);
   const initialSort = initialParam("sortBy");
   const [sortBy, setSortBy] = useState(initialSort && initialSort !== "cercania" ? initialSort : "rating");
-  const sortLabel = sortBy === "priceAsc"
-    ? t("sort.priceAsc")
-    : sortBy === "availability"
-    ? t("sort.availability")
-    : t("sort.rating");
+  const sortLabel = t(`sort.${SORT_OPTIONS.includes(sortBy as (typeof SORT_OPTIONS)[number]) ? sortBy : "rating"}`);
   const [modality, setModality] = useState(initialParam("modalidad") || ANY_MODALITY);
   const modalityLabel = modality === "video"
     ? t("filters.attentionVideo")
@@ -663,9 +660,9 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           }}>
             <SelectTrigger className={pill}><SelectValue /></SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
-              <SelectItem value="rating">{t("sort.rating")}</SelectItem>
-              <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
-              <SelectItem value="availability">{t("sort.availability")}</SelectItem>
+              {SORT_OPTIONS.map((option) => (
+                <SelectItem key={option} value={option}>{t(`sort.${option}`)}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -920,9 +917,9 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           }}>
             <SelectTrigger className={FILTER_TRIGGER}><SelectValue>{sortLabel}</SelectValue></SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
-              <SelectItem value="rating">{t("sort.rating")}</SelectItem>
-              <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
-              <SelectItem value="availability">{t("sort.availability")}</SelectItem>
+              {SORT_OPTIONS.map((option) => (
+                <SelectItem key={option} value={option}>{t(`sort.${option}`)}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

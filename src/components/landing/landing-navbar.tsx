@@ -514,7 +514,7 @@ export function AccountMenu({
       <button
         onClick={toggle}
         className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent hover:ring-[#009FD9]/30 transition-all"
-        title={displayName || user.email || ""}
+        aria-label={displayName || user.email || t("myPanel")}
       >
         {!avatarReady ? (
           // Avatar state not resolved yet → a NEUTRAL skeleton, never the initials
@@ -574,7 +574,6 @@ function PanelIconLink({ href, label }: { href: string; label: string }) {
     <Link
       href={href}
       aria-label={label}
-      title={label}
       className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744]"
     >
       <UserRound className="h-5 w-5" />
@@ -587,7 +586,6 @@ function HeaderIconLink({ href, label, children }: { href: string; label: string
     <Link
       href={href}
       aria-label={label}
-      title={label}
       className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
     >
       {children}
@@ -1140,14 +1138,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               <div className={cn("flex-1", mobileInline && "hidden lg:block")} />
 
               {/* Right actions */}
-              <div className="relative z-[60] hidden w-[340px] justify-end lg:flex items-center gap-2 shrink-0">
+              <div className="relative z-[60] hidden min-w-[340px] justify-end lg:flex items-center gap-2 shrink-0">
                 {authLoading && !user ? (
                   <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
                     <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
                     <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
                   </div>
                 ) : user ? (
-                  <div className="flex w-[220px] items-center justify-end gap-1">
+                  <div className="flex w-auto min-w-0 items-center justify-end gap-1">
                     {!isPro && (
                       <Link
                         href="/registro/profesional"

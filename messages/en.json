@@ -242,6 +242,9 @@
     },
     "sort": {
       "rating": "Best rated",
+      "successCases": "Most success stories",
+      "experience": "Most experience",
+      "followers": "Most followers",
       "reviews": "Most reviews",
       "priceAsc": "Price: low to high",
       "priceDesc": "Price: high to low",
@@ -281,7 +284,7 @@
     "unverified": "Unverified",
     "unverifiedTitle": "Identity not verified",
     "rate": "Rate",
-    "noReviews": "No reviews yet",
+    "noReviews": "No reviews",
     "reviewsCount": "{count, plural, one {# review} other {# reviews}}",
     "viewCases": "Success stories",
     "viewCertifications": "Education",
@@ -1418,13 +1421,13 @@
       "items": {
         "clientPanel": {
           "title": "Client panel",
-          "short": "My requests, My projects and My favorites",
-          "body": "Use the client panel to follow up on what you want to hire.",
+          "short": "My requests, My projects and Saved",
+          "body": "The client panel brings together what you use when hiring: requests, posted projects, saved profiles and your basic information.",
           "steps": [
-            "In My requests, review services you requested directly from a professional.",
-            "In My projects, review projects you created to receive proposals.",
-            "In My favorites, save profiles to compare or contact later.",
-            "From the same panel, open support if you need help."
+            "Start with My requests to review services you requested directly from a professional.",
+            "Use My projects when you want to post a need and receive proposals.",
+            "Save profiles in Saved to compare or contact later.",
+            "You can also open Support from the panel if you need help."
           ],
           "cta": "Go to client panel"
         },
@@ -1498,18 +1501,6 @@
           ],
           "cta": "Go to professional panel"
         },
-        "profile": {
-          "title": "My profile",
-          "short": "Identity, photo and trust",
-          "body": "Help clients and professionals understand who you are before contacting you.",
-          "steps": [
-            "Add a clear photo or logo if it represents your business better.",
-            "Review your name, phone number and main details.",
-            "If you offer services, write a short and trustworthy description.",
-            "Verify your identity when available to show more trust."
-          ],
-          "cta": "Go to my profile"
-        },
         "services": {
           "title": "My services",
           "short": "What you offer and how clients find you",
@@ -1565,6 +1556,62 @@
             "Follow up from messages if the client replies."
           ],
           "cta": "Go to projects received"
+        },
+        "clientRequests": {
+          "title": "My requests",
+          "short": "Services you requested directly",
+          "body": "My requests shows services you requested from a professional profile or an availability slot.",
+          "steps": [
+            "Review the date, service, professional and status of each request.",
+            "Open messages if you need to coordinate details before confirming.",
+            "Cancel or follow up from the same card when available."
+          ],
+          "cta": "Go to my requests"
+        },
+        "clientProjects": {
+          "title": "My projects",
+          "short": "Posts to receive proposals",
+          "body": "My projects lets you post a need and receive proposals from interested professionals.",
+          "steps": [
+            "Create a project with a clear title, service, location and description.",
+            "Review received proposals and compare scope, price and message.",
+            "Continue in messages with the professional that fits best."
+          ],
+          "cta": "Go to my projects"
+        },
+        "clientSaved": {
+          "title": "Saved",
+          "short": "Saved profiles to compare",
+          "body": "Saved keeps professionals you want to review, compare or contact later.",
+          "steps": [
+            "Save professionals from Search or from their public profile.",
+            "Return to Saved when you want to compare options.",
+            "Open the profile or send a message when you decide to move forward."
+          ],
+          "cta": "Go to saved"
+        },
+        "clientProfile": {
+          "title": "My client profile",
+          "short": "Basic information for hiring",
+          "body": "Your client profile helps identify you when requesting services, posting projects or using messages.",
+          "steps": [
+            "Keep your name, photo and contact information updated.",
+            "Verify your identity when available to build more trust.",
+            "If you are also a professional, switch to the professional panel with the same account."
+          ],
+          "cta": "Go to my profile"
+        },
+        "professionalProfile": {
+          "title": "My professional profile",
+          "short": "How clients see you",
+          "body": "My professional profile controls the public information clients see before contacting you.",
+          "steps": [
+            "Complete basics, photo or logo and professional description.",
+            "Add work areas, contact options, languages and public links.",
+            "Use View my profile to review how clients see you.",
+            "Turn on Show business name only if you prefer showing your business name."
+          ],
+          "cta": "Go to professional profile"
         }
       }
     },
@@ -1936,7 +1983,7 @@
     "nameRequired": "The name is required.",
     "priceRequired": "Enter a price or check \"Ask price\".",
     "yearsRequired": "Add the years of experience for this service.",
-    "experienceRequired": "Add the experience for this service.",
+    "experienceRequired": "Select when you started working in this service.",
     "nameLabel": "Service name *",
     "namePlaceholder": "example: Residential electrical installation",
     "description": "Description",
@@ -1944,7 +1991,9 @@
     "descPlaceholder": "Briefly describe what this service involves...",
     "price": "Price",
     "willShowAs": "Will show as: {price}",
-    "experienceLabel": "Experience in this service",
+    "experienceLabel": "Working in this service since",
+    "startedAtLabel": "Working in this service since",
+    "startedAtHelp": "ContrataCR calculates the experience automatically.",
     "yearsLabel": "Years",
     "yearsShort": "Years",
     "yearsPlaceholder": "example: 5",

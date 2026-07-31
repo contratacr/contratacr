@@ -308,7 +308,20 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // Inline error for a submit that fails (e.g. the slot was just taken — 409).
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Guest email duplicate detection (inline, real-time).
+
   const guestEmailCheck = useAvailabilityCheck(clientEmail, "email", !isLoggedIn);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (!open) {
+      document.body.classList.remove("ccr-booking-modal-open");
+      return;
+    }
+    document.body.classList.add("ccr-booking-modal-open");
+    return () => {
+      document.body.classList.remove("ccr-booking-modal-open");
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -1051,7 +1064,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onInteractOutside={keepSelectMenuOpen}
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
-            "app-bottom-sheet fixed inset-x-0 bottom-0 z-50 sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:-translate-x-1/2 sm:-translate-y-1/2",
+            "ccr-booking-modal-panel app-bottom-sheet fixed inset-x-0 bottom-0 z-50 sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:-translate-x-1/2 sm:-translate-y-1/2",
             "w-full overflow-hidden rounded-t-2xl shadow-2xl sm:w-[95vw] sm:max-w-4xl sm:rounded-3xl",
             "flex flex-col md:flex-row",
             "max-h-[92vh] sm:max-h-[95vh] md:max-h-[720px]",
@@ -1060,6 +1073,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             "data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0"
           )}
         >
+          <Dialog.Title className="sr-only">
+            {`${t("title")} - ${proDisplayName(professional.fullName)}`}
+          </Dialog.Title>
           {/* LEFT PANEL — the original dark navy→blue gradient (sprint 323 reverted the
               sprint-317 light recolor). ONLY the verified mark was kept from that change:
               the solid #009FD9 "Verificado" pill that matches the /buscar card (it reads

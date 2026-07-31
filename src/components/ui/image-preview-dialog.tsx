@@ -32,7 +32,6 @@ export function ImagePreviewDialog({
         <button
           type="button"
           aria-label={openLabel}
-          title={openLabel}
           className={cn(
             "group relative inline-flex shrink-0 cursor-zoom-in rounded-full text-left outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2",
             className

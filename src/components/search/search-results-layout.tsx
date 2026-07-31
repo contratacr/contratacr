@@ -87,6 +87,18 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (!showFilters) {
+      document.body.classList.remove("ccr-search-filters-open");
+      return;
+    }
+    document.body.classList.add("ccr-search-filters-open");
+    return () => {
+      document.body.classList.remove("ccr-search-filters-open");
+    };
+  }, [showFilters]);
+
   // ── Draggable bottom sheet (mobile) ──────────────────────────────────────────
   function onHandleDown(e: React.PointerEvent) {
     draggingRef.current = true;

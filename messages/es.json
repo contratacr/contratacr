@@ -242,6 +242,9 @@
     },
     "sort": {
       "rating": "Mejor calificados",
+      "successCases": "Más casos de éxito",
+      "experience": "Más experiencia",
+      "followers": "Más seguidores",
       "reviews": "Más reseñas",
       "priceAsc": "Menor precio",
       "priceDesc": "Precio: mayor a menor",
@@ -281,7 +284,7 @@
     "unverified": "Sin verificar",
     "unverifiedTitle": "Identidad sin verificar",
     "rate": "Tarifa",
-    "noReviews": "Sin reseñas todavía",
+    "noReviews": "Sin reseñas",
     "reviewsCount": "{count, plural, one {# reseña} other {# reseñas}}",
     "viewCases": "Casos de éxito",
     "viewCertifications": "Formación",
@@ -375,7 +378,7 @@
     "ok": "Entendido",
     "messages": {
       "request": "No puedes solicitarte un servicio a ti mismo. Así es como los clientes te encuentran y reservan tus servicios.",
-      "whatsapp": "No puedes contactarte a ti mismo. As? es como los clientes te escriben por WhatsApp para coordinar.",
+      "whatsapp": "No puedes contactarte a ti mismo. Así es como los clientes te escriben por WhatsApp para coordinar.",
       "call": "No puedes llamarte a ti mismo. Así es como los clientes te contactan por teléfono.",
       "email": "No puedes escribirte a ti mismo. Así es como los clientes te contactan por correo.",
       "proposal": "No puedes enviarte una propuesta a tu propia solicitud.",
@@ -927,7 +930,7 @@
     "whatsappNumberBody": "Para coordinar tu cita necesitamos tu número de contacto. Lo guardamos para tus próximas solicitudes.",
     "success": {
       "title": "¡Solicitud confirmada!",
-      "desc": "Tu solicitud qued? confirmada. Puedes coordinar los detalles por WhatsApp con el profesional.",
+      "desc": "Tu solicitud quedó confirmada. Puedes coordinar los detalles por WhatsApp con el profesional.",
       "whatsapp": "WhatsApp",
       "viewRequest": "Ver mi solicitud",
       "close": "Listo"
@@ -1418,38 +1421,27 @@
         "clientPanel": {
           "title": "Panel cliente",
           "short": "Mis solicitudes, Mis proyectos y Mis favoritos",
-          "body": "Usa el panel cliente para dar seguimiento a lo que quieres contratar.",
+          "body": "El panel cliente reúne lo que haces cuando quieres contratar: solicitudes, proyectos publicados, favoritos y tu información básica.",
           "steps": [
-            "En Mis solicitudes revisas servicios que pediste directamente a un profesional.",
-            "En Mis proyectos ves los proyectos que creaste para recibir propuestas.",
-            "En Mis favoritos guardas perfiles para compararlos o contactarlos después.",
-            "Desde el mismo panel puedes abrir soporte si necesitas ayuda."
+            "Revisa tus solicitudes recientes y el estado de cada una.",
+            "Consulta tus proyectos publicados y las propuestas recibidas.",
+            "Guarda profesionales en favoritos para compararlos o contactarlos luego.",
+            "Desde el panel también puedes abrir soporte si necesitas ayuda."
           ],
           "cta": "Ir al panel cliente"
         },
         "searchServices": {
           "title": "Buscar",
           "short": "Encuentra profesionales",
-          "body": "La búsqueda te ayuda a comparar profesionales por servicio, ubicación, reseñas, casos de éxito y disponibilidad.",
+          "body": "Buscar te ayuda a encontrar profesionales por servicio, ubicación, reseñas, casos de éxito, experiencia, seguidores y disponibilidad.",
           "steps": [
-            "Entra a Buscar y escribe el servicio que necesitas.",
-            "Usa filtros de servicio, ubicación y modalidad para reducir resultados.",
-            "Revisa el card del profesional: nombre, verificación, reseñas, casos de éxito y contacto.",
-            "Abre el perfil para ver más información antes de escribir o reservar.",
-            "Si el profesional no muestra horarios, usa Enviar mensaje para coordinar."
+            "Escribe el servicio que necesitas o elige una categoría.",
+            "Usa filtros de ubicación, modalidad, idioma y orden para afinar los resultados.",
+            "Revisa cada card: reseñas, casos de éxito, experiencia, seguidores, ubicación y horarios.",
+            "Abre el perfil para ver más información antes de contactar.",
+            "Envía mensaje o revisa disponibilidad cuando encuentres una opción adecuada."
           ],
           "cta": "Ir a buscar"
-        },
-        "searchFilters": {
-          "title": "Usar filtros en buscar",
-          "short": "Servicio, ubicación y modalidad",
-          "body": "Los filtros sirven para reducir resultados y encontrar opciones más cercanas a lo que necesitas.",
-          "steps": [
-            "Filtra por servicio para ver solo profesionales relacionados.",
-            "Agrega ubicación si quieres resultados cerca de una provincia o cantón.",
-            "Usa modalidad para separar atención presencial, videoconsulta o ambas."
-          ],
-          "cta": "Abrir filtros"
         },
         "messages": {
           "title": "Mensajes",
@@ -1496,18 +1488,6 @@
             "También conservas el panel cliente para contratar otros servicios."
           ],
           "cta": "Ir al panel profesional"
-        },
-        "profile": {
-          "title": "Mi perfil",
-          "short": "Identidad, foto y confianza",
-          "body": "Ayuda a que clientes y profesionales entiendan quién eres antes de contactarte.",
-          "steps": [
-            "Agrega una foto clara o logo si representa mejor tu negocio.",
-            "Revisa tu nombre, teléfono y datos principales.",
-            "Si ofreces servicios, escribe una descripción breve y confiable.",
-            "Verifica tu identidad cuando esté disponible para mostrar más confianza."
-          ],
-          "cta": "Ir a mi perfil"
         },
         "services": {
           "title": "Mis servicios",
@@ -1564,6 +1544,62 @@
             "Da seguimiento desde mensajes si el cliente responde."
           ],
           "cta": "Ir a proyectos recibidos"
+        },
+        "clientRequests": {
+          "title": "Mis solicitudes",
+          "short": "Servicios que pediste directamente",
+          "body": "Mis solicitudes muestra los servicios que pediste desde el perfil de un profesional o desde una disponibilidad.",
+          "steps": [
+            "Revisa fecha, servicio, profesional y estado de cada solicitud.",
+            "Abre mensajes si necesitas coordinar detalles antes de confirmar.",
+            "Cancela o da seguimiento desde el mismo card cuando aplique."
+          ],
+          "cta": "Ir a mis solicitudes"
+        },
+        "clientProjects": {
+          "title": "Mis proyectos",
+          "short": "Publicaciones para recibir propuestas",
+          "body": "Mis proyectos sirve para publicar una necesidad y recibir propuestas de profesionales interesados.",
+          "steps": [
+            "Crea un proyecto con título, servicio, ubicación y descripción clara.",
+            "Revisa las propuestas que recibes y compara perfiles antes de elegir.",
+            "Continúa por mensajes con el profesional que más te convenga."
+          ],
+          "cta": "Ir a mis proyectos"
+        },
+        "clientSaved": {
+          "title": "Mis favoritos",
+          "short": "Perfiles guardados para comparar",
+          "body": "Mis favoritos guarda profesionales que quieres revisar, comparar o contactar más adelante.",
+          "steps": [
+            "Guarda profesionales desde Buscar o desde su perfil público.",
+            "Vuelve a Mis favoritos cuando quieras comparar opciones.",
+            "Abre el perfil o escribe un mensaje cuando decidas avanzar."
+          ],
+          "cta": "Ir a mis favoritos"
+        },
+        "clientProfile": {
+          "title": "Mi perfil de cliente",
+          "short": "Datos básicos para contratar",
+          "body": "Tu perfil de cliente ayuda a identificarte cuando solicitas servicios, publicas proyectos o hablas por mensajes.",
+          "steps": [
+            "Mantén tu nombre, foto y datos de contacto actualizados.",
+            "Revisa tu seguridad de cuenta y correo.",
+            "Si también eres profesional, puedes cambiar al panel profesional con la misma cuenta."
+          ],
+          "cta": "Ir a mi perfil"
+        },
+        "professionalProfile": {
+          "title": "Mi perfil profesional",
+          "short": "Cómo te ven los clientes",
+          "body": "Mi perfil profesional controla la información pública que ven los clientes antes de contactarte.",
+          "steps": [
+            "Completa datos básicos, foto o logo y descripción profesional.",
+            "Agrega formación, lugares de trabajo, contacto, idiomas y enlaces públicos.",
+            "Activa Mostrar solo nombre comercial si quieres que el público vea tu empresa en vez de tu nombre personal.",
+            "Usa el icono de perfil público para revisar cómo te ven los clientes."
+          ],
+          "cta": "Ir a mi perfil profesional"
         }
       }
     },
@@ -1935,7 +1971,7 @@
     "nameRequired": "El nombre es requerido.",
     "priceRequired": "Ingresa un precio o marca \"Consultar precio\".",
     "yearsRequired": "Agrega los años de experiencia en este servicio.",
-    "experienceRequired": "Agrega la experiencia en este servicio.",
+    "experienceRequired": "Indica desde cuándo trabajas en este servicio.",
     "nameLabel": "Nombre del servicio *",
     "namePlaceholder": "Ejemplo: Instalación eléctrica residencial",
     "description": "Descripción",
@@ -1943,7 +1979,9 @@
     "descPlaceholder": "Describe brevemente en qué consiste este servicio...",
     "price": "Precio",
     "willShowAs": "Se mostrará como: {price}",
-    "experienceLabel": "Experiencia en este servicio",
+    "experienceLabel": "Trabajo en este servicio desde",
+    "startedAtLabel": "Trabajo en este servicio desde",
+    "startedAtHelp": "ContrataCR calcula la experiencia automáticamente.",
     "yearsLabel": "Años",
     "yearsShort": "Años",
     "yearsPlaceholder": "Ejemplo: 5",
@@ -2068,7 +2106,7 @@
     "cancel": "Cancelar",
     "confirmPrivate": "Sí, ocultar agenda",
     "privateSubPublic": "Desactivada: tus horarios están visibles para reservar.",
-    "privateSubPrivate": "Activada: tu agenda est? oculta y coordinas por WhatsApp.",
+    "privateSubPrivate": "Activada: tu agenda está oculta y coordinas por WhatsApp.",
     "scheduleForLabel": "Horario para",
     "addLocation": "Agregar lugar",
     "profession": "Servicio",

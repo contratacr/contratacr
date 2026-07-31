@@ -97,6 +97,7 @@ export type ProService = {
   category?: string;
   years?: number;
   months?: number;
+  startedAt?: string;
   active?: boolean;
   modalities?: Array<"in_person" | "at_home" | "video">;
 };
@@ -110,12 +111,21 @@ function isDemoSgSolutions(professional: Pick<ProfessionalCardData, "slug" | "bu
   return name === "sg solutions" || professional.slug?.includes("sg-solutions") === true;
 }
 
-function setServiceExperience<T extends { years?: number; months?: number }>(services: T[] | undefined, years: number): T[] | undefined {
+function setServiceExperience<T extends { years?: number; months?: number }>(services: T[] | undefined, years: number, months = 0): T[] | undefined {
+  const startedAt = monthValueFromExperience(years, months);
   return services?.map((service) => ({
     ...service,
     years,
-    months: 0,
+    months,
+    startedAt,
   }));
+}
+
+function monthValueFromExperience(years: number, months = 0) {
+  const totalMonths = Math.max(0, years * 12 + months);
+  const now = new Date();
+  const date = new Date(now.getFullYear(), now.getMonth() - totalMonths, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function withAdvertisingDemoStats<T extends ProfessionalCardData>(professional: T): T {
@@ -124,7 +134,8 @@ function withAdvertisingDemoStats<T extends ProfessionalCardData>(professional: 
       ...professional,
       followerCount: 20,
       yearsExperience: 7,
-      services: setServiceExperience(professional.services, 7),
+      monthsExperience: 7,
+      services: setServiceExperience(professional.services, 7, 7),
     };
   }
   if (isDemoSgSolutions(professional)) {

@@ -1,16 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, CheckCheck, Trash2 } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
-import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
-import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
-import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
+import { notificationInMode } from "@/lib/notification-link";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 
@@ -24,7 +20,6 @@ type Notification = {
   data?: { link?: string } | null;
 };
 
-const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "offer" }) {
   const { user, notificationUnread } = useAuth();
   const router = useRouter();
@@ -35,10 +30,13 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     items: [] as Notification[],
   }));
   const [hasSyncedNotifications, setHasSyncedNotifications] = useState(false);
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+
   const notifications = useMemo(
     () => notificationState.userId === user?.id ? notificationState.items : readCachedNotifications(user?.id) ?? [],
     [notificationState, user?.id],
   );
+
   const updateNotifications = useCallback((updater: (prev: Notification[]) => Notification[]) => {
     setHasSyncedNotifications(true);
     setNotificationState((prev) => {
@@ -46,19 +44,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       return { userId: user?.id, items: updater(base) };
     });
   }, [user?.id]);
-  const [open, setOpen] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
-  // A UNIQUE channel name per component instance. The navbar mounts the bell in
-  // BOTH the default and compact header rows (and dashboards mount one too), so a
-  // shared static name made the 2nd instance call `.channel("notifications")`,
-  // get back Supabase's CACHED already-subscribed channel, and adding `.on()` to
-  // it threw "cannot add postgres_changes callbacks after subscribe()" — crashing
-  // the whole app via the error boundary. A unique topic gives each instance its
-  // own channel, so handlers are always registered before subscribe().
-  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
-  // Outside panels the navbar is the account inbox; inside a panel, keep the bell
-  // scoped to that mode so the unread count matches what the user is doing.
   const visible = scope === "all" ? notifications : notifications.filter((n) => notificationInMode(n.type, scope));
   const cachedUnreadCount = visible.filter((n) => !n.read).length;
   const serverUnreadCount = scope === "offer"
@@ -67,11 +53,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       ? notificationUnread.use + notificationUnread.neutral
       : notificationUnread.offer + notificationUnread.use + notificationUnread.neutral;
   const unreadCount = hasSyncedNotifications ? cachedUnreadCount : serverUnreadCount;
-  const notificationTitle = (n: Notification) =>
-    n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
 
-  // Re-pullable so the badge can refresh whenever notifications change anywhere
-  // (the in-panel list marks read / deletes, another tab, etc.).
   const fetchNotifications = useCallback(() => {
     if (!user) return;
     const supabase = createClient();
@@ -104,12 +86,6 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
-
-    // Real-time subscription. ALL `.on(...)` handlers are registered FIRST and
-    // `.subscribe()` is called LAST, exactly once, on a per-instance unique
-    // channel (so no other mounted bell shares/reuses this channel). We listen to
-    // INSERT (new notification) AND UPDATE (read flag flipped elsewhere) so the
-    // unread badge stays correct without a manual refresh.
     const channel = supabase
       .channel(`notifications-${user.id}-${instanceId}`)
       .on(
@@ -118,7 +94,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         (payload) => {
           updateNotifications((prev) => uniqueNotifications([payload.new as Notification, ...prev]));
           window.dispatchEvent(new CustomEvent("notificationsChanged"));
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -127,7 +103,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           const updated = payload.new as Notification;
           updateNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
           window.dispatchEvent(new CustomEvent("notificationsChanged"));
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -136,93 +112,30 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           const deleted = payload.old as Pick<Notification, "id">;
           updateNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
           window.dispatchEvent(new CustomEvent("notificationsChanged"));
-        }
+        },
       )
       .subscribe();
 
-    // Clean up on unmount / user change so the channel is removed exactly once
-    // and never re-subscribed with stale handlers.
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchNotifications, instanceId, updateNotifications]);
 
-  // Same-tab sync: other notification surfaces (the in-panel list) broadcast this
-  // event after marking read / deleting; re-pull so the bell badge matches.
   useEffect(() => {
     function onChanged() { fetchNotifications(); }
     window.addEventListener("notificationsChanged", onChanged);
     return () => window.removeEventListener("notificationsChanged", onChanged);
   }, [fetchNotifications]);
 
-  useEffect(() => {
-    function handleClickOutside(e: Event) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    function handleEsc(e: KeyboardEvent) { if (e.key === "Escape") setOpen(false); }
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("touchstart", handleClickOutside);
-      document.addEventListener("keydown", handleEsc);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, [open]);
-
-  async function markAllRead() {
-    if (!user) return;
-    const ids = visible.filter((n) => !n.read).map((n) => n.id);
-    if (ids.length === 0) return;
-    const supabase = createClient();
-    await supabase.from("notifications").update({ read: true }).in("id", ids);
-    updateNotifications((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)));
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
-  }
-
-  async function openNotification(n: Notification) {
-    setOpen(false);
-    if (!n.read) {
-      const supabase = createClient();
-      updateNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
-      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {
-        window.dispatchEvent(new CustomEvent("notificationsChanged"));
-      });
-    }
-    const role = user?.user_metadata?.role as string | undefined;
-    const href = notificationActionHref(n, role, locale);
-    if (!href) return;
-    if (user) await Promise.race([prefetchDashboardDataForNotification(user.id, n.type), wait(320)]);
-    router.prefetch(href);
-    router.push(href);
-  }
-
-  async function dismiss(e: React.MouseEvent, id: string) {
-    e.stopPropagation();
-    updateNotifications((prev) => prev.filter((n) => n.id !== id));
-    const supabase = createClient();
-    await supabase.from("notifications").delete().eq("id", id);
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
-  }
-
   if (!user) return null;
 
-  const allNotificationsHref = `/${locale}/notificaciones`;
   const openNotifications = () => {
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
-      router.push(allNotificationsHref);
-      return;
-    }
-    setOpen(!open);
+    router.push(`/${locale}/notificaciones`);
   };
 
   return (
-    <div className="relative" ref={panelRef}>
+    <AppTooltip label={t("title")}>
       <button
         onClick={openNotifications}
-        className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] hover:bg-[#f3f4f6] transition-colors"
+        className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
         aria-label={t("title")}
       >
         <span className="relative inline-flex">
@@ -234,91 +147,6 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           )}
         </span>
       </button>
-
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 rounded-2xl border border-[#e5e7eb] bg-white shadow-xl z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#f3f4f6]">
-            <span className="text-sm font-semibold text-[#111827]">{t("title")}</span>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                className="flex items-center gap-1 text-xs text-[#319278] hover:underline"
-              >
-                <CheckCheck className="h-3.5 w-3.5" />
-                {t("markAllRead")}
-              </button>
-            )}
-          </div>
-
-          <div className="max-h-80 overflow-y-auto">
-            {visible.length === 0 ? (
-              <div className="text-center py-8">
-                <Bell className="h-8 w-8 text-[#e5e7eb] mx-auto mb-2" />
-                <p className="text-sm text-[#9ca3af]">{t("empty")}</p>
-              </div>
-            ) : (
-              <ul>
-                {visible.map((n) => (
-                  <li
-                    key={n.id}
-                    className={cn(
-                      "relative group border-b border-[#f3f4f6] last:border-0",
-                      !n.read && "bg-[#f0f9f6]"
-                    )}
-                  >
-                    <button
-                      onClick={() => openNotification(n)}
-                      className={cn(
-                        "w-full text-left px-4 py-3 pr-9 transition-colors",
-                        notificationActionHref(n, user?.user_metadata?.role as string | undefined, locale)
-                          ? "cursor-pointer hover:bg-[#f3f4f6]"
-                          : "cursor-default",
-                      )}
-                    >
-                      <div className="flex items-start gap-2.5">
-                        <div className="relative shrink-0">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f3f4f6] text-[#374151]">
-                            <NotificationSourceIcon type={n.type} className="h-4 w-4" />
-                          </span>
-                          {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#319278] ring-2 ring-white" />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          {/* No role tag — title + message already make the
-                              context clear; clicking still routes correctly. */}
-                          <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] break-words line-clamp-2">{notificationTitle(n)}</p>
-                          <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#6b7280] [overflow-wrap:anywhere] break-words">
-                            {n.message}
-                          </p>
-                          <p className="text-xs text-[#9ca3af] mt-1">
-                            {formatRelativeTime(n.created_at, locale)}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                    <AppTooltip label={t("delete")} className="absolute top-2 right-2">
-                      <button
-                        onClick={(e) => dismiss(e, n.id)}
-                        className="p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-red-500 transition-colors"
-                        aria-label={t("delete")}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </AppTooltip>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Footer — open the full notifications screen. */}
-          <a
-            href={allNotificationsHref}
-            className="block text-center px-4 py-2.5 border-t border-[#f3f4f6] text-sm font-medium text-[#009FD9] hover:bg-[#f9fafb] transition-colors"
-          >
-            {t("viewAll")}
-          </a>
-        </div>
-      )}
-    </div>
+    </AppTooltip>
   );
 }

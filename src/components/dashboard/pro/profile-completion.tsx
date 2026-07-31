@@ -31,6 +31,8 @@ function hasCompleteServiceInfo(v: unknown): boolean {
   if (!Array.isArray(v) || v.length === 0) return false;
   return v.every((service) => {
     if (!service || typeof service !== "object") return false;
+    const startedAt = (service as { startedAt?: unknown }).startedAt;
+    if (typeof startedAt === "string" && /^\d{4}-\d{2}$/.test(startedAt)) return true;
     const years = (service as { years?: unknown }).years;
     const months = (service as { months?: unknown }).months;
     return (typeof years === "number" && years > 0) || (typeof months === "number" && months > 0);

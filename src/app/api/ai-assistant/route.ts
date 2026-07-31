@@ -78,6 +78,31 @@ function normalizeText(value: string) {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
+function repairSpanishDisplayText(value: string | null | undefined) {
+  if (!value) return value ?? null;
+  return value
+    .replace(/\bReparaci\?n\b/g, "Reparación")
+    .replace(/\bInformaci\?n\b/g, "Información")
+    .replace(/\bVerificaci\?n\b/g, "Verificación")
+    .replace(/\bNotificaci\?n\b/g, "Notificación")
+    .replace(/\bPublicaci\?n\b/g, "Publicación")
+    .replace(/\bDescripci\?n\b/g, "Descripción")
+    .replace(/\bUbicaci\?n\b/g, "Ubicación")
+    .replace(/\bJardiner\?a\b/g, "Jardinería")
+    .replace(/\bPlomer\?a\b/g, "Plomería")
+    .replace(/\bContrase\?a\b/g, "Contraseña")
+    .replace(/\bcl\?nica\b/g, "clínica")
+    .replace(/\bCl\?nica\b/g, "Clínica")
+    .replace(/\bAs\?\b/g, "Así")
+    .replace(/\bqued\?\b/g, "quedó")
+    .replace(/\best\?\b/g, "está");
+}
+
+function displayLabel(value: string | null | undefined, locale: Locale) {
+  const cleaned = locale === "es" ? repairSpanishDisplayText(value) : value;
+  return cleaned || null;
+}
+
 function includesAny(text: string, words: string[]) {
   return words.some((word) => text.includes(word));
 }
@@ -1120,21 +1145,22 @@ function normalizePayload(
   // entered only through an explicit user request, never because a prior zero-result
   // answer happened to offer that alternative.
   if (wantsProfessionalSearch && directService && directPlace) {
-    const serviceLabel = labels.get(directService.id) || getCategoryLabel(directService.id, locale);
+    const serviceLabel = displayLabel(labels.get(directService.id) || getCategoryLabel(directService.id, locale), locale)!;
+    const placeLabel = displayLabel(directPlaceLabel, locale)!;
     return {
       ...payload,
       action: "search_professionals",
       serviceId: directService.id,
-      locationText: directPlaceLabel,
+      locationText: placeLabel,
       searchQuery: serviceLabel,
       answer: locale === "en"
-        ? `I found professionals for ${serviceLabel} in ${directPlaceLabel}.`
-        : `Encontré profesionales de ${serviceLabel} en ${directPlaceLabel}.`,
+        ? `I found professionals for ${serviceLabel} in ${placeLabel}.`
+        : `Encontré profesionales de ${serviceLabel} en ${placeLabel}.`,
       ctaLabel: locale === "en" ? "See all results" : "Ver todos los resultados",
     };
   }
   if (wantsProfessionalSearch && directService && !directPlace) {
-    const serviceLabel = labels.get(directService.id) || getCategoryLabel(directService.id, locale);
+    const serviceLabel = displayLabel(labels.get(directService.id) || getCategoryLabel(directService.id, locale), locale)!;
     return {
       ...payload,
       action: "answer",
@@ -1373,13 +1399,15 @@ function assistantProfessionalResult(
   serviceId?: string | null,
   hasPublicAvailability = false,
 ): AssistantProfessionalResult {
-  const service =
+  const service = displayLabel(
     serviceId ? getCategoryLabel(serviceId, locale) :
     professional.categoryId ? getCategoryLabel(professional.categoryId, locale) :
-    locale === "en" ? "Professional service" : "Servicio profesional";
-  const location = professional.workplaces?.[0]?.name?.trim()
+    locale === "en" ? "Professional service" : "Servicio profesional",
+    locale,
+  )!;
+  const location = displayLabel(professional.workplaces?.[0]?.name?.trim()
     || [professional.cantonName, professional.provinceName].filter(Boolean).join(", ")
-    || (professional.videoconsulta ? (locale === "en" ? "Video consultation" : "Videoconsulta") : "Costa Rica");
+    || (professional.videoconsulta ? (locale === "en" ? "Video consultation" : "Videoconsulta") : "Costa Rica"), locale)!;
   const profileHref = `/${locale}/profesionales/${professional.slug}`;
   const actionKind: "availability" | "message" =
     hasPublicAvailability && professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp"
@@ -1492,8 +1520,8 @@ export async function POST(req: Request) {
       : resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
     const missingServiceName = !resolvedCategory.id ? clearMissingServiceName(rawMessage) : null;
     if (payload.action === "suggest_service" && resolvedCategory.id && !explicitPublishIntent) {
-      const serviceLabel = catalog.labels.get(resolvedCategory.id) || getCategoryLabel(resolvedCategory.id, locale);
-      const placeLabel = formatPlaceLabel(userMessagePlace(rawMessage));
+      const serviceLabel = displayLabel(catalog.labels.get(resolvedCategory.id) || getCategoryLabel(resolvedCategory.id, locale), locale)!;
+      const placeLabel = displayLabel(formatPlaceLabel(userMessagePlace(rawMessage)), locale);
       payload.action = placeLabel ? "search_professionals" : "answer";
       payload.answer = placeLabel
         ? locale === "en"
@@ -1563,9 +1591,9 @@ export async function POST(req: Request) {
     const noResults = payload.action === "search_professionals" && !!payload.serviceId && resultCount === 0;
     const hasResults = payload.action === "search_professionals" && resultCount > 0;
     const suggestedService = payload.action === "suggest_service" ? payload.searchQuery || rawMessage : null;
-    const requestedServiceLabel = payload.serviceId ? catalog.labels.get(payload.serviceId) : null;
+    const requestedServiceLabel = payload.serviceId ? displayLabel(catalog.labels.get(payload.serviceId), locale) : null;
     const resolvedAnswerSearch = resolveSearch(rawMessage, locale, payload.serviceId, payload.locationText);
-    const requestedPlaceLabel = formatPlaceLabel(resolvedAnswerSearch.place);
+    const requestedPlaceLabel = displayLabel(formatPlaceLabel(resolvedAnswerSearch.place), locale);
     const resultCta = locale === "en"
       ? `See ${resultCount} ${resultCount === 1 ? "professional" : "professionals"}`
       : `Ver ${resultCount} ${resultCount === 1 ? "profesional" : "profesionales"}`;

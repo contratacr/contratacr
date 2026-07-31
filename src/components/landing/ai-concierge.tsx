@@ -10,7 +10,6 @@ import {
   Loader2,
   MapPin,
   Minus,
-  MoreHorizontal,
   RotateCcw,
   Send,
   Sparkles,
@@ -216,14 +215,26 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState("");
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [compactViewport, setCompactViewport] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
   useContainedTouchScroll(scrollRef, open || embedded);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const update = () => setCompactViewport(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener("change", update);
+    window.addEventListener("resize", update);
+    return () => {
+      mediaQuery.removeEventListener("change", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
 
   useEffect(() => {
     if (embedded) return;
@@ -279,25 +290,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     window.addEventListener("keydown", minimizeOnEscape);
     return () => window.removeEventListener("keydown", minimizeOnEscape);
   }, [embedded, open]);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    function closeOnOutside(event: MouseEvent | TouchEvent) {
-      if (menuRef.current?.contains(event.target as Node)) return;
-      setMenuOpen(false);
-    }
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setMenuOpen(false);
-    }
-    document.addEventListener("mousedown", closeOnOutside);
-    document.addEventListener("touchstart", closeOnOutside);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("mousedown", closeOnOutside);
-      document.removeEventListener("touchstart", closeOnOutside);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [menuOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -428,7 +420,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   }
 
   function resetConversation() {
-    setMenuOpen(false);
     setConversationId(crypto.randomUUID());
     setMessages([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
     setInput("");
@@ -436,8 +427,9 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
+  const nativeAssistantShell = nativeApp && compactViewport;
   if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
-  if (!embedded && nativeApp && !open) return null;
+  if (!embedded && nativeAssistantShell && !open) return null;
   if (!embedded && !open) {
     return (
       <button
@@ -447,7 +439,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
         aria-label={copy.closedLabel}
         className={cn(
           "group fixed right-3 z-[95] hidden h-14 w-14 place-items-center overflow-visible bg-transparent transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 lg:grid sm:bottom-6 sm:right-6 sm:h-[72px] sm:w-[72px]",
-          nativeApp
+          nativeAssistantShell
             ? "bottom-auto right-[-10px] top-[38svh] h-16 w-16 sm:bottom-auto sm:right-[-10px] sm:top-[38svh] sm:h-[72px] sm:w-[72px]"
             : insideDashboard
             ? "bottom-[calc(1rem+env(safe-area-inset-bottom))] lg:bottom-6"
@@ -488,7 +480,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
         )}
       >
         <header className="relative flex shrink-0 items-center gap-1.5 border-b border-[#e3ebf1] bg-white px-2.5 py-3 sm:gap-3 sm:px-5 sm:py-4">
-          {(embedded || nativeApp) && (
+          {(embedded || nativeAssistantShell) && (
             <button
               type="button"
               onClick={embedded ? onBack : () => setOpen(false)}
@@ -501,28 +493,17 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           <div className="-my-2 -ml-1.5 h-[58px] w-[58px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
             <h2 className="truncate text-[14px] font-black text-[#102746] min-[380px]:text-[15px] sm:text-lg">{copy.title}</h2>
-            <p className="ccr-ai-mobile-header-notice mt-0.5 hidden truncate text-[11px] font-semibold text-[#7d8fa8]">{copy.notice}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <div ref={menuRef} className="relative ccr-ai-reset-action">
-              <AppTooltip label={lang === "en" ? "Assistant options" : "Opciones del asistente"}>
-                <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-label={lang === "en" ? "Assistant options" : "Opciones del asistente"} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><MoreHorizontal className="h-5 w-5" /></button>
-              </AppTooltip>
-              {menuOpen && (
-                <div className="absolute right-0 top-full z-40 mt-2 w-[260px] overflow-hidden rounded-2xl border border-[#d8e6f0] bg-white p-1.5 text-sm text-[#173052] shadow-[0_18px_48px_-22px_rgba(15,45,80,0.45)]">
-                  <button type="button" onClick={resetConversation} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#f4f8fb] active:bg-[#eef9fd]">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[#009FD9]">
-                      <RotateCcw className="h-[18px] w-[18px]" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[14px] font-extrabold leading-tight text-[#102746]">{copy.reset}</span>
-                      <span className="mt-0.5 block text-[12px] font-semibold leading-snug text-[#6b7a90]">{copy.resetHint}</span>
-                    </span>
-                  </button>
-                </div>
-              )}
-            </div>
-            {!embedded && !nativeApp && (
+            <button
+              type="button"
+              onClick={resetConversation}
+              aria-label={copy.reset}
+              className="ccr-ai-reset-action grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"
+            >
+              <RotateCcw className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+            </button>
+            {!embedded && !nativeAssistantShell && (
               <AppTooltip label={copy.minimize}>
                 <button type="button" onClick={() => setOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>
               </AppTooltip>
@@ -583,7 +564,8 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           )}
         </div>
 
-        <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-4">
+        <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3">
+          <p className="ccr-ai-footer-notice mb-2 text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:hidden">{copy.notice}</p>
           <form onSubmit={submit} className="flex items-end gap-2 rounded-[24px] border-2 border-[#009FD9] bg-white p-2 pl-4 shadow-[0_10px_30px_-18px_rgba(0,159,217,0.48)] focus-within:ring-4 focus-within:ring-[#009FD9]/10">
             <input
               type="text"
@@ -604,7 +586,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </button>
           </form>
-          <p className="ccr-ai-footer-notice mt-3 text-center text-[11px] font-medium leading-tight text-[#7d8fa8]">{copy.notice}</p>
+          <p className="ccr-ai-footer-notice mt-3 hidden text-center text-[11px] font-medium leading-tight text-[#7d8fa8] sm:block">{copy.notice}</p>
         </footer>
       </div>
     </section>

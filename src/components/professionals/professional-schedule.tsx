@@ -58,8 +58,6 @@ interface ProfessionalScheduleProps {
 // How many day-columns are shown at once, and how far ahead the arrows page.
 const COLS = 3;
 const BOOKING_MAX_FUTURE_DAYS = 90;
-const locationNavButtonClass =
-  "relative z-20 -my-1 flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-full text-[#6b7280] transition-colors hover:bg-[#f3f8fc] hover:text-[#009FD9] active:bg-[#EBF5FB] active:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30";
 
 function toKey(d: Date): string {
   const y = d.getFullYear();
@@ -110,8 +108,14 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const [showBooking, setShowBooking] = useState(false);
   const [preset, setPreset] = useState<ScheduleSlot | null>(null);
   const [offset, setOffset] = useState(0);
-  // Scroll container for the location tabs — chevron buttons scroll it when the tabs OVERFLOW.
   const locScrollRef = useRef<HTMLDivElement>(null);
+  const [locScrollHint, setLocScrollHint] = useState({ overflow: false, left: false, right: false });
+  const locDragStateRef = useRef<{ pointerId: number | null; startX: number; startScrollLeft: number; moved: boolean }>({
+    pointerId: null,
+    startX: 0,
+    startScrollLeft: 0,
+    moved: false,
+  });
   // When the pro acts on their OWN card we block the action with a friendly modal
   // instead of hiding the buttons (the card looks identical to a client's view).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
@@ -389,12 +393,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       : (placeAddress || "");
   const venueName = workplaceAddr ? businessName.trim() : "";
   // Show the chevron nav whenever the tab row actually OVERFLOWS its container (FIT-based, not a
-  // fixed count) — so on a NARROW card (e.g. the profile contact rail) where the 3rd location is
-  // cut off, the arrows already appear; on a wide card they only appear once a tab won't fit. This
-  // makes /buscar and the profile consistent (the old `locTabs.length > 3` showed them too late on
-  // the narrower profile card). Measured on mount, on resize (ResizeObserver), and when the tabs
-  // change. Monotonic (adding the chevrons only narrows the row further), so it never oscillates.
-  const [locScrollState, setLocScrollState] = useState({ overflow: false, left: false, right: false });
+  useEffect(() => {
+    const el = locScrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: 0 });
+  }, [locTabs.length, effectiveId]);
   useEffect(() => {
     const el = locScrollRef.current;
     if (!el) return;
@@ -408,65 +411,94 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           left: el.scrollLeft > 2,
           right: el.scrollLeft < maxScroll - 2,
         };
-        setLocScrollState((prev) => (
+        setLocScrollHint((prev) => (
           prev.overflow === next.overflow && prev.left === next.left && prev.right === next.right ? prev : next
         ));
       });
     };
     measure();
     let ro: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(measure); ro.observe(el); }
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(measure);
+      ro.observe(el);
+    }
     el.addEventListener("scroll", measure, { passive: true });
-    if (typeof window !== "undefined") window.addEventListener("resize", measure);
+    window.addEventListener("resize", measure);
     return () => {
       window.cancelAnimationFrame(frame);
       ro?.disconnect();
       el.removeEventListener("scroll", measure);
-      if (typeof window !== "undefined") window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", measure);
     };
   }, [locTabs.length, effectiveId]);
-  useEffect(() => {
+  const beginLocationDrag = (clientX: number, pointerId: number | null = null) => {
     const el = locScrollRef.current;
     if (!el) return;
-    if (locTabs.length <= 1) el.scrollTo({ left: 0 });
-  }, [locTabs.length, effectiveId]);
-  const showLocNav = locTabs.length > 1 && locScrollState.overflow;
-  const reserveLocNav = locTabs.length > 1;
-  const scrollLocs = (dir: number) => {
+    locDragStateRef.current = {
+      pointerId,
+      startX: clientX,
+      startScrollLeft: el.scrollLeft,
+      moved: false,
+    };
+  };
+  const moveLocationDrag = (clientX: number) => {
     const el = locScrollRef.current;
-    if (!el) return;
-    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
-    const next = Math.min(maxScroll, Math.max(0, el.scrollLeft + dir * Math.min(180, Math.max(96, el.clientWidth * 0.65))));
-    el.scrollTo({ left: next, behavior: "smooth" });
+    if (!el) return false;
+    const delta = clientX - locDragStateRef.current.startX;
+    if (!locDragStateRef.current.moved && Math.abs(delta) < 4) return false;
+    locDragStateRef.current.moved = true;
+    el.scrollLeft = locDragStateRef.current.startScrollLeft - delta;
+    return true;
+  };
+  const endLocationDrag = () => {
+    window.setTimeout(() => {
+      locDragStateRef.current.pointerId = null;
+      locDragStateRef.current.moved = false;
+    }, 0);
   };
   const locationControl = locTabs.length > 0 ? (
     <div
-      className="relative z-10 min-w-0"
+      className="relative z-10 w-full min-w-0"
       onClick={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
     >
       {/* TABS (Doctoralia-style): pin + name; the selected tab is brand-blue with an
           underline, the rest muted. The row SCROLLS sideways and NEVER wraps
-          (`shrink-0` + `whitespace-nowrap`). `.hide-scrollbar` hides the chrome; when
-          there are >3 tabs the chevrons below scroll it. */}
-      <div className="flex items-center gap-0.5">
-        {reserveLocNav && (
-          <button
-            type="button"
-            aria-label={t("prevLocations")}
-            disabled={!showLocNav || !locScrollState.left}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(-1); }}
-            className={`${locationNavButtonClass} ${!showLocNav || !locScrollState.left ? "invisible pointer-events-none" : ""}`}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
+          (`shrink-0` + `whitespace-nowrap`). A thin scrollbar appears only when
+          there is horizontal overflow, matching modern secondary tab rows. */}
+      <div className="relative">
+        {locScrollHint.overflow && locScrollHint.left && (
+          <span className="pointer-events-none absolute left-0 top-0 z-10 h-full w-6 bg-gradient-to-r from-white via-white/90 to-white/0" aria-hidden />
+        )}
+        {locScrollHint.overflow && locScrollHint.right && (
+          <span className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-white via-white/90 to-white/0" aria-hidden />
         )}
         {/* `overflow-y-hidden` is REQUIRED: `overflow-x-auto` alone leaves overflow-y as
             `visible`, which CSS then COMPUTES to `auto` — so the row became vertically
             scrollable (it could be dragged up/down even with ONE location). Pinning overflow-y
             to hidden makes it strictly a HORIZONTAL tab scroll; vertical touch-drags then bubble
             to the page/sheet scroll (default touch-action). */}
-        <div ref={locScrollRef} className={`-mx-1 flex min-w-0 flex-1 gap-3 ${reserveLocNav ? "overflow-x-auto" : "overflow-x-hidden"} overflow-y-hidden hide-scrollbar border-b border-[#e5e7eb] px-1`} role="tablist" aria-label={t("location")}>
+        <div
+          ref={locScrollRef}
+          className="ccr-location-tabs-scroll hide-scrollbar flex min-w-0 gap-3 overflow-x-auto overflow-y-hidden pr-6 pb-[2px]"
+          role="tablist"
+          aria-label={t("location")}
+          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+          onPointerDown={(e) => {
+            beginLocationDrag(e.clientX, e.pointerId);
+          }}
+          onPointerMove={(e) => {
+            if (locDragStateRef.current.pointerId !== e.pointerId) return;
+            if (moveLocationDrag(e.clientX)) e.preventDefault();
+          }}
+          onPointerUp={(e) => {
+            if (locDragStateRef.current.pointerId !== e.pointerId) return;
+            endLocationDrag();
+          }}
+          onPointerCancel={(e) => {
+            if (locDragStateRef.current.pointerId !== e.pointerId) return;
+            endLocationDrag();
+          }}
+        >
           {locTabs.map((o) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
             const isVideoTab = o.id === "videoconsulta" || (!hasRealLoc && (professional.videoconsulta || professional.coverage?.country));
@@ -478,13 +510,22 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                 role="tab"
                 aria-selected={active}
                 onClick={hasRealLoc
-                  ? (e) => { e.stopPropagation(); setSelectedLoc(o.id); setOffset(0); }
+                  ? (e) => {
+                      e.stopPropagation();
+                      if (locDragStateRef.current.moved) {
+                        e.preventDefault();
+                        return;
+                      }
+                      setSelectedLoc(o.id);
+                      setOffset(0);
+                    }
                   : (e) => e.stopPropagation()}
-                className={`shrink-0 -mb-px inline-flex items-center gap-1 whitespace-nowrap border-b-2 px-0.5 pb-1.5 text-[12px] font-semibold transition-colors ${
+                className={`shrink-0 inline-flex items-center gap-1 whitespace-nowrap py-0 pl-0 pr-0.5 text-[12px] font-semibold transition-colors ${
                   active
-                    ? "border-[#009FD9] text-[#009FD9]"
-                    : "border-transparent text-[#6b7280] hover:border-[#ccecf8] hover:text-[#009FD9]"
+                    ? "text-[#009FD9]"
+                    : "text-[#6b7280] hover:text-[#009FD9]"
                 }`}
+                style={{ touchAction: "pan-x" }}
               >
                 {isVideoTab ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
                 {locTabLabel(o.label)}
@@ -492,18 +533,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             );
           })}
         </div>
-        {reserveLocNav && (
-          <button
-            type="button"
-            aria-label={t("nextLocations")}
-            disabled={!showLocNav || !locScrollState.right}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(1); }}
-            className={`${locationNavButtonClass} ${!showLocNav || !locScrollState.right ? "invisible pointer-events-none" : ""}`}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        )}
       </div>
+      <div className="mt-1 h-px w-full bg-[#e5e7eb]" aria-hidden />
       {addressLine && (
         <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-[#6b7280]">
           {venueName && <span className="font-semibold text-[#374151]">{venueName} · </span>}

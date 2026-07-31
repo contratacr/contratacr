@@ -1269,32 +1269,27 @@ export default function DashboardPage() {
           mobileSectionOpen && "px-0 pt-0 sm:px-0 lg:px-8 lg:pt-8",
           mobileFullScreenTab && "max-w-none px-0 pb-0 pt-0 sm:px-0 lg:max-w-7xl lg:px-8 lg:pb-8 lg:pt-8",
         )}>
-          {/* Header, clean, restrained (serious tone): a modest larger avatar with a hairline
-              ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
-              the content by a single hairline divider. No gradient/decoration. */}
-          <div className={cn("mx-auto mb-6 w-full max-w-6xl items-start justify-between gap-3 border-b border-[#e5e7eb] pb-5 sm:items-center sm:gap-4", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:flex" : "flex")}>
-            <div className="flex min-w-0 flex-1 flex-col">
-              <p className="mb-2 truncate pl-[76px] text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af] sm:pl-[96px]">
-                {mode === "offer" ? t("panelProfessional") : t("panelClient")}
-              </p>
-              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                <ImagePreviewDialog
-                  src={headerAvatar}
-                  alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
-                  openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
-                >
-                  <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb] sm:h-20 sm:w-20">
-                    <AvatarImage src={headerAvatar ?? undefined} />
-                    <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
-                      {getInitials(displayName || "?")}
-                    </AvatarFallback>
-                  </Avatar>
-                </ImagePreviewDialog>
-                <div className="flex min-w-0 flex-1 flex-col justify-center">
-                  {/* Keep the account name on one line in responsive; very long names truncate
-                      instead of pushing the header into two lines. */}
-                <div className="flex min-w-0 max-w-full items-center gap-0.5 sm:gap-1">
-                  <h1 className="min-w-0 truncate whitespace-nowrap text-lg font-bold leading-none text-[#162543] sm:text-2xl" title={displayName}>
+          {/* Header — base visual from prod, keeping local extras restrained. */}
+          <div className={cn("mx-auto mb-6 w-full max-w-6xl items-start justify-between gap-4 border-b border-[#e5e7eb] pb-5 sm:items-center", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:flex" : "flex")}>
+            <div className="flex min-w-0 flex-1 items-center gap-4">
+              <ImagePreviewDialog
+                src={headerAvatar}
+                alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
+                openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+              >
+                <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb] sm:h-20 sm:w-20">
+                  <AvatarImage src={headerAvatar ?? undefined} />
+                  <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
+                    {getInitials(displayName || "?")}
+                  </AvatarFallback>
+                </Avatar>
+              </ImagePreviewDialog>
+              <div className="min-w-0 flex-1">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
+                  {mode === "offer" ? t("panelProfessional") : t("panelClient")}
+                </p>
+                <div className="flex min-w-0 max-w-full items-center gap-1">
+                  <h1 className="min-w-0 truncate whitespace-nowrap text-lg font-bold leading-tight text-[#162543] sm:text-2xl" title={displayName}>
                     <span className="hidden min-[430px]:inline sm:hidden">{displayName}</span>
                     <span className="min-[430px]:hidden sm:hidden">{compactMobileHeaderName}</span>
                     <span className="hidden sm:inline">{compactHeaderName}</span>
@@ -1309,12 +1304,11 @@ export default function DashboardPage() {
                     </Link>
                   )}
                 </div>
-                <div className="-mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 sm:gap-x-2">
+                <div className="-mt-0.5 flex min-h-[22px] flex-wrap items-center gap-x-2 gap-y-1">
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
                   <div className="flex min-w-0 items-center">
                     <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                   </div>
-                </div>
                 </div>
               </div>
             </div>
