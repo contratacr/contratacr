@@ -196,8 +196,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
     : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
   const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#009FD9]";
   const reviewIconClass = "h-3.5 w-3.5 shrink-0 text-[#f59e0b]";
-  const mobileMetricClass = "flex min-w-0 items-center justify-center px-0.5 py-2 text-left";
-  const mobileMetricInnerClass = "flex min-w-0 items-center justify-start gap-1";
+  const mobileMetricClass = "flex min-w-0 items-center justify-center px-1 py-2 text-left";
+  const mobileMetricInnerClass = "grid min-w-0 grid-cols-[14px_minmax(0,max-content)] items-center justify-start gap-1";
   const metricNumberClass = "text-[15px] font-bold leading-none text-[#162543]";
   const metricTextClass = "whitespace-nowrap text-[11px] font-semibold leading-none text-[#5f6f86]";
   const desktopMetricClass = "relative z-10 inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
