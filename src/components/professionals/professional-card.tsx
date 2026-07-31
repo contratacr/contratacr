@@ -194,10 +194,19 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const experienceLabel = locale === "en"
     ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"} experience`
     : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
+  const reviewTextLabel = tCard("reviewsCount", { count: professional.reviewCount });
+  const followerTextOnlyLabel = locale === "en"
+    ? (followerCount === 1 ? "follower" : "followers")
+    : (followerCount === 1 ? "seguidor" : "seguidores");
+  const casesTextOnlyLabel = locale === "en"
+    ? `success ${portfolioCount === 1 ? "case" : "cases"}`
+    : `casos de éxito`;
+  const experienceTextOnlyLabel = locale === "en" ? "experience" : "años experiencia";
   const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#0089bb]";
-  const mobileMetricClass = "flex min-w-0 items-center justify-center gap-1 px-1 py-2 text-center";
-  const metricNumberClass = "text-[15px] font-bold leading-none text-[#162543]";
-  const metricTextClass = "min-w-0 truncate text-[11px] font-semibold leading-none text-[#6b7280]";
+  const mobileMetricClass = "flex min-w-0 items-center justify-center gap-2 px-1.5 py-2 text-left";
+  const metricNumberClass = "shrink-0 text-[15px] font-bold leading-none text-[#162543]";
+  const metricTextClass = "min-w-0 truncate text-[10.5px] font-semibold leading-none text-[#6b7280]";
+  const metricDividerClass = "border-[#edf2f7]";
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
@@ -367,37 +376,41 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {/* Trust metrics: social proof first, then proof-of-work. */}
           <div className="-ml-[68px] w-[calc(100%+68px)] basis-full lg:-ml-[76px] lg:w-[calc(100%+76px)] lg:basis-auto">
             <div className={cn(
-              "grid w-full max-w-full min-w-0 overflow-hidden border-y border-[#e5e7eb] sm:hidden",
+              "grid w-full max-w-full min-w-0 overflow-hidden border-y sm:hidden",
               hasExperience ? "grid-cols-2" : "grid-cols-3",
+              metricDividerClass,
             )}>
               {professional.reviewCount > 0 ? (
                 <Link
                   href={reviewsHref}
-                  className={cn(mobileMetricClass, hasExperience && "border-r border-b border-[#e5e7eb]")}
+                  className={cn(mobileMetricClass, hasExperience && "border-r border-b", metricDividerClass)}
                   aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                 >
                   <Star className={`${metricIconClass} fill-current`} />
                   <span className={metricNumberClass}>{professional.ratingAvg.toFixed(1)}</span>
-                  <span className={metricTextClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
+                  <span className={metricTextClass}>{reviewTextLabel}</span>
                 </Link>
               ) : (
-                <span className={cn(mobileMetricClass, hasExperience && "border-r border-b border-[#e5e7eb]")}>
+                <span className={cn(mobileMetricClass, hasExperience && "border-r border-b", metricDividerClass)}>
                   <Star className={metricIconClass} />
                   <span className={metricTextClass}>{tCard("noReviews")}</span>
                 </span>
               )}
-              <span className={cn(mobileMetricClass, hasExperience ? "border-b border-[#e5e7eb]" : "border-x border-[#e5e7eb]")}>
+              <span className={cn(mobileMetricClass, hasExperience ? "border-b" : "border-x", metricDividerClass)}>
                 <Users className={metricIconClass} />
-                <span className={metricTextClass}>{followersLabel}</span>
+                <span className={metricNumberClass}>{followerCount}</span>
+                <span className={metricTextClass}>{followerTextOnlyLabel}</span>
               </span>
-              <Link href={casesHref} className={cn(mobileMetricClass, hasExperience && "border-r border-[#e5e7eb]")}>
+              <Link href={casesHref} className={cn(mobileMetricClass, hasExperience && "border-r", metricDividerClass)}>
                 <Camera className={metricIconClass} />
-                <span className={metricTextClass}>{casesLabel}</span>
+                <span className={metricNumberClass}>{portfolioCount}</span>
+                <span className={metricTextClass}>{casesTextOnlyLabel}</span>
               </Link>
               {hasExperience && (
                 <span className={mobileMetricClass}>
                   <BriefcaseBusiness className={metricIconClass} />
-                  <span className={metricTextClass}>{experienceLabel}</span>
+                  <span className={metricNumberClass}>{yearsExperience}</span>
+                  <span className={metricTextClass}>{experienceTextOnlyLabel}</span>
                 </span>
               )}
             </div>
