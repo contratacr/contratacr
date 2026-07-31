@@ -195,8 +195,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
     ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"} experience`
     : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
   const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#009FD9]";
-  const mobileMetricClass = "flex min-w-0 items-center justify-center px-1 py-2 text-left";
-  const mobileMetricInnerClass = "flex min-w-0 w-[108px] items-center justify-start gap-1";
+  const mobileMetricClass = "flex min-w-0 items-center justify-center px-0.5 py-2 text-left";
+  const mobileMetricInnerClass = "flex min-w-0 w-[96px] items-center justify-start gap-1";
   const metricNumberClass = "text-[15px] font-bold leading-none text-[#162543]";
   const metricTextClass = "min-w-0 truncate text-[11px] font-semibold leading-none text-[#6b7280]";
 
@@ -263,10 +263,10 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   <span className="hidden lg:inline">{displayName.primaryDesktop}</span>
                 </h3>
               </Link>
-              <div className="mt-0.5 flex min-w-0 items-start justify-between gap-2 pr-7 lg:mt-0 lg:block lg:pr-0">
+              <div className="mt-0.5 flex min-w-0 items-start justify-between gap-2 lg:mt-0 lg:block">
                 {verifiedMark}
                 {priceLabel && (
-                  <div className="ml-auto shrink-0 text-right leading-tight lg:hidden">
+                  <div className="ml-auto w-[58px] shrink-0 text-right leading-tight lg:hidden">
                     <span className="block text-[13px] font-bold leading-tight text-[#009FD9]">{priceAmount}</span>
                     {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
                     {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
@@ -295,7 +295,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {(displayProfessions.length > 0 || professional.isFeatured) && (
             <>
             <div
-              className="-mt-0.5 flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden pr-20 lg:hidden"
+              className="-mt-0.5 flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden pr-[68px] lg:hidden"
               data-testid="professional-card-service-summary"
               data-service-summary-version="single-row-v4"
             >
