@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { BriefcaseBusiness, Camera, Star, Users } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -376,36 +377,58 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           <div className="basis-full lg:basis-auto">
             {professional.reviewCount > 0 ? (
               <div className={cn(
-                "w-fit max-w-full min-w-0 gap-x-5 gap-y-1 text-[11px] font-semibold leading-tight text-[#8a97a8]",
-                hasExperience ? "grid grid-cols-[auto_auto]" : "flex flex-wrap items-center",
+                "grid w-full max-w-full min-w-0 grid-cols-2 gap-x-3 gap-y-1 text-[11px] font-semibold leading-tight text-[#8a97a8] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3",
+                !hasExperience && "sm:flex",
               )}>
                   <Link
                     href={reviewsHref}
-                    className="relative z-10 inline-flex w-fit items-center gap-1 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                    className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
                     aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                   >
-                    <span className="text-[13px] font-bold text-[#6f7d90] transition-colors group-hover:text-[#0089BB]">{professional.ratingAvg.toFixed(1)}</span>
-                    <span className="font-semibold text-[#8a97a8] hover:underline">
+                    <Star className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
+                    <span className="text-[13px] font-bold text-[#6f7d90]">{professional.ratingAvg.toFixed(1)}</span>
+                    <span className="truncate font-semibold text-[#8a97a8] hover:underline">
                       {tCard("reviewsCount", { count: professional.reviewCount })}
                     </span>
                   </Link>
-                  <span className="whitespace-nowrap">{followersLabel}</span>
-                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                  <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                    <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                    {followersLabel}
+                  </span>
+                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                    <Camera className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                     <span className="truncate">{casesLabel}</span>
                   </Link>
-                  {hasExperience && <span className="whitespace-nowrap">{experienceLabel}</span>}
+                  {hasExperience && (
+                    <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                      <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                      {experienceLabel}
+                    </span>
+                  )}
               </div>
             ) : (
               <div className={cn(
-                "w-fit max-w-full min-w-0 gap-x-5 gap-y-1 text-[11px] font-semibold leading-tight text-[#9ca3af]",
-                hasExperience ? "grid grid-cols-[auto_auto]" : "flex flex-wrap items-center",
+                "grid w-full max-w-full min-w-0 grid-cols-2 gap-x-3 gap-y-1 text-[11px] font-semibold leading-tight text-[#9ca3af] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3",
+                !hasExperience && "sm:flex",
               )}>
-                  <span className="whitespace-nowrap">{tCard("noReviews")}</span>
-                  <span className="whitespace-nowrap">{followersLabel}</span>
-                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                  <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                    <Star className="h-3.5 w-3.5 shrink-0 text-[#cbd5e1]" />
+                    {tCard("noReviews")}
+                  </span>
+                  <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                    <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                    {followersLabel}
+                  </span>
+                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                    <Camera className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                     <span className="truncate">{casesLabel}</span>
                   </Link>
-                  {hasExperience && <span className="whitespace-nowrap">{experienceLabel}</span>}
+                  {hasExperience && (
+                    <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                      <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                      {experienceLabel}
+                    </span>
+                  )}
               </div>
             )}
           </div>
