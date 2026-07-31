@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/modal";
 import { CategorySearch } from "@/components/ui/category-search";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { anyVideoConsultCategory, getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
@@ -27,6 +28,7 @@ export type ProService = {
   priceType?: PricingType; // por_hora | por_proyecto | …
   years?: number;          // years of experience in THIS service
   months?: number;         // extra months of experience in THIS service
+  startedAt?: string;      // YYYY-MM: when this service started
   // Which service (category id) this info belongs to. The model is SERVICES-ONLY:
   // each service the pro offers = one catalog category, with ONE info object.
   category?: string;
@@ -58,16 +60,110 @@ interface ServiceFormState {
   priceUnit: PricingType;   // a non-a_convenir unit (por_hora, por_proyecto, …)
   priceAmount: string;
   aConsultar: boolean;      // "Consultar precio" → persists as priceType a_convenir
-  years: string;
-  months: string;
+  startedAt: string;
 }
 
-const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "", months: "" };
+const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, startedAt: "" };
 const SERVICE_DESCRIPTION_MAX_LENGTH = 600;
-const SERVICE_YEARS_MAX_LENGTH = 2;
-const SERVICE_YEARS_MAX = 99;
-const SERVICE_MONTHS_MAX_LENGTH = 2;
-const SERVICE_MONTHS_MAX = 11;
+
+function monthValueFromExperience(years?: number, months?: number) {
+  const totalMonths = Math.max(0, (years ?? 0) * 12 + (months ?? 0));
+  if (totalMonths <= 0) return "";
+  const now = new Date();
+  const date = new Date(now.getFullYear(), now.getMonth() - totalMonths, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function experienceFromMonthValue(value: string) {
+  if (!/^\d{4}-\d{2}$/.test(value)) return null;
+  const [yearRaw, monthRaw] = value.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) return null;
+  const now = new Date();
+  const currentTotal = now.getFullYear() * 12 + now.getMonth();
+  const startedTotal = year * 12 + (month - 1);
+  const diff = currentTotal - startedTotal;
+  if (diff < 0) return null;
+  return { years: Math.floor(diff / 12), months: diff % 12 };
+}
+
+function monthLabel(month: number, locale: string) {
+  const dateLocale = locale === "en" ? "en-US" : "es-CR";
+  const label = new Date(2026, month - 1, 1).toLocaleDateString(dateLocale, { month: "long" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function monthYearLabel(value: string, locale: string) {
+  if (!/^\d{4}-\d{2}$/.test(value)) return "";
+  const [yearRaw, monthRaw] = value.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) return "";
+  return `${monthLabel(month, locale)} ${year}`;
+}
+
+function ServiceStartMonthPicker({
+  value,
+  onChange,
+  locale,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  locale: string;
+}) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const selectedYear = /^\d{4}-\d{2}$/.test(value) ? value.slice(0, 4) : "";
+  const selectedMonth = /^\d{4}-\d{2}$/.test(value) ? String(Number(value.slice(5, 7))) : "";
+  const yearOptions = Array.from({ length: currentYear - 1970 + 1 }, (_, index) => {
+    const year = currentYear - index;
+    return { value: String(year), label: String(year) };
+  });
+  const maxMonth = selectedYear && Number(selectedYear) === currentYear ? currentMonth : 12;
+  const monthOptions = Array.from({ length: maxMonth }, (_, index) => {
+    const month = index + 1;
+    return { value: String(month), label: monthLabel(month, locale) };
+  });
+  const commit = (year: string, month: string) => {
+    if (!year || !month) {
+      onChange("");
+      return;
+    }
+    onChange(`${year}-${String(Number(month)).padStart(2, "0")}`);
+  };
+  const helper = locale === "en" ? "Select month and year" : "Selecciona mes y año";
+
+  return (
+    <div className="rounded-xl border border-[#e5e7eb] bg-white p-3">
+      <div className="mb-2 flex min-h-5 items-center justify-between gap-3">
+        <span className={cn("text-sm font-semibold", value ? "text-[#162543]" : "text-[#9ca3af]")}>
+          {monthYearLabel(value, locale) || helper}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-2.5">
+        <SelectMenu
+          value={selectedMonth}
+          onChange={(month) => commit(selectedYear || String(currentYear), month)}
+          options={monthOptions}
+          placeholder={locale === "en" ? "Month" : "Mes"}
+        />
+        <SelectMenu
+          value={selectedYear}
+          onChange={(year) => {
+            const month = selectedMonth && Number(selectedMonth) <= (Number(year) === currentYear ? currentMonth : 12)
+              ? selectedMonth
+              : "";
+            commit(year, month);
+          }}
+          options={yearOptions}
+          placeholder={locale === "en" ? "Year" : "Año"}
+        />
+      </div>
+    </div>
+  );
+}
 
 export function ServicesEditor({
   professionalId,
@@ -250,8 +346,7 @@ export function ServicesEditor({
       priceUnit: rep?.priceType && !isAsk ? rep.priceType : "por_hora",
       priceAmount: rep?.priceAmount != null ? String(rep.priceAmount) : "",
       aConsultar: isAsk,
-      years: rep?.years != null ? String(rep.years) : "",
-      months: rep?.months != null ? String(rep.months) : "",
+      startedAt: rep?.startedAt ?? monthValueFromExperience(rep?.years, rep?.months),
     });
     setFormError(null);
     if (professions.includes(prof)) setPendingNewCategory(null);
@@ -296,13 +391,8 @@ export function ServicesEditor({
       : parseMoneyAmount(form.priceAmount) ?? undefined;
     const priceDisplay = formatServicePrice(amount, priceType) ?? undefined;
     const description = form.description.trim().slice(0, SERVICE_DESCRIPTION_MAX_LENGTH);
-    const yearsRaw = form.years.replace(/\D/g, "").slice(0, SERVICE_YEARS_MAX_LENGTH);
-    const yearsValue = yearsRaw ? Math.min(Number(yearsRaw), SERVICE_YEARS_MAX) : undefined;
-    const years = yearsValue && yearsValue > 0 ? yearsValue : undefined;
-    const monthsRaw = form.months.replace(/\D/g, "").slice(0, SERVICE_MONTHS_MAX_LENGTH);
-    const monthsValue = monthsRaw ? Math.min(Number(monthsRaw), SERVICE_MONTHS_MAX) : undefined;
-    const months = monthsValue && monthsValue > 0 ? monthsValue : undefined;
-    if (!years && !months) {
+    const experience = experienceFromMonthValue(form.startedAt);
+    if (!experience || (experience.years <= 0 && experience.months <= 0)) {
       setFormError(t("experienceRequired"));
       return;
     }
@@ -318,8 +408,9 @@ export function ServicesEditor({
       priceAmount: amount,
       priceType,
       price: priceDisplay,
-      years,
-      months,
+      years: experience.years,
+      months: experience.months,
+      startedAt: form.startedAt,
       category: editCategory,
       active: rep?.active ?? true,
     };
@@ -363,9 +454,6 @@ export function ServicesEditor({
     }
     return groups;
   }, [pickerList]);
-
-  const inputClass =
-    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   // ── The elegant, single list-level "Agregar servicio" action (opens the catalog). ──
   const addServiceButton = (
@@ -588,32 +676,12 @@ export function ServicesEditor({
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">
                 {t("experienceLabel")} <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <input
-                    className={inputClass}
-                    inputMode="numeric"
-                    aria-label={t("yearsLabel")}
-                    placeholder={t("yearsPlaceholder")}
-                    value={form.years}
-                    maxLength={SERVICE_YEARS_MAX_LENGTH}
-                    onChange={(e) => setForm((f) => ({ ...f, years: e.target.value.replace(/\D/g, "").slice(0, SERVICE_YEARS_MAX_LENGTH) }))}
-                  />
-                  <p className="mt-1 text-xs font-medium text-[#6b7280]">{t("yearsShort")}</p>
-                </div>
-                <div>
-                  <input
-                    className={inputClass}
-                    inputMode="numeric"
-                    aria-label={t("monthsLabel")}
-                    placeholder={t("monthsPlaceholder")}
-                    value={form.months}
-                    maxLength={SERVICE_MONTHS_MAX_LENGTH}
-                    onChange={(e) => setForm((f) => ({ ...f, months: e.target.value.replace(/\D/g, "").slice(0, SERVICE_MONTHS_MAX_LENGTH) }))}
-                  />
-                  <p className="mt-1 text-xs font-medium text-[#6b7280]">{t("monthsShort")}</p>
-                </div>
-              </div>
+              <ServiceStartMonthPicker
+                value={form.startedAt}
+                locale={locale}
+                onChange={(startedAt) => setForm((f) => ({ ...f, startedAt }))}
+              />
+              <p className="mt-1.5 text-xs leading-5 text-[#6b7280]">{t("startedAtHelp")}</p>
             </div>
           </div>
         </Modal>
