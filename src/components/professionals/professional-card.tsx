@@ -194,11 +194,11 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const experienceLabel = locale === "en"
     ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"} experience`
     : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
-  const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#009FD9]";
+  const metricIconClass = "h-3 w-3 shrink-0 text-[#009FD9]";
   const mobileMetricClass = "flex min-w-0 items-center justify-center px-0.5 py-2 text-left";
-  const mobileMetricInnerClass = "flex min-w-0 w-[96px] items-center justify-start gap-1";
-  const metricNumberClass = "text-[15px] font-bold leading-none text-[#162543]";
-  const metricTextClass = "min-w-0 truncate text-[11px] font-semibold leading-none text-[#6b7280]";
+  const mobileMetricInnerClass = "flex min-w-0 items-center justify-start gap-1";
+  const metricNumberClass = "text-[14px] font-bold leading-none text-[#162543]";
+  const metricTextClass = "whitespace-nowrap text-[10px] font-semibold leading-none text-[#6b7280]";
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
