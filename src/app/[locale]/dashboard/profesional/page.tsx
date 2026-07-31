@@ -1065,7 +1065,7 @@ export default function DashboardPage() {
           setTab(tab);
         }}
         className={cn(
-          "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-2 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2.5 min-[1180px]:text-[12.5px] xl:px-3 xl:text-[13px]",
+          "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-1.5 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]",
           activeTab === tab
             ? "text-[#0089bb]"
             : "text-[#526277] hover:bg-[#f3f7fa] hover:text-[#162543]",
@@ -1091,7 +1091,7 @@ export default function DashboardPage() {
       <button
         type="button"
         onClick={() => handleSwitchMode(nextMode)}
-        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-[12px] font-bold text-[#526277] transition-colors hover:bg-[#f3f7fa] hover:text-[#162543] min-[1180px]:h-11 min-[1180px]:px-2.5 min-[1180px]:text-[12.5px] xl:px-3 xl:text-[13px]"
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-1.5 text-[12px] font-bold text-[#526277] transition-colors hover:bg-[#f3f7fa] hover:text-[#162543] min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]"
       >
         <Repeat2 className="h-4 w-4 text-[#64748b]" />
         {switchPanelLabel()}
@@ -1103,11 +1103,11 @@ export default function DashboardPage() {
     if (mobileFullScreenTab) return null;
     return (
       <div className="mb-5 hidden lg:flex lg:justify-center">
-        <div className="w-full max-w-[1280px] rounded-2xl border border-[#dfe8f0] bg-white p-1.5 shadow-sm">
-          <div className="flex max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] xl:gap-1.5 [&::-webkit-scrollbar]:hidden">
+        <div className="w-full max-w-6xl rounded-2xl border border-[#dfe8f0] bg-white p-1 shadow-sm xl:p-1.5">
+          <div className="flex max-w-full flex-nowrap items-center gap-0.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] xl:gap-1 [&::-webkit-scrollbar]:hidden">
             {desktopSwitchPanelButton()}
             {isProvider && <div className="h-7 w-px shrink-0 bg-[#e5edf3]" />}
-            <nav className="flex min-w-max flex-nowrap items-center justify-start gap-1 py-0.5 xl:gap-1.5">
+            <nav className="flex min-w-max flex-nowrap items-center justify-start gap-0.5 px-0.5 py-0.5 xl:gap-1">
               {desktopSidebarTabs.map(topNavButton)}
             </nav>
           </div>
