@@ -367,13 +367,24 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {/* Trust metrics: social proof first, then proof-of-work. */}
           <div className="-ml-[68px] w-[calc(100%+68px)] basis-full lg:-ml-[76px] lg:w-[calc(100%+76px)] lg:basis-auto">
             <div className={cn(
-              "grid w-full max-w-full min-w-0 overflow-hidden border-y border-[#e5e7eb] sm:hidden",
+              "relative grid w-full max-w-full min-w-0 overflow-hidden sm:hidden",
               hasExperience ? "grid-cols-2" : "grid-cols-3",
             )}>
+              {hasExperience ? (
+                <>
+                  <span className="pointer-events-none absolute left-4 right-4 top-1/2 h-px bg-[#edf2f7]" aria-hidden />
+                  <span className="pointer-events-none absolute bottom-2 left-1/2 top-2 w-px bg-[#edf2f7]" aria-hidden />
+                </>
+              ) : (
+                <>
+                  <span className="pointer-events-none absolute bottom-2 left-1/3 top-2 w-px bg-[#edf2f7]" aria-hidden />
+                  <span className="pointer-events-none absolute bottom-2 left-2/3 top-2 w-px bg-[#edf2f7]" aria-hidden />
+                </>
+              )}
               {professional.reviewCount > 0 ? (
                 <Link
                   href={reviewsHref}
-                  className={cn(mobileMetricClass, hasExperience && "border-r border-b border-[#e5e7eb]")}
+                  className={mobileMetricClass}
                   aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                 >
                   <Star className={`${metricIconClass} fill-current`} />
@@ -381,16 +392,16 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   <span className={metricTextClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
                 </Link>
               ) : (
-                <span className={cn(mobileMetricClass, hasExperience && "border-r border-b border-[#e5e7eb]")}>
+                <span className={mobileMetricClass}>
                   <Star className={metricIconClass} />
                   <span className={metricTextClass}>{tCard("noReviews")}</span>
                 </span>
               )}
-              <span className={cn(mobileMetricClass, hasExperience ? "border-b border-[#e5e7eb]" : "border-x border-[#e5e7eb]")}>
+              <span className={mobileMetricClass}>
                 <Users className={metricIconClass} />
                 <span className={metricTextClass}>{followersLabel}</span>
               </span>
-              <Link href={casesHref} className={cn(mobileMetricClass, hasExperience && "border-r border-[#e5e7eb]")}>
+              <Link href={casesHref} className={mobileMetricClass}>
                 <Camera className={metricIconClass} />
                 <span className={metricTextClass}>{casesLabel}</span>
               </Link>
