@@ -149,6 +149,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
   const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix, isColones: priceIsColones } = splitPricingLabel(priceLabel);
   const priceBoxClass = priceUnit || priceTaxSuffix ? "max-w-[38%] sm:max-w-[40%]" : "w-[74px] sm:w-[86px]";
+  const priceMobileBoxClass = priceUnit || priceTaxSuffix ? "w-[86px]" : "max-w-[calc(100%-4.5rem)]";
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
@@ -273,8 +274,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             </div>
           </div>
           {priceLabel && (
-            <div className="mt-1 flex justify-end sm:hidden">
-              <div className="shrink-0 whitespace-nowrap text-right leading-tight py-1">
+            <div className="flex justify-end pr-10 sm:hidden">
+              <div className={`shrink-0 whitespace-nowrap text-right leading-tight ${priceMobileBoxClass}`}>
                 <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
                 {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
                 {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
