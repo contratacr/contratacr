@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -58,14 +58,14 @@ import {
 } from "@/lib/dashboard-bootstrap-cache";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
-// "Usar servicios" (the seek capability — always available) and "Ofrecer servicios"
-// (the offer capability — unlocked by completing the professional profile). There
+// "Usar servicios" (the seek capability, always available) and "Ofrecer servicios"
+// (the offer capability, unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
   | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "saved" | "network"
-  | "chat" | "assistant" | "notifications" | "soporte" | "cuenta";
+  | "chat" | "assistant" | "notifications" | "soporte" | "cuenta" | "guides";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -89,6 +89,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   notifications: <Bell className="h-4 w-4" />,
   soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
+  guides: <FileText className="h-4 w-4" />,
 };
 
 // Tabs that show a one-line context note under the section title.
@@ -102,12 +103,25 @@ const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
-  "bookings", "proposals", "photos", "availability", "services", "profile",
+  "bookings", "proposals", "photos", "availability", "services", "soporte", "profile", "guides",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
-  "soporte",
 ];
-const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "saved", "profile", "soporte"];
+const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "saved", "soporte", "profile", "guides"];
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
+
+const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
+  bookings: { es: "Solicitudes Recibidas", en: "Received requests" },
+  proposals: { es: "Proyectos Recibidos", en: "Received projects" },
+  sent_bookings: { es: "Mis solicitudes", en: "My requests" },
+  sent_projects: { es: "Mis proyectos", en: "My projects" },
+  photos: { es: "Casos de éxito", en: "Success cases" },
+  availability: { es: "Disponibilidad", en: "Availability" },
+  services: { es: "Servicios", en: "Services" },
+  saved: { es: "Favoritos", en: "Saved" },
+  soporte: { es: "Soporte", en: "Support" },
+  profile: { es: "Perfil", en: "Profile" },
+  guides: { es: "Guías", en: "Guides" },
+};
 
 type GuideItem = {
   id: string;
@@ -120,17 +134,21 @@ type GuideItem = {
 
 const GUIDE_ITEMS: GuideItem[] = [
   { id: "clientPanel", section: "client", actionTab: "home", targetMode: "use", stepCount: 4 },
+  { id: "clientRequests", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 3 },
+  { id: "clientProjects", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 3 },
+  { id: "clientSaved", section: "client", actionTab: "saved", targetMode: "use", stepCount: 3 },
+  { id: "clientProfile", section: "client", actionTab: "profile", targetMode: "use", stepCount: 3 },
   { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
   { id: "messages", section: "shared", href: "/mensajes", stepCount: 4 },
   { id: "assistantGuide", section: "shared", actionTab: "assistant", stepCount: 3 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
-  { id: "profile", section: "shared", actionTab: "profile", stepCount: 4 },
   { id: "professionalPanel", section: "professional", actionTab: "home", targetMode: "offer", stepCount: 4 },
   { id: "requests", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 3 },
   { id: "opportunities", section: "professional", actionTab: "proposals", targetMode: "offer", stepCount: 3 },
   { id: "successCases", section: "professional", actionTab: "photos", targetMode: "offer", stepCount: 3 },
   { id: "availability", section: "professional", actionTab: "availability", targetMode: "offer", stepCount: 3 },
   { id: "services", section: "professional", actionTab: "services", targetMode: "offer", stepCount: 4 },
+  { id: "professionalProfile", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 4 },
 ];
 
 function guideIcon(id: string) {
@@ -143,6 +161,15 @@ function guideIcon(id: string) {
       return <Search className="h-4 w-4" />;
     case "messages":
       return <MessageSquareMore className="h-4 w-4" />;
+    case "clientRequests":
+      return <CalendarClock className="h-4 w-4" />;
+    case "clientProjects":
+      return <ClipboardList className="h-4 w-4" />;
+    case "clientSaved":
+      return <Bookmark className="h-4 w-4" />;
+    case "clientProfile":
+    case "professionalProfile":
+      return <User className="h-4 w-4" />;
     case "assistantGuide":
       return <Bot className="h-4 w-4" />;
     case "supportGuide":
@@ -461,7 +488,7 @@ export default function DashboardPage() {
   }, []);
 
   // The account CAN offer if it has a professional profile (authoritative once
-  // loaded) — fall back to the metadata capability for an instant first paint.
+  // loaded) fall back to the metadata capability for an instant first paint.
   const isProvider = !!pro || canOffer(user);
   const pendingProfessionalSignup =
     user?.user_metadata?.professional_signup_started === true &&
@@ -469,8 +496,8 @@ export default function DashboardPage() {
 
   // Airbnb FULL switch: the active mode is the GLOBAL (persisted) mode shared with the
   // navbar + bell. A mode-specific tab in the URL (a deep link from a notification or a
-  // navbar quick link) overrides it — and is persisted below so everything stays in sync.
-  // A non-provider has no offer world → always "use".
+  // navbar quick link) overrides it, and is persisted below so everything stays in sync.
+  // A non-provider has no offer world: always "use".
   const { mode: globalMode, setMode } = useMode(isProvider);
   const urlForcedMode: Mode | null =
     legacyVerificationTab ? "offer" : requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
@@ -484,13 +511,28 @@ export default function DashboardPage() {
   }, [isProvider, urlForcedMode, globalMode, setMode]);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
     const updateDefaultPanelTarget = () => {
-      setPreferMobileMenuDefault(!rawRequestedTab && window.matchMedia("(max-width: 1023px)").matches);
+      const isMobilePanel = mediaQuery.matches;
+      setPreferMobileMenuDefault(!rawRequestedTab && isMobilePanel);
+      if (!isMobilePanel) setMobilePanelOpen(false);
     };
     updateDefaultPanelTarget();
     window.addEventListener("resize", updateDefaultPanelTarget);
-    return () => window.removeEventListener("resize", updateDefaultPanelTarget);
+    mediaQuery.addEventListener("change", updateDefaultPanelTarget);
+    return () => {
+      window.removeEventListener("resize", updateDefaultPanelTarget);
+      mediaQuery.removeEventListener("change", updateDefaultPanelTarget);
+    };
   }, [rawRequestedTab]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.innerWidth >= 1024 && preferMobileMenuDefault) {
+      setPreferMobileMenuDefault(false);
+      setMobilePanelOpen(false);
+    }
+  }, [preferMobileMenuDefault]);
 
   useEffect(() => {
     if (!legacyVerificationTab) return;
@@ -511,6 +553,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (requestedTab !== "assistant") return;
+    window.dispatchEvent(new Event("contratacr:open-ai"));
     const params = new URLSearchParams(searchParams.toString());
     params.delete("tab");
     const qs = params.toString();
@@ -529,7 +572,16 @@ export default function DashboardPage() {
     router.replace(`/dashboard/profesional?${qs}`, { scroll: false });
   }, [defaultTab, requestedTab, router, searchParams]);
 
-  // Suppress the login-redirect while signing out (from the navbar menu) → straight
+  useEffect(() => {
+    if (requestedTab || activeTab !== "home") return;
+    if (typeof window === "undefined" || window.innerWidth < 1024) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", defaultTab);
+    const qs = params.toString();
+    router.replace(`/dashboard/profesional?${qs}`, { scroll: false });
+  }, [activeTab, defaultTab, requestedTab, router, searchParams]);
+
+  // Suppress the login-redirect while signing out (from the navbar menu) straight
   // to main, no /login flash. Logout lives only in the navbar profile menu now.
   useEffect(() => {
     if (!authLoading && !user && !isSigningOut()) router.push("/login");
@@ -655,7 +707,7 @@ export default function DashboardPage() {
     queueMicrotask(() => fetchPro({ silent: !firstLoadForUser }));
   }, [user, refreshKey, fetchPro]);
 
-  // Base profile (name/avatar) for the header — works for seekers with no pro row.
+  // Base profile (name/avatar) for the header, works for seekers with no pro row.
   useEffect(() => {
     if (!user) return;
     queueMicrotask(() => fetchProfile());
@@ -714,7 +766,7 @@ export default function DashboardPage() {
 
   // Unread opportunities deserve a front-door modal even when the user did not
   // arrive through the explicit post-login redirect.
-  // Unread support replies → badge on the Soporte sidebar item.
+  // Unread support replies: badge on the Soporte sidebar item.
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
@@ -733,7 +785,7 @@ export default function DashboardPage() {
   }, [user]);
 
   // Inconsistent state ONLY: metadata says this account can offer, but no pro row
-  // exists yet. A freshly-created pro account can lag (replication/RLS) — retry a
+  // exists yet. A freshly-created pro account can lag (replication/RLS), retry a
   // few times, then send them to finish the professional profile. A genuine seeker
   // (cannot offer) is never bounced; a missing pro row is normal for them.
   useEffect(() => {
@@ -830,7 +882,7 @@ export default function DashboardPage() {
     if (tab === activeTab) return;
     if (OFFER_ONLY.has(tab)) setMode("offer");
     if (USE_ONLY.has(tab)) setMode("use");
-    // Mode is persisted globally now, so the tab alone is enough — a mode-specific tab
+    // Mode is persisted globally now, so the tab alone is enough; a mode-specific tab
     // also re-asserts its mode via the effect above, keeping the navbar switch in sync.
     // Query-only panel navigation should not request the same route again.
     // Next integrates native history with useSearchParams, including Back/Forward.
@@ -849,7 +901,7 @@ export default function DashboardPage() {
   }
 
   // The mode switch now lives in the panel header (sprint 518). Switching flips the global
-  // mode AND lands on the destination mode's MAIN tab — which re-asserts the mode via the
+  // mode AND lands on the destination mode's MAIN tab, which re-asserts the mode via the
   // urlForcedMode effect, so a switch from ANY section (incl. a mode-specific one) sticks.
   function handleSwitchMode(next: Mode) {
     if (next === mode) return;
@@ -884,12 +936,18 @@ export default function DashboardPage() {
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
-  const displayName =
+  const businessName = typeof pro?.business_name === "string" ? pro.business_name.trim() : "";
+  const personalDisplayName =
     profile?.full_name ||
     proProfile?.full_name ||
     (user.user_metadata?.full_name as string) ||
     user.email?.split("@")[0] ||
     "";
+  const professionalDisplayName =
+    businessName && (pro?.public_business_name_only === true || pro?.publicBusinessNameOnly === true)
+      ? businessName
+      : personalDisplayName;
+  const displayName = mode === "offer" ? professionalDisplayName : personalDisplayName;
   const compactHeaderName = compactDisplayName(displayName);
   const compactMobileHeaderName = compactMobileDisplayName(displayName);
   const headerAvatar = profile?.avatar_url || proProfile?.avatar_url || null;
@@ -912,11 +970,11 @@ export default function DashboardPage() {
         },
       }
     : pro;
-  const publicProfileHref = activeTab === "profile" && mode === "offer" && typeof pro?.slug === "string" && pro.slug.trim()
+  const publicProfileHref = mode === "offer" && typeof pro?.slug === "string" && pro.slug.trim()
     ? `/profesionales/${pro.slug.trim()}`
     : null;
   // Client (use mode) identity: verified via cédula (saved at solicitud/booking or before).
-  // Drives the "Verificado" badge below the name — the SAME badge the pro side uses.
+  // Drives the "Verificado" badge below the name, the SAME badge the pro side uses.
   const clientVerified =
     profile?.client_identity_status === "verified" &&
     !!profile?.cedula &&
@@ -931,6 +989,7 @@ export default function DashboardPage() {
   // instead of competing with the core panel tasks.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = modeTabs;
+  const desktopSidebarTabs = sidebarTabs.filter((tab) => tab !== "guides");
   const mobileSectionTabs = sidebarTabs;
   const mobileFullScreenTab = activeTab === "network";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
@@ -940,13 +999,34 @@ export default function DashboardPage() {
     !!proForCompletion &&
     ((profileCompletionPercent ?? 0) < 100 || proForCompletion.verification_status !== "verified");
 
+  function panelTabLabel(tab: Tab) {
+    return PANEL_TAB_LABELS[tab]?.[locale === "en" ? "en" : "es"] ?? t(`tabs.${tab}`);
+  }
+
+  function switchPanelLabel() {
+    return mode === "offer"
+      ? (locale === "en" ? "Go to client panel" : "Ir a panel cliente")
+      : (locale === "en" ? "Go to professional panel" : "Ir a panel profesional");
+  }
+
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
+    const label = panelTabLabel(tab);
     return (
       <button
         key={tab}
         data-testid={`panel-tab-${tab}`}
-        onClick={() => setTab(tab)}
+        onClick={() => {
+          if (tab === "assistant") {
+            window.dispatchEvent(new Event("contratacr:open-ai"));
+            return;
+          }
+          if (tab === "guides") {
+            setGuidesOpen(true);
+            return;
+          }
+          setTab(tab);
+        }}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
           activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
@@ -960,21 +1040,32 @@ export default function DashboardPage() {
             </span>
           )}
         </span>
-        {t(`tabs.${tab}`)}
+        {label}
       </button>
     );
   }
 
   function topNavButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
+    const label = panelTabLabel(tab);
     return (
       <button
         key={tab}
         type="button"
         data-testid={`panel-tab-${tab}`}
-        onClick={() => setTab(tab)}
+        onClick={() => {
+          if (tab === "assistant") {
+            window.dispatchEvent(new Event("contratacr:open-ai"));
+            return;
+          }
+          if (tab === "guides") {
+            setGuidesOpen(true);
+            return;
+          }
+          setTab(tab);
+        }}
         className={cn(
-          "relative inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-bold transition",
+          "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-2 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2.5 min-[1180px]:text-[12.5px] xl:px-3 xl:text-[13px]",
           activeTab === tab
             ? "text-[#0089bb]"
             : "text-[#526277] hover:bg-[#f3f7fa] hover:text-[#162543]",
@@ -988,7 +1079,7 @@ export default function DashboardPage() {
             </span>
           )}
         </span>
-        <span className="whitespace-nowrap">{t(`tabs.${tab}`)}</span>
+        <span className="whitespace-nowrap">{label}</span>
       </button>
     );
   }
@@ -1000,10 +1091,10 @@ export default function DashboardPage() {
       <button
         type="button"
         onClick={() => handleSwitchMode(nextMode)}
-        className="inline-flex h-11 shrink-0 items-center gap-2 px-3 text-sm font-bold text-[#526277] transition-colors hover:text-[#162543]"
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-[12px] font-bold text-[#526277] transition-colors hover:bg-[#f3f7fa] hover:text-[#162543] min-[1180px]:h-11 min-[1180px]:px-2.5 min-[1180px]:text-[12.5px] xl:px-3 xl:text-[13px]"
       >
         <Repeat2 className="h-4 w-4 text-[#64748b]" />
-        {mode === "offer" ? t("switchToClientPanel") : t("switchToProfessionalPanel")}
+        {switchPanelLabel()}
       </button>
     );
   }
@@ -1011,13 +1102,13 @@ export default function DashboardPage() {
   function desktopPanelNav() {
     if (mobileFullScreenTab) return null;
     return (
-      <div className="mb-6 hidden lg:block">
-        <div className="rounded-2xl border border-[#dfe8f0] bg-white p-2 shadow-sm">
-          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain pr-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mb-5 hidden lg:flex lg:justify-center">
+        <div className="w-full max-w-[1280px] rounded-2xl border border-[#dfe8f0] bg-white p-1.5 shadow-sm">
+          <div className="flex max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] xl:gap-1.5 [&::-webkit-scrollbar]:hidden">
             {desktopSwitchPanelButton()}
             {isProvider && <div className="h-7 w-px shrink-0 bg-[#e5edf3]" />}
-            <nav className="flex min-w-max flex-1 flex-nowrap items-center gap-1 px-1 py-0.5 pr-4">
-              {sidebarTabs.map(topNavButton)}
+            <nav className="flex min-w-max flex-nowrap items-center justify-start gap-1 py-0.5 xl:gap-1.5">
+              {desktopSidebarTabs.map(topNavButton)}
             </nav>
           </div>
         </div>
@@ -1047,22 +1138,23 @@ export default function DashboardPage() {
         }}
         className={cn(
           "w-full flex items-center rounded-xl text-left font-semibold transition-colors",
-          mobile ? "gap-4 px-4 py-4 text-base" : "gap-3 px-3 py-2.5 text-sm",
+          mobile ? "min-h-14 gap-3 px-3.5 py-3 text-[15px]" : "gap-3 px-3 py-2.5 text-sm",
           "text-[#162543] hover:bg-[#EBF5FB]",
         )}
       >
         <span className={cn(
           "relative inline-flex shrink-0 items-center justify-center text-[#64748b]",
-          mobile ? "h-9 w-9 [&>svg]:h-6 [&>svg]:w-6" : "mr-1.5",
+          mobile ? "h-8 w-8 [&>svg]:h-5 [&>svg]:w-5" : "mr-1.5",
         )}>
           <Repeat2 className="h-4 w-4" />
         </span>
-        {mode === "offer" ? t("switchToClientPanel") : t("switchToProfessionalPanel")}
+        {switchPanelLabel()}
       </button>
     );
   }
 
   function mobileSectionButton(tab: Tab) {
+    const label = panelTabLabel(tab);
     return (
       <button
         key={tab}
@@ -1074,14 +1166,22 @@ export default function DashboardPage() {
             scrollDashboardToPageTop();
             return;
           }
+          if (tab === "assistant") {
+            window.dispatchEvent(new Event("contratacr:open-ai"));
+            return;
+          }
+          if (tab === "guides") {
+            setGuidesOpen(true);
+            return;
+          }
           setTab(tab);
         }}
-        className="flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-base font-semibold text-[#374151] transition-colors hover:bg-[#f8fbfd]"
+        className="flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold text-[#374151] transition-colors hover:bg-[#f8fbfd]"
       >
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-6 [&>svg]:w-6">
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
           {TAB_ICONS[tab]}
         </span>
-        <span className="min-w-0 flex-1 truncate">{t(`tabs.${tab}`)}</span>
+        <span className="min-w-0 flex-1 truncate">{label}</span>
       </button>
     );
   }
@@ -1113,6 +1213,10 @@ export default function DashboardPage() {
         onClose={() => setGuidesOpen(false)}
         isProvider={isProvider}
         onGo={(guide) => {
+          if (guide.actionTab === "assistant") {
+            window.dispatchEvent(new Event("contratacr:open-ai"));
+            return;
+          }
           if (guide.targetMode) setMode(guide.targetMode);
           setTab(guide.actionTab ?? "home");
         }}
@@ -1165,39 +1269,52 @@ export default function DashboardPage() {
           mobileSectionOpen && "px-0 pt-0 sm:px-0 lg:px-8 lg:pt-8",
           mobileFullScreenTab && "max-w-none px-0 pb-0 pt-0 sm:px-0 lg:max-w-7xl lg:px-8 lg:pb-8 lg:pt-8",
         )}>
-          {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
+          {/* Header, clean, restrained (serious tone): a modest larger avatar with a hairline
               ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
               the content by a single hairline divider. No gradient/decoration. */}
-          <div className={cn("mb-6 items-start justify-between gap-3 border-b border-[#e5e7eb] pb-5 sm:items-center sm:gap-4", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:flex" : "flex")}>
-            <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-              <ImagePreviewDialog
-                src={headerAvatar}
-                alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
-                openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
-              >
-                <Avatar className="h-12 w-12 shrink-0 ring-1 ring-[#e5e7eb] sm:h-16 sm:w-16">
-                  <AvatarImage src={headerAvatar ?? undefined} />
-                  <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
-                    {getInitials(displayName || "?")}
-                  </AvatarFallback>
-                </Avatar>
-              </ImagePreviewDialog>
-              <div className="min-w-0 flex-1">
-                <p className="mb-1 truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
-                  {mode === "offer" ? t("panelProfessional") : t("panelClient")}
-                </p>
-                {/* Keep the account name on one line in responsive; very long names truncate
-                    instead of pushing the header into two lines. */}
-                <h1 className="truncate whitespace-nowrap text-lg font-bold leading-tight text-[#162543] sm:text-2xl" title={displayName}>
-                  <span className="hidden min-[430px]:inline sm:hidden">{displayName}</span>
-                  <span className="min-[430px]:hidden sm:hidden">{compactMobileHeaderName}</span>
-                  <span className="hidden sm:inline">{compactHeaderName}</span>
-                </h1>
-                <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-x-3 gap-y-1">
-                  <div className="shrink-0">{identityBadge()}</div>
-                  <div>
+          <div className={cn("mx-auto mb-6 w-full max-w-6xl items-start justify-between gap-3 border-b border-[#e5e7eb] pb-5 sm:items-center sm:gap-4", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:flex" : "flex")}>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <p className="mb-2 truncate pl-[76px] text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af] sm:pl-[96px]">
+                {mode === "offer" ? t("panelProfessional") : t("panelClient")}
+              </p>
+              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                <ImagePreviewDialog
+                  src={headerAvatar}
+                  alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
+                  openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+                >
+                  <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb] sm:h-20 sm:w-20">
+                    <AvatarImage src={headerAvatar ?? undefined} />
+                    <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
+                      {getInitials(displayName || "?")}
+                    </AvatarFallback>
+                  </Avatar>
+                </ImagePreviewDialog>
+                <div className="flex min-w-0 flex-1 flex-col justify-center">
+                  {/* Keep the account name on one line in responsive; very long names truncate
+                      instead of pushing the header into two lines. */}
+                <div className="flex min-w-0 max-w-full items-center gap-0.5 sm:gap-1">
+                  <h1 className="min-w-0 truncate whitespace-nowrap text-lg font-bold leading-none text-[#162543] sm:text-2xl" title={displayName}>
+                    <span className="hidden min-[430px]:inline sm:hidden">{displayName}</span>
+                    <span className="min-[430px]:hidden sm:hidden">{compactMobileHeaderName}</span>
+                    <span className="hidden sm:inline">{compactHeaderName}</span>
+                  </h1>
+                  {publicProfileHref && (
+                    <Link
+                      href={publicProfileHref}
+                      aria-label={locale === "en" ? "View my profile" : "Ver mi perfil"}
+                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-[#64748b] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:h-7 sm:w-7"
+                    >
+                      <ExternalLink className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
+                    </Link>
+                  )}
+                </div>
+                <div className="-mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 sm:gap-x-2">
+                  <div className="flex shrink-0 items-center">{identityBadge()}</div>
+                  <div className="flex min-w-0 items-center">
                     <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                   </div>
+                </div>
                 </div>
               </div>
             </div>
@@ -1206,17 +1323,15 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => setGuidesOpen(true)}
                 aria-label={locale === "en" ? "Guides" : "Guías"}
-                title={locale === "en" ? "Guides" : "Guías"}
                 className="inline-flex items-center justify-center gap-2 px-1 py-2 text-sm font-bold text-[#162543] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
               >
-                <FileText className="h-5 w-5" />
+                <FileText className="h-4 w-4" />
                 <span>{locale === "en" ? "Guides" : "Guías"}</span>
               </button>
               <button
                 type="button"
                 onClick={() => signOutToHome(locale)}
                 aria-label={locale === "en" ? "Exit" : "Salir"}
-                title={locale === "en" ? "Exit" : "Salir"}
                 className="inline-flex items-center justify-center gap-2 px-1 py-2 text-sm font-bold text-[#162543] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
               >
                 <LogOut className="h-4 w-4" />
@@ -1225,7 +1340,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
+          {/* Offer mode, provider row still loading: spinner (avoids gate flash). */}
           {proLoadError ? (
             <Card>
               <CardContent className="px-6 py-12 flex flex-col items-center text-center">
@@ -1245,7 +1360,7 @@ export default function DashboardPage() {
                 </Button>
               </CardContent>
             </Card>
-          ) : /* Offer mode, not yet a provider → activation gate. */
+          ) : /* Offer mode, not yet a provider: activation gate. */
           showOfferGate ? (
             <Card>
               <CardContent className="px-6 py-12 flex flex-col items-center text-center">
@@ -1261,7 +1376,7 @@ export default function DashboardPage() {
             </Card>
           ) : (
             <>
-              {/* Profile-completion — offer mode only, hides itself once complete. */}
+              {/* Profile-completion, offer mode only, hides itself once complete. */}
               {showProfileCompletion && !mobileFullScreenTab && (
                 <div className={cn(mobileSectionOpen && "hidden lg:block")}>
                 <ProfileCompletion
@@ -1291,47 +1406,28 @@ export default function DashboardPage() {
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
-                  <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
-                  <div className="flex shrink-0 justify-self-end">
-                    {publicProfileHref && (
-                      <Link
-                        href={publicProfileHref}
-                        aria-label={t("viewAsClient")}
-                        className="grid h-10 w-10 place-items-center rounded-full border border-[#dbeafe] bg-white text-[#64748b] transition active:bg-[#EBF5FB] active:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Link>
-                    )}
-                  </div>
+                  <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
+                  <div className="flex shrink-0 justify-self-end" />
                 </div>
               )}
 
               <div className="flex flex-col">
-                {/* Main content — min-w-0 so a long unbroken string inside a card can't
+                {/* Main content, min-w-0 so a long unbroken string inside a card can't
                     grow this flex column past the available width and break the page. */}
                 <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
                   <SaveStatusProvider>
                     <HeaderSaveStatus />
                     <Card className={cn(
+                      activeTab === "home" && "lg:hidden",
                       activeTab === "chat" && "overflow-hidden",
+                      activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && "lg:mx-auto lg:max-w-6xl",
                       mobileFullScreenTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none",
                       !mobileFullScreenTab && mobileSectionOpen && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:min-h-0 lg:rounded-xl lg:border lg:shadow-sm",
                     )}>
                       {activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
-                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
-                            {publicProfileHref && (
-                              <AppTooltip label={t("viewAsClient")} side="top" align="center">
-                                <Link
-                                  href={publicProfileHref}
-                                  aria-label={t("viewAsClient")}
-                                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#dbeafe] bg-white text-[#64748b] transition hover:border-[#9fd8ec] hover:bg-[#EBF5FB] hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </Link>
-                              </AppTooltip>
-                            )}
+                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
                           </div>
                         </div>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
@@ -1361,23 +1457,13 @@ export default function DashboardPage() {
                                 {switchPanelButton({ mobile: true })}
                                 {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
                                 {mobileSectionTabs.map(mobileSectionButton)}
-                                <button
-                                  type="button"
-                                  onClick={() => setGuidesOpen(true)}
-                                  className="flex min-h-[68px] w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-base font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827]"
-                                >
-                                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-6 [&>svg]:w-6">
-                                    <FileText className="h-4 w-4" />
-                                  </span>
-                                  {locale === "en" ? "Guides" : "Guías"}
-                                </button>
                                 <div className="my-3 border-t border-[#e5e7eb]" />
                                 <button
                                   type="button"
                                   onClick={() => signOutToHome(locale)}
-                                  className="flex min-h-[68px] w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-base font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827]"
+                                  className="flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827]"
                                 >
-                                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-6 [&>svg]:w-6">
+                                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
                                     <LogOut className="h-4 w-4" />
                                   </span>
                                   {locale === "en" ? "Exit" : "Salir"}
@@ -1387,7 +1473,7 @@ export default function DashboardPage() {
                           </>
                         )}
 
-                        {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
+                        {/* MI PERFIL, pro editor in offer mode, basic identity in use mode. */}
                         {activeTab === "profile" && mode === "offer" && pro && (
                           <ProfileEditor
                             professionalId={pro.id}
@@ -1485,7 +1571,7 @@ export default function DashboardPage() {
                             services={pro.services ?? []}
                           />
                         )}
-                        {/* "Usar servicios" — the seek capability. */}
+                        {/* "Usar servicios", the seek capability. */}
                         {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
