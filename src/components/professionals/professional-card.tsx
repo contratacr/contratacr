@@ -1,8 +1,9 @@
-import { getLocale, getTranslations } from "next-intl/server";
+﻿import { getLocale, getTranslations } from "next-intl/server";
+import { BriefcaseBusiness, Star, Camera, Users } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -15,7 +16,7 @@ export type Certification = { id?: string; name: string; institution?: string; y
 
 export type ProfessionalCardData = {
   id: string;
-  /** Owner's auth user id (professionals.profile_id) — used to detect "this is my
+  /** Owner's auth user id (professionals.profile_id) â€” used to detect "this is my
    *  own profile" and hide self-service actions. */
   profileId?: string;
   slug: string;
@@ -32,7 +33,6 @@ export type ProfessionalCardData = {
   ratingAvg: number;
   reviewCount: number;
   yearsExperience?: number;
-  monthsExperience?: number;
   hourlyRate?: number;
   isVerified: boolean;
   isFeatured: boolean;
@@ -49,11 +49,11 @@ export type ProfessionalCardData = {
   serviceType?: string | null;
   /** General profile-level capability: the pro can attend online when appropriate. */
   videoconsulta?: boolean;
-  /** Count of "casos de éxito" (portfolio photos) — drives the preview link. */
+  /** Count of "casos de Ã©xito" (portfolio photos) â€” drives the preview link. */
   portfolioCount?: number;
   /** Public follower count for the professional profile. */
   followerCount?: number;
-  /** Count of certifications — drives the compact "Ver certificaciones (N)" link. */
+  /** Count of certifications â€” drives the compact "Ver certificaciones (N)" link. */
   certificationCount?: number;
   /** Insurance networks (aseguradoras) the pro belongs to. */
   insuranceNetworks?: string[];
@@ -67,8 +67,6 @@ export type ProfessionalCardData = {
     price?: string;
     priceAmount?: number | null;
     priceType?: import("@/lib/pricing").PricingType | null;
-    years?: number;
-    months?: number;
     active?: boolean;
     category?: string;
     modalities?: Array<"in_person" | "at_home" | "video">;
@@ -88,11 +86,11 @@ interface ProfessionalCardProps {
   slots?: ScheduleSlot[];
   /** False in search results when availability streams after profile data. */
   slotsInitiallyLoaded?: boolean;
-  /** Active category filter from the search query — narrows the badges shown. */
+  /** Active category filter from the search query â€” narrows the badges shown. */
   activeCategory?: string;
-  /** Viewer's auth id — when it matches this pro's owner, hide self-service actions. */
+  /** Viewer's auth id â€” when it matches this pro's owner, hide self-service actions. */
   viewerProfileId?: string;
-  /** 1-based rank — rendered as a navy badge overlapping the avatar, matching the map pin. */
+  /** 1-based rank â€” rendered as a navy badge overlapping the avatar, matching the map pin. */
   rank?: number;
   /** Search is explicitly for video consultation: show contact actions, not schedules. */
   forceContactOnly?: boolean;
@@ -111,7 +109,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const tSchedule = await getTranslations("schedule");
   const locale = await getLocale();
   // Safe category label: if a translation key is missing, next-intl returns the
-  // raw "categories.xxx" path — fall back to the taxonomy label (e.g. "otro" →
+  // raw "categories.xxx" path â€” fall back to the taxonomy label (e.g. "otro" â†’
   // "Otro servicio") so no internal key ever leaks into the UI.
   const catLabel = (id: string) => {
     if (!id) return "";
@@ -119,7 +117,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   };
   const isPrivate = professional.availabilityPublic === false;
   // Brand hierarchy: company name leads (clients recognize the brand), personal
-  // name becomes the muted subtitle. No company → personal name leads, no subtitle.
+  // name becomes the muted subtitle. No company â†’ personal name leads, no subtitle.
   const businessName = professional.businessName?.trim();
   const displayName = getProfessionalDisplayName(professional.fullName, businessName, professional.publicBusinessNameOnly);
   const categoryName = catLabel(professional.categoryId);
@@ -146,11 +144,12 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const desktopProfessionList = fitProfessionLabels(24, 1);
   const wideDesktopProfessionList = fitProfessionLabels(55, 3);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
-  // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
+  // target screenshots â€” e.g. "â‚¡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
   const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix, isColones: priceIsColones } = splitPricingLabel(priceLabel);
   const priceBoxClass = priceUnit || priceTaxSuffix ? "max-w-[38%] sm:max-w-[40%]" : "w-[74px] sm:w-[86px]";
+  const priceMobileBoxClass = priceUnit || priceTaxSuffix ? "w-[86px]" : "max-w-[calc(100%-4.5rem)]";
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
@@ -162,52 +161,35 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
   const profileHref = (() => {
-    return `/profesionales/${professional.slug}`;
+    const params = new URLSearchParams();
+    if (searchReturnHref) params.set("from", searchReturnHref);
+    const query = params.toString();
+    return query ? `/profesionales/${professional.slug}?${query}` : `/profesionales/${professional.slug}`;
   })();
   const reviewsHref = (() => {
     const params = new URLSearchParams({ tab: "resenas" });
+    if (searchReturnHref) params.set("from", searchReturnHref);
     return `/profesionales/${professional.slug}?${params.toString()}#resenas`;
   })();
   const casesHref = (() => {
     const params = new URLSearchParams({ tab: "casos" });
+    if (searchReturnHref) params.set("from", searchReturnHref);
     return `/profesionales/${professional.slug}?${params.toString()}#casos`;
   })();
   const portfolioCount = professional.portfolioCount ?? 0;
   const followerCount = professional.followerCount ?? 0;
-  const candidateExperienceServices = activeCategory
-    ? professional.services?.filter((service) => service.category === activeCategory)
-    : professional.services;
-  const serviceExperience = candidateExperienceServices?.find((service) => {
-    const years = typeof service.years === "number" ? service.years : 0;
-    const months = typeof service.months === "number" ? service.months : 0;
-    return years > 0 || months > 0;
-  });
-  const yearsExperience = Math.max(0, Math.floor(serviceExperience?.years ?? professional.yearsExperience ?? 0));
-  const monthsExperience = Math.max(0, Math.min(11, Math.floor(serviceExperience?.months ?? professional.monthsExperience ?? 0)));
-  const hasExperience = yearsExperience > 0 || monthsExperience > 0;
-  const formatExperienceLabel = (years: number, months: number) => {
-    if (locale === "en") {
-      const parts = [
-        years > 0 ? `${years} ${years === 1 ? "year" : "years"}` : "",
-        months > 0 ? `${months} ${months === 1 ? "month" : "months"}` : "",
-      ].filter(Boolean);
-      return `${parts.length ? parts.join(" ") : "0 years"} experience`;
-    }
-    const parts = [
-      years > 0 ? `${years} ${years === 1 ? "año" : "años"}` : "",
-      months > 0 ? `${months} ${months === 1 ? "mes" : "meses"}` : "",
-    ].filter(Boolean);
-    return `${parts.length ? parts.join(" ") : "0 años"} experiencia`;
-  };
+  const yearsExperience = professional.yearsExperience ?? 0;
   const casesLabel = locale === "en"
     ? `${portfolioCount} success ${portfolioCount === 1 ? "case" : "cases"}`
-    : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
+    : `${portfolioCount} ${portfolioCount === 1 ? "caso de Ã©xito" : "casos de Ã©xito"}`;
   const followersLabel = locale === "en"
-    ? `${followerCount} ${followerCount === 1 ? "follower" : "followers"}`
-    : `${followerCount} ${followerCount === 1 ? "seguidor" : "seguidores"}`;
-  const experienceLabel = formatExperienceLabel(yearsExperience, monthsExperience);
+    ? (followerCount === 1 ? "follower" : "followers")
+    : (followerCount === 1 ? "seguidor" : "seguidores");
+  const experienceLabel = locale === "en"
+    ? `${yearsExperience} ${yearsExperience === 1 ? "yr exp." : "yrs exp."}`
+    : `${yearsExperience} ${yearsExperience === 1 ? "aÃ±o de exp." : "aÃ±os de exp."}`;
 
-  // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
+  // Verified trust mark â€” a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
   // panel/dashboard, for cross-surface consistency. Sits on its OWN line between the
   // company name and the personal name. Unverified shows NOTHING (no negative label).
@@ -218,24 +200,24 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   ) : null;
 
   // Location data for the schedule's location control (now rendered in the LEFT
-  // column under the rating — see ProfessionalSchedule). The per-place TABS +
+  // column under the rating â€” see ProfessionalSchedule). The per-place TABS +
   // street addresses come from the pro's workplaces; here we only supply the
-  // FALLBACK tab (province/cantón, shown when there are no named workplaces) and
-  // the general province/cantón address. Video-only national coverage uses this
+  // FALLBACK tab (province/cantÃ³n, shown when there are no named workplaces) and
+  // the general province/cantÃ³n address. Video-only national coverage uses this
   // same row with "Videoconsulta" so the card never looks location-empty.
   const placeFallback = professional.cantonName || professional.provinceName || (professional.videoconsulta || professional.coverage?.country ? tSchedule("videoconsulta") : "");
   const placeAddress = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
 
-  // ── LEFT-column professional info (slotted into ProfessionalSchedule, which owns the
+  // â”€â”€ LEFT-column professional info (slotted into ProfessionalSchedule, which owns the
   // desktop two-column layout). Each block is a direct child of the schedule's left
-  // column `flex flex-col gap-2`, so vertical spacing comes from that gap — no per-section
-  // margins. Order: photo + name/Verificado/personal name + price → tags → rating →
+  // column `flex flex-col gap-2`, so vertical spacing comes from that gap â€” no per-section
+  // margins. Order: photo + name/Verificado/personal name + price â†’ tags â†’ rating â†’
   // location. The location TABS + selected address come AFTER this (in ProfessionalSchedule).
   const info = (
     <>
       {/* Identity: CIRCULAR photo on the LEFT carrying the navy ranking badge that mirrors
           its map pin. To its right, a TIGHT identity stack (gap-1): company name +
-          Verificado + personal name, then the service tags and rating DIRECTLY beneath —
+          Verificado + personal name, then the service tags and rating DIRECTLY beneath â€”
           so tags/reviews read as part of the same block right under the name (they used to
           be siblings of this row and got pushed BELOW the taller avatar, leaving a gap).
           PRICE is right-aligned on the company-name line only. The mobile `pr-8` keeps the
@@ -258,7 +240,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           )}
         </Link>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          {/* Company-name line + PRICE (right-aligned on THIS line only). */}
+          {/* Company-name line + PRICE (desktop on this line). On mobile, PRICE goes lower to
+              stay beside the edge without overlapping the save icon. */}
           <div className="flex min-w-0 flex-1 items-start gap-2 pr-8 lg:pr-0">
             <div className="flex min-w-0 flex-1 flex-col gap-0">
               {/* Company/brand name (or personal name when there's no company). Wraps up to
@@ -278,18 +261,29 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 </p>
               )}
             </div>
-            {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
+            {/* Price â€” on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
                 capped width so a long price wraps instead of crowding the name. */}
-            {priceLabel && (
-              <div className={`ml-auto shrink-0 text-right leading-tight ${priceBoxClass}`}>
+            <div className="hidden lg:block">
+              {priceLabel && (
+                <div className={`shrink-0 text-right leading-tight ${priceBoxClass}`}>
+                  <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
+                  {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
+                  {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
+                </div>
+              )}
+            </div>
+          </div>
+          {priceLabel && (
+            <div className="flex justify-end pr-10 sm:hidden">
+              <div className={`shrink-0 whitespace-nowrap text-right leading-tight ${priceMobileBoxClass}`}>
                 <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
                 {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
                 {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
+          {/* Service tags â€” DIRECTLY under the name; one line only, cap + "+N". */}
           {(displayProfessions.length > 0 || professional.isFeatured) && (
             <>
             <div
@@ -372,42 +366,40 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             </div>
             </>
           )}
-          {/* Trust metrics: social proof first, then proof-of-work. */}
+          {/* Rating + review count â€” DIRECTLY under the tags (only the count links out). */}
           <div className="basis-full lg:basis-auto">
-            {professional.reviewCount > 0 ? (
-              <div className={cn(
-                "w-fit max-w-full min-w-0 gap-x-5 gap-y-1 text-[11px] font-semibold leading-tight text-[#8a97a8]",
-                hasExperience ? "grid grid-cols-[auto_auto]" : "flex flex-wrap items-center",
-              )}>
-                  <Link
-                    href={reviewsHref}
-                    className="relative z-10 inline-flex w-fit items-center gap-1 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-                    aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
-                  >
-                    <span className="text-[13px] font-bold text-[#6f7d90] transition-colors group-hover:text-[#0089BB]">{professional.ratingAvg.toFixed(1)}</span>
-                    <span className="font-semibold text-[#8a97a8] hover:underline">
-                      {tCard("reviewsCount", { count: professional.reviewCount })}
-                    </span>
-                  </Link>
-                  <span className="whitespace-nowrap">{followersLabel}</span>
-                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
-                    <span className="truncate">{casesLabel}</span>
-                  </Link>
-                  {hasExperience && <span className="whitespace-nowrap">{experienceLabel}</span>}
-              </div>
-            ) : (
-              <div className={cn(
-                "w-fit max-w-full min-w-0 gap-x-5 gap-y-1 text-[11px] font-semibold leading-tight text-[#9ca3af]",
-                hasExperience ? "grid grid-cols-[auto_auto]" : "flex flex-wrap items-center",
-              )}>
-                  <span className="whitespace-nowrap">{tCard("noReviews")}</span>
-                  <span className="whitespace-nowrap">{followersLabel}</span>
-                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
-                    <span className="truncate">{casesLabel}</span>
-                  </Link>
-                  {hasExperience && <span className="whitespace-nowrap">{experienceLabel}</span>}
-              </div>
-            )}
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-[#8a97a8]">
+              {professional.reviewCount > 0 ? (
+                <Link
+                  href={reviewsHref}
+                  className="relative z-10 inline-flex w-fit items-center gap-1.5 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                  aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+                >
+                  <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
+                  <span className="text-[13px] font-bold text-[#111827] transition-colors group-hover:text-[#0089BB]">{professional.ratingAvg.toFixed(1)}</span>
+                  <span className="font-medium text-[#9ca3af] hover:underline">
+                    ({tCard("reviewsCount", { count: professional.reviewCount })})
+                  </span>
+                </Link>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[#9ca3af]">
+                  <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
+                </span>
+              )}
+              <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                <span className="truncate">{casesLabel}</span>
+              </Link>
+              <span className="inline-flex min-w-0 items-center gap-1.5 text-[#6b7280]">
+                <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                <span className="truncate">{followerCount}</span>
+                <span className="text-[#9ca3af]">{followersLabel}</span>
+              </span>
+              <span className="inline-flex min-w-0 items-center gap-1.5 text-[#6b7280]">
+                <Camera className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                <span className="text-[#111827]">{experienceLabel}</span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -415,9 +407,9 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   );
 
   return (
-    // CONTENT-DRIVEN height — NO fixed height, NO overflow clipping. DESKTOP (lg+) lays the
+    // CONTENT-DRIVEN height â€” NO fixed height, NO overflow clipping. DESKTOP (lg+) lays the
     // body out in TWO columns (info + location tabs | schedule), separated by a vertical
-    // divider; MOBILE stacks them — all owned by ProfessionalSchedule, which holds the
+    // divider; MOBILE stacks them â€” all owned by ProfessionalSchedule, which holds the
     // schedule state and receives the info above as a slot. The ranking number now rides on
     // the avatar; the favorite bookmark sits inside the card so responsive sheets never clip it.
     <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
@@ -440,7 +432,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
         syncWithSearchLoading={syncScheduleWithSearchLoading}
       />
 
-      {/* Whole card → the professional's profile (stretched low-z overlay). The interactive
+      {/* Whole card â†’ the professional's profile (stretched low-z overlay). The interactive
           bits (name/reviews links, location tabs, schedule chips, action buttons) are
           `relative z-10` and keep working; the favorite bookmark (z-20, SaveableCard) stays
           clickable. Keyboard/SR users use the focusable logo/name links (overlay aria-hidden). */}
@@ -453,3 +445,4 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
     </article>
   );
 }
+
