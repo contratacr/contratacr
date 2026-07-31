@@ -194,8 +194,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const experienceLabel = locale === "en"
     ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"} experience`
     : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
-  const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#0089bb]";
-  const mobileMetricClass = "flex min-w-0 items-center justify-center gap-1 px-1 py-2 text-center";
+  const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#0077b6]";
+  const mobileMetricClass = "flex min-w-0 items-center justify-start gap-1 px-3 py-2 text-left";
   const metricNumberClass = "text-[15px] font-bold leading-none text-[#162543]";
   const metricTextClass = "min-w-0 truncate text-[11px] font-semibold leading-none text-[#6b7280]";
 
