@@ -267,55 +267,53 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 </h3>
               </Link>
               <div className="mt-0.5 flex min-w-0 items-start justify-between gap-2 lg:mt-0 lg:block">
-                <div className="flex min-w-0 flex-col items-start gap-1 lg:block">
-                  {verifiedMark}
-                  {(displayProfessions.length > 0 || professional.isFeatured) && (
-                    <div
-                      className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:hidden"
-                      data-testid="professional-card-service-summary"
-                      data-service-summary-version="mobile-identity-stack-v1"
-                    >
-                      {mobileProfessionList.map((cat) => (
-                        <span
-                          key={`mobile-service-summary-${cat}`}
-                          data-testid="professional-card-mobile-service"
-                          data-full-label="true"
-                          data-extra-count={mobileExtraProfessions}
-                          className={serviceChipClass}
-                          title={catLabel(cat)}
-                        >
-                          {catLabel(cat)}
-                        </span>
-                      ))}
-                      {mobileExtraProfessions > 0 && (
-                        <Link
-                          href={profileHref}
-                          title={tCard("moreProfessions")}
-                          aria-label={tCard("moreProfessions")}
-                          data-testid="professional-card-more-services"
-                          className={moreProfessionsClass}
-                        >
-                          +{mobileExtraProfessions}
-                        </Link>
-                      )}
-                      {professional.isFeatured && (
-                        <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                          {tCard("featured")}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {verifiedMark}
                 {priceLabel && (
-                  <div className="ml-auto flex min-h-[42px] w-[66px] shrink-0 items-center justify-end text-right leading-tight lg:hidden">
+                  <div className="ml-auto w-[66px] shrink-0 text-right leading-tight lg:hidden">
                     <div>
-                    <span className="block text-[14px] font-bold leading-[1.15] text-[#009FD9]">{priceAmount}</span>
+                    <span className="block text-[12px] font-bold leading-[1.1] text-[#009FD9]">{priceAmount}</span>
                     {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
                     {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
                     </div>
                   </div>
                 )}
               </div>
+              {(displayProfessions.length > 0 || professional.isFeatured) && (
+                <div
+                  className="mt-1 flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:hidden"
+                  data-testid="professional-card-service-summary"
+                  data-service-summary-version="mobile-under-verified-v1"
+                >
+                  {mobileProfessionList.map((cat) => (
+                    <span
+                      key={`mobile-service-summary-${cat}`}
+                      data-testid="professional-card-mobile-service"
+                      data-full-label="true"
+                      data-extra-count={mobileExtraProfessions}
+                      className={serviceChipClass}
+                      title={catLabel(cat)}
+                    >
+                      {catLabel(cat)}
+                    </span>
+                  ))}
+                  {mobileExtraProfessions > 0 && (
+                    <Link
+                      href={profileHref}
+                      title={tCard("moreProfessions")}
+                      aria-label={tCard("moreProfessions")}
+                      data-testid="professional-card-more-services"
+                      className={moreProfessionsClass}
+                    >
+                      +{mobileExtraProfessions}
+                    </Link>
+                  )}
+                  {professional.isFeatured && (
+                    <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                      {tCard("featured")}
+                    </span>
+                  )}
+                </div>
+              )}
               {displayName.hasSecondary && (
                 <p title={professional.fullName} className="text-[12px] font-medium leading-snug text-[#6b7280] lg:line-clamp-1">
                   <span className="lg:hidden">{displayName.secondaryMobile}</span>
