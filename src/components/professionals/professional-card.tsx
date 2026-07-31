@@ -184,29 +184,16 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
     return years > 0 || months > 0;
   });
   const yearsExperience = Math.max(0, Math.floor(serviceExperience?.years ?? professional.yearsExperience ?? 0));
-  const monthsExperience = Math.max(0, Math.min(11, Math.floor(serviceExperience?.months ?? professional.monthsExperience ?? 0)));
-  const hasExperience = yearsExperience > 0 || monthsExperience > 0;
-  const formatExperienceLabel = (years: number, months: number) => {
-    if (locale === "en") {
-      const parts = [
-        years > 0 ? `${years} ${years === 1 ? "year" : "years"}` : "",
-        months > 0 ? `${months} ${months === 1 ? "month" : "months"}` : "",
-      ].filter(Boolean);
-      return `${parts.length ? parts.join(" ") : "0 years"} experience`;
-    }
-    const parts = [
-      years > 0 ? `${years} ${years === 1 ? "año" : "años"}` : "",
-      months > 0 ? `${months} ${months === 1 ? "mes" : "meses"}` : "",
-    ].filter(Boolean);
-    return `${parts.length ? parts.join(" ") : "0 años"} experiencia`;
-  };
+  const hasExperience = yearsExperience > 0;
   const casesLabel = locale === "en"
     ? `${portfolioCount} success ${portfolioCount === 1 ? "case" : "cases"}`
     : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
   const followersLabel = locale === "en"
     ? `${followerCount} ${followerCount === 1 ? "follower" : "followers"}`
     : `${followerCount} ${followerCount === 1 ? "seguidor" : "seguidores"}`;
-  const experienceLabel = formatExperienceLabel(yearsExperience, monthsExperience);
+  const experienceLabel = locale === "en"
+    ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"} experience`
+    : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
