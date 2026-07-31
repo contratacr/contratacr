@@ -252,7 +252,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
         </Link>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           {/* Company-name line + PRICE (right-aligned on THIS line only). */}
-          <div className="flex min-w-0 flex-1 items-start gap-2 pr-8 lg:pr-0">
+          <div className="flex min-w-0 flex-1 items-start gap-2 lg:pr-0">
             <div className="flex min-w-0 flex-1 flex-col gap-0">
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
@@ -263,7 +263,16 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   <span className="hidden lg:inline">{displayName.primaryDesktop}</span>
                 </h3>
               </Link>
-              {verifiedMark}
+              <div className="mt-0.5 flex min-w-0 items-start justify-between gap-2 pr-7 lg:mt-0 lg:block lg:pr-0">
+                {verifiedMark}
+                {priceLabel && (
+                  <div className="ml-auto shrink-0 text-right leading-tight lg:hidden">
+                    <span className="block text-[13px] font-bold leading-tight text-[#009FD9]">{priceAmount}</span>
+                    {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
+                    {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
+                  </div>
+                )}
+              </div>
               {displayName.hasSecondary && (
                 <p title={professional.fullName} className="text-[12px] font-medium leading-snug text-[#6b7280] lg:line-clamp-1">
                   <span className="lg:hidden">{displayName.secondaryMobile}</span>
@@ -274,7 +283,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
                 capped width so a long price wraps instead of crowding the name. */}
             {priceLabel && (
-              <div className={`ml-auto shrink-0 pt-5 text-right leading-tight lg:pt-0 ${priceUnit || priceTaxSuffix ? priceBoxClass : "w-[58px] sm:w-[74px] lg:w-[86px]"}`}>
+              <div className={`ml-auto hidden shrink-0 text-right leading-tight lg:block ${priceBoxClass}`}>
                 <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
                 {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
                 {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
@@ -286,7 +295,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {(displayProfessions.length > 0 || professional.isFeatured) && (
             <>
             <div
-              className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:hidden"
+              className="-mt-0.5 flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden pr-20 lg:hidden"
               data-testid="professional-card-service-summary"
               data-service-summary-version="single-row-v4"
             >
