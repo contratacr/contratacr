@@ -374,7 +374,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             </>
           )}
           {/* Trust metrics: social proof first, then proof-of-work. */}
-          <div className="basis-full lg:basis-auto">
+          <div className="-ml-[68px] w-[calc(100%+68px)] basis-full lg:-ml-[76px] lg:w-[calc(100%+76px)] lg:basis-auto">
             {professional.reviewCount > 0 ? (
               <div className={cn(
                 "grid w-full max-w-full min-w-0 grid-cols-2 gap-x-3 gap-y-1 text-[11px] font-semibold leading-tight text-[#8a97a8] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3",
