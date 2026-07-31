@@ -1072,6 +1072,31 @@ input::-ms-clear {
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+.ccr-location-tabs-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #bfdbfe transparent;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ccr-location-tabs-scroll::-webkit-scrollbar {
+  height: 3px;
+}
+
+.ccr-location-tabs-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ccr-location-tabs-scroll::-webkit-scrollbar-thumb {
+  background: #bfdbfe;
+  border-radius: 999px;
+}
+
+.ccr-location-tabs-scroll:hover::-webkit-scrollbar-thumb {
+  background: #7dd3fc;
+}
+
 /* ─── App section phone drift ─── */
 @keyframes phone-drift {
   0%, 100% { transform: translateY(0) rotate(2deg); }
