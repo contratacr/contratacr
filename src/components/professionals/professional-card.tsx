@@ -372,7 +372,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             )}>
               {hasExperience ? (
                 <>
-                  <span className="pointer-events-none absolute left-4 right-4 top-1/2 h-px bg-[#edf2f7]" aria-hidden />
+                  <span className="pointer-events-none absolute left-4 right-[calc(50%+0.75rem)] top-1/2 h-px bg-[#edf2f7]" aria-hidden />
+                  <span className="pointer-events-none absolute left-[calc(50%+0.75rem)] right-4 top-1/2 h-px bg-[#edf2f7]" aria-hidden />
                   <span className="pointer-events-none absolute bottom-2 left-1/2 top-2 w-px bg-[#edf2f7]" aria-hidden />
                 </>
               ) : (
