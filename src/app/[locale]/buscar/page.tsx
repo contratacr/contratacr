@@ -513,13 +513,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </span>
                         )}
                       </div>
-                      <div className="hidden flex-nowrap items-center justify-between gap-4 sm:flex">
-                        <p className="hidden min-w-40 text-sm font-medium text-[#64748b] lg:block">
+                      <div className="relative hidden min-h-10 items-center justify-center sm:flex">
+                        <p className="absolute left-0 hidden text-sm font-medium text-[#64748b] lg:block">
                           {currentPage} / {totalPages}
                         </p>
-                        <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-x-auto overflow-y-visible px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <div className="flex max-w-full items-center justify-center gap-1.5 overflow-x-auto overflow-y-visible px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                           {currentPage > 1 && (
-                            <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 min-w-[104px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-4 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
+                            <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-5 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
                               <ChevronLeft className="h-4 w-4" />
                               <span>{t("pagination.prev")}</span>
                             </Link>
@@ -542,7 +542,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             <ChevronRight className="h-4 w-4 shrink-0" />
                           </Link>
                         )}
-                        <span className="hidden min-w-40 text-right text-sm font-medium text-[#64748b] md:block">
+                        <span className="absolute right-0 hidden text-right text-sm font-medium text-[#64748b] md:block">
                           {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
                         </span>
                       </div>
