@@ -305,9 +305,9 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   )}
                 </div>
                 {priceLabel && (
-                  <div className="ml-auto flex min-h-[42px] w-[58px] shrink-0 items-center justify-end text-right leading-tight lg:hidden">
+                  <div className="ml-auto flex min-h-[42px] w-[66px] shrink-0 items-center justify-end text-right leading-tight lg:hidden">
                     <div>
-                    <span className="block text-[13px] font-bold leading-tight text-[#009FD9]">{priceAmount}</span>
+                    <span className="block text-[14px] font-bold leading-[1.15] text-[#009FD9]">{priceAmount}</span>
                     {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
                     {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
                     </div>
