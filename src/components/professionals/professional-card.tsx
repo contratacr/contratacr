@@ -184,6 +184,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
     return years > 0 || months > 0;
   });
   const yearsExperience = Math.max(0, Math.floor(serviceExperience?.years ?? professional.yearsExperience ?? 0));
+  const hasExperience = yearsExperience > 0;
   const casesLabel = locale === "en"
     ? `${portfolioCount} success ${portfolioCount === 1 ? "case" : "cases"}`
     : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
@@ -362,7 +363,10 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {/* Trust metrics: social proof first, then proof-of-work. */}
           <div className="-ml-[68px] w-[calc(100%+68px)] basis-full lg:-ml-[76px] lg:w-[calc(100%+76px)] lg:basis-auto">
             {professional.reviewCount > 0 ? (
-              <div className="grid w-full max-w-full min-w-0 grid-cols-2 gap-x-2.5 gap-y-1.5 text-[11px] font-semibold leading-tight text-[#8a97a8] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
+              <div className={cn(
+                "grid w-full max-w-full min-w-0 gap-x-2.5 gap-y-1.5 text-[11px] font-semibold leading-tight text-[#8a97a8] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1",
+                hasExperience ? "grid-cols-2" : "grid-cols-3",
+              )}>
                   <Link
                     href={reviewsHref}
                     className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
@@ -382,13 +386,18 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                     <Camera className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                     <span className="truncate">{casesLabel}</span>
                   </Link>
-                  <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
-                    <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                    <span className="truncate">{experienceLabel}</span>
-                  </span>
+                  {hasExperience && (
+                    <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                      <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                      <span className="truncate">{experienceLabel}</span>
+                    </span>
+                  )}
               </div>
             ) : (
-              <div className="grid w-full max-w-full min-w-0 grid-cols-2 gap-x-2.5 gap-y-1.5 text-[11px] font-semibold leading-tight text-[#9ca3af] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
+              <div className={cn(
+                "grid w-full max-w-full min-w-0 gap-x-2.5 gap-y-1.5 text-[11px] font-semibold leading-tight text-[#9ca3af] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1",
+                hasExperience ? "grid-cols-2" : "grid-cols-3",
+              )}>
                   <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
                     <Star className="h-3.5 w-3.5 shrink-0 text-[#cbd5e1]" />
                     <span className="truncate">{tCard("noReviews")}</span>
@@ -401,10 +410,12 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                     <Camera className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                     <span className="truncate">{casesLabel}</span>
                   </Link>
-                  <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
-                    <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                    <span className="truncate">{experienceLabel}</span>
-                  </span>
+                  {hasExperience && (
+                    <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                      <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                      <span className="truncate">{experienceLabel}</span>
+                    </span>
+                  )}
               </div>
             )}
           </div>
