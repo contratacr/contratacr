@@ -363,12 +363,12 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           <div className="-ml-[68px] w-[calc(100%+68px)] basis-full lg:-ml-[76px] lg:w-[calc(100%+76px)] lg:basis-auto">
             {professional.reviewCount > 0 ? (
               <div className={cn(
-                "grid w-full max-w-full min-w-0 gap-x-2.5 gap-y-1.5 text-[11px] font-semibold leading-tight text-[#8a97a8] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1",
+                "grid w-full max-w-full min-w-0 gap-x-2.5 gap-y-1.5 text-center text-[11px] font-semibold leading-tight text-[#8a97a8] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1 sm:text-left",
                 hasExperience ? "grid-cols-2" : "grid-cols-3",
               )}>
                   <Link
                     href={reviewsHref}
-                    className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                    className="relative z-10 inline-flex min-w-0 items-center justify-center gap-1 rounded-md transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 sm:justify-start"
                     aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                   >
                     <span className="text-[13px] font-bold text-[#6f7d90]">{professional.ratingAvg.toFixed(1)}</span>
@@ -376,34 +376,34 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                       {tCard("reviewsCount", { count: professional.reviewCount })}
                     </span>
                   </Link>
-                  <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                  <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
                     <span className="truncate">{followersLabel}</span>
                   </span>
-                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center justify-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 sm:justify-start">
                     <span className="truncate">{casesLabel}</span>
                   </Link>
                   {hasExperience && (
-                    <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                    <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
                       <span className="truncate">{experienceLabel}</span>
                     </span>
                   )}
               </div>
             ) : (
               <div className={cn(
-                "grid w-full max-w-full min-w-0 gap-x-2.5 gap-y-1.5 text-[11px] font-semibold leading-tight text-[#9ca3af] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1",
+                "grid w-full max-w-full min-w-0 gap-x-2.5 gap-y-1.5 text-center text-[11px] font-semibold leading-tight text-[#9ca3af] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1 sm:text-left",
                 hasExperience ? "grid-cols-2" : "grid-cols-3",
               )}>
-                  <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                  <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
                     <span className="truncate">{tCard("noReviews")}</span>
                   </span>
-                  <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                  <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
                     <span className="truncate">{followersLabel}</span>
                   </span>
-                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30">
+                  <Link href={casesHref} className="relative z-10 inline-flex min-w-0 items-center justify-center gap-1 rounded-md hover:text-[#0089BB] hover:underline focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 sm:justify-start">
                     <span className="truncate">{casesLabel}</span>
                   </Link>
                   {hasExperience && (
-                    <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+                    <span className="inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap sm:justify-start">
                       <span className="truncate">{experienceLabel}</span>
                     </span>
                   )}
