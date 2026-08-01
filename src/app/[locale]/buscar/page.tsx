@@ -7,7 +7,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
-import { searchProfessionals } from "@/lib/queries/professionals";
+import { searchProfessionals, type ProService } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
 import { getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
@@ -185,7 +185,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     (b.ratingAvg ?? 0) - (a.ratingAvg ?? 0) ||
     (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
   const experienceMonths = (professional: (typeof allResults)[number]) => {
-    const service = professional.services?.find((item) => {
+    const services = professional.services as ProService[] | undefined;
+    const service = services?.find((item) => {
       if (typeof item.startedAt === "string" && item.startedAt.trim()) return true;
       const years = typeof item.years === "number" ? item.years : 0;
       const months = typeof item.months === "number" ? item.months : 0;
