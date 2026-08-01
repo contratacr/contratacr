@@ -106,6 +106,7 @@ export async function GET(req: Request) {
         full_name: profile.full_name,
         email: profile.email,
         cedula: profile.cedula,
+        phone: profile.phone ?? null,
         role: profile.role,
         avatar_url: profile.avatar_url,
         created_at: profile.created_at,
