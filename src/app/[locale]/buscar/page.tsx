@@ -43,8 +43,6 @@ interface SearchPageProps {
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAX_CARD_SLOTS_PER_PRO = 24;
 const RESULTS_PER_PAGE = 20;
-const LOCAL_DEMO_ENABLED = process.env.NODE_ENV === "development";
-const PETER_PARKER_DEMO_ID = "demo-peter-parker-photography";
 
 type SearchWorkplace = {
   id?: string;
@@ -62,22 +60,6 @@ function isExactWorkplacePin(workplace: SearchWorkplace | undefined): workplace 
   return typeof workplace.address === "string" && workplace.address.trim().length > 0;
 }
 
-function createPeterParkerCardSlots(): ScheduleSlot[] {
-  const slots: ScheduleSlot[] = [];
-  const today = new Date();
-  const timeBlocks = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
-  for (let dayOffset = 1; dayOffset <= 14; dayOffset += 1) {
-    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + dayOffset);
-    const weekday = date.getDay();
-    if (weekday === 0) continue;
-    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-    const locationId = weekday === 6 ? "demo-peter-outdoor" : "demo-peter-studio";
-    for (const time of timeBlocks) {
-      slots.push({ date: iso, time, locationId, categoryId: "fotografia" });
-    }
-  }
-  return slots.slice(0, MAX_CARD_SLOTS_PER_PRO);
-}
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
@@ -198,11 +180,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     } catch {
       /* best-effort - cards just render without the strip */
     }
-  }
-  if (LOCAL_DEMO_ENABLED && allResults.some((pro) => pro.id === PETER_PARKER_DEMO_ID)) {
-    const demoSlots = createPeterParkerCardSlots();
-    slotsByPro[PETER_PARKER_DEMO_ID] = demoSlots;
-    if (demoSlots[0]) earliestByPro[PETER_PARKER_DEMO_ID] = `${demoSlots[0].date}T${demoSlots[0].time}`;
   }
 
   const ratingTieBreak = (a: (typeof allResults)[number], b: (typeof allResults)[number]) =>
