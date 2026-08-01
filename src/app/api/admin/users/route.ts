@@ -8,6 +8,7 @@ type ListedProfile = {
   full_name: string | null;
   email: string | null;
   cedula: string | null;
+  phone?: string | null;
   role: string | null;
   avatar_url: string | null;
   is_disabled: boolean | null;
@@ -16,7 +17,7 @@ type ListedProfile = {
   professionals?: unknown;
 };
 
-// GET /api/admin/users?q=…  — search users by name / cédula / email (admin-only).
+// GET /api/admin/users?q=…  — search users by name / cédula / email / phone (admin-only).
 // GET /api/admin/users?mode=list — paginated admin directory of all accounts.
 // GET /api/admin/users?id=… — consolidated case file for ONE user: account,
 //   professional record, support tickets, verification history + appeals,
@@ -72,7 +73,7 @@ export async function GET(req: Request) {
     for (let from = 0; from < 10000; from += batchSize) {
       const { data, error } = await db
         .from("profiles")
-        .select("id, full_name, email, cedula, role, avatar_url, is_disabled, client_identity_status, created_at, professionals(id, verification_status, is_banned, business_name)")
+        .select("id, full_name, email, cedula, phone, role, avatar_url, is_disabled, client_identity_status, created_at, professionals(id, verification_status, is_banned, business_name)")
         .order("created_at", { ascending: false })
         .range(from, from + batchSize - 1);
       if (error) {
@@ -141,7 +142,7 @@ export async function GET(req: Request) {
         if (!["banned", "unverified"].includes(verification) && row.verification_status !== verification) return false;
       }
       if (queryTokens.length === 0) return true;
-      const haystack = norm(`${row.full_name ?? ""} ${row.business_name ?? ""} ${row.email ?? ""} ${row.cedula ?? ""}`);
+      const haystack = norm(`${row.full_name ?? ""} ${row.business_name ?? ""} ${row.email ?? ""} ${row.cedula ?? ""} ${row.phone ?? ""}`);
       return queryTokens.every((token) => haystack.includes(token));
     });
 
@@ -288,7 +289,7 @@ export async function GET(req: Request) {
   // ── Search ──────────────────────────────────────────────────────────────
   // Smart, word-based matching: EVERY word in the query must appear somewhere in
   // the full name (any order, partial) — so "Isaac Sanchez" finds "Isaac Alberto
-  // Sanchez Monge". Email matches the whole query; cédula matches partially.
+  // Sanchez Monge". Email matches the whole query; cédula/phone match partially.
   const q = (url.searchParams.get("q") ?? "").trim();
   if (q.length < 2) return NextResponse.json({ users: [] });
 
@@ -307,6 +308,7 @@ export async function GET(req: Request) {
   const safeQ = safe(q);
   if (safeQ) ors.push(`email.ilike.%${safeQ}%`);
   if (ced) ors.push(`cedula.ilike.%${ced}%`);
+  if (safeQ) ors.push(`phone.ilike.%${safeQ}%`);
   if (ors.length === 0) return NextResponse.json({ users: [] });
 
   const { data } = await db
