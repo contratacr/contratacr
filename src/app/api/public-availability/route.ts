@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { crTodayISO } from "@/lib/time-cr";
 
-const LOCAL_DEMO_ENABLED = process.env.NODE_ENV === "development";
+const LOCAL_DEMO_ENABLED = true;
 const PETER_PARKER_DEMO_ID = "demo-peter-parker-photography";
 
 function noStore(body: unknown, init?: ResponseInit) {

@@ -102,7 +102,7 @@ export type ProService = {
   modalities?: Array<"in_person" | "at_home" | "video">;
 };
 
-const LOCAL_DEMO_ENABLED = process.env.NODE_ENV === "development";
+const LOCAL_DEMO_ENABLED = true;
 const PETER_PARKER_DEMO_ID = "demo-peter-parker-photography";
 const PETER_PARKER_DEMO_SLUG = "peter-parker-fotografo-san-jose";
 
