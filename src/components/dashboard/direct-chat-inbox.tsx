@@ -670,9 +670,11 @@ export function DirectChatInbox() {
   }
 
   if (loading) return (
-    <div className="ccr-delayed-loading flex min-h-[calc(100dvh-153px)] flex-col items-center justify-center gap-2 px-4 text-center lg:min-h-[520px]" aria-busy="true" role="status">
-      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
-      <p className="text-sm font-extrabold text-[#162543]">{isEn ? "Loading" : "Cargando"}</p>
+    <div className="ccr-delayed-loading grid h-full min-h-[calc(100dvh-153px)] w-full place-items-center lg:min-h-[520px]" aria-busy="true" role="status">
+      <div className="flex flex-col items-center justify-center gap-2 px-4 text-center">
+        <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
+        <p className="text-sm font-extrabold text-[#162543]">{isEn ? "Loading" : "Cargando"}</p>
+      </div>
     </div>
   );
 

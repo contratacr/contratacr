@@ -102,6 +102,241 @@ export type ProService = {
   modalities?: Array<"in_person" | "at_home" | "video">;
 };
 
+const LOCAL_DEMO_ENABLED = process.env.NODE_ENV === "development";
+const PETER_PARKER_DEMO_ID = "demo-peter-parker-photography";
+const PETER_PARKER_DEMO_SLUG = "peter-parker-fotografo-san-jose";
+
+function isPeterParkerDemo(professional: Pick<ProfessionalCardData, "id" | "slug" | "businessName" | "fullName">) {
+  return professional.id === PETER_PARKER_DEMO_ID
+    || professional.slug === PETER_PARKER_DEMO_SLUG
+    || professional.fullName.trim().toLowerCase() === "peter parker"
+    || professional.businessName?.trim().toLowerCase() === "peter parker";
+}
+
+function createPeterParkerServices(): ProService[] {
+  return [
+    {
+      id: "demo-peter-photography-main",
+      name: "Fotografía profesional",
+      category: "fotografia",
+      description: [
+        "Sesiones fotográficas para marca personal, retratos ejecutivos, contenido para redes y cobertura visual para negocios que necesitan verse profesionales.",
+        "Trabajo con dirección de poses, selección de locación, guía previa a la sesión, edición cuidada y entrega optimizada para web, redes sociales, campañas y material comercial.",
+      ].join("\n\n"),
+      price: "Consultar precio",
+      priceType: "a_convenir",
+      years: 10,
+      months: 0,
+      startedAt: monthValueFromExperience(10, 0),
+      active: true,
+      modalities: ["in_person"],
+    },
+  ];
+}
+
+function createPeterParkerPortfolio(): PortfolioItem[] {
+  return [
+    {
+      id: "demo-peter-case-1",
+      serviceId: "demo-peter-photography-main",
+      profession: "fotografia",
+      title: "Retratos para marca personal de abogados y consultores",
+      description: "Producción de retratos profesionales para perfiles públicos, LinkedIn, sitio web y campañas de captación, con iluminación natural y edición enfocada en confianza y cercanía.",
+      recipient: "Firmas y consultores independientes",
+      date: "2026",
+      photos: [
+        "/demo/peter-portfolio-portrait.svg",
+        "/demo/peter-portfolio-studio.svg",
+      ],
+      likes: 34,
+    },
+    {
+      id: "demo-peter-case-2",
+      serviceId: "demo-peter-photography-main",
+      profession: "fotografia",
+      title: "Cobertura visual para restaurantes y cafeterías",
+      description: "Sesiones de producto, ambiente y equipo de trabajo para renovar la imagen comercial de negocios locales y dejar material listo para publicaciones, menú digital y anuncios.",
+      recipient: "Negocios gastronómicos en San José",
+      date: "2026",
+      photos: [
+        "/demo/peter-portfolio-cafe.svg",
+        "/demo/peter-portfolio-portrait.svg",
+      ],
+      likes: 27,
+    },
+    {
+      id: "demo-peter-case-3",
+      serviceId: "demo-peter-photography-main",
+      profession: "fotografia",
+      title: "Contenido para campañas y redes sociales",
+      description: "Banco de fotos para anuncios, historias y publicaciones recurrentes, pensado para que el negocio tenga material consistente durante varias semanas.",
+      recipient: "Emprendimientos y marcas personales",
+      date: "2025",
+      photos: [
+        "/demo/peter-portfolio-studio.svg",
+        "/demo/peter-portfolio-cafe.svg",
+      ],
+      likes: 31,
+    },
+  ];
+}
+
+function createPeterParkerReviews(): Review[] {
+  return [
+    {
+      id: "demo-peter-review-1",
+      clientName: "María Fernanda Rojas",
+      rating: 5,
+      comment: "Me ayudó a renovar todas mis fotos profesionales para el sitio y LinkedIn. Dirige muy bien la sesión y entrega material que realmente se puede usar para vender.",
+      createdAt: "2026-07-18T14:00:00.000Z",
+      jobTitle: "Retratos para marca personal",
+    },
+    {
+      id: "demo-peter-review-2",
+      clientName: "Carlos Solano",
+      rating: 5,
+      comment: "Llegó con ideas claras, entendió el estilo de la marca y nos dejó fotos listas para redes y anuncios. El resultado se ve serio y moderno.",
+      createdAt: "2026-06-29T10:30:00.000Z",
+      jobTitle: "Sesión comercial para restaurante",
+    },
+    {
+      id: "demo-peter-review-3",
+      clientName: "Andrea Murillo",
+      rating: 5,
+      comment: "Súper ordenado en la comunicación, puntual y con muy buen ojo para aprovechar luz y locación. Se nota la experiencia.",
+      createdAt: "2026-05-11T16:45:00.000Z",
+      jobTitle: "Fotografía para campaña digital",
+    },
+    {
+      id: "demo-peter-review-4",
+      clientName: "Javier Brenes",
+      rating: 5,
+      comment: "Necesitábamos material rápido para una campaña y resolvió excelente. Nos dio variedad de tomas y el proceso fue muy fácil.",
+      createdAt: "2026-03-22T12:00:00.000Z",
+      jobTitle: "Contenido para redes sociales",
+    },
+    {
+      id: "demo-peter-review-5",
+      clientName: "Lucía Chaves",
+      rating: 5,
+      comment: "Las fotos transmiten exactamente lo que quería proyectar. Quedé con material suficiente para web, presentaciones y publicaciones.",
+      createdAt: "2025-12-09T09:20:00.000Z",
+      jobTitle: "Retratos corporativos",
+    },
+  ];
+}
+
+function createPeterParkerSearchCard(): ProfessionalCardData {
+  const services = createPeterParkerServices();
+  return {
+    id: PETER_PARKER_DEMO_ID,
+    profileId: "demo-peter-profile",
+    slug: PETER_PARKER_DEMO_SLUG,
+    fullName: "Peter Parker",
+    avatarUrl: "/demo/peter-parker-profile.jpg",
+    categoryId: "fotografia",
+    categoryIcon: "",
+    professions: ["fotografia"],
+    pricing: [{ id: "demo-peter-price", type: "a_convenir" }],
+    bio: [
+      "Fotógrafo profesional con enfoque en retratos, marca personal, contenido comercial y sesiones para negocios que necesitan verse bien en web, redes y campañas.",
+      "Trabajo con una mezcla de dirección clara, atención al detalle y edición limpia para que cada entrega sirva de verdad para vender, comunicar y posicionar la marca.",
+    ].join("\n\n"),
+    whatsapp: "8888-0000",
+    provinceName: "San José",
+    cantonName: "Escazú",
+    ratingAvg: 5,
+    reviewCount: 5,
+    yearsExperience: 10,
+    monthsExperience: 0,
+    hourlyRate: undefined,
+    isVerified: true,
+    isFeatured: false,
+    isAvailable: true,
+    availabilityPublic: true,
+    contactPreference: "ambas",
+    languages: ["Español", "English"],
+    businessName: "Peter Parker",
+    publicBusinessNameOnly: false,
+    workplaces: [
+      {
+        id: "demo-peter-studio",
+        name: "Estudio Peter Parker",
+        address: "Escazú centro, San José",
+        lat: 9.9188,
+        lng: -84.1399,
+      },
+      {
+        id: "demo-peter-outdoor",
+        name: "Sesiones en locación",
+        address: "Sabana y alrededores, San José",
+        lat: 9.9436,
+        lng: -84.1074,
+      },
+    ],
+    verificationStatus: "verified",
+    lat: 9.9188,
+    lng: -84.1399,
+    serviceType: null,
+    videoconsulta: false,
+    portfolioCount: 3,
+    followerCount: 200,
+    certificationCount: 2,
+    insuranceNetworks: [],
+    coverage: { country: false, provincias: ["San José"], cantones: ["Escazú", "San José", "Santa Ana"] },
+    services,
+    allowPhoneCall: true,
+    callPhone: "8888-0000",
+    contactEmail: "peter.parker.demo@contratacr.local",
+  };
+}
+
+function createPeterParkerDetail(): ProfessionalDetail {
+  const base = createPeterParkerSearchCard();
+  const services = createPeterParkerServices();
+  const portfolioItems = createPeterParkerPortfolio();
+  const reviews = createPeterParkerReviews();
+  return {
+    ...base,
+    availabilityPublic: true,
+    portfolioUrls: portfolioItems.flatMap((item) => item.photos ?? []).slice(0, 5),
+    portfolioItems,
+    reviews,
+    services,
+    certifications: [
+      { id: "demo-peter-cert-1", name: "Iluminación y retrato comercial", institution: "Taller Creativo CR", year: "2021", profession: "fotografia" },
+      { id: "demo-peter-cert-2", name: "Edición y flujo fotográfico profesional", institution: "Academia Visual", year: "2019", profession: "fotografia" },
+    ],
+    socialLinks: {
+      instagram: "peterparker.fotos",
+      website: "peterparkerfotos.cr",
+    },
+    bio: [
+      "Soy Peter Parker, fotógrafo profesional con 10 años de experiencia creando imágenes para marcas personales, negocios y campañas digitales. Me especializo en retratos que transmiten confianza, sesiones comerciales que ayudan a vender mejor y contenido visual que sí se siente actual.",
+      "Mi trabajo está pensado para personas y empresas que necesitan verse profesionales sin complicarse. Antes de la sesión alineamos objetivo, estilo, usos de las fotos y locación; durante la producción dirijo poses, encuadres y ritmo para que la experiencia sea fluida incluso si la persona no está acostumbrada a estar frente a una cámara.",
+      "Entrego material útil para perfiles públicos, sitios web, LinkedIn, anuncios, redes sociales, catálogos y presentaciones. También puedo ayudar con sesiones para equipos, producto, oficinas, restaurantes y contenido continuo para publicaciones comerciales.",
+      "La prioridad es que cada foto sirva. Busco una imagen limpia, expresiva y fácil de aprovechar en celular, escritorio y piezas publicitarias sin que el cliente tenga que adivinar cuáles sí funcionan.",
+    ].join("\n\n"),
+  };
+}
+
+function shouldShowPeterParkerDemo(filters: SearchFilters) {
+  if (!LOCAL_DEMO_ENABLED) return false;
+  const category = filters.categoryId?.trim();
+  if (category && category !== "fotografia" && category !== "fotografia_eventos") return false;
+  const province = filters.provinceId?.trim();
+  if (province && province !== "san-jose") return false;
+  const query = normalizeText(filters.query ?? "");
+  if (!query) return true;
+  return ["peter", "parker", "foto", "fotografo", "fotografia", "photography", "photographer"].some((term) => query.includes(term));
+}
+
+function prependPeterParkerDemo(results: ProfessionalCardData[], filters: SearchFilters) {
+  if (!shouldShowPeterParkerDemo(filters)) return results;
+  const peter = createPeterParkerSearchCard();
+  return [peter, ...results.filter((item) => !isPeterParkerDemo(item))];
+}
+
 function isDemoContrataCr(professional: Pick<ProfessionalCardData, "slug" | "businessName">): boolean {
   return professional.slug === "contratacr-desarrollo-web-atenas" || professional.businessName?.trim().toLowerCase() === "contratacr";
 }
@@ -637,14 +872,14 @@ async function searchProfessionalsUncached(
         });
       }
 
-      return mapped;
+      return prependPeterParkerDemo(mapped, filters);
     } catch (err) {
       console.error("[searchProfessionals] Supabase error:", err);
     }
   }
 
   // No fake/seed fallback - only real professionals are ever listed.
-  return [];
+  return prependPeterParkerDemo([], filters);
 }
 
 // ---------------------------------------------------------------------------
@@ -729,6 +964,18 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
 export async function getProfessionalBySlug(
   slug: string
 ): Promise<ProfessionalDetail | null> {
+  if (LOCAL_DEMO_ENABLED) {
+    const normalizedSlug = (() => {
+      try {
+        return decodeURIComponent(slug);
+      } catch {
+        return slug;
+      }
+    })().trim().toLowerCase();
+    if (normalizedSlug === PETER_PARKER_DEMO_SLUG) {
+      return createPeterParkerDetail();
+    }
+  }
   if (SUPABASE_CONFIGURED) {
     try {
       const { createClient } = await import("@/lib/supabase/server");

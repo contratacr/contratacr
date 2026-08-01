@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="Caso de éxito retrato">
+  <rect width="1200" height="900" fill="#f4f8fb"/>
+  <rect x="80" y="80" width="1040" height="740" rx="36" fill="#ffffff" stroke="#d7e3ee"/>
+  <circle cx="385" cy="390" r="145" fill="#f0c7ad"/>
+  <path d="M255 350c30-110 170-157 264-88-16 4-40 14-67 34-35 24-55 51-69 75l-128-21z" fill="#35241d"/>
+  <rect x="642" y="205" width="318" height="52" rx="18" fill="#d8ecf8"/>
+  <rect x="642" y="282" width="248" height="28" rx="14" fill="#eaf3f9"/>
+  <rect x="642" y="332" width="286" height="28" rx="14" fill="#eaf3f9"/>
+  <rect x="642" y="382" width="210" height="28" rx="14" fill="#eaf3f9"/>
+  <rect x="615" y="544" width="310" height="174" rx="26" fill="#112746"/>
+  <circle cx="770" cy="632" r="54" fill="#425670"/>
+  <circle cx="770" cy="632" r="26" fill="#9fddff"/>
+  <rect x="683" y="590" width="53" height="24" rx="10" fill="#233046"/>
+  <text x="142" y="720" fill="#1b2940" font-family="Arial, sans-serif" font-size="46" font-weight="700">Retrato profesional para marca personal</text>
+</svg>
