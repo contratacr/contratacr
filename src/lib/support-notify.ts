@@ -1,11 +1,9 @@
 // Branded support-ticket email notifications (Brevo). Best-effort: failures are
 // logged and never break the request. Clickable links only — no raw URLs.
-import { sendBrevoEmail } from "@/lib/email/send";
-import { cloudinaryAssetUrl } from "@/lib/cloudinary";
+import { EMAIL_LOGO_DARK_MODE_STYLES, emailLogoMarkup, sendBrevoEmail } from "@/lib/email/send";
 
 const SUPPORT_TO = "soporte@contratacr.com";
 const SITE = "https://contratacr.com";
-const LOGO = cloudinaryAssetUrl("contratacr/brand/email-logo.png", "f_png,w_128");
 type SupportLocale = "es" | "en";
 
 function escapeHtml(s: string): string {
@@ -19,12 +17,12 @@ async function sendEmail(to: string, subject: string, html: string, replyTo?: st
 /** Branded shell with an optional CTA button (clickable link, never a raw URL). */
 function shell(headline: string, bodyHtml: string, cta?: { href: string; label: string }): string {
   return `
+  <head><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><style>${EMAIL_LOGO_DARK_MODE_STYLES}</style></head>
   <body style="margin:0;padding:0;background-color:#f4f7fa;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f7fa;"><tr><td align="center" style="padding:32px 16px;">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:#ffffff;border-radius:16px;border:1px solid #eef1f5;">
       <tr><td align="center" style="padding:30px 32px 6px 32px;">
-        <img src="${LOGO}" width="44" height="44" alt="ContrataCR" style="display:block;border:0;">
-        <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;margin-top:8px;color:#162543;">Contrata<span style="color:#008ce0;">CR</span></div>
+        ${emailLogoMarkup(SITE)}
       </td></tr>
       <tr><td style="padding:6px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;">
         <h1 style="font-size:19px;font-weight:bold;margin:14px 0 10px 0;color:#162543;">${escapeHtml(headline)}</h1>

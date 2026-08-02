@@ -10,7 +10,6 @@ import { ArrowRight, AlertCircle, MailCheck, RefreshCw } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { useResendCooldown } from "@/hooks/use-resend-cooldown";
@@ -75,9 +74,8 @@ export default function OlvideContrasenaPage() {
       <Navbar />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
-          <div className="text-center mb-8">
-            <ContrataCRLogo className="justify-center mb-4" />
+          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
+          <div className="text-center mb-7">
             <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
           </div>

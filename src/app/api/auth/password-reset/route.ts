@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendBrevoEmail } from "@/lib/email/send";
+import { EMAIL_LOGO_DARK_MODE_STYLES, emailLogoMarkup, sendBrevoEmail } from "@/lib/email/send";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { requestHost } from "@/lib/security/write-guard";
 
@@ -79,11 +79,20 @@ export async function POST(req: NextRequest) {
 
     const sent = await sendBrevoEmail({
       to: email,
-      subject: "Restablece tu contrasena - ContrataCR",
+      subject: "Restablece tu contraseña - ContrataCR",
       html: `
-        <div style="margin:0;padding:28px 14px;background:#f4f7fa;color:#162543;font-family:Arial,Helvetica,sans-serif">
+        <!doctype html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8">
+          <meta name="color-scheme" content="light dark">
+          <meta name="supported-color-schemes" content="light dark">
+          <style>${EMAIL_LOGO_DARK_MODE_STYLES}</style>
+        </head>
+        <body style="margin:0;padding:0;background:#f4f7fa;color:#162543;font-family:Arial,Helvetica,sans-serif">
+          <div style="padding:28px 14px">
           <div style="max-width:532px;margin:0 auto;padding:30px 34px;background:#fff;border:1px solid #e6edf3;border-radius:18px">
-            <img src="${origin}/brand/email-logo-light.png" width="167" alt="ContrataCR" style="display:block;margin:0 auto 24px;border:0;height:auto">
+            <div style="margin:0 auto 24px">${emailLogoMarkup(origin)}</div>
             <h1 style="font-size:21px;line-height:1.25;margin:0 0 10px">Restablece tu contrase&ntilde;a</h1>
             <p style="font-size:15px;line-height:1.65;color:#374151;margin:0 0 24px">Recibimos una solicitud para restablecer la contrase&ntilde;a de tu cuenta. Usa este bot&oacute;n para crear una nueva.</p>
             <div style="text-align:center">
@@ -91,7 +100,9 @@ export async function POST(req: NextRequest) {
             </div>
             <p style="font-size:12px;line-height:1.6;color:#8b97a6;margin:20px 0 0">Si no solicitaste este cambio, ignora el correo y tu contrase&ntilde;a seguir&aacute; igual.</p>
           </div>
-        </div>`,
+          </div>
+        </body>
+        </html>`,
     });
     if (!sent.ok) {
       return NextResponse.json({ error: "reset_failed" }, { status: 502 });
