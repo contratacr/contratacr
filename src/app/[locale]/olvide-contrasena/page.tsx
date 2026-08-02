@@ -71,10 +71,11 @@ export default function OlvideContrasenaPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center py-10 px-4">
-        <div className="w-full max-w-sm">
+      <main className="flex-1 flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-8">
             <ContrataCRLogo className="justify-center mb-4" />
             <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
@@ -89,7 +90,7 @@ export default function OlvideContrasenaPage() {
           )}
 
           {success ? (
-            <section className="rounded-2xl border border-[#e5edf4] bg-white p-5 text-center shadow-[0_18px_45px_rgba(26,39,68,0.08)] sm:p-6">
+            <section className="text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f6fc] text-[#009FD9]">
                 <MailCheck className="h-6 w-6" />
               </div>
@@ -144,6 +145,7 @@ export default function OlvideContrasenaPage() {
               {t("backToLogin")}
             </Link>
           </p>
+          </div>
         </div>
       </main>
       <LandingFooter />

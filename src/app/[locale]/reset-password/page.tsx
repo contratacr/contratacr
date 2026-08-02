@@ -194,10 +194,10 @@ export default function ResetPasswordPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-[#fafafa]">
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
-          <div className="w-full max-w-sm text-center">
+          <div className="w-full max-w-md rounded-3xl border border-[#e5e7eb] bg-white p-8 text-center shadow-sm">
             <SuccessIcon size={80} className="mx-auto mb-5" />
             <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("doneTitle")}</h1>
             <p className="text-[#6b7280] text-sm">
@@ -211,10 +211,10 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center py-10 px-4">
-        <div className="w-full max-w-sm">
+      <main className="flex-1 flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
           <div className="text-center mb-8">
             <BrandIconBadge icon={Lock} size={56} className="mx-auto mb-4" />
             <ContrataCRLogo className="justify-center mb-4" />
