@@ -12,7 +12,6 @@ import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -217,7 +216,6 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
           <div className="text-center mb-8">
             <BrandIconBadge icon={Lock} size={56} className="mx-auto mb-4" />
-            <ContrataCRLogo className="justify-center mb-4" />
             <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">
               {t("subtitle")}

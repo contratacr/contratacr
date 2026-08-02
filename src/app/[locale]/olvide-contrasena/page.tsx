@@ -23,7 +23,7 @@ export default function OlvideContrasenaPage() {
   const t = useTranslations("forgotPassword");
   const tc = useTranslations("common");
   const schema = z.object({
-    email: z.string().email(locale === "en" ? "Invalid email" : "Email invalido"),
+    email: z.string().email(locale === "en" ? "Invalid email" : "Email inválido"),
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,11 +74,13 @@ export default function OlvideContrasenaPage() {
       <Navbar />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
-          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
-          <div className="text-center mb-7">
-            <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
-            <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
-          </div>
+          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-7 shadow-sm sm:p-8">
+          {!success && (
+            <div className="text-center mb-7">
+              <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
+              <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
+            </div>
+          )}
 
           {error && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 mb-4">
@@ -92,16 +94,16 @@ export default function OlvideContrasenaPage() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f6fc] text-[#009FD9]">
                 <MailCheck className="h-6 w-6" />
               </div>
-              <h2 className="mt-4 text-xl font-bold text-[#111827]">{t("sentTitle")}</h2>
-              <p className="mt-2 text-sm leading-6 text-[#4b5563]">{t("sentBody")}</p>
+              <h1 className="mt-4 text-2xl font-bold text-[#111827]">{t("sentTitle")}</h1>
+              <p className="mx-auto mt-2 max-w-[320px] text-sm leading-6 text-[#4b5563]">{t("sentBody")}</p>
               {sentEmail && (
-                <p className="mx-auto mt-3 max-w-full truncate rounded-full bg-[#f4f7fa] px-3 py-2 text-sm font-semibold text-[#1a2744]">
+                <p className="mx-auto mt-4 max-w-full truncate rounded-full bg-[#f4f7fa] px-4 py-2 text-sm font-semibold text-[#1a2744]">
                   {sentEmail}
                 </p>
               )}
-              <SpamNotice className="mx-auto mt-3 max-w-[280px] leading-5 text-[#6b7280]" />
+              <SpamNotice className="mx-auto mt-4 max-w-[300px] leading-5 text-[#6b7280]" />
 
-              <div className="mt-5 border-t border-[#edf2f7] pt-4">
+              <div className="mt-6 border-t border-[#edf2f7] pt-5">
                 {resendState.resent && (
                   <p className="mb-2 text-xs font-semibold text-[#0089bb]">{tc("resent")}</p>
                 )}
