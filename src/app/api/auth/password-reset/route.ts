@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { requestHost } from "@/lib/security/write-guard";
+
+function requestOrigin(req: NextRequest) {
+  const proto = req.headers.get("x-forwarded-proto") ?? new URL(req.url).protocol.replace(":", "");
+  return `${proto}://${requestHost(req)}`;
+}
 
 export async function POST(req: NextRequest) {
   const rl = enforceRateLimit(req, "password-reset", 8, 60_000);
@@ -16,9 +22,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  if (!email || !redirectTo || !redirectTo.startsWith("http")) {
+  if (!email) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
+
+  const requestedLocale = (() => {
+    try {
+      const url = new URL(redirectTo);
+      return url.pathname.startsWith("/en/") || url.pathname === "/en" ? "en" : "es";
+    } catch {
+      return "es";
+    }
+  })();
+  const resetRedirectTo = `${requestOrigin(req)}/${requestedLocale}/reset-password`;
 
   const admin = createAdminClient();
 
@@ -42,7 +58,7 @@ export async function POST(req: NextRequest) {
     // does not become a reliable account-enumeration oracle.
     if (!foundMatchingAuthUser) return NextResponse.json({ ok: true });
 
-    const { error } = await admin.auth.resetPasswordForEmail(email, { redirectTo });
+    const { error } = await admin.auth.resetPasswordForEmail(email, { redirectTo: resetRedirectTo });
     if (error) return NextResponse.json({ error: "reset_failed" }, { status: 400 });
 
     return NextResponse.json({ ok: true });

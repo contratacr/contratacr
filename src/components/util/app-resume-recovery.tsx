@@ -14,6 +14,26 @@ export function AppResumeRecovery() {
   const lastRecoveryRef = useRef(0);
 
   useEffect(() => {
+    const path = window.location.pathname;
+    const locale = path.startsWith("/en") ? "en" : "es";
+    const localeRoot = path === `/${locale}` || path === `/${locale}/`;
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const searchParams = new URLSearchParams(window.location.search);
+    const isRecoveryHash =
+      hashParams.get("type") === "recovery" ||
+      (!!hashParams.get("access_token") && !!hashParams.get("refresh_token"));
+    const hasRecoveryCode = localeRoot && !!searchParams.get("code");
+
+    if (localeRoot && isRecoveryHash) {
+      window.location.replace(`/${locale}/reset-password${window.location.hash}`);
+      return;
+    }
+
+    if (hasRecoveryCode) {
+      window.location.replace(`/${locale}/reset-password${window.location.search}`);
+      return;
+    }
+
     const markHidden = () => {
       hiddenAtRef.current ??= Date.now();
     };
