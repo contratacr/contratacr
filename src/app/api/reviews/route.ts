@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   const r = Number(rating);
   if (!(r >= 0.5 && r <= 5 && r * 2 === Math.floor(r * 2))) {
-    return NextResponse.json({ error: "Calificaci\u00f3n inv\u00e1lida." }, { status: 400 });
+    return NextResponse.json({ error: "Calificación inválida." }, { status: 400 });
   }
 
   const reviewText = validateReviewText(comment);
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (targetPro.profile_id === user.id) {
-    return NextResponse.json({ error: "No puedes dejarte una rese\u00f1a a ti mismo." }, { status: 400 });
+    return NextResponse.json({ error: "No puedes dejarte una reseña a ti mismo." }, { status: 400 });
   }
 
   let jobTitle: string | null = null;
@@ -200,8 +200,8 @@ export async function POST(req: NextRequest) {
     const { error: notificationError } = await admin.from("notifications").insert({
       user_id: targetPro.profile_id,
       type: "review_received",
-      title: "Nueva rese\u00f1a recibida",
-      message: `${clientName} te dej\u00f3 una rese\u00f1a de ${stars} estrellas.`,
+      title: "Nueva reseña recibida",
+      message: `${clientName} te dejó una reseña de ${stars} estrellas.`,
       data: {
         link: `/es/profesionales/${targetPro.slug}?tab=resenas#resenas`,
         professional_id: professionalId,
@@ -268,4 +268,3 @@ export async function GET(req: Request) {
   const { data } = await q.limit(1).maybeSingle();
   return NextResponse.json({ review: data ?? null });
 }
-

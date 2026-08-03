@@ -12,17 +12,16 @@ export function normalizeReviewText(value: unknown) {
 export function validateReviewText(comment: string) {
   const clean = normalizeReviewText(comment);
   if (!clean) {
-    return { ok: false, error: "Escribe un comentario para publicar tu rese\u00f1a." };
+    return { ok: false, error: "Escribe un comentario para publicar tu reseña." };
   }
   if (clean.length > 300) {
-    return { ok: false, error: "La rese\u00f1a no puede superar 300 caracteres." };
+    return { ok: false, error: "La reseña no puede superar 300 caracteres." };
   }
   if (BLOCKED_REVIEW_PATTERNS.some((pattern) => pattern.test(clean))) {
     return {
       ok: false,
-      error: "Tu rese\u00f1a contiene lenguaje ofensivo, amenazas o datos de contacto. Edita el texto para publicarla.",
+      error: "Tu reseña contiene lenguaje ofensivo, amenazas o datos de contacto. Edita el texto para publicarla.",
     };
   }
   return { ok: true, comment: clean };
 }
-

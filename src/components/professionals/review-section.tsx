@@ -122,7 +122,7 @@ export function ReviewSection({
           onClick={openReviewModal}
           className="rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#008fc3]"
         >
-          {locale === "en" ? "Write review" : "Dejar rese\u00f1a"}
+          {locale === "en" ? "Write review" : "Dejar reseña"}
         </button>
       </div>
 

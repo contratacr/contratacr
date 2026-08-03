@@ -49,7 +49,7 @@ export async function GET(req: Request) {
 
   if (error) {
     console.error("[admin/reviews] list error:", error.message);
-    return NextResponse.json({ error: "No se pudo cargar rese\u00f1as." }, { status: 500 });
+    return NextResponse.json({ error: "No se pudo cargar reseñas." }, { status: 500 });
   }
 
   const professionalIds = [...new Set(rows.map((row) => row.professional_id).filter(Boolean))] as string[];

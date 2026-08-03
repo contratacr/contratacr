@@ -61,10 +61,10 @@ export function AdminReviews() {
       <div className="rounded-2xl border border-[#d9e2ec] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#64748b]">Moderaci\u00f3n</p>
-            <h1 className="mt-1 text-2xl font-bold text-[#0f172a]">Rese\u00f1as</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#64748b]">Moderación</p>
+            <h1 className="mt-1 text-2xl font-bold text-[#0f172a]">Reseñas</h1>
             <p className="mt-1 text-sm text-[#64748b]">
-              Revisa rese\u00f1as nuevas, rese\u00f1as directas del perfil y contenido que puede requerir atenci\u00f3n.
+              Revisa reseñas nuevas, reseñas directas del perfil y contenido que puede requerir atención.
             </p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
@@ -100,7 +100,7 @@ export function AdminReviews() {
             <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" />
           </div>
         ) : reviews.length === 0 ? (
-          <p className="py-12 text-center text-sm text-[#64748b]">No hay rese\u00f1as para mostrar.</p>
+          <p className="py-12 text-center text-sm text-[#64748b]">No hay reseñas para mostrar.</p>
         ) : (
           <div className="divide-y divide-[#e5e7eb]">
             {reviews.map((review) => (
@@ -156,4 +156,3 @@ export function AdminReviews() {
     </div>
   );
 }
-

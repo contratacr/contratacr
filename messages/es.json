@@ -163,7 +163,7 @@
       },
       "reviews": {
         "title": "Reseñas reales",
-        "desc": "Solo clientes que contrataron el servicio pueden dejar reseñas. 100% auténticas."
+        "desc": "Las reseñas se moderan para mantener una comunidad confiable."
       },
       "community": {
         "title": "Comunidad costarricense",
@@ -598,7 +598,7 @@
       "quality": "Calidad",
       "communication": "Comunicación"
     },
-    "reviewsGate": "Solo clientes que recibieron este servicio pueden dejar una reseña.",
+    "reviewsGate": "Puedes dejar una reseña desde el perfil del profesional.",
     "description": "Descripción",
     "experienceLabel": "Experiencia",
     "yearsValue": "{years, plural, one {# año} other {# años}}",
@@ -627,7 +627,7 @@
     "pricesRefCaption": "Precios de referencia.",
     "reviewsHeading": "Reseñas ({count})",
     "reviewOf": "Reseña de “{title}”",
-    "noReviews": "Aún no hay reseñas. Solo los clientes que completaron un servicio pueden dejar una.",
+    "noReviews": "Aún no hay reseñas.",
     "whatItMeans": "¿Qué significa?",
     "close": "Cerrar"
   },
@@ -2996,7 +2996,7 @@
     "faq4Q": "¿Cómo coordino el servicio?",
     "faq4A": "Si buscas directamente, abre el perfil y usa una de las opciones de contacto habilitadas. Si creas un proyecto, compara las propuestas y coordina con el profesional que elijas. El precio, la fecha y los detalles se acuerdan directamente.",
     "faq5Q": "¿Cómo dejo una reseña?",
-    "faq5A": "Después de completar un servicio, puedes dejar una reseña desde tu panel, en Modo cliente → Solicitudes. Solo clientes que realmente contrataron ese servicio pueden dejar reseñas — así se garantiza que son auténticas.",
+    "faq5A": "Puedes dejar una reseña entrando al perfil del profesional. También puedes usar los enlaces de reseña que recibas después de solicitar un servicio o publicar un proyecto.",
     "faq6Q": "¿Qué es crear un proyecto?",
     "faq6A": "Crear un proyecto es una alternativa a buscar directamente. Describes lo que necesitas (por ejemplo: “pintura de sala 4x4 m, presupuesto ₡80.000”), y los profesionales que ofrecen ese servicio en tu zona te envían propuestas con su precio. Tú eliges con quién trabajar.",
     "faq7Q": "¿Mi información personal está segura?",
