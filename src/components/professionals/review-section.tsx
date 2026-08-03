@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Star } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StarRating } from "@/components/ui/star-rating";
+import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
 import { ALL_CATEGORIES, getCategoryLabel } from "@/lib/data/categories";
 import type { Review } from "@/lib/queries/professionals";
@@ -37,12 +39,17 @@ function localizedReviewJobTitle(title: string | null | undefined, locale: strin
 }
 
 export function ReviewSection({
+  professionalId,
+  professionalName,
   reviewCount,
   ratingAvg,
   reviews,
+  isAuthenticated,
 }: ReviewSectionProps) {
   const t = useTranslations("profile");
   const locale = useLocale();
+  const router = useRouter();
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
   const commentsToTranslate = useMemo(
     () => reviews.filter((review) => review.comment.trim()).map((review) => ({ id: review.id, comment: review.comment.trim() })),
@@ -89,16 +96,34 @@ export function ReviewSection({
     return () => { active = false; };
   }, [commentsToTranslate, locale, translatedComments]);
 
+  function openReviewModal() {
+    if (!isAuthenticated) {
+      const redirect = `${window.location.pathname}?tab=resenas#resenas`;
+      window.location.assign(`/${locale}/login?redirect=${encodeURIComponent(redirect)}`);
+      return;
+    }
+    setReviewOpen(true);
+  }
+
   return (
     <>
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg font-semibold text-[#111827]">
-          {t("reviewsHeading", { count: reviewCount })}
-        </h2>
-        <div className="flex items-center gap-1">
-          <Star className="h-5 w-5 text-[#ff9b32] fill-[#ff9b32]" />
-          <span className="font-bold text-[#111827]">{ratingAvg.toFixed(1)}</span>
+        <div>
+          <h2 className="text-lg font-semibold text-[#111827]">
+            {t("reviewsHeading", { count: reviewCount })}
+          </h2>
+          <div className="mt-1 flex items-center gap-1 text-sm text-[#374151]">
+            <Star className="h-4 w-4 text-[#ff9b32] fill-[#ff9b32]" />
+            <span className="font-bold text-[#111827]">{ratingAvg.toFixed(1)}</span>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={openReviewModal}
+          className="rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#008fc3]"
+        >
+          {locale === "en" ? "Write review" : "Dejar rese\u00f1a"}
+        </button>
       </div>
 
       <div className="flex flex-col gap-5">
@@ -133,6 +158,14 @@ export function ReviewSection({
           </p>
         )}
       </div>
+      {reviewOpen && (
+        <LeaveReviewModal
+          professionalId={professionalId}
+          professionalName={professionalName}
+          onClose={() => setReviewOpen(false)}
+          onSuccess={() => router.refresh()}
+        />
+      )}
     </>
   );
 }
