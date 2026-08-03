@@ -5,7 +5,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Bot, Shield,
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -1421,17 +1421,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
                 </Link>
               )}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  window.dispatchEvent(new Event("contratacr:open-ai"));
-                }}
-                className={mobileDrawerItemClass}
-              >
-                <DrawerIcon><Bot /></DrawerIcon>
-                <span className={mobileDrawerTextClass}>{locale === "en" ? "Assistant" : "Asistente"}</span>
-              </button>
               {!user && (
                 <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><UserRound /></DrawerIcon>
@@ -1558,14 +1547,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <MessageSquareText className="h-5 w-5" />
                 <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
               </Link>
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
-                className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]"
-              >
-                <Bot className="h-5 w-5" />
-                <span>{locale === "en" ? "Assistant" : "Asistente"}</span>
-              </button>
             </div>
           </nav>
         )}
