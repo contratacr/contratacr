@@ -487,6 +487,23 @@ async function searchProfessionalsUncached(
         });
       }
 
+      if (mapped.length > 0) {
+        try {
+          const { data: follows } = await supabase
+            .from("professional_follows")
+            .select("professional_id")
+            .in("professional_id", mapped.map((p) => p.id));
+          const counts = new Map<string, number>();
+          for (const row of follows ?? []) {
+            const id = (row as { professional_id?: string }).professional_id;
+            if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+          }
+          mapped = mapped.map((p) => ({ ...p, followerCount: counts.get(p.id) ?? 0 }));
+        } catch {
+          mapped = mapped.map((p) => ({ ...p, followerCount: 0 }));
+        }
+      }
+
       // "Cerca de mí" is a real location filter: exact professional pins or
       // exact workplace pins inside a short radius count first. For video-compatible
       // services, keep nationwide videoconsulta pros as remote results after that.

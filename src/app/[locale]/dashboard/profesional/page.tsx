@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
-  User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
+  User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench, FileText,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink,
 } from "lucide-react";
@@ -61,7 +61,7 @@ type Tab =
   | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "saved"
-  | "chat" | "assistant" | "notifications" | "soporte" | "cuenta";
+  | "chat" | "assistant" | "notifications" | "soporte" | "cuenta" | "guides";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -84,6 +84,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   notifications: <Bell className="h-4 w-4" />,
   soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
+  guides: <FileText className="h-4 w-4" />,
 };
 
 // Tabs that show a one-line context note under the section title.
@@ -97,11 +98,23 @@ const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
-  "bookings", "proposals", "services", "availability", "photos", "profile",
+  "bookings", "proposals", "photos", "availability", "services", "soporte", "profile", "guides",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
-  "soporte",
 ];
-const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "profile", "saved", "soporte"];
+const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "saved", "soporte", "profile", "guides"];
+const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
+  bookings: { es: "Solicitudes Recibidas", en: "Received requests" },
+  proposals: { es: "Proyectos Recibidos", en: "Received projects" },
+  sent_bookings: { es: "Mis solicitudes", en: "My requests" },
+  sent_projects: { es: "Mis proyectos", en: "My projects" },
+  photos: { es: "Casos de éxito", en: "Success cases" },
+  availability: { es: "Disponibilidad", en: "Availability" },
+  services: { es: "Servicios", en: "Services" },
+  saved: { es: "Favoritos", en: "Saved" },
+  soporte: { es: "Soporte", en: "Support" },
+  profile: { es: "Perfil", en: "Profile" },
+  guides: { es: "Guías", en: "Guides" },
+};
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 function compactDisplayName(name: string) {
@@ -658,6 +671,7 @@ export default function DashboardPage() {
     mode === "offer" &&
     !!proForCompletion &&
     ((profileCompletionPercent ?? 0) < 100 || proForCompletion.verification_status !== "verified");
+  const tabLabel = (tab: Tab) => PANEL_TAB_LABELS[tab]?.[locale === "en" ? "en" : "es"] ?? t(`tabs.${tab}`);
 
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
@@ -679,7 +693,7 @@ export default function DashboardPage() {
             </span>
           )}
         </span>
-        {t(`tabs.${tab}`)}
+        {tabLabel(tab)}
       </button>
     );
   }
@@ -762,7 +776,7 @@ export default function DashboardPage() {
         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-6 [&>svg]:w-6">
           {TAB_ICONS[tab]}
         </span>
-        <span className="min-w-0 flex-1 truncate">{t(`tabs.${tab}`)}</span>
+        <span className="min-w-0 flex-1 truncate">{tabLabel(tab)}</span>
       </button>
     );
   }
@@ -931,7 +945,7 @@ export default function DashboardPage() {
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
-                  <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                  <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : tabLabel(activeTab)}</h2>
                   <div className="flex shrink-0 justify-self-end">
                     {publicProfileHref && (
                       <Link
@@ -976,7 +990,7 @@ export default function DashboardPage() {
                       {activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
-                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : tabLabel(activeTab)}</h2>
                             {publicProfileHref && (
                               <AppTooltip label={t("viewAsClient")} side="top" align="center">
                                 <Link
@@ -1134,6 +1148,43 @@ export default function DashboardPage() {
                           <div className="space-y-6">
                             <AccountSecuritySection showHeading={false} />
                             <CloseAccountSection />
+                          </div>
+                        )}
+                        {activeTab === "guides" && (
+                          <div className="space-y-4">
+                            <div className="rounded-2xl border border-[#dbeafe] bg-[#f8fbfd] p-5">
+                              <h3 className="text-lg font-bold text-[#162543]">{locale === "en" ? "Guides" : "Guías"}</h3>
+                              <p className="mt-1 text-sm leading-relaxed text-[#526277]">
+                                {locale === "en"
+                                  ? "Quick help for using your client and professional panels."
+                                  : "Ayuda rápida para usar tu panel cliente y profesional."}
+                              </p>
+                            </div>
+                            <div className="grid gap-3 md:grid-cols-2">
+                              {[
+                                {
+                                  title: locale === "en" ? "Client panel" : "Panel cliente",
+                                  body: locale === "en" ? "Requests, projects and saved professionals." : "Solicitudes, proyectos y profesionales favoritos.",
+                                },
+                                {
+                                  title: locale === "en" ? "Professional panel" : "Panel profesional",
+                                  body: locale === "en" ? "Received requests, success cases, availability and services." : "Solicitudes recibidas, casos de éxito, disponibilidad y servicios.",
+                                },
+                                {
+                                  title: locale === "en" ? "Support" : "Soporte",
+                                  body: locale === "en" ? "Open or continue support conversations." : "Abre o continúa conversaciones de soporte.",
+                                },
+                                {
+                                  title: locale === "en" ? "Profile" : "Perfil",
+                                  body: locale === "en" ? "Keep your public information and account settings updated." : "Mantén actualizada tu información pública y de cuenta.",
+                                },
+                              ].map((guide) => (
+                                <div key={guide.title} className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
+                                  <p className="font-bold text-[#162543]">{guide.title}</p>
+                                  <p className="mt-1 text-sm text-[#526277]">{guide.body}</p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </CardContent>
