@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
-  Share2, Flag, Award, SearchX, FileText, Globe,
+  Share2, Flag, Award, SearchX, FileText, Globe, Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
@@ -35,6 +35,7 @@ import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
+import { FollowButton } from "@/components/professionals/follow-button";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
@@ -137,6 +138,19 @@ export default function ProfilePage() {
     }
     load();
   }, [locale, routeSlug]);
+
+  useEffect(() => {
+    if (!professional?.id) return;
+    const onFollowChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ professionalId?: string; delta?: number }>).detail;
+      if (detail?.professionalId !== professional.id || !detail.delta) return;
+      setProfessional((current) => current
+        ? { ...current, followerCount: Math.max(0, (current.followerCount ?? 0) + detail.delta!) }
+        : current);
+    };
+    window.addEventListener("professionalFollowsChanged", onFollowChange);
+    return () => window.removeEventListener("professionalFollowsChanged", onFollowChange);
+  }, [professional?.id]);
 
   // Resolve the viewer's role-aware panel route up front (parallel, non-blocking) so the
   // "Profesional no encontrado" screen can offer "Volver a mi panel" even though load()
@@ -403,6 +417,12 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
+                  <FollowButton
+                    professionalId={professional.id}
+                    isOwn={isOwn}
+                    initialFollowers={professional.followerCount ?? 0}
+                    className="mt-3 w-fit"
+                  />
                 </div>
               </div>
 
@@ -433,6 +453,17 @@ export default function ProfilePage() {
                     <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statCasos")}</p>
                   </button>
                 )}
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Users className="h-4 w-4 text-[#009FD9]" />
+                    <span className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-[#9ca3af]">
+                    {locale === "en"
+                      ? ((professional.followerCount ?? 0) === 1 ? "follower" : "followers")
+                      : ((professional.followerCount ?? 0) === 1 ? "seguidor" : "seguidores")}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

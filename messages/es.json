@@ -626,6 +626,7 @@
     "baseRateCaption": "Tarifa base por hora.",
     "pricesRefCaption": "Precios de referencia.",
     "reviewsHeading": "Reseñas ({count})",
+    "writeReview": "Dejar reseña",
     "reviewOf": "Reseña de “{title}”",
     "noReviews": "Aún no hay reseñas.",
     "whatItMeans": "¿Qué significa?",
@@ -1410,6 +1411,288 @@
       "saved": "Favoritos",
       "moreTitle": "Más opciones",
       "close": "Cerrar"
+    },
+    "guides": {
+      "headerButton": "Guías rápidas",
+      "modalTitle": "Guías Paso a Paso",
+      "modalSubtitle": "Elige una sección y revisa los pasos principales.",
+      "modalQuestion": "¿Tienes alguna duda? Acá te ayudamos",
+      "close": "Cerrar",
+      "heroEyebrow": "Guía paso a paso",
+      "heroTitle": "Usa tu panel con ejemplos reales",
+      "heroBody": "Esta guía toma como referencia el perfil de ContrataCR para mostrar qué ve un cliente, qué debe completar un profesional y cómo dar seguimiento sin perder orden.",
+      "exampleProfile": {
+        "verified": "Verificado",
+        "service": "Desarrollo web",
+        "reviews": "reseñas",
+        "cases": "casos",
+        "year": "año"
+      },
+      "examples": {
+        "search": {
+          "title": "Cómo te ve un cliente en /buscar",
+          "body": "El card debe responder rápido: quién eres, qué haces, dónde trabajas, reseñas y cómo contactarte.",
+          "reviewCount": "(5 reseñas)",
+          "priceLine1": "Consultar",
+          "priceLine2": "precio",
+          "location": "Atenas, Alajuela"
+        },
+        "messages": {
+          "title": "Cómo coordinar después del contacto",
+          "body": "Mensajes mantiene la conversación clara. Si vienes de una solicitud o propuesta, escribe el contexto en el primer mensaje.",
+          "client": "Hola, vi tu perfil y necesito una landing page para mi negocio.",
+          "pro": "Claro, puedo revisar el alcance y enviarte una propuesta inicial."
+        }
+      },
+      "clientPanel": {
+        "title": "Panel cliente",
+        "body": "Para buscar, contratar y dar seguimiento.",
+        "points": [
+          "Busca profesionales por servicio, zona o nombre.",
+          "Guarda perfiles para compararlos después.",
+          "Envía solicitudes o mensajes cuando necesites coordinar.",
+          "Revisa tus solicitudes, publicaciones y conversaciones desde el panel."
+        ]
+      },
+      "proPanel": {
+        "title": "Panel profesional",
+        "body": "Para ofrecer servicios y construir confianza.",
+        "points": [
+          "Completa tu perfil, servicios, cobertura y disponibilidad.",
+          "Sube casos de éxito para mostrar trabajos reales.",
+          "Responde solicitudes y oportunidades desde un solo lugar.",
+          "También conservas el panel cliente para contratar otros servicios."
+        ]
+      },
+      "providerNoteTitle": "Si eres profesional:",
+      "providerNoteBody": "Como profesional también puedes usar el panel cliente con la misma cuenta.",
+      "clientNoteTitle": "Si solo usas ContrataCR como cliente:",
+      "clientNoteBody": "La guía profesional queda disponible si luego quieres ofrecer servicios.",
+      "activateProfessionalCta": "Crear perfil profesional",
+      "sections": {
+        "client": "Para clientes",
+        "shared": "Funciones compartidas",
+        "professional": "Para profesionales"
+      },
+      "sectionListTitle": "Secciones",
+      "selectedEyebrow": "Paso a paso",
+      "previewTitle": "Ejemplo visual",
+      "preview": {
+        "profile": {
+          "body": "Un perfil completo muestra identidad, servicio principal, reseñas, casos de éxito, cobertura y formas de contacto."
+        },
+        "services": {
+          "title": "Servicios en tu panel",
+          "badge": "Activo",
+          "desc": "Describe qué incluye, precio y alcance.",
+          "detail": "Usa servicios separados para que te encuentren mejor."
+        },
+        "availability": {
+          "title": "Horarios visibles para clientes",
+          "cta": "Ver disponibilidad"
+        },
+        "cases": {
+          "title": "Casos de éxito",
+          "caseTitle": "Buscador y perfiles de ContrataCR",
+          "body": "Cada caso debe mostrar qué hiciste, para quién y el resultado logrado."
+        },
+        "requests": {
+          "title": "Solicitud recibida",
+          "body": "Landing page para clínica dental con formulario y botón de contacto.",
+          "cta": "Responder"
+        },
+        "opportunities": {
+          "title": "Oportunidad abierta",
+          "project": "Sitio web para negocio local",
+          "body": "Publicación de cliente esperando propuestas de profesionales.",
+          "cta": "Enviar propuesta"
+        }
+      },
+      "items": {
+        "clientPanel": {
+          "title": "Panel cliente",
+          "short": "Mis solicitudes, Mis proyectos y Mis favoritos",
+          "body": "El panel cliente reúne lo que haces cuando quieres contratar: solicitudes, proyectos publicados, favoritos y tu información básica.",
+          "steps": [
+            "Revisa tus solicitudes recientes y el estado de cada una.",
+            "Consulta tus proyectos publicados y las propuestas recibidas.",
+            "Guarda profesionales en favoritos para compararlos o contactarlos luego.",
+            "Desde el panel también puedes abrir soporte si necesitas ayuda."
+          ],
+          "cta": "Ir al panel cliente"
+        },
+        "searchServices": {
+          "title": "Buscar",
+          "short": "Encuentra profesionales",
+          "body": "Buscar te ayuda a encontrar profesionales por servicio, ubicación, reseñas, casos de éxito, experiencia, seguidores y disponibilidad.",
+          "steps": [
+            "Escribe el servicio que necesitas o elige una categoría.",
+            "Usa filtros de ubicación, modalidad, idioma y orden para afinar los resultados.",
+            "Revisa cada card: reseñas, casos de éxito, experiencia, seguidores, ubicación y horarios.",
+            "Abre el perfil para ver más información antes de contactar.",
+            "Envía mensaje o revisa disponibilidad cuando encuentres una opción adecuada."
+          ],
+          "cta": "Ir a buscar"
+        },
+        "messages": {
+          "title": "Mensajes",
+          "short": "Coordina con orden",
+          "body": "Mensajes centraliza conversaciones con profesionales, clientes y soporte para que no pierdas contexto.",
+          "steps": [
+            "Abre una conversación desde un perfil, solicitud, proyecto o propuesta.",
+            "Si vienes de un proyecto o solicitud, revisa el contexto antes de responder.",
+            "Solo quedan conversaciones activas cuando hay mensajes enviados.",
+            "Usa el buscador para encontrar conversaciones antiguas."
+          ],
+          "cta": "Ir a mensajes"
+        },
+        "assistantGuide": {
+          "title": "Asistente",
+          "short": "Ayuda rápida dentro de la app",
+          "body": "El asistente ayuda a orientarte dentro de ContrataCR, redactar mensajes y entender qué sección usar.",
+          "steps": [
+            "Pregunta qué necesitas hacer y el asistente te guía.",
+            "Revisa siempre la respuesta antes de enviar información importante.",
+            "Puedes iniciar un nuevo chat cuando quieras cambiar de tema."
+          ],
+          "cta": "Abrir asistente"
+        },
+        "supportGuide": {
+          "title": "Soporte",
+          "short": "Ayuda para tu cuenta",
+          "body": "Soporte sirve para abrir tiquetes y continuar conversaciones con el equipo de ContrataCR.",
+          "steps": [
+            "Abre Soporte desde el panel cliente o profesional.",
+            "Elige el tema y escribe el detalle del problema.",
+            "Continúa el tiquete desde la misma conversación cuando recibas respuesta."
+          ],
+          "cta": "Ir a soporte"
+        },
+        "professionalPanel": {
+          "title": "Panel profesional",
+          "short": "Solicitudes recibidas, Proyectos recibidos y perfil",
+          "body": "El panel profesional es para recibir solicitudes, responder proyectos y mantener tu oferta completa.",
+          "steps": [
+            "Revisa Solicitudes recibidas cuando un cliente te contacte directamente.",
+            "En Proyectos recibidos ves oportunidades donde puedes enviar propuestas.",
+            "Mantén servicios, disponibilidad y casos de éxito actualizados.",
+            "También conservas el panel cliente para contratar otros servicios."
+          ],
+          "cta": "Ir al panel profesional"
+        },
+        "services": {
+          "title": "Mis servicios",
+          "short": "Qué ofreces y cómo te encuentran",
+          "body": "Mientras más claro sea lo que ofreces, más fácil es que te encuentren.",
+          "steps": [
+            "Agrega cada servicio por separado.",
+            "Escribe una descripción concreta de lo que incluye.",
+            "Indica precio, modalidad y lugares donde trabajas.",
+            "Guarda cambios antes de pasar a otra sección."
+          ],
+          "cta": "Ir a mis servicios"
+        },
+        "availability": {
+          "title": "Disponibilidad",
+          "short": "Horarios y formas de contacto",
+          "body": "Define cuándo pueden contactarte o reservar contigo.",
+          "steps": [
+            "Elige si atiendes por ubicación, videconsulta o ambas.",
+            "Marca horarios reales por día.",
+            "Usa cambios puntuales para feriados o días especiales."
+          ],
+          "cta": "Ir a disponibilidad"
+        },
+        "successCases": {
+          "title": "Casos de éxito",
+          "short": "Trabajos reales y evidencia",
+          "body": "Muestra trabajos reales para que nuevos clientes confíen más rápido.",
+          "steps": [
+            "Selecciona el servicio relacionado.",
+            "Sube hasta 5 fotos claras por caso.",
+            "Explica qué hiciste, para quién y cuándo fue."
+          ],
+          "cta": "Ir a casos de éxito"
+        },
+        "requests": {
+          "title": "Solicitudes recibidas",
+          "short": "Clientes que te contactan",
+          "body": "Mantén ordenadas las solicitudes que llegan directamente a tu perfil.",
+          "steps": [
+            "Revisa el detalle antes de responder.",
+            "Coordina por mensaje si necesitas aclarar algo.",
+            "Actualiza el estado para no perder seguimiento."
+          ],
+          "cta": "Ir a solicitudes recibidas"
+        },
+        "opportunities": {
+          "title": "Proyectos recibidos",
+          "short": "Proyectos donde puedes enviar propuestas",
+          "body": "Encuentra proyectos publicados que coinciden con tus servicios.",
+          "steps": [
+            "Filtra por servicio para ver oportunidades relevantes.",
+            "Envía una propuesta clara con precio y alcance.",
+            "Da seguimiento desde mensajes si el cliente responde."
+          ],
+          "cta": "Ir a proyectos recibidos"
+        },
+        "clientRequests": {
+          "title": "Mis solicitudes",
+          "short": "Servicios que pediste directamente",
+          "body": "Mis solicitudes muestra los servicios que pediste desde el perfil de un profesional o desde una disponibilidad.",
+          "steps": [
+            "Revisa fecha, servicio, profesional y estado de cada solicitud.",
+            "Abre mensajes si necesitas coordinar detalles antes de confirmar.",
+            "Cancela o da seguimiento desde el mismo card cuando aplique."
+          ],
+          "cta": "Ir a mis solicitudes"
+        },
+        "clientProjects": {
+          "title": "Mis proyectos",
+          "short": "Publicaciones para recibir propuestas",
+          "body": "Mis proyectos sirve para publicar una necesidad y recibir propuestas de profesionales interesados.",
+          "steps": [
+            "Crea un proyecto con título, servicio, ubicación y descripción clara.",
+            "Revisa las propuestas que recibes y compara perfiles antes de elegir.",
+            "Continúa por mensajes con el profesional que más te convenga."
+          ],
+          "cta": "Ir a mis proyectos"
+        },
+        "clientSaved": {
+          "title": "Mis favoritos",
+          "short": "Perfiles guardados para comparar",
+          "body": "Mis favoritos guarda profesionales que quieres revisar, comparar o contactar más adelante.",
+          "steps": [
+            "Guarda profesionales desde Buscar o desde su perfil público.",
+            "Vuelve a Mis favoritos cuando quieras comparar opciones.",
+            "Abre el perfil o escribe un mensaje cuando decidas avanzar."
+          ],
+          "cta": "Ir a mis favoritos"
+        },
+        "clientProfile": {
+          "title": "Mi perfil de cliente",
+          "short": "Datos básicos para contratar",
+          "body": "Tu perfil de cliente ayuda a identificarte cuando solicitas servicios, publicas proyectos o hablas por mensajes.",
+          "steps": [
+            "Mantén tu nombre, foto y datos de contacto actualizados.",
+            "Revisa tu seguridad de cuenta y correo.",
+            "Si también eres profesional, puedes cambiar al panel profesional con la misma cuenta."
+          ],
+          "cta": "Ir a mi perfil"
+        },
+        "professionalProfile": {
+          "title": "Mi perfil profesional",
+          "short": "Cómo te ven los clientes",
+          "body": "Mi perfil profesional controla la información pública que ven los clientes antes de contactarte.",
+          "steps": [
+            "Completa datos básicos, foto o logo y descripción profesional.",
+            "Agrega formación, lugares de trabajo, contacto, idiomas y enlaces públicos.",
+            "Activa Mostrar solo nombre comercial si quieres que el público vea tu empresa en vez de tu nombre personal.",
+            "Usa el icono de perfil público para revisar cómo te ven los clientes."
+          ],
+          "cta": "Ir a mi perfil profesional"
+        }
+      }
     }
   },
   "bookingRequests": {
@@ -2921,7 +3204,7 @@
     "trust0Title": "Verificación de identidad",
     "trust0Body": "Confirmamos identificaciones costarricenses con el padrón cuando aplica. DIMEX, NITE y casos especiales pueden pasar a revisión manual.",
     "trust1Title": "Reseñas verificadas",
-    "trust1Body": "Las reseñas se dejan después de servicios completados para que pesen más que comentarios sin contexto.",
+    "trust1Body": "Las reseñas requieren una cuenta y se moderan para cuidar la confianza de la comunidad.",
     "trust2Title": "WhatsApp para coordinar",
     "trust2Body": "ContrataCR organiza la búsqueda, solicitudes y propuestas; la coordinación final se hace por WhatsApp o llamada cuando esté disponible.",
     "trust3Title": "Teléfono y correo opcionales",

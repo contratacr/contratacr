@@ -5,9 +5,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
-  User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench, FileText,
+  User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink,
+  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, CheckCircle2, FileText, Search,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -26,6 +26,7 @@ import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
+import { applyPendingFollow } from "@/components/professionals/follow-button";
 import { FollowNetworkTab } from "@/components/professionals/follow-network-tab";
 import { FollowNetworkSummaryLink } from "@/components/professionals/follow-network-summary-link";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
@@ -42,6 +43,7 @@ import { canOffer } from "@/lib/auth/capabilities";
 import { anyVideoConsultCategory } from "@/lib/data/categories";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
+import { Modal } from "@/components/ui/modal";
 import { notificationContext } from "@/lib/notification-link";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -56,13 +58,13 @@ import {
 } from "@/lib/dashboard-bootstrap-cache";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
-// "Usar servicios" (the seek capability — always available) and "Ofrecer servicios"
-// (the offer capability — unlocked by completing the professional profile). There
+// "Usar servicios" (the seek capability, always available) and "Ofrecer servicios"
+// (the offer capability, unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
   | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "suscripcion"
-  | "sent_bookings" | "sent_projects" | "saved"
+  | "sent_bookings" | "sent_projects" | "saved" | "network"
   | "chat" | "assistant" | "notifications" | "soporte" | "cuenta" | "guides";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,6 +83,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   sent_bookings: <CalendarClock className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
+  network: <Users className="h-4 w-4" />,
   chat: <MessageSquareMore className="h-4 w-4" />,
   assistant: <Bot className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
@@ -90,7 +93,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 };
 
 // Tabs that show a one-line context note under the section title.
-const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings", "sent_projects", "saved"]);
+const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_projects", "saved", "network"]);
 
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
@@ -104,6 +107,8 @@ const OFFER_TABS: Tab[] = [
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
 const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "saved", "soporte", "profile", "guides"];
+const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
+
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   bookings: { es: "Solicitudes Recibidas", en: "Received requests" },
   proposals: { es: "Proyectos Recibidos", en: "Received projects" },
@@ -117,12 +122,83 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   profile: { es: "Perfil", en: "Profile" },
   guides: { es: "Guías", en: "Guides" },
 };
-const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
+
+type GuideItem = {
+  id: string;
+  section: "client" | "shared" | "professional";
+  actionTab?: Tab;
+  href?: string;
+  targetMode?: Mode;
+  stepCount: number;
+};
+
+const GUIDE_ITEMS: GuideItem[] = [
+  { id: "clientPanel", section: "client", actionTab: "home", targetMode: "use", stepCount: 4 },
+  { id: "clientRequests", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 3 },
+  { id: "clientProjects", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 3 },
+  { id: "clientSaved", section: "client", actionTab: "saved", targetMode: "use", stepCount: 3 },
+  { id: "clientProfile", section: "client", actionTab: "profile", targetMode: "use", stepCount: 3 },
+  { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
+  { id: "messages", section: "shared", href: "/mensajes", stepCount: 4 },
+  { id: "assistantGuide", section: "shared", actionTab: "assistant", stepCount: 3 },
+  { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
+  { id: "professionalPanel", section: "professional", actionTab: "home", targetMode: "offer", stepCount: 4 },
+  { id: "requests", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 3 },
+  { id: "opportunities", section: "professional", actionTab: "proposals", targetMode: "offer", stepCount: 3 },
+  { id: "successCases", section: "professional", actionTab: "photos", targetMode: "offer", stepCount: 3 },
+  { id: "availability", section: "professional", actionTab: "availability", targetMode: "offer", stepCount: 3 },
+  { id: "services", section: "professional", actionTab: "services", targetMode: "offer", stepCount: 4 },
+  { id: "professionalProfile", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 4 },
+];
+
+function guideIcon(id: string) {
+  switch (id) {
+    case "clientPanel":
+    case "professionalPanel":
+      return <Home className="h-4 w-4" />;
+    case "searchServices":
+    case "searchFilters":
+      return <Search className="h-4 w-4" />;
+    case "messages":
+      return <MessageSquareMore className="h-4 w-4" />;
+    case "clientRequests":
+      return <CalendarClock className="h-4 w-4" />;
+    case "clientProjects":
+      return <ClipboardList className="h-4 w-4" />;
+    case "clientSaved":
+      return <Bookmark className="h-4 w-4" />;
+    case "clientProfile":
+    case "professionalProfile":
+      return <User className="h-4 w-4" />;
+    case "assistantGuide":
+      return <Bot className="h-4 w-4" />;
+    case "supportGuide":
+      return <Headset className="h-4 w-4" />;
+    case "services":
+      return <Wrench className="h-4 w-4" />;
+    case "availability":
+      return <CalendarDays className="h-4 w-4" />;
+    case "successCases":
+      return <Award className="h-4 w-4" />;
+    case "requests":
+      return <CalendarCheck className="h-4 w-4" />;
+    case "opportunities":
+      return <Handshake className="h-4 w-4" />;
+    default:
+      return <User className="h-4 w-4" />;
+  }
+}
 
 function compactDisplayName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (name.length <= 29 || parts.length < 4) return name;
   return [parts[0], ...parts.slice(-2)].join(" ");
+}
+
+function compactMobileDisplayName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 4) return [parts[0], ...parts.slice(-2)].join(" ");
+  return name;
 }
 
 type OpportunityProjectSummary = { id?: string | null };
@@ -156,6 +232,242 @@ function rememberSeenOpportunityKeys(userId: string, keys: string[]) {
   }
 }
 
+function QuickGuidesModal({
+  open,
+  onClose,
+  isProvider,
+  onGo,
+}: {
+  open: boolean;
+  onClose: () => void;
+  isProvider: boolean;
+  onGo: (guide: GuideItem) => void;
+}) {
+  const t = useTranslations("proPanel.guides");
+  const locale = useLocale();
+  const guideSections = [
+    { id: "client", title: t("sections.client"), guides: GUIDE_ITEMS.filter((guide) => guide.section === "client") },
+    { id: "professional", title: t("sections.professional"), guides: GUIDE_ITEMS.filter((guide) => guide.section === "professional") },
+    { id: "shared", title: t("sections.shared"), guides: GUIDE_ITEMS.filter((guide) => guide.section === "shared") },
+  ];
+  const [selectedGuideId, setSelectedGuideId] = useState<string | null>(null);
+  const selectedGuide = selectedGuideId ? GUIDE_ITEMS.find((guide) => guide.id === selectedGuideId) : null;
+
+  useEffect(() => {
+    if (open) setSelectedGuideId(null);
+  }, [open]);
+
+  if (!open) return null;
+
+  const go = (guide: GuideItem) => {
+    onClose();
+    if (!isProvider && guide.section === "professional") {
+      window.location.assign(`/${locale}/registro/profesional`);
+      return;
+    }
+    if (guide.href) {
+      window.location.assign(`/${locale}${guide.href}`);
+      return;
+    }
+    if (guide.actionTab) onGo(guide);
+  };
+
+  return (
+    <Modal
+      onClose={onClose}
+      title={t("modalTitle")}
+      subtitle={t("modalSubtitle")}
+      size="lg"
+      mobilePresentation="center"
+      bodyClassName="bg-white px-5 py-5 sm:px-7 sm:py-6"
+    >
+      <div className="mx-auto max-w-[620px]">
+        <p className="mx-auto max-w-[520px] text-center text-xs font-semibold leading-relaxed text-[#7c8ba0]">
+          {isProvider ? (
+            <>
+              {t("providerNoteBody")}
+            </>
+          ) : (
+            <>
+              {t("clientNoteBody")}
+            </>
+          )}
+        </p>
+
+        <div className="mt-5 overflow-hidden rounded-lg border border-[#dfe5ec]">
+          {guideSections.map((section) => (
+            <div key={section.id} className="border-b border-[#dfe5ec] last:border-b-0">
+              <div className="bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.06em] text-[#7c8ba0]">
+                {section.title}
+              </div>
+              {section.guides.map((guide, guideIndex) => {
+                const selected = selectedGuide?.id === guide.id;
+                return (
+                  <div key={guide.id} className="border-t border-white first:border-t-0">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedGuideId(selected ? "" : guide.id)}
+                      className={cn(
+                        "flex w-full items-center gap-3 bg-[#e9edf2] px-4 py-2.5 text-left text-sm font-semibold text-[#162543] transition hover:bg-[#dfe5ec]",
+                        selected && "bg-[#dfe5ec]",
+                      )}
+                    >
+                      <span className="w-7 shrink-0 text-right tabular-nums">{guideIndex + 1} -</span>
+                      <span className="min-w-0 flex-1 truncate">{t(`items.${guide.id}.title`)}</span>
+                    </button>
+                    {selected && (
+                      <div className="bg-white px-4 py-4">
+                        <p className="text-sm leading-relaxed text-[#526277]">{t(`items.${guide.id}.body`)}</p>
+                        <ol className="mt-3 space-y-2">
+                          {Array.from({ length: guide.stepCount }, (_, stepIndex) => (
+                            <li key={stepIndex} className="flex gap-2 text-sm leading-relaxed text-[#374151]">
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
+                              <span>{t(`items.${guide.id}.steps.${stepIndex}`)}</span>
+                            </li>
+                          ))}
+                        </ol>
+                        <Button type="button" className="mt-4 rounded-full px-5" onClick={() => go(guide)}>
+                          {!isProvider && guide.section === "professional" ? t("activateProfessionalCta") : t(`items.${guide.id}.cta`)}
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-[#dfe8f0] bg-[#f8fbfe] px-4 py-4 sm:px-5">
+          <p className="text-sm font-semibold text-[#162543]">
+            {locale === "en" ? "Need more help?" : "¿Necesitas más ayuda?"}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-[#526277]">
+            {locale === "en"
+              ? "If you still have questions, open support and we'll help you from there."
+              : "Si todavía tienes dudas, abre soporte y te ayudamos desde ahí."}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4 rounded-full px-5"
+            onClick={() => {
+              onClose();
+              window.location.assign(`/${locale}/dashboard/profesional?tab=soporte`);
+            }}
+          >
+            {locale === "en" ? "Contact support" : "Contactar soporte"}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+      </div>
+    </Modal>
+  );
+}
+
+function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslations<"proPanel.guides">> }) {
+  if (id === "services") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h4 className="font-bold text-[#162543]">{t("preview.services.title")}</h4>
+          <span className="rounded-full bg-[#EBF5FB] px-2 py-1 text-xs font-bold text-[#0089bb]">{t("preview.services.badge")}</span>
+        </div>
+        <div className="space-y-3">
+          <div className="rounded-xl border border-[#e5e7eb] p-3">
+            <p className="font-bold text-[#111827]">Desarrollo web</p>
+            <p className="mt-1 text-xs text-[#6b7280]">{t("preview.services.desc")}</p>
+            <div className="mt-3 h-2 rounded-full bg-[#EBF5FB]" />
+          </div>
+          <div className="rounded-xl border border-[#e5e7eb] p-3">
+            <p className="font-bold text-[#111827]">Automatizaciones</p>
+            <p className="mt-1 text-xs text-[#6b7280]">{t("preview.services.detail")}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (id === "availability") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-[#162543]">{t("preview.availability.title")}</h4>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+          {["Mañana", "31 jul", "1 ago"].map((day) => (
+            <div key={day}>
+              <p className="mb-2 font-bold text-[#6b7280]">{day}</p>
+              {["09:00", "14:00"].map((time) => (
+                <div key={time} className="mb-2 rounded-lg bg-[#EBF5FB] px-2 py-1.5 font-bold text-[#0089bb]">{time}</div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 rounded-full bg-[#009FD9] py-2 text-center text-sm font-bold text-white">{t("preview.availability.cta")}</div>
+      </div>
+    );
+  }
+
+  if (id === "successCases") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-[#162543]">{t("preview.cases.title")}</h4>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="aspect-square rounded-xl bg-[#EBF5FB] p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.png" alt="" className="h-full w-full object-contain" />
+          </div>
+          <div className="aspect-square rounded-xl bg-[#eef2f6] p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/ai-assistant-robot.png" alt="" className="h-full w-full object-contain" />
+          </div>
+        </div>
+        <p className="mt-3 text-sm font-bold text-[#111827]">{t("preview.cases.caseTitle")}</p>
+        <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{t("preview.cases.body")}</p>
+      </div>
+    );
+  }
+
+  if (id === "requests" || id === "opportunities") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-[#162543]">{id === "requests" ? t("preview.requests.title") : t("preview.opportunities.title")}</h4>
+        <div className="mt-4 space-y-3">
+          <div className="rounded-xl border border-[#e5e7eb] p-3">
+            <p className="text-sm font-bold text-[#111827]">{id === "requests" ? "Gerardo Solís" : t("preview.opportunities.project")}</p>
+            <p className="mt-1 text-xs text-[#6b7280]">{id === "requests" ? t("preview.requests.body") : t("preview.opportunities.body")}</p>
+          </div>
+          <div className="rounded-xl bg-[#009FD9] px-3 py-2 text-center text-sm font-bold text-white">{id === "requests" ? t("preview.requests.cta") : t("preview.opportunities.cta")}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-mark.png" alt="" className="h-16 w-16 rounded-xl object-contain ring-1 ring-[#eef2f6]" />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-lg font-bold text-[#111827]">ContrataCR</p>
+            <Badge variant="verified">{t("exampleProfile.verified")}</Badge>
+          </div>
+          <p className="text-sm text-[#526277]">Isaac Alberto Sanchez Monge</p>
+          <p className="mt-1 inline-flex rounded-full bg-[#f3f4f6] px-2 py-0.5 text-xs font-semibold text-[#6b7280]">{t("exampleProfile.service")}</p>
+        </div>
+      </div>
+      <p className="mt-4 text-xs leading-relaxed text-[#526277]">{t("preview.profile.body")}</p>
+      <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-[#526277]">
+        <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">5.0<br /><span className="font-medium">{t("exampleProfile.reviews")}</span></span>
+        <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">4<br /><span className="font-medium">{t("exampleProfile.cases")}</span></span>
+        <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">1<br /><span className="font-medium">{t("exampleProfile.year")}</span></span>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -182,8 +494,9 @@ export default function DashboardPage() {
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(false);
+  const [guidesOpen, setGuidesOpen] = useState(false);
   const [networkModal, setNetworkModal] = useState<"following" | "followers" | null>(null);
+  const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -198,7 +511,7 @@ export default function DashboardPage() {
   }, []);
 
   // The account CAN offer if it has a professional profile (authoritative once
-  // loaded) — fall back to the metadata capability for an instant first paint.
+  // loaded) fall back to the metadata capability for an instant first paint.
   const isProvider = !!pro || canOffer(user);
   const pendingProfessionalSignup =
     user?.user_metadata?.professional_signup_started === true &&
@@ -206,8 +519,8 @@ export default function DashboardPage() {
 
   // Airbnb FULL switch: the active mode is the GLOBAL (persisted) mode shared with the
   // navbar + bell. A mode-specific tab in the URL (a deep link from a notification or a
-  // navbar quick link) overrides it — and is persisted below so everything stays in sync.
-  // A non-provider has no offer world → always "use".
+  // navbar quick link) overrides it, and is persisted below so everything stays in sync.
+  // A non-provider has no offer world: always "use".
   const { mode: globalMode, setMode } = useMode(isProvider);
   const urlForcedMode: Mode | null =
     legacyVerificationTab ? "offer" : requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
@@ -221,13 +534,28 @@ export default function DashboardPage() {
   }, [isProvider, urlForcedMode, globalMode, setMode]);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
     const updateDefaultPanelTarget = () => {
-      setPreferMobileMenuDefault(!rawRequestedTab && window.matchMedia("(max-width: 1023px)").matches);
+      const isMobilePanel = mediaQuery.matches;
+      setPreferMobileMenuDefault(!rawRequestedTab && isMobilePanel);
+      if (!isMobilePanel) setMobilePanelOpen(false);
     };
     updateDefaultPanelTarget();
     window.addEventListener("resize", updateDefaultPanelTarget);
-    return () => window.removeEventListener("resize", updateDefaultPanelTarget);
+    mediaQuery.addEventListener("change", updateDefaultPanelTarget);
+    return () => {
+      window.removeEventListener("resize", updateDefaultPanelTarget);
+      mediaQuery.removeEventListener("change", updateDefaultPanelTarget);
+    };
   }, [rawRequestedTab]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.innerWidth >= 1024 && preferMobileMenuDefault) {
+      setPreferMobileMenuDefault(false);
+      setMobilePanelOpen(false);
+    }
+  }, [preferMobileMenuDefault]);
 
   useEffect(() => {
     if (!legacyVerificationTab) return;
@@ -248,6 +576,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (requestedTab !== "assistant") return;
+    window.dispatchEvent(new Event("contratacr:open-ai"));
     const params = new URLSearchParams(searchParams.toString());
     params.delete("tab");
     const qs = params.toString();
@@ -266,7 +595,16 @@ export default function DashboardPage() {
     router.replace(`/dashboard/profesional?${qs}`, { scroll: false });
   }, [defaultTab, requestedTab, router, searchParams]);
 
-  // Suppress the login-redirect while signing out (from the navbar menu) → straight
+  useEffect(() => {
+    if (requestedTab || activeTab !== "home") return;
+    if (typeof window === "undefined" || window.innerWidth < 1024) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", defaultTab);
+    const qs = params.toString();
+    router.replace(`/dashboard/profesional?${qs}`, { scroll: false });
+  }, [activeTab, defaultTab, requestedTab, router, searchParams]);
+
+  // Suppress the login-redirect while signing out (from the navbar menu) straight
   // to main, no /login flash. Logout lives only in the navbar profile menu now.
   useEffect(() => {
     if (!authLoading && !user && !isSigningOut()) router.push("/login");
@@ -275,6 +613,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (authLoading || !user) return;
     applyPendingSavedPro();
+    applyPendingFollow(user.id);
   }, [authLoading, user]);
 
   useEffect(() => {
@@ -391,7 +730,7 @@ export default function DashboardPage() {
     queueMicrotask(() => fetchPro({ silent: !firstLoadForUser }));
   }, [user, refreshKey, fetchPro]);
 
-  // Base profile (name/avatar) for the header — works for seekers with no pro row.
+  // Base profile (name/avatar) for the header, works for seekers with no pro row.
   useEffect(() => {
     if (!user) return;
     queueMicrotask(() => fetchProfile());
@@ -450,7 +789,7 @@ export default function DashboardPage() {
 
   // Unread opportunities deserve a front-door modal even when the user did not
   // arrive through the explicit post-login redirect.
-  // Unread support replies → badge on the Soporte sidebar item.
+  // Unread support replies: badge on the Soporte sidebar item.
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
@@ -469,7 +808,7 @@ export default function DashboardPage() {
   }, [user]);
 
   // Inconsistent state ONLY: metadata says this account can offer, but no pro row
-  // exists yet. A freshly-created pro account can lag (replication/RLS) — retry a
+  // exists yet. A freshly-created pro account can lag (replication/RLS), retry a
   // few times, then send them to finish the professional profile. A genuine seeker
   // (cannot offer) is never bounced; a missing pro row is normal for them.
   useEffect(() => {
@@ -566,7 +905,7 @@ export default function DashboardPage() {
     if (tab === activeTab) return;
     if (OFFER_ONLY.has(tab)) setMode("offer");
     if (USE_ONLY.has(tab)) setMode("use");
-    // Mode is persisted globally now, so the tab alone is enough — a mode-specific tab
+    // Mode is persisted globally now, so the tab alone is enough; a mode-specific tab
     // also re-asserts its mode via the effect above, keeping the navbar switch in sync.
     // Query-only panel navigation should not request the same route again.
     // Next integrates native history with useSearchParams, including Back/Forward.
@@ -585,7 +924,7 @@ export default function DashboardPage() {
   }
 
   // The mode switch now lives in the panel header (sprint 518). Switching flips the global
-  // mode AND lands on the destination mode's MAIN tab — which re-asserts the mode via the
+  // mode AND lands on the destination mode's MAIN tab, which re-asserts the mode via the
   // urlForcedMode effect, so a switch from ANY section (incl. a mode-specific one) sticks.
   function handleSwitchMode(next: Mode) {
     if (next === mode) return;
@@ -620,13 +959,20 @@ export default function DashboardPage() {
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
-  const displayName =
+  const businessName = typeof pro?.business_name === "string" ? pro.business_name.trim() : "";
+  const personalDisplayName =
     profile?.full_name ||
     proProfile?.full_name ||
     (user.user_metadata?.full_name as string) ||
     user.email?.split("@")[0] ||
     "";
+  const professionalDisplayName =
+    businessName && (pro?.public_business_name_only === true || pro?.publicBusinessNameOnly === true)
+      ? businessName
+      : personalDisplayName;
+  const displayName = mode === "offer" ? professionalDisplayName : personalDisplayName;
   const compactHeaderName = compactDisplayName(displayName);
+  const compactMobileHeaderName = compactMobileDisplayName(displayName);
   const headerAvatar = profile?.avatar_url || proProfile?.avatar_url || null;
   const proForCompletion = pro && headerAvatar && !proProfile?.avatar_url
     ? { ...pro, profiles: { ...(proProfile ?? {}), avatar_url: headerAvatar } }
@@ -647,11 +993,11 @@ export default function DashboardPage() {
         },
       }
     : pro;
-  const publicProfileHref = activeTab === "profile" && mode === "offer" && typeof pro?.slug === "string" && pro.slug.trim()
+  const publicProfileHref = mode === "offer" && typeof pro?.slug === "string" && pro.slug.trim()
     ? `/profesionales/${pro.slug.trim()}`
     : null;
   // Client (use mode) identity: verified via cédula (saved at solicitud/booking or before).
-  // Drives the "Verificado" badge below the name — the SAME badge the pro side uses.
+  // Drives the "Verificado" badge below the name, the SAME badge the pro side uses.
   const clientVerified =
     profile?.client_identity_status === "verified" &&
     !!profile?.cedula &&
@@ -666,23 +1012,45 @@ export default function DashboardPage() {
   // instead of competing with the core panel tasks.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = modeTabs;
+  const desktopSidebarTabs = sidebarTabs.filter((tab) => tab !== "guides");
   const mobileSectionTabs = sidebarTabs;
-  const mobileFullScreenTab = false;
+  const mobileFullScreenTab = activeTab === "network";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
+  const singleSurfaceTab = activeTab === "profile" || activeTab === "availability";
   const profileCompletionPercent = proForCompletion ? computeCompletion(proForCompletion).percent : null;
   const showProfileCompletion =
     mode === "offer" &&
     !!proForCompletion &&
     ((profileCompletionPercent ?? 0) < 100 || proForCompletion.verification_status !== "verified");
-  const tabLabel = (tab: Tab) => PANEL_TAB_LABELS[tab]?.[locale === "en" ? "en" : "es"] ?? t(`tabs.${tab}`);
+
+  function panelTabLabel(tab: Tab) {
+    return PANEL_TAB_LABELS[tab]?.[locale === "en" ? "en" : "es"] ?? t(`tabs.${tab}`);
+  }
+
+  function switchPanelLabel() {
+    return mode === "offer"
+      ? (locale === "en" ? "Go to client panel" : "Ir a panel cliente")
+      : (locale === "en" ? "Go to professional panel" : "Ir a panel profesional");
+  }
 
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
+    const label = panelTabLabel(tab);
     return (
       <button
         key={tab}
         data-testid={`panel-tab-${tab}`}
-        onClick={() => setTab(tab)}
+        onClick={() => {
+          if (tab === "assistant") {
+            window.dispatchEvent(new Event("contratacr:open-ai"));
+            return;
+          }
+          if (tab === "guides") {
+            setGuidesOpen(true);
+            return;
+          }
+          setTab(tab);
+        }}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
           activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
@@ -696,30 +1064,152 @@ export default function DashboardPage() {
             </span>
           )}
         </span>
-        {tabLabel(tab)}
+        {label}
       </button>
     );
   }
 
-  function signOutButton({ mobile = false }: { mobile?: boolean } = {}) {
+  function topNavButton(tab: Tab) {
+    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
+    const label = panelTabLabel(tab);
+    return (
+      <button
+        key={tab}
+        type="button"
+        data-testid={`panel-tab-${tab}`}
+        onClick={() => {
+          if (tab === "assistant") {
+            window.dispatchEvent(new Event("contratacr:open-ai"));
+            return;
+          }
+          if (tab === "guides") {
+            setGuidesOpen(true);
+            return;
+          }
+          setTab(tab);
+        }}
+        className={cn(
+          "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-1.5 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]",
+          activeTab === tab
+            ? "text-[#0089bb]"
+            : "text-[#526277] hover:bg-[#f3f7fa] hover:text-[#162543]",
+        )}
+      >
+        <span className="relative inline-flex shrink-0">
+          {TAB_ICONS[tab]}
+          {badge > 0 && (
+            <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
+              {badge > 9 ? "9+" : badge}
+            </span>
+          )}
+        </span>
+        <span className="whitespace-nowrap">{label}</span>
+      </button>
+    );
+  }
+
+  function desktopSidebarButton(tab: Tab) {
+    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
+    const label = panelTabLabel(tab);
+    return (
+      <button
+        key={tab}
+        type="button"
+        data-testid={`panel-tab-${tab}`}
+        onClick={() => {
+          if (tab === "assistant") {
+            window.dispatchEvent(new Event("contratacr:open-ai"));
+            return;
+          }
+          if (tab === "guides") {
+            setGuidesOpen(true);
+            return;
+          }
+          setTab(tab);
+        }}
+        className={cn(
+          "flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold transition-colors",
+          activeTab === tab
+            ? "bg-[#EBF5FB] text-[#009FD9]"
+            : "text-[#374151] hover:bg-[#f7fafc] hover:text-[#162543]"
+        )}
+      >
+        <span className="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
+          {TAB_ICONS[tab]}
+          {badge > 0 && (
+            <span className="absolute -right-2 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
+              {badge > 9 ? "9+" : badge}
+            </span>
+          )}
+        </span>
+        <span className="min-w-0 flex-1 truncate">{label}</span>
+      </button>
+    );
+  }
+
+  function desktopSwitchPanelButton() {
+    if (!isProvider) return null;
+    const nextMode: Mode = mode === "offer" ? "use" : "offer";
     return (
       <button
         type="button"
-        onClick={() => signOutToHome(locale)}
-        className={cn(
-          "w-full flex items-center rounded-xl text-left font-medium transition-colors",
-          mobile ? "gap-4 px-4 py-4 text-base font-semibold" : "gap-3 px-3 py-2.5 text-sm",
-          "text-[#374151] hover:bg-[#f3f4f6] hover:text-[#111827]",
-        )}
+        onClick={() => handleSwitchMode(nextMode)}
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-1.5 text-[12px] font-bold text-[#526277] transition-colors hover:bg-[#f3f7fa] hover:text-[#162543] min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]"
       >
-        <span className={cn(
-          "relative inline-flex shrink-0 items-center justify-center text-[#64748b]",
-          mobile ? "h-9 w-9 [&>svg]:h-6 [&>svg]:w-6" : "mr-1.5",
-        )}>
-          <LogOut className="h-4 w-4" />
-        </span>
-        {t("signOut")}
+        <Repeat2 className="h-4 w-4 text-[#64748b]" />
+        {switchPanelLabel()}
       </button>
+    );
+  }
+
+  function desktopPanelNav() {
+    if (mobileFullScreenTab) return null;
+    return (
+      <aside className="hidden lg:block lg:w-[260px] lg:shrink-0">
+        <div className="sticky top-[6.5rem] overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white p-2 shadow-sm">
+          <div className="flex flex-col gap-1.5">
+            {isProvider && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchMode(mode === "offer" ? "use" : "offer")}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#f7fafc] hover:text-[#162543]"
+                >
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#64748b]">
+                    <Repeat2 className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">{switchPanelLabel()}</span>
+                </button>
+                <div className="my-1 h-px bg-[#e5edf3]" />
+              </>
+            )}
+            <nav className="flex flex-col gap-1">
+              {desktopSidebarTabs.map(desktopSidebarButton)}
+            </nav>
+            <div className="my-1 h-px bg-[#e5edf3]" />
+            <button
+              type="button"
+              onClick={() => setGuidesOpen(true)}
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#f7fafc] hover:text-[#162543]"
+            >
+              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#64748b]">
+                <FileText className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Guides" : "Guías"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => signOutToHome(locale)}
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#fef2f2] hover:text-[#b91c1c]"
+            >
+              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#64748b]">
+                <LogOut className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Sign out" : "Cerrar sesión"}</span>
+            </button>
+          </div>
+        </div>
+      </aside>
     );
   }
 
@@ -745,22 +1235,23 @@ export default function DashboardPage() {
         }}
         className={cn(
           "w-full flex items-center rounded-xl text-left font-semibold transition-colors",
-          mobile ? "gap-4 px-4 py-4 text-base" : "gap-3 px-3 py-2.5 text-sm",
+          mobile ? "min-h-14 gap-3 px-3.5 py-3 text-[15px]" : "gap-3 px-3 py-2.5 text-sm",
           "text-[#162543] hover:bg-[#EBF5FB]",
         )}
       >
         <span className={cn(
           "relative inline-flex shrink-0 items-center justify-center text-[#64748b]",
-          mobile ? "h-9 w-9 [&>svg]:h-6 [&>svg]:w-6" : "mr-1.5",
+          mobile ? "h-8 w-8 [&>svg]:h-5 [&>svg]:w-5" : "mr-1.5",
         )}>
           <Repeat2 className="h-4 w-4" />
         </span>
-        {mode === "offer" ? t("switchToClientPanel") : t("switchToProfessionalPanel")}
+        {switchPanelLabel()}
       </button>
     );
   }
 
   function mobileSectionButton(tab: Tab) {
+    const label = panelTabLabel(tab);
     return (
       <button
         key={tab}
@@ -772,14 +1263,22 @@ export default function DashboardPage() {
             scrollDashboardToPageTop();
             return;
           }
+          if (tab === "assistant") {
+            window.dispatchEvent(new Event("contratacr:open-ai"));
+            return;
+          }
+          if (tab === "guides") {
+            setGuidesOpen(true);
+            return;
+          }
           setTab(tab);
         }}
-        className="flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-base font-semibold text-[#374151] transition-colors hover:bg-[#f8fbfd]"
+        className="flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold text-[#374151] transition-colors hover:bg-[#f8fbfd]"
       >
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-6 [&>svg]:w-6">
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
           {TAB_ICONS[tab]}
         </span>
-        <span className="min-w-0 flex-1 truncate">{tabLabel(tab)}</span>
+        <span className="min-w-0 flex-1 truncate">{label}</span>
       </button>
     );
   }
@@ -806,6 +1305,19 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
+      <QuickGuidesModal
+        open={guidesOpen}
+        onClose={() => setGuidesOpen(false)}
+        isProvider={isProvider}
+        onGo={(guide) => {
+          if (guide.actionTab === "assistant") {
+            window.dispatchEvent(new Event("contratacr:open-ai"));
+            return;
+          }
+          if (guide.targetMode) setMode(guide.targetMode);
+          setTab(guide.actionTab ?? "home");
+        }}
+      />
       {networkModal && (
         <FollowNetworkTab initialView={networkModal} onBack={() => setNetworkModal(null)} />
       )}
@@ -850,21 +1362,20 @@ export default function DashboardPage() {
       )}
       <main className="flex-1 min-h-[calc(100svh-88px)]">
         <div className={cn(
-          "dashboard-panel-content mx-auto max-w-6xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8",
+          "dashboard-panel-content mx-auto max-w-7xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8",
           mobileSectionOpen && "px-0 pt-0 sm:px-0 lg:px-8 lg:pt-8",
           mobileFullScreenTab && "max-w-none px-0 pb-0 pt-0 sm:px-0 lg:max-w-7xl lg:px-8 lg:pb-8 lg:pt-8",
         )}>
-          {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
-              ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
-              the content by a single hairline divider. No gradient/decoration. */}
-          <div className={cn("mb-6 flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:flex" : "flex")}>
+          {/* Header card — identity and status grouped in one surface on desktop. */}
+          <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:block" : "block")}>
+            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <ImagePreviewDialog
                 src={headerAvatar}
                 alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
                 openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
               >
-                <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb]">
+                <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb] sm:h-20 sm:w-20">
                   <AvatarImage src={headerAvatar ?? undefined} />
                   <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
                     {getInitials(displayName || "?")}
@@ -875,20 +1386,34 @@ export default function DashboardPage() {
                 <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
                   {mode === "offer" ? t("panelProfessional") : t("panelClient")}
                 </p>
-                {/* Keep the account name on one line in responsive; very long names truncate
-                    instead of pushing the header into two lines. */}
-                <h1 className="truncate whitespace-nowrap text-lg font-bold leading-tight text-[#162543] sm:text-2xl" title={displayName}>
-                  {compactHeaderName}
-                </h1>
-                <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-2">
-                  {identityBadge()}
-                  <FollowNetworkSummaryLink onOpen={setNetworkModal} />
+                <div className="flex min-w-0 max-w-full items-center gap-1">
+                  <h1 className="min-w-0 truncate whitespace-nowrap text-lg font-bold leading-tight text-[#162543] sm:text-2xl" title={displayName}>
+                    <span className="hidden min-[430px]:inline sm:hidden">{displayName}</span>
+                    <span className="min-[430px]:hidden sm:hidden">{compactMobileHeaderName}</span>
+                    <span className="hidden sm:inline">{compactHeaderName}</span>
+                  </h1>
+                  {publicProfileHref && (
+                    <Link
+                      href={publicProfileHref}
+                      aria-label={locale === "en" ? "View my profile" : "Ver mi perfil"}
+                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-[#64748b] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:h-7 sm:w-7"
+                    >
+                      <ExternalLink className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
+                    </Link>
+                  )}
+                </div>
+                <div className="-mt-0.5 flex min-h-[22px] flex-wrap items-center gap-x-2 gap-y-1">
+                  <div className="flex shrink-0 items-center">{identityBadge()}</div>
+                  <div className="flex min-w-0 items-center">
+                    <FollowNetworkSummaryLink onOpen={setNetworkModal} />
+                  </div>
                 </div>
               </div>
             </div>
+            </div>
           </div>
 
-          {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
+          {/* Offer mode, provider row still loading: spinner (avoids gate flash). */}
           {proLoadError ? (
             <Card>
               <CardContent className="px-6 py-12 flex flex-col items-center text-center">
@@ -908,7 +1433,7 @@ export default function DashboardPage() {
                 </Button>
               </CardContent>
             </Card>
-          ) : /* Offer mode, not yet a provider → activation gate. */
+          ) : /* Offer mode, not yet a provider: activation gate. */
           showOfferGate ? (
             <Card>
               <CardContent className="px-6 py-12 flex flex-col items-center text-center">
@@ -924,7 +1449,7 @@ export default function DashboardPage() {
             </Card>
           ) : (
             <>
-              {/* Profile-completion — offer mode only, hides itself once complete. */}
+              {/* Profile-completion, offer mode only, hides itself once complete. */}
               {showProfileCompletion && !mobileFullScreenTab && (
                 <div className={cn(mobileSectionOpen && "hidden lg:block")}>
                 <ProfileCompletion
@@ -952,63 +1477,30 @@ export default function DashboardPage() {
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
-                  <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : tabLabel(activeTab)}</h2>
-                  <div className="flex shrink-0 justify-self-end">
-                    {publicProfileHref && (
-                      <Link
-                        href={publicProfileHref}
-                        aria-label={t("viewAsClient")}
-                        className="grid h-10 w-10 place-items-center rounded-full border border-[#dbeafe] bg-white text-[#64748b] transition active:bg-[#EBF5FB] active:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Link>
-                    )}
-                  </div>
+                  <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
+                  <div className="flex shrink-0 justify-self-end" />
                 </div>
               )}
 
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Sidebar nav (desktop only); mobile renders the same sections as full-screen entries. */}
-                <nav className="hidden lg:block lg:w-60 shrink-0 space-y-3">
-                  <Card>
-                    <CardContent className="p-2">
-                      {switchPanelButton()}
-                      {isProvider && <div className="my-2 border-t border-[#f3f4f6]" />}
-                      <div>{sidebarTabs.map(navButton)}</div>
-                      <div className="my-2 border-t border-[#f3f4f6] pt-2">
-                        {signOutButton()}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* The "Ofrecer mis servicios" invitation lives at the END of "Mi perfil"
-                      (BasicProfileSection) for a client-only account — not here in the sidebar. */}
-                </nav>
-
-                {/* Main content — min-w-0 so a long unbroken string inside a card can't
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+                {activeTab !== "home" && !mobileFullScreenTab ? desktopPanelNav() : null}
+                {/* Main content, min-w-0 so a long unbroken string inside a card can't
                     grow this flex column past the available width and break the page. */}
                 <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
                   <SaveStatusProvider>
                     <HeaderSaveStatus />
                     <Card className={cn(
+                      activeTab === "home" && "lg:hidden",
                       activeTab === "chat" && "overflow-hidden",
-                      (mobileFullScreenTab || mobileSectionOpen) && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:min-h-0 lg:rounded-xl lg:border lg:shadow-sm",
+                      activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && "lg:max-w-[62rem]",
+                      singleSurfaceTab && !mobileFullScreenTab && "border-0 bg-transparent shadow-none",
+                      mobileFullScreenTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none",
+                      !mobileFullScreenTab && mobileSectionOpen && !singleSurfaceTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:min-h-0 lg:rounded-xl lg:border lg:shadow-sm",
                     )}>
-                      {activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
+                      {activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && !singleSurfaceTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
-                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : tabLabel(activeTab)}</h2>
-                            {publicProfileHref && (
-                              <AppTooltip label={t("viewAsClient")} side="top" align="center">
-                                <Link
-                                  href={publicProfileHref}
-                                  aria-label={t("viewAsClient")}
-                                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#dbeafe] bg-white text-[#64748b] transition hover:border-[#9fd8ec] hover:bg-[#EBF5FB] hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </Link>
-                              </AppTooltip>
-                            )}
+                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
                           </div>
                         </div>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
@@ -1029,25 +1521,33 @@ export default function DashboardPage() {
                       </CardHeader>}
                       <CardContent className={mobileFullScreenTab ? "min-h-[calc(100svh-88px)] p-0 sm:p-0" : cn(
                         "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6",
-                        mobileSectionOpen && "dashboard-section-content px-5 pb-8 pt-5 sm:px-6 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-1",
+                        singleSurfaceTab && "px-0 pt-0 pb-0 sm:px-0 sm:pt-0 sm:pb-0",
+                        mobileSectionOpen && !singleSurfaceTab && "dashboard-section-content px-5 pb-8 pt-5 sm:px-6 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-1",
                       )}>
                         {activeTab === "home" && (
                           <>
-                            <div className="ccr-dashboard-mobile-home lg:hidden">
+                            <div className="lg:hidden">
                               <div className="space-y-1 pt-1">
                                 {switchPanelButton({ mobile: true })}
                                 {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
                                 {mobileSectionTabs.map(mobileSectionButton)}
-                              </div>
-                              <div className="my-3 border-t border-[#e5e7eb]" />
-                              <div className="space-y-1 pb-1">
-                                {signOutButton({ mobile: true })}
+                                <div className="my-3 border-t border-[#e5e7eb]" />
+                                <button
+                                  type="button"
+                                  onClick={() => signOutToHome(locale)}
+                                  className="flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827]"
+                                >
+                                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
+                                    <LogOut className="h-4 w-4" />
+                                  </span>
+                                  {locale === "en" ? "Sign out" : "Cerrar sesión"}
+                                </button>
                               </div>
                             </div>
                           </>
                         )}
 
-                        {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
+                        {/* MI PERFIL, pro editor in offer mode, basic identity in use mode. */}
                         {activeTab === "profile" && mode === "offer" && pro && (
                           <ProfileEditor
                             professionalId={pro.id}
@@ -1145,53 +1645,17 @@ export default function DashboardPage() {
                             services={pro.services ?? []}
                           />
                         )}
-                        {/* "Usar servicios" — the seek capability. */}
+                        {/* "Usar servicios", the seek capability. */}
                         {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
+                        {activeTab === "network" && <FollowNetworkTab onBack={() => setTab("home")} />}
                         {activeTab === "notifications" && <NotificationsList />}
                         {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
                         {activeTab === "cuenta" && (
                           <div className="space-y-6">
                             <AccountSecuritySection showHeading={false} />
                             <CloseAccountSection />
-                          </div>
-                        )}
-                        {activeTab === "guides" && (
-                          <div className="space-y-4">
-                            <div className="rounded-2xl border border-[#dbeafe] bg-[#f8fbfd] p-5">
-                              <h3 className="text-lg font-bold text-[#162543]">{locale === "en" ? "Guides" : "Guías"}</h3>
-                              <p className="mt-1 text-sm leading-relaxed text-[#526277]">
-                                {locale === "en"
-                                  ? "Quick help for using your client and professional panels."
-                                  : "Ayuda rápida para usar tu panel cliente y profesional."}
-                              </p>
-                            </div>
-                            <div className="grid gap-3 md:grid-cols-2">
-                              {[
-                                {
-                                  title: locale === "en" ? "Client panel" : "Panel cliente",
-                                  body: locale === "en" ? "Requests, projects and saved professionals." : "Solicitudes, proyectos y profesionales favoritos.",
-                                },
-                                {
-                                  title: locale === "en" ? "Professional panel" : "Panel profesional",
-                                  body: locale === "en" ? "Received requests, success cases, availability and services." : "Solicitudes recibidas, casos de éxito, disponibilidad y servicios.",
-                                },
-                                {
-                                  title: locale === "en" ? "Support" : "Soporte",
-                                  body: locale === "en" ? "Open or continue support conversations." : "Abre o continúa conversaciones de soporte.",
-                                },
-                                {
-                                  title: locale === "en" ? "Profile" : "Perfil",
-                                  body: locale === "en" ? "Keep your public information and account settings updated." : "Mantén actualizada tu información pública y de cuenta.",
-                                },
-                              ].map((guide) => (
-                                <div key={guide.title} className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
-                                  <p className="font-bold text-[#162543]">{guide.title}</p>
-                                  <p className="mt-1 text-sm text-[#526277]">{guide.body}</p>
-                                </div>
-                              ))}
-                            </div>
                           </div>
                         )}
                       </CardContent>
