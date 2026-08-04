@@ -281,7 +281,7 @@
     "unverified": "Sin verificar",
     "unverifiedTitle": "Identidad sin verificar",
     "rate": "Tarifa",
-    "noReviews": "Sin reseñas todavía",
+    "noReviews": "Sin reseñas",
     "reviewsCount": "{count, plural, one {# reseña} other {# reseñas}}",
     "viewCases": "Casos de éxito",
     "viewCertifications": "Formación",

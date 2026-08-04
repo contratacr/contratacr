@@ -58,8 +58,6 @@ interface ProfessionalScheduleProps {
 // How many day-columns are shown at once, and how far ahead the arrows page.
 const COLS = 3;
 const BOOKING_MAX_FUTURE_DAYS = 90;
-const locationNavButtonClass =
-  "relative z-20 -my-1 flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-full text-[#6b7280] transition-colors hover:bg-[#f3f8fc] hover:text-[#009FD9] active:bg-[#EBF5FB] active:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30";
 
 function toKey(d: Date): string {
   const y = d.getFullYear();
@@ -110,8 +108,14 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const [showBooking, setShowBooking] = useState(false);
   const [preset, setPreset] = useState<ScheduleSlot | null>(null);
   const [offset, setOffset] = useState(0);
-  // Scroll container for the location tabs — chevron buttons scroll it when the tabs OVERFLOW.
   const locScrollRef = useRef<HTMLDivElement>(null);
+  const [locScrollHint, setLocScrollHint] = useState({ overflow: false, left: false, right: false });
+  const locDragStateRef = useRef<{ pointerId: number | null; startX: number; startScrollLeft: number; moved: boolean }>({
+    pointerId: null,
+    startX: 0,
+    startScrollLeft: 0,
+    moved: false,
+  });
   // When the pro acts on their OWN card we block the action with a friendly modal
   // instead of hiding the buttons (the card looks identical to a client's view).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
@@ -275,7 +279,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (!id || id === "general") return "General";
     if (id === "videoconsulta") return t("videoconsulta");
     if (id.startsWith("cov_")) return t("atHome");
-    return professional.workplaces?.find((w) => w.id === id)?.name ?? t("location");
+    const workplace = professional.workplaces?.find((w) => w.id === id);
+    const workplaceLabel = typeof (workplace as { label?: unknown } | undefined)?.label === "string"
+      ? ((workplace as { label?: string }).label ?? "").trim()
+      : "";
+    return workplace?.name?.trim() || workplaceLabel || t("location");
   }
   function locTabLabel(label: string): string {
     return label
@@ -302,16 +310,24 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // slots-only derivation.
   const locationOptions = useMemo(() => {
     const map = new Map<string, string>(); // id -> label, insertion-ordered
+    const videoLabel = t("videoconsulta");
+    const normalizedVideoLabel = videoLabel.trim().toLocaleLowerCase();
     for (const w of professional.workplaces ?? []) {
-      if (w.id && w.name?.trim()) map.set(w.id, w.name.trim());
+      const rawLabel = (w as { label?: unknown }).label;
+      const label = w.name?.trim() || (typeof rawLabel === "string" ? rawLabel.trim() : "");
+      const isVideoWorkplace = label.trim().toLocaleLowerCase() === normalizedVideoLabel || (w as { type?: unknown }).type === "video";
+      const id = isVideoWorkplace ? "videoconsulta" : (w.id || (professional.workplaces?.length === 1 ? "general" : ""));
+      if (id && label) map.set(id, label);
     }
     for (const s of slots) {
       const id = s.locationId;
       if (id?.startsWith("cov_")) continue;
-      if (id && id !== "general" && !map.has(id)) map.set(id, locLabel(id));
+      const label = id && id !== "general" ? locLabel(id) : "";
+      if (id && id !== "general" && label && label !== t("location") && !map.has(id)) map.set(id, label);
     }
-    if ((professional.videoconsulta || professional.coverage?.country) && !map.has("videoconsulta")) {
-      map.set("videoconsulta", t("videoconsulta"));
+    const hasVideoOption = map.has("videoconsulta") || Array.from(map.values()).some((label) => label.trim().toLocaleLowerCase() === normalizedVideoLabel);
+    if ((professional.videoconsulta || professional.coverage?.country) && !hasVideoOption) {
+      map.set("videoconsulta", videoLabel);
     }
     return Array.from(map, ([id, label]) => ({ id, label }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -342,11 +358,16 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // honest "no upcoming times" state (it doesn't borrow another location's hours).
   const filteredSlots = useMemo(() => {
     if (!effectiveId) return slots;
+    const knownLocationIds = new Set(visibleLocationOptions.map((o) => o.id));
+    const defaultPhysicalLocationId = visibleLocationOptions.find((o) => o.id !== "videoconsulta")?.id ?? visibleLocationOptions[0]?.id ?? null;
     return slots.filter((s) => {
       const loc = s.locationId ?? "general";
+      const unknownFixedLocation = loc !== "general" && !loc.startsWith("cov_") && !knownLocationIds.has(loc);
+      if (unknownFixedLocation && effectiveId === defaultPhysicalLocationId) return true;
+      if (visibleLocationOptions.length === 1 && !visibleLocationOptions.some((o) => o.id === loc) && !loc.startsWith("cov_")) return true;
       return loc === effectiveId || loc === "general";
     });
-  }, [slots, effectiveId]);
+  }, [slots, effectiveId, visibleLocationOptions]);
 
   // ── LOCATION control (LEFT column, under the rating) — a HORIZONTAL TAB ROW on a
   // hairline divider, then the selected place's ADDRESS. Built ONCE and ALWAYS shown
@@ -372,12 +393,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       : (placeAddress || "");
   const venueName = workplaceAddr ? businessName.trim() : "";
   // Show the chevron nav whenever the tab row actually OVERFLOWS its container (FIT-based, not a
-  // fixed count) — so on a NARROW card (e.g. the profile contact rail) where the 3rd location is
-  // cut off, the arrows already appear; on a wide card they only appear once a tab won't fit. This
-  // makes /buscar and the profile consistent (the old `locTabs.length > 3` showed them too late on
-  // the narrower profile card). Measured on mount, on resize (ResizeObserver), and when the tabs
-  // change. Monotonic (adding the chevrons only narrows the row further), so it never oscillates.
-  const [locScrollState, setLocScrollState] = useState({ overflow: false, left: false, right: false });
+  useEffect(() => {
+    const el = locScrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: 0 });
+  }, [locTabs.length, effectiveId]);
   useEffect(() => {
     const el = locScrollRef.current;
     if (!el) return;
@@ -391,65 +411,94 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           left: el.scrollLeft > 2,
           right: el.scrollLeft < maxScroll - 2,
         };
-        setLocScrollState((prev) => (
+        setLocScrollHint((prev) => (
           prev.overflow === next.overflow && prev.left === next.left && prev.right === next.right ? prev : next
         ));
       });
     };
     measure();
     let ro: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(measure); ro.observe(el); }
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(measure);
+      ro.observe(el);
+    }
     el.addEventListener("scroll", measure, { passive: true });
-    if (typeof window !== "undefined") window.addEventListener("resize", measure);
+    window.addEventListener("resize", measure);
     return () => {
       window.cancelAnimationFrame(frame);
       ro?.disconnect();
       el.removeEventListener("scroll", measure);
-      if (typeof window !== "undefined") window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", measure);
     };
   }, [locTabs.length, effectiveId]);
-  useEffect(() => {
+  const beginLocationDrag = (clientX: number, pointerId: number | null = null) => {
     const el = locScrollRef.current;
     if (!el) return;
-    if (locTabs.length <= 1) el.scrollTo({ left: 0 });
-  }, [locTabs.length, effectiveId]);
-  const showLocNav = locTabs.length > 1 && locScrollState.overflow;
-  const reserveLocNav = locTabs.length > 1;
-  const scrollLocs = (dir: number) => {
+    locDragStateRef.current = {
+      pointerId,
+      startX: clientX,
+      startScrollLeft: el.scrollLeft,
+      moved: false,
+    };
+  };
+  const moveLocationDrag = (clientX: number) => {
     const el = locScrollRef.current;
-    if (!el) return;
-    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
-    const next = Math.min(maxScroll, Math.max(0, el.scrollLeft + dir * Math.min(180, Math.max(96, el.clientWidth * 0.65))));
-    el.scrollTo({ left: next, behavior: "smooth" });
+    if (!el) return false;
+    const delta = clientX - locDragStateRef.current.startX;
+    if (!locDragStateRef.current.moved && Math.abs(delta) < 4) return false;
+    locDragStateRef.current.moved = true;
+    el.scrollLeft = locDragStateRef.current.startScrollLeft - delta;
+    return true;
+  };
+  const endLocationDrag = () => {
+    window.setTimeout(() => {
+      locDragStateRef.current.pointerId = null;
+      locDragStateRef.current.moved = false;
+    }, 0);
   };
   const locationControl = locTabs.length > 0 ? (
     <div
-      className="relative z-10 min-w-0"
+      className="relative z-10 w-full min-w-0"
       onClick={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
     >
       {/* TABS (Doctoralia-style): pin + name; the selected tab is brand-blue with an
           underline, the rest muted. The row SCROLLS sideways and NEVER wraps
-          (`shrink-0` + `whitespace-nowrap`). `.hide-scrollbar` hides the chrome; when
-          there are >3 tabs the chevrons below scroll it. */}
-      <div className="flex items-center gap-0.5">
-        {reserveLocNav && (
-          <button
-            type="button"
-            aria-label={t("prevLocations")}
-            disabled={!showLocNav || !locScrollState.left}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(-1); }}
-            className={`${locationNavButtonClass} ${!showLocNav || !locScrollState.left ? "invisible pointer-events-none" : ""}`}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
+          (`shrink-0` + `whitespace-nowrap`). A thin scrollbar appears only when
+          there is horizontal overflow, matching modern secondary tab rows. */}
+      <div className="relative">
+        {locScrollHint.overflow && locScrollHint.left && (
+          <span className="pointer-events-none absolute left-0 top-0 z-10 h-full w-6 bg-gradient-to-r from-white via-white/90 to-white/0" aria-hidden />
+        )}
+        {locScrollHint.overflow && locScrollHint.right && (
+          <span className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-white via-white/90 to-white/0" aria-hidden />
         )}
         {/* `overflow-y-hidden` is REQUIRED: `overflow-x-auto` alone leaves overflow-y as
             `visible`, which CSS then COMPUTES to `auto` — so the row became vertically
             scrollable (it could be dragged up/down even with ONE location). Pinning overflow-y
             to hidden makes it strictly a HORIZONTAL tab scroll; vertical touch-drags then bubble
             to the page/sheet scroll (default touch-action). */}
-        <div ref={locScrollRef} className={`-mx-1 flex min-w-0 flex-1 gap-3 ${reserveLocNav ? "overflow-x-auto" : "overflow-x-hidden"} overflow-y-hidden hide-scrollbar border-b border-[#e5e7eb] px-1`} role="tablist" aria-label={t("location")}>
+        <div
+          ref={locScrollRef}
+          className="ccr-location-tabs-scroll hide-scrollbar flex min-w-0 gap-3 overflow-x-auto overflow-y-hidden pr-6 pb-[2px]"
+          role="tablist"
+          aria-label={t("location")}
+          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+          onPointerDown={(e) => {
+            beginLocationDrag(e.clientX, e.pointerId);
+          }}
+          onPointerMove={(e) => {
+            if (locDragStateRef.current.pointerId !== e.pointerId) return;
+            if (moveLocationDrag(e.clientX)) e.preventDefault();
+          }}
+          onPointerUp={(e) => {
+            if (locDragStateRef.current.pointerId !== e.pointerId) return;
+            endLocationDrag();
+          }}
+          onPointerCancel={(e) => {
+            if (locDragStateRef.current.pointerId !== e.pointerId) return;
+            endLocationDrag();
+          }}
+        >
           {locTabs.map((o) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
             const isVideoTab = o.id === "videoconsulta" || (!hasRealLoc && (professional.videoconsulta || professional.coverage?.country));
@@ -461,13 +510,22 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                 role="tab"
                 aria-selected={active}
                 onClick={hasRealLoc
-                  ? (e) => { e.stopPropagation(); setSelectedLoc(o.id); setOffset(0); }
+                  ? (e) => {
+                      e.stopPropagation();
+                      if (locDragStateRef.current.moved) {
+                        e.preventDefault();
+                        return;
+                      }
+                      setSelectedLoc(o.id);
+                      setOffset(0);
+                    }
                   : (e) => e.stopPropagation()}
-                className={`shrink-0 -mb-px inline-flex items-center gap-1 whitespace-nowrap border-b-2 px-0.5 pb-1.5 text-[12px] font-semibold transition-colors ${
+                className={`shrink-0 inline-flex items-center gap-1 whitespace-nowrap py-0 pl-0 pr-0.5 text-[12px] font-semibold transition-colors ${
                   active
-                    ? "border-[#009FD9] text-[#009FD9]"
-                    : "border-transparent text-[#6b7280] hover:border-[#ccecf8] hover:text-[#009FD9]"
+                    ? "text-[#009FD9]"
+                    : "text-[#6b7280] hover:text-[#009FD9]"
                 }`}
+                style={{ touchAction: "pan-x" }}
               >
                 {isVideoTab ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
                 {locTabLabel(o.label)}
@@ -475,18 +533,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             );
           })}
         </div>
-        {reserveLocNav && (
-          <button
-            type="button"
-            aria-label={t("nextLocations")}
-            disabled={!showLocNav || !locScrollState.right}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLocs(1); }}
-            className={`${locationNavButtonClass} ${!showLocNav || !locScrollState.right ? "invisible pointer-events-none" : ""}`}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        )}
       </div>
+      <div className="mt-1 h-px w-full bg-[#e5e7eb]" aria-hidden />
       {addressLine && (
         <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-[#6b7280]">
           {venueName && <span className="font-semibold text-[#374151]">{venueName} · </span>}
@@ -649,6 +697,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canPrev = effOffset > 0;
   const canNext = effOffset + COLS < availableDays.length;
   const dayColsClass = "grid-cols-3"; // always 3 columns (availability days + "No disponible" padding)
+  const scheduleOuterGap = "gap-1";
+  const dayGridGap = "gap-2";
+  const dayColumnGap = "gap-1.5";
+  const dayLabelClass = "text-center text-[11px] font-semibold leading-tight truncate text-[#6b7280]";
+  const timePillClass = "w-full rounded-md py-1 text-[11px] font-semibold text-[#0089bb] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors leading-none";
+  const emptyTimePillClass = "block w-full rounded-md py-1 text-[11px] font-semibold leading-none opacity-0";
+  const extraPillClass = "w-full rounded-md py-1 text-[10px] font-bold leading-none text-[#0089bb] border border-dashed border-[#bfdbfe] hover:bg-[#EBF5FB] transition-colors";
 
   // Action buttons live IN the right column (HuliHealth style), full-width PILLS of that
   // column — NOT a separate bottom strip. CONDITIONAL on availability (logic unchanged):
@@ -779,10 +834,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     <div className="flex w-full flex-col gap-3" aria-label={locale === "en" ? "Loading availability" : "Cargando horarios"} aria-busy="true">
       <div className="flex w-full items-start gap-1">
         <span className="flex w-4 shrink-0 self-center" aria-hidden />
-        <div className="grid flex-1 grid-cols-3 gap-2">
+        <div className={`grid flex-1 grid-cols-3 ${dayGridGap}`}>
           {days.slice(0, COLS).map((day) => (
-            <div key={day.key} className="flex min-w-0 flex-col gap-1.5">
-              <p className="truncate text-center text-[11px] font-semibold leading-tight text-[#6b7280]">{day.label}</p>
+            <div key={day.key} className={`flex min-w-0 flex-col ${dayColumnGap}`}>
+              <p className={dayLabelClass}>{day.label}</p>
               <Skeleton className="h-6 w-full rounded-md" />
               <Skeleton className="h-6 w-full rounded-md" />
               <Skeleton className="h-6 w-full rounded-md" />
@@ -809,7 +864,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     scheduleBody = scheduleNote(otherLocationHasTimes ? t("noTimesAtLocation") : t("availabilityHiddenNote"));
   } else {
     scheduleBody = (
-      <div className="flex w-full items-start gap-1">
+      <div className={`flex w-full items-start ${scheduleOuterGap}`}>
         <button
           type="button"
           disabled={!canPrev}
@@ -820,12 +875,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <ChevronLeft className="h-[15px] w-[15px]" />
         </button>
 
-        <div className={`grid flex-1 gap-2 ${dayColsClass}`}>
+        <div className={`grid flex-1 ${dayGridGap} ${dayColsClass}`}>
           {windowDays.map((day) => {
             const extra = day.items.length - 3;
             return (
-              <div key={day.key} className="flex flex-col gap-1.5 min-w-0">
-                <p className="text-center text-[11px] font-semibold leading-tight truncate text-[#6b7280]">{day.label}</p>
+              <div key={day.key} className={`flex min-w-0 flex-col ${dayColumnGap}`}>
+                <p className={dayLabelClass}>{day.label}</p>
                 {day.items.length === 0 ? (
                   <p className="text-center text-[10px] leading-tight text-[#cbd5e1] py-1.5">{t("dayUnavailable")}</p>
                 ) : (
@@ -834,16 +889,27 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                       <button
                         key={`${slot.time}-${slot.locationId ?? ""}`}
                         onClick={(e) => { e.stopPropagation(); pick(slot); }}
-                        className="w-full rounded-md py-1 text-[11px] font-semibold text-[#0089bb] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors leading-none"
+                        aria-label={`${day.label}, ${slot.time}`}
+                        className={timePillClass}
                       >
                         {slot.time}
                       </button>
+                    ))}
+                    {Array.from({ length: Math.max(0, 3 - day.items.length) }).map((_, index) => (
+                      <span
+                        key={`empty-${day.key}-${index}`}
+                        aria-hidden="true"
+                        className={emptyTimePillClass}
+                      >
+                        00:00
+                      </span>
                     ))}
                     {extra > 0 && (
                       <button
                         onClick={(e) => { e.stopPropagation(); pick(day.items[3]); }}
                         title={t("viewFullSchedule")}
-                        className="w-full rounded-md py-1 text-[10px] font-bold leading-none text-[#0089bb] border border-dashed border-[#bfdbfe] hover:bg-[#EBF5FB] transition-colors"
+                        aria-label={`${t("viewFullSchedule")}: ${day.label}`}
+                        className={extraPillClass}
                       >
                         +{extra}
                       </button>
@@ -914,7 +980,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             TOP band so the favorites bookmark (top-right of the card) sits cleanly in the
             corner ABOVE the content — instead of reserving a side gutter (which left an ugly
             blank strip beside the full-width buttons). Content stays full-width. */}
-        <div className="relative z-10 flex min-w-0 flex-col gap-3 border-t border-[#e5e7eb] pt-3 lg:justify-center lg:border-t-0 lg:border-l lg:border-[#e5e7eb] lg:pt-6 lg:pl-4">
+        <div className="relative z-10 flex min-w-0 flex-col gap-3 lg:justify-center lg:border-l lg:border-[#e5e7eb] lg:pt-6 lg:pl-4">
           {scheduleBody}
           {/* A pro who enabled "Permitir contacto por llamada" should ALWAYS surface a
               "Llamar" option on their /buscar card — even when a bookable schedule funnels

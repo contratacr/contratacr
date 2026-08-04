@@ -26,6 +26,8 @@ import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
+import { FollowNetworkTab } from "@/components/professionals/follow-network-tab";
+import { FollowNetworkSummaryLink } from "@/components/professionals/follow-network-summary-link";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
@@ -181,6 +183,7 @@ export default function DashboardPage() {
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(false);
+  const [networkModal, setNetworkModal] = useState<"following" | "followers" | null>(null);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -803,6 +806,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
+      {networkModal && (
+        <FollowNetworkTab initialView={networkModal} onBack={() => setNetworkModal(null)} />
+      )}
       {opportunityWelcomeCount !== null && (
         <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#0f172a]/45 p-0 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
           <div
@@ -876,6 +882,7 @@ export default function DashboardPage() {
                 </h1>
                 <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-2">
                   {identityBadge()}
+                  <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                 </div>
               </div>
             </div>
