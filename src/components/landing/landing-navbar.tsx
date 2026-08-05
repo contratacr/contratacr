@@ -5,7 +5,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Bot, Shield,
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -1009,24 +1009,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     <NotificationBell scope="all" />
                   </div>
                 ) : (
-                  <Link
-                    href={loginHref}
-                    aria-label={t("login")}
-                    className="grid h-10 w-10 justify-self-end place-items-center rounded-xl text-[#1A2744] transition-colors active:bg-[#eef9fd] active:text-[#009FD9]"
-                  >
-                    <UserRound className="h-5 w-5" />
-                  </Link>
+                  <span className="h-10 w-10 justify-self-end" aria-hidden />
                 )
               ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
                 {user && <NotificationBell scope="all" />}
-                <Link
-                  href={user ? primaryPanelHref : loginHref}
-                  aria-label={user ? t("myPanel") : t("login")}
-                  className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-gray-50"
-                >
-                  <UserRound className="h-5 w-5" />
-                </Link>
+                {!user && <span className="h-10 w-10" aria-hidden />}
               </div>
               )}
             </div>
@@ -1368,17 +1356,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
                 </Link>
               )}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  window.dispatchEvent(new Event("contratacr:open-ai"));
-                }}
-                className={mobileDrawerItemClass}
-              >
-                <DrawerIcon><Bot /></DrawerIcon>
-                <span className={mobileDrawerTextClass}>{locale === "en" ? "Assistant" : "Asistente"}</span>
-              </button>
               {!user && (
                 <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><UserRound /></DrawerIcon>
@@ -1492,7 +1469,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-1.5 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] min-[360px]:px-2"
           >
-            <div className="mx-auto grid w-full max-w-[430px] grid-cols-[repeat(4,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
+            <div className="mx-auto grid w-full max-w-[430px] grid-cols-[repeat(3,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
               <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
                 <LayoutDashboard className="h-5 w-5" />
                 <span className="max-w-full truncate">Panel</span>
@@ -1505,14 +1482,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 <MessageSquareText className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Messages" : "Mensajes"}</span>
               </Link>
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
-                className="flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#526277] transition-colors active:bg-[#eef9fd] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]"
-              >
-                <Bot className="h-5 w-5" />
-                <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>
-              </button>
             </div>
           </nav>
         )}

@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { notificationInMode } from "@/lib/notification-link";
-import { AppTooltip } from "@/components/ui/app-tooltip";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 
 type Notification = {
@@ -30,6 +29,8 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     items: [] as Notification[],
   }));
   const [hasSyncedNotifications, setHasSyncedNotifications] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const notifications = useMemo(
@@ -125,18 +126,29 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     return () => window.removeEventListener("notificationsChanged", onChanged);
   }, [fetchNotifications]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onPointerDown(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [menuOpen]);
+
   if (!user) return null;
 
   const openNotifications = () => {
+    setMenuOpen(false);
     router.push(`/${locale}/notificaciones`);
   };
 
   return (
-    <AppTooltip label={t("title")}>
+    <div ref={menuRef} className="relative">
       <button
-        onClick={openNotifications}
+        onClick={() => setMenuOpen((next) => !next)}
         className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
         aria-label={t("title")}
+        aria-expanded={menuOpen}
       >
         <span className="relative inline-flex">
           <Bell className="h-5 w-5" />
@@ -147,6 +159,22 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           )}
         </span>
       </button>
-    </AppTooltip>
+      {menuOpen && (
+        <div className="absolute right-0 top-11 z-[90] w-52 overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white py-2 shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]">
+          <button
+            type="button"
+            onClick={openNotifications}
+            className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-[#1A2744] hover:bg-[#f5fbfe] hover:text-[#009FD9]"
+          >
+            <span>{locale === "en" ? "View all" : "Ver todas"}</span>
+            {unreadCount > 0 && (
+              <span className="rounded-full bg-[#eaf8fd] px-2 py-0.5 text-xs font-bold text-[#009FD9]">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

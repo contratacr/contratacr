@@ -333,7 +333,7 @@ export function BasicProfileSection({
           </div>
           {cedulaVerified && (
             <p className="text-xs text-[#6b7280] mt-1.5">
-              {t.rich("nameLockedHelp", { link: (c) => <Link href={supportTab} className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
+              {t.rich("nameLockedHelp", { link: (c) => <Link href="/dashboard/profesional?tab=verificacion" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
             </p>
           )}
         </div>

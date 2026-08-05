@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, CheckCircle2, FileText, Search,
+  ArrowLeft, ArrowRight, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, CheckCircle2, FileText, Search,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -49,7 +49,6 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { DashboardRouteLoading } from "@/components/ui/route-loading";
-import { AppTooltip } from "@/components/ui/app-tooltip";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import {
   dashboardBootstrapKey,
@@ -65,7 +64,7 @@ type Tab =
   | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "saved" | "network"
-  | "chat" | "assistant" | "notifications" | "soporte" | "cuenta" | "guides";
+  | "chat" | "notifications" | "soporte" | "cuenta" | "guides";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -85,7 +84,6 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   saved: <Bookmark className="h-4 w-4" />,
   network: <Users className="h-4 w-4" />,
   chat: <MessageSquareMore className="h-4 w-4" />,
-  assistant: <Bot className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
   soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
@@ -140,7 +138,6 @@ const GUIDE_ITEMS: GuideItem[] = [
   { id: "clientProfile", section: "client", actionTab: "profile", targetMode: "use", stepCount: 3 },
   { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
   { id: "messages", section: "shared", href: "/mensajes", stepCount: 4 },
-  { id: "assistantGuide", section: "shared", actionTab: "assistant", stepCount: 3 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
   { id: "professionalPanel", section: "professional", actionTab: "home", targetMode: "offer", stepCount: 4 },
   { id: "requests", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 3 },
@@ -170,8 +167,6 @@ function guideIcon(id: string) {
     case "clientProfile":
     case "professionalProfile":
       return <User className="h-4 w-4" />;
-    case "assistantGuide":
-      return <Bot className="h-4 w-4" />;
     case "supportGuide":
       return <Headset className="h-4 w-4" />;
     case "services":
@@ -278,7 +273,7 @@ function QuickGuidesModal({
       title={t("modalTitle")}
       subtitle={t("modalSubtitle")}
       size="lg"
-      mobilePresentation="center"
+      mobilePresentation="sheet"
       bodyClassName="bg-white px-5 py-5 sm:px-7 sm:py-6"
     >
       <div className="mx-auto max-w-[620px]">
@@ -572,15 +567,6 @@ export default function DashboardPage() {
     params.delete("tab");
     const qs = params.toString();
     router.replace(`/mensajes${qs ? `?${qs}` : ""}`, { scroll: false });
-  }, [requestedTab, searchParams, router]);
-
-  useEffect(() => {
-    if (requestedTab !== "assistant") return;
-    window.dispatchEvent(new Event("contratacr:open-ai"));
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("tab");
-    const qs = params.toString();
-    router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
   }, [requestedTab, searchParams, router]);
 
   useEffect(() => {
@@ -1010,7 +996,7 @@ export default function DashboardPage() {
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = modeTabs;
   const desktopSidebarTabs = sidebarTabs.filter((tab) => tab !== "guides");
-  const mobileSectionTabs = sidebarTabs;
+  const mobileSectionTabs = sidebarTabs.filter((tab) => tab !== "guides");
   const mobileFullScreenTab = activeTab === "network";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
   const singleSurfaceTab = activeTab === "profile" || activeTab === "availability";
@@ -1038,10 +1024,6 @@ export default function DashboardPage() {
         key={tab}
         data-testid={`panel-tab-${tab}`}
         onClick={() => {
-          if (tab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
           if (tab === "guides") {
             setGuidesOpen(true);
             return;
@@ -1075,10 +1057,6 @@ export default function DashboardPage() {
         type="button"
         data-testid={`panel-tab-${tab}`}
         onClick={() => {
-          if (tab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
           if (tab === "guides") {
             setGuidesOpen(true);
             return;
@@ -1114,10 +1092,6 @@ export default function DashboardPage() {
         type="button"
         data-testid={`panel-tab-${tab}`}
         onClick={() => {
-          if (tab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
           if (tab === "guides") {
             setGuidesOpen(true);
             return;
@@ -1183,27 +1157,6 @@ export default function DashboardPage() {
             <nav className="flex flex-col gap-1">
               {desktopSidebarTabs.map(desktopSidebarButton)}
             </nav>
-            <div className="my-1 h-px bg-[#e5edf3]" />
-            <button
-              type="button"
-              onClick={() => setGuidesOpen(true)}
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#f7fafc] hover:text-[#162543]"
-            >
-              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#64748b]">
-                <FileText className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Guides" : "Guías"}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => signOutToHome(locale)}
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#fef2f2] hover:text-[#b91c1c]"
-            >
-              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#64748b]">
-                <LogOut className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Sign out" : "Cerrar sesión"}</span>
-            </button>
           </div>
         </div>
       </aside>
@@ -1260,10 +1213,6 @@ export default function DashboardPage() {
             scrollDashboardToPageTop();
             return;
           }
-          if (tab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
           if (tab === "guides") {
             setGuidesOpen(true);
             return;
@@ -1307,10 +1256,6 @@ export default function DashboardPage() {
         onClose={() => setGuidesOpen(false)}
         isProvider={isProvider}
         onGo={(guide) => {
-          if (guide.actionTab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
           if (guide.targetMode) setMode(guide.targetMode);
           setTab(guide.actionTab ?? "home");
         }}
@@ -1365,25 +1310,25 @@ export default function DashboardPage() {
         )}>
           {/* Header card — identity and status grouped in one surface on desktop. */}
           <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:block" : "block")}>
-            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6">
-            <div className="flex min-w-0 flex-1 items-center gap-4">
+            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-4 py-4 shadow-sm sm:px-6 sm:py-5">
+            <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-5">
               <ImagePreviewDialog
                 src={headerAvatar}
                 alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
                 openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
               >
-                <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb] sm:h-20 sm:w-20">
+                <Avatar className="h-16 w-16 shrink-0 bg-transparent sm:h-20 sm:w-20">
                   <AvatarImage src={headerAvatar ?? undefined} />
-                  <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
+                  <AvatarFallback className="bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">
                     {getInitials(displayName || "?")}
                   </AvatarFallback>
                 </Avatar>
               </ImagePreviewDialog>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0">
                 <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
                   {mode === "offer" ? t("panelProfessional") : t("panelClient")}
                 </p>
-                <div className="flex min-w-0 max-w-full items-center gap-1">
+                <div className="flex min-w-0 max-w-full items-center gap-1.5">
                   <h1 className="min-w-0 truncate whitespace-nowrap text-lg font-bold leading-tight text-[#162543] sm:text-2xl" title={displayName}>
                     <span className="hidden min-[430px]:inline sm:hidden">{displayName}</span>
                     <span className="min-[430px]:hidden sm:hidden">{compactMobileHeaderName}</span>
@@ -1393,18 +1338,45 @@ export default function DashboardPage() {
                     <Link
                       href={publicProfileHref}
                       aria-label={locale === "en" ? "View my profile" : "Ver mi perfil"}
-                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-[#64748b] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:h-7 sm:w-7"
+                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center self-center text-[#64748b] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
                     >
-                      <ExternalLink className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
+                      <ExternalLink className="h-4 w-4" />
                     </Link>
                   )}
                 </div>
-                <div className="-mt-0.5 flex min-h-[22px] flex-wrap items-center gap-x-2 gap-y-1">
+                <div className="mt-0.5 flex min-h-[22px] flex-wrap items-center gap-x-2 gap-y-1 sm:mt-1">
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
                   <div className="flex min-w-0 items-center">
                     <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                   </div>
                 </div>
+              </div>
+              <div className="col-span-2 flex flex-wrap items-center justify-center gap-2 border-t border-[#eef3f7] pt-3 sm:col-span-1 sm:justify-end sm:border-t-0 sm:pt-0">
+                {publicProfileHref && (
+                  <Link
+                    href={publicProfileHref}
+                    className="hidden h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb] sm:inline-flex"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    {locale === "en" ? "View profile" : "Ver mi perfil"}
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setGuidesOpen(true)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb]"
+                >
+                  <FileText className="h-4 w-4" />
+                  {locale === "en" ? "Guides" : "Guías"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => signOutToHome(locale)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#fef2f2] hover:text-[#b91c1c]"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {locale === "en" ? "Sign out" : "Cerrar sesión"}
+                </button>
               </div>
             </div>
             </div>
@@ -1528,17 +1500,6 @@ export default function DashboardPage() {
                                 {switchPanelButton({ mobile: true })}
                                 {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
                                 {mobileSectionTabs.map(mobileSectionButton)}
-                                <div className="my-3 border-t border-[#e5e7eb]" />
-                                <button
-                                  type="button"
-                                  onClick={() => signOutToHome(locale)}
-                                  className="flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827]"
-                                >
-                                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
-                                    <LogOut className="h-4 w-4" />
-                                  </span>
-                                  {locale === "en" ? "Sign out" : "Cerrar sesión"}
-                                </button>
                               </div>
                             </div>
                           </>
@@ -1673,3 +1634,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
