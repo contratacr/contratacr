@@ -553,38 +553,46 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </span>
                         )}
                       </div>
-                      <div className="relative hidden min-h-10 items-center justify-center sm:flex">
-                        <p className="absolute left-0 hidden text-sm font-medium text-[#64748b] lg:block">
-                          {currentPage} / {totalPages}
-                        </p>
-                        <div className="flex max-w-full items-center justify-center gap-1.5 overflow-x-auto overflow-y-visible px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                          {currentPage > 1 && (
+                      <div className="hidden min-h-10 grid-cols-[minmax(132px,1fr)_auto_minmax(132px,1fr)] items-center gap-3 sm:grid">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <p className="hidden text-sm font-medium text-[#64748b] lg:block">
+                            {currentPage} / {totalPages}
+                          </p>
+                          {currentPage > 1 ? (
                             <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-5 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
                               <ChevronLeft className="h-4 w-4" />
                               <span>{t("pagination.prev")}</span>
                             </Link>
-                          )}
-                          <div className="mx-1 flex shrink-0 items-center gap-1 rounded-full bg-[#f3f7fb] p-1">
-                          {paginationPages.map((page, index) => page === "ellipsis" ? (
-                            <span key={`ellipsis-${index}`} className="grid h-9 w-8 place-items-center text-sm font-semibold text-[#9ca3af]">...</span>
-                          ) : page === currentPage ? (
-                            <span key={page} aria-current="page" className="grid h-9 min-w-9 place-items-center rounded-full bg-[#009FD9] px-3 text-sm font-bold text-white shadow-sm">{page}</span>
                           ) : (
-                            <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-9 min-w-9 place-items-center rounded-full px-3 text-sm font-bold text-[#526174] transition hover:bg-white hover:text-[#0089BB] hover:shadow-sm">
-                              {page}
-                            </Link>
-                          ))}
+                            <span aria-hidden className="hidden h-10 min-w-[112px] shrink-0 lg:inline-flex" />
+                          )}
+                        </div>
+                        <div className="flex max-w-full min-w-0 items-center justify-center overflow-x-auto overflow-y-visible px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                          <div className="flex shrink-0 items-center gap-1 rounded-full bg-[#f3f7fb] p-1">
+                            {paginationPages.map((page, index) => page === "ellipsis" ? (
+                              <span key={`ellipsis-${index}`} className="grid h-9 w-8 place-items-center text-sm font-semibold text-[#9ca3af]">...</span>
+                            ) : page === currentPage ? (
+                              <span key={page} aria-current="page" className="grid h-9 min-w-9 place-items-center rounded-full bg-[#009FD9] px-3 text-sm font-bold text-white shadow-sm">{page}</span>
+                            ) : (
+                              <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-9 min-w-9 place-items-center rounded-full px-3 text-sm font-bold text-[#526174] transition hover:bg-white hover:text-[#0089BB] hover:shadow-sm">
+                                {page}
+                              </Link>
+                            ))}
                           </div>
                         </div>
-                        {currentPage < totalPages && (
-                          <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
-                            <span className="leading-none">{t("pagination.next")}</span>
-                            <ChevronRight className="h-4 w-4 shrink-0" />
-                          </Link>
-                        )}
-                        <span className="absolute right-0 hidden text-right text-sm font-medium text-[#64748b] md:block">
-                          {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
-                        </span>
+                        <div className="flex min-w-0 items-center justify-end gap-3">
+                          {currentPage < totalPages ? (
+                            <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
+                              <span className="leading-none">{t("pagination.next")}</span>
+                              <ChevronRight className="h-4 w-4 shrink-0" />
+                            </Link>
+                          ) : (
+                            <span aria-hidden className="inline-flex h-10 min-w-[112px] shrink-0" />
+                          )}
+                          <span className="hidden text-right text-sm font-medium text-[#64748b] md:block">
+                            {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
+                          </span>
+                        </div>
                       </div>
                     </nav>
                   )}

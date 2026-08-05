@@ -56,15 +56,11 @@ export function formatPersonDisplayName(name?: string, mode: "desktop" | "mobile
   return [parts[0], parts[parts.length - 2], parts[parts.length - 1]].join(" ");
 }
 
-export function getProfessionalDisplayName(fullName: string, businessName?: string, businessNameOnly = false) {
+export function getProfessionalDisplayName(fullName: string, businessName?: string, _businessNameOnly = false) {
   const cleanBusinessName = businessName?.trim() || "";
   const personMobile = formatPersonDisplayName(fullName, "mobile");
   const personDesktop = formatPersonDisplayName(fullName, "desktop");
-  const showPersonSubtitle =
-    !!cleanBusinessName &&
-    !businessNameOnly &&
-    !samePublicIdentity(fullName, cleanBusinessName) &&
-    !looksLikeBusinessName(fullName);
+  const showPersonSubtitle = false;
 
   return {
     primaryMobile: cleanBusinessName || personMobile,

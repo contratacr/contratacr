@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
@@ -59,7 +59,11 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const [busy, setBusy] = useState(initialCache === null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
+  const [itemMenuOpenId, setItemMenuOpenId] = useState<string | null>(null);
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const globalMenuRef = useRef<HTMLDivElement | null>(null);
+  const itemMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const projectTimes = useNotificationProjectTimes(items);
 
   const loadNotifications = useCallback(() => {
@@ -127,6 +131,29 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     return () => { void supabase.removeChannel(channel); };
   }, [instanceId, loadNotifications, user]);
 
+  useEffect(() => {
+    if (!globalMenuOpen && !itemMenuOpenId) return;
+    function onPointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (globalMenuOpen && globalMenuRef.current?.contains(target)) return;
+      if (itemMenuOpenId && itemMenuRefs.current[itemMenuOpenId]?.contains(target)) return;
+      setGlobalMenuOpen(false);
+      setItemMenuOpenId(null);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setGlobalMenuOpen(false);
+        setItemMenuOpenId(null);
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [globalMenuOpen, itemMenuOpenId]);
+
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
@@ -165,6 +192,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   async function markOneRead(e: React.MouseEvent, id: string) {
     e.stopPropagation();
+    setItemMenuOpenId(null);
     setNotificationState((prev) => {
       const next = prev.items.map((n) => (n.id === id ? { ...n, read: true } : n));
       cacheNotifications(user?.id, next);
@@ -195,6 +223,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   async function dismiss(e: React.MouseEvent, id: string) {
     e.stopPropagation();
+    setItemMenuOpenId(null);
     setNotificationState((prev) => {
       const next = prev.items.filter((n) => n.id !== id);
       cacheNotifications(user?.id, next);
@@ -207,6 +236,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   async function doDeleteAll() {
     setConfirmDelete(false);
+    setGlobalMenuOpen(false);
     if (!user || visible.length === 0) return;
     // Delete only the CURRENT mode's notifications (the list is per-mode).
     const ids = visible.map((n) => n.id);
@@ -221,28 +251,60 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   }
 
   return (
-    <div>
-      <div className="mb-3 hidden sm:block">
-        <h3 className="text-lg font-extrabold text-[#162543]">{t("title")}</h3>
-        {unread > 0 && (
-          <p className="mt-0.5 text-xs text-[#6b7280]">
+    <div className="ccr-notifications-list flex h-full min-h-0 flex-col">
+      <div className="mb-2 flex items-start justify-between gap-3 pt-0">
+        <div className="min-w-0">
+          <h3 className="text-lg font-extrabold text-[#162543] sm:text-[1.15rem]">{t("title")}</h3>
+          <p className="mt-0.5 text-sm font-semibold text-[#6b7280]">
             {unread} {locale === "en" ? "unread" : "sin leer"}
           </p>
-        )}
-      </div>
-
-      {visible.length > 0 && (
-        <div className="mb-3 flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
-          {unread > 0 && (
-            <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
-              <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
-            </button>
-          )}
-          <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
-            <Trash2 className="h-4 w-4" /> {t("deleteAll")}
-          </button>
         </div>
-      )}
+        <div ref={globalMenuRef} className="relative shrink-0">
+          <button
+            type="button"
+            aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
+            aria-haspopup="menu"
+            aria-expanded={globalMenuOpen}
+            onClick={() => {
+              setItemMenuOpenId(null);
+              setGlobalMenuOpen((open) => !open);
+            }}
+            className="inline-flex h-6.5 w-6.5 items-center justify-center rounded-full border-[1.75px] border-[#111827] bg-white text-[#111827] transition-colors hover:bg-[#f8fafc]"
+          >
+            <MoreHorizontal className="h-[16px] w-[16px]" strokeWidth={3.2} />
+          </button>
+          {globalMenuOpen && (
+            <div role="menu" className="absolute right-0 top-full z-30 mt-2 min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl">
+              {unread > 0 && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setGlobalMenuOpen(false);
+                    void markAllRead();
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
+                >
+                  <CheckCheck className="h-4 w-4 text-[#009FD9]" />
+                  {t("markAllRead")}
+                </button>
+              )}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setGlobalMenuOpen(false);
+                  setConfirmDelete(true);
+                }}
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t("deleteAll")}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {confirmDelete && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
@@ -258,7 +320,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           </div>
         </div>
       )}
-      <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
+      <div className="ccr-notifications-scroll min-h-0 flex-1 rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
         {busy ? (
           <PanelSectionLoading
             className={scope === "all" ? "min-h-[calc(100dvh-13rem)] sm:min-h-[18rem]" : "min-h-[16rem] sm:min-h-[18rem]"}
@@ -276,7 +338,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             )}
           />
         ) : (
-          <ul>
+          <ul className="ccr-notifications-items">
             {visible.map((n) => {
               const message = notificationMessage(n);
               const canExpand = message.length > 180;
@@ -337,19 +399,52 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                 </div>
                 {/* Two distinct actions, intentionally different icons so they're
                     never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
-                <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
-                  {!n.read && (
-                    <AppTooltip label={t("markRead")}>
-                      <button onClick={(e) => markOneRead(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#dcfce7] hover:text-[#15803d] transition-colors" aria-label={t("markRead")}>
-                        <Check className="h-3.5 w-3.5" />
-                      </button>
-                    </AppTooltip>
-                  )}
-                  <AppTooltip label={t("delete")}>
-                    <button onClick={(e) => dismiss(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label={t("delete")}>
-                      <Trash2 className="h-3.5 w-3.5" />
+                <div
+                  ref={(node) => {
+                    itemMenuRefs.current[n.id] = node;
+                  }}
+                  className="absolute top-2.5 right-2.5"
+                >
+                  <AppTooltip label={locale === "en" ? "Notification options" : "Opciones"}>
+                    <button
+                      type="button"
+                      aria-label={locale === "en" ? "Notification options" : "Opciones"}
+                      aria-haspopup="menu"
+                      aria-expanded={itemMenuOpenId === n.id}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setGlobalMenuOpen(false);
+                        setItemMenuOpenId((current) => (current === n.id ? null : n.id));
+                      }}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#eef4f8] hover:text-[#162543]"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </AppTooltip>
+                  {itemMenuOpenId === n.id && (
+                    <div role="menu" className="absolute right-0 top-full z-30 mt-1.5 min-w-[190px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl">
+                      {!n.read && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={(event) => void markOneRead(event, n.id)}
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
+                        >
+                          <Check className="h-4 w-4 text-[#15803d]" />
+                          {t("markRead")}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={(event) => void dismiss(event, n.id)}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {t("delete")}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </li>
               );

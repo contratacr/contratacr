@@ -49,8 +49,10 @@ function ProfileSection({
         <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="px-4 sm:px-5 pb-5 pt-4 flex flex-col gap-4 border-t border-[#f3f4f6]">
-          {children}
+        <div className="border-t border-[#f3f4f6] px-4 pb-5 pt-4 sm:px-5">
+          <div className="flex flex-col gap-4 rounded-2xl border border-[#eef2f6] bg-[#fbfcfd] px-3 py-3 sm:border-0 sm:bg-transparent sm:p-0">
+            {children}
+          </div>
         </div>
       )}
     </div>
@@ -92,7 +94,7 @@ export function BasicProfileSection({
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(["basic"]));
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const toggleSection = (id: string) =>
     setOpenSections((prev) => {
       const next = new Set(prev);
@@ -259,8 +261,18 @@ export function BasicProfileSection({
     "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#eef0f2]">
+    <div className="mx-auto flex w-full max-w-none flex-col gap-4">
+      <div className="divide-y divide-[#eef0f2] overflow-hidden bg-white sm:rounded-2xl sm:border sm:border-[#e5e7eb] sm:shadow-sm">
+      <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-[#111827]">{locale === "en" ? "Profile" : "Perfil"}</h2>
+          <p className="mt-1 text-sm text-[#6b7280]">
+            {locale === "en"
+              ? "Complete your basic information and keep your account up to date."
+              : "Completa tu información básica y mantén tu cuenta al día."}
+          </p>
+        </div>
+      </div>
       <ProfileSection id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
       {/* Foto */}
       <div className="flex flex-wrap items-center gap-4">

@@ -83,11 +83,52 @@ function Section({ id, title, desc, open, onToggle, children }: { id: string; ti
         <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="px-4 sm:px-5 pb-5 pt-4 flex flex-col gap-4 border-t border-[#f3f4f6]">
-          {children}
+        <div className="border-t border-[#f3f4f6] px-4 pb-5 pt-4 sm:px-5">
+          <div className="flex flex-col gap-4 rounded-2xl border border-[#eef2f6] bg-[#fbfcfd] px-3 py-3 sm:border-0 sm:bg-transparent sm:p-0">
+            {children}
+          </div>
         </div>
       )}
     </div>
+  );
+}
+
+function ProfileToggleRow({
+  title,
+  description,
+  checked,
+  onToggle,
+  enabledLabel,
+  disabledLabel,
+  ariaLabel,
+}: {
+  title: React.ReactNode;
+  description: React.ReactNode;
+  checked: boolean;
+  onToggle: () => void;
+  enabledLabel: string;
+  disabledLabel: string;
+  ariaLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-center justify-between gap-4 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-3.5 text-left transition-colors hover:bg-[#f5f7fa]"
+      aria-label={ariaLabel}
+      aria-pressed={checked}
+    >
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-[#111827]">{title}</p>
+        <p className="mt-1 text-xs text-[#6b7280]">{description}</p>
+      </div>
+      <span className="flex shrink-0 items-center gap-2">
+        <span className="text-xs font-semibold text-[#526174]">{checked ? enabledLabel : disabledLabel}</span>
+        <span className={cn("relative h-6 w-11 rounded-full transition-all", checked ? "bg-[#009FD9]" : "bg-[#d1d5db]")}>
+          <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", checked ? "left-5" : "left-0.5")} />
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -226,8 +267,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // Keep the stored value so an existing address column isn't wiped on save.
   const address = (initial.address as string) ?? "";
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
-  const [publicBusinessNameOnly, setPublicBusinessNameOnly] = useState<boolean>(!!initial.business_name && initial.public_business_name_only === true);
-  const publicBusinessNameOnlyRef = useRef(publicBusinessNameOnly);
   const [workplaces, setWorkplaces] = useState<Workplace[]>(() => seedZones(initial));
   // Default to "Español" (most professionals) so a Spanish-only pro is never
   // treated as "missing" languages. Extra languages are an optional bonus.
@@ -254,7 +293,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasBusinessName = businessName.trim().length > 0;
 
   // ── App-wide RELIABLE autosave (the "Save standard"; see contratacr-context.md) ──
   // touch() marks dirty + debounces a save; flush() saves NOW (used on field blur);
@@ -400,30 +438,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     }
   }
 
-  async function saveBusinessNameVisibility(nextOnly: boolean) {
-    const cleanBusinessName = limitText(businessName.trim(), NAME_MAX_LENGTH);
-    if (!cleanBusinessName) return;
-    setAutoSaving(true);
-    setError(null);
-    const supabase = createClient();
-    try {
-      const { error: businessError } = await supabase
-        .from("professionals")
-        .update({
-          business_name: cleanBusinessName,
-          public_business_name_only: nextOnly,
-        })
-        .eq("id", professionalId);
-      if (businessError) throw businessError;
-      showSavedConfirmation();
-      onSaved?.();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t("saveError"));
-    } finally {
-      setAutoSaving(false);
-    }
-  }
-
   async function handleSave(auto = false): Promise<boolean> {
     const seq = ++saveSeq.current;
     if (auto) setAutoSaving(true); else setSaving(true);
@@ -468,7 +482,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       const cleanBusinessName = limitText(businessName.trim(), NAME_MAX_LENGTH);
       const businessIdentityFields = {
         business_name: cleanBusinessName || null,
-        public_business_name_only: !!cleanBusinessName && publicBusinessNameOnlyRef.current,
+        public_business_name_only: !!cleanBusinessName,
       };
       const identityFields = {
         coverage_areas: onlineCoverage,
@@ -638,7 +652,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   useReportSaveStatus(saving || autoSaving || photoUploading, saved, dirty);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-none flex-col gap-4">
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {error}
@@ -647,7 +661,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
       {/* ONE cohesive settings card (instead of 6 separate boxes) — the sections are
           divider-separated rows; each expands inline into a soft inset field panel. */}
-      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#eef0f2]">
+      <div className="divide-y divide-[#eef0f2] overflow-hidden bg-white sm:rounded-2xl sm:border sm:border-[#e5e7eb] sm:shadow-sm">
+      <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-[#111827]">{locale === "en" ? "Profile" : "Perfil"}</h2>
+        </div>
+      </div>
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
       <Section id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
         {/* Photo — explicit buttons, no hover-to-change */}
@@ -739,30 +758,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           onChange={(e) => {
             const next = limitText(e.target.value, NAME_MAX_LENGTH);
             setBusinessName(next);
-            if (!next.trim()) setPublicBusinessNameOnly(false);
             touch();
           }}
           onBlur={flush}
           placeholder={t("businessPlaceholder")}
         />
-        {hasBusinessName && (
-          <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-            <p className="text-sm font-medium text-[#111827]">{t("businessNameOnly")}</p>
-            <button
-              type="button"
-              onClick={() => {
-                const next = !publicBusinessNameOnly;
-                publicBusinessNameOnlyRef.current = next;
-                setPublicBusinessNameOnly(next);
-                void saveBusinessNameVisibility(next);
-              }}
-              className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", publicBusinessNameOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-              aria-label={t("businessNameOnly")}
-            >
-              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", publicBusinessNameOnly ? "left-5" : "left-0.5")} />
-            </button>
-          </div>
-        )}
 
         {/* Description */}
         <div data-field="bio">
@@ -843,36 +843,20 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             onChange={(next) => { setWorkplaces(next); touch(); }}
             mapHeight={168}
             extraActions={canOfferVideoConsult ? (
-              <div className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#f9fafb] p-3.5">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
-                    <Video className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#111827]">{t("videoConsultOption")}</p>
-                    <p className="mt-0.5 text-xs text-[#6b7280]">{t("videoCountryHelp")}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = !(videoConsult && videoCoverageCountry);
-                    setVideoConsult(next);
-                    setVideoCoverageCountry(next);
-                    touch();
-                  }}
-                  className={cn(
-                    "relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200",
-                    videoConsult && videoCoverageCountry ? "bg-[#009FD9]" : "bg-[#d1d5db]"
-                  )}
-                  aria-label={t("videoConsultOption")}
-                >
-                  <span className={cn(
-                    "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200",
-                    videoConsult && videoCoverageCountry ? "left-5" : "left-0.5"
-                  )} />
-                </button>
-              </div>
+              <ProfileToggleRow
+                title={t("videoConsultOption")}
+                description={t("videoCountryHelp")}
+                checked={videoConsult && videoCoverageCountry}
+                onToggle={() => {
+                  const next = !(videoConsult && videoCoverageCountry);
+                  setVideoConsult(next);
+                  setVideoCoverageCountry(next);
+                  touch();
+                }}
+                enabledLabel={locale === "en" ? "On" : "Activado"}
+                disabledLabel={locale === "en" ? "Off" : "Desactivado"}
+                ariaLabel={t("videoConsultOption")}
+              />
             ) : null}
           />
         </div>
@@ -895,24 +879,24 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         {/* Progressive disclosure: turning on "Permitir contacto por llamada"
             reveals the optional separate call line. Empty → the WhatsApp number
             is used for calls too (so the toggle alone is self-explanatory). */}
-        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-          <p className="text-sm font-medium text-[#111827]">{t("allowCallLabel")}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setAllowPhoneCall((v) => {
-                const nv = !v;
-                if (nv && !callPhone.trim() && whatsapp.trim()) setCallPhone(whatsapp);
-                return nv;
-              });
-              touch();
-            }}
-            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", allowPhoneCall ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label={t("allowCallLabel")}
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
-          </button>
-        </div>
+        <ProfileToggleRow
+          title={t("allowCallLabel")}
+          description={locale === "en"
+            ? "Let clients call you directly. If you don't add another number, we'll use your WhatsApp number."
+            : "Permite que te llamen directamente. Si no agregas otro número, usaremos tu número de WhatsApp."}
+          checked={allowPhoneCall}
+          onToggle={() => {
+            setAllowPhoneCall((v) => {
+              const nv = !v;
+              if (nv && !callPhone.trim() && whatsapp.trim()) setCallPhone(whatsapp);
+              return nv;
+            });
+            touch();
+          }}
+          enabledLabel={locale === "en" ? "On" : "Activado"}
+          disabledLabel={locale === "en" ? "Off" : "Desactivado"}
+          ariaLabel={t("allowCallLabel")}
+        />
 
         {allowPhoneCall && (
           <div>
@@ -928,24 +912,24 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
         {/* Optional public contact email — opt-in via a toggle (consistent with the
             call-number pattern). Off → no email is shown; turning it off clears it. */}
-        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-          <p className="text-sm font-medium text-[#111827]">{t("contactEmail")}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setShowContactEmail((v) => {
-                const nv = !v;
-                if (nv && !contactEmail.trim() && accountEmail) setContactEmail(accountEmail);
-                return nv;
-              });
-              touch();
-            }}
-            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", showContactEmail ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label={t("contactEmail")}
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", showContactEmail ? "left-5" : "left-0.5")} />
-          </button>
-        </div>
+        <ProfileToggleRow
+          title={t("contactEmail")}
+          description={locale === "en"
+            ? "Show a public email in your profile so clients can contact you there too."
+            : "Muestra un correo público en tu perfil para que también puedan contactarte por ahí."}
+          checked={showContactEmail}
+          onToggle={() => {
+            setShowContactEmail((v) => {
+              const nv = !v;
+              if (nv && !contactEmail.trim() && accountEmail) setContactEmail(accountEmail);
+              return nv;
+            });
+            touch();
+          }}
+          enabledLabel={locale === "en" ? "On" : "Activado"}
+          disabledLabel={locale === "en" ? "Off" : "Desactivado"}
+          ariaLabel={t("contactEmail")}
+        />
 
         {showContactEmail && (
           <div className="w-full sm:max-w-[40rem]">

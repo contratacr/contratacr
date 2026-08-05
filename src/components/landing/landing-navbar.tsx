@@ -650,8 +650,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const { user, loading: authLoading } = useAuth();
   const nativeBottomNavVisible = nativeBottomShell && !!user;
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
-  const compactEnabled = !pathname.startsWith("/dashboard");
-  const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
+  const isHomePage = pathname === "/";
+  const compactEnabled = true;
+  const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
   const compactSearchExamples = useMemo(() => {
     const raw = t.raw(isSmallScreen ? "searchExamples" : "searchExamplesDesktop");
     return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];

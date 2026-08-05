@@ -132,7 +132,6 @@ export async function POST(req: Request) {
       cedula: bodyCedula,
       photoUrl,
       businessName: bodyBusinessName,
-      publicBusinessNameOnly: bodyPublicBusinessNameOnly,
       workplaces: bodyWorkplaces,
       coverageAreas: bodyCoverage,
       searchProvincias: bodySearchProv,
@@ -149,7 +148,7 @@ export async function POST(req: Request) {
     }
     const safeBio = limitTrimmedText(bio, PROFILE_BIO_MAX_LENGTH);
     const businessName = limitTrimmedText(bodyBusinessName, NAME_MAX_LENGTH) || null;
-    const publicBusinessNameOnly = !!businessName && bodyPublicBusinessNameOnly === true;
+    const publicBusinessNameOnly = !!businessName;
     // Workplaces: [{ id, name, address, lat, lng, provinciaId, cantonId, distrito }]
     // — fixed-location pins (single source of truth). Coverage = travel areas.
     const workplaces = Array.isArray(bodyWorkplaces) ? bodyWorkplaces : [];

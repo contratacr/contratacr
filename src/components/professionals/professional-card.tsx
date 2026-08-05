@@ -1,9 +1,9 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { BriefcaseBusiness, Camera, Star, Users } from "lucide-react";
+import { BadgeCheck, Star } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -143,8 +143,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
     if (items.length < maxItems && currentLength + labelLength <= maxReadableLength) return [...items, id];
     return items;
   }, []);
-  const mobileProfessionList = fitProfessionLabels(24, 1);
-  const desktopProfessionList = fitProfessionLabels(24, 1);
+  const mobileProfessionList = fitProfessionLabels(38, 2);
+  const desktopProfessionList = fitProfessionLabels(38, 2);
   const wideDesktopProfessionList = fitProfessionLabels(55, 3);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
@@ -156,8 +156,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
   const wideDesktopExtraProfessions = allProfessions.length - wideDesktopProfessionList.length;
-  const serviceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold leading-snug text-[#6b7280]";
-  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-bold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]";
+  const serviceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[11px] font-semibold leading-snug text-[#6b7280]";
+  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 text-[10px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
@@ -184,7 +184,6 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
     return years > 0 || months > 0;
   });
   const yearsExperience = Math.max(0, Math.floor(serviceExperience?.years ?? professional.yearsExperience ?? 0));
-  const hasExperience = yearsExperience > 0;
   const casesLabel = locale === "en"
     ? `${portfolioCount} success ${portfolioCount === 1 ? "case" : "cases"}`
     : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
@@ -202,33 +201,38 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const casesMetric = splitMetricLabel(casesLabel);
   const experienceMetric = splitMetricLabel(experienceLabel);
   const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#009FD9]";
-  const reviewIconClass = "h-3.5 w-3.5 shrink-0 text-[#f59e0b]";
-  const mobileMetricClass = "flex min-w-0 items-center justify-center px-0 py-2 text-center";
-  const mobileMetricWideClass = "flex w-[9.55rem] min-w-0 items-center justify-center px-0 py-2 text-center";
-  const mobileMetricCompactClass = "flex w-[6.9rem] min-w-0 items-center justify-center px-0 py-2 text-center";
-  const mobileMetricInnerWideClass = "inline-flex w-[9.15rem] max-w-full items-center justify-start gap-0.5 pl-[0.9rem]";
-  const mobileMetricInnerCompactClass = "inline-flex w-[6.6rem] max-w-full items-center justify-start gap-0.5";
   const metricIconWrapClass = "inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center";
-  const metricNumberClass = "shrink-0 text-[15px] font-bold leading-none tabular-nums text-[#162543]";
-  const metricTextClass = "min-w-0 whitespace-nowrap text-[11px] font-semibold leading-none text-[#5f6f86]";
-  const metricTextCompactClass = "min-w-0 whitespace-nowrap text-[11px] font-semibold leading-none text-[#5f6f86]";
-  const desktopMetricTextClass = "min-w-0 whitespace-nowrap text-[11px] font-medium leading-none text-[#5f6f86]";
-  const desktopMetricClass = "relative z-10 inline-flex min-w-0 max-w-full items-center justify-center gap-0.5 px-1.5 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
-  const desktopMetricNumberClass = "shrink-0 text-[13px] font-semibold tabular-nums text-[#162543]";
-  const desktopMetricDividerClass = "hidden sm:block h-4 w-px shrink-0 bg-[#ecf2f7]";
-  const desktopMetricCompactClass = "relative z-10 inline-flex w-[8.9rem] min-w-0 items-center justify-center gap-0.5 px-1.5 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
-  const desktopMetricDividerLeftClass = "hidden -ml-4 sm:block h-4 w-px shrink-0 bg-[#ecf2f7]";
-  const desktopMetricDividerRightClass = "hidden -ml-4 sm:block h-4 w-px shrink-0 bg-[#ecf2f7]";
-  const mobileMetricDividerClass = "my-auto block h-4 w-px shrink-0 bg-[#edf2f7] sm:hidden";
+  const metricNumberClass = "shrink-0 text-[13px] font-semibold leading-none tabular-nums text-[#162543]";
+  const metricTextClass = "min-w-0 whitespace-nowrap text-[11px] font-medium leading-none text-[#5f6f86]";
+  const secondaryMetricClass = "relative z-10 inline-flex min-w-0 items-center justify-center gap-1 py-1.5 text-center transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
+  const starFillPercent = Math.max(0, Math.min(5, professional.ratingAvg)) * 20;
+  const ratingLabel = professional.reviewCount > 0
+    ? tCard("reviewsCount", { count: professional.reviewCount })
+    : tCard("noReviews");
+  const ratingStars = (
+    <span className="relative inline-flex h-4 w-[4.5rem] shrink-0 items-center" aria-hidden>
+      <span className="absolute inset-0 inline-flex items-center gap-0.5 text-[#d5dde8]">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Star key={`empty-star-${index}`} className="h-3.5 w-3.5 fill-current" />
+        ))}
+      </span>
+      <span className="absolute inset-y-0 left-0 inline-flex items-center gap-0.5 overflow-hidden text-[#f59e0b]" style={{ width: `${starFillPercent}%` }}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Star key={`filled-star-${index}`} className="h-3.5 w-3.5 shrink-0 fill-current" />
+        ))}
+      </span>
+    </span>
+  );
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
   // panel/dashboard, for cross-surface consistency. Sits on its OWN line between the
   // company name and the personal name. Unverified shows NOTHING (no negative label).
-  const verifiedMark = isVerified ? (
-    <span title={tCard("verifiedTitle")} className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
-      {tCard("verifiedShort")}
-    </span>
+  const verifiedIcon = isVerified ? (
+    <BadgeCheck
+      aria-label={tCard("verifiedTitle")}
+      className="mt-0.5 h-3.5 w-3.5 shrink-0 fill-[#009FD9] text-white"
+    />
   ) : null;
 
   // Location data for the schedule's location control (now rendered in the LEFT
@@ -279,26 +283,15 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
                   Verificado, then the personal name = first name + first surname. */}
               <Link href={profileHref} className="relative z-10 min-w-0">
-                <h3 title={businessName ? businessName : professional.fullName} className="line-clamp-2 font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
-                  <span className="lg:hidden">{displayName.primaryMobile}</span>
-                  <span className="hidden lg:inline">{displayName.primaryDesktop}</span>
+                <h3 title={businessName ? businessName : professional.fullName} className="flex min-w-0 items-start gap-1.5 font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
+                  <span className="min-w-0 line-clamp-2 lg:hidden">{displayName.primaryMobile}</span>
+                  <span className="hidden min-w-0 lg:line-clamp-1">{displayName.primaryDesktop}</span>
+                  {verifiedIcon}
                 </h3>
               </Link>
-              <div className="mt-0.5 flex min-w-0 items-start justify-between gap-2 lg:mt-0 lg:block">
-                {verifiedMark}
-                {priceLabel && (
-                  <div className="ml-auto shrink-0 text-right leading-tight lg:hidden">
-                    <div>
-                    <span className="block whitespace-nowrap text-[12px] font-bold leading-[1.1] text-[#009FD9]">{priceAmount}</span>
-                    {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
-                    {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
-                    </div>
-                  </div>
-                )}
-              </div>
               {(displayProfessions.length > 0 || professional.isFeatured) && (
                 <div
-                  className="mt-1 flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:hidden"
+                  className="mt-1 flex w-full min-w-0 max-w-full flex-wrap items-start gap-x-2 gap-y-0.5 overflow-visible lg:hidden"
                   data-testid="professional-card-service-summary"
                   data-service-summary-version="mobile-under-verified-v1"
                 >
@@ -332,6 +325,26 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   )}
                 </div>
               )}
+              <div className="mt-1 flex min-w-0 items-center justify-between gap-2 lg:hidden">
+                {professional.reviewCount > 0 && (
+                  <Link
+                    href={reviewsHref}
+                    className="relative z-10 inline-flex w-fit items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                    aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+                  >
+                    <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
+                    <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+                    <span>{ratingLabel}</span>
+                  </Link>
+                )}
+                {priceLabel && (
+                  <div className="ml-auto shrink-0 text-right leading-tight">
+                    <span className="block whitespace-nowrap text-[12px] font-bold leading-[1.1] text-[#009FD9]">{priceAmount}</span>
+                    {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
+                    {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
+                  </div>
+                )}
+              </div>
               {displayName.hasSecondary && (
                 <p title={professional.fullName} className="text-[12px] font-medium leading-snug text-[#6b7280] lg:line-clamp-1">
                   <span className="lg:hidden">{displayName.secondaryMobile}</span>
@@ -341,19 +354,12 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             </div>
             {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
                 capped width so a long price wraps instead of crowding the name. */}
-            {priceLabel && (
-              <div className={`ml-auto hidden shrink-0 text-right leading-tight lg:block ${priceBoxClass}`}>
-                <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
-                {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
-                {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
-              </div>
-            )}
           </div>
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
           {(displayProfessions.length > 0 || professional.isFeatured) && (
             <>
-            <div className="hidden w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden lg:flex 2xl:hidden">
+            <div className="hidden w-full min-w-0 max-w-full flex-wrap items-start gap-x-2 gap-y-0.5 overflow-visible lg:flex 2xl:hidden">
               {desktopProfessionList.map((cat) => (
                 <span key={`desktop-service-summary-${cat}`} className={serviceChipClass} title={catLabel(cat)}>
                   {catLabel(cat)}
@@ -375,7 +381,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                 </span>
               )}
             </div>
-            <div className="hidden w-full min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden 2xl:flex">
+            <div className="hidden w-full min-w-0 max-w-full flex-wrap items-start gap-x-2 gap-y-0.5 overflow-visible 2xl:flex">
               {wideDesktopProfessionList.map((cat) => (
                 <span key={`wide-desktop-service-summary-${cat}`} className={serviceChipClass} title={catLabel(cat)}>
                   {catLabel(cat)}
@@ -399,166 +405,25 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             </div>
             </>
           )}
-          {/* Trust metrics: social proof first, then proof-of-work. */}
-          <div className="-ml-[68px] w-[calc(100%+68px)] basis-full lg:-ml-[76px] lg:w-[calc(100%+76px)] lg:basis-auto">
-            <div className={cn(
-              "relative mx-auto min-w-0 overflow-hidden sm:hidden",
-              hasExperience ? "grid w-fit max-w-full grid-cols-2" : "flex w-fit max-w-full items-center justify-center",
-            )}>
-              {hasExperience ? (
-                <>
-                  <span className="pointer-events-none absolute left-4 right-[calc(50%+0.75rem)] top-1/2 h-px bg-[#edf2f7]" aria-hidden />
-                  <span className="pointer-events-none absolute left-[calc(50%+0.75rem)] right-4 top-1/2 h-px bg-[#edf2f7]" aria-hidden />
-                  <span className="pointer-events-none absolute bottom-2 left-1/2 top-2 w-px bg-[#edf2f7]" aria-hidden />
-                </>
-              ) : (
-                <>
-                  <span className="pointer-events-none absolute bottom-[0.68rem] left-[30.4%] top-[0.68rem] w-px bg-[#edf2f7]" aria-hidden />
-                  <span className="pointer-events-none absolute bottom-[0.68rem] left-[63.2%] top-[0.68rem] w-px bg-[#edf2f7]" aria-hidden />
-                </>
-              )}
-              {professional.reviewCount > 0 ? (
+          <div className="hidden min-w-0 items-center justify-between gap-2 pt-1 lg:flex">
+              {professional.reviewCount > 0 && (
                 <Link
                   href={reviewsHref}
-                  className={hasExperience ? mobileMetricWideClass : mobileMetricCompactClass}
+                  className="relative z-10 inline-flex w-fit items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
                   aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
                 >
-                  <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
-                    <span className={metricIconWrapClass}>
-                      <Star className={`${reviewIconClass} fill-current`} />
-                    </span>
-                    <span className={metricNumberClass}>{professional.ratingAvg.toFixed(1)}</span>
-                    <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
-                  </span>
+                  <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
+                  <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+                  <span>{ratingLabel}</span>
                 </Link>
-              ) : (
-                <span className={hasExperience ? mobileMetricWideClass : mobileMetricCompactClass}>
-                  <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
-                    <span className={metricIconWrapClass}>
-                      <Star className={reviewIconClass} />
-                    </span>
-                    <span className={`${metricNumberClass} invisible`}>0</span>
-                    <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{tCard("noReviews")}</span>
-                  </span>
-                </span>
               )}
-              <span className={hasExperience ? mobileMetricWideClass : mobileMetricCompactClass}>
-                <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
-                  <span className={metricIconWrapClass}>
-                    <Users className={metricIconClass} />
-                  </span>
-                  <span className={metricNumberClass}>{followersMetric.value}</span>
-                  <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{followersMetric.text}</span>
-                </span>
-              </span>
-              <Link href={casesHref} className={hasExperience ? mobileMetricWideClass : mobileMetricCompactClass}>
-                <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
-                  <span className={metricIconWrapClass}>
-                    <Camera className={metricIconClass} />
-                  </span>
-                  <span className={metricNumberClass}>{casesMetric.value}</span>
-                  <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{casesMetric.text}</span>
-                </span>
-              </Link>
-              {hasExperience && (
-                <span className={mobileMetricWideClass}>
-                  <span className={hasExperience ? mobileMetricInnerWideClass : mobileMetricInnerCompactClass}>
-                    <span className={metricIconWrapClass}>
-                      <BriefcaseBusiness className={metricIconClass} />
-                    </span>
-                    <span className={metricNumberClass}>{experienceMetric.value}</span>
-                    <span className={hasExperience ? metricTextClass : metricTextCompactClass}>{experienceMetric.text}</span>
-                  </span>
-                </span>
+              {priceLabel && (
+                <div className={`ml-auto shrink-0 text-right leading-tight ${priceBoxClass}`}>
+                  <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
+                  {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
+                  {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
+                </div>
               )}
-            </div>
-            {professional.reviewCount > 0 ? (
-              <div className={cn(
-                "relative hidden w-full max-w-full min-w-0 items-center justify-center overflow-hidden text-center sm:flex sm:flex-nowrap sm:text-left",
-                hasExperience ? "sm:gap-x-1" : "sm:gap-x-0.5",
-              )}>
-                  <Link
-                    href={reviewsHref}
-                    className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}
-                    aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
-                  >
-                    <span className={metricIconWrapClass}>
-                      <Star className={`${reviewIconClass} fill-current`} />
-                    </span>
-                    <span className={desktopMetricNumberClass}>{professional.ratingAvg.toFixed(1)}</span>
-                    <span className={desktopMetricTextClass}>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
-                  </Link>
-                  <span aria-hidden className={hasExperience ? desktopMetricDividerClass : desktopMetricDividerLeftClass} />
-                  <span className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
-                    <span className={metricIconWrapClass}>
-                      <Users className={metricIconClass} />
-                    </span>
-                    <span className={desktopMetricNumberClass}>{followersMetric.value}</span>
-                    <span className={desktopMetricTextClass}>{followersMetric.text}</span>
-                  </span>
-                  <span aria-hidden className={hasExperience ? desktopMetricDividerClass : desktopMetricDividerRightClass} />
-                  <Link href={casesHref} className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
-                    <span className={metricIconWrapClass}>
-                      <Camera className={metricIconClass} />
-                    </span>
-                    <span className={desktopMetricNumberClass}>{casesMetric.value}</span>
-                    <span className={desktopMetricTextClass}>{casesMetric.text}</span>
-                  </Link>
-                  {hasExperience && (
-                    <>
-                      <span aria-hidden className={desktopMetricDividerClass} />
-                    <span className={desktopMetricClass}>
-                        <span className={metricIconWrapClass}>
-                          <BriefcaseBusiness className={metricIconClass} />
-                        </span>
-                        <span className={desktopMetricNumberClass}>{experienceMetric.value}</span>
-                        <span className={desktopMetricTextClass}>{experienceMetric.text}</span>
-                      </span>
-                    </>
-                  )}
-              </div>
-            ) : (
-              <div className={cn(
-                "relative hidden w-full max-w-full min-w-0 items-center justify-center overflow-hidden text-center sm:flex sm:flex-nowrap sm:text-left",
-                hasExperience ? "sm:gap-x-1" : "sm:gap-x-0.5",
-              )}>
-                  <span className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
-                    <span className={metricIconWrapClass}>
-                      <Star className={reviewIconClass} />
-                    </span>
-                    <span className={`${desktopMetricNumberClass} invisible`}>0</span>
-                    <span className={desktopMetricTextClass}>{tCard("noReviews")}</span>
-                  </span>
-                  <span aria-hidden className={hasExperience ? desktopMetricDividerClass : desktopMetricDividerLeftClass} />
-                  <span className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
-                    <span className={metricIconWrapClass}>
-                      <Users className={metricIconClass} />
-                    </span>
-                    <span className={desktopMetricNumberClass}>{followersMetric.value}</span>
-                    <span className={desktopMetricTextClass}>{followersMetric.text}</span>
-                  </span>
-                  <span aria-hidden className={hasExperience ? desktopMetricDividerClass : desktopMetricDividerRightClass} />
-                  <Link href={casesHref} className={hasExperience ? desktopMetricClass : desktopMetricCompactClass}>
-                    <span className={metricIconWrapClass}>
-                      <Camera className={metricIconClass} />
-                    </span>
-                    <span className={desktopMetricNumberClass}>{casesMetric.value}</span>
-                    <span className={desktopMetricTextClass}>{casesMetric.text}</span>
-                  </Link>
-                  {hasExperience && (
-                    <>
-                      <span aria-hidden className={desktopMetricDividerClass} />
-                      <span className={desktopMetricClass}>
-                        <span className={metricIconWrapClass}>
-                          <BriefcaseBusiness className={metricIconClass} />
-                        </span>
-                        <span className={desktopMetricNumberClass}>{experienceMetric.value}</span>
-                        <span className={desktopMetricTextClass}>{experienceMetric.text}</span>
-                      </span>
-                    </>
-                  )}
-              </div>
-            )}
           </div>
         </div>
       </div>
