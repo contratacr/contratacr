@@ -830,7 +830,6 @@ export default function RegisterProfessionalPage() {
           email: userEmail,
           fullName,
           businessName: limitText(businessName.trim(), NAME_MAX_LENGTH) || null,
-          publicBusinessNameOnly: !!businessName.trim(),
           cedula: skipCedula ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (accountCedula || oauthCedula ? (accountCedula || oauthCedula).replace(/\D/g, "") : null)),
           // Skipping the cédula (noCrId) is a normal unverified registration — NOT a
           // review case. Only "¿No es tu información?" (identityMismatch) routes to

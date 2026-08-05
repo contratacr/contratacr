@@ -482,7 +482,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       const cleanBusinessName = limitText(businessName.trim(), NAME_MAX_LENGTH);
       const businessIdentityFields = {
         business_name: cleanBusinessName || null,
-        public_business_name_only: !!cleanBusinessName,
       };
       const identityFields = {
         coverage_areas: onlineCoverage,

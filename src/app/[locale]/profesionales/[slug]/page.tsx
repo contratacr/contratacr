@@ -448,13 +448,13 @@ export default function ProfilePage() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <h1 className="text-2xl font-bold leading-tight text-[#111827]">
-                      {getProfessionalDisplayName(professional.fullName, professional.businessName, professional.publicBusinessNameOnly).primaryDesktop}
+                      {getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop}
                     </h1>
                     {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
                   </div>
-                  {getProfessionalDisplayName(professional.fullName, professional.businessName, professional.publicBusinessNameOnly).hasSecondary && (
+                  {getProfessionalDisplayName(professional.fullName, professional.businessName).hasSecondary && (
                     <p className="mt-0.5 text-sm font-medium text-[#6b7280]">
-                      {getProfessionalDisplayName(professional.fullName, professional.businessName, professional.publicBusinessNameOnly).secondaryDesktop}
+                      {getProfessionalDisplayName(professional.fullName, professional.businessName).secondaryDesktop}
                     </p>
                   )}
                   <p className="mt-1 text-sm text-[#6b7280]">

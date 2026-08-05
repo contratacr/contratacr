@@ -67,6 +67,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const locale = await getLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
   const sortBy = params.sortBy && params.sortBy !== "cercania" ? params.sortBy : undefined;
+  const cardHighlightMetric =
+    sortBy === "successCases" || sortBy === "experience" || sortBy === "followers"
+      ? sortBy
+      : "rating";
   const selectedCategory = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const effectiveQuery = selectedCategory ? undefined : params.q;
   const parsedNearLat = params.lat ? Number(params.lat) : undefined;
@@ -508,6 +512,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
                           <ProfessionalCard
                             professional={pro}
+                            highlightMetric={cardHighlightMetric}
                             slots={slotsByPro[pro.id] ?? []}
                             slotsInitiallyLoaded
                             activeCategory={activeCategoryId}

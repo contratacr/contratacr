@@ -86,6 +86,7 @@ export type ProfessionalCardData = {
 interface ProfessionalCardProps {
   professional: ProfessionalCardData;
   className?: string;
+  highlightMetric?: "rating" | "successCases" | "experience" | "followers";
   slots?: ScheduleSlot[];
   /** False in search results when availability streams after profile data. */
   slotsInitiallyLoaded?: boolean;
@@ -107,7 +108,7 @@ interface ProfessionalCardProps {
   searchReturnHref?: string;
 }
 
-export async function ProfessionalCard({ professional, className, slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false, searchReturnHref }: ProfessionalCardProps) {
+export async function ProfessionalCard({ professional, className, highlightMetric = "rating", slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false, searchReturnHref }: ProfessionalCardProps) {
   const tCard = await getTranslations("card");
   const tSchedule = await getTranslations("schedule");
   const locale = await getLocale();
@@ -122,7 +123,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   // Brand hierarchy: company name leads (clients recognize the brand), personal
   // name becomes the muted subtitle. No company → personal name leads, no subtitle.
   const businessName = professional.businessName?.trim();
-  const displayName = getProfessionalDisplayName(professional.fullName, businessName, professional.publicBusinessNameOnly);
+  const displayName = getProfessionalDisplayName(professional.fullName, businessName);
   const categoryName = catLabel(professional.categoryId);
   const allProfessions = (professional.professions && professional.professions.length > 0
     ? professional.professions
@@ -151,7 +152,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   // "Consultar precio" has no "/" and renders whole in grey.
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
   const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix, isColones: priceIsColones } = splitPricingLabel(priceLabel);
-  const priceBoxClass = priceUnit || priceTaxSuffix ? "max-w-[38%] sm:max-w-[40%]" : "w-[74px] sm:w-[86px]";
+  const priceBoxClass = "max-w-[48%]";
+  const priceFitsWithService = displayProfessions.length <= 1;
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
@@ -223,6 +225,48 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
       </span>
     </span>
   );
+  const desktopMetricClass = "relative z-10 inline-flex min-w-0 items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
+  const desktopMetric = (() => {
+    if (highlightMetric === "successCases") {
+      if (portfolioCount <= 0) return null;
+      return (
+        <Link href={casesHref} className={desktopMetricClass} aria-label={casesLabel}>
+          <span className="font-semibold tabular-nums text-[#5f6f86]">{portfolioCount}</span>
+          <span>{portfolioCount === 1 ? (locale === "en" ? "success case" : "caso de éxito") : (locale === "en" ? "success cases" : "casos de éxito")}</span>
+        </Link>
+      );
+    }
+    if (highlightMetric === "experience") {
+      if (yearsExperience <= 0) return null;
+      return (
+        <span className={desktopMetricClass}>
+          <span className="font-semibold tabular-nums text-[#5f6f86]">{yearsExperience}</span>
+          <span>{yearsExperience === 1 ? (locale === "en" ? "year experience" : "año experiencia") : (locale === "en" ? "years experience" : "años experiencia")}</span>
+        </span>
+      );
+    }
+    if (highlightMetric === "followers") {
+      if (followerCount <= 0) return null;
+      return (
+        <span className={desktopMetricClass}>
+          <span className="font-semibold tabular-nums text-[#5f6f86]">{followerCount}</span>
+          <span>{followerCount === 1 ? (locale === "en" ? "follower" : "seguidor") : (locale === "en" ? "followers" : "seguidores")}</span>
+        </span>
+      );
+    }
+    if (professional.reviewCount <= 0) return null;
+    return (
+      <Link
+        href={reviewsHref}
+        className={desktopMetricClass}
+        aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+      >
+        <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
+        <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+        <span>{ratingLabel}</span>
+      </Link>
+    );
+  })();
 
   // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
   // the SAME color as the canonical `Badge variant="verified"` used in the professional
@@ -231,8 +275,18 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const verifiedIcon = isVerified ? (
     <BadgeCheck
       aria-label={tCard("verifiedTitle")}
-      className="mt-0.5 h-3.5 w-3.5 shrink-0 fill-[#009FD9] text-white"
+      className="mt-[4px] h-3.5 w-3.5 shrink-0 fill-[#009FD9] text-white lg:mt-[3px]"
     />
+  ) : null;
+
+  const desktopPrice = priceLabel ? (
+    <div className={`relative z-10 ml-auto hidden shrink-0 text-right leading-tight lg:block ${priceBoxClass}`}>
+      <span className="block truncate whitespace-nowrap leading-none">
+        <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
+        {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
+        {priceTaxSuffix && <span className="text-[9px] font-semibold tracking-wide text-[#9ca3af]"> {priceTaxSuffix}</span>}
+      </span>
+    </div>
   ) : null;
 
   // Location data for the schedule's location control (now rendered in the LEFT
@@ -275,17 +329,16 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
             </span>
           )}
         </Link>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-1 lg:pr-0">
           {/* Company-name line + PRICE (right-aligned on THIS line only). */}
-          <div className="flex min-w-0 flex-1 items-start gap-2 lg:pr-0">
+          <div className="flex min-w-0 flex-1 items-start gap-3 lg:items-center lg:pr-0">
             <div className="flex min-w-0 flex-1 flex-col gap-0">
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
                   Verificado, then the personal name = first name + first surname. */}
               <Link href={profileHref} className="relative z-10 min-w-0">
                 <h3 title={businessName ? businessName : professional.fullName} className="flex min-w-0 items-start gap-1.5 font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
-                  <span className="min-w-0 line-clamp-2 lg:hidden">{displayName.primaryMobile}</span>
-                  <span className="hidden min-w-0 lg:line-clamp-1">{displayName.primaryDesktop}</span>
+                  <span className="min-w-0 line-clamp-2 lg:line-clamp-1">{displayName.primaryDesktop}</span>
                   {verifiedIcon}
                 </h3>
               </Link>
@@ -325,7 +378,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   )}
                 </div>
               )}
-              <div className="mt-1 flex min-w-0 items-center justify-between gap-2 lg:hidden">
+              <div className="mt-1.5 flex min-w-0 items-center justify-between gap-2 lg:hidden">
                 {professional.reviewCount > 0 && (
                   <Link
                     href={reviewsHref}
@@ -345,12 +398,6 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
                   </div>
                 )}
               </div>
-              {displayName.hasSecondary && (
-                <p title={professional.fullName} className="text-[12px] font-medium leading-snug text-[#6b7280] lg:line-clamp-1">
-                  <span className="lg:hidden">{displayName.secondaryMobile}</span>
-                  <span className="hidden lg:inline">{displayName.secondaryDesktop}</span>
-                </p>
-              )}
             </div>
             {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
                 capped width so a long price wraps instead of crowding the name. */}
@@ -359,72 +406,64 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
           {(displayProfessions.length > 0 || professional.isFeatured) && (
             <>
-            <div className="hidden w-full min-w-0 max-w-full flex-wrap items-start gap-x-2 gap-y-0.5 overflow-visible lg:flex 2xl:hidden">
-              {desktopProfessionList.map((cat) => (
-                <span key={`desktop-service-summary-${cat}`} className={serviceChipClass} title={catLabel(cat)}>
-                  {catLabel(cat)}
-                </span>
-              ))}
-              {desktopExtraProfessions > 0 && (
-                <Link
-                  href={profileHref}
-                  title={tCard("moreProfessions")}
-                  aria-label={tCard("moreProfessions")}
-                  className={moreProfessionsClass}
-                >
-                  +{desktopExtraProfessions}
-                </Link>
-              )}
-              {professional.isFeatured && (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                  {tCard("featured")}
-                </span>
-              )}
+            <div className="mt-0.5 hidden w-full min-w-0 max-w-full items-center gap-x-2 overflow-visible lg:flex 2xl:hidden">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 overflow-visible">
+                {desktopProfessionList.map((cat) => (
+                  <span key={`desktop-service-summary-${cat}`} className={serviceChipClass} title={catLabel(cat)}>
+                    {catLabel(cat)}
+                  </span>
+                ))}
+                {desktopExtraProfessions > 0 && (
+                  <Link
+                    href={profileHref}
+                    title={tCard("moreProfessions")}
+                    aria-label={tCard("moreProfessions")}
+                    className={moreProfessionsClass}
+                  >
+                    +{desktopExtraProfessions}
+                  </Link>
+                )}
+                {professional.isFeatured && (
+                  <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                    {tCard("featured")}
+                  </span>
+                )}
+              </div>
+              {priceFitsWithService && desktopPrice}
             </div>
-            <div className="hidden w-full min-w-0 max-w-full flex-wrap items-start gap-x-2 gap-y-0.5 overflow-visible 2xl:flex">
-              {wideDesktopProfessionList.map((cat) => (
-                <span key={`wide-desktop-service-summary-${cat}`} className={serviceChipClass} title={catLabel(cat)}>
-                  {catLabel(cat)}
-                </span>
-              ))}
-              {wideDesktopExtraProfessions > 0 && (
-                <Link
-                  href={profileHref}
-                  title={tCard("moreProfessions")}
-                  aria-label={tCard("moreProfessions")}
-                  className={moreProfessionsClass}
-                >
-                  +{wideDesktopExtraProfessions}
-                </Link>
-              )}
-              {professional.isFeatured && (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                  {tCard("featured")}
-                </span>
-              )}
+            <div className="mt-0.5 hidden w-full min-w-0 max-w-full items-center gap-x-2 overflow-visible 2xl:flex">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 overflow-visible">
+                {wideDesktopProfessionList.map((cat) => (
+                  <span key={`wide-desktop-service-summary-${cat}`} className={serviceChipClass} title={catLabel(cat)}>
+                    {catLabel(cat)}
+                  </span>
+                ))}
+                {wideDesktopExtraProfessions > 0 && (
+                  <Link
+                    href={profileHref}
+                    title={tCard("moreProfessions")}
+                    aria-label={tCard("moreProfessions")}
+                    className={moreProfessionsClass}
+                  >
+                    +{wideDesktopExtraProfessions}
+                  </Link>
+                )}
+                {professional.isFeatured && (
+                  <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                    {tCard("featured")}
+                  </span>
+                )}
+              </div>
+              {priceFitsWithService && desktopPrice}
             </div>
             </>
           )}
-          <div className="hidden min-w-0 items-center justify-between gap-2 pt-1 lg:flex">
-              {professional.reviewCount > 0 && (
-                <Link
-                  href={reviewsHref}
-                  className="relative z-10 inline-flex w-fit items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-                  aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
-                >
-                  <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
-                  <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                  <span>{ratingLabel}</span>
-                </Link>
-              )}
-              {priceLabel && (
-                <div className={`ml-auto shrink-0 text-right leading-tight ${priceBoxClass}`}>
-                  <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
-                  {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
-                  {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
-                </div>
-              )}
+          {(desktopMetric || (!priceFitsWithService && desktopPrice)) && (
+          <div className="mt-1.5 hidden min-w-0 items-center justify-between gap-2 lg:flex">
+              {desktopMetric}
+              {!priceFitsWithService && desktopPrice}
           </div>
+          )}
         </div>
       </div>
     </>

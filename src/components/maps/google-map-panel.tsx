@@ -311,7 +311,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     popupKeyRef.current = pro.id;
     const href = `/${locale}/profesionales/${pro.slug}`;
     const profs = (pro.professions ?? []).filter(Boolean).slice(0, 2).join(" · ") || pro.categoryLabel || "";
-    const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName, pro.publicBusinessNameOnly);
+    const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName);
     const primaryName = displayName.primaryDesktop;
     const secondaryName = displayName.secondaryDesktop;
     const wrap = document.createElement("div");
@@ -487,7 +487,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       const el = teardropEl(num ?? "");
       el.dataset.basez = String(z);
 
-      const titleName = getProfessionalDisplayName(pro.fullName, pro.businessName, pro.publicBusinessNameOnly).primaryDesktop || pro.fullName;
+      const titleName = getProfessionalDisplayName(pro.fullName, pro.businessName).primaryDesktop || pro.fullName;
       const marker = new g.marker.AdvancedMarkerElement({ map, position: pos, content: el, zIndex: z, title: titleName });
       // Keep a back-ref so setPinActive can raise zIndex without a marker lookup.
       (el as unknown as { _marker: unknown })._marker = marker;
