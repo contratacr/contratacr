@@ -14,6 +14,7 @@ const PRO_TYPES = new Set([
   "booking_completed_by_client",
   "booking_rescheduled",
   "review_received",
+  "professional_follow",
   "proposal_accepted",
   "project_proposal_accepted",
   "project_proposal_declined",
@@ -118,6 +119,10 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
     case "project_deleted":
     case "project_completed":
       href = "/dashboard/profesional?tab=proposals";
+      break;
+
+    case "professional_follow":
+      href = "/dashboard/profesional?tab=network&network=followers";
       break;
 
     case "booking_confirmed":
