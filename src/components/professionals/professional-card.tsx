@@ -198,8 +198,8 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const experienceLabel = locale === "en"
     ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"} experience`
     : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
-  const noFollowersLabel = locale === "en" ? "No followers" : "Sin seguidores";
-  const noCasesLabel = locale === "en" ? "No success cases" : "Sin casos";
+  const noFollowersLabel = locale === "en" ? "0 followers" : "0 seguidores";
+  const noCasesLabel = locale === "en" ? "0 success cases" : "0 casos";
   const splitMetricLabel = (label: string) => {
     const [value, ...rest] = label.split(" ");
     return { value, text: rest.join(" ") };
@@ -211,9 +211,9 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const reviewIconClass = "h-3.5 w-3.5 shrink-0 text-[#f59e0b]";
   const mobileMetricClass = "flex min-w-0 items-center justify-center px-0 py-2 text-center";
   const mobileMetricWideClass = "flex w-[9.55rem] min-w-0 items-center justify-center px-0 py-2 text-center";
-  const mobileMetricCompactClass = "flex w-[6.9rem] min-w-0 items-center justify-center px-0 py-2 text-center";
+  const mobileMetricCompactClass = "flex w-[7.35rem] min-w-0 items-center justify-center px-0 py-2 text-center";
   const mobileMetricInnerWideClass = "inline-flex w-[9.15rem] max-w-full items-center justify-start gap-0.5 pl-[0.9rem]";
-  const mobileMetricInnerCompactClass = "inline-flex w-[6.6rem] max-w-full items-center justify-center gap-1";
+  const mobileMetricInnerCompactClass = "inline-flex w-[7rem] max-w-full items-center justify-center gap-1";
   const metricIconWrapClass = "inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center";
   const metricNumberClass = "shrink-0 text-[15px] font-bold leading-none tabular-nums text-[#162543]";
   const metricTextClass = "min-w-0 whitespace-nowrap text-[11px] font-semibold leading-none text-[#5f6f86]";
@@ -222,7 +222,7 @@ export async function ProfessionalCard({ professional, className, slots = [], sl
   const desktopMetricClass = "relative z-10 inline-flex min-w-0 max-w-full items-center justify-center gap-0.5 px-1.5 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
   const desktopMetricNumberClass = "shrink-0 text-[13px] font-semibold tabular-nums text-[#162543]";
   const desktopMetricDividerClass = "hidden sm:block h-4 w-px shrink-0 bg-[#ecf2f7]";
-  const desktopMetricCompactClass = "relative z-10 inline-flex w-[8.9rem] min-w-0 items-center justify-center gap-1 px-1.5 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
+  const desktopMetricCompactClass = "relative z-10 inline-flex w-[9.75rem] min-w-0 items-center justify-center gap-1 px-1 py-1 text-[11px] font-semibold leading-tight text-[#6b7280] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
   const desktopMetricDividerLeftClass = "hidden -ml-4 sm:block h-4 w-px shrink-0 bg-[#ecf2f7]";
   const desktopMetricDividerRightClass = "hidden -ml-4 sm:block h-4 w-px shrink-0 bg-[#ecf2f7]";
   const mobileMetricDividerClass = "my-auto block h-4 w-px shrink-0 bg-[#edf2f7] sm:hidden";

@@ -17,6 +17,7 @@ type FollowButtonProps = {
   showCount?: boolean;
   initialFollowers?: number;
   labelOverride?: string;
+  onCountChange?: (count: number) => void;
 };
 
 function writePendingFollow(professionalId: string) {
@@ -74,7 +75,7 @@ export async function applyPendingFollow(userId?: string): Promise<boolean> {
   return true;
 }
 
-export function FollowButton({ professionalId, isOwn = false, compact = false, className, showCount = false, initialFollowers = 0, labelOverride }: FollowButtonProps) {
+export function FollowButton({ professionalId, isOwn = false, compact = false, className, showCount = false, initialFollowers = 0, labelOverride, onCountChange }: FollowButtonProps) {
   const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
   const [following, setFollowing] = useState(false);
@@ -89,9 +90,11 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
       ? db.from("professional_follows").select("id").eq("professional_id", professionalId).eq("follower_id", user.id).maybeSingle()
       : Promise.resolve({ data: null });
     const [countResult, stateResult] = await Promise.all([countQuery, stateQuery]);
-    setFollowers(countResult.count ?? initialFollowers);
+    const nextFollowers = countResult.count ?? initialFollowers;
+    setFollowers(nextFollowers);
+    onCountChange?.(nextFollowers);
     setFollowing(Boolean(stateResult.data) || Boolean(user && getLocalFollowIds(user.id).includes(professionalId)));
-  }, [initialFollowers, professionalId, user]);
+  }, [initialFollowers, onCountChange, professionalId, user]);
 
   useEffect(() => {
     void refresh();
@@ -120,13 +123,21 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
       : await db.from("professional_follows").insert({ follower_id: user.id, professional_id: professionalId });
     if (!result.error) {
       setFollowing(!following);
-      setFollowers((value) => Math.max(0, value + (following ? -1 : 1)));
+      setFollowers((value) => {
+        const nextFollowers = Math.max(0, value + (following ? -1 : 1));
+        onCountChange?.(nextFollowers);
+        return nextFollowers;
+      });
       window.dispatchEvent(new CustomEvent("professionalFollowsChanged", { detail: { professionalId, delta: following ? -1 : 1 } }));
     } else {
       if (following) removeLocalFollow(user.id, professionalId);
       else addLocalFollow(user.id, professionalId);
       setFollowing(!following);
-      setFollowers((value) => Math.max(0, value + (following ? -1 : 1)));
+      setFollowers((value) => {
+        const nextFollowers = Math.max(0, value + (following ? -1 : 1));
+        onCountChange?.(nextFollowers);
+        return nextFollowers;
+      });
       window.dispatchEvent(new CustomEvent("professionalFollowsChanged", { detail: { professionalId, delta: following ? -1 : 1 } }));
     }
     setBusy(false);

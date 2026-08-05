@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
@@ -151,6 +151,12 @@ export default function ProfilePage() {
     window.addEventListener("professionalFollowsChanged", onFollowChange);
     return () => window.removeEventListener("professionalFollowsChanged", onFollowChange);
   }, [professional?.id]);
+
+  const updateFollowerCount = useCallback((count: number) => {
+    setProfessional((current) => current
+      ? { ...current, followerCount: Math.max(0, count) }
+      : current);
+  }, []);
 
   // Resolve the viewer's role-aware panel route up front (parallel, non-blocking) so the
   // "Profesional no encontrado" screen can offer "Volver a mi panel" even though load()
@@ -421,6 +427,7 @@ export default function ProfilePage() {
                     professionalId={professional.id}
                     isOwn={isOwn}
                     initialFollowers={professional.followerCount ?? 0}
+                    onCountChange={updateFollowerCount}
                     className="mt-3 w-fit"
                   />
                 </div>
