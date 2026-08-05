@@ -510,7 +510,7 @@ export async function PATCH(req: NextRequest) {
       }
     }
     // Client cancelled their own booking → notify the professional (their slot freed),
-    // with the motivo if the client added one. Links to Solicitudes recibidas.
+    // with the motivo if the client added one. Links to Solicitudes.
     if (isOwnerClient && status === "cancelled") {
       const { data: pr } = await admin.from("professionals").select("profile_id").eq("id", bookingRow.professional_id).maybeSingle();
       if (pr?.profile_id) {

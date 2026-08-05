@@ -10,7 +10,7 @@ Manual fallback: paste each HTML file in **Supabase Dashboard -> Authentication 
 | `invite-user.html` | **Invite user** | `{{ .ConfirmationURL }}` |
 | `magic-link.html` | **Magic Link** | `{{ .ConfirmationURL }}` |
 | `change-email.html` | **Change Email Address** | `{{ .SiteURL }}`, `{{ .TokenHash }}`, `{{ .Email }}`, `{{ .NewEmail }}` |
-| `reset-password.html` | **Reset Password** | `{{ .ConfirmationURL }}` |
+| `reset-password.html` | **Reset Password** | `{{ .SiteURL }}`, `{{ .TokenHash }}` |
 | `reauthentication.html` | **Reauthentication** | `{{ .Token }}` (codigo de 6 digitos) |
 
 ## Automated sync
@@ -45,6 +45,7 @@ Production should be applied through GitHub Actions with environment approval:
 ## Notes
 
 - **Change Email uses the `token_hash` flow:** the button points to `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change`, and `/auth/callback` finishes the change with `verifyOtp({ type: "email_change", token_hash })`.
+- **Reset Password uses the `token_hash` flow:** this lets a user request the email on one device and open it on another. The callback verifies the one-time token server-side and then opens `/es/reset-password` with the recovery session.
 - **Confirm signup must use `{{ .Token }}`**, not `{{ .ConfirmationURL }}`. The app verifies signup with `supabase.auth.verifyOtp({ type: "signup" })` and asks the user for the 6-digit code.
 - Design: light and stable by default. Dark-mode CSS only swaps the logo to the white version for clients that support `prefers-color-scheme` or Outlook.com's `[data-ogsc]` dark-mode attribute.
 - Public logos:

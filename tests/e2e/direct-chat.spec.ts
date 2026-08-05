@@ -136,7 +136,7 @@ test.describe("@seeded contextual direct chat", () => {
     const { data: project, error: projectError } = await admin.from("projects").insert({
       client_id: seed.clientId,
       category_id: seed.categoryId,
-      title: "E2E publicación con chat",
+      title: "E2E proyecto con chat",
       description: "E2E contexto para comprobar el chat de una propuesta.",
       provincia_id: "al",
       canton_id: "al-al",
@@ -170,7 +170,7 @@ test.describe("@seeded contextual direct chat", () => {
     const thread = await apiJson<ThreadResponse>(page, `/api/direct-chat?id=${created.body.conversationId}`);
     expect(thread.body.conversation?.context?.type).toBe("proposal");
     expect(thread.body.messages?.map((message) => message.body)).toEqual(["E2E mensaje sobre propuesta"]);
-    expect(thread.body.conversation?.context?.title).toBe("E2E publicación con chat");
+    expect(thread.body.conversation?.context?.title).toBe("E2E proyecto con chat");
 
     await resetAuth(page);
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);

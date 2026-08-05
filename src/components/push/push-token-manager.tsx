@@ -250,7 +250,7 @@ export function PushTokenManager() {
 
   const professional = user.user_metadata?.is_provider === true;
   const copy = professional
-    ? "Activa notificaciones para enterarte cuando un cliente te escriba o aparezcan oportunidades para tus servicios."
+    ? "Activa notificaciones para enterarte cuando un cliente te escriba o haya proyectos relacionados con tus servicios."
     : "Activa notificaciones para enterarte cuando un profesional te responda o tengas novedades en tus solicitudes.";
 
   return (

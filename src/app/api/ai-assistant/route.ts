@@ -78,31 +78,6 @@ function normalizeText(value: string) {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-function repairSpanishDisplayText(value: string | null | undefined) {
-  if (!value) return value ?? null;
-  return value
-    .replace(/\bReparaci\?n\b/g, "Reparación")
-    .replace(/\bInformaci\?n\b/g, "Información")
-    .replace(/\bVerificaci\?n\b/g, "Verificación")
-    .replace(/\bNotificaci\?n\b/g, "Notificación")
-    .replace(/\bPublicaci\?n\b/g, "Publicación")
-    .replace(/\bDescripci\?n\b/g, "Descripción")
-    .replace(/\bUbicaci\?n\b/g, "Ubicación")
-    .replace(/\bJardiner\?a\b/g, "Jardinería")
-    .replace(/\bPlomer\?a\b/g, "Plomería")
-    .replace(/\bContrase\?a\b/g, "Contraseña")
-    .replace(/\bcl\?nica\b/g, "clínica")
-    .replace(/\bCl\?nica\b/g, "Clínica")
-    .replace(/\bAs\?\b/g, "Así")
-    .replace(/\bqued\?\b/g, "quedó")
-    .replace(/\best\?\b/g, "está");
-}
-
-function displayLabel(value: string | null | undefined, locale: Locale) {
-  const cleaned = locale === "es" ? repairSpanishDisplayText(value) : value;
-  return cleaned || null;
-}
-
 function includesAny(text: string, words: string[]) {
   return words.some((word) => text.includes(word));
 }
@@ -126,7 +101,7 @@ function uncertainSearchPayload(message: string, locale: Locale): AssistantPaylo
     locationText: null,
     confidence: 0,
     answer: locale === "en"
-      ? "I am not fully sure which service fits that request. Search with those words first; if you do not find the right option, publish a request with the details."
+      ? "I am not fully sure which service fits that request. Search with those words first; if you do not find the right option, create a project with the details."
       : "No tengo total certeza de qué servicio calza con esa necesidad. Busque con esas palabras primero; si no encuentra la opción correcta, publique una solicitud con los detalles.",
     ctaLabel: locale === "en" ? "Search in ContrataCR" : "Buscar en ContrataCR",
   };
@@ -657,8 +632,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "how_it_works",
       answer: locale === "en"
-        ? "ContrataCR helps you find professionals, compare profiles, publish requests, receive proposals, book services and coordinate directly."
-        : "ContrataCR permite buscar profesionales, comparar perfiles, publicar solicitudes, recibir propuestas, agendar servicios y coordinar directamente.",
+        ? "ContrataCR helps you find professionals, compare profiles, create projects, receive proposals, book services and coordinate directly."
+        : "ContrataCR permite buscar profesionales, comparar perfiles, crear proyectos, recibir propuestas, agendar servicios y coordinar directamente.",
       ctaLabel: locale === "en" ? "See how it works" : "Ver cómo funciona",
     };
   }
@@ -667,8 +642,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "answer",
       answer: locale === "en"
-        ? "Using ContrataCR to search, publish requests and create a professional profile is currently free. ContrataCR does not add a commission to the price agreed between client and professional."
-        : "Actualmente buscar, publicar solicitudes y crear un perfil profesional en ContrataCR es gratis. ContrataCR no agrega comisión al precio acordado entre cliente y profesional.",
+        ? "Using ContrataCR to search, create projects and create a professional profile is currently free. ContrataCR does not add a commission to the price agreed between client and professional."
+        : "Actualmente buscar, crear proyectos y crear un perfil profesional en ContrataCR es gratis. ContrataCR no agrega comisión al precio acordado entre cliente y profesional.",
     };
   }
 
@@ -676,9 +651,9 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "publish_request",
       answer: locale === "en"
-        ? "Publish what you need, the area and the details. ContrataCR will notify professionals related to that service so they can send proposals."
-        : "Publica lo que necesitas, la zona y los detalles. ContrataCR notificará a profesionales relacionados con ese servicio para que puedan enviar propuestas.",
-      ctaLabel: locale === "en" ? "Publish request" : "Publicar solicitud",
+        ? "Create a project with what you need, the area and the details. ContrataCR will notify professionals related to that service so they can send proposals."
+        : "Crea un proyecto con lo que necesitas, la zona y los detalles. ContrataCR notificará a profesionales relacionados con ese servicio para que puedan enviar propuestas.",
+      ctaLabel: locale === "en" ? "Create project" : "Crear proyecto",
     };
   }
 
@@ -719,7 +694,7 @@ ${CONTRATACR_PRODUCT_KNOWLEDGE}
 Rules:
 - Never invent professionals, prices, availability, ratings, app features or policies.
 - A real professional search is performed after your response. Set action=search_professionals only when a service or location search is intended.
-- If you are not sure which exact catalog service fits, do not guess a serviceId. Use action=search_professionals with serviceId=null and searchQuery as the user's own words, or publish_request only when the user clearly wants to publish a request.
+- If you are not sure which exact catalog service fits, do not guess a serviceId. Use action=search_professionals with serviceId=null and searchQuery as the user's own words, or publish_request only when the user clearly wants to create a project.
 - Search results will be attached to your answer immediately. Introduce them as current options; never say "wait", "one moment" or promise a later search.
 - If the requested service is not represented by a serviceId in the catalog, set action=suggest_service and searchQuery to the shortest proper service name.
 - If the user wants a specific professional from results previously shown, explain that they can open that profile and use its service request, booking or contact action.
@@ -728,13 +703,13 @@ Rules:
 - Ask one short clarification only when service or location is essential and missing. Otherwise act.
 - If the message contains both a service intent and a Costa Rica location, do not ask another question; set action=search_professionals.
 - If the message has a service but no location, ask which Costa Rica area. If it has a location but no service, ask which service.
-- Distinguish finding professionals from publishing a request. Words such as "busco", "profesional", "especialista", "opciones", "quienes hay" or a follow-up location mean search_professionals, not publish_request.
-- Never switch an existing professional search to publish_request unless the user explicitly asks to publish/create a request. Offering a request after zero results does not change the user's intent.
+- Distinguish finding professionals from creating a project. Words such as "busco", "profesional", "especialista", "opciones", "quienes hay" or a follow-up location mean search_professionals, not publish_request.
+- Never switch an existing professional search to publish_request unless the user explicitly asks to create a project. Offering a project after zero results does not change the user's intent.
 - Preserve the most recent service only when the latest user message is a direct follow-up with a Costa Rica location. Do not invent, infer or reuse a location unless the latest user message explicitly mentions that location.
 - A fresh service-only message such as "limpieza" must ask for the Costa Rica area without naming any province or canton.
 - A role word such as "especialista" must not replace an explicit trade such as "redes".
-- For creating a request, collect only the missing service and Costa Rica location. Once both are known, set action=publish_request and offer to open the form; the form collects job details.
-- Never claim that you will create, publish, submit or complete a request for the person. Only the person can review and publish it from the form.
+- For creating a project, collect only the missing service and Costa Rica location. Once both are known, set action=publish_request and offer to open the form; the form collects project details.
+- Never claim that you will create, publish, submit or complete a project for the person. Only the person can review and create it from the form.
 - Use the matching navigation action when the person wants to open services, register, sign in, reset a password, open their dashboard, support or help.
 - When prior assistant history includes "Resultados mostrados", action=select_professional and selectedResultIndex must identify requests such as "the second one". Never guess an index that was not shown.
 
@@ -846,16 +821,23 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
   }
   if (payload.action === "help") return `/${locale}/ayuda`;
   if (payload.action === "search_professionals" && !payload.serviceId && payload.searchQuery) {
-    return freeTextSearchHref(payload.searchQuery);
+    const place = userMessagePlace(originalMessage) ?? resolveLocationIntent(payload.locationText || "");
+    if (!place) return freeTextSearchHref(payload.searchQuery);
+    const params = new URLSearchParams({ q: payload.searchQuery });
+    if (place.type === "province") params.set("provincia", place.id);
+    if (place.type === "canton") {
+      params.set("provincia", place.provinceId);
+      params.set("canton", place.id);
+    }
+    return `/buscar?${params.toString()}`;
   }
-  const seed = payload.searchQuery || originalMessage;
-  return resolveSearch(seed, locale, payload.serviceId, null).href;
+  return resolveSearch(originalMessage, locale, payload.serviceId, payload.locationText).href;
 }
 
 function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
   const english = locale === "en";
   if (action === "search_professionals") return english ? "See all results" : "Ver todos los resultados";
-  if (action === "publish_request") return english ? "Publish request" : "Publicar solicitud";
+  if (action === "publish_request") return english ? "Create project" : "Crear proyecto";
   if (action === "how_it_works") return english ? "See how it works" : "Ver cómo funciona";
   if (action === "support") return english ? "Open support" : "Ir a soporte";
   if (action === "browse_services") return english ? "Browse services" : "Ver servicios";
@@ -1049,8 +1031,8 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "Yes. You can edit a pending proposal from My proposals while the publication still allows it. An accepted, rejected or withdrawn proposal can no longer be edited."
-        : "Sí. Puede editar una propuesta pendiente desde Mis propuestas mientras la publicación todavía lo permita. Una propuesta aceptada, rechazada o retirada ya no se puede editar.",
+        ? "Yes. You can edit a pending proposal from My proposals while the project still allows it. An accepted, rejected or withdrawn proposal can no longer be edited."
+        : "Sí. Puede editar una propuesta pendiente desde Mis propuestas mientras el proyecto todavía lo permita. Una propuesta aceptada, rechazada o retirada ya no se puede editar.",
       ctaLabel: locale === "en" ? "Open my proposals" : "Ver mis propuestas",
     };
   }
@@ -1059,8 +1041,8 @@ function normalizePayload(
       ...payload,
       action: "answer",
       answer: locale === "en"
-        ? "No. The client reschedules an active appointment from My requests. The professional can cancel it with an optional reason and coordinate another time through WhatsApp, but cannot move the appointment unilaterally."
-        : "No. El cliente reprograma una cita activa desde Mis solicitudes. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por WhatsApp, pero no puede mover la cita unilateralmente.",
+        ? "No. The client reschedules an active appointment from My requests in client mode. The professional can cancel it with an optional reason and coordinate another time through WhatsApp, but cannot move the appointment unilaterally."
+        : "No. El cliente reprograma una cita activa desde Mis solicitudes en modo cliente. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por WhatsApp, pero no puede mover la cita unilateralmente.",
       ctaLabel: null,
     };
   }
@@ -1074,13 +1056,13 @@ function normalizePayload(
       ctaLabel: null,
     };
   }
-  if (includesAny(normalized, ["publicar una solicitud sin cuenta", "publicar solicitud sin cuenta", "publish a request without an account"])) {
+  if (includesAny(normalized, ["crear un proyecto sin cuenta", "crear proyecto sin cuenta", "publicar una solicitud sin cuenta", "publicar solicitud sin cuenta", "create a project without an account", "publish a request without an account"])) {
     return {
       ...payload,
       action: "login",
       answer: locale === "en"
-        ? "You need to sign in to publish a request so proposals and notifications stay linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
-        : "Necesita iniciar sesión para publicar una solicitud, así las propuestas y notificaciones quedan vinculadas a su cuenta. Si todavía no tiene una, puede crearla desde la pantalla de ingreso.",
+        ? "You need to sign in to create a project so proposals and notifications stay linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
+        : "Necesita iniciar sesión para crear un proyecto, así las propuestas y notificaciones quedan vinculadas a su cuenta. Si todavía no tiene una, puede crearla desde la pantalla de ingreso.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1095,7 +1077,7 @@ function normalizePayload(
     };
   }
   if (includesAny(normalized, ["ver oportunidades", "donde veo oportunidades", "donde reviso oportunidades", "donde reviso las oportunidades", "mis oportunidades", "ver propuestas", "mis propuestas", "view opportunities", "my opportunities", "my proposals"])) {
-    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open opportunities" : "Ver oportunidades" };
+    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos" };
   }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {
     return { ...payload, action: "support", ctaLabel: locale === "en" ? "Open support" : "Ir a soporte" };
@@ -1129,7 +1111,7 @@ function normalizePayload(
     return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open availability" : "Ir a disponibilidad" };
   }
   if (includesAny(normalized, ["editar mis servicios", "administrar mis servicios", "servicios que ofrezco", "agregar otro servicio", "agregar un servicio", "agrego otro servicio", "agrego un servicio", "anadir otro servicio", "anadir un servicio", "anado otro servicio", "anado un servicio", "edit my services", "manage my services", "add another service", "add a service"])) {
-    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open my services" : "Ir a mis servicios" };
+    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open services" : "Ir a servicios" };
   }
   const wantsToPublish = publishConversation || hasExplicitPublishIntent(message);
   if (userSaysServiceIsUnclear && !wantsToPublish) {
@@ -1141,26 +1123,25 @@ function normalizePayload(
   if (wantsProfessionalSearch && !directService && !directPlace && !wantsToPublish) {
     return uncertainSearchPayload(message, locale);
   }
-  // Search intent always wins over a model-suggested publication CTA. Publishing is
+  // Search intent always wins over a model-suggested project CTA. Project creation is
   // entered only through an explicit user request, never because a prior zero-result
   // answer happened to offer that alternative.
   if (wantsProfessionalSearch && directService && directPlace) {
-    const serviceLabel = displayLabel(labels.get(directService.id) || getCategoryLabel(directService.id, locale), locale)!;
-    const placeLabel = displayLabel(directPlaceLabel, locale)!;
+    const serviceLabel = labels.get(directService.id) || getCategoryLabel(directService.id, locale);
     return {
       ...payload,
       action: "search_professionals",
       serviceId: directService.id,
-      locationText: placeLabel,
+      locationText: directPlaceLabel,
       searchQuery: serviceLabel,
       answer: locale === "en"
-        ? `I found professionals for ${serviceLabel} in ${placeLabel}.`
-        : `Encontré profesionales de ${serviceLabel} en ${placeLabel}.`,
+        ? `I found professionals for ${serviceLabel} in ${directPlaceLabel}.`
+        : `Encontré profesionales de ${serviceLabel} en ${directPlaceLabel}.`,
       ctaLabel: locale === "en" ? "See all results" : "Ver todos los resultados",
     };
   }
   if (wantsProfessionalSearch && directService && !directPlace) {
-    const serviceLabel = displayLabel(labels.get(directService.id) || getCategoryLabel(directService.id, locale), locale)!;
+    const serviceLabel = labels.get(directService.id) || getCategoryLabel(directService.id, locale);
     return {
       ...payload,
       action: "answer",
@@ -1225,9 +1206,9 @@ function normalizePayload(
       searchQuery: serviceLabel,
       locationText: publishPlaceLabel,
       answer: locale === "en"
-        ? `I have the service (${serviceLabel}) and location (${publishPlaceLabel}). Open the form to add the job details, review the information and publish the request.`
-        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${publishPlaceLabel}). Abra el formulario para agregar los detalles del trabajo, revisar la información y publicar la solicitud.`,
-      ctaLabel: locale === "en" ? "Create request" : "Crear solicitud",
+        ? `I have the service (${serviceLabel}) and location (${publishPlaceLabel}). Open the form to add the job details, review the information and create the project.`
+        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${publishPlaceLabel}). Abra el formulario para agregar los detalles del trabajo, revisar la información y crear el proyecto.`,
+      ctaLabel: locale === "en" ? "Create project" : "Crear proyecto",
     };
   }
   if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "forgot my password", "reset password"])) {
@@ -1293,8 +1274,8 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
     return {
       action: "answer",
       answer: locale === "en"
-        ? "I cannot share internal instructions, secrets or implementation details. I can help you search for services, publish a request or answer questions about ContrataCR."
-        : "No puedo compartir instrucciones internas, secretos ni detalles de implementacion. Si gusta, puedo ayudarle a buscar servicios, publicar una solicitud o resolver dudas sobre ContrataCR.",
+        ? "I cannot share internal instructions, secrets or implementation details. I can help you search for services, create a project or answer questions about ContrataCR."
+        : "No puedo compartir instrucciones internas, secretos ni detalles de implementacion. Si gusta, puedo ayudarle a buscar servicios, crear un proyecto o resolver dudas sobre ContrataCR.",
     };
   }
 
@@ -1399,15 +1380,13 @@ function assistantProfessionalResult(
   serviceId?: string | null,
   hasPublicAvailability = false,
 ): AssistantProfessionalResult {
-  const service = displayLabel(
+  const service =
     serviceId ? getCategoryLabel(serviceId, locale) :
     professional.categoryId ? getCategoryLabel(professional.categoryId, locale) :
-    locale === "en" ? "Professional service" : "Servicio profesional",
-    locale,
-  )!;
-  const location = displayLabel(professional.workplaces?.[0]?.name?.trim()
+    locale === "en" ? "Professional service" : "Servicio profesional";
+  const location = professional.workplaces?.[0]?.name?.trim()
     || [professional.cantonName, professional.provinceName].filter(Boolean).join(", ")
-    || (professional.videoconsulta ? (locale === "en" ? "Video consultation" : "Videoconsulta") : "Costa Rica"), locale)!;
+    || (professional.videoconsulta ? (locale === "en" ? "Video consultation" : "Videoconsulta") : "Costa Rica");
   const profileHref = `/${locale}/profesionales/${professional.slug}`;
   const actionKind: "availability" | "message" =
     hasPublicAvailability && professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp"
@@ -1428,7 +1407,7 @@ function assistantProfessionalResult(
     actionHref: profileHref,
     actionLabel: actionKind === "availability"
       ? locale === "en" ? "View availability" : "Ver disponibilidad"
-      : locale === "en" ? "Send message" : "Enviar mensaje",
+      : locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
     actionKind,
   };
 }
@@ -1520,8 +1499,8 @@ export async function POST(req: Request) {
       : resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
     const missingServiceName = !resolvedCategory.id ? clearMissingServiceName(rawMessage) : null;
     if (payload.action === "suggest_service" && resolvedCategory.id && !explicitPublishIntent) {
-      const serviceLabel = displayLabel(catalog.labels.get(resolvedCategory.id) || getCategoryLabel(resolvedCategory.id, locale), locale)!;
-      const placeLabel = displayLabel(formatPlaceLabel(userMessagePlace(rawMessage)), locale);
+      const serviceLabel = catalog.labels.get(resolvedCategory.id) || getCategoryLabel(resolvedCategory.id, locale);
+      const placeLabel = formatPlaceLabel(userMessagePlace(rawMessage));
       payload.action = placeLabel ? "search_professionals" : "answer";
       payload.answer = placeLabel
         ? locale === "en"
@@ -1548,7 +1527,7 @@ export async function POST(req: Request) {
       payload.action = "suggest_service";
       payload.answer = locale === "en"
         ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-        : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
+        : "Ese servicio todavÃ­a no estÃ¡ en el catÃ¡logo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
       payload.searchQuery = missingServiceName;
       payload.serviceId = null;
       payload.locationText = null;
@@ -1558,7 +1537,7 @@ export async function POST(req: Request) {
       payload.action = "answer";
       payload.answer = locale === "en"
         ? "Which service do you need? For example: plumbing, electricity, cleaning, repair or consulting."
-        : "¿Qué tipo de servicio necesita? Por ejemplo: plomería, electricidad, limpieza, reparación o asesoría.";
+        : "Â¿QuÃ© tipo de servicio necesita? Por ejemplo: plomerÃ­a, electricidad, limpieza, reparaciÃ³n o asesorÃ­a.";
       payload.searchQuery = null;
       payload.serviceId = null;
       payload.locationText = null;
@@ -1591,9 +1570,9 @@ export async function POST(req: Request) {
     const noResults = payload.action === "search_professionals" && !!payload.serviceId && resultCount === 0;
     const hasResults = payload.action === "search_professionals" && resultCount > 0;
     const suggestedService = payload.action === "suggest_service" ? payload.searchQuery || rawMessage : null;
-    const requestedServiceLabel = payload.serviceId ? displayLabel(catalog.labels.get(payload.serviceId), locale) : null;
+    const requestedServiceLabel = payload.serviceId ? catalog.labels.get(payload.serviceId) : null;
     const resolvedAnswerSearch = resolveSearch(rawMessage, locale, payload.serviceId, payload.locationText);
-    const requestedPlaceLabel = displayLabel(formatPlaceLabel(resolvedAnswerSearch.place), locale);
+    const requestedPlaceLabel = formatPlaceLabel(resolvedAnswerSearch.place);
     const resultCta = locale === "en"
       ? `See ${resultCount} ${resultCount === 1 ? "professional" : "professionals"}`
       : `Ver ${resultCount} ${resultCount === 1 ? "profesional" : "profesionales"}`;
@@ -1609,8 +1588,8 @@ export async function POST(req: Request) {
     const placePhrase = requestedPlaceLabel || "Costa Rica";
     const assistantAnswer = noResults
       ? locale === "en"
-        ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can publish a request so related professionals are notified.`
-        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puede publicar una solicitud para notificar a profesionales relacionados.`
+        ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can create a project so related professionals are notified.`
+        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puede crear un proyecto para notificar a profesionales relacionados.`
       : hasResults
         ? resultCount === 1
           ? locale === "en"
@@ -1633,7 +1612,7 @@ export async function POST(req: Request) {
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
         : singleProfessionalHref ?? searchHref,
       ctaLabel: noResults
-        ? locale === "en" ? "Publish request" : "Publicar solicitud"
+        ? locale === "en" ? "Create project" : "Crear proyecto"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),
       professionals: assistantProfessionals,
       suggestedService,

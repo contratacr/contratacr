@@ -37,7 +37,7 @@
     "subjectKey": "mailer_subjects_recovery",
     "contentKey": "mailer_templates_recovery_content",
     "subject": "Restablece tu contrasena - ContrataCR",
-    "requiredTokens": ["{{ .ConfirmationURL }}"]
+    "requiredTokens": ["{{ .SiteURL }}", "{{ .TokenHash }}"]
   },
   {
     "name": "reauthentication",

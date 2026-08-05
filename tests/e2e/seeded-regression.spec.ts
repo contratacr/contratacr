@@ -433,7 +433,7 @@ test.describe("@seeded core regression", () => {
       method: "POST",
       body: {
         title: marker,
-        description: "Publicación para probar retiro y rechazo de propuestas.",
+        description: "Proyecto para probar retiro y rechazo de propuestas.",
         categoryId: seed.categoryId,
         provinciaId: "al",
         cantonId: "al-al",
@@ -521,7 +521,7 @@ test.describe("@seeded core regression", () => {
       method: "POST",
       body: {
         title: `E2E Regression cancel project ${Date.now()}`,
-        description: "Publicacion para probar cancelacion sin propuesta activa.",
+        description: "Proyecto para probar cancelación sin propuesta activa.",
         categoryId: seed.categoryId,
         provinciaId: "al",
         cantonId: "al-al",

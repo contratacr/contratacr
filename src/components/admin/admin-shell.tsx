@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShieldCheck, LogOut, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList, ArrowLeft } from "lucide-react";
+import { ShieldCheck, LogOut, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList, ArrowLeft, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
   | "resumen" | "verificacion" | "usuarios" | "solicitudes" | "publicaciones" | "reportes" | "aseguradoras"
-  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad";
+  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas";
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
 // scroll strip on small screens). "Resumen" is the home/overview; the other
@@ -70,7 +70,8 @@ export function AdminShell({
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: counts.verificacion ?? 0 },
     { id: "usuarios", label: "Usuarios", icon: Users, href: "/admin/usuarios", badge: 0 },
     { id: "solicitudes", label: "Solicitudes", icon: CalendarCheck, href: "/admin/solicitudes", badge: 0 },
-    { id: "publicaciones", label: "Publicaciones", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
+    { id: "publicaciones", label: "Proyectos", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
+    { id: "resenas", label: "Reseñas", icon: Star, href: "/admin/resenas", badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },
@@ -131,7 +132,7 @@ export function AdminShell({
         <nav className="flex-1 overflow-y-auto px-3 py-2">
           {[
             { label: "Principal", ids: ["resumen", "usuarios"] },
-            { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "reportes", "soporte"] },
+            { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "resenas", "reportes", "soporte"] },
             { label: "Gestión", ids: ["categorias", "aseguradoras"] },
             { label: "Información", ids: ["analitica", "actividad"] },
           ].map((group, index) => (

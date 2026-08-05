@@ -770,6 +770,13 @@ export function AvailabilityEditor({
   const [applyModal, setApplyModal] = useState<{ weekday: number } | null>(null);
   const [dayModal, setDayModal] = useState<{ date: string } | null>(null);
 
+  useEffect(() => {
+    const open = Boolean(applyModal || dayModal);
+    const roots = [document.documentElement, document.body];
+    roots.forEach((root) => root.classList.toggle("ccr-availability-modal-open", open));
+    return () => roots.forEach((root) => root.classList.remove("ccr-availability-modal-open"));
+  }, [applyModal, dayModal]);
+
   const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
   const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
   const hasSchedulableLocation = locationOptions.length > 0;
@@ -1182,9 +1189,9 @@ function ApplyScheduleModal({ sourceWeekday, onClose, onApply }: {
   }
 
   return (
-    <div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
+    <div className="ccr-availability-modal app-modal-screen fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="app-bottom-sheet relative z-10 w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] shadow-2xl sm:max-w-sm sm:rounded-2xl sm:pb-5">
+      <div className="ccr-availability-modal-panel app-bottom-sheet relative z-10 w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] shadow-2xl sm:max-w-sm sm:rounded-2xl sm:pb-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-lg font-bold text-[#111827]">{t("applyToDaysTitle", { day: t(`weekday${sourceWeekday}` as `weekday${number}`) })}</h3>
@@ -1296,9 +1303,9 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
   ];
 
   return (
-    <div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
+    <div className="ccr-availability-modal app-modal-screen fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="app-bottom-sheet relative z-10 max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
+      <div className="ccr-availability-modal-panel app-bottom-sheet relative z-10 max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] p-4 sm:p-5">
           <div>
             <h3 className="text-base font-bold text-[#111827]">{t("modalTitle")}</h3>

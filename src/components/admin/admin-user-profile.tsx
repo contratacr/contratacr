@@ -428,7 +428,7 @@ export function AdminUserProfile({
       <Section icon={FolderOpen} title="Resumen como cliente">
         <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-4">
           <AnalyticsTile label="Solicitudes directas" value={bookings.length} />
-          <AnalyticsTile label="Publicaciones" value={projects.length} />
+          <AnalyticsTile label="Proyectos" value={projects.length} />
           <AnalyticsTile label="Activas o en curso" value={clientActive} />
           <AnalyticsTile label="Completadas" value={clientCompleted} />
           <AnalyticsTile label="Canceladas" value={clientCancelled} />

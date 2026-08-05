@@ -71,7 +71,7 @@ export type SearchFilters = {
   cantonId?: string;
   sortBy?: string;
   query?: string;
-  /** "Solo con identidad verificada" - only show verified providers. */
+  /** "Solo con identidad verificada" â€” only show verified providers. */
   verifiedOnly?: boolean;
   /** Filter by an insurance network (aseguradora) the pro belongs to. */
   insurerId?: string;
@@ -79,10 +79,10 @@ export type SearchFilters = {
   languageId?: string;
   /** How the client wants to be attended. Video is only shown for compatible services. */
   modality?: "any" | "in_person" | "video";
-  /** User coordinates (geolocation) - enables the "cerca de m?" proximity sort. */
+  /** User coordinates (geolocation) â€” enables the "cerca de mÃ­" proximity sort. */
   nearLat?: number;
   nearLng?: number;
-  /** "Buscar en esta área" - keep only pros within the map's visible viewport.
+  /** "Buscar en esta Ã¡rea" â€” keep only pros within the map's visible viewport.
    *  Applied IN ADDITION to the other filters (a JS post-filter on the results). */
   bounds?: { north: number; south: number; east: number; west: number };
 };
@@ -95,69 +95,15 @@ export type ProService = {
   priceAmount?: number | null;
   priceType?: import("@/lib/pricing").PricingType | null;
   category?: string;
+  active?: boolean;
   years?: number;
   months?: number;
   startedAt?: string;
-  active?: boolean;
   modalities?: Array<"in_person" | "at_home" | "video">;
 };
 
-function isDemoContrataCr(professional: Pick<ProfessionalCardData, "slug" | "businessName">): boolean {
-  return professional.slug === "contratacr-desarrollo-web-atenas" || professional.businessName?.trim().toLowerCase() === "contratacr";
-}
-
-function isDemoSgSolutions(professional: Pick<ProfessionalCardData, "slug" | "businessName">): boolean {
-  const name = professional.businessName?.trim().toLowerCase();
-  return name === "sg solutions" || professional.slug?.includes("sg-solutions") === true;
-}
-
-function setServiceExperience<T extends { years?: number; months?: number }>(services: T[] | undefined, years: number, months = 0): T[] | undefined {
-  const startedAt = monthValueFromExperience(years, months);
-  return services?.map((service) => ({
-    ...service,
-    years,
-    months,
-    startedAt,
-  }));
-}
-
-function monthValueFromExperience(years: number, months = 0) {
-  const totalMonths = Math.max(0, years * 12 + months);
-  const now = new Date();
-  const date = new Date(now.getFullYear(), now.getMonth() - totalMonths, 1);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function withAdvertisingDemoStats<T extends ProfessionalCardData>(professional: T): T {
-  if (isDemoContrataCr(professional)) {
-    return {
-      ...professional,
-      followerCount: 20,
-      yearsExperience: 7,
-      monthsExperience: 7,
-      services: setServiceExperience(professional.services, 7, 7),
-    };
-  }
-  if (isDemoSgSolutions(professional)) {
-    return {
-      ...professional,
-      followerCount: 10,
-      yearsExperience: 25,
-      portfolioCount: 2,
-      services: setServiceExperience(professional.services, 25),
-    };
-  }
-  return professional;
-}
-
 function hasActiveService(services: unknown): boolean {
   return activeServices(services).length > 0;
-}
-
-function hasLegacyPublicProfession(categoryId: unknown, professions: unknown, services: unknown): boolean {
-  if (hasCategorizedServices(services)) return false;
-  if (typeof categoryId === "string" && categoryId.trim()) return true;
-  return Array.isArray(professions) && professions.some((profession) => typeof profession === "string" && profession.trim());
 }
 
 function activeServices(services: unknown): ProService[] {
@@ -209,21 +155,10 @@ function isExactWorkplacePin(workplace: ProfessionalWorkplace | undefined): work
 }
 
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
-export type PortfolioItem = {
-  url?: string;
-  serviceId?: string;
-  profession?: string;
-  id?: string;
-  title?: string;
-  description?: string;
-  recipient?: string;
-  date?: string;
-  photos?: string[];
-  likes?: number;
-};
+export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
 // Optional website/social links. Social networks are stored as usernames; the
-// website is stored as a normalized URL. Additive to "casos de éxito" photos.
+// website is stored as a normalized URL. Additive to "casos de Ã©xito" photos.
 export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; linkedin?: string; website?: string };
 
 export type ProfessionalDetail = ProfessionalCardData & {
@@ -243,7 +178,7 @@ export type Review = {
   rating: number;
   comment: string;
   createdAt: string;
-  /** The job (solicitud/proyecto) this review belongs to - shown for context. */
+  /** The job (solicitud/proyecto) this review belongs to â€” shown for context. */
   jobTitle?: string | null;
 };
 
@@ -290,9 +225,9 @@ async function searchProfessionalsUncached(
     try {
       const supabase = createAdminClient();
 
-      // Built as a closure so we can retry without the `is_banned` filter if that
-      // column hasn't been migrated yet (migration 029) - search never breaks.
-      // modern = use is_banned + location-aware search arrays (migrations 029/030).
+      // Built as a closure so we can retry without location-aware search arrays if
+      // those columns have not been migrated yet.
+      // modern = use location-aware search arrays (migrations 029/030).
       // legacy = fall back to the old single provincia_id/canton_id columns.
       const build = (modern: boolean) => {
         let query = supabase
@@ -307,12 +242,8 @@ async function searchProfessionalsUncached(
              cantones(id, name)`
           );
 
-        if (modern) query = query.eq("is_banned", false);
-        // Unverified professionals (no_cr_id / pending / under appeal) ARE listed -
-        // shown with an explicit "Identidad sin verificar" label and ranked BELOW
-        // verified ones (see the verified-first pass below). Only rejected profiles
-        // are never visible.
-        if (modern) query = query.neq("verification_status", "rejected");
+        // Verified and unverified professionals are listed. Search visibility is
+        // controlled by active services and disabled profile status.
         const includeVideoNationwide =
           filters.modality !== "in_person" &&
           (filters.modality === "video" ||
@@ -332,7 +263,7 @@ async function searchProfessionalsUncached(
           query = query.or(`category_id.eq.${filters.categoryId},professions.cs.{${filters.categoryId}},${serviceCategoryContains(filters.categoryId)}`);
         }
         if (filters.provinceId && filters.provinceId !== "todas") {
-          // Hierarchy-aware: appears under every covered provincia (pins + cantón/
+          // Hierarchy-aware: appears under every covered provincia (pins + cantÃ³n/
           // provincia coverage) OR whole-country coverage. Legacy fallback for
           // un-migrated pros.
           query = modern
@@ -345,7 +276,7 @@ async function searchProfessionalsUncached(
             : query.eq("provincia_id", filters.provinceId);
         }
         if (filters.cantonId && filters.cantonId !== "todos") {
-          // A searched cantón matches if covered directly (search_cantones), via its
+          // A searched cantÃ³n matches if covered directly (search_cantones), via its
           // whole provincia (coverage_provincias), or via whole-country coverage.
           const parts = [`search_cantones.cs.{${filters.cantonId}}`, `canton_id.eq.${filters.cantonId}`];
           if (modern) {
@@ -414,7 +345,7 @@ async function searchProfessionalsUncached(
             if (parts.length > 0) {
               query = query.or(parts.join(","));
             }
-            // No usable text after sanitizing -> skip the text filter entirely.
+            // No usable text after sanitizing â†’ skip the text filter entirely.
           } else {
             const textFilter = `bio.ilike.%${q}%,business_name.ilike.%${q}%`;
             const parts = [textFilter, ...locationFilterParts];
@@ -457,20 +388,19 @@ async function searchProfessionalsUncached(
       };
 
       let { data, error } = await build(true);
-      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|certifications|call_phone|public_business_name_only|column/i.test(error.message)) {
+      if (error && /search_provincias|search_cantones|coverage_|no_cr_id|certifications|call_phone|public_business_name_only|column/i.test(error.message)) {
         ({ data, error } = await build(false)); // pre-migration fallback
       }
       if (error) throw error;
 
       let mapped = (data ?? [])
-        // Hide soft-disabled accounts (item 17). undefined (pre-migration) -> shown.
+        // Hide soft-disabled accounts (item 17). undefined (pre-migration) â†’ shown.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((row: any) => !row.profiles?.is_disabled)
         // Modern profiles must have at least one active service. Legacy profiles
-        // created before services were normalized may still only have
-        // category_id/professions; keep those visible until they edit their services.
+        // A professional is public-searchable only while at least one service is active.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .filter((row: any) => hasActiveService(row.services) || hasLegacyPublicProfession(row.category_id, row.professions, row.services))
+        .filter((row: any) => hasActiveService(row.services))
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((row: any) => {
           const rowActiveServices = activeServices(row.services);
@@ -484,7 +414,7 @@ async function searchProfessionalsUncached(
         categoryId: publicProfessions[0] ?? row.category_id ?? "",
         categoryIcon: "",
         professions: publicProfessions,
-        // Price now lives ONLY in Servicios - derive the card "Desde" from the
+        // Price now lives ONLY in Servicios â€” derive the card "Desde" from the
         // services (legacy profile-level pricing/hourly_rate kept as fallback).
         pricing: deriveDisplayPricing(rowActiveServices, row.pricing as ProfessionalCardData["pricing"], row.hourly_rate),
         bio: row.bio,
@@ -501,7 +431,7 @@ async function searchProfessionalsUncached(
         availabilityPublic: row.availability_public ?? true,
         contactPreference: (row.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
         businessName: row.business_name ?? undefined,
-        publicBusinessNameOnly: !!row.business_name,
+        publicBusinessNameOnly: !!row.business_name && row.public_business_name_only === true,
         workplaces: (row.workplaces as ProfessionalCardData["workplaces"]) ?? [],
         verificationStatus: (row.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
         languages: (row.languages as string[]) ?? [],
@@ -560,9 +490,6 @@ async function searchProfessionalsUncached(
         });
       }
 
-      // "Cerca de mí" is a real location filter: exact professional pins or
-      // exact workplace pins inside a short radius count first. For video-compatible
-      // services, keep nationwide videoconsulta pros as remote results after that.
       if (mapped.length > 0) {
         try {
           const { data: follows } = await supabase
@@ -578,9 +505,11 @@ async function searchProfessionalsUncached(
         } catch {
           mapped = mapped.map((p) => ({ ...p, followerCount: 0 }));
         }
-        mapped = mapped.map(withAdvertisingDemoStats);
       }
 
+      // "Cerca de mí" is a real location filter: exact professional pins or
+      // exact workplace pins inside a short radius count first. For video-compatible
+      // services, keep nationwide videoconsulta pros as remote results after that.
       if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
         const { nearLat, nearLng } = filters;
         const includeVideoNationwideForNear =
@@ -614,14 +543,14 @@ async function searchProfessionalsUncached(
       }
 
       // Verified-first ranking (default trust incentive): verified above unverified,
-      // featured above non-featured - applied as a STABLE pass so the chosen sort
-      // (rating/price/proximity/...) is preserved within each rank group. Unverified
+      // featured above non-featured â€” applied as a STABLE pass so the chosen sort
+      // (rating/price/proximity/â€¦) is preserved within each rank group. Unverified
       // pros still appear, just lower.
       const rank = (p: ProfessionalCardData) =>
         (p.verificationStatus === "verified" ? 2 : 0) + (p.isFeatured ? 1 : 0);
       mapped.sort((a, b) => rank(b) - rank(a));
 
-      // "Buscar en esta área" - keep only pros whose exact pin/workplace falls
+      // "Buscar en esta Ã¡rea" â€” keep only pros whose exact pin/workplace falls
       // within the map's visible viewport. A broad canton/province coverage zone
       // is not precise enough for a zoomed-in map rectangle.
       if (filters.bounds) {
@@ -643,20 +572,20 @@ async function searchProfessionalsUncached(
     }
   }
 
-  // No fake/seed fallback - only real professionals are ever listed.
+  // No fake/seed fallback â€” only real professionals are ever listed.
   return [];
 }
 
 // ---------------------------------------------------------------------------
 // Real zone coverage (home "Encuentra profesionales en tu zona")
 // ---------------------------------------------------------------------------
-// Returns, per province id, the set of cantón ids that GENUINELY have at least
-// one listed professional - mirroring /buscar search semantics so a clicked
+// Returns, per province id, the set of cantÃ³n ids that GENUINELY have at least
+// one listed professional â€” mirroring /buscar search semantics so a clicked
 // zone never lands on an empty result. NO fabricated counts: a province with no
 // professionals returns an empty list, and the UI then hides the count / shows
 // an honest empty state. Best-effort + column-fallback so it never breaks home.
 export type ZoneCoverage = {
-  /** province id -> covered cantón ids (deduped). Empty array = no coverage yet. */
+  /** province id â†’ covered cantÃ³n ids (deduped). Empty array = no coverage yet. */
   byProvince: Record<string, string[]>;
   /** True if ANY professional covers the whole country (every zone then matches). */
   countryWide: boolean;
@@ -672,12 +601,12 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
       supabase
         .from("professionals")
         .select(
-          `provincia_id, canton_id${modern ? ", search_provincias, search_cantones, coverage_provincias, coverage_country, is_banned" : ""}, verification_status, profiles(is_disabled)`
+          `services, provincia_id, canton_id${modern ? ", search_provincias, search_cantones, coverage_provincias, coverage_country" : ""}, profiles(is_disabled)`
         );
 
-    let res = await select(true).eq("is_banned", false).neq("verification_status", "rejected");
-    if (res.error && /is_banned|search_|coverage_|column/i.test(res.error.message)) {
-      res = await select(false).neq("verification_status", "rejected");
+    let res = await select(true);
+    if (res.error && /search_|coverage_|column/i.test(res.error.message)) {
+      res = await select(false);
     }
     if (res.error || !res.data) return empty;
 
@@ -691,6 +620,7 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
 
     for (const row of res.data as unknown as Record<string, unknown>[]) {
       if ((row.profiles as { is_disabled?: boolean } | null)?.is_disabled) continue;
+      if (!hasActiveService(row.services)) continue;
 
       add(row.provincia_id as string, row.canton_id as string);
 
@@ -702,7 +632,7 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
         add(prov, c);
       }
 
-      // Whole-province coverage -> every cantón in that province genuinely matches.
+      // Whole-province coverage â†’ every cantÃ³n in that province genuinely matches.
       const covProvs = Array.isArray(row.coverage_provincias) ? (row.coverage_provincias as string[]) : [];
       for (const pid of covProvs) {
         const prov = getProvinceById(pid);
@@ -786,7 +716,7 @@ export async function getProfessionalBySlug(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const proRow = pro as any;
 
-      // Tagged casos-de-éxito + phone-call opt-in + coverage. Best-effort: separate
+      // Tagged casos-de-Ã©xito + phone-call opt-in + coverage. Best-effort: separate
       // queries so a missing column (pre-migration 033/034) never breaks the profile.
       let portfolioItems: PortfolioItem[] = [];
       try {
@@ -841,7 +771,7 @@ export async function getProfessionalBySlug(
 
       // Job-title snapshot per review (best-effort; column from migration 036) so
       // each review shows which job it belongs to. (Edited timestamps are NOT
-      // surfaced publicly - only the author sees that, item 4.)
+      // surfaced publicly â€” only the author sees that, item 4.)
       const titleMap: Record<string, string | null> = {};
       try {
         const { data: rj } = await supabase.from("reviews").select("id, job_title").eq("professional_id", proRow.id);
@@ -862,21 +792,13 @@ export async function getProfessionalBySlug(
       const visibleServices = activeServices(rawServices);
       const legacyProfessions = (proRow.professions as string[]) ?? (proRow.category_id ? [proRow.category_id] : []);
       const publicProfessions = publicProfessionsFromServices(rawServices, legacyProfessions);
-      let followerCount = 0;
-      try {
-        const { count } = await supabase
-          .from("professional_follows")
-          .select("id", { count: "exact", head: true })
-          .eq("professional_id", proRow.id);
-        followerCount = count ?? 0;
-      } catch { /* table not migrated yet */ }
 
-      return withAdvertisingDemoStats({
+      return {
         id: proRow.id,
         slug: proRow.slug,
         fullName: (proRow.profiles as any)?.full_name ?? "Profesional",
         avatarUrl: (proRow.profiles as any)?.avatar_url ?? null,
-        // category_id is a plain text column - no join needed
+        // category_id is a plain text column â€” no join needed
         categoryId: publicProfessions[0] ?? proRow.category_id ?? "",
         categoryIcon: "",
         professions: publicProfessions,
@@ -888,7 +810,6 @@ export async function getProfessionalBySlug(
         cantonName: (proRow.cantones as any)?.name ?? "",
         ratingAvg: Number(proRow.rating_avg ?? 0),
         reviewCount: proRow.review_count ?? 0,
-        followerCount,
         yearsExperience: proRow.years_experience,
         hourlyRate: proRow.hourly_rate,
         isVerified: proRow.is_verified ?? false,
@@ -908,7 +829,7 @@ export async function getProfessionalBySlug(
         contactPreference: (proRow.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
         languages: (proRow.languages as string[]) ?? [],
         businessName: (proRow.business_name as string) ?? undefined,
-        publicBusinessNameOnly: !!proRow.business_name,
+        publicBusinessNameOnly: !!proRow.business_name && proRow.public_business_name_only === true,
         workplaces: (proRow.workplaces as ProfessionalCardData["workplaces"]) ?? [],
         verificationStatus: (proRow.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
         insuranceNetworks: (proRow.insurance_networks as string[]) ?? [],
@@ -917,7 +838,7 @@ export async function getProfessionalBySlug(
         callPhone,
         contactEmail,
         socialLinks,
-      });
+      };
       /* eslint-enable @typescript-eslint/no-explicit-any */
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);

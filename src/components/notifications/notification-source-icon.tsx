@@ -8,6 +8,7 @@ import {
   Handshake,
   Headset,
   Star,
+  UserPlus,
 } from "lucide-react";
 
 export function NotificationSourceIcon({ type, className }: { type: string; className?: string }) {
@@ -33,6 +34,8 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
       return <CalendarClock className={className} />;
     case "review_received":
       return <Star className={className} />;
+    case "professional_follow":
+      return <UserPlus className={className} />;
     case "proposal_received":
     case "proposal_updated":
     case "proposal_withdrawn":

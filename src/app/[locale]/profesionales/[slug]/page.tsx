@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
@@ -19,7 +19,7 @@ import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, proDisplayName, cn } from "@/lib/utils";
 import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
-import { CASE_PHOTOS_PER_CASE, casoProfession, countCases } from "@/lib/services";
+import { casoProfession, countCases } from "@/lib/services";
 import { addTaxIncludedToPriceLabel, formatServicePrice, primaryPricingLabel, splitPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
@@ -41,59 +41,6 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 
-const CONTRATACR_PROFILE_DEMO = {
-  bio: [
-    "Soy Isaac S\u00e1nchez Monge, fundador de ContrataCR y desarrollador web. Trabajo creando productos digitales pr\u00e1cticos para negocios reales: sitios que explican bien lo que se vende, aplicaciones que ordenan procesos y paneles que reducen trabajo manual.",
-    "Mi enfoque mezcla dise\u00f1o, programaci\u00f3n y criterio comercial. Antes de escribir c\u00f3digo, ordeno el objetivo: qu\u00e9 necesita hacer el usuario, qu\u00e9 datos debe capturar el negocio y cu\u00e1l es la acci\u00f3n principal que debe quedar clara en celular.",
-    "He construido flujos con autenticaci\u00f3n, perfiles p\u00fablicos, b\u00fasqueda, mapas, disponibilidad, solicitudes, propuestas, mensajer\u00eda, soporte, notificaciones, anal\u00edtica, integraciones con Supabase, almacenamiento de archivos y asistentes con IA.",
-    "ContrataCR es el ejemplo m\u00e1s completo de mi trabajo: una plataforma para Costa Rica con experiencia web, mobile, iOS y Android, pensada para conectar clientes con profesionales y mostrar informaci\u00f3n clara antes de iniciar una conversaci\u00f3n.",
-  ].join("\n\n"),
-  service: {
-    id: "contratacr-desarrollo-web",
-    name: "Desarrollo web",
-    category: "desarrollo_web",
-    active: true,
-    price: "Consultar precio",
-    priceType: "a_convenir" as const,
-    years: 7,
-    months: 0,
-    modalities: ["video" as const],
-    description: [
-      "Dise\u00f1o y desarrollo sitios web, landing pages, paneles internos y aplicaciones web completas para negocios que necesitan vender, atender mejor y operar con m\u00e1s orden.",
-      "Puedo ayudarle desde una p\u00e1gina comercial sencilla hasta una plataforma con usuarios, perfiles, formularios, reservas, mensajes, notificaciones, mapas, pagos, anal\u00edtica, panel administrativo e integraciones con servicios externos.",
-      "El trabajo incluye definici\u00f3n del flujo, estructura de contenido, dise\u00f1o responsive, desarrollo, pruebas en celular, configuraci\u00f3n de dominio, despliegue, medici\u00f3n b\u00e1sica y soporte para dejar el proyecto listo para usarse.",
-      "Cada entrega se piensa primero para mobile: textos claros, llamadas a la acci\u00f3n visibles, carga r\u00e1pida, formularios simples y una experiencia que no dependa de que el cliente est\u00e9 en computadora.",
-    ].join("\n\n"),
-  },
-  cases: [
-    { id: "contratacr-buscador-perfiles", serviceId: "contratacr-desarrollo-web", profession: "desarrollo_web", title: "Buscador y perfiles profesionales de ContrataCR", description: "Dise\u00f1o y desarrollo del buscador de profesionales con filtros, mapa, cards de resultados, horarios visibles, perfiles p\u00fablicos, rese\u00f1as, casos de \u00e9xito y llamadas a la acci\u00f3n para coordinar desde la misma plataforma.", recipient: "ContrataCR", date: "2026", photos: ["/og-image.png", "/web-app-manifest-flat-logo-v3-512x512.png"], likes: 18 },
-    { id: "contratacr-mobile-ios-android", serviceId: "contratacr-desarrollo-web", profession: "desarrollo_web", title: "Experiencia mobile, iOS y Android", description: "Adaptaci\u00f3n de ContrataCR para uso mobile con navegaci\u00f3n inferior, paneles que respetan safe areas, pantallas full screen, asistente IA optimizado para celular y vistas listas para capturas de App Store, Play Store y publicidad.", recipient: "ContrataCR mobile", date: "2026", photos: ["/apple-touch-icon-flat-logo-v3.png", "/android-chrome-512x512.png"], likes: 12 },
-    { id: "contratacr-mensajes-soporte", serviceId: "contratacr-desarrollo-web", profession: "desarrollo_web", title: "Mensajes, soporte y conversaciones internas", description: "Construcci\u00f3n de mensajer\u00eda interna, conversaciones por contexto, soporte tipo chat, estados de no le\u00eddo, archivado y composer mobile inspirado en patrones modernos para que el usuario pueda coordinar sin salir de ContrataCR.", recipient: "ContrataCR", date: "2026", photos: ["/logo-wordmark-transparent.png", "/brand/ai-assistant-robot.png"], likes: 9 },
-    { id: "contratacr-panel-operativo", serviceId: "contratacr-desarrollo-web", profession: "desarrollo_web", title: "Panel profesional y flujo de solicitudes", description: "Desarrollo de paneles para clientes y profesionales con solicitudes recibidas, oportunidades, propuestas, disponibilidad, notificaciones y datos demo reales para validar el producto en escenarios de captura y uso comercial.", recipient: "ContrataCR operaciones", date: "2026", photos: ["/logo-mark-transparent.png", "/logo-wordmark-transparent.png"], likes: 11 },
-  ],
-};
-
-function withContrataCrDemoProfile(pro: ProfessionalDetail): ProfessionalDetail {
-  if (pro.slug !== "contratacr-desarrollo-web-atenas") return pro;
-  return {
-    ...pro,
-    businessName: "ContrataCR",
-    bio: CONTRATACR_PROFILE_DEMO.bio,
-    categoryId: "desarrollo_web",
-    professions: ["desarrollo_web"],
-    services: [CONTRATACR_PROFILE_DEMO.service],
-    portfolioItems: CONTRATACR_PROFILE_DEMO.cases,
-    portfolioUrls: CONTRATACR_PROFILE_DEMO.cases.flatMap((item) => item.photos).slice(0, 5),
-    followerCount: 20,
-    yearsExperience: 7,
-    ratingAvg: Math.max(pro.ratingAvg ?? 0, 5),
-    reviewCount: Math.max(pro.reviewCount ?? 0, 5),
-    videoconsulta: true,
-    availabilityPublic: true,
-    contactPreference: "ambas",
-  };
-}
-
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
 // ─── Tab types ────────────────────────────────────────────────────────────────
@@ -109,6 +56,17 @@ function initialTabFromUrl(): Tab {
 function searchParamFromUrl(key: string): string | null {
   if (typeof window === "undefined") return null;
   return new URLSearchParams(window.location.search).get(key);
+}
+function safeSearchReturnHref(value: string | null): string {
+  if (!value) return "/buscar";
+  let href = value;
+  try {
+    href = decodeURIComponent(value);
+  } catch {
+    href = value;
+  }
+  const path = href.split("?")[0] ?? href;
+  return path === "/buscar" ? href : "/buscar";
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
@@ -128,31 +86,11 @@ export default function ProfilePage() {
   // stranded. `null` = logged out (that screen then shows only "Buscar profesionales").
   const [panelHref, setPanelHref] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>(() => initialTabFromUrl());
+  const [searchReturnHref] = useState(() => safeSearchReturnHref(searchParamFromUrl("from")));
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
   // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
   const [previewMode] = useState(() => searchParamFromUrl("preview") === "1");
-  const [searchReturnHref] = useState(() => {
-    const from = searchParamFromUrl("from");
-    if (from && from.startsWith("/") && !from.startsWith("//")) return from;
-    if (typeof document !== "undefined") {
-      try {
-        const referrer = new URL(document.referrer);
-        if (referrer.origin === window.location.origin) {
-          const localizedSearchPrefix = `/${locale}/buscar`;
-          const searchHref = `${referrer.pathname}${referrer.search}`;
-          if (referrer.pathname === localizedSearchPrefix) return searchHref.replace(`/${locale}`, "") || "/buscar";
-          if (referrer.pathname === "/buscar") return searchHref;
-        }
-      } catch {
-        // Ignore missing/invalid referrer and use the default search route.
-      }
-    }
-    return "/buscar";
-  });
-  const localizedSearchReturnHref = searchReturnHref === `/${locale}` || searchReturnHref.startsWith(`/${locale}/`)
-    ? searchReturnHref
-    : `/${locale}${searchReturnHref}`;
   // The profession the client searched/filtered by (?categoria=) — passed to the
   // booking modal so, for a multi-specialty pro, that service is pre-selected and we
   // know up front whether it's a health service (DOB) without re-asking.
@@ -179,9 +117,8 @@ export default function ProfilePage() {
       setSlug(routeSlug);
       const res = await fetch(`/api/professionals/${routeSlug}`);
       if (!res.ok) { setProNotFound(true); setLoading(false); return; }
-      const fetchedPro: ProfessionalDetail | null = await res.json();
-      if (!fetchedPro) { setProNotFound(true); setLoading(false); return; }
-      const pro = withContrataCrDemoProfile(fetchedPro);
+      const pro: ProfessionalDetail | null = await res.json();
+      if (!pro) { setProNotFound(true); setLoading(false); return; }
       setProfessional(pro);
       setLoading(false);
 
@@ -215,6 +152,12 @@ export default function ProfilePage() {
     return () => window.removeEventListener("professionalFollowsChanged", onFollowChange);
   }, [professional?.id]);
 
+  const updateFollowerCount = useCallback((count: number) => {
+    setProfessional((current) => current
+      ? { ...current, followerCount: Math.max(0, count) }
+      : current);
+  }, []);
+
   // Resolve the viewer's role-aware panel route up front (parallel, non-blocking) so the
   // "Profesional no encontrado" screen can offer "Volver a mi panel" even though load()
   // bails early on a missing pro. Reads ONLY the session (no avatar/profiles query).
@@ -235,10 +178,22 @@ export default function ProfilePage() {
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tab !== "resenas") return;
 
-    setActiveTab("resenas");
-    window.setTimeout(() => {
+    const scrollToReviews = () => {
       document.getElementById("resenas")?.scrollIntoView({ block: "start" });
+    };
+    let secondFrame: number | null = null;
+    const activateReviews = window.setTimeout(() => {
+      setActiveTab("resenas");
+      secondFrame = window.requestAnimationFrame(scrollToReviews);
     }, 0);
+    const firstFrame = window.requestAnimationFrame(scrollToReviews);
+    const fallback = window.setTimeout(scrollToReviews, 250);
+    return () => {
+      window.clearTimeout(activateReviews);
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame !== null) window.cancelAnimationFrame(secondFrame);
+      window.clearTimeout(fallback);
+    };
   }, [professional]);
 
   if (loading) {
@@ -390,8 +345,8 @@ export default function ProfilePage() {
     isVerified: professional.verificationStatus === "verified",
     videoconsulta: professional.videoconsulta,
     coverage: professional.coverage,
-    followerCount: professional.followerCount,
   };
+  const displayName = getProfessionalDisplayName(professional.fullName, professional.businessName);
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
@@ -416,10 +371,10 @@ export default function ProfilePage() {
               </Link>
             </div>
           ) : (
-            <a href={localizedSearchReturnHref} className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
+            <Link href={searchReturnHref} className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
               <ArrowLeft className="h-4 w-4" />
               {t("back")}
-            </a>
+            </Link>
           )}
 
           {/* No unverified-identity notice in the client preview: the ABSENCE of the
@@ -448,15 +403,10 @@ export default function ProfilePage() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <h1 className="text-2xl font-bold leading-tight text-[#111827]">
-                      {getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop}
+                      {displayName.primaryDesktop}
                     </h1>
                     {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
                   </div>
-                  {getProfessionalDisplayName(professional.fullName, professional.businessName).hasSecondary && (
-                    <p className="mt-0.5 text-sm font-medium text-[#6b7280]">
-                      {getProfessionalDisplayName(professional.fullName, professional.businessName).secondaryDesktop}
-                    </p>
-                  )}
                   <p className="mt-1 text-sm text-[#6b7280]">
                     {(professional.professions && professional.professions.length > 0 ? professional.professions : [professional.categoryId])
                       .filter(Boolean)
@@ -473,13 +423,14 @@ export default function ProfilePage() {
                     professionalId={professional.id}
                     isOwn={isOwn}
                     initialFollowers={professional.followerCount ?? 0}
+                    onCountChange={updateFollowerCount}
                     className="mt-3 w-fit"
                   />
                 </div>
               </div>
 
               {/* Stats strip — rating · años de exp · casos de éxito. */}
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-3 self-start shrink-0 sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5">
+              <div className="flex items-center gap-5 self-start shrink-0 sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5">
                 <button type="button" onClick={() => setActiveTab("resenas")} className="text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
@@ -493,10 +444,7 @@ export default function ProfilePage() {
                       <Briefcase className="h-4 w-4 text-[#009FD9]" />
                       <span className="text-[15px] font-bold text-[#111827]">{expYears}</span>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-[#9ca3af]">
-                      <span className="sm:hidden">{locale === "en" ? "yrs exp" : "años exp"}</span>
-                      <span className="hidden sm:inline">{locale === "en" ? "years experience" : "años experiencia"}</span>
-                    </p>
+                    <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statYears")}</p>
                   </div>
                 )}
                 {hasCasos && (
@@ -526,8 +474,8 @@ export default function ProfilePage() {
           <div className="flex flex-col lg:flex-row gap-6">
 
             {/* ── LEFT STICKY CARD ── */}
-            <aside className="w-full shrink-0 lg:order-2 lg:w-[360px]">
-              <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] p-4 sm:p-5 lg:sticky lg:top-24 flex flex-col gap-4">
+            <aside className="w-full shrink-0 lg:order-2 lg:w-80">
+              <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] p-5 lg:sticky lg:top-24 flex flex-col gap-4">
 
                 {/* "Desde" price — mirrors the right side of the /buscar card. Identity
                     (avatar/name/verificado/rating/location) now lives in the HEADER card
@@ -641,14 +589,12 @@ export default function ProfilePage() {
               <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] overflow-hidden">
 
                 {/* Tab bar */}
-                <div className="hide-scrollbar flex overflow-x-auto border-b border-[#e5e7eb]" role="tablist" aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}>
+                <div className="flex border-b border-[#e5e7eb] overflow-x-auto">
                   {TABS.map(tab => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      role="tab"
-                      aria-selected={activeTab === tab.id}
-                      className="relative shrink-0 px-5 py-4 text-sm font-semibold transition-colors hover:bg-[#f8fbfd]"
+                      className="relative shrink-0 px-5 py-4 text-sm font-semibold transition-colors"
                       style={{ color: activeTab === tab.id ? "#009FD9" : "#6b7280" }}
                     >
                       {tab.label}
@@ -709,7 +655,7 @@ export default function ProfilePage() {
                                     <p className="min-h-[44px] text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:min-h-[22px]">{title}</p>
                                     <div className="mt-2 h-[92px]">
                                       {description ? (
-                                        <div className="flex h-full flex-col justify-start">
+                                        <>
                                         <p className="line-clamp-3 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{description}</p>
                                           <button
                                             type="button"
@@ -717,13 +663,13 @@ export default function ProfilePage() {
                                             aria-hidden={!hasFullDescription}
                                             tabIndex={hasFullDescription ? 0 : -1}
                                             className={cn(
-                                               "mt-1 text-left text-[12px] font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]",
-                                               !hasFullDescription && "invisible pointer-events-none"
-                                             )}
-                                           >
+                                              "mt-1.5 text-left text-[13px] font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]",
+                                              !hasFullDescription && "invisible pointer-events-none"
+                                            )}
+                                          >
                                             {t("readFullDescription")}
                                           </button>
-                                        </div>
+                                        </>
                                       ) : (
                                         <>
                                           <p className="text-[13px] leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
@@ -731,7 +677,7 @@ export default function ProfilePage() {
                                         </>
                                       )}
                                     </div>
-                                    <div className="mt-3.5 min-h-[46px] space-y-1.5 text-[14px]">
+                                    <div className="mt-3 min-h-[46px] space-y-1.5 text-[14px]">
                                       {serviceYears ? (
                                         <p className="flex items-center gap-2 text-[#374151]">
                                           <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
@@ -797,7 +743,7 @@ export default function ProfilePage() {
                             }
                           }
                           for (const [prof, photos] of legacyByProf) {
-                            for (let i = 0; i < photos.length; i += CASE_PHOTOS_PER_CASE) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + CASE_PHOTOS_PER_CASE) });
+                            for (let i = 0; i < photos.length; i += 3) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
                           }
                           // Client-facing showcase: profession filter + a polished case-card grid.
                           return <CaseShowcase professionalId={professional.id} cases={caseList} professions={profsOrder} isOwn={isOwn} />;
@@ -857,13 +803,6 @@ export default function ProfilePage() {
                           </div>
                         </div>
                       )}
-
-                      <div className="flex items-start gap-2 mb-5">
-                        <Shield className="h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5" />
-                        <p className="text-xs text-[#6b7280]">
-                          {t("reviewsGate")}
-                        </p>
-                      </div>
 
                       <ReviewSection
                         professionalId={professional.id}

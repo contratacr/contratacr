@@ -1,0 +1,134 @@
+name: Mobile Native Regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      mobile_ref:
+        description: Branch or commit to test
+        required: true
+        default: mobile/ios-capacitor
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-native-regression-${{ github.event.inputs.mobile_ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: Mobile contracts and public environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.mobile_ref }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run security:env
+      - run: npm run test:mobile:remote
+      - run: npx tsc --noEmit
+
+  android:
+    name: Android lint, unit and emulator regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.mobile_ref }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - uses: android-actions/setup-android@v3
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - run: npm ci
+      - run: npx cap sync android
+      - run: chmod +x android/gradlew
+      - name: Compile, lint and run JVM tests
+        working-directory: android
+        run: ./gradlew lintDebug testDebugUnitTest assembleDebug assembleDebugAndroidTest
+      - name: Run native tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          profile: pixel_4
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash scripts/run-android-native-regression.sh
+      - name: Upload Android reports and APK
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: android-native-regression
+          path: |
+            android/app/build/reports/
+            android/app/build/outputs/apk/debug/
+            android/app/build/outputs/androidTest-results/
+            build/android-device/
+          if-no-files-found: ignore
+
+  ios:
+    name: iOS simulator build and launch regression
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.mobile_ref }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx cap sync ios
+      - name: Compile unsigned iOS simulator app
+        run: >
+          xcodebuild
+          -project ios/App/App.xcodeproj
+          -scheme App
+          -configuration Debug
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath build/ios-simulator
+          CODE_SIGNING_ALLOWED=NO
+          build
+      - name: Install and launch on iOS simulator
+        shell: bash
+        run: |
+          DEVICE_ID="$(xcrun simctl list devices available -j | python3 -c 'import json, sys; devices=json.load(sys.stdin)["devices"]; print(next(device["udid"] for runtime in devices.values() for device in runtime if device["name"].startswith("iPhone")))')"
+          xcrun simctl boot "$DEVICE_ID" || true
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          xcrun simctl install "$DEVICE_ID" build/ios-simulator/Build/Products/Debug-iphonesimulator/App.app
+          LAUNCH_OUTPUT="$(xcrun simctl launch "$DEVICE_ID" com.contratacr.app)"
+          echo "$LAUNCH_OUTPUT"
+          grep -q "com.contratacr.app" <<< "$LAUNCH_OUTPUT"
+          sleep 8
+          xcrun simctl io "$DEVICE_ID" screenshot build/ios-simulator/contratacr-launch.png
+          test -s build/ios-simulator/contratacr-launch.png
+      - name: Upload iOS simulator evidence
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ios-simulator-regression
+          path: |
+            build/ios-simulator/contratacr-launch.png
+            build/ios-simulator/Logs/
+          if-no-files-found: ignore

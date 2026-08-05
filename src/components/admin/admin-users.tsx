@@ -166,7 +166,7 @@ export function AdminUsers() {
               id="admin-users-search"
               value={q}
               onChange={(event) => setQ(event.target.value)}
-              placeholder="Nombre, nombre comercial, correo o identificación"
+              placeholder="Nombre, nombre comercial, correo, teléfono o identificación"
               className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#111827] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
             />
           </div>

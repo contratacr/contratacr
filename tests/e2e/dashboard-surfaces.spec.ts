@@ -8,8 +8,8 @@ const professionalTabs = [
   { tab: "services", marker: /Servicios|Services/i },
   { tab: "photos", marker: /Casos de exito|Casos de .xito|Success cases|Success stories/i },
   { tab: "availability", marker: /Disponibilidad|Availability/i },
-  { tab: "bookings", marker: /Solicitudes recibidas|Requests received/i },
-  { tab: "proposals", marker: /Oportunidades|Opportunities/i },
+  { tab: "bookings", marker: /Solicitudes|Requests/i },
+  { tab: "proposals", marker: /Proyectos|Projects/i },
   { tab: "verificacion", marker: /Verificacion|Verificaci.n|Verification/i },
   { tab: "notifications", marker: /Notificaciones|Notifications/i },
   { tab: "chat", marker: /Mensajes|Messages/i },
@@ -20,8 +20,8 @@ const professionalTabs = [
 const clientTabs = [
   { tab: "home&mode=use", marker: /Panel cliente|Client panel/i },
   { tab: "profile&mode=use", marker: /Mi perfil|My profile/i },
-  { tab: "sent_bookings", marker: /Mis solicitudes|My requests/i },
-  { tab: "sent_projects", marker: /Mis publicaciones|My posts/i },
+  { tab: "sent_bookings", marker: /Solicitudes|Requests/i },
+  { tab: "sent_projects", marker: /Mis proyectos|My projects/i },
   { tab: "saved", marker: /Mis favoritos|My favorites/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
   { tab: "chat&mode=use", marker: /Mensajes|Messages/i },
@@ -149,7 +149,7 @@ test.describe("@seeded dashboard surfaces", () => {
     for (const section of professionalTabs) {
       await gotoOK(page, `/en/dashboard/profesional?tab=${section.tab}`);
       await expectVisibleText(page.locator("main"), section.marker);
-      await expect(page.locator("main").last()).not.toContainText(/Notificaciones|Solicitudes recibidas|Disponibilidad|Cuenta y seguridad/i);
+      await expect(page.locator("main").last()).not.toContainText(/Notificaciones|Disponibilidad|Cuenta y seguridad/i);
       await expectHealthyPage(page);
     }
 
