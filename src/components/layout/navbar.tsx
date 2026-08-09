@@ -5,17 +5,15 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 /**
  * Single shared app header.
  *
- * `Navbar` is kept as a thin wrapper around `LandingNavbar` so EVERY page —
- * home, /buscar, dashboards, registro, login, etc. — renders the exact same
- * role-aware header (Categorías mega-menu + autocomplete, Recursos, account
- * menu). `LandingNavbar` is `position: fixed`, so we add the `h-16` spacer that
- * the in-flow pages used to get from the old sticky header.
+ * Navbar is kept as a thin wrapper around LandingNavbar so every page renders
+ * the same role-aware header. Pages can opt out of the mobile search when the
+ * header should stay navigation-only, like dashboard/account sections.
  */
-export function Navbar() {
+export function Navbar({ mobileSearch = true }: { mobileSearch?: boolean } = {}) {
   return (
     <>
-      <LandingNavbar />
-      <div className="h-16" aria-hidden />
+      <LandingNavbar mobileSearch={mobileSearch} />
+      <div className="ccr-navbar-spacer h-16" aria-hidden />
     </>
   );
 }

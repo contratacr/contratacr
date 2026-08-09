@@ -1,13 +1,10 @@
-import { getTranslations, getLocale } from "next-intl/server";
+import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { Search, CalendarDays, BadgeCheck, MessageCircle } from "lucide-react";
-import { PhoneFrame, ResultsScreen, buildLandingResultsCopy } from "@/components/landing/phone-screens";
 import { Link } from "@/i18n/navigation";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 
-/* "Así funciona ContrataCR" — ONE phone (the best/most representative app
-   screen) with all the key info organized beside it. Merges how-it-works,
-   trust and the professional pitch. Monochrome icons (serious tone).
-   Copy lives in the landing.howItWorks namespace (ES/EN). */
+/* "Asi funciona ContrataCR" - one clean phone with the real app screen. */
 const POINTS = [
   { Icon: Search, key: "point0" },
   { Icon: CalendarDays, key: "point1" },
@@ -19,14 +16,9 @@ const leadIconClass = "absolute -left-[18px] top-0 inline-flex h-9 w-9 shrink-0 
 
 export async function WhyContratacr() {
   const t = await getTranslations("landing.howItWorks");
-  const tCard = await getTranslations("card");
-  const tSched = await getTranslations("schedule");
-  const locale = await getLocale();
-
-  const resultsCopy = buildLandingResultsCopy({ locale, tLanding: t, tCard, tSchedule: tSched });
 
   return (
-    <section className="relative overflow-hidden py-20 sm:py-28 bg-white">
+    <section className="relative overflow-hidden bg-[#f4f7fa] py-20 sm:py-28">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744]">{t("heading")}</h2>
@@ -79,12 +71,42 @@ export async function WhyContratacr() {
             </ol>
           </FadeInUp>
 
-          {/* One phone — floats cleanly on the section, just a soft shadow */}
+          {/* One clean phone with the real app screen */}
           <FadeInUp delay={120} className="lg:order-2 order-1">
             <div className="relative flex justify-center">
-              {/* subtle ground shadow only — no container/box behind the phone */}
-              <div aria-hidden className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 h-6 w-52 rounded-[50%] bg-[#1a2744]/15 blur-2xl" />
-              <PhoneFrame><ResultsScreen copy={resultsCopy} /></PhoneFrame>
+              <div aria-hidden className="pointer-events-none absolute bottom-1 left-1/2 h-6 w-48 -translate-x-1/2 rounded-[50%] bg-[#1a2744]/10 blur-2xl" />
+              <div className="relative w-[284px] sm:w-[304px] lg:w-[326px]">
+                <div aria-hidden className="absolute -left-[2px] top-[116px] h-8 w-[3px] rounded-l-sm bg-[#2b2f36]" />
+                <div aria-hidden className="absolute -left-[2px] top-[162px] h-12 w-[3px] rounded-l-sm bg-[#2b2f36]" />
+                <div aria-hidden className="absolute -left-[2px] top-[208px] h-12 w-[3px] rounded-l-sm bg-[#2b2f36]" />
+                <div aria-hidden className="absolute -right-[2px] top-[150px] h-16 w-[3px] rounded-r-sm bg-[#2b2f36]" />
+
+                <div
+                  className="relative"
+                  style={{
+                    background: "linear-gradient(135deg,#f1f3f6 0%,#c6cbd2 18%,#777c85 50%,#c6cbd2 82%,#f1f3f6 100%)",
+                    borderRadius: 56,
+                    padding: 3,
+                    boxShadow:
+                      "0 50px 100px -28px rgba(15,23,42,0.50), 0 24px 48px -22px rgba(15,23,42,0.42), inset 0 0 0 0.5px rgba(255,255,255,0.45)",
+                  }}
+                >
+                  <div className="relative" style={{ background: "#04060a", borderRadius: 53, padding: 8 }}>
+                    <div className="relative overflow-hidden bg-white" style={{ borderRadius: 46 }}>
+                      <Image
+                        src="/landing-professionals-search.png"
+                        alt="Resultados de profesionales en ContrataCR"
+                        width={419}
+                        height={928}
+                        sizes="(max-width: 640px) 284px, (max-width: 1024px) 304px, 326px"
+                        className="block h-auto w-full"
+                        priority
+                      />
+                      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-20 h-16 bg-gradient-to-b from-white/14 to-transparent" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </FadeInUp>
         </div>
@@ -92,3 +114,4 @@ export async function WhyContratacr() {
     </section>
   );
 }
+

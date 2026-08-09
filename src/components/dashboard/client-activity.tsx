@@ -27,7 +27,7 @@ import { SavedProfessionalsTab } from "@/components/professionals/saved-professi
 import { useAuth } from "@/hooks/use-auth";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
-import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 
 /**
  * Shared "acting as a client" activity views — the user's SENT solicitudes,
@@ -575,7 +575,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   if (loading) {
-    return <PanelSectionLoading />;
+    return <PanelListSkeleton rows={3} withTabs />;
   }
 
   const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));
@@ -722,25 +722,26 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const isActiveB = ["pending", "confirmed", "in_progress"].includes(b.status);
                               const canContactAfterProCancel = b.status === "cancelled" && b.cancelled_by === "professional";
                               const canMessage = canContactAfterProCancel || (b.status !== "cancelled" && b.status !== "completed");
+                              const actionButtonClass = "min-h-10 w-full rounded-lg px-3 text-sm font-bold";
                               let primary: ReactNode = null;
                               if (b.status === "awaiting_confirmation") {
-                                primary = <Button size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
+                                primary = <Button size="sm" className={`${actionButtonClass} sm:min-w-[10rem] sm:flex-1`} onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
                               } else if (b.status === "completed") {
-                                primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
+                                primary = <Button variant="outline" size="sm" className={`${actionButtonClass} sm:min-w-[10rem] sm:flex-1`} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
                               } else if (canMessage && b.professional_id) {
                                 primary = (
-                                  <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" className="min-h-9 flex-1 rounded-lg px-4 text-sm font-bold sm:flex-none" />
+                                  <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" className={`${actionButtonClass} sm:min-w-[10rem] sm:flex-1`} />
                                 );
                               }
                               return (
-                                <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
+                                <div className="grid grid-cols-2 gap-2 border-t border-[#eef2f6] pt-3 sm:flex sm:flex-wrap sm:items-center">
                                   {primary}
                                   {isActiveB && (
                                     <>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="flex-1 rounded-lg border-[#bfdbfe] px-4 text-[#0089bb] hover:bg-[#f8fcff] sm:flex-none"
+                                        className={`${actionButtonClass} border-[#bfdbfe] text-[#0089bb] hover:bg-[#f8fcff] sm:min-w-[10rem] sm:flex-1`}
                                         onClick={() => {
                                           setReschedule({
                                             id: b.id,
@@ -756,7 +757,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                         <CalendarClock className="h-4 w-4" />
                                         {t("reschedule")}
                                       </Button>
-                                      <Button variant="outline" size="sm" className="flex-1 rounded-lg border-[#fecaca] px-4 text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:flex-none" onClick={() => openCancelBooking(b.id)}>
+                                      <Button variant="outline" size="sm" className={`${actionButtonClass} border-[#fecaca] text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:min-w-[10rem] sm:flex-1`} onClick={() => openCancelBooking(b.id)}>
                                         {t("cancel")}
                                       </Button>
                                     </>
@@ -765,7 +766,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="flex-1 rounded-lg border-red-100 px-4 text-red-600 hover:bg-red-50 sm:flex-none"
+                                      className={`${actionButtonClass} border-red-100 text-red-600 hover:bg-red-50 sm:min-w-[10rem] sm:flex-1`}
                                       onClick={() => archiveBooking(b.id)}
                                     >
                                       {t("archive")}
@@ -776,7 +777,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     aria-label={t("reportTitle")}
                                     title={t("reportTitle")}
                                     onClick={() => setReportProFor(b.id)}
-                                    className="ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-md px-1.5 text-xs font-medium text-[#9ca3af] transition-colors hover:text-[#dc2626]"
+                                    className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[#9ca3af] transition-colors hover:bg-[#f9fafb] hover:text-[#dc2626] sm:ml-auto sm:w-auto sm:min-w-[10rem]"
                                   >
                                     <Flag className="h-3.5 w-3.5" />
                                     <span>{t("reportTitle")}</span>

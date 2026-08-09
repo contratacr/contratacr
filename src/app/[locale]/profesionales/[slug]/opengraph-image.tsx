@@ -65,6 +65,13 @@ function clampText(text: string, max: number) {
   return text.length > max ? `${text.slice(0, max - 1).trim()}...` : text;
 }
 
+function serviceTypography(services: string[]) {
+  const totalLength = services.reduce((sum, service) => sum + service.length, 0);
+  if (services.length >= 8 || totalLength > 150) return 19;
+  if (services.length >= 5 || totalLength > 95) return 22;
+  return 26;
+}
+
 async function imageDataUrl(url?: string | null) {
   if (!url) return null;
   try {
@@ -86,20 +93,25 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const isEn = locale === "en";
   const pro = await getProfessionalBySlug(slug);
   const displayName = pro ? pro.businessName?.trim() || proDisplayName(pro.fullName) : "ContrataCR";
-  const personName = pro?.businessName?.trim() ? proDisplayName(pro.fullName) : "";
   const serviceIds = pro?.professions?.length ? pro.professions : pro?.categoryId ? [pro.categoryId] : [];
-  const services = serviceIds.slice(0, 3).map((id) => getCategoryLabel(id, locale)).filter(Boolean);
-  const serviceText = services.length > 0
-    ? services.join(" - ")
-    : isEn
-      ? "Service professional"
-      : "Profesional de servicios";
+  const serviceNames = (pro?.services ?? [])
+    .filter((service) => service.active !== false && service.name?.trim())
+    .map((service) => service.name!.trim());
+  const categoryNames = serviceIds.map((id) => getCategoryLabel(id, locale)).filter(Boolean);
+  const services = Array.from(
+    new Map((serviceNames.length > 0 ? serviceNames : categoryNames).map((name) => [name.toLocaleLowerCase(locale), name])).values()
+  );
+  const visibleServices = services.length > 0
+    ? services
+    : [isEn ? "Service professional" : "Profesional de servicios"];
+  const serviceFontSize = serviceTypography(visibleServices);
+  const serviceText = visibleServices.join("  ·  ");
   const location = [pro?.cantonName, pro?.provinceName].filter(Boolean).join(", ");
   const logoSrc = await logoWordmarkDataUrl();
   const avatarDataUrl = await imageDataUrl(pro?.avatarUrl);
   const brandLine = isEn
-    ? { lead: "Offer", middle: " and find services in\u00a0", place: "Costa Rica." }
-    : { lead: "Ofrece", middle: " y encuentra servicios en\u00a0", place: "Costa Rica." };
+    ? { lead: "Offer", middle: " and find services in ", place: "Costa Rica." }
+    : { lead: "Ofrece", middle: " y encuentra servicios en ", place: "Costa Rica." };
 
   return new ImageResponse(
     (
@@ -134,10 +146,10 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               display: "flex",
               alignItems: "center",
               justifyContent: "flex-start",
-              padding: "30px 48px 8px",
+              padding: "28px 48px 6px",
             }}
           >
-            <LogoWordmark src={logoSrc} width={278} height={62} />
+            <LogoWordmark src={logoSrc} width={352} height={78} />
           </div>
 
           <div
@@ -146,7 +158,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               flex: 1,
               padding: "8px 48px 22px",
               minWidth: 0,
-              gap: 42,
+              gap: 34,
             }}
           >
             <div
@@ -161,38 +173,46 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               <div
                 style={{
                   display: "flex",
-                  fontSize: displayName.length > 34 ? 50 : 60,
+                  fontSize: displayName.length > 34 ? 48 : 58,
                   lineHeight: 1.02,
                   fontWeight: 900,
                   color: "#162543",
-                  maxWidth: 660,
+                  maxWidth: 700,
                 }}
               >
                 {clampText(displayName, 52)}
               </div>
 
-              {personName && (
-                <div style={{ display: "flex", marginTop: 12, fontSize: 27, color: "#607089", fontWeight: 700 }}>
-                  {clampText(personName, 42)}
-                </div>
-              )}
+              <div
+                style={{
+                  display: "flex",
+                  marginTop: 20,
+                  marginBottom: 10,
+                  fontSize: 18,
+                  lineHeight: 1,
+                  color: "#607089",
+                  fontWeight: 800,
+                }}
+              >
+                {isEn ? "Services" : "Servicios"}
+              </div>
 
               <div
                 style={{
                   display: "flex",
-                  marginTop: 24,
-                  fontSize: 28,
-                  lineHeight: 1.2,
-                  color: "#243654",
-                  fontWeight: 850,
-                  maxWidth: 690,
+                  width: "100%",
+                  maxWidth: 720,
+                  color: "#162543",
+                  fontSize: serviceFontSize,
+                  lineHeight: 1.35,
+                  fontWeight: 700,
                 }}
               >
-                {clampText(serviceText, 72)}
+                {serviceText}
               </div>
 
               {location && (
-                <div style={{ display: "flex", marginTop: 18, fontSize: 25, color: "#607089", fontWeight: 700 }}>
+                <div style={{ display: "flex", marginTop: 16, fontSize: 23, color: "#607089", fontWeight: 700 }}>
                   {clampText(location, 52)}
                 </div>
               )}
@@ -201,7 +221,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
             <div
               style={{
                 display: "flex",
-                width: 322,
+                width: 292,
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
@@ -211,8 +231,8 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
               <div
                 style={{
                   display: "flex",
-                  width: 270,
-                  height: 270,
+                  width: 250,
+                  height: 250,
                   borderRadius: 999,
                   background: "#EBF5FB",
                   alignItems: "center",
@@ -224,8 +244,8 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={avatarDataUrl}
-                    width="270"
-                    height="270"
+                    width="250"
+                    height="250"
                     alt={displayName}
                     style={{
                       width: "100%",

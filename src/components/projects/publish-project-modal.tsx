@@ -11,7 +11,7 @@ import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { DateOfBirthPicker } from "@/components/ui/date-of-birth-picker";
 import { FormLoadingState } from "@/components/ui/loading-state";
-import { Loader2, ShieldAlert, ShieldCheck, X } from "lucide-react";
+import { ArrowLeft, Loader2, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { isHealthCategory } from "@/lib/data/categories";
 import { createClient } from "@/lib/supabase/client";
@@ -292,30 +292,31 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const shouldShowNoCedulaNotice = profileReady && !savedCedula && noCedula;
 
   return (
-    <div className="app-modal-screen fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
+    <div className="app-modal-screen fixed inset-0 z-[100] flex items-stretch justify-center sm:items-center sm:p-4">
       {/* Dimmed backdrop — click to close */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 hidden bg-black/50 backdrop-blur-sm sm:block" onClick={onClose} />
 
       {/* Dialog: full-width bottom-sheet on mobile, centered card on desktop. */}
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="publish-project-title"
-        className="app-bottom-sheet relative z-10 flex h-[92dvh] min-h-0 w-full max-h-[92vh] flex-col rounded-t-2xl bg-white shadow-2xl sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:rounded-2xl"
+        className="app-fullscreen-modal relative z-10 flex h-[var(--app-visual-viewport-height)] min-h-0 w-full max-h-[var(--app-visual-viewport-height)] flex-col overflow-hidden bg-white shadow-none sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-2xl sm:shadow-2xl"
       >
         {/* Header (pinned) */}
-        <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] px-5 py-4 shrink-0 sm:px-6">
-          <div className="min-w-0">
+        <div className="relative flex shrink-0 items-center justify-center gap-3 border-b border-[#f3f4f6] px-14 py-4 sm:items-start sm:justify-between sm:px-6">
+          <div className="min-w-0 text-center sm:text-left">
             <h2 id="publish-project-title" className="text-lg font-bold text-[#111827]">{t("title")}</h2>
-            <p className="mt-0.5 text-xs text-[#6b7280]">{t("subtitle")}</p>
+            <p className="mt-0.5 hidden text-xs text-[#6b7280] sm:block">{t("subtitle")}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label={t("close")}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors"
+            className="absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 shrink-0 items-center justify-center rounded-lg text-[#162543] transition-colors hover:bg-[#f3f4f6] sm:static sm:h-8 sm:w-8 sm:translate-y-0 sm:text-[#9ca3af] sm:hover:text-[#374151]"
           >
-            <X className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 sm:hidden" />
+            <X className="hidden h-5 w-5 sm:block" />
           </button>
         </div>
 
@@ -550,7 +551,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
           {/* Footer (pinned) */}
           <div className="flex shrink-0 gap-3 border-t border-[#f3f4f6] px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4">
-            <Button type="button" variant="outline" size="lg" onClick={onClose}>
+            <Button type="button" variant="outline" size="lg" onClick={onClose} className="hidden sm:inline-flex">
               {t("cancel")}
             </Button>
             <Button type={published ? "button" : "submit"} size="lg" className="flex-1" loading={submitting} disabled={submitting || !profileReady} onClick={published ? onClose : undefined}>

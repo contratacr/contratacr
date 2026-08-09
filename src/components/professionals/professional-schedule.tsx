@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { CalendarDays, ChevronLeft, ChevronRight, Mail, MapPin, Phone, Video } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Mail, MapPin, Phone, Video } from "lucide-react";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { useAuth } from "@/hooks/use-auth";
@@ -87,6 +87,7 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  */
 export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
+  const tLoading = useTranslations("loading");
   const locale = useLocale();
   const scheduleRootRef = useRef<HTMLDivElement>(null);
   const [shouldAutoRefresh, setShouldAutoRefresh] = useState(stacked || !slotsInitiallyLoaded);
@@ -108,14 +109,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const [showBooking, setShowBooking] = useState(false);
   const [preset, setPreset] = useState<ScheduleSlot | null>(null);
   const [offset, setOffset] = useState(0);
-  const locScrollRef = useRef<HTMLDivElement>(null);
-  const [locScrollHint, setLocScrollHint] = useState({ overflow: false, left: false, right: false });
-  const locDragStateRef = useRef<{ pointerId: number | null; startX: number; startScrollLeft: number; moved: boolean }>({
-    pointerId: null,
-    startX: 0,
-    startScrollLeft: 0,
-    moved: false,
-  });
+  const locationMenuRef = useRef<HTMLDivElement>(null);
+  const [locationMenuOpen, setLocationMenuOpen] = useState(false);
   // When the pro acts on their OWN card we block the action with a friendly modal
   // instead of hiding the buttons (the card looks identical to a client's view).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
@@ -378,6 +373,19 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const locTabs = hasRealLoc
     ? visibleLocationOptions
     : (placeFallback ? [{ id: "__fallback", label: placeFallback }] : []);
+  const primaryLocationTabs = useMemo(() => {
+    if (locTabs.length <= 3) return locTabs;
+    const selected = locTabs.find((option) => option.id === effectiveId);
+    if (!selected || locTabs.slice(0, 2).some((option) => option.id === selected.id)) {
+      return locTabs.slice(0, 2);
+    }
+    return [locTabs[0], selected];
+  }, [effectiveId, locTabs]);
+  const hiddenLocationTabs = useMemo(
+    () => locTabs.filter((option) => !primaryLocationTabs.some((visible) => visible.id === option.id)),
+    [locTabs, primaryLocationTabs],
+  );
+  const extraLocationCount = hiddenLocationTabs.length;
   // Address under the tabs: follow the selected tab. If a workplace has no exact
   // address, show that tab label instead of falling back to another location from
   // the search result.
@@ -392,114 +400,35 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       ? (workplaceAddr || selectedLocationLabel)
       : (placeAddress || "");
   const venueName = workplaceAddr ? businessName.trim() : "";
-  // Show the chevron nav whenever the tab row actually OVERFLOWS its container (FIT-based, not a
   useEffect(() => {
-    const el = locScrollRef.current;
-    if (!el) return;
-    el.scrollTo({ left: 0 });
-  }, [locTabs.length, effectiveId]);
-  useEffect(() => {
-    const el = locScrollRef.current;
-    if (!el) return;
-    let frame = 0;
-    const measure = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
-        const next = {
-          overflow: maxScroll > 1,
-          left: el.scrollLeft > 2,
-          right: el.scrollLeft < maxScroll - 2,
-        };
-        setLocScrollHint((prev) => (
-          prev.overflow === next.overflow && prev.left === next.left && prev.right === next.right ? prev : next
-        ));
-      });
+    if (!locationMenuOpen) return;
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!locationMenuRef.current?.contains(event.target as Node)) setLocationMenuOpen(false);
     };
-    measure();
-    let ro: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(measure);
-      ro.observe(el);
-    }
-    el.addEventListener("scroll", measure, { passive: true });
-    window.addEventListener("resize", measure);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      ro?.disconnect();
-      el.removeEventListener("scroll", measure);
-      window.removeEventListener("resize", measure);
-    };
-  }, [locTabs.length, effectiveId]);
-  const beginLocationDrag = (clientX: number, pointerId: number | null = null) => {
-    const el = locScrollRef.current;
-    if (!el) return;
-    locDragStateRef.current = {
-      pointerId,
-      startX: clientX,
-      startScrollLeft: el.scrollLeft,
-      moved: false,
-    };
-  };
-  const moveLocationDrag = (clientX: number) => {
-    const el = locScrollRef.current;
-    if (!el) return false;
-    const delta = clientX - locDragStateRef.current.startX;
-    if (!locDragStateRef.current.moved && Math.abs(delta) < 4) return false;
-    locDragStateRef.current.moved = true;
-    el.scrollLeft = locDragStateRef.current.startScrollLeft - delta;
-    return true;
-  };
-  const endLocationDrag = () => {
-    window.setTimeout(() => {
-      locDragStateRef.current.pointerId = null;
-      locDragStateRef.current.moved = false;
-    }, 0);
-  };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
+  }, [locationMenuOpen]);
   const locationControl = locTabs.length > 0 ? (
     <div
-      className="relative z-10 w-full min-w-0"
+      className="relative z-30 w-full min-w-0"
       onClick={(e) => e.stopPropagation()}
     >
       {/* TABS (Doctoralia-style): pin + name; the selected tab is brand-blue with an
           underline, the rest muted. The row SCROLLS sideways and NEVER wraps
           (`shrink-0` + `whitespace-nowrap`). A thin scrollbar appears only when
           there is horizontal overflow, matching modern secondary tab rows. */}
-      <div className="relative">
-        {locScrollHint.overflow && locScrollHint.left && (
-          <span className="pointer-events-none absolute left-0 top-0 z-10 h-full w-6 bg-gradient-to-r from-white via-white/90 to-white/0" aria-hidden />
-        )}
-        {locScrollHint.overflow && locScrollHint.right && (
-          <span className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-white via-white/90 to-white/0" aria-hidden />
-        )}
+      <div className="relative" ref={locationMenuRef}>
         {/* `overflow-y-hidden` is REQUIRED: `overflow-x-auto` alone leaves overflow-y as
             `visible`, which CSS then COMPUTES to `auto` — so the row became vertically
             scrollable (it could be dragged up/down even with ONE location). Pinning overflow-y
             to hidden makes it strictly a HORIZONTAL tab scroll; vertical touch-drags then bubble
             to the page/sheet scroll (default touch-action). */}
         <div
-          ref={locScrollRef}
-          className="ccr-location-tabs-scroll hide-scrollbar flex min-w-0 gap-3 overflow-x-auto overflow-y-hidden pr-6 pb-[2px]"
+          className="flex min-w-0 items-center gap-3 pb-[2px]"
           role="tablist"
           aria-label={t("location")}
-          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
-          onPointerDown={(e) => {
-            beginLocationDrag(e.clientX, e.pointerId);
-          }}
-          onPointerMove={(e) => {
-            if (locDragStateRef.current.pointerId !== e.pointerId) return;
-            if (moveLocationDrag(e.clientX)) e.preventDefault();
-          }}
-          onPointerUp={(e) => {
-            if (locDragStateRef.current.pointerId !== e.pointerId) return;
-            endLocationDrag();
-          }}
-          onPointerCancel={(e) => {
-            if (locDragStateRef.current.pointerId !== e.pointerId) return;
-            endLocationDrag();
-          }}
         >
-          {locTabs.map((o) => {
+          {primaryLocationTabs.map((o) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
             const isVideoTab = o.id === "videoconsulta" || (!hasRealLoc && (professional.videoconsulta || professional.coverage?.country));
             return (
@@ -512,27 +441,65 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                 onClick={hasRealLoc
                   ? (e) => {
                       e.stopPropagation();
-                      if (locDragStateRef.current.moved) {
-                        e.preventDefault();
-                        return;
-                      }
                       setSelectedLoc(o.id);
                       setOffset(0);
                     }
                   : (e) => e.stopPropagation()}
-                className={`shrink-0 inline-flex items-center gap-1 whitespace-nowrap py-0 pl-0 pr-0.5 text-[12px] font-semibold transition-colors ${
+                className={`inline-flex min-w-0 items-center gap-1 whitespace-nowrap py-0 pl-0 pr-0.5 text-[12px] font-semibold transition-colors ${extraLocationCount > 0 ? "max-w-[36%]" : primaryLocationTabs.length > 2 ? "max-w-[32%]" : primaryLocationTabs.length > 1 ? "max-w-[48%]" : "max-w-full"} ${
                   active
                     ? "text-[#009FD9]"
                     : "text-[#6b7280] hover:text-[#009FD9]"
                 }`}
-                style={{ touchAction: "pan-x" }}
+                title={locTabLabel(o.label)}
               >
                 {isVideoTab ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
-                {locTabLabel(o.label)}
+                <span className="min-w-0 truncate">{locTabLabel(o.label)}</span>
               </button>
             );
           })}
+          {extraLocationCount > 0 && (
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={locationMenuOpen}
+              onClick={(event) => {
+                event.stopPropagation();
+                setLocationMenuOpen((open) => !open);
+              }}
+              className="ml-auto inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] font-bold text-[#5f6f86] transition-colors hover:text-[#009FD9]"
+            >
+              +{extraLocationCount} {locale === "en" ? "locations" : "lugares"}
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${locationMenuOpen ? "rotate-180" : ""}`} />
+            </button>
+          )}
         </div>
+        {locationMenuOpen && extraLocationCount > 0 && (
+          <div className="absolute right-0 top-[calc(100%+0.35rem)] z-[120] min-w-[13rem] max-w-[min(18rem,calc(100vw-3rem))] overflow-hidden rounded-lg border border-[#dbe4ec] bg-white py-1 shadow-[0_12px_30px_rgba(15,39,71,0.18)]" role="menu">
+            {hiddenLocationTabs.map((option) => {
+              const active = option.id === effectiveId;
+              const isVideo = option.id === "videoconsulta";
+              return (
+                <button
+                  key={`location-menu-${option.id}`}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={active}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedLoc(option.id);
+                    setOffset(0);
+                    setLocationMenuOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-semibold transition-colors ${active ? "bg-[#edf8fc] text-[#009FD9]" : "text-[#162543] hover:bg-[#f4f7fa]"}`}
+                >
+                  {isVideo ? <Video className="h-3.5 w-3.5 shrink-0" /> : <MapPin className="h-3.5 w-3.5 shrink-0" />}
+                  <span className="min-w-0 flex-1 truncate">{locTabLabel(option.label)}</span>
+                  {active && <Check className="h-3.5 w-3.5 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
       <div className="mt-1 h-px w-full bg-[#e5e7eb]" aria-hidden />
       {addressLine && (
@@ -757,10 +724,24 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       .catch(() => {});
   }
 
+  function requireContactAuth() {
+    if (user) return true;
+    const redirect = typeof window !== "undefined"
+      ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+      : "/";
+    window.location.assign(`/${locale}/login?redirect=${encodeURIComponent(redirect)}`);
+    return false;
+  }
+
   const renderCall = (secondary: boolean) => (
     <a
       href={isOwn ? undefined : telHref}
-      onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => { e.stopPropagation(); trackContact("phone"); recordContactFollowUp("phone"); }}
+      onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => {
+        e.stopPropagation();
+        if (!requireContactAuth()) { e.preventDefault(); return; }
+        trackContact("phone");
+        recordContactFollowUp("phone");
+      }}
       className={`w-full inline-flex items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-semibold transition-colors ${
         secondary
           ? "border border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
@@ -781,7 +762,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       {showEmail && (
         <a
           href={isOwn ? undefined : emailHref}
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => { e.stopPropagation(); trackContact("email"); recordContactFollowUp("email"); }}
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => {
+            e.stopPropagation();
+            if (!requireContactAuth()) { e.preventDefault(); return; }
+            trackContact("email");
+            recordContactFollowUp("email");
+          }}
           className="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
         >
           <Mail className="h-4 w-4" /> {t("email")}
@@ -808,7 +794,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           {showEmail && (
             <a
               href={isOwn ? undefined : emailHref}
-              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => { e.stopPropagation(); trackContact("email"); recordContactFollowUp("email"); }}
+              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => {
+                e.stopPropagation();
+                if (!requireContactAuth()) { e.preventDefault(); return; }
+                trackContact("email");
+                recordContactFollowUp("email");
+              }}
               className="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-3 py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
             >
               <Mail className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">{t("email")}</span>
@@ -831,7 +822,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   );
 
   const scheduleLoadingBody = (
-    <div className="flex w-full flex-col gap-3" aria-label={locale === "en" ? "Loading availability" : "Cargando horarios"} aria-busy="true">
+    <div className="flex w-full flex-col gap-3" aria-label={tLoading("availability")} aria-busy="true">
       <div className="flex w-full items-start gap-1">
         <span className="flex w-4 shrink-0 self-center" aria-hidden />
         <div className={`grid flex-1 grid-cols-3 ${dayGridGap}`}>

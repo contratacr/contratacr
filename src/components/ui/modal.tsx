@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
@@ -34,7 +34,7 @@ interface ModalProps {
   /** Extra classes on the body wrapper (e.g. remove default padding). */
   bodyClassName?: string;
   /** Small alerts can stay centered on mobile; long forms keep the bottom sheet. */
-  mobilePresentation?: "sheet" | "center";
+  mobilePresentation?: "sheet" | "center" | "fullscreen";
   /** Extra classes on the pinned footer. */
   footerClassName?: string;
 }
@@ -63,13 +63,14 @@ export function Modal({
   if (!open) return null;
 
   const centeredMobile = mobilePresentation === "center";
+  const fullscreenMobile = mobilePresentation === "fullscreen";
 
   return (
     <div
       className={cn(
         "app-modal-screen fixed inset-0 z-[100] flex justify-center",
         centeredMobile && "app-centered-modal-screen",
-        centeredMobile ? "items-center p-4" : "items-end sm:items-center sm:p-4"
+        fullscreenMobile ? "items-stretch sm:items-center sm:p-4" : centeredMobile ? "items-center p-4" : "items-end sm:items-center sm:p-4"
       )}
     >
       {/* Dimmed backdrop — click to close */}
@@ -81,16 +82,25 @@ export function Modal({
         aria-modal="true"
         className={cn(
           "relative z-10 flex w-full flex-col overflow-hidden bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
-          centeredMobile
-            ? "app-centered-modal max-h-[calc(var(--app-visual-viewport-height)-2rem)] rounded-2xl"
-            : "max-h-[92vh] rounded-t-2xl",
+          fullscreenMobile
+            ? "app-fullscreen-modal h-[var(--app-visual-viewport-height)] max-h-[var(--app-visual-viewport-height)] rounded-none sm:h-auto sm:max-h-[90vh] sm:rounded-2xl"
+            : centeredMobile
+              ? "app-centered-modal max-h-[calc(var(--app-visual-viewport-height)-2rem)] rounded-2xl"
+              : "max-h-[92vh] rounded-t-2xl",
           "app-bottom-sheet min-h-0",
           SIZES[size]
         )}
       >
         {/* Header (pinned) */}
-        <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] px-5 py-4 shrink-0 sm:px-6">
-          <div className="min-w-0">
+        <div
+          className={cn(
+            "flex shrink-0 gap-3 border-b border-[#f3f4f6] px-5 py-4 sm:px-6",
+            fullscreenMobile
+              ? "relative items-center justify-center sm:static sm:items-start sm:justify-between"
+              : "items-start justify-between",
+          )}
+        >
+          <div className={cn("min-w-0", fullscreenMobile && "text-center sm:text-left")}>
             <h2 className="text-lg font-bold text-[#111827] leading-tight">{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-[#6b7280]">{subtitle}</p>}
           </div>
@@ -98,9 +108,19 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label={closeLabel}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors"
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]",
+              fullscreenMobile && "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
+            )}
           >
-            <X className="h-5 w-5" />
+            {fullscreenMobile ? (
+              <>
+                <ArrowLeft className="h-5 w-5 sm:hidden" />
+                <X className="hidden h-5 w-5 sm:block" />
+              </>
+            ) : (
+              <X className="h-5 w-5" />
+            )}
           </button>
         </div>
 

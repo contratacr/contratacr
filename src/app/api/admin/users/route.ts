@@ -58,7 +58,7 @@ export async function GET(req: Request) {
   }
 
   function norm(value: string | null | undefined) {
-    return (value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return (value ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   }
 
   if (mode === "list") {

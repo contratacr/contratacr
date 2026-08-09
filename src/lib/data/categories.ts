@@ -1,4 +1,4 @@
-﻿import { repairVisibleText } from "@/lib/text/repair-visible-text";
+import { hasBrokenVisibleText, repairVisibleText } from "@/lib/text/repair-visible-text";
 
 export type CategoryItem = {
   id: string;
@@ -42,7 +42,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "hogar",
     label: "Hogar y construcción",
-    emoji: "ðŸ ",
+    emoji: "🏠",
     items: [
       { id: "plomeria", label: "Plomería", keywords: ["plomero", "plomera", "fontanero", "fontanera", "tuberias", "canerias", "grifo", "fuga", "sanitarios", "agua", "lavamanos", "inodoro"] },
       { id: "electricidad", label: "Electricidad", keywords: ["electricista", "cableado", "circuitos", "enchufes", "apagadores", "tablero", "breaker", "luz"] },
@@ -78,7 +78,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "jardin",
     label: "Jardín y exterior",
-    emoji: "ðŸŒ¿",
+    emoji: "🌿",
     items: [
       { id: "jardineria", label: "Jardinería", keywords: ["jardinero", "jardinera", "jardin", "grama", "plantas", "podado", "mantenimiento de jardin", "cesped", "flores"] },
       { id: "poda_arboles", label: "Poda de árboles", keywords: ["arbol", "poda", "tala", "arborista", "ramas"] },
@@ -91,7 +91,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "limpieza",
     label: "Limpieza",
-    emoji: "ðŸ§¹",
+    emoji: "🧹",
     items: [
       { id: "limpieza", label: "Limpieza del hogar", keywords: ["limpiador", "limpiadora", "limpieza de casa", "hogar", "servicio domestico", "empleada domestica", "empleado domestico", "aseo", "mucama"] },
       { id: "limpieza_oficinas", label: "Limpieza de oficinas", keywords: ["limpieza comercial", "empresa", "edificio", "bodega", "local comercial"] },
@@ -127,7 +127,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "profesional",
     label: "Servicios empresariales",
-    emoji: "ðŸ’¼",
+    emoji: "💼",
     items: [
       { id: "contabilidad", label: "Contabilidad y finanzas", keywords: ["contador", "CPA", "finanzas", "declaracion de renta", "tributacion", "libros contables", "impuestos", "hacienda"] },
       { id: "legal", label: "Abogados y servicios legales", keywords: ["abogado", "notario", "asesor legal", "juridico", "contratos", "derecho", "bufete", "tramites", "liberar hipoteca", "cancelar hipoteca", "levantamiento de hipoteca", "prenda de vehiculo", "liberar prenda", "cancelar prenda", "registro nacional vehiculo"] },
@@ -156,7 +156,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "salud",
     label: "Salud y bienestar",
-    emoji: "ðŸ©º",
+    emoji: "🩺",
     items: [
       { id: "entrenamiento_personal", label: "Entrenamiento personal", keywords: ["entrenador", "personal trainer", "fitness", "gym", "ejercicio", "pesas", "crossfit", "fuerza"] },
       { id: "entrenamiento_deportivo", label: "Entrenamiento deportivo", keywords: ["entrenador de futbol", "coach deportivo", "futbol", "natacion", "tenis", "baloncesto", "deporte", "preparador fisico", "atletismo"] },
@@ -190,7 +190,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "belleza",
     label: "Belleza y estética",
-    emoji: "ðŸ’…",
+    emoji: "💅",
     items: [
       { id: "belleza", label: "Servicios de belleza", keywords: ["belleza", "estetica", "salon de belleza", "cuidado personal"] },
       { id: "peluqueria", label: "Peluquería y barbería", keywords: ["barbero", "estilista", "corte de pelo", "cabello", "coloracion", "mechas", "peluquero"] },
@@ -206,7 +206,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "moda_y_cuidado_personal",
     label: "Moda y cuidado personal",
-    emoji: "ðŸ§µ",
+    emoji: "🧵",
     items: [
       { id: "costura_y_arreglos_de_ropa", label: "Costura y arreglos de ropa", keywords: ["costurera", "sastreria", "sastre", "arreglos de ropa", "ruedos", "ajustes de ropa"] },
       { id: "lavanderia", label: "Lavandería", keywords: ["lavado de ropa", "planchado", "lavaseco", "dry cleaning", "ropa", "edredones"] },
@@ -237,7 +237,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "transporte",
     label: "Mudanzas y transporte",
-    emoji: "ðŸšš",
+    emoji: "🚚",
     items: [
       { id: "mudanzas", label: "Mudanzas", keywords: ["mudanza", "transporte de muebles", "flete", "carga", "camion de mudanza"] },
       { id: "fletes", label: "Fletes y carga", keywords: ["flete", "carga", "transporte de mercancia", "pick up", "camioneta de carga"] },
@@ -250,7 +250,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "eventos",
     label: "Eventos",
-    emoji: "ðŸŽ‰",
+    emoji: "🎉",
     items: [
       { id: "fotografia_eventos", label: "Fotografía de eventos", keywords: ["fotografo de bodas", "quinceaneras", "eventos", "fotografia social", "quinceañera"] },
       { id: "videografia", label: "Videografía de eventos", keywords: ["videografo de bodas", "filmacion de eventos", "video de boda", "video social"] },
@@ -269,7 +269,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "seguridad",
     label: "Seguridad",
-    emoji: "ðŸ”",
+    emoji: "🔐",
     items: [
       { id: "guardas_seguridad", label: "Guardas de seguridad", keywords: ["guarda de seguridad", "vigilante", "seguridad privada", "vigilancia", "condominio"] },
       { id: "alarmas", label: "Instalación de alarmas", keywords: ["alarma de casa", "sistema de seguridad", "sensores", "alarma de robo"] },
@@ -283,7 +283,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "automotriz",
     label: "Vehículos y movilidad",
-    emoji: "ðŸš—",
+    emoji: "🚗",
     items: [
       { id: "mecanica", label: "Mecánica automotriz", keywords: ["mecanico", "mecanica", "mecanicos", "mecanico automotriz", "taller mecanico", "taller", "motor", "frenos", "transmision", "aceite", "servicio de auto"] },
       { id: "mecanica_bicicletas", label: "Mecánica de bicicletas", keywords: ["bicicleta", "bicicletas", "bici", "bicis", "cleta", "cletas", "mecanico de bicicletas", "reparacion de bicicletas", "taller de bicicletas", "frenos de bicicleta", "cadena de bicicleta", "llantas de bicicleta", "mountain bike", "ciclismo", "bicycle", "bike", "bike repair", "bicycle repair", "bicycle mechanic", "bike mechanic"] },
@@ -299,7 +299,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "turismo",
     label: "Turismo",
-    emoji: "ðŸ§­",
+    emoji: "🧭",
     items: [
       { id: "agencia_viajes", label: "Agencia de viajes", keywords: ["viajes", "paquetes turisticos", "boletos", "vacaciones", "tour"] },
       { id: "guia_turistico", label: "Guía turístico", keywords: ["guia turistico", "guia local", "tour guide", "excursiones", "recorridos"] },
@@ -310,7 +310,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     id: "comercios",
     label: "Comercios",
-    emoji: "ðŸª",
+    emoji: "🏪",
     items: [
       { id: "restaurantes_comida", label: "Restaurantes y comida", keywords: ["restaurante", "restaurantes", "soda", "sodas", "comida", "almuerzo", "cena", "casado", "comida rapida", "comida a domicilio", "delivery de comida"] },
       { id: "cafeterias", label: "Cafeterías", keywords: ["cafeteria", "cafe", "coffee shop", "reposteria", "desayuno", "meriendas"] },
@@ -333,23 +333,23 @@ type CategorySegmentDefinition = Omit<CategoryGroup, "items"> & {
 };
 
 const CATEGORY_SEGMENTS: CategorySegmentDefinition[] = [
-  { id: "hogar", label: "Hogar", labelEn: "Home", emoji: "ðŸ ", iconKey: "armchair" },
-  { id: "construccion_ingenieria", label: "Construcci\u00f3n", labelEn: "Construction", emoji: "\uD83D\uDC77", iconKey: "hard-hat" },
-  { id: "limpieza", label: "Limpieza", labelEn: "Cleaning", emoji: "ðŸ§¹", iconKey: "sparkles" },
-  { id: "salud", label: "Salud", labelEn: "Health", emoji: "ðŸ©º", iconKey: "heart" },
-  { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "\uD83E\uDD1D", iconKey: "heart-handshake" },
-  { id: "belleza", label: "Belleza", labelEn: "Beauty & aesthetics", emoji: "\u2728", iconKey: "star" },
-  { id: "moda_y_cuidado_personal", label: "Moda", labelEn: "Fashion", emoji: "\uD83D\uDC55", iconKey: "shirt" },
-  { id: "automotriz", label: "Veh\u00edculos", labelEn: "Vehicles", emoji: "\uD83D\uDE97", iconKey: "car" },
+  { id: "hogar", label: "Hogar", labelEn: "Home", emoji: "🏠", iconKey: "armchair" },
+  { id: "construccion_ingenieria", label: "Construcción", labelEn: "Construction", emoji: "👷", iconKey: "hard-hat" },
+  { id: "limpieza", label: "Limpieza", labelEn: "Cleaning", emoji: "🧹", iconKey: "sparkles" },
+  { id: "salud", label: "Salud", labelEn: "Health", emoji: "🩺", iconKey: "heart" },
+  { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "🤝", iconKey: "heart-handshake" },
+  { id: "belleza", label: "Belleza", labelEn: "Beauty & aesthetics", emoji: "✨", iconKey: "star" },
+  { id: "moda_y_cuidado_personal", label: "Moda", labelEn: "Fashion", emoji: "👕", iconKey: "shirt" },
+  { id: "automotriz", label: "Vehículos", labelEn: "Vehicles", emoji: "🚗", iconKey: "car" },
   { id: "tecnologia", label: "Tecnología", labelEn: "Technology", emoji: "💻", iconKey: "laptop" },
-  { id: "profesional", label: "Empresas", labelEn: "Business", emoji: "ðŸ’¼", iconKey: "briefcase" },
-  { id: "comercios", label: "Comercios", labelEn: "Shops", emoji: "ðŸª", iconKey: "store" },
-  { id: "creatividad", label: "Creatividad", labelEn: "Creative", emoji: "ðŸŽ¨", iconKey: "palette" },
-  { id: "eventos", label: "Eventos", labelEn: "Events", emoji: "ðŸŽ‰", iconKey: "calendar-days" },
+  { id: "profesional", label: "Empresas", labelEn: "Business", emoji: "💼", iconKey: "briefcase" },
+  { id: "comercios", label: "Comercios", labelEn: "Shops", emoji: "🏪", iconKey: "store" },
+  { id: "creatividad", label: "Creatividad", labelEn: "Creative", emoji: "🎨", iconKey: "palette" },
+  { id: "eventos", label: "Eventos", labelEn: "Events", emoji: "🎉", iconKey: "calendar-days" },
   { id: "educacion", label: "Educación", labelEn: "Education", emoji: "📚", iconKey: "book-open" },
-  { id: "agricultura", label: "Agro", labelEn: "Agro", emoji: "ðŸŒ¾", iconKey: "wheat" },
-  { id: "turismo", label: "Turismo", labelEn: "Tourism", emoji: "ðŸ§­", iconKey: "map" },
-  { id: "mascotas", label: "Mascotas", labelEn: "Pets", emoji: "ðŸ¾", iconKey: "paw-print" },
+  { id: "agricultura", label: "Agro", labelEn: "Agro", emoji: "🌾", iconKey: "wheat" },
+  { id: "turismo", label: "Turismo", labelEn: "Tourism", emoji: "🧭", iconKey: "map" },
+  { id: "mascotas", label: "Mascotas", labelEn: "Pets", emoji: "🐾", iconKey: "paw-print" },
 ];
 
 const SOURCE_GROUP_SEGMENT_OVERRIDES: Record<string, string> = {
@@ -505,8 +505,8 @@ export function setCustomCategories(
       ...group,
       id,
       iconKey: resolveCategoryGroupIconKey(id, group.label, group.iconKey),
-      label: isOtherCategoryGroup(id, group.label) ? "Otras categorías" : group.label,
-      labelEn: isOtherCategoryGroup(id, group.label) ? "Other categories" : group.labelEn,
+      label: isOtherCategoryGroup(id, group.label) ? "Otras categorías" : repairVisibleText(group.label),
+      labelEn: isOtherCategoryGroup(id, group.label) ? "Other categories" : repairVisibleText(group.labelEn),
       sortOrder: isOtherCategoryGroup(id, group.label) ? Number.MAX_SAFE_INTEGER : group.sortOrder,
     });
   }
@@ -517,8 +517,8 @@ export function setCustomCategories(
     list
       .filter((c) => c && c.id && !c.isHidden && (c.label || c.labelEn || c.groupId))
       .map((c) => [c.id, {
-        label: c.label,
-        labelEn: c.labelEn,
+        label: repairVisibleText(c.label),
+        labelEn: repairVisibleText(c.labelEn),
         groupId: fixedById.get(c.id)?.groupId ?? (c.groupId ? normalizeSegmentGroupId(c.groupId) : undefined),
         keywords: c.keywords,
         isHidden: c.isHidden,
@@ -530,8 +530,8 @@ export function setCustomCategories(
       const groupId = normalizeSegmentGroupId(c.groupId);
       return {
         id: c.id,
-        label: c.label,
-        labelEn: c.labelEn,
+        label: repairVisibleText(c.label),
+        labelEn: repairVisibleText(c.labelEn),
         keywords: c.keywords ?? [],
         groupId,
         groupLabel: getCategoryGroupLabel(groupId),
@@ -632,13 +632,25 @@ export function getAllCategories(): (CategoryItem & { groupId: string; groupLabe
       const groupId = override?.groupId || category.groupId;
       return {
         ...category,
-        label: override?.label || category.label,
+        label: (() => {
+          const repairedOverride = repairVisibleText(override?.label);
+          return repairedOverride && !hasBrokenVisibleText(repairedOverride)
+            ? repairedOverride
+            : category.label;
+        })(),
         keywords: override?.keywords ?? category.keywords,
         groupId,
         groupLabel: getCategoryGroupLabel(groupId),
       };
     });
-  return CUSTOM_CATEGORIES.length ? [...fixed, ...CUSTOM_CATEGORIES] : fixed;
+  return CUSTOM_CATEGORIES.length
+    ? [...fixed, ...CUSTOM_CATEGORIES.map((category) => ({
+        ...category,
+        label: repairVisibleText(category.label),
+        labelEn: repairVisibleText(category.labelEn),
+        groupLabel: repairVisibleText(category.groupLabel),
+      }))]
+    : fixed;
 }
 
 /* ─── Normalize text for accent-insensitive comparison ─── */
@@ -646,7 +658,7 @@ export function normalizeText(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[̀-ͯ]/g, "");
 }
 
 /* ─── Canonical category ID from a name ───
@@ -870,7 +882,7 @@ export function slugifyCategory(name: string): string {
   const slug = (name ?? "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // strip accents/diacritics
+    .replace(/[̀-ͯ]/g, "") // strip accents/diacritics
     .replace(/[^a-z0-9]+/g, "_")      // any run of non-alphanumerics → one underscore
     .replace(/^_+|_+$/g, "")          // trim leading/trailing underscores
     .slice(0, 40)

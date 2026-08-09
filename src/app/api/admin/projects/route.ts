@@ -60,7 +60,7 @@ function normalize(value: string | null | undefined) {
   return (value ?? "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[̀-ͯ]/g, "");
 }
 
 function countsFor(rows: ProjectRow[]) {

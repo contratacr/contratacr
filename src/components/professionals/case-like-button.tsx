@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type MouseEvent } from "react";
 import { Heart } from "lucide-react";
+import { useLocale } from "next-intl";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 // Public "Me gusta" on a caso de éxito — a SINGLE clickable heart, nothing more (no label,
@@ -24,6 +26,8 @@ export function CaseLikeButton({
   label: string;
   className?: string;
 }) {
+  const locale = useLocale();
+  const { user, loading: authLoading } = useAuth();
   const [liked, setLiked] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -34,6 +38,14 @@ export function CaseLikeButton({
     e.preventDefault();
     e.stopPropagation();
     if (liked || busy) return;
+    if (authLoading) return;
+    if (!user) {
+      const redirect = typeof window !== "undefined"
+        ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+        : "/";
+      window.location.assign(`/${locale}/login?redirect=${encodeURIComponent(redirect)}`);
+      return;
+    }
     setBusy(true);
     setLiked(true); // optimistic
     try {

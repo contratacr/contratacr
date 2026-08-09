@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Bell, ArrowRight, CheckCheck } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { notificationInMode } from "@/lib/notification-link";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
+import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
+import { cn, formatRelativeOrDate } from "@/lib/utils";
 
 type Notification = {
   id: string;
@@ -53,7 +55,8 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     : scope === "use"
       ? notificationUnread.use + notificationUnread.neutral
       : notificationUnread.offer + notificationUnread.use + notificationUnread.neutral;
-  const unreadCount = hasSyncedNotifications ? cachedUnreadCount : serverUnreadCount;
+  const unreadCount = Math.max(cachedUnreadCount, serverUnreadCount);
+  const previewItems = visible.slice(0, 4);
 
   const fetchNotifications = useCallback(() => {
     if (!user) return;
@@ -79,6 +82,10 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       setHasSyncedNotifications(cached !== null);
     });
   }, [user?.id]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   useEffect(() => {
     cacheNotifications(user?.id, notifications);
@@ -142,6 +149,16 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     router.push(`/${locale}/notificaciones`);
   };
 
+  async function markAllRead() {
+    if (!user) return;
+    const ids = visible.filter((item) => !item.read).map((item) => item.id);
+    if (ids.length === 0) return;
+    const supabase = createClient();
+    await supabase.from("notifications").update({ read: true }).in("id", ids);
+    updateNotifications((prev) => prev.map((item) => (ids.includes(item.id) ? { ...item, read: true } : item)));
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+  }
+
   return (
     <div ref={menuRef} className="relative">
       <button
@@ -160,18 +177,77 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         </span>
       </button>
       {menuOpen && (
-        <div className="absolute right-0 top-11 z-[90] w-52 overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white py-2 shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]">
+        <div className="absolute right-0 top-11 z-[90] w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]">
+          <div className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-[#111827]">{t("title")}</p>
+              <p className="mt-0.5 text-xs font-semibold text-[#64748b]">
+                {unreadCount > 0
+                  ? locale === "en" ? `${unreadCount} unread` : `${unreadCount} sin leer`
+                  : locale === "en" ? "No unread notifications" : "Sin notificaciones sin leer"}
+              </p>
+            </div>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={() => void markAllRead()}
+                className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eef9fd] px-2.5 text-[11px] font-bold text-[#0089bb] transition hover:bg-[#dff4fc] sm:px-3 sm:text-xs"
+              >
+                <CheckCheck className="h-3.5 w-3.5" />
+                {locale === "en" ? "Mark read" : "Marcar leídas"}
+              </button>
+            )}
+          </div>
+
+          {previewItems.length > 0 ? (
+            <div className="max-h-[18rem] overflow-y-auto py-1">
+              {previewItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={openNotifications}
+                  className={cn(
+                    "flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-[#f5fbfe]",
+                    !item.read && "bg-[#f8fcff]",
+                  )}
+                >
+                  <span className={cn("mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full", item.read ? "bg-[#f1f5f9] text-[#64748b]" : "bg-[#e8f8fe] text-[#009FD9]")}>
+                    <NotificationSourceIcon type={item.type} className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex min-w-0 items-start gap-2">
+                      <span className="min-w-0 flex-1 truncate text-sm font-bold text-[#111827]">{item.title}</span>
+                      {!item.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#009FD9]" />}
+                    </span>
+                    <span className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#64748b]">{item.message}</span>
+                    <span className="mt-1 block text-[11px] font-semibold text-[#94a3b8]">{formatRelativeOrDate(item.created_at, locale)}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="px-4 py-6 text-center">
+              <div className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-[#eef7fb] text-[#009FD9]">
+                <Bell className="h-5 w-5" />
+              </div>
+              <p className="mt-3 text-sm font-bold text-[#111827]">
+                {locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones"}
+              </p>
+              <p className="mx-auto mt-1 max-w-[15rem] text-xs leading-snug text-[#64748b]">
+                {locale === "en"
+                  ? "When something important happens, it will appear here."
+                  : "Cuando pase algo importante, aparecerá aquí."}
+              </p>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={openNotifications}
-            className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-[#1A2744] hover:bg-[#f5fbfe] hover:text-[#009FD9]"
+            className="flex w-full items-center justify-between border-t border-[#eef2f6] px-4 py-3 text-left text-sm font-bold text-[#1A2744] transition hover:bg-[#f5fbfe] hover:text-[#009FD9]"
           >
-            <span>{locale === "en" ? "View all" : "Ver todas"}</span>
-            {unreadCount > 0 && (
-              <span className="rounded-full bg-[#eaf8fd] px-2 py-0.5 text-xs font-bold text-[#009FD9]">
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
+            <span>{locale === "en" ? "View all notifications" : "Ver todas las notificaciones"}</span>
+            <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       )}

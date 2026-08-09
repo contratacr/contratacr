@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ALL_CATEGORIES, CATEGORY_GROUP_ICON_KEYS, CATEGORY_GROUP_LABELS_EN, CATEGORY_GROUPS, autoEnglishCategoryLabel, resolveCategoryGroupIconKey } from "@/lib/data/categories";
+import { hasBrokenVisibleText, repairVisibleText } from "@/lib/text/repair-visible-text";
 
 // GET /api/categories/approved — public custom services + catalog overrides.
 // The operational catalog is the `categories` table. Approved suggestions are
@@ -38,15 +39,18 @@ export async function GET() {
 
   for (const row of flags ?? []) {
     if (!row.id || row.is_hidden) continue;
-    const label = (row.name || "").trim();
-    if (!label) continue;
+    const repairedLabel = repairVisibleText(row.name || "").trim();
     const fixedCategory = fixedById.get(row.id);
+    const label = hasBrokenVisibleText(repairedLabel) && fixedCategory
+      ? fixedCategory.label
+      : repairedLabel;
+    if (!label) continue;
     const groupId = fixedCategory?.groupId || row.group_id || undefined;
     if (!fixedCategory && !groupId) continue;
     categoriesById.set(row.id, {
       id: row.id,
       label,
-      labelEn: row.name_en || autoEnglishCategoryLabel(label),
+      labelEn: repairVisibleText(row.name_en) || autoEnglishCategoryLabel(label),
       groupId,
       isHidden: false,
       esSalud: !!row.es_salud,
@@ -58,13 +62,13 @@ export async function GET() {
     if (!suggestion.id || fixedIds.has(suggestion.id) || categoriesById.has(suggestion.id)) continue;
     const row = flagMap.get(suggestion.id);
     if (row?.is_hidden) continue;
-    const label = (row?.name || suggestion.label || suggestion.suggested_name || "").trim();
+    const label = repairVisibleText(row?.name || suggestion.label || suggestion.suggested_name || "").trim();
     if (!label) continue;
     if (!row?.group_id) continue;
     categoriesById.set(suggestion.id, {
       id: suggestion.id,
       label,
-      labelEn: row?.name_en || autoEnglishCategoryLabel(label),
+      labelEn: repairVisibleText(row?.name_en) || autoEnglishCategoryLabel(label),
       groupId: row.group_id,
       isHidden: false,
       esSalud: !!row?.es_salud,
@@ -99,8 +103,8 @@ export async function GET() {
   const groups = [
     ...dbGroups.map((group) => ({
       id: group.id,
-      label: group.label,
-      labelEn: group.label_en || undefined,
+      label: repairVisibleText(group.label),
+      labelEn: repairVisibleText(group.label_en) || undefined,
       iconKey: resolveCategoryGroupIconKey(group.id, group.label, group.icon_key),
       sortOrder: group.sort_order ?? 100,
       isHidden: !!group.is_hidden,

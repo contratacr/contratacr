@@ -44,7 +44,7 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "sub", text: "2.6 Dispositivo, uso y analítica" },
       { k: "ul", items: [
         "Dirección IP, tipo de dispositivo y navegador, sistema operativo, idioma, versión de la aplicación, identificadores técnicos y registros de seguridad.",
-        "Interacciones con perfiles, servicios, botones de contacto, favoritos, solicitudes y funciones de la Plataforma.",
+        "Interacciones con perfiles, servicios, botones de contacto, guardados, solicitudes y funciones de la Plataforma.",
         "Token de notificaciones push, plataforma, identificador del dispositivo y estado del permiso cuando activa notificaciones.",
         "Cookies y tecnologías similares necesarias para sesión, idioma, seguridad y funcionamiento; además de medición publicitaria cuando corresponda.",
       ] },

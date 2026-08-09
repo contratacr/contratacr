@@ -12,6 +12,8 @@ import { TimeSelect, to12h } from "@/components/ui/time-select";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { FormLoadingState } from "@/components/ui/loading-state";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
+import { PanelSwitch } from "@/components/dashboard/panel-toggle-row";
 import { Link } from "@/i18n/navigation";
 import { stableWorkplaceId } from "@/lib/workplaces";
 
@@ -20,13 +22,14 @@ import { stableWorkplaceId } from "@/lib/workplaces";
 // window is regenerated on every edit AND when the editor mounts, so it stays fresh.
 const HORIZON_DAYS = 70;
 const VIDEO_LOCATION_ID = "videoconsulta";
+const COUNTRY_LOCATION_ID = "wp_todo_costa_rica";
 
-// Monday-first display order (JS getDay: 0=Sun … 6=Sat).
+// Monday-first display order (JS getDay: 0=Sun ... 6=Sat).
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DURATION_OPTIONS = [30, 45, 60, 90, 120];
 
 type Franja = { id: string; start: string; end: string };
-// A weekly time block in the UNIFIED per-day view — a franja that CARRIES its own
+// A weekly time block in the UNIFIED per-day view - a franja that CARRIES its own
 // location (sprint 238). The day-first UI shows every location's blocks together;
 // each block writes its own `location_id` to `availability_weekly` (backend model
 // unchanged).
@@ -43,8 +46,8 @@ function toMins(t: string): number {
   return h * 60 + m;
 }
 // Two half-open minute ranges [aS,aE) and [bS,bE) overlap iff they share any minute.
-// Touching ends (e.g. 12:00–13:00 then 13:00–14:00) do NOT overlap — that's a clean
-// CONSECUTIVE hand-off between back-to-back blocks (08:00–15:00 then 15:00–17:00 is
+// Touching ends (e.g. 12:00-13:00 then 13:00-14:00) do NOT overlap - that's a clean
+// CONSECUTIVE hand-off between back-to-back blocks (08:00-15:00 then 15:00-17:00 is
 // fine), not being in two places at once. No minimum gap/travel time is enforced.
 function rangesOverlap(aS: number, aE: number, bS: number, bE: number): boolean {
   return aS < bE && bS < aE;
@@ -56,13 +59,13 @@ function sharesTimeWithVideo(a: string, b: string): boolean {
   return a !== b && (isVideoLocationId(a) || isVideoLocationId(b));
 }
 // A franja is COMPLETE (savable) only when BOTH ends are set and end > start. Newly
-// enabled days start as INCOMPLETE drafts (empty fields) — kept in the UI so the pro
+// enabled days start as INCOMPLETE drafts (empty fields) - kept in the UI so the pro
 // can pick freely, but never validated/persisted/materialized until complete.
 function isCompleteFranja(f: { start: string; end: string }): boolean {
   return !!f.start && !!f.end && toMins(f.end) > toMins(f.start);
 }
-// Merge overlapping/touching ranges into the fewest contiguous ranges (sorted) — for a
-// clean "already occupied" read (08:00–12:00 + 12:00–15:00 → 08:00–15:00).
+// Merge overlapping/touching ranges into the fewest contiguous ranges (sorted) - for a
+// clean "already occupied" read (08:00-12:00 + 12:00-15:00 -> 08:00-15:00).
 function mergeRanges(ranges: [number, number][]): [number, number][] {
   const sorted = [...ranges].sort((a, b) => a[0] - b[0]);
   const out: [number, number][] = [];
@@ -90,7 +93,7 @@ function weekdayOf(iso: string): number {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d).getDay();
 }
-// A sensible new franja: after the previous one, else a default 8–5 / 9–12 block.
+// A sensible new franja: after the previous one, else a default 8-5 / 9-12 block.
 function nextFranja(existing: Franja[]): Franja {
   if (existing.length === 0) return { id: genId(), start: "08:00", end: "17:00" };
   const last = existing[existing.length - 1];
@@ -99,13 +102,14 @@ function nextFranja(existing: Franja[]): Franja {
   return { id: genId(), start: hhmm(Math.min(start, 23 * 60)), end: hhmm(end > start ? end : Math.min(start + 30, 23 * 60 + 30)) };
 }
 
-type Place = { id?: string | null; name?: string | null; address?: string | null; provinciaId?: string | null; cantonId?: string | null };
+type Place = { id?: string | null; name?: string | null; address?: string | null; provinciaId?: string | null; cantonId?: string | null; level?: "country" | "provincia" | "canton" | null };
 
 interface AvailabilityEditorProps {
   professionalId: string;
   initialPublic?: boolean;
   initialContactPreference?: ContactPreference;
   workplaces?: Place[];
+  coverageCountry?: boolean;
   videoConsultationAllowed?: boolean;
   initialVideoConsultation?: boolean;
   onSaved?: () => void;
@@ -115,6 +119,7 @@ export function AvailabilityEditor({
   professionalId,
   initialPublic = true,
   workplaces = [],
+  coverageCountry = false,
   videoConsultationAllowed = false,
   initialVideoConsultation = false,
   onSaved,
@@ -130,9 +135,11 @@ export function AvailabilityEditor({
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [savingVideoConsultation, setSavingVideoConsultation] = useState(false);
   const [isVideoConsultation, setIsVideoConsultation] = useState(initialVideoConsultation);
+  const [draftIsPublic, setDraftIsPublic] = useState(initialPublic);
+  const [draftIsVideoConsultation, setDraftIsVideoConsultation] = useState(initialVideoConsultation);
   const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
   const [showClosedDays, setShowClosedDays] = useState(false);
-  // Cross/same-location overlap block — a pro can't be in two places at once.
+  // Cross/same-location overlap block - a pro can't be in two places at once.
   const [conflict, setConflict] = useState<{ title: string; body: string; kind?: "location" | "time" } | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   function pulseSaved() { setJustSaved(true); setTimeout(() => setJustSaved(false), 2500); }
@@ -160,17 +167,25 @@ export function AvailabilityEditor({
   // Appointment length is ONE global value (applies to every block/location).
   const [durationPref, setDurationPref] = useState(60);
 
-  // ── Location tabs ("HORARIO PARA") — fixed/base workplaces + videoconsulta ──
+  // -- Location tabs ("HORARIO PARA") - fixed/base workplaces + videoconsulta --
   const locationOptions = useMemo(() => {
     const opts: { id: string; label: string }[] = [];
+    let hasCountryCoverage = coverageCountry;
     for (let i = 0; i < workplaces.length; i += 1) {
       const w = workplaces[i];
+      if (w.level === "country") {
+        hasCountryCoverage = true;
+        continue;
+      }
       const id = stableWorkplaceId(w, i);
       opts.push({ id, label: w.name?.trim() || t("locationFallback") });
     }
+    if (hasCountryCoverage && !opts.some((option) => option.id === COUNTRY_LOCATION_ID)) {
+      opts.unshift({ id: COUNTRY_LOCATION_ID, label: locale === "en" ? "All Costa Rica" : "Todo Costa Rica" });
+    }
     if (isVideoConsultation) opts.push({ id: VIDEO_LOCATION_ID, label: t("videoconsulta") });
     return opts;
-  }, [isVideoConsultation, t, workplaces]);
+  }, [coverageCountry, isVideoConsultation, locale, t, workplaces]);
   const schedulableLocationIds = useMemo(() => new Set(locationOptions.map((o) => o.id)), [locationOptions]);
 
   // Weekly schedules are edited one schedulable location at a time. "A domicilio" is
@@ -178,7 +193,7 @@ export function AvailabilityEditor({
   const isMultiLocation = locationOptions.length > 1;
   const defaultLocationId = locationOptions[0]?.id ?? "";
 
-  // `genLocation` now scopes ONLY the EXCEPTIONS ("¿Un día distinto?") section — its
+  // `genLocation` now scopes ONLY the EXCEPTIONS ("¿Un día distinto?") section - its
   // per-location machinery (saveException / DayModal / otherOccupiedForDate) is kept
   // as-is, driven by a small location selector shown there when multi-location.
   const [genLocation, setGenLocation] = useState("");
@@ -190,7 +205,7 @@ export function AvailabilityEditor({
   const activeLocationId = locationOptions.some((o) => o.id === genLocation) ? genLocation : defaultLocationId;
 
   // Schedules are keyed by LOCATION ONLY. Professions ("what I do") are profile info,
-  // never tied to when/where — the specific service is coordinated at contact/booking.
+  // never tied to when/where - the specific service is coordinated at contact/booking.
   // New weekly/exception rows write category_id = null; legacy profession-tagged rows
   // are matched by location (any category) and migrate to null as the pro edits.
   const sameLoc = useCallback((loc: string) => loc === activeLocationId, [activeLocationId]);
@@ -200,9 +215,9 @@ export function AvailabilityEditor({
     return locationOptions.find((o) => o.id === id)?.label ?? t("locationFallback");
   }
 
-  // ── Overlap guard: a pro can't be available in two places at the same time ──
+  // -- Overlap guard: a pro can't be available in two places at the same time --
   // The minute-ranges a location is actually OPEN on a concrete DATE, applying the
-  // SAME precedence as materialization (closed → none; a `custom` exception REPLACES
+  // SAME precedence as materialization (closed -> none; a `custom` exception REPLACES
   // the weekly hours; `extra` ADDS to them). Used to compare a proposed schedule
   // against every OTHER location on the affected day(s).
   const rangesForLocOnDate = useCallback((loc: string, date: string, wk: WeeklyRow[], exc: ExcRow[]): [number, number][] => {
@@ -220,7 +235,7 @@ export function AvailabilityEditor({
   // Validate a PROPOSED set of franjas (minute-ranges) placed at `loc`, BEFORE writing.
   // `scope` is a recurring weekday (check every future date that lands on it) or a
   // single exception date. `ownBase` are this location's OTHER ranges the proposal must
-  // also clear (e.g. the weekly hours when adding `extra` on the same location/day) —
+  // also clear (e.g. the weekly hours when adding `extra` on the same location/day) -
   // `ownBaseBody` is the message to show when the proposal overlaps that base (defaults
   // to the generic self-overlap copy; `extra` passes a "overlaps your usual hours" one).
   // Returns a localized conflict {title, body, kind} to block with, or null when it's safe.
@@ -280,10 +295,10 @@ export function AvailabilityEditor({
     return null;
   }
 
-  // ── "Already occupied elsewhere" guidance (DATE; used by the "Cambiar un día"
-  // modal) — other locations' occupied ranges on a specific DATE, applying the full
+  // -- "Already occupied elsewhere" guidance (DATE; used by the "Cambiar un día"
+  // modal) - other locations' occupied ranges on a specific DATE, applying the full
   // closed/custom/extra precedence via rangesForLocOnDate. (The weekly view no longer
-  // needs a per-weekday hint — every location's blocks are shown together.)
+  // needs a per-weekday hint - every location's blocks are shown together.)
   function otherOccupiedForDate(date: string): { label: string; ranges: [number, number][] }[] {
     const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))]
       .filter((l) => l && l !== activeLocationId && !sharesTimeWithVideo(l, activeLocationId));
@@ -292,12 +307,12 @@ export function AvailabilityEditor({
       .filter((o) => o.ranges.length > 0);
   }
 
-  // Render a location's occupied ranges as "8:00 AM–3:00 PM, 5:00 PM–7:00 PM".
+  // Render a location's occupied ranges as "8:00 AM-3:00 PM, 5:00 PM-7:00 PM".
   function fmtRanges(ranges: [number, number][]): string {
-    return ranges.map(([s, e]) => `${to12h(hhmm(s))} – ${to12h(hhmm(e))}`).join(", ");
+    return ranges.map(([s, e]) => `${to12h(hhmm(s))} - ${to12h(hhmm(e))}`).join(", ");
   }
 
-  // ── MATERIALIZE the template + exceptions into concrete slots ──────────────
+  // -- MATERIALIZE the template + exceptions into concrete slots --------------
   // Keyed by LOCATION (not profession): availability_slots can publish the same
   // pro+date+time for videoconsulta + one physical place. Bookings remain unique by
   // pro+date+time, so one reservation blocks both visible options.
@@ -343,7 +358,7 @@ export function AvailabilityEditor({
           if (e <= s) continue;
           const times: string[] = [];
           for (let m = s; m + dur <= e; m += dur) times.push(hhmm(m));
-          if (times.length === 0) times.push(hhmm(s)); // a configured franja always yields ≥1 time
+          if (times.length === 0) times.push(hhmm(s)); // a configured franja always yields >=1 time
           for (const time of times) {
             if (isTooSoonCR(date, time)) continue;
             const key = `${date}|${time}|${loc}`;
@@ -391,7 +406,7 @@ export function AvailabilityEditor({
     }
   }, [professionalId, computeDesiredSlots, onSaved, reportSaveFailure]);
 
-  // ── Initial load: read the template + exceptions; top up the slot window once. ──
+  // -- Initial load: read the template + exceptions; top up the slot window once. --
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -428,11 +443,11 @@ export function AvailabilityEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionalId]);
 
-  // ── Unified per-day blocks (ALL locations together) ───────────────────────
+  // -- Unified per-day blocks (ALL locations together) -----------------------
   // The appointment length is one global value applied to every block.
   const activeDuration = durationPref;
 
-  // Every weekday → ALL its blocks across ALL locations (each carries its location).
+  // Every weekday -> ALL its blocks across ALL locations (each carries its location).
   const dayBlocks = useMemo(() => {
     const map = new Map<number, Block[]>();
     for (const r of weekly) {
@@ -460,7 +475,7 @@ export function AvailabilityEditor({
       .sort(([a], [b]) => a.localeCompare(b));
   }, [exceptions, sameLoc]);
 
-  // ── Overlap validation for the UNIFIED day (ALL locations together) ─────────
+  // -- Overlap validation for the UNIFIED day (ALL locations together) ---------
   // The rule is unchanged (a pro can't be in two places at once), just expressed over
   // every block of the weekday: on each future date of that weekday, NO two effective
   // open ranges (any location, exception-aware via `rangesForLocOnDate`) may overlap.
@@ -502,16 +517,16 @@ export function AvailabilityEditor({
     return null;
   }
 
-  // A new block's SMART default: 8 AM–5 PM when it wouldn't conflict with the day's
+  // A new block's SMART default: 8 AM-5 PM when it wouldn't conflict with the day's
   // other blocks, else EMPTY (so the pro freely picks a non-conflicting time).
   function smartDefaultBlock(weekday: number, existing: Block[], loc: string): Block {
     const probe = validateDayBlocks(weekday, [...existing.filter(isCompleteFranja), { id: "_probe", locationId: loc, start: "08:00", end: "17:00" }], loc);
     return probe ? { id: genId(), locationId: loc, start: "", end: "" } : { id: genId(), locationId: loc, start: "08:00", end: "17:00" };
   }
 
-  // ── Persist ALL of a weekday's blocks (every location) at once, then re-materialize. ──
+  // -- Persist ALL of a weekday's blocks (every location) at once, then re-materialize. --
   // Backend model unchanged: each COMPLETE block writes its own `availability_weekly`
-  // row (category_id null → absorbs legacy). INCOMPLETE drafts stay in LOCAL state so
+  // row (category_id null -> absorbs legacy). INCOMPLETE drafts stay in LOCAL state so
   // the row shows, but are NOT validated/written/materialized.
   async function persistDay(weekday: number, blocks: Block[], loc: string = activeLocationId) {
     const complete = blocks.filter(isCompleteFranja);
@@ -629,15 +644,15 @@ export function AvailabilityEditor({
     }
   }
 
-  // ── Exceptions ("¿Un día distinto?") ──────────────────────────────────────
+  // -- Exceptions ("¿Un día distinto?") --------------------------------------
   // Returns false (without writing) when the proposed hours overlap another location
-  // — or this location's own weekly hours when ADDING extra — on that date.
+  // - or this location's own weekly hours when ADDING extra - on that date.
   async function saveException(date: string, mode: ExcMode, franjas: Franja[], dur: number): Promise<boolean> {
     if (scheduleSaveInFlightRef.current) return false;
     if (mode !== "closed") {
       const proposed = franjas.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]).filter(([s, e]) => e > s);
       // `extra` ADDS to the weekly hours (they still apply that date), so the extra
-      // franjas must not overlap THIS location's weekly base for that weekday — block
+      // franjas must not overlap THIS location's weekly base for that weekday - block
       // with a message that names the real conflict (the usual hours). `custom`/`closed`
       // REPLACE the weekly hours, so they get no weekly base to clear (only the
       // cross-location check below applies).
@@ -699,10 +714,11 @@ export function AvailabilityEditor({
     }
   }
 
-  // ── Visibility (privada) ──────────────────────────────────────────────────
-  function toggleVisibility() {
-    if (isPublic) { setShowPrivateConfirm(true); return; }
-    makePublic();
+  const settingsDirty = draftIsPublic !== isPublic || draftIsVideoConsultation !== isVideoConsultation;
+
+  // -- Visibility (privada) --------------------------------------------------
+  function toggleVisibilityDraft() {
+    setDraftIsPublic((value) => !value);
   }
   async function makePublic() {
     setIsPublic(true);
@@ -712,6 +728,7 @@ export function AvailabilityEditor({
     setSavingVisibility(false);
     // Re-publish the schedule from the kept template.
     await regenerate(weekly, exceptions);
+    setDraftIsPublic(true);
   }
   async function confirmMakePrivate() {
     setSavingVisibility(true);
@@ -723,11 +740,14 @@ export function AvailabilityEditor({
     setSavingVisibility(false);
     setShowPrivateConfirm(false);
     setIsPublic(false);
+    setDraftIsPublic(false);
+    if (draftIsVideoConsultation !== isVideoConsultation) {
+      await persistVideoConsultation(draftIsVideoConsultation);
+    }
     pulseSaved();
     onSaved?.();
   }
-  async function toggleVideoConsultation() {
-    const next = !isVideoConsultation;
+  async function persistVideoConsultation(next: boolean) {
     setIsVideoConsultation(next);
     setSavingVideoConsultation(true);
     const supabase = createClient();
@@ -738,6 +758,7 @@ export function AvailabilityEditor({
     if (error) {
       console.error("[availability] video consultation update failed:", error);
       setIsVideoConsultation(!next);
+      setDraftIsVideoConsultation(!next);
     } else {
       if (!next) {
         const nextWeekly = weekly.filter((r) => r.location_id !== VIDEO_LOCATION_ID);
@@ -748,10 +769,26 @@ export function AvailabilityEditor({
         await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", VIDEO_LOCATION_ID);
         await supabase.from("availability_slots").delete().eq("professional_id", professionalId).eq("location_id", VIDEO_LOCATION_ID);
       }
+      setDraftIsVideoConsultation(next);
       pulseSaved();
       onSaved?.();
     }
     setSavingVideoConsultation(false);
+  }
+  function cancelAvailabilitySettings() {
+    setDraftIsPublic(isPublic);
+    setDraftIsVideoConsultation(isVideoConsultation);
+  }
+  async function saveAvailabilitySettings() {
+    if (!settingsDirty || savingVisibility || savingVideoConsultation || busy) return;
+    if (!draftIsPublic && isPublic) {
+      setShowPrivateConfirm(true);
+      return;
+    }
+    if (draftIsPublic && !isPublic) await makePublic();
+    if (draftIsVideoConsultation !== isVideoConsultation) {
+      await persistVideoConsultation(draftIsVideoConsultation);
+    }
   }
   useEffect(() => {
     if (!showPrivateConfirm) return;
@@ -780,70 +817,75 @@ export function AvailabilityEditor({
   const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
   const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
   const hasSchedulableLocation = locationOptions.length > 0;
-  const scheduleControlsDisabled = busy || savingVisibility || savingVideoConsultation;
+  const scheduleControlsDisabled = busy || savingVisibility || savingVideoConsultation || settingsDirty;
 
-  // App-wide autosave: report status to the section title row (inline, no layout shift).
-  useReportSaveStatus(savingVisibility || savingVideoConsultation || busy, justSaved);
+  useReportSaveStatus(savingVisibility || savingVideoConsultation || busy, justSaved, settingsDirty);
+
+  const availabilityToggleCard = ({
+    title,
+    checked,
+    onToggle,
+    loading,
+    disabled,
+    ariaLabel,
+  }: {
+    title: string;
+    description: string;
+    checked: boolean;
+    onToggle: () => void;
+    icon: typeof Lock;
+    loading?: boolean;
+    disabled?: boolean;
+    ariaLabel: string;
+  }) => (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onToggle();
+      }}
+      disabled={disabled}
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      className="inline-flex w-fit items-center gap-3 text-left text-sm font-semibold text-[#111827] transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <PanelSwitch checked={checked} disabled={disabled} />}
+      <span>{title}</span>
+      <span className="ml-1 text-xs font-bold text-[#64748b]">{checked ? (locale === "en" ? "Enabled" : "Activado") : (locale === "en" ? "Disabled" : "Desactivado")}</span>
+    </button>
+  );
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
 
-      {/* ── Disponibilidad privada ─────────────────────────────────────────── */}
+      {/* -- Disponibilidad privada ------------------------------------------- */}
       <div className="p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-          <div className="flex min-w-0 items-center gap-3">
-            {/* Blue padlock — signals this controls PRIVATE availability. */}
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
-              <Lock className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
-              <p className="mt-0.5 text-xs text-[#6b7280]">
-                {isPublic && !hasSchedulableLocation ? t("privateSubNeedsWorkplace") : isPublic ? t("privateSubPublic") : t("privateSubPrivate")}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
-            <button
-              type="button"
-              onClick={toggleVisibility}
-              disabled={savingVisibility}
-              className={cn("relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer", !isPublic ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-              aria-label={isPublic ? t("makePrivate") : t("makePublic")}
-            >
-              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
-            </button>
-          </div>
-        </div>
+        {availabilityToggleCard({
+          title: t("privateLabel"),
+          description: draftIsPublic && !hasSchedulableLocation ? t("privateSubNeedsWorkplace") : draftIsPublic ? t("privateSubPublic") : t("privateSubPrivate"),
+          checked: !draftIsPublic,
+          onToggle: toggleVisibilityDraft,
+          icon: Lock,
+          loading: savingVisibility,
+          disabled: savingVisibility,
+          ariaLabel: draftIsPublic ? t("makePrivate") : t("makePublic"),
+        })}
       </div>
 
       {videoConsultationAllowed && (
         <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-          <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
-                <Video className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#111827]">{t("videoLabel")}</p>
-                <p className="mt-0.5 text-xs text-[#6b7280]">{t("videoDesc")}</p>
-              </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              {savingVideoConsultation && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
-              <button
-                type="button"
-                onClick={toggleVideoConsultation}
-                disabled={savingVideoConsultation}
-                className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200", isVideoConsultation ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-                aria-label={t("videoLabel")}
-              >
-                <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", isVideoConsultation ? "left-5" : "left-0.5")} />
-              </button>
-            </div>
-          </div>
+          {availabilityToggleCard({
+            title: t("videoLabel"),
+            description: t("videoDesc"),
+            checked: draftIsVideoConsultation,
+            onToggle: () => setDraftIsVideoConsultation((value) => !value),
+            icon: Video,
+            loading: savingVideoConsultation,
+            disabled: savingVideoConsultation,
+            ariaLabel: t("videoLabel"),
+          })}
         </div>
       )}
 
@@ -873,7 +915,7 @@ export function AvailabilityEditor({
             </Link>
           </div>
         </div>
-      ) : (
+            ) : (
         <>
           <div>
             <div className="grid gap-5 p-4 sm:grid-cols-2 sm:p-5">
@@ -942,11 +984,11 @@ export function AvailabilityEditor({
                         type="button"
                         onClick={() => toggleDay(wd)}
                         disabled={scheduleControlsDisabled}
-                        className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55 lg:hidden", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+                        className="shrink-0 cursor-pointer disabled:cursor-not-allowed lg:hidden"
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
-                        <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", on ? "left-5" : "left-0.5")} />
+                        <PanelSwitch checked={on} disabled={scheduleControlsDisabled} />
                       </button>
                     </div>
 
@@ -955,11 +997,11 @@ export function AvailabilityEditor({
                         type="button"
                         onClick={() => toggleDay(wd)}
                         disabled={scheduleControlsDisabled}
-                        className={cn("relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+                        className="shrink-0 cursor-pointer disabled:cursor-not-allowed"
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
-                        <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", on ? "left-5" : "left-0.5")} />
+                        <PanelSwitch checked={on} disabled={scheduleControlsDisabled} />
                       </button>
                     </div>
 
@@ -1013,11 +1055,11 @@ export function AvailabilityEditor({
                             type="button"
                             onClick={() => toggleDay(wd)}
                             disabled={scheduleControlsDisabled}
-                            className="relative h-6 w-11 shrink-0 cursor-pointer rounded-full bg-[#d1d5db] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55"
+                            className="shrink-0 cursor-pointer disabled:cursor-not-allowed"
                             aria-label={t(`weekday${wd}` as `weekday${number}`)}
                             aria-pressed={false}
                           >
-                            <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200" />
+                            <PanelSwitch checked={false} disabled={scheduleControlsDisabled} />
                           </button>
                         </div>
                       ))}
@@ -1028,7 +1070,7 @@ export function AvailabilityEditor({
             </div>
           </div>
 
-          {/* ── ¿Un día distinto? — date exceptions ──────────────────────── */}
+          {/* -- ¿Un día distinto? - date exceptions ------------------------ */}
           <div className="border-t border-[#f3f4f6] p-4 sm:p-5">
             <div className="mb-6">
               <div className="min-w-0">
@@ -1058,7 +1100,7 @@ export function AvailabilityEditor({
               <div className="flex flex-col gap-2">
                 {activeExceptions.map(([date, rows]) => {
                   const mode = rows[0].mode;
-                  const times = rows.filter((r) => r.start && r.end).map((r) => `${to12h(r.start!)} – ${to12h(r.end!)}`).join(", ");
+                  const times = rows.filter((r) => r.start && r.end).map((r) => `${to12h(r.start!)} - ${to12h(r.end!)}`).join(", ");
                   const [y, m, d] = date.split("-").map(Number);
                   const dt = new Date(y, m - 1, d);
                   const monthShort = dt.toLocaleDateString(dateLocale, { month: "short" }).replace(".", "").toUpperCase();
@@ -1089,9 +1131,37 @@ export function AvailabilityEditor({
         </>
       )}
       </div>
-      </div>
 
       {/* "Aplicar a otros días" modal */}
+      <div className="flex flex-col gap-2 border-t border-[#edf2f7] px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
+        <Button
+          type="button"
+          variant="ghost"
+          size="md"
+          className="hidden sm:inline-flex sm:w-auto"
+          onClick={cancelAvailabilitySettings}
+          disabled={!settingsDirty || savingVisibility || savingVideoConsultation || busy}
+        >
+          {t("cancel")}
+        </Button>
+        <Button
+          type="button"
+          size="md"
+          className="w-full sm:w-auto"
+          onClick={saveAvailabilitySettings}
+          disabled={!settingsDirty || savingVisibility || savingVideoConsultation || busy}
+          loading={savingVisibility || savingVideoConsultation}
+        >
+          {locale === "en" ? "Save changes" : "Guardar cambios"}
+        </Button>
+      </div>
+
+      <UnsavedChangesGuard
+        dirty={settingsDirty}
+        onSave={saveAvailabilitySettings}
+        onDiscard={cancelAvailabilitySettings}
+      />
+
       {applyModal && (
         <ApplyScheduleModal
           sourceWeekday={applyModal.weekday}
@@ -1107,7 +1177,7 @@ export function AvailabilityEditor({
           markedDates={new Set(exceptions.filter((e) => sameLoc(e.location_id)).map((e) => e.date))}
           defaultDuration={activeDuration}
           dateLocale={dateLocale}
-          // Other locations' occupied ranges on the picked date → guidance to pick a free slot.
+          // Other locations' occupied ranges on the picked date -> guidance to pick a free slot.
           occupiedOnDate={otherOccupiedForDate}
           fmtRanges={fmtRanges}
           onClose={() => setDayModal(null)}
@@ -1117,7 +1187,7 @@ export function AvailabilityEditor({
         />
       )}
 
-      {/* ── Confirm: hide agenda ─────────────────────────────────────────── */}
+      {/* -- Confirm: hide agenda ------------------------------------------- */}
       {showPrivateConfirm && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPrivateConfirm(false)} />
@@ -1135,7 +1205,7 @@ export function AvailabilityEditor({
         </div>
       )}
 
-      {/* ── Overlap conflict notice ──────────────────────────────────────────
+      {/* -- Overlap conflict notice ------------------------------------------
           Blocks a schedule that would have the pro in two places at once (or
           overlapping itself). Sits above the "Cambiar un día" modal (z-[210]). */}
       {conflict && (
@@ -1172,7 +1242,7 @@ export function AvailabilityEditor({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 function ApplyScheduleModal({ sourceWeekday, onClose, onApply }: {
   sourceWeekday: number;
   onClose: () => void;
@@ -1322,7 +1392,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
           <div className="flex flex-col gap-3">
             <p className="text-sm font-semibold text-[#111827] capitalize">{selectedLong}</p>
 
-            {/* Guidance: what OTHER locations already occupy this date → pick a free slot.
+            {/* Guidance: what OTHER locations already occupy this date -> pick a free slot.
                 Consecutive (touching) ranges are allowed; only true overlaps are blocked. */}
             {(() => {
               const occupied = occupiedOnDate(date);
@@ -1367,7 +1437,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
                 {franjas.map((f) => (
                   <div key={f.id} className="flex items-center gap-1.5">
                     <TimeSelect value={f.start} step={dur} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, start: v, ...(toMins(x.end) <= toMins(v) ? { end: hhmmLocal(Math.min(toMins(v) + dur, 23 * 60 + 30)) } : {}) } : x)))} className="min-w-0 flex-1 sm:flex-none sm:w-32" />
-                    <span className="shrink-0 text-[#9ca3af]">–</span>
+                    <span className="shrink-0 text-[#9ca3af]">-</span>
                     <TimeSelect value={f.end} step={dur} min={hhmmLocal(Math.min(toMins(f.start) + dur, 23 * 60 + 30))} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, end: v } : x)))} className="min-w-0 flex-1 sm:flex-none sm:w-32" error={toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
                     <button type="button" onClick={() => setFranjas((prev) => prev.filter((x) => x.id !== f.id))} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
                       <X className="h-4 w-4" />
@@ -1449,3 +1519,5 @@ function MonthCalendar({ value, onChange, marked, dateLocale }: { value: string;
     </div>
   );
 }
+
+

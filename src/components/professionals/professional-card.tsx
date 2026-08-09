@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { BadgeCheck, Star } from "lucide-react";
+import { CheckCircle2, Star } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -137,16 +137,20 @@ export async function ProfessionalCard({ professional, className, highlightMetri
     activeCategory && allProfessions.includes(activeCategory)
       ? [activeCategory]
       : allProfessions;
-  const fitProfessionLabels = (maxReadableLength: number, maxItems: number) => displayProfessions.reduce<string[]>((items, id) => {
+  const mobileDisplayProfessions =
+    activeCategory && allProfessions.includes(activeCategory)
+      ? [activeCategory, ...allProfessions.filter((id) => id !== activeCategory)]
+      : allProfessions;
+  const fitProfessionLabels = (source: string[], maxReadableLength: number, maxItems: number) => source.reduce<string[]>((items, id) => {
     const labelLength = catLabel(id).length;
     const currentLength = items.reduce((sum, item) => sum + catLabel(item).length, 0);
     if (items.length === 0) return [id];
     if (items.length < maxItems && currentLength + labelLength <= maxReadableLength) return [...items, id];
     return items;
   }, []);
-  const mobileProfessionList = fitProfessionLabels(38, 2);
-  const desktopProfessionList = fitProfessionLabels(38, 2);
-  const wideDesktopProfessionList = fitProfessionLabels(55, 3);
+  const mobileProfessionList = fitProfessionLabels(mobileDisplayProfessions, 80, 2);
+  const desktopProfessionList = fitProfessionLabels(displayProfessions, 38, 2);
+  const wideDesktopProfessionList = fitProfessionLabels(displayProfessions, 55, 3);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
@@ -155,7 +159,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   const priceBoxClass = "max-w-[48%]";
   const priceFitsWithService = displayProfessions.length <= 1;
   const isVerified = professional.verificationStatus === "verified";
-  const mobileExtraProfessions = allProfessions.length - mobileProfessionList.length;
+  const mobileExtraProfessions = mobileDisplayProfessions.length - mobileProfessionList.length;
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
   const wideDesktopExtraProfessions = allProfessions.length - wideDesktopProfessionList.length;
   const serviceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[11px] font-semibold leading-snug text-[#6b7280]";
@@ -273,21 +277,42 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   // panel/dashboard, for cross-surface consistency. Sits on its OWN line between the
   // company name and the personal name. Unverified shows NOTHING (no negative label).
   const verifiedIcon = isVerified ? (
-    <BadgeCheck
+    <CheckCircle2
       aria-label={tCard("verifiedTitle")}
-      className="mt-[4px] h-3.5 w-3.5 shrink-0 fill-[#009FD9] text-white lg:mt-[3px]"
+      className="mt-[1px] h-3.5 w-3.5 shrink-0 text-[#009FD9] lg:mt-[1px]"
     />
   ) : null;
 
   const desktopPrice = priceLabel ? (
     <div className={`relative z-10 ml-auto hidden shrink-0 text-right leading-tight lg:block ${priceBoxClass}`}>
-      <span className="block truncate whitespace-nowrap leading-none">
+      <span className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-1 gap-y-0.5 leading-none">
         <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
-        {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
+        {(priceUnit || priceTaxSuffix) && (
+          <span className="whitespace-nowrap text-right leading-none">
+            {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]">{priceUnit}</span>}
+            {priceTaxSuffix && <span className="ml-1 text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
+          </span>
+        )}
+      </span>
+    </div>
+  ) : null;
+  const mobilePrice = priceLabel ? (
+    <div className="ml-auto min-w-0 shrink-0 text-right leading-none">
+      <span className="block max-w-[12.75rem] truncate whitespace-nowrap leading-none">
+        <span className="text-[12px] font-bold text-[#009FD9]">{priceAmount}</span>
+        {priceUnit && <span className="text-[10px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
         {priceTaxSuffix && <span className="text-[9px] font-semibold tracking-wide text-[#9ca3af]"> {priceTaxSuffix}</span>}
       </span>
     </div>
   ) : null;
+  const mobileServiceLineLength =
+    mobileProfessionList.reduce((sum, id) => sum + catLabel(id).length, 0) +
+    (mobileProfessionList.length > 1 ? mobileProfessionList.length - 1 : 0) +
+    (mobileExtraProfessions > 0 ? `+${mobileExtraProfessions}`.length : 0);
+  const mobilePriceInlineWithService =
+    mobileProfessionList.length <= 1 ||
+    (mobileProfessionList.length <= 2 && mobileServiceLineLength + priceAmount.length <= 46);
+  const mobilePriceInlineWithReviews = !mobilePriceInlineWithService;
 
   // Location data for the schedule's location control (now rendered in the LEFT
   // column under the rating — see ProfessionalSchedule). The per-place TABS +
@@ -336,71 +361,73 @@ export async function ProfessionalCard({ professional, className, highlightMetri
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
                   Verificado, then the personal name = first name + first surname. */}
-              <Link href={profileHref} className="relative z-10 min-w-0">
-                <h3 title={businessName ? businessName : professional.fullName} className="flex min-w-0 items-start gap-1.5 font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">
-                  <span className="min-w-0 line-clamp-2 lg:line-clamp-1">{displayName.primaryDesktop}</span>
-                  {verifiedIcon}
-                </h3>
-              </Link>
+              <div className="flex min-w-0 items-start gap-2 pr-8 lg:pr-0">
+                <Link href={profileHref} className="relative z-10 min-w-0 flex-1">
+                  <h3 title={businessName ? businessName : professional.fullName} className="flex min-w-0 items-center gap-1.5 font-bold text-[#111827] text-[15px] leading-[1.1] hover:text-[#009FD9] transition-colors">
+                    <span className="min-w-0 truncate whitespace-nowrap lg:line-clamp-1">{displayName.primaryDesktop}</span>
+                    {verifiedIcon}
+                  </h3>
+                </Link>
+                {desktopPrice}
+              </div>
               {(displayProfessions.length > 0 || professional.isFeatured) && (
                 <div
-                  className="mt-1 flex w-full min-w-0 max-w-full flex-wrap items-start gap-x-2 gap-y-0.5 overflow-visible lg:hidden"
+                  className={`mt-1 flex w-full min-w-0 max-w-full items-center gap-2 overflow-hidden lg:hidden ${mobilePriceInlineWithService && mobilePrice ? "justify-between" : ""}`}
                   data-testid="professional-card-service-summary"
                   data-service-summary-version="mobile-under-verified-v1"
                 >
-                  {mobileProfessionList.map((cat) => (
-                    <span
-                      key={`mobile-service-summary-${cat}`}
-                      data-testid="professional-card-mobile-service"
-                      data-full-label="true"
-                      data-extra-count={mobileExtraProfessions}
-                      className={serviceChipClass}
-                      title={catLabel(cat)}
-                    >
-                      {catLabel(cat)}
-                    </span>
-                  ))}
-                  {mobileExtraProfessions > 0 && (
-                    <Link
-                      href={profileHref}
-                      title={tCard("moreProfessions")}
-                      aria-label={tCard("moreProfessions")}
-                      data-testid="professional-card-more-services"
-                      className={moreProfessionsClass}
-                    >
-                      +{mobileExtraProfessions}
-                    </Link>
-                  )}
-                  {professional.isFeatured && (
-                    <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                      {tCard("featured")}
-                    </span>
-                  )}
+                  <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                    {mobileProfessionList.map((cat) => (
+                      <span
+                        key={`mobile-service-summary-${cat}`}
+                        data-testid="professional-card-mobile-service"
+                        data-full-label="true"
+                        data-extra-count={mobileExtraProfessions}
+                        className={`${serviceChipClass} min-w-0 truncate ${mobileProfessionList.length > 1 ? "shrink basis-auto" : "flex-1"}`}
+                        title={catLabel(cat)}
+                      >
+                        {catLabel(cat)}
+                      </span>
+                    ))}
+                    {mobileExtraProfessions > 0 && (
+                      <Link
+                        href={profileHref}
+                        title={tCard("moreProfessions")}
+                        aria-label={tCard("moreProfessions")}
+                        data-testid="professional-card-more-services"
+                        className={moreProfessionsClass}
+                      >
+                        +{mobileExtraProfessions}
+                      </Link>
+                    )}
+                    {professional.isFeatured && (
+                      <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                        {tCard("featured")}
+                      </span>
+                    )}
+                  </div>
+                  {mobilePriceInlineWithService ? mobilePrice : null}
                 </div>
               )}
-              <div className="mt-1.5 flex min-w-0 items-center justify-between gap-2 lg:hidden">
-                {professional.reviewCount > 0 && (
-                  <Link
-                    href={reviewsHref}
-                    className="relative z-10 inline-flex w-fit items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-                    aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
-                  >
-                    <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
-                    <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                    <span>{ratingLabel}</span>
-                  </Link>
-                )}
-                {priceLabel && (
-                  <div className="ml-auto shrink-0 text-right leading-tight">
-                    <span className="block whitespace-nowrap text-[12px] font-bold leading-[1.1] text-[#009FD9]">{priceAmount}</span>
-                    {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
-                    {priceTaxSuffix && <span className="block text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceTaxSuffix}</span>}
-                  </div>
-                )}
-              </div>
+              {(professional.reviewCount > 0 || mobilePriceInlineWithReviews) && (
+                <div className="mt-1.5 flex min-w-0 items-center gap-2 lg:hidden">
+                  {professional.reviewCount > 0 ? (
+                    <Link
+                      href={reviewsHref}
+                      className="relative z-10 inline-flex min-w-0 w-fit items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                      aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+                    >
+                      <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
+                      <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+                      <span>{ratingLabel}</span>
+                    </Link>
+                  ) : (
+                    <div />
+                  )}
+                  {mobilePriceInlineWithReviews ? <div className="ml-auto">{mobilePrice}</div> : null}
+                </div>
+              )}
             </div>
-            {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
-                capped width so a long price wraps instead of crowding the name. */}
           </div>
 
           {/* Service tags — DIRECTLY under the name; one line only, cap + "+N". */}
@@ -429,7 +456,6 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                   </span>
                 )}
               </div>
-              {priceFitsWithService && desktopPrice}
             </div>
             <div className="mt-0.5 hidden w-full min-w-0 max-w-full items-center gap-x-2 overflow-visible 2xl:flex">
               <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 overflow-visible">
@@ -454,14 +480,12 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                   </span>
                 )}
               </div>
-              {priceFitsWithService && desktopPrice}
             </div>
             </>
           )}
-          {(desktopMetric || (!priceFitsWithService && desktopPrice)) && (
+          {desktopMetric && (
           <div className="mt-1.5 hidden min-w-0 items-center justify-between gap-2 lg:flex">
               {desktopMetric}
-              {!priceFitsWithService && desktopPrice}
           </div>
           )}
         </div>

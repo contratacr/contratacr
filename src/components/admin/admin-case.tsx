@@ -220,7 +220,12 @@ export function AdminCase({ providerId }: { providerId: string }) {
           {padron && (
             <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
               <h2 className="font-semibold text-[#111827] text-sm mb-3">Comparación con el padrón (TSE)</h2>
-              {!padron.found ? (
+              {padron.skipped ? (
+                <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] px-3 py-2 text-sm text-[#1e3a8a]">
+                  <p className="font-semibold">Revisión manual requerida</p>
+                  <p className="mt-1">{padron.reason}</p>
+                </div>
+              ) : !padron.found ? (
                 <p className="text-sm text-[#b45309]">La cédula no se encontró en el padrón cargado.</p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-2.5 text-sm">

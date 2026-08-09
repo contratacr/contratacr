@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, SendHorizontal, User, Shield, Plus, Clock3 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
+import { SupportForm } from "@/components/support/support-form";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAppDialog } from "@/hooks/use-app-dialog";
-import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 
 type Ticket = {
   id: string;
@@ -68,7 +69,19 @@ const LEGACY_SUBJECT_TO_KEY: Record<string, (typeof SUPPORT_SUBJECT_KEYS)[number
   "Other": "subject5",
 };
 
-export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadChange?: (n: number) => void; initialTicketId?: string | null }) {
+type SupportThreadState = { open: boolean; title: string | null; reference: string | null };
+
+export function SupportTickets({
+  onUnreadChange,
+  initialTicketId,
+  initialNewSupport,
+  onThreadChange,
+}: {
+  onUnreadChange?: (n: number) => void;
+  initialTicketId?: string | null;
+  initialNewSupport?: boolean;
+  onThreadChange?: (state: SupportThreadState) => void;
+}) {
   const { user } = useAuth();
   const t = useTranslations("supportTickets");
   const locale = useLocale();
@@ -110,6 +123,13 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   // away from the panel). On submit we close it and reload the list so the new
   // ticket appears inline.
   const [showModal, setShowModal] = useState(false);
+  const [showNewTicketPage, setShowNewTicketPage] = useState(false);
+
+  const closeThread = useCallback(() => {
+    setOpenId(null);
+    setTicket(null);
+    setMessages([]);
+  }, []);
 
   const setUnreadAndNotify = useCallback((s: Set<string>) => {
     setUnread(s);
@@ -152,8 +172,8 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   }, []);
 
   useEffect(() => {
-    if (!openId) queueMicrotask(() => { load(); loadUnread(); });
-  }, [openId, load, loadUnread]);
+    if (!openId && !showNewTicketPage) queueMicrotask(() => { load(); loadUnread(); });
+  }, [openId, showNewTicketPage, load, loadUnread]);
 
   const openTicket = useCallback(async (id: string) => {
     setOpenId(id);
@@ -197,16 +217,13 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     }
   }, [initialTicketId, openTicket]);
 
-  useLayoutEffect(() => {
-    if (!openId) return;
-    const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
-    if (!shouldLockScroll) return;
-    const roots = [document.documentElement, document.body];
-    roots.forEach((root) => root.classList.add("contratacr-support-thread-open"));
-    return () => {
-      roots.forEach((root) => root.classList.remove("contratacr-support-thread-open"));
-    };
-  }, [openId]);
+  const didOpenInitialSupportForm = useRef(false);
+  useEffect(() => {
+    if (!initialNewSupport || didOpenInitialSupportForm.current) return;
+    didOpenInitialSupportForm.current = true;
+    if (window.matchMedia("(max-width: 639px)").matches) setShowNewTicketPage(true);
+    else setShowModal(true);
+  }, [initialNewSupport]);
 
   async function sendReply() {
     if (!reply.trim() || !openId) return;
@@ -245,17 +262,63 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     return m;
   }, [items]);
 
+  useEffect(() => {
+    onThreadChange?.({
+      open: !!openId || showNewTicketPage,
+      title: showNewTicketPage ? t("newTicket") : ticket ? ticketSubject(ticket) : null,
+      reference: ticket ? supportTicketRef(ticket.id, ticket.created_at, ticket.case_number) : null,
+    });
+  }, [openId, showNewTicketPage, ticket, onThreadChange, t]);
+
+  useEffect(() => {
+    const handler = () => {
+      setShowNewTicketPage(false);
+      closeThread();
+    };
+    window.addEventListener("ccr:support-close-thread", handler);
+    return () => window.removeEventListener("ccr:support-close-thread", handler);
+  }, [closeThread]);
+
   // ── Thread view ──
+  function openNewTicket() {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches) {
+      setShowNewTicketPage(true);
+      return;
+    }
+    setShowModal(true);
+  }
+
+  function handleNewTicketSubmitted() {
+    setShowModal(false);
+    setShowNewTicketPage(false);
+    setFilter("open");
+    load();
+    loadUnread();
+  }
+
+  if (showNewTicketPage) {
+    return (
+      <>
+        <div className="ccr-support-new-ticket flex min-h-0 flex-1 flex-col bg-white">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+            <SupportForm onSuccess={handleNewTicketSubmitted} />
+          </div>
+        </div>
+        {dialogNode}
+      </>
+    );
+  }
+
   if (openId) {
     return (
       <>
       <div className="ccr-support-thread flex min-h-0 flex-1 flex-col">
         {threadLoading || !ticket ? (
-          <PanelSectionLoading rows={2} />
+          <PanelListSkeleton rows={2} />
         ) : (
-          <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white shadow-sm">
-            <header className="grid min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5">
-              <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
+          <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+            <header className="hidden min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5 lg:grid">
+              <button onClick={closeThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div className="flex min-w-0 items-center gap-3">
@@ -331,7 +394,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
 
   // ── List view ──
   return (
-    <div className="space-y-4">
+    <div className="mx-auto w-full max-w-[34rem] space-y-4 px-4 sm:max-w-none sm:px-0">
       <div className="flex justify-end">
         {/* Header action shows ONLY once tickets have loaded AND there's at least one
             (the persistent action above the list). It must NOT render while loading
@@ -339,7 +402,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
             EMPTY state (the centered empty-state card carries the single "Contactar
             soporte" button, so it never appears twice). The heading above stays always. */}
         {!loading && items.length > 0 && (
-          <button onClick={() => setShowModal(true)} className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] shrink-0 w-full sm:w-auto">
+          <button onClick={openNewTicket} className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] shrink-0 w-full sm:w-auto">
             <Plus className="h-4 w-4" /> {t("newTicket")}
           </button>
         )}
@@ -361,7 +424,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
       )}
 
       {loading ? (
-        <PanelSectionLoading rows={2} />
+        <PanelListSkeleton rows={3} withTabs />
       ) : loadError ? (
         <div className="rounded-2xl border border-[#e5e7eb] bg-white px-5 py-10 text-center">
           <Headset className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />
@@ -377,7 +440,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
           description={t("emptySub")}
           className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white"
           action={(
-            <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb]">
+            <button onClick={openNewTicket} className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb]">
               <Plus className="h-4 w-4" /> {t("openTicket")}
             </button>
           )}
@@ -426,7 +489,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
           onClose={() => setShowModal(false)}
           // New ticket submitted → close the modal, jump to "Pendiente" (where a
           // brand-new ticket lands) and reload so it shows up inline immediately.
-          onSubmitted={() => { setShowModal(false); setFilter("open"); load(); loadUnread(); }}
+          onSubmitted={handleNewTicketSubmitted}
         />
       )}
       {dialogNode}

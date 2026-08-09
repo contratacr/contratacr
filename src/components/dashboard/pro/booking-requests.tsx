@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
+import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, MoreHorizontal, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { computeAge } from "@/lib/age";
@@ -19,8 +19,7 @@ import { ReportModal } from "@/components/dashboard/report-modal";
 import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
-import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
-import { AppTooltip } from "@/components/ui/app-tooltip";
+import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 
 type Booking = {
@@ -124,6 +123,7 @@ export function BookingRequests() {
   // Inline cancel-with-reason panel — the pro's only exception tool (the pro does NOT
   // reschedule; sprint 433). One open at a time, keyed by booking id.
   const [actionFor, setActionFor] = useState<{ id: string; mode: "cancel" } | null>(null);
+  const [actionsMenuFor, setActionsMenuFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -132,6 +132,16 @@ export function BookingRequests() {
     setReason("");
   }
   function closeAction() { setActionFor(null); }
+
+  useEffect(() => {
+    if (!actionsMenuFor) return;
+    const close = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (!target?.closest(`[data-booking-actions="${actionsMenuFor}"]`)) setActionsMenuFor(null);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [actionsMenuFor]);
 
   const loadBookings = useCallback(async (silent = false) => {
     try {
@@ -250,7 +260,7 @@ export function BookingRequests() {
   }
 
   if (loading) {
-    return <PanelSectionLoading />;
+    return <PanelListSkeleton rows={2} withTabs />;
   }
 
   if (bookings.length === 0) {
@@ -304,7 +314,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card id={`booking-${booking.id}`} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-[box-shadow,border-color] hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
+      <Card id={`booking-${booking.id}`} className={cn("overflow-visible rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-[box-shadow,border-color] hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + relevant flags). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
@@ -430,59 +440,45 @@ export function BookingRequests() {
               </p>
             )}
 
-            {/* Actions: primary row first, secondary row second. Mobile keeps a stable
-                2-column grid so the buttons do not jump between different widths. */}
+            {/* Frequent actions stay visible; exceptional actions live in the overflow menu. */}
             {!panelOpen && (() => {
               const primaryActionClass = "min-h-10 w-full rounded-lg px-3 text-sm font-bold";
-              const secondaryActionClass = "min-h-10 w-full rounded-lg px-3 text-sm font-bold";
               return (
-                <div className="grid grid-cols-2 gap-2 border-t border-[#eef2f6] pt-3 sm:flex sm:flex-wrap sm:items-center">
-                  {isActive && (
-                <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone="contrast" className={`${primaryActionClass} sm:min-w-[10rem] sm:flex-1`} />
-                  )}
-                  {isActive && (
-                    <>
+                <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
+                  <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
+                    {isActive && (
+                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone="contrast" className={primaryActionClass} />
+                    )}
+                    {isActive && (
                       <Button
                         type="button"
                         size="sm"
-                        className={`${primaryActionClass} sm:min-w-[10rem] sm:flex-1`}
+                        className={primaryActionClass}
                         onClick={() => updateStatus(booking.id, "awaiting_confirmation")}
                       >
                         {t("markCompleted")}
                       </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className={`${secondaryActionClass} border-[#fecaca] text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:min-w-[10rem] sm:flex-1`}
-                        onClick={() => openAction(booking.id, "cancel")}
-                      >
-                        {t("cancel")}
-                      </Button>
-                    </>
-                  )}
-                  {booking.status === "cancelled" && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className={`${secondaryActionClass} border-red-100 text-red-600 hover:bg-red-50 sm:min-w-[10rem] sm:flex-1`}
-                      onClick={() => archiveBooking(booking.id)}
-                    >
-                      {t("archive")}
-                    </Button>
-                  )}
-                  <AppTooltip label={t("reportClient")} className="min-w-0 sm:ml-auto">
+                    )}
+                  </div>
+                  <div className="relative shrink-0" data-booking-actions={booking.id}>
                     <button
                       type="button"
-                      aria-label={t("reportClient")}
-                      onClick={() => setReportFor(booking)}
-                      className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-[#9ca3af] transition-colors hover:bg-[#f9fafb] hover:text-[#dc2626] sm:w-auto sm:justify-start"
+                      aria-label={locale === "en" ? "More options" : "Más opciones"}
+                      aria-haspopup="menu"
+                      aria-expanded={actionsMenuFor === booking.id}
+                      onClick={() => setActionsMenuFor((current) => current === booking.id ? null : booking.id)}
+                      className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"
                     >
-                      <Flag className="h-3.5 w-3.5" />
-                      <span>{t("reportClient")}</span>
+                      <MoreHorizontal className="h-5 w-5" />
                     </button>
-                  </AppTooltip>
+                    {actionsMenuFor === booking.id && (
+                      <div role="menu" className="absolute right-0 top-[calc(100%+6px)] z-50 w-48 rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
+                        {isActive && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); openAction(booking.id, "cancel"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("cancel")}</button>}
+                        {booking.status === "cancelled" && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); archiveBooking(booking.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{t("archive")}</button>}
+                        <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); setReportFor(booking); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("reportClient")}</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })()}
@@ -520,7 +516,7 @@ export function BookingRequests() {
       {filtered.length === 0 ? (
         <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>
       ) : (
-        <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
+        <div className="ccr-native-safe-list-end flex flex-col gap-3.5 overflow-visible pb-4">
           {filtered.map((b) => <BookingCard key={b.id} booking={b} />)}
         </div>
       )}

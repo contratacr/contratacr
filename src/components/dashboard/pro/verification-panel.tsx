@@ -8,13 +8,14 @@ import { CedulaInput } from "@/components/ui/cedula-input";
 import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { Link } from "@/i18n/navigation";
 import { SupportLink } from "@/components/support/support-link";
-import { cleanId, isValidId } from "@/lib/cedula";
+import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { caseRef, type VerificationStatus } from "@/lib/verification";
 
 interface Props {
   professionalId: string;
   status: VerificationStatus;
   reason?: string | null;
+  currentCedula?: string | null;
   /** No-CR-identification case (manual review; no padrón to check against). */
   noCrId?: boolean;
   onSaved?: () => void;
@@ -28,6 +29,7 @@ export function VerificationPanel({
   professionalId,
   status,
   reason,
+  currentCedula = null,
   noCrId = false,
   onSaved,
 }: Props) {
@@ -41,6 +43,7 @@ export function VerificationPanel({
   const [note, setNote] = useState<string | null>(null);
   const [verifiedName, setVerifiedName] = useState<string | null>(null);
   const [verifiedCedula, setVerifiedCedula] = useState<string | null>(null);
+  const [changeCedulaOpen, setChangeCedulaOpen] = useState(false);
 
   // Add-cédula-later (no-ID pros who obtained a CR cédula).
   const [newCedula, setNewCedula] = useState("");
@@ -50,6 +53,19 @@ export function VerificationPanel({
   const [cedulaError, setCedulaError] = useState<string | null>(null);
 
   const ref = caseRef(professionalId);
+  const cleanCurrentCedula = cleanId(currentCedula ?? "");
+  const hasCurrentCedula = !!cleanCurrentCedula;
+  const currentIdType = detectIdType(cleanCurrentCedula);
+  const currentIdTypeLabel =
+    currentIdType === "cedula"
+      ? t("idTypeCedula")
+      : currentIdType === "juridica"
+        ? t("idTypeJuridica")
+        : currentIdType === "dimex"
+          ? t("idTypeDimex")
+          : currentIdType === "nite"
+            ? t("idTypeNite")
+            : null;
   const wasMovedToReview = status === "pending" && !!reason;
   const summaryTone =
     status === "verified"
@@ -188,11 +204,18 @@ export function VerificationPanel({
         setVerifiedName(nextName || null);
         setVerifiedCedula(nextCedula || null);
         setNote(t("cedulaVerified"));
+        window.dispatchEvent(new CustomEvent("ccr:identity-updated", {
+          detail: { fullName: nextName || null, cedula: nextCedula || null, verified: true },
+        }));
       } else {
         setNote(t("cedulaSaved"));
+        window.dispatchEvent(new CustomEvent("ccr:identity-updated", {
+          detail: { fullName: null, cedula, verified: false },
+        }));
       }
       setNewCedula("");
       setCedulaCheck(null);
+      setChangeCedulaOpen(false);
       onSaved?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("processError"));
@@ -347,51 +370,61 @@ export function VerificationPanel({
   }
 
   return (
-    <div className="space-y-5">
-      <VerificationSummary
-        title={
-          status === "verified"
-            ? t("verifiedTitle")
-            : status === "under_appeal"
+    <div className="space-y-4">
+      {status !== "verified" && (
+        <VerificationSummary
+          title={
+            status === "under_appeal"
               ? t("underAppealTitle")
               : status === "rejected"
                 ? t("rejectedTitle")
                 : wasMovedToReview
                   ? t("pendingTitle")
                   : t("unverifiedTitle")
-        }
-        tone={summaryTone}
-        badge={status === "verified" ? t("verifiedChip") : undefined}
-      >
-        {status === "verified" && t.rich("verifiedBody", rich)}
-        {status === "pending" && (
-          <>
-            {reason && <span className="block">{t("reason", { reason })}</span>}
-            <span className={reason ? "mt-1 block" : undefined}>{t.rich("pendingBody", rich)}</span>
-          </>
-        )}
-        {status === "under_appeal" && t("underAppealBody")}
-        {status === "rejected" && (
-          <>
-            {reason ? (
-              <span className="block">{t("reason", { reason })}</span>
-            ) : (
-              t("noReason")
-            )}
-            <span className="block mt-1">{t("rejectedBody")}</span>
-          </>
-        )}
-      </VerificationSummary>
+          }
+          tone={summaryTone}
+        >
+          {status === "pending" && (
+            <>
+              {reason && <span className="block">{t("reason", { reason })}</span>}
+              <span className={reason ? "mt-1 block" : undefined}>{t.rich("pendingBody", rich)}</span>
+            </>
+          )}
+          {status === "under_appeal" && t("underAppealBody")}
+          {status === "rejected" && (
+            <>
+              {reason ? (
+                <span className="block">{t("reason", { reason })}</span>
+              ) : (
+                t("noReason")
+              )}
+              <span className="block mt-1">{t("rejectedBody")}</span>
+            </>
+          )}
+        </VerificationSummary>
+      )}
 
-      {note && (
-        <VerificationResultNotice
-          note={note}
-          title={t("resultTitle")}
-          verifiedName={verifiedName}
-          verifiedCedula={verifiedCedula}
-        />
+      <CurrentIdentificationPanel
+        title={t("currentIdTitle")}
+        emptyLabel={t("currentIdEmpty")}
+        value={hasCurrentCedula ? cleanCurrentCedula : null}
+        typeLabel={currentIdTypeLabel}
+        statusLabel={status === "verified" ? t("verifiedChip") : undefined}
+        changeLabel={changeCedulaOpen ? t("cancelChangeId") : t("changeId")}
+        onChangeClick={() => setChangeCedulaOpen((open) => !open)}
+      />
+
+      {note && status === "verified" && <Notice tone="info">{note}</Notice>}
+      {note && status !== "verified" && (
+        <VerificationResultNotice note={note} title={t("resultTitle")} verifiedName={verifiedName} verifiedCedula={verifiedCedula} />
       )}
       {error && <Notice tone="error">{error}</Notice>}
+
+      {status === "verified" && changeCedulaOpen && (
+        <ActionPanel title={t("changeIdTitle")} body={t("changeIdBody")}>
+          {renderCedulaVerifier()}
+        </ActionPanel>
+      )}
 
       {/* Pending no longer shows a separate "Verificar mi identidad ahora" (re-run the
           cédula on file) button — it was redundant with the "Verifica tu identidad con tu
@@ -454,6 +487,57 @@ export function VerificationPanel({
         </ActionPanel>
       )}
     </div>
+  );
+}
+
+function CurrentIdentificationPanel({
+  title,
+  emptyLabel,
+  value,
+  typeLabel,
+  statusLabel,
+  changeLabel,
+  onChangeClick,
+}: {
+  title: string;
+  emptyLabel: string;
+  value: string | null;
+  typeLabel?: string | null;
+  statusLabel?: string;
+  changeLabel: string;
+  onChangeClick: () => void;
+}) {
+  return (
+    <section className="rounded-xl bg-[#f8fafc] px-4 py-3 sm:px-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#009FD9] shadow-sm ring-1 ring-[#e5eef6]">
+            <ShieldCheck className="h-4.5 w-4.5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.06em] text-[#64748b]">{title}</p>
+            <div className="mt-1 flex min-w-0 items-center gap-2">
+              <p className="min-w-0 truncate font-mono text-base font-extrabold tracking-wide text-[#162543]">{value ?? emptyLabel}</p>
+              {statusLabel && (
+                <Badge variant="verified" className="shrink-0">
+                  {statusLabel}
+                </Badge>
+              )}
+            </div>
+            {value && typeLabel ? (
+              <p className="mt-0.5 text-xs font-semibold text-[#64748b]">{typeLabel}</p>
+            ) : null}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onChangeClick}
+          className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-[#dbe4ee] bg-white px-4 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb] sm:w-auto"
+        >
+          {changeLabel}
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -565,3 +649,4 @@ function VerificationResultNotice({
     </Notice>
   );
 }
+

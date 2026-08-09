@@ -34,8 +34,8 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const wordmarkSrc = await logoWordmarkDataUrl();
   const markSrc = await logoMarkDataUrl();
   const subtitle = isEn
-    ? { lead: "Offer", middle: " and find services in\u00a0", place: "Costa Rica." }
-    : { lead: "Ofrece", middle: " y encuentra servicios en\u00a0", place: "Costa Rica." };
+    ? { lead: "Offer", middle: " and find services in ", place: "Costa Rica." }
+    : { lead: "Ofrece", middle: " y encuentra servicios en ", place: "Costa Rica." };
 
   return new ImageResponse(
     (

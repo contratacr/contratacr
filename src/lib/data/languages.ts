@@ -1,6 +1,6 @@
 // Languages a professional can declare they speak. IDs are stable (English),
 // `label` is Spanish-first UI copy, `labelEn` the English rendering. Used by the
-// profile languages chip input and the public profile. Resolve with
+// profile language picker, filters and the public profile. Resolve with
 // languageLabel(id, locale) so the value follows the active locale.
 export const LANGUAGES = [
   { id: "es", label: "Español", labelEn: "Spanish" },
@@ -9,15 +9,16 @@ export const LANGUAGES = [
   { id: "pt", label: "Portugués", labelEn: "Portuguese" },
   { id: "zh", label: "Mandarín", labelEn: "Mandarin" },
   { id: "ja", label: "Japonés", labelEn: "Japanese" },
-  { id: "lsr", label: "LESCO (Lengua de Señas Costarricense)", labelEn: "LESCO (Costa Rican Sign Language)" },
+  { id: "lsr", label: "LESCO", labelEn: "LESCO" },
 ] as const;
 
 export function languageLabel(id: string, locale?: string): string {
-  const l = LANGUAGES.find((x) => x.id === id);
-  if (!l && ["english", "english program", "inglés", "ingles"].includes(id.trim().toLowerCase())) {
+  const needle = id.trim().toLowerCase();
+  const l = LANGUAGES.find((x) => x.id === id || x.label.toLowerCase() === needle || x.labelEn.toLowerCase() === needle);
+  if (!l && ["english", "english program", "inglés", "ingles"].includes(needle)) {
     return locale === "en" ? "English" : "Inglés";
   }
-  if (!l && ["spanish", "español", "espanol"].includes(id.trim().toLowerCase())) {
+  if (!l && ["spanish", "español", "espanol"].includes(needle)) {
     return locale === "en" ? "Spanish" : "Español";
   }
   if (!l) return id;

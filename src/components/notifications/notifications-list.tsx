@@ -14,7 +14,7 @@ import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
-import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 
@@ -250,12 +250,18 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
+  const headingTitle = locale === "en" ? "Notifications" : "Notificaciones";
+
   return (
     <div className="ccr-notifications-list flex h-full min-h-0 flex-col">
-      <div className="mb-2 flex items-start justify-between gap-3 pt-0">
+      <div className="ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3 rounded-2xl bg-white px-1 py-1 sm:px-0 sm:py-0">
         <div className="min-w-0">
-          <h3 className="text-lg font-extrabold text-[#162543] sm:text-[1.15rem]">{t("title")}</h3>
-          <p className="mt-0.5 text-sm font-semibold text-[#6b7280]">
+          {scope === "all" ? (
+            <h1 className="text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl">{headingTitle}</h1>
+          ) : (
+            <h3 className="text-lg font-extrabold leading-tight text-[#162543] sm:text-[1.15rem]">{headingTitle}</h3>
+          )}
+          <p className="mt-1 inline-flex w-fit items-center rounded-full bg-[#eef6fb] px-2.5 py-1 text-xs font-extrabold text-[#526277]">
             {unread} {locale === "en" ? "unread" : "sin leer"}
           </p>
         </div>
@@ -269,9 +275,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
               setItemMenuOpenId(null);
               setGlobalMenuOpen((open) => !open);
             }}
-            className="inline-flex h-6.5 w-6.5 items-center justify-center rounded-full border-[1.75px] border-[#111827] bg-white text-[#111827] transition-colors hover:bg-[#f8fafc]"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#162543] ring-1 ring-[#dbe7ef] transition-colors hover:bg-[#eef6fb]"
           >
-            <MoreHorizontal className="h-[16px] w-[16px]" strokeWidth={3.2} />
+            <MoreHorizontal className="h-5 w-5" strokeWidth={3} />
           </button>
           {globalMenuOpen && (
             <div role="menu" className="absolute right-0 top-full z-30 mt-2 min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl">
@@ -322,8 +328,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       )}
       <div className="ccr-notifications-scroll min-h-0 flex-1 rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
         {busy ? (
-          <PanelSectionLoading
-            className={scope === "all" ? "min-h-[calc(100dvh-13rem)] sm:min-h-[18rem]" : "min-h-[16rem] sm:min-h-[18rem]"}
+          <PanelListSkeleton
+            rows={4}
+            className={scope === "all" ? "min-h-[calc(100dvh-13rem)] p-4 sm:min-h-[18rem]" : "min-h-[16rem] p-4 sm:min-h-[18rem]"}
           />
         ) : visible.length === 0 ? (
           <PanelEmptyState

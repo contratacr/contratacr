@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { AlertCircle, Paperclip, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -23,13 +24,33 @@ type AttachedFile = { file: File; preview?: string };
 export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void }) {
   const t = useTranslations("soporte");
   const locale = useLocale();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prefillAppliedRef = useRef(false);
 
   const [form, setForm] = useState({ name: "", email: "", topic: "", subject: "", message: "" });
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (prefillAppliedRef.current) return;
+    const topic = searchParams.get("topic") ?? "";
+    const subject = searchParams.get("subject") ?? "";
+    const message = searchParams.get("message") ?? "";
+    if (!topic && !subject && !message) return;
+    prefillAppliedRef.current = true;
+    setForm((f) => {
+      const nextTopic = SUBJECT_IDS.map((i) => `subject${i}`).includes(topic) ? topic : f.topic;
+      return {
+        ...f,
+        topic: nextTopic,
+        subject: limitText(subject || (nextTopic ? t(nextTopic) : f.subject), SHORT_TEXT_MAX_LENGTH),
+        message: limitText(message || f.message, LONG_TEXT_MAX_LENGTH),
+      };
+    });
+  }, [searchParams, t]);
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -156,7 +177,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
             {t("nameLabel")} <span className="text-red-500">*</span>

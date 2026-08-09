@@ -73,9 +73,9 @@ function suggestedGroupId(name: string, groups: CatalogGroup[]) {
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (next: boolean) => void; label: string }) {
   return (
-    <button type="button" onClick={() => onChange(!checked)} className="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold text-[#374151] hover:bg-[#f9fafb]">
-      <span className={`relative h-5 w-9 rounded-full transition ${checked ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
-        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition ${checked ? "left-4" : "left-0.5"}`} />
+    <button type="button" role="checkbox" aria-checked={checked} onClick={() => onChange(!checked)} className="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold text-[#374151] hover:bg-[#f9fafb]">
+      <span className={`grid h-5 w-5 place-items-center rounded-[4px] border bg-white ${checked ? "border-[#009FD9] text-[#009FD9]" : "border-[#b8c5d3] text-transparent"}`} aria-hidden="true">
+        <Check className="h-3.5 w-3.5" strokeWidth={3.2} />
       </span>
       {label}
     </button>
@@ -634,7 +634,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo guardar la sección", data.error || "Inténtalo de nuevo.");
+        showNotice("No se pudo guardar la categoría", data.error || "Inténtalo de nuevo.");
         return;
       }
       await loadCatalog();
@@ -717,7 +717,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo agregar la sección", data.error || "Inténtalo de nuevo.");
+        showNotice("No se pudo agregar la categoría", data.error || "Inténtalo de nuevo.");
         return;
       }
       setNewGroupName("");
@@ -766,17 +766,17 @@ export function AdminCategories() {
     const inUse = catalog.filter((item) => item.groupId === group.id).length;
     if (inUse > 0) {
       showNotice(
-        "Esta sección todavía tiene servicios",
+        "Esta categoría todavía tiene servicios",
         `Tiene ${inUse} servicio${inUse === 1 ? "" : "s"} asociado${inUse === 1 ? "" : "s"}.`,
-        "Mueve esos servicios a otra sección y vuelve a intentarlo."
+        "Mueve esos servicios a otra categoría y vuelve a intentarlo."
       );
       return;
     }
     setDialog({
-      title: "Eliminar sección",
+      title: "Eliminar categoría",
       description: `"${group.label}" dejará de aparecer en el catálogo.`,
-      detail: "Esta acción solo oculta la sección. No elimina servicios ni datos históricos.",
-      confirmLabel: "Eliminar sección",
+      detail: "Esta acción solo oculta la categoría. No elimina servicios ni datos históricos.",
+      confirmLabel: "Eliminar categoría",
       cancelLabel: "Cancelar",
       tone: "danger",
       onConfirm: () => deleteGroupConfirmed(group),
@@ -789,7 +789,7 @@ export function AdminCategories() {
       const res = await fetch(`/api/admin/categories?groupId=${encodeURIComponent(group.id)}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo eliminar la sección", data.error || "Inténtalo de nuevo.", undefined, "danger");
+        showNotice("No se pudo eliminar la categoría", data.error || "Inténtalo de nuevo.", undefined, "danger");
         return;
       }
       await loadCatalog();
@@ -809,7 +809,7 @@ export function AdminCategories() {
             <h1 className="text-xl font-bold text-[#111827]">Catálogo de servicios</h1>
           </div>
           <p className="max-w-2xl text-sm text-[#6b7280]">
-            Administra secciones, servicios, traducciones y reglas de salud o videoconsulta.
+            Administra categorías, servicios, traducciones y reglas de salud o videoconsulta.
           </p>
         </div>
       </div>
@@ -818,7 +818,7 @@ export function AdminCategories() {
         <div className="grid grid-cols-3 gap-1">
           {[
             { id: "services", label: "Servicios", icon: Tag },
-            { id: "groups", label: "Secciones", icon: Layers3 },
+            { id: "groups", label: "Categorías", icon: Layers3 },
             { id: "suggestions", label: "Sugerencias", icon: Check, count: pendingCount },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -857,7 +857,7 @@ export function AdminCategories() {
               </span>
             </div>
             <p className="mt-1 text-sm leading-6 text-[#5f6b7a]">
-              La app propone nombre en inglés, sección, salud y videoconsulta. El admin confirma o ajusta antes de publicar.
+              La app propone nombre en inglés, categoría, salud y videoconsulta. El admin confirma o ajusta antes de publicar.
             </p>
           </div>
 
@@ -937,7 +937,7 @@ export function AdminCategories() {
                     {status === "pending" && (
                       <>
                         <div>
-                          <FieldLabel>Sección</FieldLabel>
+                          <FieldLabel>Categoría</FieldLabel>
                           <select
                             value={groupOfSuggestion(i)}
                             onChange={(e) => setSuggestionGroups((p) => ({ ...p, [i.id]: e.target.value }))}
@@ -1001,7 +1001,7 @@ export function AdminCategories() {
                 />
               </div>
               <div>
-                <FieldLabel>Sección</FieldLabel>
+                <FieldLabel>Categoría</FieldLabel>
                 <select
                   value={newServiceGroupId}
                   onChange={(e) => setNewServiceGroupId(e.target.value)}
@@ -1027,7 +1027,7 @@ export function AdminCategories() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar servicio o sección"
+                placeholder="Buscar servicio o categoría"
                 className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
               />
             </div>
@@ -1080,7 +1080,7 @@ export function AdminCategories() {
                   <select
                     value={draftOf(item).groupId}
                     onChange={(e) => setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), groupId: e.target.value } }))}
-                    aria-label="Sección del servicio"
+                    aria-label="Categoría del servicio"
                     className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#64748b] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                   >
                     {groups.map((group) => <option key={group.id} value={group.id}>{group.label}</option>)}
@@ -1113,7 +1113,7 @@ export function AdminCategories() {
           <form onSubmit={addGroup} className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
               <div>
-                <FieldLabel>Sección en español</FieldLabel>
+                <FieldLabel>Categoría en español</FieldLabel>
                 <input
                   value={newGroupName}
                   onChange={(e) => {
@@ -1128,7 +1128,7 @@ export function AdminCategories() {
                 />
               </div>
               <div>
-                <FieldLabel>Sección en inglés</FieldLabel>
+                <FieldLabel>Categoría en inglés</FieldLabel>
                 <input
                   value={newGroupNameEn}
                   onChange={(e) => {
@@ -1142,7 +1142,7 @@ export function AdminCategories() {
               </div>
               <button type="submit" disabled={(!newGroupName.trim() && !newGroupNameEn.trim()) || busy === "new-group"} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
                 {busy === "new-group" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                Agregar sección
+                Agregar categoría
               </button>
             </div>
           </form>
@@ -1158,13 +1158,13 @@ export function AdminCategories() {
                     <input
                       value={draft.label}
                       onChange={(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, label: e.target.value } }))}
-                      aria-label="Nombre de la sección"
+                      aria-label="Nombre de la categoría"
                       className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
                     <input
                       value={draft.labelEn}
                       onChange={(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, labelEn: e.target.value } }))}
-                      aria-label="Nombre de la sección en inglés"
+                      aria-label="Nombre de la categoría en inglés"
                       className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
                     <div className="flex justify-end gap-2">

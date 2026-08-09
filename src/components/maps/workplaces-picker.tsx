@@ -13,6 +13,7 @@ export type Workplace = {
   id: string;
   name: string;
   address: string;
+  level?: "country" | "provincia" | "canton";
   lat?: number;
   lng?: number;
   // Authoritative administrative areas - chosen by the pro in the selects. These
@@ -43,6 +44,7 @@ interface WorkplacesPickerProps {
 type GMaps = any;
 
 const COSTA_RICA_CENTER = { lat: 9.7489, lng: -83.7534 };
+const COUNTRY_OPTION = "__country__";
 
 function genId() {
   return `wp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -108,7 +110,26 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   }, [draftPin]);
 
   function commitWorkplace() {
-    if (!province) return;
+    if (!province || province === COUNTRY_OPTION) {
+      onChange([
+        ...valueRef.current.filter((wp) => wp.level !== "country"),
+        {
+          id: "wp_todo_costa_rica",
+          name: t("wholeCountryName"),
+          address: "",
+          level: "country",
+        },
+      ]);
+      setProvince("");
+      setCanton("");
+      setDraftPin(null);
+      setShowMap(false);
+      setAdding(false);
+      setAddrQuery("");
+      setAddrSug([]);
+      setAddrOpen(false);
+      return;
+    }
     const pin = canton ? draftPinRef.current : null;
     const cantonName = getCantonById(canton)?.name ?? "";
     const provinceName = getProvinceById(province)?.name ?? "";
@@ -123,6 +144,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         address: pin?.address || "",
         lat: pin?.lat,
         lng: pin?.lng,
+        level: canton ? "canton" : "provincia",
         provinciaId: province,
         cantonId: canton || undefined,
       },
@@ -298,45 +320,50 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   }, [addrQuery]);
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-3.5">
       {/* Added zones - listed FIRST, above the add-another-location form. */}
       {addedCount > 0 && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           {value.map((wp) => (
-            <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
-              <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
+            <div key={wp.id} className="flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-2.5">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#009FD9] shadow-sm ring-1 ring-[#e5eef6]">
+                <MapPin className="h-4.5 w-4.5" />
+              </span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-[#0089bb] truncate">{wp.name}</p>
-                <p className="text-[10px] text-[#6b7280] truncate">
-                  {wp.cantonId
-                    ? [getCantonById(wp.cantonId)?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")
-                    : t("wholeProvinceTag")}
+                <p className="truncate text-sm font-semibold text-[#162543]">{wp.name}</p>
+                <p className="mt-0.5 truncate text-xs font-medium text-[#64748b]">
+                  {wp.level === "country"
+                    ? t("wholeCountryTag")
+                    : wp.cantonId
+                      ? [getCantonById(wp.cantonId)?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")
+                      : t("wholeProvinceTag")}
                   {wp.lat != null && wp.lng != null ? ` · ${t("pinnedTag")}` : ""}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => removeWorkplace(wp.id)}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
                 aria-label={t("removePlace")}
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-          ))}          {extraPlaces.map((place) => (
-            <div key={place.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
-              <span className="grid h-4 w-4 shrink-0 place-items-center text-[#009FD9]">
+          ))}
+          {extraPlaces.map((place) => (
+            <div key={place.id} className="flex items-center gap-3 rounded-2xl border border-[#dbe7ef] bg-[#f8fcff] px-4 py-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
                 {place.icon ?? <MapPin className="h-4 w-4" />}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-[#0089bb] truncate">{place.label}</p>
-                {place.description && <p className="text-[10px] text-[#6b7280] truncate">{place.description}</p>}
+                <p className="truncate text-sm font-bold text-[#162543]">{place.label}</p>
+                {place.description && <p className="mt-0.5 truncate text-xs font-medium text-[#64748b]">{place.description}</p>}
               </div>
               {place.onRemove && (
                 <button
                   type="button"
                   onClick={place.onRemove}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
                   aria-label={place.removeLabel ?? t("removePlace")}
                 >
                   <X className="h-4 w-4" />
@@ -352,27 +379,30 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           provincia -> cantón -> optional map pin -> "Agregar esta ubicación". Shown
           while adding; collapses behind "Agregar otra ubicación" after a commit. */}
       {showAddForm && (
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-3">
       {/* 1 - Structured field FIRST: provincia -> cantón (authoritative for search).
           Polished popover dropdowns (shared SelectMenu) - same look/behavior as the
           Disponibilidad time selector. SIDE-BY-SIDE (provincia | cantón), matching the
           publicar-proyecto layout exactly (`grid grid-cols-2 gap-3`). The SelectMenu's
           OPTIONS popup grows to its content + scrolls past `max-h-72` (sprint 301/321), so
           a long cantón name is never cut off in the open list even in a half-width cell. */}
-      <div className="grid w-full grid-cols-2 gap-2.5 sm:max-w-[40rem]">
+      <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
         <SelectMenu
           value={province}
           onChange={(v) => { setProvince(v); setCanton(""); }}
           placeholder={t("provincePlaceholder")}
-          className="[&>button]:pl-3 [&>button]:pr-8 [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
-          options={PROVINCES.map((p) => ({ value: p.id, label: p.name }))}
+          className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#dfe8f0] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
+          options={[
+            { value: COUNTRY_OPTION, label: t("wholeCountryName") },
+            ...PROVINCES.map((p) => ({ value: p.id, label: p.name })),
+          ]}
         />
         <SelectMenu
           value={canton}
           onChange={setCanton}
-          disabled={!province}
+          disabled={!province || province === COUNTRY_OPTION}
           placeholder={t("cantonPlaceholder")}
-          className="[&>button]:pl-3 [&>button]:pr-8 [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
+          className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#dfe8f0] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
           options={[
             { value: "", label: t("cantonUnselected") },
             ...cantons.map((c) => ({ value: c.id, label: c.name })),
@@ -382,7 +412,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
 
       {/* 2 - OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
              link reveals the address search + map only when the pro chooses to pin. */}
-      {effectiveKey && canton ? (
+      {effectiveKey && canton && province !== COUNTRY_OPTION ? (
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -456,7 +486,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           )}
         </div>
       ) : (
-        canton && <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
+        canton && province !== COUNTRY_OPTION && <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
       )}
 
       {/* 3 - Add THIS zone (the one selected above). Enabled once provincia + cantón
@@ -464,10 +494,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       <button
         type="button"
         onClick={commitWorkplace}
-        disabled={!province}
-        className="self-start inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="self-start inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#e8f7fd] px-3.5 text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#d8f1fb]"
       >
-        <Plus className="h-4 w-4" /> {canton ? t("addThisPlace") : t("addWholeProvince")}
+        <Plus className="h-4 w-4" /> {!province || province === COUNTRY_OPTION ? t("addWholeCountry") : canton ? t("addThisPlace") : t("addWholeProvince")}
       </button>
       </div>
       )}
@@ -478,7 +507,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl px-1 text-sm font-bold text-[#009FD9] transition-colors hover:text-[#0089bb]"
           >
             <Plus className="h-4 w-4" /> {t("addAnotherPlace")}
           </button>
@@ -489,3 +518,4 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     </div>
   );
 }
+

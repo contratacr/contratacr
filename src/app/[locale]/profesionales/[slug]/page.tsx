@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
-  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, BadgeCheck, Languages,
   Share2, Flag, Award, SearchX, FileText, Globe, Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
-import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, proDisplayName, cn } from "@/lib/utils";
 import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
@@ -40,6 +39,7 @@ import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
+import { cldThumb } from "@/lib/cloudinary";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -72,6 +72,7 @@ function safeSearchReturnHref(value: string | null): string {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const t = useTranslations("profile");
+  const tLoading = useTranslations("loading");
   const locale = useLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
   const routeParams = useParams();
@@ -204,7 +205,7 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" aria-hidden />
             <p className="text-sm font-medium text-[#6b7280]">
-              {locale === "en" ? "Loading profile..." : "Cargando perfil..."}
+              {tLoading("profile")}
             </p>
           </div>
         </main>
@@ -384,25 +385,25 @@ export default function ProfilePage() {
           {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
-          <div className="relative bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-5 sm:p-6 mb-6">
+          <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm sm:p-6">
             {/* Same bare favorite bookmark used in /buscar: no circle, border or shadow. */}
             <SaveButton pro={savedPro} isOwn={isOwn} className="absolute right-3 top-3 z-10" />
             <div className="flex flex-col gap-4 pr-10 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-4 min-w-0">
+              <div className="flex min-w-0 items-start gap-4">
                 <ImagePreviewDialog
                   src={professional.avatarUrl}
                   alt={professional.fullName}
                   openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
                   closeLabel={locale === "en" ? "Close" : "Cerrar"}
                 >
-                  <Avatar className="h-20 w-20 sm:h-[88px] sm:w-[88px] shrink-0">
+                  <Avatar className="h-20 w-20 shrink-0 sm:h-[88px] sm:w-[88px]">
                     <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
                     <AvatarFallback className="text-2xl bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
                   </Avatar>
                 </ImagePreviewDialog>
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <h1 className="text-2xl font-bold leading-tight text-[#111827]">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                    <h1 className="min-w-0 truncate text-2xl font-bold leading-tight text-[#111827]">
                       {displayName.primaryDesktop}
                     </h1>
                     {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
@@ -419,18 +420,21 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
-                  <FollowButton
-                    professionalId={professional.id}
-                    isOwn={isOwn}
-                    initialFollowers={professional.followerCount ?? 0}
-                    onCountChange={updateFollowerCount}
-                    className="mt-3 w-fit"
-                  />
+                  <div className="mt-3 flex">
+                    <FollowButton
+                      professionalId={professional.id}
+                      isOwn={isOwn}
+                      initialFollowers={professional.followerCount ?? 0}
+                      onCountChange={updateFollowerCount}
+                      onSelfAction={() => setSelfMsg(SELF_MSG.follow)}
+                      className="w-fit"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Stats strip — rating · años de exp · casos de éxito. */}
-              <div className="flex items-center gap-5 self-start shrink-0 sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5">
+              <div className="grid w-full shrink-0 grid-cols-4 gap-3 self-start sm:w-auto sm:min-w-[22rem] sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5">
                 <button type="button" onClick={() => setActiveTab("resenas")} className="text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
@@ -631,7 +635,7 @@ export default function ProfilePage() {
                         {cats.length === 0 ? (
                           <p className="text-sm text-[#9ca3af] py-4 text-center">{t("noServices")}</p>
                         ) : (
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div className="grid grid-cols-1 gap-4">
                             {cats.map((cat) => {
                               const items = byCat.get(cat) ?? [];
                               // ONE clean summary per service: its description + price (the model is
@@ -647,16 +651,50 @@ export default function ProfilePage() {
                                 : t("priceConsult");
                               const title = getCategoryLabel(cat, locale);
                               const description = rep?.description?.trim() ?? "";
+                              const serviceImageUrl = typeof (rep as { imageUrl?: unknown } | undefined)?.imageUrl === "string"
+                                ? ((rep as { imageUrl: string }).imageUrl).trim()
+                                : "";
+                              const credential = rep as {
+                                professionalCredentialLabel?: string;
+                                professionalCredentialNumber?: string;
+                                professionalCredentialIssuer?: string;
+                              } | undefined;
+                              const credentialNumber = credential?.professionalCredentialNumber?.trim();
+                              const credentialLabel = credential?.professionalCredentialLabel?.trim() || (locale === "en" ? "Professional credential" : "Credencial profesional");
+                              const credentialIssuer = credential?.professionalCredentialIssuer?.trim();
                               const hasFullDescription = description.length > 150;
                               const priceParts = splitPricingLabel(priceLabel);
                               return (
-                                <div key={cat} className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+                                <div key={cat} className="overflow-hidden rounded-2xl border border-[#e2eaf2] bg-white shadow-[0_14px_34px_-30px_rgba(15,23,42,0.7)] transition-shadow hover:shadow-[0_22px_48px_-34px_rgba(15,23,42,0.8)]">
+                                  {serviceImageUrl && (
+                                    <ImagePreviewDialog
+                                      src={serviceImageUrl}
+                                      alt={title}
+                                      openLabel={locale === "en" ? `View image for ${title}` : `Ver imagen de ${title}`}
+                                      closeLabel={locale === "en" ? "Close" : "Cerrar"}
+                                      className="block h-44 w-full rounded-none sm:h-56"
+                                      imageClassName="sm:max-w-[900px]"
+                                    >
+                                      <span className="block h-44 w-full overflow-hidden bg-[#eef1f5] sm:h-56">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={cldThumb(serviceImageUrl, 760)} alt={title} loading="lazy" className="h-full w-full object-cover" />
+                                      </span>
+                                    </ImagePreviewDialog>
+                                  )}
+                                  <div className="flex flex-col p-5">
                                   <div className="flex flex-1 flex-col">
-                                    <p className="min-h-[44px] text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:min-h-[22px]">{title}</p>
-                                    <div className="mt-2 h-[92px]">
+                                    <div className="flex min-w-0 items-start justify-between gap-4">
+                                      <p className="min-w-0 text-[17px] font-extrabold leading-snug text-[#162543] [overflow-wrap:anywhere]">{title}</p>
+                                      <p className="shrink-0 text-right leading-tight">
+                                        <span className="block text-[15px] font-extrabold text-[#009FD9]">{priceParts.amount}</span>
+                                        {priceParts.unit && <span className="block text-[11px] font-semibold text-[#6b7280]">{priceParts.unit}</span>}
+                                        {priceParts.taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span>}
+                                      </p>
+                                    </div>
+                                    <div className="mt-3 h-[92px]">
                                       {description ? (
                                         <>
-                                        <p className="line-clamp-3 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{description}</p>
+                                        <p className="line-clamp-3 text-[14px] leading-relaxed text-[#526277] [overflow-wrap:anywhere]">{description}</p>
                                           <button
                                             type="button"
                                             onClick={() => hasFullDescription && setServiceDescriptionOpen({ title, description })}
@@ -684,7 +722,7 @@ export default function ProfilePage() {
                                           <span className="font-semibold">{t("yearsExperienceValue", { years: serviceYears })}</span>
                                         </p>
                                       ) : null}
-                                      <p className="flex items-center gap-2 text-[#111827]">
+                                      <p className="hidden items-center gap-2 text-[#111827]">
                                         <Banknote className="h-4 w-4 shrink-0 text-[#009FD9]" />
                                         <span className="font-bold [overflow-wrap:anywhere]">
                                           {priceParts.amount}
@@ -692,8 +730,19 @@ export default function ProfilePage() {
                                           {priceParts.taxSuffix && <span className="ml-1 text-[10px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span>}
                                         </span>
                                       </p>
+                                      {credentialNumber && (
+                                        <p className="flex items-start gap-2 rounded-xl bg-[#f3fbfe] px-3 py-2 text-xs font-semibold leading-snug text-[#526277]">
+                                          <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
+                                          <span className="min-w-0">
+                                            <span className="font-bold text-[#162543]">{credentialLabel}:</span>{" "}
+                                            <span>{credentialNumber}</span>
+                                            {credentialIssuer && <span className="text-[#6b7280]"> · {credentialIssuer}</span>}
+                                          </span>
+                                        </p>
+                                      )}
                                     </div>
                                     {canBookService ? <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4"><span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">{t("serviceRequest")}</span></button> : <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={catLabel(cat)} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.request)} buttonLabel="WhatsApp" analyticsSource="profile_service" className="mt-auto w-full rounded-xl px-4 py-2.5 text-sm font-semibold" />}
+                                  </div>
                                   </div>
                                 </div>
                               );
@@ -731,12 +780,12 @@ export default function ProfilePage() {
                           const raw: any[] = (professional.portfolioItems && professional.portfolioItems.length > 0)
                             ? professional.portfolioItems
                             : (professional.portfolioUrls ?? []).map((url) => ({ url }));
-                          type Caso = { id: string; profession: string; title?: string; description?: string; recipient?: string; date?: string; photos: string[]; likes?: number; likeable?: boolean };
+                          type Caso = { id: string; profession: string; title?: string; description?: string; recipient?: string; date?: string; photos: string[] };
                           const caseList: Caso[] = [];
                           const legacyByProf = new Map<string, string[]>();
                           for (const it of raw) {
                             if (Array.isArray(it?.photos) && it.id) {
-                              caseList.push({ id: String(it.id), profession: it.profession ?? primaryProf, title: it.title, description: it.description, recipient: it.recipient, date: it.date, photos: it.photos, likes: Number(it.likes) || 0, likeable: true });
+                              caseList.push({ id: String(it.id), profession: it.profession ?? primaryProf, title: it.title, description: it.description, recipient: it.recipient, date: it.date, photos: it.photos });
                             } else if (it?.url) {
                               const prof = profOf(it) || primaryProf || "";
                               const arr = legacyByProf.get(prof) ?? []; arr.push(it.url); legacyByProf.set(prof, arr);
@@ -746,7 +795,7 @@ export default function ProfilePage() {
                             for (let i = 0; i < photos.length; i += 3) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
                           }
                           // Client-facing showcase: profession filter + a polished case-card grid.
-                          return <CaseShowcase professionalId={professional.id} cases={caseList} professions={profsOrder} isOwn={isOwn} />;
+                          return <CaseShowcase cases={caseList} professions={profsOrder} initialCaseId={searchParamFromUrl("case")} />;
                         })()
                       ) : (
                         <p className="text-sm text-[#9ca3af]">{t("noCasos")}</p>
@@ -791,19 +840,6 @@ export default function ProfilePage() {
                   {/* ── TAB: Reseñas ── */}
                   {activeTab === "resenas" && (
                     <div>
-                      {/* Real aggregate ONLY when real reviews exist. Zero reviews →
-                          honest empty state; never a fabricated score or per-category
-                          breakdown (those were hardcoded fakes and were removed). */}
-                      {professional.reviewCount > 0 && (
-                        <div className="flex items-center gap-3 mb-5">
-                          <span className="text-4xl font-extrabold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                          <div className="flex flex-col">
-                            <StarRating rating={professional.ratingAvg} size="sm" />
-                            <span className="text-xs text-[#9ca3af] mt-0.5">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
-                          </div>
-                        </div>
-                      )}
-
                       <ReviewSection
                         professionalId={professional.id}
                         professionalName={professional.fullName}

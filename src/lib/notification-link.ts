@@ -3,7 +3,17 @@
 // in the same stream, so routing and per-panel filtering must stay explicit.
 export type NotificationLinkInput = {
   type: string;
-  data?: { link?: string; booking_id?: string | null; project_id?: string | null } | null;
+  data?: {
+    link?: string;
+    booking_id?: string | null;
+    project_id?: string | null;
+    activity_id?: string | null;
+    job_id?: string | null;
+    application_id?: string | null;
+    professional_id?: string | null;
+    activity_type?: string | null;
+    content_id?: string | null;
+  } | null;
 };
 
 export type NotificationContext = "professional" | "client" | "support" | null;
@@ -15,6 +25,7 @@ const PRO_TYPES = new Set([
   "booking_rescheduled",
   "review_received",
   "professional_follow",
+  "job_application",
   "proposal_accepted",
   "project_proposal_accepted",
   "project_proposal_declined",
@@ -34,6 +45,7 @@ const CLIENT_TYPES = new Set([
   "proposal_updated",
   "proposal_withdrawn",
   "project_work_done",
+  "job_application_status",
 ]);
 
 export function notificationContext(type: string): NotificationContext {
@@ -125,6 +137,10 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
       href = "/dashboard/profesional?tab=network&network=followers";
       break;
 
+    case "job_application":
+      href = "/dashboard/profesional?mode=offer&tab=jobs";
+      break;
+
     case "booking_confirmed":
     case "booking_cancelled":
     case "booking_completed":
@@ -138,6 +154,10 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
     case "proposal_withdrawn":
     case "project_work_done":
       href = "/dashboard/profesional?tab=sent_projects";
+      break;
+
+    case "job_application_status":
+      href = n.data?.job_id ? `/empleos/${n.data.job_id}` : "/empleos";
       break;
 
     case "support_reply":

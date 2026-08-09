@@ -1,7 +1,10 @@
 import { Loader2 } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { getTranslations } from "next-intl/server";
 
-export default function MessagesLoading() {
+export default async function MessagesLoading({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "loading" });
   return (
     <div className="flex min-h-screen flex-col bg-[#edf2f7]">
       <LandingNavbar />
@@ -9,7 +12,7 @@ export default function MessagesLoading() {
         <section className="mx-auto grid h-full min-h-0 w-full max-w-[1880px] place-items-center overflow-hidden">
           <div className="ccr-delayed-loading flex w-full max-w-md flex-col items-center justify-center gap-3 px-4 text-center" aria-busy="true" role="status">
             <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
-            <p className="text-sm font-extrabold text-[#162543]">Cargando</p>
+            <p className="text-sm font-extrabold text-[#162543]">{t("messages")}</p>
           </div>
         </section>
       </main>

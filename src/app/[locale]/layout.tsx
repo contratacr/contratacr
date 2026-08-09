@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
@@ -20,6 +19,8 @@ import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-fol
 import { PushTokenManager } from "@/components/push/push-token-manager";
 import { AppResumeRecovery } from "@/components/util/app-resume-recovery";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
+import { AppIntlProvider } from "@/components/app-intl-provider";
+import { GlobalActionLoading } from "@/components/global-action-loading";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -140,7 +141,8 @@ export default async function LocaleLayout({
   }
 
   return (
-    <NextIntlClientProvider messages={messages}>
+    <AppIntlProvider messages={messages} locale={locale}>
+      <GlobalActionLoading />
       <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialNotificationUnread={initialNotificationUnread}>
         <DocumentLocale locale={locale} />
         <EmojiBlocker />
@@ -157,6 +159,6 @@ export default async function LocaleLayout({
         {children}
         <WhatsAppReviewFollowUp />
       </AuthProvider>
-    </NextIntlClientProvider>
+    </AppIntlProvider>
   );
 }

@@ -8,11 +8,13 @@ import { cn } from "@/lib/utils";
 type ImagePreviewDialogProps = {
   src?: string | null;
   alt: string;
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   imageClassName?: string;
   openLabel?: string;
   closeLabel?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function ImagePreviewDialog({
@@ -23,12 +25,14 @@ export function ImagePreviewDialog({
   imageClassName,
   openLabel = "Ver foto en grande",
   closeLabel = "Cerrar",
+  open,
+  onOpenChange,
 }: ImagePreviewDialogProps) {
   if (!src) return <>{children}</>;
 
   return (
-    <Dialog.Root>
-      <Dialog.Trigger asChild>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      {children ? <Dialog.Trigger asChild>
         <button
           type="button"
           aria-label={openLabel}
@@ -42,7 +46,7 @@ export function ImagePreviewDialog({
             <ZoomIn className="h-5 w-5 drop-shadow" />
           </span>
         </button>
-      </Dialog.Trigger>
+      </Dialog.Trigger> : null}
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[220] bg-[#111827]/85 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-[221] max-h-[90vh] max-w-[94vw] -translate-x-1/2 -translate-y-1/2 outline-none">

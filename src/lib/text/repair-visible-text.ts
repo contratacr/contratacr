@@ -1,54 +1,109 @@
 const REPAIRS: Array<[RegExp, string]> = [
-  [/\bJardiner\?a\b/gi, "Jardiner\u00eda"],
-  [/\bPlomer\?a\b/gi, "Plomer\u00eda"],
-  [/\bCategor\?a\b/gi, "Categor\u00eda"],
-  [/\bRevisi\?n\b/gi, "Revisi\u00f3n"],
-  [/\bCl\?nica\b/gi, "Cl\u00ednica"],
-  [/\bp\?gina\b/gi, "p\u00e1gina"],
-  [/\bdise\?o\b/gi, "dise\u00f1o"],
-  [/\brese\?a\b/gi, "rese\u00f1a"],
-  [/\bsecci\?n\b/gi, "secci\u00f3n"],
-  [/\binformaci\?n\b/gi, "informaci\u00f3n"],
-  [/\bubicaci\?n\b/gi, "ubicaci\u00f3n"],
-  [/\bverificaci\?n\b/gi, "verificaci\u00f3n"],
-  [/\bconversaci\?n\b/gi, "conversaci\u00f3n"],
-  [/\bdescripci\?n\b/gi, "descripci\u00f3n"],
-  [/\bpublicaci\?n\b/gi, "publicaci\u00f3n"],
-  [/\bopci\?n\b/gi, "opci\u00f3n"],
-  [/\br\?pida\b/gi, "r\u00e1pida"],
-  [/\br\?pido\b/gi, "r\u00e1pido"],
-  [/\bdespu\?s\b/gi, "despu\u00e9s"],
-  [/\btambi\?n\b/gi, "tambi\u00e9n"],
-  [/\bqui\?n\b/gi, "qui\u00e9n"],
-  [/\bqu\?\b/gi, "qu\u00e9"],
-  [/\bcu\?ndo\b/gi, "cu\u00e1ndo"],
-  [/\bc\?mo\b/gi, "c\u00f3mo"],
-  [/\bT\?cnico\b/g, "T\u00e9cnico"],
-  [/\bt\?cnico\b/g, "t\u00e9cnico"],
-  [/\bel\?ctrica\b/gi, "el\u00e9ctrica"],
-  [/\bel\?ctrico\b/gi, "el\u00e9ctrico"],
-  [new RegExp("\u00c3\u00a1", "g"), "\u00e1"],
-  [new RegExp("\u00c3\u00a9", "g"), "\u00e9"],
-  [new RegExp("\u00c3\u00ad", "g"), "\u00ed"],
-  [new RegExp("\u00c3\u00b3", "g"), "\u00f3"],
-  [new RegExp("\u00c3\u00ba", "g"), "\u00fa"],
-  [new RegExp("\u00c3\u00b1", "g"), "\u00f1"],
-  [new RegExp("\u00c3\u0081", "g"), "\u00c1"],
-  [new RegExp("\u00c3\u0089", "g"), "\u00c9"],
-  [new RegExp("\u00c3\u008d", "g"), "\u00cd"],
-  [new RegExp("\u00c3\u0093", "g"), "\u00d3"],
-  [new RegExp("\u00c3\u009a", "g"), "\u00da"],
-  [new RegExp("\u00c3\u0091", "g"), "\u00d1"],
-  [new RegExp("\u00c2\u00b7", "g"), "\u00b7"],
-  [new RegExp("\u00c2\u00bf", "g"), "\u00bf"],
-  [new RegExp("\u00c2\u00a1", "g"), "\u00a1"],
+  [/\bJardiner\?a\b/gi, "Jardinería"],
+  [/\bPlomer\?a\b/gi, "Plomería"],
+  [/\bTapicer\?a\b/gi, "Tapicería"],
+  [/\bCategor\?a\b/gi, "Categoría"],
+  [/\bRevisi\?n\b/gi, "Revisión"],
+  [/\bCl\?nica\b/gi, "Clínica"],
+  [/\bp\?gina\b/gi, "página"],
+  [/\bdise\?o\b/gi, "diseño"],
+  [/\brese\?a\b/gi, "reseña"],
+  [/\bsecci\?n\b/gi, "sección"],
+  [/\binformaci\?n\b/gi, "información"],
+  [/\bubicaci\?n\b/gi, "ubicación"],
+  [/\bverificaci\?n\b/gi, "verificación"],
+  [/\bconversaci\?n\b/gi, "conversación"],
+  [/\bdescripci\?n\b/gi, "descripción"],
+  [/\bpublicaci\?n\b/gi, "publicación"],
+  [/\bopci\?n\b/gi, "opción"],
+  [/\br\?pida\b/gi, "rápida"],
+  [/\br\?pido\b/gi, "rápido"],
+  [/\bdespu\?s\b/gi, "después"],
+  [/\btambi\?n\b/gi, "también"],
+  [/\bqui\?n\b/gi, "quién"],
+  [/\bqu\?\b/gi, "qué"],
+  [/\bcu\?ndo\b/gi, "cuándo"],
+  [/\bc\?mo\b/gi, "cómo"],
+  [/\bT\?cnico\b/g, "Técnico"],
+  [/\bt\?cnico\b/g, "técnico"],
+  [/\bel\?ctrica\b/gi, "eléctrica"],
+  [/\bel\?ctrico\b/gi, "eléctrico"],
+  [/\bFot\?grafa\b/gi, "Fotógrafa"],
+  [/\bFot\?grafo\b/gi, "Fotógrafo"],
+  [/\bfotograf\?a\b/gi, "fotografía"],
+  [/\bMec\?nica\b/gi, "Mecánica"],
+  [/\bmec\?nica\b/gi, "mecánica"],
+  [/\bmec\?nico\b/gi, "mecánico"],
+  [/\ba\?os\b/gi, "años"],
+  [/\ba\?o\b/gi, "año"],
+  [/\bcasos de \?xito\b/gi, "casos de éxito"],
+  [/\bformaci\?n\b/gi, "formación"],
+  [/\beducaci\?n\b/gi, "educación"],
+  [/\bconfiguraci\?n\b/gi, "configuración"],
+  [/\bconexi\?n\b/gi, "conexión"],
+  [/\binstalaci\?n\b/gi, "instalación"],
+  [/\bcontrase\?a\b/gi, "contraseña"],
+  [/\bb\?squeda\b/gi, "búsqueda"],
+  [/\bb\?sico\b/gi, "básico"],
+  [/\bb\?sicos\b/gi, "básicos"],
+  [/\bM\?s\b/g, "Más"],
+  [/\bm\?s\b/g, "más"],
+  [/\best\?\b/gi, "está"],
+  [/\bc\?dula\b/gi, "cédula"],
+  [/\bpa\?s\b/gi, "país"],
+  [/\bd\?a\b/gi, "día"],
 ];
+
+const MOJIBAKE_HINT = /(?:Ã[\u0080-\u017f]|Â[\u0080-\u017f]|â[\u0080-\u017f]|ï¿½|�)/u;
+const WINDOWS_1252_BYTES = new Map<number, number>([
+  [0x20ac, 0x80], [0x201a, 0x82], [0x0192, 0x83], [0x201e, 0x84],
+  [0x2026, 0x85], [0x2020, 0x86], [0x2021, 0x87], [0x02c6, 0x88],
+  [0x2030, 0x89], [0x0160, 0x8a], [0x2039, 0x8b], [0x0152, 0x8c],
+  [0x017d, 0x8e], [0x2018, 0x91], [0x2019, 0x92], [0x201c, 0x93],
+  [0x201d, 0x94], [0x2022, 0x95], [0x2013, 0x96], [0x2014, 0x97],
+  [0x02dc, 0x98], [0x2122, 0x99], [0x0161, 0x9a], [0x203a, 0x9b],
+  [0x0153, 0x9c], [0x017e, 0x9e], [0x0178, 0x9f],
+]);
+
+function mojibakeScore(value: string): number {
+  return (value.match(/(?:Ã[\u0080-\u017f]|Â[\u0080-\u017f]|â[\u0080-\u017f]|ï¿½|�)/gu)?.length ?? 0) * 3;
+}
+
+function decodeWindows1252AsUtf8(value: string): string | null {
+  const bytes: number[] = [];
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0;
+    if (code <= 0xff && !(code >= 0x80 && code <= 0x9f)) bytes.push(code);
+    else if (WINDOWS_1252_BYTES.has(code)) bytes.push(WINDOWS_1252_BYTES.get(code)!);
+    else return null;
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes));
+  } catch {
+    return null;
+  }
+}
+
+function repairMojibake(value: string): string {
+  let current = value;
+  for (let pass = 0; pass < 4 && MOJIBAKE_HINT.test(current); pass += 1) {
+    const decoded = decodeWindows1252AsUtf8(current);
+    if (!decoded || mojibakeScore(decoded) >= mojibakeScore(current)) break;
+    current = decoded;
+  }
+  return current;
+}
 
 export function repairVisibleText<T extends string | null | undefined>(value: T): T {
   if (typeof value !== "string") return value;
-  let next: string = value;
+  let next: string = repairMojibake(value);
   for (const [pattern, replacement] of REPAIRS) {
     next = next.replace(pattern, replacement);
   }
   return next as T;
+}
+
+export function hasBrokenVisibleText(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  return MOJIBAKE_HINT.test(value) || /[A-Za-zÀ-ſ]\?[A-Za-zÀ-ſ]/u.test(value);
 }

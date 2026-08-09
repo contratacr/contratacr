@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Archive, ArchiveRestore, ArrowLeft, ChevronLeft, Download, FileText, Loader2, MessageSquareMore, MoreHorizontal, Plus, Search, SendHorizontal, Trash2, X } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -224,6 +224,7 @@ function demoConversations(userId: string | undefined): Conversation[] {
 
 export function DirectChatInbox() {
   const locale = useLocale();
+  const tLoading = useTranslations("loading");
   const isEn = locale === "en";
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -673,7 +674,7 @@ export function DirectChatInbox() {
     <div className="ccr-delayed-loading grid h-full min-h-[calc(100dvh-153px)] w-full place-items-center lg:min-h-[520px]" aria-busy="true" role="status">
       <div className="flex flex-col items-center justify-center gap-2 px-4 text-center">
         <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
-        <p className="text-sm font-extrabold text-[#162543]">{isEn ? "Loading" : "Cargando"}</p>
+        <p className="text-sm font-extrabold text-[#162543]">{tLoading("messages")}</p>
       </div>
     </div>
   );

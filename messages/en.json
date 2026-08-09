@@ -1,4 +1,20 @@
 {
+  "loading": {
+    "generic": "Loading…",
+    "panel": "Loading your panel…",
+    "messages": "Loading messages…",
+    "conversation": "Loading conversation…",
+    "availability": "Loading availability…",
+    "profile": "Loading your profile…",
+    "search": "Searching for professionals…",
+    "notifications": "Loading notifications…",
+    "support": "Loading support…",
+    "jobs": "Loading jobs…",
+    "offers": "Loading offers…",
+    "signingOut": "Signing out…",
+    "saving": "Saving changes…",
+    "uploading": "Uploading file…"
+  },
   "common": {
     "spamNotice": "Don't see it? Check your spam or junk folder.",
     "resendPrompt": "Didn't get the email?",
@@ -22,7 +38,7 @@
   "header": {
     "categories": "Services",
     "howItWorks": "How it works",
-    "resources": "Resources",
+    "resources": "About ContrataCR",
     "viewAllCategories": "View all services",
     "searchServicePlaceholder": "Search for a service…",
     "searchServicePlaceholderShort": "Search for a service…",
@@ -44,7 +60,7 @@
     "myRequests": "My requests",
     "publishedProjects": "My projects",
     "myProjects": "My projects",
-    "favorites": "My favorites",
+    "favorites": "My saved",
     "notifications": "Notifications",
     "supportTickets": "Support",
     "accountSecurity": "Account & security",
@@ -83,7 +99,10 @@
       "howItWorks": "How to use",
       "helpCenter": "Help center",
       "proTips": "Professional tips",
-      "support": "Support"
+      "support": "Support",
+      "contact": "Contact",
+      "terms": "Terms",
+      "privacy": "Privacy"
     },
     "loginModal": {
       "welcomeBack": "Welcome back",
@@ -237,6 +256,8 @@
       "nearMe": "Search professionals near me",
       "nearMeActive": "Near me",
       "verifiedOnly": "Verified only",
+      "price": "Price",
+      "anyPrice": "Any price",
       "geoUnsupported": "Your browser doesn't allow location. Use the province or cantón search.",
       "geoFailed": "We couldn't get your location. You can search by province and cantón."
     },
@@ -245,8 +266,18 @@
       "reviews": "Most reviews",
       "priceAsc": "Price: low to high",
       "priceDesc": "Price: high to low",
+      "successCases": "Most success cases",
+      "experience": "Most experience",
+      "followers": "Most followers",
       "newest": "Newest",
       "availability": "Immediate availability"
+    },
+    "priceFilter": {
+      "visible": "Published price",
+      "quote": "Quote on request",
+      "por_hora": "Per hour",
+      "por_consulta": "Per consultation",
+      "por_proyecto": "Per project"
     }
   },
   "hero": {
@@ -319,11 +350,14 @@
     "addPlace": "Add place",
     "addThisPlace": "Save location",
     "addWholeProvince": "Save whole province",
+    "addWholeCountry": "Add all Costa Rica",
     "addAnotherPlace": "Add another location",
     "hintCanton": "Choose the canton to save this place.",
     "wholeProvinceName": "All of {province} province",
     "wholeProvinceTag": "Whole province",
     "wholeProvinceHint": "If you do not choose a canton, this zone applies to every canton in the province.",
+    "wholeCountryName": "All Costa Rica",
+    "wholeCountryTag": "National coverage",
     "addedPlaces": "Added places ({count})",
     "removePlace": "Remove place"
   },
@@ -380,7 +414,8 @@
       "call": "You can't call yourself. This is how clients reach you by phone.",
       "email": "You can't email yourself. This is how clients reach you by email.",
       "proposal": "You can't send a proposal to your own request.",
-      "favorite": "You can't save yourself to favorites. This is where clients save your profile to hire you later."
+      "favorite": "You can't save yourself to Saved. This is where clients save your profile to hire you later.",
+      "follow": "You can't follow your own profile. This is how other people can follow your updates."
     }
   },
   "categorySearch": {
@@ -765,6 +800,8 @@
       "usesAccountId": "{name}",
       "yourAccount": "Your account",
       "businessName": "Business or company name",
+      "businessNameOnly": "Show only business name",
+      "businessNameOnlyHelp": "Your public profile will show the business name instead of your personal name.",
       "businessPlaceholder": "Example: SG Solutions",
       "servicesSectionTitle": "Services",
       "professionPrincipal": "Your main service",
@@ -1197,7 +1234,9 @@
       "suscripcion": "Subscription",
       "sent_bookings": "My requests",
       "sent_projects": "My projects",
-      "saved": "My favorites",
+      "saved": "My saved",
+      "network": "Following and followers",
+      "guides": "Guides",
       "notifications": "Notifications",
       "soporte": "Support",
       "cuenta": "Account & security"
@@ -1317,11 +1356,13 @@
     },
     "servicesHeading": "Services",
     "subtitles": {
+      "network": "Manage the professionals you follow and the people who follow your profile.",
       "bookings": "Requests your clients sent you.",
       "proposals": "Client projects you can send proposals to.",
       "sent_bookings": "Services you requested.",
       "sent_projects": "Projects you created to receive proposals.",
-      "saved": "Profiles you saved to hire later."
+      "saved": "Profiles you saved to hire later.",
+      "connections": "Professionals with whom you confirmed or completed a service."
     },
     "profileSections": {
       "photosDesc": "Photos and completed work clients can see.",
@@ -1357,7 +1398,22 @@
       "whatsapp": "Confirm your contact number",
       "whatsappBenefit": "We use it to complete your account information.",
       "insurers": "List your insurers",
-      "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments."
+      "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments.",
+      "serviceDescription": "Describe a service",
+      "servicePrice": "Add price or quote option",
+      "serviceExperience": "Add when you started",
+      "languages": "Add languages",
+      "publicLinks": "Add public links",
+      "education": "Add education",
+      "serviceImage": "Add a service image",
+      "serviceCredential": "Add professional credential",
+      "portfolio": "Add success cases",
+      "optionalShort": "optional",
+      "ignoreStep": "Ignore step",
+      "ignoreOptional": "Ignore optional steps",
+      "ignoredCount": "{count, plural, one {# ignored} other {# ignored}}",
+      "compactProgress": "{percent}% complete",
+      "viewSteps": "View steps"
     },
     "modeUse": "Client mode",
     "modeOffer": "Professional mode",
@@ -1415,13 +1471,13 @@
     },
     "guides": {
       "headerButton": "Quick guides",
-      "modalTitle": "Step-by-step guides",
-      "modalSubtitle": "Choose a section and review the main steps.",
+      "modalTitle": "ContrataCR guides",
+      "modalSubtitle": "Choose what you want to do and review the updated steps.",
       "modalQuestion": "Need help? Start here",
       "close": "Close",
-      "heroEyebrow": "Step-by-step guide",
-      "heroTitle": "Use your panel with real examples",
-      "heroBody": "This guide uses ContrataCR's profile as a reference to show what a client sees, what a professional should complete and how to follow up without losing order.",
+      "heroEyebrow": "Quick guide",
+      "heroTitle": "Use ContrataCR with clarity",
+      "heroBody": "These guides explain how to find professionals, manage your panel, post jobs or offers, and complete your profile without getting lost.",
       "exampleProfile": {
         "verified": "Verified",
         "service": "Web development",
@@ -1431,18 +1487,18 @@
       },
       "examples": {
         "search": {
-          "title": "How a client sees you in /buscar",
-          "body": "The card should answer quickly: who you are, what you do, where you work, reviews and how to contact you.",
-          "reviewCount": "(5 reviews)",
-          "priceLine1": "Request",
+          "title": "How a client sees you in Search",
+          "body": "The card should answer quickly: who you are, what you do, where you work, reviews, price, and how to contact you.",
+          "reviewCount": "5 reviews",
+          "priceLine1": "Ask",
           "priceLine2": "price",
           "location": "Atenas, Alajuela"
         },
         "messages": {
           "title": "How to coordinate after contact",
-          "body": "Messages keeps the conversation clear. If you come from a request or proposal, write the context in the first message.",
-          "client": "Hi, I saw your profile and need a landing page for my business.",
-          "pro": "Sure, I can review the scope and send you an initial proposal."
+          "body": "WhatsApp and support keep coordination clear once there is intent to move forward.",
+          "client": "Hi, I saw your profile and need a quote for my business.",
+          "pro": "Sure, I can review the scope and coordinate by WhatsApp."
         }
       },
       "clientPanel": {
@@ -1468,12 +1524,12 @@
       "providerNoteTitle": "If you are a professional:",
       "providerNoteBody": "As a professional, you can also use the client panel with the same account.",
       "clientNoteTitle": "If you only use ContrataCR as a client:",
-      "clientNoteBody": "The professional guide stays available if you later want to offer services.",
+      "clientNoteBody": "Professional guides stay available if you later want to offer services, post jobs, or publish offers.",
       "activateProfessionalCta": "Create professional profile",
       "sections": {
         "client": "For clients",
-        "shared": "Shared features",
-        "professional": "For professionals"
+        "professional": "For professionals",
+        "shared": "Search, account and community"
       },
       "sectionListTitle": "Sections",
       "selectedEyebrow": "Step by step",
@@ -1507,200 +1563,300 @@
           "project": "Website for a local business",
           "body": "Client post waiting for proposals from professionals.",
           "cta": "Send proposal"
+        },
+        "jobs": {
+          "title": "Jobs",
+          "badge": "Opportunity",
+          "role": "Assistant",
+          "meta": "Full-time · Costa Rica",
+          "cta": "View job"
+        },
+        "offers": {
+          "title": "Offers",
+          "badge": "Promotion",
+          "offer": "Professional package",
+          "meta": "Available in Costa Rica"
         }
       },
       "items": {
         "clientPanel": {
           "title": "Client panel",
-          "short": "My requests, My projects and Saved",
-          "body": "The client panel brings together what you use when hiring: requests, posted projects, saved profiles and your basic information.",
+          "short": "Requests, projects, saved and connections",
+          "body": "The client panel brings together what you need to hire, save professionals and follow up on services.",
           "steps": [
-            "Start with My requests to review services you requested directly from a professional.",
-            "Use My projects when you want to post a need and receive proposals.",
-            "Save profiles in Saved to compare or contact later.",
-            "You can also open Support from the panel if you need help."
+            "Review your requests and projects from their sections.",
+            "Save professionals to compare later.",
+            "Use Connections to see professionals with confirmed service history.",
+            "Open support if you need help with a request, account or access."
           ],
           "cta": "Go to client panel"
         },
-        "searchServices": {
-          "title": "Search",
-          "short": "Compare professionals",
-          "body": "Search helps you compare professionals by service, location, reviews, success stories and availability.",
-          "steps": [
-            "Open Search and type the service you need.",
-            "Use service, location and mode filters to narrow results.",
-            "Review the professional card: name, verification, reviews, success stories and contact options.",
-            "Open the profile to see more information before messaging or booking.",
-            "If the professional does not show times, use Send message to coordinate."
-          ],
-          "cta": "Go to search"
-        },
-        "searchFilters": {
-          "title": "Use search filters",
-          "short": "Service, location and mode",
-          "body": "Filters narrow results so you can find options closer to what you need.",
-          "steps": [
-            "Filter by service to see related professionals.",
-            "Add location if you want results near a province or canton.",
-            "Use mode to separate in-person, video consultation or both."
-          ],
-          "cta": "Open filters"
-        },
-        "messages": {
-          "title": "Messages",
-          "short": "Coordinate in order",
-          "body": "Messages centralizes conversations with professionals, clients and support so context is not lost.",
-          "steps": [
-            "Open a conversation from a profile, request, project or proposal.",
-            "If you come from a project or request, review the context before replying.",
-            "Conversations only stay active once messages are sent.",
-            "Use search to find older conversations."
-          ],
-          "cta": "Go to messages"
-        },
-        "assistantGuide": {
-          "title": "Assistant",
-          "short": "Quick help inside the app",
-          "body": "The assistant helps you navigate ContrataCR, draft messages and understand which section to use.",
-          "steps": [
-            "Ask what you need to do and the assistant guides you.",
-            "Always review the answer before sending important information.",
-            "Start a new chat when you want to change topics."
-          ],
-          "cta": "Open assistant"
-        },
-        "supportGuide": {
-          "title": "Support",
-          "short": "Help with your account",
-          "body": "Support lets you open tickets and continue conversations with the ContrataCR team.",
-          "steps": [
-            "Open Support from the client or professional panel.",
-            "Choose the topic and describe the problem.",
-            "Continue the ticket from the same conversation when you receive a reply."
-          ],
-          "cta": "Go to support"
-        },
-        "professionalPanel": {
-          "title": "Professional panel",
-          "short": "Requests received, Projects received and profile",
-          "body": "The professional panel is for receiving requests, replying to projects and keeping your offer complete.",
-          "steps": [
-            "Check Requests received when a client contacts you directly.",
-            "In Projects received, review opportunities where you can send proposals.",
-            "Keep services, availability and success stories updated.",
-            "You still keep the client panel to hire other services."
-          ],
-          "cta": "Go to professional panel"
-        },
-        "services": {
-          "title": "My services",
-          "short": "What you offer and how clients find you",
-          "body": "The clearer your offer is, the easier it is for clients to find you.",
-          "steps": [
-            "Add each service separately.",
-            "Write a concrete description of what it includes.",
-            "Set price, modality and the places where you work.",
-            "Save changes before moving to another section."
-          ],
-          "cta": "Go to my services"
-        },
-        "availability": {
-          "title": "Availability",
-          "short": "Hours and contact options",
-          "body": "Define when clients can contact or book you.",
-          "steps": [
-            "Choose whether you work by location, videoconsultation or both.",
-            "Set real hours for each day.",
-            "Use one-day changes for holidays or special dates."
-          ],
-          "cta": "Go to availability"
-        },
-        "successCases": {
-          "title": "Success stories",
-          "short": "Real work and evidence",
-          "body": "Show real work so new clients can trust you faster.",
-          "steps": [
-            "Select the related service.",
-            "Upload up to 5 clear photos per story.",
-            "Explain what you did, who it was for and when it happened."
-          ],
-          "cta": "Go to success stories"
-        },
-        "requests": {
-          "title": "Requests received",
-          "short": "Clients who contact you",
-          "body": "Keep requests that arrive directly to your profile organized.",
-          "steps": [
-            "Review the details before replying.",
-            "Coordinate by message if you need to clarify anything.",
-            "Update the status so you do not lose track."
-          ],
-          "cta": "Go to requests received"
-        },
-        "opportunities": {
-          "title": "Projects received",
-          "short": "Projects where you can send proposals",
-          "body": "Find published projects that match your services.",
-          "steps": [
-            "Filter by service to see relevant opportunities.",
-            "Send a clear proposal with price and scope.",
-            "Follow up from messages if the client replies."
-          ],
-          "cta": "Go to projects received"
-        },
         "clientRequests": {
           "title": "My requests",
-          "short": "Services you requested directly",
-          "body": "My requests shows services you requested from a professional profile or an availability slot.",
+          "short": "Services you requested",
+          "body": "My requests keeps track of services you requested directly from a professional.",
           "steps": [
-            "Review the date, service, professional and status of each request.",
-            "Open messages if you need to coordinate details before confirming.",
-            "Cancel or follow up from the same card when available."
+            "Review status, professional, date and service details.",
+            "Coordinate by WhatsApp if details need clarification.",
+            "Update or cancel the request when available."
           ],
           "cta": "Go to my requests"
         },
         "clientProjects": {
           "title": "My projects",
           "short": "Posts to receive proposals",
-          "body": "My projects lets you post a need and receive proposals from interested professionals.",
+          "body": "My projects lets you publish a need and receive proposals from professionals.",
           "steps": [
-            "Create a project with a clear title, service, location and description.",
-            "Review received proposals and compare scope, price and message.",
-            "Continue in messages with the professional that fits best."
+            "Create a clear post with service, location and description.",
+            "Compare received proposals.",
+            "Choose the professional that fits the job best."
           ],
           "cta": "Go to my projects"
         },
         "clientSaved": {
           "title": "Saved",
-          "short": "Saved profiles to compare",
-          "body": "Saved keeps professionals you want to review, compare or contact later.",
+          "short": "Saved profiles",
+          "body": "Saved keeps professionals you want to compare or contact later.",
           "steps": [
-            "Save professionals from Search or from their public profile.",
-            "Return to Saved when you want to compare options.",
-            "Open the profile or send a message when you decide to move forward."
+            "Save professionals from Search or from their profile.",
+            "Return to Saved to compare options.",
+            "Open the profile when you want to contact or review availability."
           ],
           "cta": "Go to saved"
         },
-        "clientProfile": {
-          "title": "My client profile",
-          "short": "Basic information for hiring",
-          "body": "Your client profile helps identify you when requesting services, posting projects or using messages.",
+        "clientConnections": {
+          "title": "Connections",
+          "short": "Professionals with history",
+          "body": "Connections shows professionals with confirmed or completed service history with you.",
           "steps": [
-            "Keep your name, photo and contact information updated.",
-            "Verify your identity when available to build more trust.",
-            "If you are also a professional, switch to the professional panel with the same account."
+            "Review professionals with history.",
+            "Open their profile if you want to hire them again.",
+            "Use the context to follow up with more confidence."
           ],
-          "cta": "Go to my profile"
+          "cta": "Go to connections"
+        },
+        "clientProfile": {
+          "title": "Client profile",
+          "short": "Data for hiring",
+          "body": "Your client profile helps identify you when requesting services or posting projects.",
+          "steps": [
+            "Keep name and contact updated.",
+            "Review account and security when changing sensitive data.",
+            "Switch to the professional panel if you also offer services."
+          ],
+          "cta": "Go to profile"
+        },
+        "searchServices": {
+          "title": "Find professionals",
+          "short": "Map, filters and availability",
+          "body": "Find professionals by service and location with a map, filters and availability.",
+          "steps": [
+            "Type the service and location or use your current location.",
+            "Use Search this area when you move the map.",
+            "Filter by top rated, price and service language.",
+            "Review verification, reviews, coverage, availability and price.",
+            "Open the profile or contact by WhatsApp when you find a good option."
+          ],
+          "cta": "Find professionals"
+        },
+        "followingGuide": {
+          "title": "Follow professionals",
+          "short": "Updates from accounts you care about",
+          "body": "Following professionals helps you receive updates from profiles you want to keep close.",
+          "steps": [
+            "Open a professional profile.",
+            "Press Follow to add them to your network.",
+            "Receive notifications when they post success stories, offers or jobs.",
+            "Return to their profile from the notification or from your network."
+          ],
+          "cta": "View my network"
+        },
+        "notificationsGuide": {
+          "title": "Notifications",
+          "short": "Important alerts and updates",
+          "body": "Notifications centralizes follower, support, review and relevant activity alerts.",
+          "steps": [
+            "Check the badge in the navbar when you have pending alerts.",
+            "Open the summary to see the latest activity.",
+            "Use View all to open the notifications page.",
+            "Press a notification to open the related profile, ticket or content."
+          ],
+          "cta": "View notifications"
+        },
+        "reviewsGuide": {
+          "title": "Reviews",
+          "short": "Account-based and moderated",
+          "body": "Reviews help people choose better and require an account to protect community trust.",
+          "steps": [
+            "Open the professional profile.",
+            "Go to Reviews.",
+            "Log in or sign up if you do not have an account yet.",
+            "Write a clear, respectful and useful review."
+          ],
+          "cta": "View professionals"
+        },
+        "jobsGuide": {
+          "title": "Jobs",
+          "short": "Work opportunities in Costa Rica",
+          "body": "Jobs shows opportunities posted by professionals or businesses on ContrataCR.",
+          "steps": [
+            "Search by role or profession.",
+            "Use filters like date posted, workplace, experience and employment type.",
+            "Open the job to review responsibilities, requirements, benefits and salary if published.",
+            "To apply, log in and complete your contact details or CV when needed."
+          ],
+          "cta": "View jobs"
+        },
+        "offersGuide": {
+          "title": "Offers",
+          "short": "Promotions from professionals",
+          "body": "Offers shows promotions, packages, products or special services posted by professionals.",
+          "steps": [
+            "Search for an offer by service, product or need.",
+            "Filter by date, type, service and price when available.",
+            "Review images, conditions, expiry date and the professional who posted it.",
+            "Contact the professional from the offer or open the profile for more context."
+          ],
+          "cta": "View offers"
+        },
+        "supportGuide": {
+          "title": "Support",
+          "short": "Tickets and help from ContrataCR",
+          "body": "Support lets you open tickets and continue conversations with the team.",
+          "steps": [
+            "Open Support from your panel or from the help pages.",
+            "Create a ticket with a clear topic and details.",
+            "Open the ticket to continue the conversation and review replies."
+          ],
+          "cta": "Go to support"
+        },
+        "accountSecurityGuide": {
+          "title": "Account and security",
+          "short": "Access, ID and account closure",
+          "body": "Account and security brings together email, password, ID, account disabling and permanent deletion.",
+          "steps": [
+            "Review email and password when you need to update access.",
+            "Change your ID from Verification if your document changed or there was an error.",
+            "Disable the account if you want to hide it temporarily.",
+            "Use permanent deletion only if you want to remove the account for good."
+          ],
+          "cta": "Go to account and security"
+        },
+        "professionalPanel": {
+          "title": "Professional panel",
+          "short": "Manage your professional presence",
+          "body": "The professional panel includes requests, received projects, success stories, availability, services, jobs, offers, support, profile and guides.",
+          "steps": [
+            "Start with Complete your profile if you have pending steps.",
+            "Keep services, coverage, contact and availability updated.",
+            "Post jobs or offers if they apply to your business.",
+            "Use View my profile to review how clients see you."
+          ],
+          "cta": "Go to professional panel"
+        },
+        "completionGuide": {
+          "title": "Complete your profile",
+          "short": "Checklist to build trust",
+          "body": "Complete your profile shows useful steps so your profile feels clearer and more trustworthy.",
+          "steps": [
+            "Complete required steps first so you appear better in search.",
+            "Add optional steps like education, languages, public links and success stories if they strengthen your profile.",
+            "Ignore optional steps when they do not apply to your work.",
+            "When you save a checklist step, you return to the next pending step or to the panel if you are done."
+          ],
+          "cta": "View pending steps"
+        },
+        "requests": {
+          "title": "Requests received",
+          "short": "Clients who contact you",
+          "body": "Requests received shows clients who arrive from your profile or availability.",
+          "steps": [
+            "Review client, service, date and details.",
+            "Contact by WhatsApp when you need to coordinate.",
+            "Update the status to keep follow-up clear."
+          ],
+          "cta": "Go to requests received"
+        },
+        "opportunities": {
+          "title": "Projects received",
+          "short": "Posts where you can propose",
+          "body": "Projects received shows client posts that match your services.",
+          "steps": [
+            "Review whether the project fits what you offer.",
+            "Send a clear proposal with scope and price.",
+            "Follow up if the client replies or accepts."
+          ],
+          "cta": "Go to projects received"
+        },
+        "successCases": {
+          "title": "Success stories",
+          "short": "Real work with photos",
+          "body": "Success stories show completed work and help clients trust you before contacting you.",
+          "steps": [
+            "Select the related service.",
+            "Upload clear photos of the result or process.",
+            "Write a short title and concrete description.",
+            "Keep your strongest and most recent stories visible."
+          ],
+          "cta": "Go to success stories"
+        },
+        "availability": {
+          "title": "Availability",
+          "short": "Public hours and video consultation",
+          "body": "Availability controls whether you show public hours, video consultation and schedules by workplace.",
+          "steps": [
+            "Turn on public availability only if you want to show times.",
+            "Turn on video consultation only if the service can be delivered remotely.",
+            "Add in-person workplaces and real hours.",
+            "Save changes before leaving."
+          ],
+          "cta": "Go to availability"
+        },
+        "services": {
+          "title": "Services",
+          "short": "What you offer and how clients find you",
+          "body": "Each service should include a clear name, description, price or quote option, experience and coverage.",
+          "steps": [
+            "Add each service separately.",
+            "Use simple names clients would search for.",
+            "Complete description, price, experience and coverage.",
+            "Add a professional credential only when it applies to that service."
+          ],
+          "cta": "Go to services"
+        },
+        "jobsPanel": {
+          "title": "Post jobs",
+          "short": "Hire people from your panel",
+          "body": "From Jobs you can publish opportunities linked to your business.",
+          "steps": [
+            "Write a clear role or profession.",
+            "Define workplace, employment type, required experience and location.",
+            "Add salary if you want to show it.",
+            "Publish and manage applications from your panel."
+          ],
+          "cta": "Go to jobs"
+        },
+        "offersPanel": {
+          "title": "Publish offers",
+          "short": "Promote services or products",
+          "body": "From Offers you can publish promotions with images and clear conditions.",
+          "steps": [
+            "Write a direct title and select a related service when it applies.",
+            "Add price, offer type and real images.",
+            "Define the available-until date if it has a deadline.",
+            "Publish and edit the offer from your panel."
+          ],
+          "cta": "Go to offers"
         },
         "professionalProfile": {
-          "title": "My professional profile",
-          "short": "How clients see you",
-          "body": "My professional profile controls the public information clients see before contacting you.",
+          "title": "Professional profile",
+          "short": "What clients see",
+          "body": "Professional profile controls your public information: basics, education, coverage, contact, links, languages and verification.",
           "steps": [
-            "Complete basics, photo or logo and professional description.",
-            "Add work areas, contact options, languages and public links.",
-            "Use View my profile to review how clients see you.",
-            "Turn on Show business name only if you prefer showing your business name."
+            "Complete basics and photo or logo.",
+            "Add education, public links and languages if applicable.",
+            "Review ID and verification status.",
+            "Use View my profile to see the public version."
           ],
           "cta": "Go to professional profile"
         }
@@ -1846,7 +2002,8 @@
   "unsavedGuard": {
     "title": "You have unsaved changes",
     "body": "If you leave now, the changes you made to your profile will be lost. What would you like to do?",
-    "saving": "Saving…",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
     "saveAndLeave": "Save and leave",
     "leaveWithout": "Leave without saving",
     "keepEditing": "Keep editing"
@@ -1975,6 +2132,8 @@
     "newService": "New price · {profession}",
     "nameRequired": "The name is required.",
     "priceRequired": "Enter a price or check \"Ask price\".",
+    "yearsRequired": "Add the years of experience for this service.",
+    "experienceRequired": "Select when you started working in this service.",
     "nameLabel": "Service name *",
     "namePlaceholder": "example: Residential electrical installation",
     "description": "Description",
@@ -1982,8 +2141,15 @@
     "descPlaceholder": "Briefly describe what this service involves...",
     "price": "Price",
     "willShowAs": "Will show as: {price}",
+    "experienceLabel": "Working in this service since",
+    "startedAtLabel": "Working in this service since",
+    "startedAtHelp": "ContrataCR calculates experience automatically.",
     "yearsLabel": "Years of experience in this service",
     "yearsPlaceholder": "example: 5",
+    "yearsShort": "yrs",
+    "monthsLabel": "Months",
+    "monthsShort": "mo",
+    "monthsPlaceholder": "e.g. 6",
     "saving": "Saving…",
     "saveChanges": "Save changes",
     "addServiceBtn": "Add price",
@@ -2006,8 +2172,8 @@
     "otherNamePlaceholder": "e.g. Bottle seller",
     "otherHelp": "Write it using the words your clients would search for. That's how you'll show up in search results.",
     "servicesPublished": "{count, plural, =0 {No prices} one {# price} other {# prices}}",
-    "svcActive": "Active",
-    "svcInactive": "Inactive",
+    "svcActive": "Enabled",
+    "svcInactive": "Disabled",
     "newServiceShort": "New price",
     "inProfession": "in {profession}",
     "nameField": "Name",
@@ -2315,7 +2481,17 @@
     "appealPlaceholder": "Explain what you corrected or why we should review again…",
     "appealReverify": "Appeal and re-verify",
     "supportApp": "Contact support",
-    "supportAppCase": "Contact support (Case #{ref})"
+    "supportAppCase": "Contact support (Case #{ref})",
+    "currentIdTitle": "Current ID",
+    "currentIdEmpty": "No ID is currently registered.",
+    "idTypeCedula": "National ID",
+    "idTypeJuridica": "Legal entity ID",
+    "idTypeDimex": "DIMEX",
+    "idTypeNite": "NITE",
+    "changeId": "Change ID",
+    "cancelChangeId": "Cancel",
+    "changeIdTitle": "Change ID",
+    "changeIdBody": "Enter the new ID and confirm the details before saving."
   },
   "clientActivity": {
     "bStatus": {
@@ -2545,6 +2721,17 @@
     "closeTitle": "Disable account",
     "closeBody": "Hide your profile and pause your activity. You can reactivate it by signing in again.",
     "closeCta": "Disable account",
+    "disableTitle": "Disable account",
+    "disableBody": "Your profile is hidden and you can reactivate it by signing in again.",
+    "disableCta": "Disable account",
+    "disabling": "Disabling...",
+    "confirmDisable": "Confirm disable",
+    "deleteTitle": "Permanently delete account",
+    "deleteBody": "This permanently deletes your account and cannot be undone.",
+    "deleteCta": "Delete account",
+    "deleting": "Deleting...",
+    "confirmDelete": "Delete permanently",
+    "deleteError": "We couldn't delete the account.",
     "reason": "Reason",
     "reasonPlaceholder": "example: I no longer need the service",
     "closing": "Disabling...",
@@ -2857,7 +3044,7 @@
     "deleteAllBody": "This action can't be undone.",
     "cancel": "Cancel",
     "noneList": "You have no notifications.",
-    "emptySub": "Updates about requests, proposals, or your account will appear here.",
+    "emptySub": "Updates about requests, jobs, offers, professionals you follow, or your account will appear here.",
     "filterAll": "All",
     "filterUnread": "Unread",
     "noUnread": "You have no unread notifications.",
@@ -2888,7 +3075,9 @@
       "verification": "Verification update",
       "verification_appeal_received": "Verification appeal received",
       "suggestion_approved": "Suggestion approved",
-      "suggestion_rejected": "Suggestion rejected"
+      "suggestion_rejected": "Suggestion rejected",
+      "job_application": "New application",
+      "job_application_status": "Application update"
     },
     "viewAll": "View all"
   },
@@ -3118,7 +3307,7 @@
     "iosReader": "Add to Reading List",
     "iosNewTab": "New tab",
     "iosAddBookmark": "Add bookmark",
-    "iosFavorite": "Add to Favorites",
+    "iosFavorite": "Add to Saved",
     "iosFindPage": "Find on Page",
     "androidTitle": "Android",
     "androidBody": "On Android, Chrome may show Install app. If it does not, use the three-dot menu.",
@@ -3184,7 +3373,7 @@
     "clientBenefit1Body": "You see profiles, verified ID where available, reviews, job photos, and relevant information before contacting them.",
     "clientBenefit2Title": "Clear schedules",
     "clientBenefit2Body": "When a professional posts their availability, you can choose a date and time without messages back and forth. If they coordinate directly, you do it by WhatsApp.",
-    "clientBenefit3Title": "Favorites and tracking",
+    "clientBenefit3Title": "Saved and tracking",
     "clientBenefit3Body": "Save professionals, review your requests, confirm completions, leave reviews, and keep track of your history in your dashboard.",
     "prosEyebrow": "Benefits for professionals",
     "prosBadge": "Professionals",
@@ -3232,7 +3421,7 @@
     "compare0Title": "Before: contacts scattered everywhere",
     "compare0Body": "Chats, groups, recommendations, and projects all get mixed up. It is hard to compare and keep track.",
     "compare1Title": "Now: profiles and requests in one place",
-    "compare1Body": "You can search, create projects, receive proposals, save favorites, and review your history from your dashboard.",
+    "compare1Body": "You can search, create projects, receive proposals, save Saved, and review your history from your dashboard.",
     "compare2Title": "Always with direct control",
     "compare2Body": "ContrataCR does not get involved in payment or the final agreement. Client and professional decide together.",
     "faqEyebrow": "Common questions",
@@ -3465,27 +3654,27 @@
     },
     "howItWorks": {
       "eyebrow": "How it works",
-      "heading": "Services in Costa Rica",
-      "subtitle": "Find, compare, and coordinate services through an experience built for Costa Rica.",
-      "flowLabel": "The app in use",
-      "flowTitle": "Find a professional and coordinate without the back-and-forth",
-      "flowDesc": "The phone shows a real result card: service, area, price, availability, and contact in one place.",
-      "point0Title": "Search by service or area",
-      "point0Desc": "Type what you need. You can also search by canton, province, or nearby location.",
-      "point1Title": "Review profiles and schedules",
-      "point1Desc": "Compare services, reviews, work areas, prices, and availability when the professional publishes it.",
-      "point2Title": "Book or coordinate directly",
-      "point2Desc": "If the professional publishes availability, you book through ContrataCR. If they prefer to coordinate, you send them a message or call when that option is available.",
-      "point3Title": "Leave your review",
-      "point3Desc": "When you're done, share your experience. Real reviews help other clients choose better.",
+      "heading": "Find professionals in Costa Rica",
+      "subtitle": "Find professionals by service, area, reviews, price, and availability in a clearer experience.",
+      "flowLabel": "Current search",
+      "flowTitle": "Map, filters, and professionals on one screen",
+      "flowDesc": "The phone shows the current experience: search an area, compare professionals, check availability, and contact by WhatsApp.",
+      "point0Title": "Search by service and location",
+      "point0Desc": "Type what you need and where. You can also use your location to find nearby professionals.",
+      "point1Title": "Compare without opening too many screens",
+      "point1Desc": "Filter by top rated, price, and language while seeing the map and results.",
+      "point2Title": "Book or message on WhatsApp",
+      "point2Desc": "If availability is published, check open times. If not, coordinate directly on WhatsApp.",
+      "point3Title": "Choose with more confidence",
+      "point3Desc": "Each profile shows verification, reviews, coverage, experience, and the professional's work.",
       "pitchTitle": "Do you offer services?",
       "pitchDesc": "Your profile can appear in searches, receive requests, manage availability, send proposals, and build reviews.",
       "pitchCta": "Offer my services",
       "pitchHow": "How it works",
       "guideCta": "See how it works",
       "installLink": "Add app to phone",
-      "mockResults": "3 professionals in Costa Rica",
-      "mockSearch": "Web development & Networks"
+      "mockResults": "118 professionals in Costa Rica",
+      "mockSearch": "Search accountant"
     },
     "why": {
       "heading": "Why customers choose ContrataCR.",

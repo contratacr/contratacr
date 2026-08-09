@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Search } from "lucide-react";
+import { BadgeCheck, ImagePlus, Loader2, Plus, Trash2, Pencil, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -16,8 +16,12 @@ import { anyVideoConsultCategory, getCategoryLabel, getAllCategories, normalizeT
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, TAX_INCLUDED_SUFFIX, formatServicePrice, splitPricingLabel, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { AppTooltip } from "@/components/ui/app-tooltip";
+import { IMAGE_ACCEPT } from "@/lib/upload-validation";
+import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { professionalCredentialSuggestion, serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
 
 export type ProService = {
   id: string;
@@ -29,6 +33,10 @@ export type ProService = {
   years?: number;          // years of experience in THIS service
   months?: number;         // extra months of experience in THIS service
   startedAt?: string;      // YYYY-MM: when this service started
+  imageUrl?: string;       // optional public cover image for this service
+  professionalCredentialLabel?: string;
+  professionalCredentialNumber?: string;
+  professionalCredentialIssuer?: string;
   // Which service (category id) this info belongs to. The model is SERVICES-ONLY:
   // each service the pro offers = one catalog category, with ONE info object.
   category?: string;
@@ -61,10 +69,37 @@ interface ServiceFormState {
   priceAmount: string;
   aConsultar: boolean;      // "Consultar precio" → persists as priceType a_convenir
   startedAt: string;
+  imageUrl: string;
+  professionalCredentialLabel: string;
+  professionalCredentialNumber: string;
+  professionalCredentialIssuer: string;
+}
+const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, startedAt: "", imageUrl: "", professionalCredentialLabel: "", professionalCredentialNumber: "", professionalCredentialIssuer: "" };
+const SERVICE_DESCRIPTION_MAX_LENGTH = 600;
+const PROFESSIONAL_CREDENTIAL_MAX_LENGTH = 80;
+
+function ServiceActiveToggle({ checked }: { checked: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors",
+        checked ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5e1] bg-[#e2e8f0]",
+      )}
+    >
+      <span
+        className={cn(
+          "h-5 w-5 rounded-full bg-white shadow-[0_1px_3px_rgba(15,23,42,0.22)] transition-transform",
+          checked ? "translate-x-[21px]" : "translate-x-0.5",
+        )}
+      />
+    </span>
+  );
 }
 
-const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, startedAt: "" };
-const SERVICE_DESCRIPTION_MAX_LENGTH = 600;
+function trimCredential(value: string) {
+  return value.trim().slice(0, PROFESSIONAL_CREDENTIAL_MAX_LENGTH);
+}
 
 function monthValueFromExperience(years?: number, months?: number) {
   const totalMonths = Math.max(0, (years ?? 0) * 12 + (months ?? 0));
@@ -92,15 +127,6 @@ function monthLabel(month: number, locale: string) {
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
   const label = new Date(2026, month - 1, 1).toLocaleDateString(dateLocale, { month: "long" });
   return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-function monthYearLabel(value: string, locale: string) {
-  if (!/^\d{4}-\d{2}$/.test(value)) return "";
-  const [yearRaw, monthRaw] = value.split("-");
-  const year = Number(yearRaw);
-  const month = Number(monthRaw);
-  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) return "";
-  return `${monthLabel(month, locale)} ${year}`;
 }
 
 function ServiceStartMonthPicker({
@@ -133,15 +159,8 @@ function ServiceStartMonthPicker({
     }
     onChange(`${year}-${String(Number(month)).padStart(2, "0")}`);
   };
-  const helper = locale === "en" ? "Select month and year" : "Selecciona mes y año";
-
   return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-3">
-      <div className="mb-2 flex min-h-5 items-center justify-between gap-3">
-        <span className={cn("text-sm font-semibold", value ? "text-[#162543]" : "text-[#9ca3af]")}>
-          {monthYearLabel(value, locale) || helper}
-        </span>
-      </div>
+    <div>
       <div className="grid grid-cols-2 gap-2.5">
         <SelectMenu
           value={selectedMonth}
@@ -213,10 +232,13 @@ export function ServicesEditor({
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const [pendingNewCategory, setPendingNewCategory] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const serviceImageInputRef = useRef<HTMLInputElement>(null);
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
-  useReportSaveStatus(saving, saved);
+  useReportSaveStatus(saving, saved, dirty);
 
   const primary = professions[0];
 
@@ -254,7 +276,11 @@ export function ServicesEditor({
     return false;
   }
 
-  async function persist(nextProfessions: string[], nextServices: ProService[]): Promise<boolean> {
+  async function persist(
+    nextProfessions: string[],
+    nextServices: ProService[],
+    options: { notifyParent?: boolean } = {},
+  ): Promise<boolean> {
     if (!ensureAtLeastOneActiveService(nextProfessions, nextServices)) return false;
     setFormError(null);
     setSaving(true);
@@ -277,8 +303,9 @@ export function ServicesEditor({
       .eq("id", professionalId);
     setSaving(false);
     setSaved(true);
+    setDirty(false);
     setTimeout(() => setSaved(false), 3000);
-    onSaved?.();
+    if (options.notifyParent !== false) onSaved?.();
     return true;
   }
 
@@ -298,6 +325,13 @@ export function ServicesEditor({
       closePicker();
       return;
     }
+    const suggestedCredential = professionalCredentialSuggestion(id, locale);
+    setForm((current) => ({
+      ...current,
+      professionalCredentialLabel: suggestedCredential?.label ?? "",
+      professionalCredentialNumber: "",
+      professionalCredentialIssuer: suggestedCredential?.issuer ?? "",
+    }));
     setEditCategory(id);
     setFormError(null);
     closePicker();
@@ -308,7 +342,8 @@ export function ServicesEditor({
     if (professions[0] === id) return;
     const next = [id, ...professions.filter((p) => p !== id)];
     setProfessions(next);
-    void persist(next, services);
+    setSaved(false);
+    setDirty(true);
   }
 
   // Remove a service entirely (the category + its info), while keeping at least one active service.
@@ -318,7 +353,8 @@ export function ServicesEditor({
     if (!ensureAtLeastOneActiveService(next, nextServices)) return;
     setProfessions(next);
     setServices(nextServices);
-    void persist(next, nextServices);
+    setSaved(false);
+    setDirty(true);
   }
 
   // Toggle a service active/inactive (inactive = paused, hidden from clients). Stored on
@@ -334,19 +370,25 @@ export function ServicesEditor({
     }
     if (!ensureAtLeastOneActiveService(professions, next)) return;
     setServices(next);
-    void persist(professions, next);
+    setSaved(false);
+    setDirty(true);
   }
 
   // Open the info editor for a service, pre-filled from its current info.
   function openEditInfo(prof: string) {
     const rep = serviceInfo(prof);
     const isAsk = rep?.priceType === "a_convenir";
+    const suggestedCredential = professionalCredentialSuggestion(prof, locale);
     setForm({
       description: rep?.description ?? "",
       priceUnit: rep?.priceType && !isAsk ? rep.priceType : "por_hora",
       priceAmount: rep?.priceAmount != null ? String(rep.priceAmount) : "",
       aConsultar: isAsk,
       startedAt: rep?.startedAt ?? monthValueFromExperience(rep?.years, rep?.months),
+      imageUrl: rep?.imageUrl ?? "",
+      professionalCredentialLabel: rep?.professionalCredentialLabel ?? suggestedCredential?.label ?? "",
+      professionalCredentialNumber: rep?.professionalCredentialNumber ?? "",
+      professionalCredentialIssuer: rep?.professionalCredentialIssuer ?? suggestedCredential?.issuer ?? "",
     });
     setFormError(null);
     if (professions.includes(prof)) setPendingNewCategory(null);
@@ -354,9 +396,51 @@ export function ServicesEditor({
     setEditCategory(prof);
   }
 
+  function serviceMissingTarget(field: string | null | undefined): string | null {
+    const activeProfessions = professions.filter((prof) => serviceActive(prof));
+    const candidates = activeProfessions.length > 0 ? activeProfessions : professions;
+    if (field === "services") return professions[0] ?? null;
+    if (field === "serviceDescription") {
+      return candidates.find((prof) => !serviceInfo(prof)?.description?.trim()) ?? candidates[0] ?? null;
+    }
+    if (field === "servicePrice") {
+      return candidates.find((prof) => {
+        const info = serviceInfo(prof);
+        return !(
+          info?.priceType === "a_convenir" ||
+          (typeof info?.priceAmount === "number" && info.priceAmount > 0) ||
+          !!info?.price?.trim()
+        );
+      }) ?? candidates[0] ?? null;
+    }
+    if (field === "serviceExperience") {
+      return candidates.find((prof) => {
+        const info = serviceInfo(prof);
+        return !(
+          (typeof info?.startedAt === "string" && /^\d{4}-\d{2}$/.test(info.startedAt)) ||
+          (typeof info?.years === "number" && info.years > 0) ||
+          (typeof info?.months === "number" && info.months > 0)
+        );
+      }) ?? candidates[0] ?? null;
+    }
+    if (field === "serviceImage") {
+      return candidates.find((prof) => !serviceInfo(prof)?.imageUrl?.trim()) ?? candidates[0] ?? null;
+    }
+    if (field === "serviceCredential") {
+      return candidates.find((prof) => !serviceInfo(prof)?.professionalCredentialNumber?.trim()) ?? candidates[0] ?? null;
+    }
+    return professions.find((prof) => !serviceInfo(prof)) ?? professions[0] ?? null;
+  }
+
   useEffect(() => {
-    if (focusField !== "serviceInfo" || !focusKey) return;
-    const target = professions.find((prof) => !serviceInfo(prof)) ?? professions[0];
+    if (focusField === "services" && focusKey) {
+      setPickerMode("add");
+      setPickerQuery("");
+      setActivePickerGroupId(null);
+      return;
+    }
+    if (!focusField?.startsWith("service") || !focusKey) return;
+    const target = serviceMissingTarget(focusField);
     if (target) openEditInfo(target);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusField, focusKey]);
@@ -370,6 +454,26 @@ export function ServicesEditor({
   }
 
   const formOpen = editCategory !== "";
+
+  async function handleServiceImageSelect(file: File) {
+    setImageUploading(true);
+    setFormError(null);
+    try {
+      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1400 });
+      const fd = new FormData();
+      fd.append("file", preparedFile);
+      fd.append("type", "portfolio");
+      const upload = await uploadPhotoFormDataWithRetry(fd);
+      const uploadedUrl = upload.data.url;
+      if (!upload.ok || !uploadedUrl) throw new Error(upload.data.error || "No se pudo subir la imagen.");
+      setForm((current) => ({ ...current, imageUrl: uploadedUrl }));
+    } catch (error) {
+      console.error("[services-editor] service image upload failed", error);
+      setFormError(locale === "en" ? "Could not upload the service image. Try again." : "No se pudo subir la imagen del servicio. Intenta de nuevo.");
+    } finally {
+      setImageUploading(false);
+    }
+  }
 
   async function handleFormSave() {
     // Require an explicit price OR the deliberate "Consultar precio" choice.
@@ -411,6 +515,16 @@ export function ServicesEditor({
       years: experience.years,
       months: experience.months,
       startedAt: form.startedAt,
+      imageUrl: form.imageUrl || undefined,
+      professionalCredentialLabel: serviceSupportsProfessionalCredential(editCategory)
+        ? trimCredential(form.professionalCredentialLabel) || undefined
+        : undefined,
+      professionalCredentialNumber: serviceSupportsProfessionalCredential(editCategory)
+        ? trimCredential(form.professionalCredentialNumber) || undefined
+        : undefined,
+      professionalCredentialIssuer: serviceSupportsProfessionalCredential(editCategory)
+        ? trimCredential(form.professionalCredentialIssuer) || undefined
+        : undefined,
       category: editCategory,
       active: rep?.active ?? true,
     };
@@ -424,11 +538,14 @@ export function ServicesEditor({
       }),
       info,
     ];
-    const didSave = await persist(nextProfessions, next);
+    const didSave = await persist(nextProfessions, next, { notifyParent: false });
     if (!didSave) return;
     setProfessions(nextProfessions);
     setServices(next);
-    cancelForm();
+    setPendingNewCategory(null);
+    setEditOriginalCategory(editCategory);
+    setEditCategory("");
+    setForm(EMPTY_FORM);
   }
 
   // Services available to add (taxonomy minus the ones already added), filtered by the
@@ -456,11 +573,39 @@ export function ServicesEditor({
   }, [pickerList]);
 
   // ── The elegant, single list-level "Agregar servicio" action (opens the catalog). ──
+  function cancelListChanges() {
+    setProfessions(seedProfessions);
+    setServices(initialServices);
+    setDirty(false);
+    setSaved(false);
+    setFormError(null);
+  }
+
+  const listActions = (
+    <div className="flex flex-col gap-2 border-t border-[#f3f4f6] pt-4 sm:flex-row sm:justify-end">
+      <button
+        type="button"
+        onClick={cancelListChanges}
+        disabled={!dirty || saving || imageUploading}
+        className="hidden h-10 rounded-xl px-4 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex sm:items-center sm:justify-center"
+      >
+        {t("cancel")}
+      </button>
+      <button
+        type="button"
+        onClick={() => void persist(professions, services)}
+        disabled={!dirty || saving || imageUploading}
+        className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
+      >
+        {saving ? t("saving") : t("saveChanges")}
+      </button>
+    </div>
+  );
   const addServiceButton = (
     <button
       type="button"
       onClick={() => { setPickerMode("add"); setPickerQuery(""); setActivePickerGroupId(null); }}
-      className="group flex w-full items-center justify-center gap-2.5 rounded-2xl border border-[#bfdbfe] bg-[#f8fbfe] py-4 text-sm font-bold text-[#0089bb] shadow-sm transition-all hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:shadow"
+      className="group flex w-full max-w-full items-center justify-center gap-2.5 rounded-2xl border border-[#bfdbfe] bg-[#f8fbfe] py-4 text-sm font-bold text-[#0089bb] shadow-sm transition-all hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:shadow"
     >
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#009FD9] text-white shadow-sm transition-transform group-hover:scale-105">
         <Plus className="h-4 w-4" strokeWidth={2.5} />
@@ -489,7 +634,7 @@ export function ServicesEditor({
         <>
           {/* ONE service per card: name + price (focal), description, then clearly grouped
               actions. No catalog image in the panel (it's for the public profile only). */}
-          <div className="grid grid-cols-1 gap-3.5">
+          <div className="grid min-w-0 grid-cols-1 gap-3.5 overflow-hidden">
             {professions.map((prof) => {
               const isPrincipal = professions.indexOf(prof) === 0;
               const info = serviceInfo(prof);
@@ -502,13 +647,13 @@ export function ServicesEditor({
                 <section
                   key={prof}
                   className={cn(
-                    "flex flex-col rounded-2xl border bg-white p-4 shadow-sm transition-shadow sm:p-5",
+                    "flex min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border bg-white p-4 shadow-sm transition-shadow sm:p-5",
                     isActive ? "border-[#e5e7eb] hover:shadow-md" : "border-[#e5e7eb] bg-[#fafbfc]"
                   )}
                 >
                   {/* Header: focal name + price on the left, active toggle pinned far right. */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3 overflow-hidden">
+                    <div className="min-w-0 overflow-hidden">
                       <h3 className={cn("text-[16px] font-bold leading-tight [overflow-wrap:anywhere]", isActive ? "text-[#162543]" : "text-[#9ca3af]")}>
                         {getCategoryLabel(prof, locale)}
                       </h3>
@@ -519,23 +664,16 @@ export function ServicesEditor({
                       </p>
                     </div>
                     {/* Active/inactive toggle — FAR RIGHT (end of the header row). */}
-                    <AppTooltip label={isActive ? t("svcActive") : t("svcInactive")}>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={isActive}
-                        onClick={() => toggleServiceActive(prof)}
-                        className="flex shrink-0 items-center gap-1.5"
-                        aria-label={isActive ? t("svcActive") : t("svcInactive")}
-                      >
-                        <span className={cn("relative h-4 w-7 rounded-full transition-colors", isActive ? "bg-[#009FD9]" : "bg-[#d1d5db]")}>
-                          <span className={cn("absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all", isActive ? "left-[14px]" : "left-0.5")} />
-                        </span>
-                        <span className={cn("hidden text-[11px] font-semibold sm:inline", isActive ? "text-[#16a34a]" : "text-[#9ca3af]")}>
-                          {isActive ? t("svcActive") : t("svcInactive")}
-                        </span>
-                      </button>
-                    </AppTooltip>
+                    <button
+                      type="button"
+                      onClick={() => toggleServiceActive(prof)}
+                      aria-label={isActive ? t("svcActive") : t("svcInactive")}
+                      aria-pressed={isActive}
+                      className="inline-flex shrink-0 items-center gap-2 rounded-md px-1 py-0.5 text-xs font-bold text-[#526277] transition-colors hover:text-[#162543] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2"
+                    >
+                      <span>{isActive ? t("svcActive") : t("svcInactive")}</span>
+                      <ServiceActiveToggle checked={isActive} />
+                    </button>
                   </div>
 
                   {/* Description group — calm supporting text (or a gentle prompt). */}
@@ -589,6 +727,7 @@ export function ServicesEditor({
 
           {/* The single, elegant list-level add action. */}
           {addServiceButton}
+          {listActions}
         </>
       )}
 
@@ -602,7 +741,7 @@ export function ServicesEditor({
           footer={
             <>
               <Button type="button" variant="outline" onClick={cancelForm}>{t("cancel")}</Button>
-              <Button type="button" onClick={handleFormSave} loading={saving} disabled={saving}>
+              <Button type="button" onClick={handleFormSave} loading={saving || imageUploading} disabled={saving || imageUploading}>
                 {t("saveChanges")}
               </Button>
             </>
@@ -640,6 +779,67 @@ export function ServicesEditor({
             </div>
 
             <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+                {locale === "en" ? "Service image" : "Imagen de tu servicio"} <span className="font-normal text-[#9ca3af]">{t("optional")}</span>
+              </label>
+              <div className="overflow-hidden rounded-2xl border border-[#dbe7ef] bg-[#f8fbfe]">
+                {form.imageUrl ? (
+                  <div className="relative h-36 bg-[#eef1f5] sm:h-44">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={form.imageUrl} alt="" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setForm((current) => ({ ...current, imageUrl: "" }))}
+                      className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/95 text-[#162543] shadow-sm transition-colors hover:bg-red-50 hover:text-red-600"
+                      aria-label={locale === "en" ? "Remove service image" : "Eliminar imagen del servicio"}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => serviceImageInputRef.current?.click()}
+                    disabled={imageUploading}
+                    className="flex min-h-32 w-full flex-col items-center justify-center gap-2 px-4 py-6 text-center transition-colors hover:bg-[#eef9fd] disabled:cursor-wait"
+                  >
+                    <span className="grid h-11 w-11 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
+                      {imageUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+                    </span>
+                    <span className="text-sm font-extrabold text-[#0089bb]">
+                      {locale === "en" ? "Add service image" : "Agregar imagen"}
+                    </span>
+                    <span className="max-w-xs text-xs leading-relaxed text-[#64748b]">
+                      {locale === "en" ? "Show this service with a real photo." : "Mostrá este servicio con una foto real."}
+                    </span>
+                  </button>
+                )}
+                {form.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => serviceImageInputRef.current?.click()}
+                    disabled={imageUploading}
+                    className="flex h-11 w-full items-center justify-center gap-2 border-t border-[#dbe7ef] text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#eef9fd] disabled:cursor-wait disabled:opacity-70"
+                  >
+                    {imageUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                    {locale === "en" ? "Change image" : "Cambiar imagen"}
+                  </button>
+                )}
+                <input
+                  ref={serviceImageInputRef}
+                  type="file"
+                  accept={IMAGE_ACCEPT}
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.currentTarget.value = "";
+                    if (file) void handleServiceImageSelect(file);
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("priceRef")} {!form.aConsultar && <span className="text-red-500">*</span>}</label>
               <div className="flex items-stretch gap-2">
                 <div className={cn("flex-1", form.aConsultar && "opacity-50 pointer-events-none")}>
@@ -650,23 +850,20 @@ export function ServicesEditor({
                     suffix={form.aConsultar ? undefined : TAX_INCLUDED_SUFFIX}
                   />
                 </div>
-                <select
+                <SelectMenu
                   value={form.priceUnit}
-                  onChange={(e) => setForm((f) => ({ ...f, priceUnit: e.target.value as PricingType }))}
+                  onChange={(value) => setForm((current) => ({ ...current, priceUnit: value as PricingType }))}
                   disabled={form.aConsultar}
-                  className="h-11 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  {PRICE_UNITS.map((pt) => (
-                    <option key={pt.value} value={pt.value}>{pt.suffix || pt.label}</option>
-                  ))}
-                </select>
+                  className="w-40 shrink-0 sm:w-44"
+                  options={PRICE_UNITS.map((priceType) => ({ value: priceType.value, label: priceType.suffix || priceType.label }))}
+                />
               </div>
               <label className="mt-2.5 flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={form.aConsultar}
                   onChange={(e) => setForm((f) => ({ ...f, aConsultar: e.target.checked }))}
-                  className="h-4 w-4 rounded border-[#cbd5e1] text-[#009FD9] focus:ring-[#009FD9]"
+                  className="h-5 w-5 rounded-[4px] border-[#b8c5d3] bg-white text-[#009FD9] focus:ring-[#009FD9]"
                 />
                 <span className="text-sm text-[#374151]">{t("aConsultarLabel")}</span>
               </label>
@@ -681,8 +878,48 @@ export function ServicesEditor({
                 locale={locale}
                 onChange={(startedAt) => setForm((f) => ({ ...f, startedAt }))}
               />
-              <p className="mt-1.5 text-xs leading-5 text-[#6b7280]">{t("startedAtHelp")}</p>
             </div>
+
+            {professionalCredentialSuggestion(editCategory, locale) && (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-medium text-[#374151]">
+                      {locale === "en" ? "Professional credential" : "Credencial profesional"}
+                      <span className="ml-1 font-normal text-[#9ca3af]">{t("optional")}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-[#64748b]">
+                      {locale === "en"
+                        ? "Helps clients verify your professional authorization."
+                        : "Ayuda a los clientes a verificar tu autorización profesional."}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-medium text-[#526277]">
+                    {form.professionalCredentialLabel || (locale === "en" ? "Credential number" : "Número de credencial")}
+                    <input
+                      value={form.professionalCredentialNumber}
+                      maxLength={PROFESSIONAL_CREDENTIAL_MAX_LENGTH}
+                      onChange={(event) => setForm((current) => ({ ...current, professionalCredentialNumber: event.target.value }))}
+                      placeholder={locale === "en" ? "Enter the number" : "Ingresa el número"}
+                      className="mt-1.5 h-11 w-full rounded-xl border border-[#dbe7ef] bg-white px-3 text-sm text-[#162543] outline-none transition-colors focus:border-[#009FD9]"
+                    />
+                  </label>
+                  <label className="text-xs font-medium text-[#526277]">
+                    {locale === "en" ? "Issuing organization" : "Entidad emisora"}
+                    <input
+                      value={form.professionalCredentialIssuer}
+                      maxLength={PROFESSIONAL_CREDENTIAL_MAX_LENGTH}
+                      onChange={(event) => setForm((current) => ({ ...current, professionalCredentialIssuer: event.target.value }))}
+                      placeholder={locale === "en" ? "Professional association" : "Colegio o entidad"}
+                      className="mt-1.5 h-11 w-full rounded-xl border border-[#dbe7ef] bg-white px-3 text-sm text-[#162543] outline-none transition-colors focus:border-[#009FD9]"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
           </div>
         </Modal>
       )}
@@ -763,6 +1000,7 @@ export function ServicesEditor({
           </div>
         </Modal>
       )}
+      <UnsavedChangesGuard dirty={dirty} onSave={() => persist(professions, services)} onDiscard={cancelListChanges} />
     </div>
   );
 }

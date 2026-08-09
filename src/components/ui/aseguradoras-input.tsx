@@ -19,7 +19,7 @@ interface Props {
 const LEGACY_EMPTY_INSURER_IDS = new Set(["ninguna", "none", "sin_seguros", "sin_seguro", "no_insurance"]);
 
 function normalize(s: string): string {
-  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 type Option = { id: string; label: string };

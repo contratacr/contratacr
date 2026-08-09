@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ImageUp, X, Loader2, Plus, Pencil, Trash2, Images, CalendarDays, Heart } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ export type SuccessCase = {
 // Legacy item shape (photos-only) — read for back-compat so nothing is lost.
 type LegacyItem = { url?: string; serviceId?: string; profession?: string };
 
-export const MAX_CASES_PER_PROFESSION = Number.POSITIVE_INFINITY;
+export const MAX_CASES_PER_PROFESSION = 10;
 export const MAX_PHOTOS_PER_CASE = CASE_PHOTOS_PER_CASE;
 
 interface PhotoGalleryProps {
@@ -88,12 +89,14 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const primary = professions[0];
 
-  const [cases, setCases] = useState<SuccessCase[]>(() => seedCases(initialItems, initialUrls, services, primary));
+  const initialCasesRef = useRef<SuccessCase[]>(seedCases(initialItems, initialUrls, services, primary));
+  const [cases, setCases] = useState<SuccessCase[]>(() => initialCasesRef.current);
   // Filter is always a real profession (no "Todas") — defaults to the first.
   const [activeProf, setActiveProf] = useState<string>(professions[0] ?? "");
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
-  useReportSaveStatus(saving, justSaved);
+  const [dirty, setDirty] = useState(false);
+  useReportSaveStatus(saving, justSaved, dirty);
 
   // The add/edit case modal — `draft != null` means open.
   const [draft, setDraft] = useState<SuccessCase | null>(null);
@@ -119,6 +122,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     }
     setSaving(false);
     setJustSaved(true);
+    setDirty(false);
+    initialCasesRef.current = next;
     setTimeout(() => setJustSaved(false), 2500);
     onSaved?.();
   }
@@ -158,14 +163,26 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     } finally { setUploading(false); }
   }
 
-  async function saveCase() {
+  function saveCase() {
     if (!draft || draft.photos.length === 0) return;
     const exists = cases.some((c) => c.id === draft.id);
     const next = exists ? cases.map((c) => (c.id === draft.id ? draft : c)) : [...cases, draft];
     setDraft(null);
-    await persist(next);
+    setCases(next);
+    setDirty(true);
   }
-  async function deleteCase(id: string) { await persist(cases.filter((c) => c.id !== id)); }
+  function deleteCase(id: string) {
+    setCases(cases.filter((c) => c.id !== id));
+    setDirty(true);
+    setJustSaved(false);
+  }
+
+  function cancelChanges() {
+    setCases(initialCasesRef.current);
+    setDraft(null);
+    setDirty(false);
+    setJustSaved(false);
+  }
 
   const shownCases = cases.filter((c) => c.profession === selectedProf);
   const addProf = selectedProf || primary || "";
@@ -263,6 +280,24 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       </div>
 
       {/* ── Add / edit case ─────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={cancelChanges}
+          disabled={!dirty || saving || uploading}
+          className="hidden h-10 rounded-xl px-4 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex sm:items-center sm:justify-center"
+        >
+          {locale === "en" ? "Cancel" : "Cancelar"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void persist(cases)}
+          disabled={!dirty || saving || uploading}
+          className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
+        >
+          {saving ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
+        </button>
+      </div>
       {draft && (
         <Modal
           onClose={() => setDraft(null)}
@@ -331,7 +366,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           </div>
         </Modal>
       )}
+      <UnsavedChangesGuard dirty={dirty} onSave={() => persist(cases)} onDiscard={cancelChanges} />
       {dialogNode}
     </div>
   );
 }
+
+

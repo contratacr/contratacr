@@ -1,23 +1,38 @@
-import { ArrowRight, CheckCircle2, Mail, ShieldCheck, Trash2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Headset, ShieldCheck, Trash2 } from "lucide-react";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Link } from "@/i18n/navigation";
-import { SUPPORT_EMAIL } from "@/lib/constants";
+import { safeGetUser } from "@/lib/supabase/get-user";
+import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   return locale === "en"
-    ? { title: "Account or data deletion - ContrataCR", description: "Request deletion of your ContrataCR account or specific personal data." }
-    : { title: "Eliminación de cuenta o datos - ContrataCR", description: "Solicite eliminar su cuenta de ContrataCR o datos personales específicos." };
+    ? {
+        title: "Delete account - ContrataCR",
+        description: "Delete or disable your ContrataCR account from Account and security.",
+      }
+    : {
+        title: "Eliminar cuenta - ContrataCR",
+        description: "Elimina o deshabilita tu cuenta de ContrataCR desde Cuenta y seguridad.",
+      };
 }
 
 export default async function DeleteAccountPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const en = locale === "en";
-  const subject = encodeURIComponent(en ? "ContrataCR account or data deletion request" : "Solicitud de eliminación de cuenta o datos ContrataCR");
-  const body = encodeURIComponent(en
-    ? "Hello,\n\nI request the deletion of my ContrataCR account or specific personal data associated with this email address.\n\nFull name:\nAccount email:\nRequest details:\n\nThank you."
-    : "Hola,\n\nSolicito eliminar mi cuenta de ContrataCR o datos personales específicos asociados con este correo electrónico.\n\nNombre completo:\nCorreo de la cuenta:\nDetalle de la solicitud:\n\nGracias.");
+  const supabase = await createClient();
+  const user = await safeGetUser(supabase);
+
+  const accountSecurityHref = "/dashboard/profesional?tab=profile&mode=offer";
+  const supportSubject = en ? "Account access for deletion" : "Acceso a mi cuenta para eliminación";
+  const supportMessage = en
+    ? "Hello ContrataCR support,\n\nI cannot access my account and need help recovering access or processing my deletion request.\n\nEmail linked to the account:\nReason:"
+    : "Hola soporte de ContrataCR,\n\nNo puedo entrar a mi cuenta y necesito ayuda para recuperar el acceso o procesar mi solicitud de eliminación.\n\nCorreo vinculado a la cuenta:\nMotivo:";
+  const supportQuery = `topic=subject1&subject=${encodeURIComponent(supportSubject)}&message=${encodeURIComponent(supportMessage)}`;
+  const supportHref = user
+    ? `/dashboard/profesional?tab=soporte&newSupport=1&${supportQuery}`
+    : `/soporte?${supportQuery}`;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f4f7fa]">
@@ -25,67 +40,80 @@ export default async function DeleteAccountPage({ params }: { params: Promise<{ 
       <main className="flex-1 px-4 pb-16 pt-28 sm:pt-32">
         <div className="mx-auto max-w-2xl">
           <header className="text-center">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fd] text-[#0089BB]">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fd] text-[#0089bb]">
               <Trash2 className="h-6 w-6" />
             </span>
             <h1 className="mt-5 text-3xl font-black text-[#162543] sm:text-4xl">
-              {en ? "Delete your account or data" : "Eliminar su cuenta o datos"}
+              {en ? "Delete or disable your account" : "Eliminar o deshabilitar tu cuenta"}
             </h1>
             <p className="mx-auto mt-3 max-w-xl leading-7 text-[#6b7280]">
               {en
-                ? "You can request deletion of your ContrataCR account or specific personal data associated with it."
-                : "Puede solicitar la eliminación de su cuenta de ContrataCR o de datos personales específicos asociados."}
+                ? "If you can sign in, manage this directly from Account and security. Support is only for people who cannot access their account."
+                : "Si puedes iniciar sesión, hazlo directamente desde Cuenta y seguridad. Soporte queda solo para quienes no pueden entrar a su cuenta."}
             </p>
           </header>
 
           <section className="mt-8 rounded-xl border border-[#dfe5eb] bg-white p-5 shadow-sm sm:p-7">
-            <h2 className="text-lg font-bold text-[#162543]">{en ? "Before requesting deletion" : "Antes de solicitarlo"}</h2>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#4b5563]">
+            <div className="rounded-lg border border-[#d8e9f2] bg-[#f4faff] p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#0089bb]" />
+                <div>
+                  <h2 className="text-sm font-bold text-[#162543]">
+                    {en ? "From Account and security" : "Desde Cuenta y seguridad"}
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-[#526277]">
+                    {en
+                      ? "There you can disable your account if you may return later, or permanently delete it automatically if you want to close it for good."
+                      : "Ahí puedes deshabilitar tu cuenta si podrías volver después, o eliminarla permanentemente de forma automática si quieres cerrarla por completo."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <ol className="mt-6 space-y-3 text-sm text-[#4b5563]">
               {[
-                en ? "If you request full account deletion, you will lose access to your profile, requests, saved items, following relationships, and account history." : "Si solicita eliminar toda la cuenta, perderá acceso a su perfil, solicitudes, elementos guardados, relaciones de seguimiento e historial de cuenta.",
-                en ? "You may also request deletion or correction of specific personal data without deleting the full account." : "También puede solicitar eliminar o corregir datos personales específicos sin eliminar toda la cuenta.",
-                en ? "Active service arrangements should be completed or canceled before full account deletion." : "Antes de eliminar toda la cuenta, debe finalizar o cancelar coordinaciones de servicio activas.",
-                en ? "Some information may be temporarily retained for security, fraud prevention, claims, or legal compliance." : "Cierta información puede conservarse temporalmente por seguridad, prevención de fraude, reclamos u obligación legal.",
+                en ? "Sign in to your ContrataCR account." : "Inicia sesión en tu cuenta de ContrataCR.",
+                en ? "Open Account and security." : "Abre Cuenta y seguridad.",
+                en ? "Choose Disable account or Delete account." : "Elige Deshabilitar cuenta o Eliminar cuenta.",
               ].map((item) => (
                 <li key={item} className="flex gap-3">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
                   <span>{item}</span>
                 </li>
               ))}
-            </ul>
+            </ol>
 
-            <div className="mt-6 rounded-lg border border-[#d8e9f2] bg-[#f4faff] p-4">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#0089BB]" />
-                <p className="text-sm leading-6 text-[#526277]">
-                  {en
-                    ? "For your protection, send the request from the email address associated with your account. We may ask for additional information to verify your identity."
-                    : "Para proteger su cuenta, envíe la solicitud desde el correo asociado. Podemos pedir información adicional razonable para verificar su identidad."}
-                </p>
-              </div>
-            </div>
-
-            <a
-              href={`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`}
-              className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089BB]"
+            <Link
+              href={accountSecurityHref}
+              className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
             >
-              <Mail className="h-4 w-4" />
-              {en ? "Request account or data deletion" : "Solicitar eliminación de cuenta o datos"}
-            </a>
-            <p className="mt-3 text-center text-xs leading-5 text-[#708095]">
-              {en ? "The request will be sent to" : "La solicitud se enviará a"} {SUPPORT_EMAIL}
-            </p>
-          </section>
+              {en ? "Go to Account and security" : "Ir a Cuenta y seguridad"}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
 
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 text-sm sm:flex-row">
-            <Link href="/privacidad" className="inline-flex items-center gap-1.5 font-semibold text-[#0089BB] hover:underline">
-              {en ? "Privacy Policy" : "Política de Privacidad"} <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-            <span className="hidden text-[#d1d5db] sm:inline">|</span>
-            <Link href="/soporte" className="font-semibold text-[#526277] hover:text-[#0089BB] hover:underline">
-              {en ? "Contact support" : "Contactar soporte"}
-            </Link>
-          </div>
+            <div className="mt-6 rounded-lg border border-[#e5e7eb] bg-white p-4">
+              <div className="flex items-start gap-3">
+                <Headset className="mt-0.5 h-5 w-5 shrink-0 text-[#0089bb]" />
+                <div>
+                  <h2 className="text-sm font-bold text-[#162543]">
+                    {en ? "Can't sign in?" : "¿No puedes iniciar sesión?"}
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-[#526277]">
+                    {en
+                      ? "Open a support case only if you cannot access your panel. We'll help verify your identity first."
+                      : "Abre un caso de soporte solo si no puedes entrar al panel. Primero te ayudamos a confirmar tu identidad."}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={supportHref}
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#cfe7f2] bg-[#f5fbfe] px-5 text-sm font-bold text-[#0089bb] transition-colors hover:border-[#009FD9]/50 hover:bg-[#eaf7fd]"
+              >
+                {en ? "Open support case" : "Abrir caso de soporte"}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </section>
         </div>
       </main>
       <LandingFooter />

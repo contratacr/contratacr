@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -1052,7 +1052,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && resetAndClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <Dialog.Overlay className="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 lg:block" />
         <Dialog.Content
           // The SelectMenu dropdowns (DOB picker day/month/year, etc.) portal their option
           // list to <body>, OUTSIDE this dialog. Without these guards, clicking an option
@@ -1064,13 +1064,13 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onInteractOutside={keepSelectMenuOpen}
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
-            "ccr-booking-modal-panel app-bottom-sheet fixed inset-x-0 bottom-0 z-50 sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:-translate-x-1/2 sm:-translate-y-1/2",
-            "w-full overflow-hidden rounded-t-2xl shadow-2xl sm:w-[95vw] sm:max-w-4xl sm:rounded-3xl",
-            "flex flex-col md:flex-row",
-            "max-h-[92vh] sm:max-h-[95vh] md:max-h-[720px]",
+            "ccr-booking-modal-panel fixed inset-0 z-50 lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
+            "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-white shadow-none lg:h-auto lg:w-[95vw] lg:max-w-4xl lg:rounded-3xl lg:shadow-2xl",
+            "flex flex-col lg:flex-row",
+            "lg:max-h-[720px]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0"
+            "data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 lg:data-[state=closed]:zoom-out-95 lg:data-[state=open]:zoom-in-95 lg:data-[state=closed]:slide-out-to-bottom-0 lg:data-[state=open]:slide-in-from-bottom-0"
           )}
         >
           <Dialog.Title className="sr-only">
@@ -1080,20 +1080,20 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               sprint-317 light recolor). ONLY the verified mark was kept from that change:
               the solid #009FD9 "Verificado" pill that matches the /buscar card (it reads
               crisply on the dark navy top too). */}
-          <div className="bg-gradient-to-br from-[#1a2744] via-[#13294a] to-[#009FD9] md:w-[320px] shrink-0 flex flex-col p-6 text-white">
-            <div className="flex items-center gap-3 md:flex-col md:items-center md:gap-0">
-              <Avatar className="h-14 w-14 md:h-20 md:w-20 shrink-0">
+          <div className="shrink-0 bg-gradient-to-br from-[#1a2744] via-[#13294a] to-[#009FD9] p-6 text-white lg:flex lg:w-[320px] lg:flex-col">
+            <div className="flex items-center gap-3 lg:flex-col lg:items-center lg:gap-0">
+              <Avatar className="h-14 w-14 shrink-0 lg:h-20 lg:w-20">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
                 <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
                   {getInitials(professional.fullName)}
                 </AvatarFallback>
               </Avatar>
-              <div className="md:mt-4 md:text-center md:w-full">
-                <div className="flex items-center gap-1.5 md:justify-center flex-wrap">
+              <div className="lg:mt-4 lg:w-full lg:text-center">
+                <div className="flex flex-wrap items-center gap-1.5 lg:justify-center">
                   {/* Display-only abbreviation (drop the middle given name; keep first +
                       both surnames) via proDisplayName — consistent with the /buscar card +
                       public profile. The DB keeps the full official name. */}
-                  <span className="font-bold text-base md:text-lg leading-tight">{proDisplayName(professional.fullName)}</span>
+                  <span className="text-base font-bold leading-tight lg:text-lg">{proDisplayName(professional.fullName)}</span>
                 </div>
                 {/* Verified → the SAME solid #009FD9 pill as the /buscar card. NOT verified →
                     nothing (no badge, no "sin verificar"). `isVerified` is set by BOTH callers
@@ -1104,11 +1104,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     {t("verified")}
                   </span>
                 )}
-                <p className="text-sm text-white/70 mt-1 md:text-center">{headerProfession}</p>
+                <p className="mt-1 text-sm text-white/70 lg:text-center">{headerProfession}</p>
               </div>
             </div>
 
-            <div className="hidden md:block mt-5 space-y-2">
+            <div className="mt-5 hidden space-y-2 lg:block">
               <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="justify-center [&_span]:text-white [&_.text-\[\#9ca3af\]]:text-white/60" />
               {professional.cantonName && (
                 <div className="flex items-center gap-1.5 justify-center text-white/70 text-sm">
@@ -1136,7 +1136,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
             {/* What happens next — genuinely useful to the client at booking time
                 (replaces the generic "sin comisiones" trust chips). */}
-            <div className="hidden md:flex flex-col gap-2.5 mt-auto pt-5">
+            <div className="mt-auto hidden flex-col gap-2.5 pt-5 lg:flex">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">{t("next.title")}</p>
               {(["step1", "step2", "step3"] as const).map((key, i) => (
                 <div key={i} className="flex items-start gap-2 text-white/70 text-xs">
@@ -1150,7 +1150,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           {/* RIGHT PANEL */}
           <div className="flex-1 bg-white flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#f3f4f6] shrink-0">
+            <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[#f3f4f6] bg-white px-5 py-3.5 shadow-sm shadow-[#0f172a]/5 lg:static lg:px-6 lg:py-4 lg:shadow-none">
               <div>
                 <h2 className="font-bold text-[#111827]">{t("title")}</h2>
                 {step !== "success" && (
@@ -1177,7 +1177,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             </div>
 
             {/* Step content */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="flex-1 overflow-y-auto px-5 py-5 md:px-6">
 
               {/* STEP: calendar */}
               {step === "calendar" && (
@@ -1646,7 +1646,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
             {/* Footer actions */}
             {step !== "success" && (
-              <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0 flex gap-3">
+              <div className="shrink-0 flex gap-3 border-t border-[#f3f4f6] bg-white px-5 py-3.5 shadow-[0_-10px_24px_rgba(15,23,42,0.06)] md:px-6 md:py-4 md:shadow-none">
                 {(step === "contact" || step === "details" || step === "complete") && (
                   <Button
                     variant="outline"
@@ -1746,7 +1746,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {step === "success" && (
-              <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0 flex flex-col gap-2.5">
+              <div className="shrink-0 flex flex-col gap-2.5 border-t border-[#f3f4f6] bg-white px-5 py-3.5 shadow-[0_-10px_24px_rgba(15,23,42,0.06)] md:px-6 md:py-4 md:shadow-none">
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
                 <Button size="md" className="w-full" onClick={goToMyRequest}>

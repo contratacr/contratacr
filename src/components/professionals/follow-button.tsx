@@ -18,6 +18,7 @@ type FollowButtonProps = {
   initialFollowers?: number;
   labelOverride?: string;
   onCountChange?: (count: number) => void;
+  onSelfAction?: () => void;
 };
 
 function writePendingFollow(professionalId: string) {
@@ -75,7 +76,7 @@ export async function applyPendingFollow(userId?: string): Promise<boolean> {
   return true;
 }
 
-export function FollowButton({ professionalId, isOwn = false, compact = false, className, showCount = false, initialFollowers = 0, labelOverride, onCountChange }: FollowButtonProps) {
+export function FollowButton({ professionalId, isOwn = false, compact = false, className, showCount = false, initialFollowers = 0, labelOverride, onCountChange, onSelfAction }: FollowButtonProps) {
   const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
   const [following, setFollowing] = useState(false);
@@ -103,12 +104,14 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
     return () => window.removeEventListener("professionalFollowsChanged", sync);
   }, [refresh]);
 
-  if (isOwn) return null;
-
   async function toggle(event: React.MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
     if (busy || authLoading) return;
+    if (isOwn) {
+      onSelfAction?.();
+      return;
+    }
     if (!user) {
       writePendingFollow(professionalId);
       const redirect = encodeURIComponent("/dashboard/profesional?tab=network&mode=use");

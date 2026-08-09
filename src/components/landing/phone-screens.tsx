@@ -1,4 +1,4 @@
-import { Search, MapPin, ShieldCheck, Star, Send, Headset, CheckCircle2, CalendarDays, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { Search, MapPin, ShieldCheck, Star, Send, Headset, CheckCircle2, CalendarDays, ChevronLeft, ChevronRight, MessageCircle, Menu, Bell, RefreshCw } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { MockAvatar } from "@/components/landing/mock-avatar";
 import { cloudinaryAssetUrl } from "@/lib/cloudinary";
@@ -304,31 +304,73 @@ export function buildLandingResultsCopy({
 
 export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsCopy }) {
   return (
-    <div className="flex h-full flex-col bg-[#f4f7fa]">
-      <AppBar title="" />
-      {/* Search context — mirrors the real /buscar top bar (search field + count). */}
-      <div className="border-b border-[#eef1f5] bg-white px-3.5 pb-2.5 pt-2">
-        <div className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2">
-          <Search className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-          <span className="truncate text-[11px] text-[#374151]">{copy.search}</span>
+    <div className="flex h-full flex-col overflow-hidden bg-[#f4f7fa]">
+      <div className="shrink-0 border-b border-[#eef1f5] bg-white px-3 pb-2.5 pt-1">
+        <div className="flex items-center justify-between pb-2">
+          <div className="flex items-center gap-2">
+            <Menu className="h-4 w-4 text-[#1a2744]" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.png" srcSet="/logo-mark.png 1x, /logo-mark@2x.png 2x" alt="ContrataCR" width={18} height={18} className="h-[18px] w-[18px]" />
+            <span className={`${poppins.className} text-[12px] font-extrabold tracking-tight leading-none`}>
+              <span className="text-[#1a2744]">Contrata</span><span style={{ color: "#008ce0" }}>CR</span>
+            </span>
+          </div>
+          <span className="relative grid h-6 w-6 place-items-center rounded-full text-[#1a2744]">
+            <Bell className="h-4 w-4" />
+            <span className="absolute -right-1 -top-1 rounded-full bg-[#009FD9] px-1 text-[7px] font-bold leading-3 text-white">9+</span>
+          </span>
         </div>
-        <p className="mt-1.5 text-[10px] text-[#6b7280]">{copy.results}</p>
+        <div className="flex h-9 items-center gap-2 rounded-[14px] bg-[#eef3f6] px-3">
+          <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-[#7b8798]">{copy.search}</span>
+          <Search className="h-4 w-4 shrink-0 text-[#1a2744]" />
+        </div>
       </div>
-      {/* Real-style result cards — one WITH a published schedule (the booking hero),
-          one WITHOUT (the WhatsApp contact path), mirroring the real mixed /buscar list. */}
-      <div className="flex-1 space-y-2 overflow-hidden p-3">
-        <ProCard
-          rank={1} initials="SG" image={cloudinaryAssetUrl("sgimage_psyvpn_hyyp4c.jpg", "f_auto,q_auto")} company="SG Solutions" person="Luis Sanchez" profession={copy.title} categories={copy.categories}
-          place={copy.primaryPlace} address={copy.primaryAddress} rating="4.9" reviews={copy.reviews(48)}
-          price={copy.priceOnRequest} verified={copy.verified} schedule={copy.days}
-          viewSchedule={copy.viewSchedule}
+
+      <div className="relative h-[138px] shrink-0 overflow-hidden bg-[#d9f3df]">
+        <div
+          className="absolute inset-0 opacity-90"
+          style={{
+            background:
+              "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.65) 0 13%, transparent 14%), radial-gradient(circle at 78% 32%, rgba(255,255,255,0.6) 0 10%, transparent 11%), linear-gradient(135deg,#c6efd5 0%,#e1f6ea 48%,#bcead5 100%)",
+          }}
         />
-        <ProCard
-          rank={2} initials="CR" image="/logo-mark-transparent.png" company="ContrataCR" profession={copy.secondaryProfession}
-          place={copy.secondaryPlace} address={copy.secondaryAddress} rating="4.8" reviews={copy.reviews(31)}
-          price={copy.priceOnRequest} verified={copy.verified}
-          viewSchedule={copy.viewSchedule} noScheduleNote={copy.noScheduleNote}
-        />
+        <svg className="absolute inset-0 h-full w-full text-[#8fb0bf]/55" viewBox="0 0 284 138" aria-hidden>
+          <path d="M-20 88 C42 42 72 116 128 74 S226 36 305 82" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M-10 34 C58 74 86 10 140 44 S230 112 300 48" fill="none" stroke="currentColor" strokeWidth="1.4" />
+          <path d="M84 -20 C72 20 90 54 72 92 C64 112 66 126 80 154" fill="none" stroke="currentColor" strokeWidth="1" />
+        </svg>
+        <button className="absolute left-1/2 top-5 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-[#1a2744] shadow-[0_8px_24px_-16px_rgba(15,23,42,0.8)]">
+          <RefreshCw className="h-3 w-3" />
+          Buscar en esta zona
+        </button>
+        <span className="absolute left-[44px] top-[56px] grid h-7 w-7 place-items-center rounded-full bg-[#009FD9] text-[10px] font-bold text-white shadow-sm ring-2 ring-white">2</span>
+        <span className="absolute right-[62px] bottom-[30px] grid h-7 w-7 place-items-center rounded-full bg-[#009FD9] text-[10px] font-bold text-white shadow-sm ring-2 ring-white">3</span>
+      </div>
+
+      <div className="-mt-2 flex min-h-0 flex-1 flex-col rounded-t-[22px] bg-white">
+        <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-[#cfd8e3]" />
+        <div className="flex gap-1.5 px-3 pt-2">
+          {["Mejor calificados", "Precio", "Idioma"].map((filter) => (
+            <span key={filter} className="inline-flex items-center rounded-full border border-[#dbe5ed] bg-white px-2.5 py-1.5 text-[9px] font-bold text-[#1a2744] shadow-[0_8px_20px_-18px_rgba(15,35,65,0.7)]">
+              {filter}
+            </span>
+          ))}
+        </div>
+        <p className="px-3 pt-2 text-[10px] font-bold text-[#1a2744]">{copy.results}</p>
+        <div className="min-h-0 flex-1 space-y-2 overflow-hidden px-3 pb-3 pt-2">
+          <ProCard
+            rank={2} initials="SG" image={cloudinaryAssetUrl("sgimage_psyvpn_hyyp4c.jpg", "f_auto,q_auto")} company="SG Solutions" profession="Redes e internet"
+            place={copy.primaryPlace} address={copy.primaryAddress} rating="5.0" reviews={copy.reviews(2)}
+            price={copy.priceOnRequest} verified={copy.verified} schedule={copy.days}
+            viewSchedule={copy.viewSchedule}
+          />
+          <ProCard
+            rank={3} initials="TC" image="/featured-brands/tecnoclima.png" company="Tecnoclima" profession="Aire acondicionado"
+            place="Provincia de Alajuela" address="Toda la provincia de Alajuela" rating="5.0" reviews={copy.reviews(1)}
+            price={copy.priceOnRequest} verified={copy.verified}
+            viewSchedule={copy.viewSchedule} noScheduleNote={copy.noScheduleNote}
+          />
+        </div>
       </div>
     </div>
   );

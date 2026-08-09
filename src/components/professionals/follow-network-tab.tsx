@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,6 +25,7 @@ type View = "following" | "followers";
 
 export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void; initialView?: View }) {
   const locale = useLocale();
+  const tLoading = useTranslations("loading");
   const es = locale !== "en";
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -34,6 +35,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
   const [following, setFollowing] = useState<NetworkItem[]>([]);
   const [followers, setFollowers] = useState<NetworkItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -116,6 +118,16 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
   }, [load]);
 
   useEffect(() => {
+    if (!loading) {
+      setShowLoadingSkeleton(false);
+      return;
+    }
+    setShowLoadingSkeleton(false);
+    const timer = window.setTimeout(() => setShowLoadingSkeleton(true), 350);
+    return () => window.clearTimeout(timer);
+  }, [loading]);
+
+  useEffect(() => {
     setView(initialView ?? (searchParams.get("network") === "followers" ? "followers" : "following"));
   }, [initialView, searchParams]);
 
@@ -158,7 +170,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3">
-          {loading ? (
+          {loading && showLoadingSkeleton ? (
             <div className="space-y-3 py-2">
               {[0, 1, 2, 3, 4].map((item) => (
                 <div key={item} className="flex items-center gap-3">
@@ -171,6 +183,8 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
                 </div>
               ))}
             </div>
+          ) : loading ? (
+            <div className="h-full min-h-[230px]" aria-busy="true" aria-label={tLoading("profile")} />
           ) : items.length === 0 ? (
             <div className="grid h-full min-h-[230px] place-items-center text-center text-sm font-medium text-[#6b7280]">
               {query ? (es ? "No encontramos resultados." : "No results found.") : (es ? "Todavía no hay perfiles aquí." : "No profiles here yet.")}

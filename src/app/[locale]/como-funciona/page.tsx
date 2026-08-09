@@ -6,7 +6,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link } from "@/i18n/navigation";
 import {
   ArrowRight,
-  BadgeCheck,
+  CheckCircle2,
   BriefcaseBusiness,
   FileText,
   Search,
@@ -125,11 +125,11 @@ export default async function ComoFuncionaPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {[
-                { icon: BadgeCheck, title: t("trust0Title"), body: t("trust0Body") },
-                { icon: Star, title: t("trust1Title"), body: t("trust1Body") },
-              ].map(({ icon: Icon, title, body }) => (
+                { icon: CheckCircle2, title: t("trust0Title"), body: t("trust0Body"), simple: true },
+                { icon: Star, title: t("trust1Title"), body: t("trust1Body"), simple: false },
+              ].map(({ icon: Icon, title, body, simple }) => (
                 <div key={title} className="flex gap-3 rounded-lg border border-[#dde4ea] bg-white p-5">
-                  <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#009fd9]" />
+                  <Icon className={`${simple ? "mt-[3px] h-4 w-4" : "mt-0.5 h-5 w-5"} shrink-0 text-[#009fd9]`} />
                   <div><h3 className="text-sm font-bold text-[#162543]">{title}</h3><p className="mt-1 text-sm leading-6 text-[#6b7280]">{body}</p></div>
                 </div>
               ))}
@@ -149,3 +149,5 @@ export default async function ComoFuncionaPage() {
     </div>
   );
 }
+
+

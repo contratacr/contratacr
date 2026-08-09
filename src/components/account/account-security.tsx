@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,7 +9,6 @@ import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { Button } from "@/components/ui/button";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
-import { Link } from "@/i18n/navigation";
 
 /* Where each provider lets the user manage their account/email + sign-in security.
    Shown to OAuth users instead of fields that wouldn't work here. */
@@ -62,10 +61,10 @@ function OAuthGuide({
 }
 
 /**
- * "Cuenta y seguridad" â€” manage how you log in: change email + password.
+ * "Cuenta y seguridad" — manage how you log in: change email + password.
  *
  * OAUTH-AWARE: accounts created with Google/Facebook have no ContrataCR
- * password and their email is managed by the provider â€” for them we show a
+ * password and their email is managed by the provider — for them we show a
  * clear note instead of fields that wouldn't work. Email/password accounts get
  * the full change-email + change-password flows (Supabase Auth, with
  * confirmation + friendly feedback).
@@ -92,7 +91,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const pwResend = useResendCooldown();
 
   // After the user confirms the change from the email link, the confirmation URL
-  // returns here (via emailRedirectTo â†’ /auth/callback â†’ this account tab) with
+  // returns here (via emailRedirectTo -> /auth/callback -> this account tab) with
   // ?emailChanged=1. The session has been refreshed (so `user.email` is the new
   // address), so we just show an "applied" banner and strip the param.
   useEffect(() => {
@@ -105,7 +104,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         setEmailPending(false);
       }, 0);
       // Pull the NEW email into the client session immediately so the UI reflects it
-      // without a sign-out/in (refresh fires onAuthStateChange â†’ useAuth re-renders).
+      // without a sign-out/in (refresh fires onAuthStateChange -> useAuth re-renders).
       createClient().auth.refreshSession().catch(() => {});
       params.delete("emailChanged");
       const qs = params.toString();
@@ -133,11 +132,11 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const [resetBusy, setResetBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
-  // Detect OAuth (Google/Facebook) accounts â€” no password, provider-managed email.
+  // Detect OAuth (Google/Facebook) accounts — no password, provider-managed email.
   // One email = one method: an account that HAS an email/password identity is a
   // MANUAL account, so we show the email/password controls even if a stray social
   // identity is also present (we block mixing at sign-in, but if a legacy account
-  // ended up with both, the password is what works â€” keep the UI truthful).
+      // ended up with both, the password is what works — keep the UI truthful).
   const oauthProvider = user?.app_metadata?.provider as string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const hasPasswordIdentity = (user?.identities ?? []).some((id: any) => id.provider === "email");
@@ -152,7 +151,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
 
   // The actual send (used by the initial submit AND the resend). The confirmation
   // link is built by the **change-email.html** template as
-  // `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change` â€”
+  // `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change` —
   // the **token_hash** flow `/auth/callback` finalizes with `verifyOtp` (no PKCE
   // code_verifier, so it survives email-scanner prefetch / a different device, and
   // needs no redirect_to allowlist). The static template can't know the app locale,
@@ -183,7 +182,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     setEmailError(null);
     const err = await performEmailChange();
     if (err) {
-      // Supabase returns these in English â€” show a localized message instead.
+      // Supabase returns these in English — show a localized message instead.
       const taken = /already|registered|exists|in use|taken|duplicate/i.test(err);
       setEmailError(taken ? t("emailTaken") : t("emailChangeError"));
       return;
@@ -202,7 +201,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     if (!user?.email) { setPwError(t("errValidate")); return; }
     setPwSaving(true);
     const supabase = createClient();
-    // Verify the CURRENT password by re-authenticating â€” Supabase validates the
+    // Verify the CURRENT password by re-authenticating — Supabase validates the
     // hash for us (we never read/decrypt it). Same session, no emailed code.
     const { error: signInErr } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPw });
     if (signInErr) { setPwSaving(false); setPwError(t("errWrongPassword")); return; }
@@ -390,7 +389,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
               <Button size="sm" onClick={savePassword} loading={pwSaving} disabled={pwSaving || !currentPw || !newPw || !confirmPw}>{t("savePassword")}</Button>
               <Button size="sm" variant="outline" onClick={() => { setPwMode(false); setCurrentPw(""); setNewPw(""); setConfirmPw(""); setPwError(null); }}>{t("cancel")}</Button>
             </div>
-            {/* Forgot-password escape hatch â€” sends the reset email. */}
+            {/* Forgot-password escape hatch — sends the reset email. */}
             {resetSent ? (
               <div>
                 <p className="text-xs text-emerald-600">{t("resetSent", { email: user?.email ?? "" })}</p>
@@ -417,7 +416,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           </div>
         ) : (
           <div className={securitySummaryClass}>
-            <span className="text-sm text-[#9ca3af]">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</span>
+            <span className="text-sm text-[#9ca3af]">********</span>
             <button onClick={() => setPwMode(true)} className={securityActionClass}>
               {t("changePassword")}
             </button>
@@ -425,24 +424,6 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         )}
       </div>
 
-      <div className="rounded-2xl border border-[#f3d5d5] bg-white p-5">
-        <div className="flex items-start gap-3">
-          <Trash2 className="mt-0.5 h-4 w-4 shrink-0 text-[#b42318]" />
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-[#374151]">
-              {locale === "en" ? "Delete account" : "Eliminar cuenta"}
-            </h3>
-            <p className="mt-1 text-xs leading-5 text-[#6b7280]">
-              {locale === "en"
-                ? "Request permanent deletion of your account and associated personal data."
-                : "Solicita la eliminación permanente de tu cuenta y los datos personales asociados."}
-            </p>
-            <Link href="/eliminar-cuenta" className="mt-3 inline-flex text-sm font-semibold text-[#b42318] hover:underline">
-              {locale === "en" ? "Request deletion" : "Solicitar eliminación"}
-            </Link>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
