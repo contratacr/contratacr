@@ -1,6 +1,44 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown, Clock3, Search, Wrench, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Clock3, Search, Wrench, X } from "lucide-react";
+import { useLocale } from "next-intl";
+
+const MARKETPLACE_CONTROL_COPY = {
+  es: {
+    clearSearch: "Limpiar búsqueda",
+    recents: "Recientes",
+    clearAll: "Borrar todo",
+    removeRecent: (value: string) => `Eliminar ${value} de búsquedas recientes`,
+    clearService: "Limpiar servicio",
+    back: "Volver",
+    suggestions: "Sugerencias",
+    clear: "Borrar",
+    country: "Costa Rica",
+    searchInCountry: "Buscar en Costa Rica",
+    deleteRecent: "Borrar búsqueda reciente",
+    emptyRecents: "Tus búsquedas recientes aparecerán aquí.",
+    closeFilter: "Cerrar filtro",
+    close: "Cerrar",
+    showResults: "Ver resultados",
+  },
+  en: {
+    clearSearch: "Clear search",
+    recents: "Recent",
+    clearAll: "Clear all",
+    removeRecent: (value: string) => `Remove ${value} from recent searches`,
+    clearService: "Clear service",
+    back: "Back",
+    suggestions: "Suggestions",
+    clear: "Clear",
+    country: "Costa Rica",
+    searchInCountry: "Search in Costa Rica",
+    deleteRecent: "Remove recent search",
+    emptyRecents: "Your recent searches will appear here.",
+    closeFilter: "Close filter",
+    close: "Close",
+    showResults: "Show results",
+  },
+} as const;
 
 export function MarketplaceNavbarPortal({ children }: { children: ReactNode }) {
   const [target, setTarget] = useState<HTMLElement | null>(null);
@@ -74,6 +112,8 @@ export function MarketplaceSearch({
   secondary?: MarketplaceSecondarySearch;
   recentStorageKey?: string;
 }) {
+  const locale = useLocale() === "en" ? "en" : "es";
+  const copy = MARKETPLACE_CONTROL_COPY[locale];
   const [open, setOpen] = useState(false);
   const [desktopField, setDesktopField] = useState<"primary" | "secondary" | null>(null);
   const [mobileField, setMobileField] = useState<"primary" | "secondary">("primary");
@@ -216,13 +256,13 @@ export function MarketplaceSearch({
             }}
             className="h-11 w-full min-w-0 bg-transparent pr-9 text-[15px] font-semibold text-[#162543] outline-none placeholder:text-[#8f9aaa] lg:text-base lg:font-normal lg:text-gray-700 lg:placeholder:text-gray-400"
           />
-          {value && <button type="button" onClick={() => onChange("")} aria-label="Limpiar búsqueda" className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
+          {value && <button type="button" onClick={() => onChange("")} aria-label={copy.clearSearch} className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
           {desktopField === "primary" && ((cleanValue && visibleSuggestions.length > 0) || (!cleanValue && recents.length > 0)) && (
             <div className="absolute -left-10 right-0 top-[calc(100%+8px)] z-50 hidden overflow-hidden rounded-xl border border-[#d7e1ea] bg-white py-1 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.8)] lg:block">
               {!cleanValue && (
                 <div className="flex items-center justify-between gap-3 border-b border-[#e6edf3] px-4 py-2">
-                  <span className="text-xs font-extrabold uppercase text-[#68778d]">Recientes</span>
-                  <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={clearRecents} className="text-xs font-bold text-[#009fd9] hover:text-[#0082b3]">Borrar todo</button>
+                  <span className="text-xs font-extrabold uppercase text-[#68778d]">{copy.recents}</span>
+                  <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={clearRecents} className="text-xs font-bold text-[#009fd9] hover:text-[#0082b3]">{copy.clearAll}</button>
                 </div>
               )}
               {cleanValue
@@ -233,7 +273,7 @@ export function MarketplaceSearch({
                       <Clock3 className="h-4 w-4 shrink-0 text-[#7b8ba1]" />
                       <span className="truncate">{recent}</span>
                     </button>
-                    <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => removeRecent(recent)} aria-label={`Eliminar ${recent} de búsquedas recientes`} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#94a3b8] hover:bg-[#e3edf4] hover:text-[#162543]">
+                    <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => removeRecent(recent)} aria-label={copy.removeRecent(recent)} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#94a3b8] hover:bg-[#e3edf4] hover:text-[#162543]">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
@@ -247,7 +287,7 @@ export function MarketplaceSearch({
             <div className="relative hidden min-w-[180px] flex-1 lg:block">
               <Wrench className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a1adbb]" aria-hidden="true" />
               <input value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className="h-10 w-full bg-transparent pl-7 pr-8 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400" />
-              {secondary.value && <button type="button" onClick={() => secondary.onChange("")} aria-label="Limpiar servicio" className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
+              {secondary.value && <button type="button" onClick={() => secondary.onChange("")} aria-label={copy.clearService} className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
             {desktopField === "secondary" && visibleSecondarySuggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-xl border border-[#d7e1ea] bg-white py-1 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.8)]">
                 {visibleSecondarySuggestions.map((suggestion) => (
@@ -269,12 +309,11 @@ export function MarketplaceSearch({
       </div>
       {open && (
         <div className="fixed inset-0 z-[1300] bg-white text-[#162543] lg:hidden">
-          <div className="flex min-h-16 items-center gap-2 border-b border-[#e7edf2] px-4">
-            <button type="button" onClick={closeMobileSearch} aria-label="Cerrar búsqueda" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-[#162543]">
-              <X className="h-7 w-7" strokeWidth={2.3} />
-            </button>
-            <div className="relative min-w-0 flex-1">
-              <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6b778a]" />
+          <div className="border-b border-[#e7edf2] px-4 py-4">
+            <div className="flex h-13 min-w-0 items-center rounded-xl border border-[#d8e4ec] bg-white px-3 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.7)]">
+              <button type="button" onClick={closeMobileSearch} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
+                <ChevronRight className="h-6 w-6 rotate-180" />
+              </button>
               <input
                 ref={fullInputRef}
                 value={value}
@@ -288,13 +327,8 @@ export function MarketplaceSearch({
                 }}
                 placeholder={placeholder}
                 enterKeyHint="search"
-                className="h-14 w-full bg-transparent pl-8 pr-9 text-lg font-semibold outline-none placeholder:text-[#9aa8ba]"
+                className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#1A2744] outline-none placeholder:text-[#a5afbd]"
               />
-              {value && (
-                <button type="button" onClick={() => onChange("")} aria-label="Limpiar búsqueda" className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-[#edf3f7] text-[#64748b]">
-                  <X className="h-4 w-4" />
-                </button>
-              )}
             </div>
           </div>
           {secondary && (
@@ -310,7 +344,7 @@ export function MarketplaceSearch({
                   className="h-11 min-w-0 flex-1 bg-transparent text-base font-semibold text-[#162543] outline-none placeholder:text-[#9aa8ba]"
                 />
                 {secondary.value && (
-                  <button type="button" onClick={() => secondary.onChange("")} aria-label="Limpiar servicio" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#edf3f7] text-[#64748b]">
+                  <button type="button" onClick={() => secondary.onChange("")} aria-label={copy.clearService} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#edf3f7] text-[#64748b]">
                     <X className="h-4 w-4" />
                   </button>
                 )}
@@ -319,10 +353,10 @@ export function MarketplaceSearch({
           )}
           <div className="px-6 py-5">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 className="text-base font-extrabold">{mobileField === "secondary" || cleanValue ? "Sugerencias" : "Recientes"}</h2>
+              <h2 className="text-base font-extrabold">{mobileField === "secondary" || cleanValue ? copy.suggestions : copy.recents}</h2>
               {mobileField === "primary" && !cleanValue && recents.length > 0 && (
                 <button type="button" onClick={clearRecents} className="rounded-full px-2 py-1 text-sm font-bold text-[#009FD9]">
-                  Borrar
+                  {copy.clear}
                 </button>
               )}
             </div>
@@ -348,7 +382,7 @@ export function MarketplaceSearch({
                       </span>
                       <span className="min-w-0">
                         <span className="block truncate text-base font-bold">{suggestion}</span>
-                        <span className="block text-sm font-semibold text-[#7a8798]">Costa Rica</span>
+                        <span className="block text-sm font-semibold text-[#7a8798]">{copy.country}</span>
                       </span>
                     </button>
                   ))}
@@ -359,7 +393,7 @@ export function MarketplaceSearch({
                       </span>
                       <span className="min-w-0">
                         <span className="block truncate text-base font-bold">{value}</span>
-                        <span className="block text-sm font-semibold text-[#7a8798]">Buscar en Costa Rica</span>
+                        <span className="block text-sm font-semibold text-[#7a8798]">{copy.searchInCountry}</span>
                       </span>
                     </button>
                   )}
@@ -374,17 +408,17 @@ export function MarketplaceSearch({
                         </span>
                         <span className="min-w-0">
                           <span className="block truncate text-base font-bold">{recent}</span>
-                          <span className="block text-sm font-semibold text-[#7a8798]">Costa Rica</span>
+                          <span className="block text-sm font-semibold text-[#7a8798]">{copy.country}</span>
                         </span>
                       </button>
-                      <button type="button" onClick={() => removeRecent(recent)} aria-label="Borrar reciente" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#94a3b8] hover:bg-[#e8f0f6] hover:text-[#162543]">
+                      <button type="button" onClick={() => removeRecent(recent)} aria-label={copy.deleteRecent} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#94a3b8] hover:bg-[#e8f0f6] hover:text-[#162543]">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
                   {recents.length === 0 && (
                     <div className="rounded-2xl bg-[#f7fafc] px-4 py-5 text-sm font-semibold text-[#6b778a]">
-                      Tus búsquedas recientes aparecerán aquí.
+                      {copy.emptyRecents}
                     </div>
                   )}
                 </>
@@ -398,6 +432,8 @@ export function MarketplaceSearch({
 }
 
 export function MarketplaceFilterChip({ label, value, options, onChange }: { label: string; value: string; options: Array<[string, string]>; onChange: (value: string) => void }) {
+  const locale = useLocale() === "en" ? "en" : "es";
+  const copy = MARKETPLACE_CONTROL_COPY[locale];
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(value);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -426,12 +462,12 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
       </button>
       {open && (
         <>
-          <button type="button" aria-label="Cerrar filtro" onClick={() => setOpen(false)} className="fixed inset-0 z-[1190] bg-[#0f172a]/35 lg:hidden" />
+          <button type="button" aria-label={copy.closeFilter} onClick={() => setOpen(false)} className="fixed inset-0 z-[1190] bg-[#0f172a]/35 lg:hidden" />
           <div className="fixed inset-x-0 bottom-0 z-[1200] rounded-t-2xl bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl lg:absolute lg:inset-auto lg:left-0 lg:top-[calc(100%+8px)] lg:z-[120] lg:w-80 lg:rounded-xl lg:border lg:border-[#dfe8f0] lg:p-4">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#c7d2dc] lg:hidden" />
             <div className="flex min-h-12 items-center justify-between border-b border-[#e7edf2] lg:min-h-10">
               <h2 className="text-lg font-bold lg:text-base">{label}</h2>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar" className="grid h-10 w-10 place-items-center"><X className="h-5 w-5" /></button>
+              <button type="button" onClick={() => setOpen(false)} aria-label={copy.close} className="grid h-10 w-10 place-items-center"><X className="h-5 w-5" /></button>
             </div>
             <div className="py-2">
               {options.map(([itemValue, itemLabel]) => (
@@ -443,7 +479,7 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
                 </button>
               ))}
             </div>
-            <button type="button" onClick={() => { onChange(pending); setOpen(false); }} className="h-12 w-full rounded-lg bg-[#009fd9] text-sm font-bold text-white hover:bg-[#008fc3]">Ver resultados</button>
+            <button type="button" onClick={() => { onChange(pending); setOpen(false); }} className="h-12 w-full rounded-lg bg-[#009fd9] text-sm font-bold text-white hover:bg-[#008fc3]">{copy.showResults}</button>
           </div>
         </>
       )}

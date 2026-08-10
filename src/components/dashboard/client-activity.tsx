@@ -640,7 +640,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             <div className="flex items-start justify-between gap-2">
                               {b.professionals?.slug ? (
                                 <Link
-                                  href={`/profesionales/${b.professionals.slug}`}
+                                  href={`/profesionales/${b.professionals.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
                                   onClick={(e) => e.stopPropagation()}
                                   className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] hover:text-[#009FD9] hover:underline sm:text-base"
                                 >
@@ -1044,7 +1044,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                         <div className="min-w-0">
                                           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                                             {proposal.professionals?.slug ? (
-                                              <Link href={`/profesionales/${proposal.professionals.slug}`} className="min-w-0 text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                              <Link href={`/profesionales/${proposal.professionals.slug}?from=${encodeURIComponent("/dashboard/cliente")}`} className="min-w-0 text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
                                                 {proposal.professionals?.profiles?.full_name}
                                               </Link>
                                             ) : (

@@ -11,6 +11,7 @@ import {
   FileText,
   Search,
   Star,
+  Tags,
 } from "lucide-react";
 
 type IconComponent = (props: { className?: string }) => ReactNode;
@@ -117,6 +118,38 @@ export default async function ComoFuncionaPage() {
         </section>
 
         <section className="border-y border-[#e5e7eb] bg-[#f4f7fa] px-4 py-12">
+          <div className="mx-auto max-w-4xl">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase text-[#009fd9]">{t("marketplaceEyebrow")}</p>
+              <h2 className="mt-2 text-2xl font-extrabold text-[#162543]">{t("marketplaceTitle")}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("marketplaceSubtitle")}</p>
+            </div>
+            <div className="mt-7 grid gap-4 sm:grid-cols-2">
+              <Link href="/empleos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#dfe5eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
+                <div>
+                  <BriefcaseBusiness className="h-5 w-5 text-[#009fd9]" />
+                  <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceJobsTitle")}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("marketplaceJobsBody")}</p>
+                </div>
+                <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb]">
+                  {t("marketplaceJobsCta")}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+              <Link href="/ofertas" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#dfe5eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
+                <div>
+                  <Tags className="h-5 w-5 text-[#009fd9]" />
+                  <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceOffersTitle")}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("marketplaceOffersBody")}</p>
+                </div>
+                <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb]">
+                  {t("marketplaceOffersCta")}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[#e5e7eb] px-4 py-12">
           <div className="mx-auto max-w-4xl">
             <div className="mb-7 max-w-2xl">
               <p className="text-xs font-bold uppercase text-[#009fd9]">{t("trustEyebrow")}</p>

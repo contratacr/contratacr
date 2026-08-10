@@ -31,6 +31,23 @@ type AuthState = {
 const AuthContext = createContext<AuthState | null>(null);
 
 const LAST_AUTH_USER_KEY = "ccr:last-auth-user";
+const RESUME_AUTH_TIMEOUT_MS = 5_000;
+
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error("auth-resume-timeout")), timeoutMs);
+    Promise.resolve(promise).then(
+      (value) => {
+        window.clearTimeout(timeout);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
+}
 
 function readCachedUser(): User | null {
   if (typeof window === "undefined") return null;
@@ -51,11 +68,15 @@ function cacheUser(u: User | null) {
 }
 
 function useAuthState(
-  initialUser: User | null = null,
+  initialUser: User | null | undefined = undefined,
   initialAvatarUrl: string | null | undefined = undefined,
   initialNotificationUnread: { offer: number; use: number; neutral: number } = { offer: 0, use: 0, neutral: 0 },
 ): AuthState {
-  const initialResolvedUser = initialUser ?? readCachedUser();
+  // `null` from the server means the request is explicitly anonymous. Only
+  // consult the browser cache when no server value was provided at all; using
+  // `??` here made an old cached session replace server-rendered anonymous UI
+  // during hydration.
+  const initialResolvedUser = initialUser === undefined ? readCachedUser() : initialUser;
   const [user, setUser] = useState<User | null>(() => initialResolvedUser);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
     if (!initialResolvedUser) return null;
@@ -125,6 +146,7 @@ function useAuthState(
     const supabase = createClient();
     let mounted = true;
     let sessionSettled = false;
+    let resumeSyncRunning = false;
     const sessionTimeout = window.setTimeout(() => {
       if (!mounted || sessionSettled) return;
       setUser(null);
@@ -179,36 +201,56 @@ function useAuthState(
     // new photo), code dispatches `ccr:profile-updated` — re-pull the user so the
     // header name/avatar update IMMEDIATELY even if the metadata change came from a
     // different Supabase client instance that didn't fire our onAuthStateChange.
-    const refreshUser = () => {
-      supabase.auth.getUser().then(({ data }) => {
-        const u = data.user ?? null;
-        setUser(u);
-        cacheUser(u);
-        if (u) {
-          syncAvatar(u);
-        } else {
-          setAvatarUrl(null);
-          setAvatarReady(true);
-        }
-      }).catch(() => { /* ignore */ });
+    const applyUser = (u: User | null) => {
+      setUser(u);
+      cacheUser(u);
+      if (u) {
+        void syncAvatar(u);
+      } else {
+        setAvatarUrl(null);
+        setAvatarReady(true);
+      }
     };
-    const onProfileUpdated = () => refreshUser();
+
+    const reconcileSession = async () => {
+      if (resumeSyncRunning || !mounted) return;
+      resumeSyncRunning = true;
+      try {
+        const { data } = await withTimeout(supabase.auth.getSession(), RESUME_AUTH_TIMEOUT_MS);
+        if (!mounted) return;
+        applyUser(data.session?.user ?? null);
+      } catch {
+        // Keep the last known state. A temporary resume/network timeout must not
+        // sign the user out or leave the interface blocked.
+      } finally {
+        resumeSyncRunning = false;
+      }
+    };
+
+    const refreshUser = async () => {
+      try {
+        const { data } = await withTimeout(supabase.auth.getUser(), RESUME_AUTH_TIMEOUT_MS);
+        if (mounted) applyUser(data.user ?? null);
+      } catch { /* keep the last known profile while the network recovers */ }
+    };
+
+    const onProfileUpdated = () => void refreshUser();
     window.addEventListener("ccr:profile-updated", onProfileUpdated);
-    window.addEventListener(APP_RESUME_EVENT, refreshUser);
+    window.addEventListener(APP_RESUME_EVENT, reconcileSession);
 
     return () => {
       mounted = false;
       window.clearTimeout(sessionTimeout);
       subscription.unsubscribe();
       window.removeEventListener("ccr:profile-updated", onProfileUpdated);
-      window.removeEventListener(APP_RESUME_EVENT, refreshUser);
+      window.removeEventListener(APP_RESUME_EVENT, reconcileSession);
     };
   }, []);
 
   return { user, avatarUrl, avatarReady, loading, notificationUnread: initialNotificationUnread };
 }
 
-export function AuthProvider({ children, initialUser = null, initialAvatarUrl, initialNotificationUnread }: { children: ReactNode; initialUser?: User | null; initialAvatarUrl?: string | null; initialNotificationUnread?: { offer: number; use: number; neutral: number } }) {
+export function AuthProvider({ children, initialUser, initialAvatarUrl, initialNotificationUnread }: { children: ReactNode; initialUser?: User | null; initialAvatarUrl?: string | null; initialNotificationUnread?: { offer: number; use: number; neutral: number } }) {
   const value = useAuthState(initialUser, initialAvatarUrl, initialNotificationUnread);
   return createElement(AuthContext.Provider, { value }, children);
 }

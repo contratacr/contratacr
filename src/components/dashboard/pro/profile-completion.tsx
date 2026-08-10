@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronRight, ListChecks, X } from "lucide-react";
 import { serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
+import { countCases } from "@/lib/services";
 
 type ProRecord = Record<string, unknown>;
 
@@ -68,8 +69,8 @@ export function computeCompletion(pro: ProRecord): {
     !!pro.coverage_country ||
     !!pro.provincia_id ||
     !!pro.canton_id;
-  const hasSelectedServices = hasLen(pro.professions) || !!pro.category_id;
   const services = activeServices(pro.services);
+  const hasSelectedServices = services.length > 0;
   const hasServiceDescription = services.some((service) => hasText(service.description));
   const hasServicePrice = services.some((service) =>
     service.priceType === "a_convenir" ||
@@ -85,7 +86,11 @@ export function computeCompletion(pro: ProRecord): {
   const hasPublicLinks = hasAnyText(links.website, links.instagram, links.facebook, links.tiktok, links.linkedin);
   const hasLanguages = Array.isArray(pro.languages) && pro.languages.some((language) => hasText(language));
   const hasEducation = hasLen(pro.certifications);
-  const hasPortfolio = hasLen(pro.portfolio);
+  const hasPortfolio =
+    countCases(
+      Array.isArray(pro.portfolio_items) ? pro.portfolio_items : null,
+      Array.isArray(pro.portfolio_urls) ? pro.portfolio_urls : null
+    ) > 0 || hasLen(pro.portfolio);
   const hasServiceImage = services.some((service) => hasText(service.imageUrl));
   const credentialServices = services.filter((service) => {
     const category = typeof service.category === "string" ? service.category : "";
@@ -125,11 +130,13 @@ export function ProfileCompletion({
   onGo,
   variant = "header",
   onViewSteps,
+  onComplete,
 }: {
   pro: ProRecord;
   onGo: (tab: string, field?: string) => void;
   variant?: "header" | "summary" | "details";
   onViewSteps?: () => void;
+  onComplete?: () => void;
 }) {
   const t = useTranslations("proPanel.completion");
   const { percent, items } = computeCompletion(pro);
@@ -158,17 +165,19 @@ export function ProfileCompletion({
   const missing = items.filter((item) => !item.done && !ignoredSet.has(item.key));
   const optionalMissing = missing.filter((item) => item.optional);
   const ignoredCount = items.filter((item) => !item.done && ignoredSet.has(item.key)).length;
-  const profileComplete = percent === 100;
+  const profileComplete = missing.length === 0;
   const checklistHidden = dismissed || missing.length === 0;
+
+  useEffect(() => {
+    if (profileComplete) onComplete?.();
+  }, [profileComplete, onComplete]);
 
   if (profileComplete) return null;
 
   function showSteps() {
     setDismissed(false);
-    setIgnored([]);
     try {
       localStorage.removeItem(storageKey);
-      localStorage.removeItem(ignoredStorageKey);
     } catch {
       // The checklist still reopens for this render if storage is unavailable.
     }
@@ -211,7 +220,7 @@ export function ProfileCompletion({
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] font-extrabold leading-tight text-[#162543]">{t("title")}</span>
           <span className="mt-0.5 block truncate text-[11px] font-semibold leading-tight text-[#64748b]">
-            {t("stepsLeft", { count: items.filter((item) => !item.done).length })}
+            {t("stepsLeft", { count: missing.length })}
           </span>
         </span>
         <ChevronRight className="h-4 w-4 shrink-0 text-[#8aa0b4]" />
@@ -270,14 +279,14 @@ export function ProfileCompletion({
   }
 
   return (
-    <section className="bg-white px-4 py-5 sm:px-6 sm:py-6">
-      <div className="mx-auto w-full max-w-[34rem]">
+    <section className="w-full bg-white py-1">
+      <div className="w-full">
         <button
           type="button"
           onClick={() => onGo(next.tab, next.key)}
-          className="group block w-full text-left"
+          className="group block w-full rounded-xl px-1 py-1 text-left transition-colors hover:bg-[#f8fbfd] sm:px-2 sm:py-2"
         >
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[19px] font-extrabold leading-tight text-[#111827] sm:text-[21px]">
                 {t("stepsLeft", { count: missing.length })}
@@ -299,11 +308,11 @@ export function ProfileCompletion({
           </span>
         </button>
 
-        <div className="mt-5 divide-y divide-[#e8eef3] border-t border-[#e8eef3]">
+        <div className="mt-5 divide-y divide-[#e8eef3] border-y border-[#e8eef3]">
           {visibleSteps.map((item, index) => (
             <div
               key={item.key}
-              className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 py-3.5 text-left transition-colors sm:gap-3"
+              className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 px-1 py-4 text-left transition-colors hover:bg-[#f8fbfd] sm:gap-3 sm:px-2"
             >
               <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[12px] font-extrabold text-[#009FD9]">
                 {index + 1}

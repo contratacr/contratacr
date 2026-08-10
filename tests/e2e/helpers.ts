@@ -33,7 +33,9 @@ export async function expectHealthyPage(page: Page) {
 
 export async function expectNoRawI18nKeys(page: Page) {
   const bodyText = await page.locator("body").innerText({ timeout: 3_000 }).catch(() => "");
-  const rawKey = bodyText.match(/\b(?:servicesPage|categoriesPage|clientActivity|schedule|categories|dashboard|card)\.[A-Za-z0-9_.-]+/i)?.[0] ?? "";
+  const rawKey = bodyText.match(
+    /\b(?:servicesPage|categoriesPage|clientActivity|schedule|categories|dashboard|card|proPanel|selfAction|unsavedGuard|search|verificationPanel|notifications|comoFunciona|ayuda|atraerClientes|supportTickets|savedPros|clientPage)\.[A-Za-z0-9_.-]+/i,
+  )?.[0] ?? "";
   expect(rawKey, `UI should not expose raw translation key "${rawKey}"`).toBe("");
 }
 

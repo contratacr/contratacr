@@ -13,7 +13,6 @@ import { SelectMenu } from "@/components/ui/select-menu";
 import { FormLoadingState } from "@/components/ui/loading-state";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
-import { PanelSwitch } from "@/components/dashboard/panel-toggle-row";
 import { Link } from "@/i18n/navigation";
 import { stableWorkplaceId } from "@/lib/workplaces";
 
@@ -27,6 +26,26 @@ const COUNTRY_LOCATION_ID = "wp_todo_costa_rica";
 // Monday-first display order (JS getDay: 0=Sun ... 6=Sat).
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DURATION_OPTIONS = [30, 45, 60, 90, 120];
+
+function AvailabilitySwitch({ checked, disabled = false }: { checked: boolean; disabled?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors duration-200",
+        checked ? "bg-[#009FD9]" : "bg-[#cbd5e1]",
+        disabled && "opacity-55",
+      )}
+    >
+      <span
+        className={cn(
+          "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200",
+          checked ? "translate-x-5.5" : "translate-x-0.5",
+        )}
+      />
+    </span>
+  );
+}
 
 type Franja = { id: string; start: string; end: string };
 // A weekly time block in the UNIFIED per-day view - a franja that CARRIES its own
@@ -846,12 +865,12 @@ export function AvailabilityEditor({
         onToggle();
       }}
       disabled={disabled}
-      role="checkbox"
+      role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
       className="inline-flex w-fit items-center gap-3 text-left text-sm font-semibold text-[#111827] transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <PanelSwitch checked={checked} disabled={disabled} />}
+      {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <AvailabilitySwitch checked={checked} disabled={disabled} />}
       <span>{title}</span>
       <span className="ml-1 text-xs font-bold text-[#64748b]">{checked ? (locale === "en" ? "Enabled" : "Activado") : (locale === "en" ? "Disabled" : "Desactivado")}</span>
     </button>
@@ -988,7 +1007,7 @@ export function AvailabilityEditor({
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
-                        <PanelSwitch checked={on} disabled={scheduleControlsDisabled} />
+                        <AvailabilitySwitch checked={on} disabled={scheduleControlsDisabled} />
                       </button>
                     </div>
 
@@ -1001,7 +1020,7 @@ export function AvailabilityEditor({
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
-                        <PanelSwitch checked={on} disabled={scheduleControlsDisabled} />
+                        <AvailabilitySwitch checked={on} disabled={scheduleControlsDisabled} />
                       </button>
                     </div>
 
@@ -1059,7 +1078,7 @@ export function AvailabilityEditor({
                             aria-label={t(`weekday${wd}` as `weekday${number}`)}
                             aria-pressed={false}
                           >
-                            <PanelSwitch checked={false} disabled={scheduleControlsDisabled} />
+                            <AvailabilitySwitch checked={false} disabled={scheduleControlsDisabled} />
                           </button>
                         </div>
                       ))}

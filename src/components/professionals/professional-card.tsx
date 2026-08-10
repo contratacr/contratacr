@@ -168,16 +168,20 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
-  const profileHref = (() => {
-    return `/profesionales/${professional.slug}`;
-  })();
+  const appendReturnPath = (href: string) => {
+    if (!searchReturnHref) return href;
+    const [pathAndQuery, hash = ""] = href.split("#");
+    const separator = pathAndQuery.includes("?") ? "&" : "?";
+    return `${pathAndQuery}${separator}from=${encodeURIComponent(searchReturnHref)}${hash ? `#${hash}` : ""}`;
+  };
+  const profileHref = appendReturnPath(`/profesionales/${professional.slug}`);
   const reviewsHref = (() => {
     const params = new URLSearchParams({ tab: "resenas" });
-    return `/profesionales/${professional.slug}?${params.toString()}#resenas`;
+    return appendReturnPath(`/profesionales/${professional.slug}?${params.toString()}#resenas`);
   })();
   const casesHref = (() => {
     const params = new URLSearchParams({ tab: "casos" });
-    return `/profesionales/${professional.slug}?${params.toString()}#casos`;
+    return appendReturnPath(`/profesionales/${professional.slug}?${params.toString()}#casos`);
   })();
   const portfolioCount = professional.portfolioCount ?? 0;
   const followerCount = professional.followerCount ?? 0;

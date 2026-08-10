@@ -8,7 +8,7 @@ import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, Check, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
-  BriefcaseBusiness, BadgePercent, Star,
+  BriefcaseBusiness, Star,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -29,6 +29,7 @@ import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 import { ClientConnections } from "@/components/dashboard/client-connections";
+import { ClientJobApplications } from "@/components/dashboard/client-job-applications";
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
 import { applyPendingFollow } from "@/components/professionals/follow-button";
 import { FollowNetworkTab } from "@/components/professionals/follow-network-tab";
@@ -50,6 +51,7 @@ import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { Modal } from "@/components/ui/modal";
 import { notificationContext } from "@/lib/notification-link";
 import { Link, useRouter } from "@/i18n/navigation";
+import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { DashboardRouteLoading } from "@/components/ui/route-loading";
@@ -60,6 +62,7 @@ import {
   type DashboardProfileData,
 } from "@/lib/dashboard-bootstrap-cache";
 import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
 // "Usar servicios" (the seek capability, always available) and "Ofrecer servicios"
@@ -69,7 +72,7 @@ type Tab =
   | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "jobs" | "offers" | "completion"
   | "suscripcion"
-  | "sent_bookings" | "sent_projects" | "saved" | "connections" | "network"
+  | "sent_bookings" | "sent_projects" | "applications" | "saved" | "connections" | "network"
   | "chat" | "notifications" | "soporte" | "cuenta" | "guides";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,7 +80,7 @@ type ProData = Record<string, any>;
 
 const ALL_TABS = new Set<Tab>([
   "home", "profile", "services", "photos", "availability", "bookings", "proposals", "verificacion",
-  "jobs", "offers", "completion", "suscripcion", "sent_bookings", "sent_projects", "saved", "connections",
+  "jobs", "offers", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
   "network", "chat", "notifications", "soporte", "cuenta", "guides",
 ]);
 
@@ -93,6 +96,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   suscripcion: <CreditCard className="h-4 w-4" />,
   sent_bookings: <CalendarClock className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
+  applications: <BriefcaseBusiness className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
   connections: <Users className="h-4 w-4" />,
   network: <Users className="h-4 w-4" />,
@@ -102,7 +106,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   cuenta: <Settings className="h-4 w-4" />,
   guides: <FileText className="h-4 w-4" />,
   jobs: <BriefcaseBusiness className="h-4 w-4" />,
-  offers: <BadgePercent className="h-4 w-4" />,
+  offers: <OfferTagPercentIcon className="h-4 w-4" />,
   completion: <CheckCircle2 className="h-4 w-4" />,
 };
 
@@ -113,14 +117,14 @@ const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_pro
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
 const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
-const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved", "connections"]);
+const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "applications", "saved", "connections"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
-  "bookings", "proposals", "photos", "availability", "services", "jobs", "offers", "soporte", "profile", "guides",
+  "bookings", "proposals", "jobs", "offers", "photos", "availability", "services", "soporte", "profile", "guides",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
-const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "saved", "connections", "soporte", "profile", "guides"];
+const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "applications", "connections", "saved", "soporte", "profile", "guides"];
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
@@ -128,11 +132,12 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   proposals: { es: "Proyectos Recibidos", en: "Received projects" },
   sent_bookings: { es: "Mis solicitudes", en: "My requests" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
+  applications: { es: "Mis postulaciones", en: "My applications" },
   connections: { es: "Conexiones", en: "Connections" },
   photos: { es: "Casos de éxito", en: "Success cases" },
   availability: { es: "Disponibilidad", en: "Availability" },
   services: { es: "Servicios", en: "Services" },
-  saved: { es: "Guardados", en: "Saved" },
+  saved: { es: "Favoritos", en: "Favorites" },
   soporte: { es: "Soporte", en: "Support" },
   profile: { es: "Perfil", en: "Profile" },
   jobs: { es: "Empleos", en: "Jobs" },
@@ -151,28 +156,31 @@ type GuideItem = {
 };
 
 const GUIDE_ITEMS: GuideItem[] = [
-  { id: "clientPanel", section: "client", actionTab: "home", targetMode: "use", stepCount: 4 },
+  { id: "clientPanel", section: "client", actionTab: "home", targetMode: "use", stepCount: 5 },
   { id: "clientRequests", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 3 },
   { id: "clientProjects", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 3 },
-  { id: "clientSaved", section: "client", actionTab: "saved", targetMode: "use", stepCount: 3 },
+  { id: "clientApplications", section: "client", actionTab: "applications", targetMode: "use", stepCount: 4 },
+  { id: "clientSaved", section: "client", actionTab: "saved", targetMode: "use", stepCount: 4 },
   { id: "clientConnections", section: "client", actionTab: "connections", targetMode: "use", stepCount: 3 },
   { id: "clientProfile", section: "client", actionTab: "profile", targetMode: "use", stepCount: 3 },
   { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
+  { id: "jobsGuide", section: "shared", href: "/empleos", stepCount: 4 },
+  { id: "offersGuide", section: "shared", href: "/ofertas", stepCount: 4 },
   { id: "followingGuide", section: "shared", actionTab: "network", stepCount: 4 },
-  { id: "notificationsGuide", section: "shared", actionTab: "notifications", stepCount: 4 },
-  { id: "reviewsGuide", section: "shared", href: "/buscar", stepCount: 3 },
+  { id: "notificationsGuide", section: "shared", actionTab: "notifications", stepCount: 5 },
+  { id: "reviewsGuide", section: "shared", href: "/buscar", stepCount: 4 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
   { id: "accountSecurityGuide", section: "shared", actionTab: "cuenta", stepCount: 4 },
   { id: "professionalPanel", section: "professional", actionTab: "home", targetMode: "offer", stepCount: 4 },
   { id: "completionGuide", section: "professional", actionTab: "completion", targetMode: "offer", stepCount: 4 },
   { id: "requests", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 3 },
   { id: "opportunities", section: "professional", actionTab: "proposals", targetMode: "offer", stepCount: 3 },
-  { id: "successCases", section: "professional", actionTab: "photos", targetMode: "offer", stepCount: 3 },
-  { id: "availability", section: "professional", actionTab: "availability", targetMode: "offer", stepCount: 3 },
+  { id: "successCases", section: "professional", actionTab: "photos", targetMode: "offer", stepCount: 4 },
+  { id: "availability", section: "professional", actionTab: "availability", targetMode: "offer", stepCount: 4 },
   { id: "services", section: "professional", actionTab: "services", targetMode: "offer", stepCount: 4 },
-  { id: "jobsGuide", section: "professional", actionTab: "jobs", targetMode: "offer", stepCount: 4 },
-  { id: "offersGuide", section: "professional", actionTab: "offers", targetMode: "offer", stepCount: 4 },
-  { id: "professionalProfile", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 4 },
+  { id: "jobsPanel", section: "professional", actionTab: "jobs", targetMode: "offer", stepCount: 4 },
+  { id: "offersPanel", section: "professional", actionTab: "offers", targetMode: "offer", stepCount: 4 },
+  { id: "professionalProfile", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 5 },
 ];
 
 function guideIcon(id: string) {
@@ -194,12 +202,12 @@ function guideIcon(id: string) {
     case "completionGuide":
       return <Sparkles className="h-4 w-4" />;
     case "jobsGuide":
+    case "jobsPanel":
+    case "clientApplications":
       return <BriefcaseBusiness className="h-4 w-4" />;
     case "offersGuide":
     case "offersPanel":
-      return <BadgePercent className="h-4 w-4" />;
-    case "jobsPanel":
-      return <BriefcaseBusiness className="h-4 w-4" />;
+      return <OfferTagPercentIcon className="h-4 w-4" />;
     case "messages":
       return <MessageSquareMore className="h-4 w-4" />;
     case "clientRequests":
@@ -240,6 +248,13 @@ function compactMobileDisplayName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length >= 4) return [parts[0], ...parts.slice(-2)].join(" ");
   return name;
+}
+
+function compactClientMobileDisplayName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return name;
+  const firstSurnameIndex = parts.length >= 4 ? parts.length - 2 : 1;
+  return `${parts[0]} ${parts[firstSurnameIndex]}`;
 }
 
 type OpportunityProjectSummary = { id?: string | null };
@@ -381,14 +396,8 @@ function QuickGuidesModal({
         </div>
 
         <div className="mt-5 rounded-2xl border border-[#dfe8f0] bg-[#f8fbfe] px-4 py-4 sm:px-5">
-          <p className="text-sm font-semibold text-[#162543]">
-            {locale === "en" ? "Need more help?" : "¿Necesitas más ayuda?"}
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-[#526277]">
-            {locale === "en"
-              ? "If you still have questions, open support and we'll help you from there."
-              : "Si todavía tienes dudas, abre soporte y te ayudamos desde ahí."}
-          </p>
+          <p className="text-sm font-semibold text-[#162543]">{t("supportTitle")}</p>
+          <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("supportBody")}</p>
           <Button
             type="button"
             variant="outline"
@@ -398,7 +407,7 @@ function QuickGuidesModal({
               window.location.assign(`/${locale}/dashboard/profesional?tab=soporte`);
             }}
           >
-            {locale === "en" ? "Contact support" : "Contactar soporte"}
+            {t("supportCta")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -503,7 +512,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
         </div>
         <div className="overflow-hidden rounded-xl border border-[#e5e7eb]">
           <div className="flex h-24 items-center justify-center bg-[#f4f8fb] text-[#009FD9]">
-            <BadgePercent className="h-8 w-8" />
+            <OfferTagPercentIcon className="h-8 w-8" />
           </div>
           <div className="p-3">
             <p className="text-sm font-bold text-[#111827]">{t("preview.offers.offer")}</p>
@@ -1278,14 +1287,15 @@ export default function DashboardPage() {
   }
 
   function handleSaved(intent: "section" | "internal" = "section") {
-    if (intent === "internal") {
-      void refreshDashboardAfterSave();
-      return;
-    }
     const storedCompletionField = typeof window !== "undefined"
       ? window.sessionStorage.getItem("contratacr:profile-completion-field")
       : null;
     const cameFromCompletion = !!completionFlowField || !!storedCompletionField;
+
+    if (intent === "internal" && !cameFromCompletion) {
+      void refreshDashboardAfterSave();
+      return;
+    }
 
     if (cameFromCompletion) {
       goToCompletionChecklist({ clearFlow: false });
@@ -1443,7 +1453,11 @@ export default function DashboardPage() {
   const professionalDisplayName = businessName || personalDisplayName;
   const displayName = mode === "offer" ? professionalDisplayName : personalDisplayName;
   const compactHeaderName = compactDisplayName(displayName);
-  const compactMobileHeaderName = compactMobileDisplayName(displayName);
+  const compactMobileHeaderName = mode === "use"
+    ? compactClientMobileDisplayName(personalDisplayName)
+    : businessName
+      ? compactMobileDisplayName(businessName)
+      : compactClientMobileDisplayName(personalDisplayName);
   const headerAvatar = profile?.avatar_url || proProfile?.avatar_url || null;
   const proForCompletion = pro && headerAvatar && !proProfile?.avatar_url
     ? { ...pro, profiles: { ...(proProfile ?? {}), avatar_url: headerAvatar } }
@@ -1770,7 +1784,14 @@ export default function DashboardPage() {
 
   function identityBadge() {
     if (clientVerified || pro?.verification_status === "verified") {
-      return <Badge variant="verified">{t("identityVerified")}</Badge>;
+      return (
+        <Badge
+          variant="verified"
+          className="shrink-0 whitespace-nowrap px-2 py-1 text-[11px] leading-none sm:px-2.5 sm:py-0.5 sm:text-xs sm:leading-normal"
+        >
+          {t("identityVerified")}
+        </Badge>
+      );
     }
     if (!pro) return null;
     return (
@@ -1780,7 +1801,7 @@ export default function DashboardPage() {
           requestUnsavedAction(() => openProfileVerification());
         }}
         title={t("verifyInvite")}
-        className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
+        className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2 py-1 text-[11px] font-medium leading-none text-[#6b7280] transition-colors hover:bg-[#e5e7eb] sm:px-2.5 sm:py-0.5 sm:text-xs sm:leading-normal"
       >
         {t("notVerifiedBadge")}
       </button>
@@ -1929,8 +1950,8 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="min-w-0 self-center">
-                <div className="flex min-w-0 max-w-full items-center gap-2">
-                  <h1 className="min-w-0 truncate whitespace-nowrap text-xl font-bold leading-tight text-[#162543] sm:text-2xl" title={displayName}>
+                <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-1.5 sm:gap-2">
+                  <h1 className="shrink-0 whitespace-nowrap text-[15px] font-bold leading-tight text-[#162543] sm:min-w-0 sm:shrink sm:truncate sm:text-2xl" title={displayName}>
                     <span className="sm:hidden">{compactMobileHeaderName}</span>
                     <span className="hidden sm:inline">{compactHeaderName}</span>
                   </h1>
@@ -1943,6 +1964,7 @@ export default function DashboardPage() {
                   {publicProfileHref && (
                     <Link
                       href={publicProfileHref}
+                      onClick={openInNewTabOnDesktop}
                       aria-label={locale === "en" ? "View my profile" : "Ver mi perfil"}
                       className="inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
                     >
@@ -1956,6 +1978,7 @@ export default function DashboardPage() {
                 {publicProfileHref && (
                   <Link
                     href={publicProfileHref}
+                    onClick={openInNewTabOnDesktop}
                     className="hidden h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb] sm:inline-flex"
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -1983,7 +2006,7 @@ export default function DashboardPage() {
             </div>
           </div>
           {((activeTab === "home") || (mode === "offer" && activeTab !== "completion" && activeTab !== "chat")) && !mobileProfileSectionTitle && showProfileCompletion && proForCompletion && (
-            <div className="mx-auto mb-6 hidden w-full max-w-[79.5rem] lg:block">
+            <div className="mx-auto mb-6 hidden w-full max-w-[79.5rem] empty:mb-0 lg:block lg:empty:hidden">
               <ProfileCompletion
                 pro={proForCompletion}
                 variant="summary"
@@ -2084,7 +2107,7 @@ export default function DashboardPage() {
                       activeTab === "home" && "rounded-none border-0 bg-transparent shadow-none lg:hidden",
                       activeTab === "chat" && "overflow-hidden",
                       activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[62rem]",
-                      singleSurfaceTab && "border-0 bg-transparent shadow-none",
+                      singleSurfaceTab && "!border-0 !bg-transparent !shadow-none",
                       mobileSectionOpen && !singleSurfaceTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-[#dfe8f0] lg:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]",
                     )}>
                       {activeTab !== "chat" && activeTab !== "home" && !singleSurfaceTab && <CardHeader className="hidden border-b border-[#eef3f7] bg-white px-5 py-4 sm:px-6 lg:block">
@@ -2111,16 +2134,16 @@ export default function DashboardPage() {
                       </CardHeader>}
                       <CardContent className={mobileSectionOpen ? cn(
                         "min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-white px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-5",
-                        singleSurfaceTab && "lg:px-0 lg:pb-0 lg:pt-0"
+                        singleSurfaceTab && "!bg-transparent lg:px-0 lg:pb-0 lg:pt-0"
                       ) : cn(
                         "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6",
                         activeTab === "home" && "px-0 sm:px-0",
-                        singleSurfaceTab && "px-0 pt-0 pb-0 sm:px-0 sm:pt-0 sm:pb-0",
+                        singleSurfaceTab && "!bg-transparent px-0 pt-0 pb-0 sm:px-0 sm:pt-0 sm:pb-0",
                       )}>
                         {activeTab === "home" && (
                           <>
                             {showProfileCompletion && proForCompletion && !mobileProfileSectionTitle && (
-                              <div className="pb-4 lg:hidden">
+                              <div className="pb-4 empty:pb-0 lg:hidden empty:hidden">
                                 <ProfileCompletion
                                   pro={proForCompletion}
                                   variant="summary"
@@ -2217,7 +2240,7 @@ export default function DashboardPage() {
                             primaryCategory={pro.category_id}
                             initialProfessions={pro.professions ?? []}
                             initialServices={pro.services ?? []}
-                            onSaved={() => handleSaved("section")}
+                            onSaved={(intent) => handleSaved(intent ?? "section")}
                             focusField={serviceFocus?.field ?? null}
                             focusKey={serviceFocus?.key}
                           />
@@ -2257,6 +2280,7 @@ export default function DashboardPage() {
                         {/* "Usar servicios", the seek capability. */}
                         {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
+                        {activeTab === "applications" && <ClientJobApplications />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
                         {activeTab === "connections" && <ClientConnections />}
                         {activeTab === "network" && <FollowNetworkTab onBack={() => requestUnsavedAction(() => setTab("home"))} />}
@@ -2278,6 +2302,11 @@ export default function DashboardPage() {
                           <ProfileCompletion
                             pro={proForCompletion}
                             variant="details"
+                            onComplete={() => {
+                              clearCompletionFlow();
+                              setTab("home", true);
+                              scrollDashboardToPageTop();
+                            }}
                             onGo={(tab, field) => {
                               requestUnsavedAction(() => openCompletionTarget(tab, field));
                             }}

@@ -6,6 +6,8 @@ const routes = [
   "/es/categorias",
   "/es/servicios",
   "/es/buscar",
+  "/es/empleos",
+  "/es/ofertas",
   "/es/login",
   "/es/registro",
   "/es/registro/cliente",
@@ -24,6 +26,8 @@ const routes = [
   "/en/categorias",
   "/en/servicios",
   "/en/buscar",
+  "/en/empleos",
+  "/en/ofertas",
   "/en/login",
   "/en/registro",
   "/en/registro/cliente",
@@ -61,7 +65,7 @@ test.describe("@smoke public routes", () => {
       await expect(page.getByRole("link", { name: /Ofrecer mis servicios/i }).first()).toBeVisible();
     } else {
       await expect(page.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
-      await expect(page.getByRole("button", { name: /^Recursos$/i }).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: /Ofrecer mis servicios/i }).first()).toBeVisible();
     }
@@ -125,11 +129,13 @@ test.describe("@smoke public routes", () => {
   test("services search uses the canonical design and art label", async ({ page }, testInfo) => {
     await gotoOK(page, "/es/servicios");
     await waitForInteractivePage(page);
-    const pageSearch = page.locator('[data-testid="services-page-search"] input').first();
+    const pageSearch = page
+      .getByTestId(isMobileProject(testInfo) ? "services-page-mobile-search" : "services-page-search")
+      .locator("input");
     await expect(pageSearch).toBeVisible();
     await pageSearch.fill("diseño");
 
-    await expect(page.getByText("Diseño y arte").first()).toBeVisible();
+    await expect(page.locator("main").getByText("Diseño y arte", { exact: true }).filter({ visible: true }).first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/Diseño\s*\/\s*Arte|Diseno/i);
     await expectHealthyPage(page);
 

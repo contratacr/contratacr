@@ -37,6 +37,17 @@ export const E2E_USERS = {
   },
 } as const;
 
+const REGRESSION_IDS = {
+  publishedJob: "00000000-0000-4000-8000-00000000e201",
+  secondaryJob: "00000000-0000-4000-8000-00000000e202",
+  pausedJob: "00000000-0000-4000-8000-00000000e203",
+  closedJob: "00000000-0000-4000-8000-00000000e204",
+  publishedOffer: "00000000-0000-4000-8000-00000000e301",
+  secondaryOffer: "00000000-0000-4000-8000-00000000e302",
+  pausedOffer: "00000000-0000-4000-8000-00000000e303",
+  application: "00000000-0000-4000-8000-00000000e401",
+} as const;
+
 type E2EUserConfig = {
   email: string;
   password: string;
@@ -60,6 +71,14 @@ export type RegressionSeedState = {
   videoSlotDate: string;
   videoSharedSlotTime: string;
   videoSecondSlotTime: string;
+  publishedJobId: string;
+  secondaryJobId: string;
+  pausedJobId: string;
+  closedJobId: string;
+  publishedOfferId: string;
+  secondaryOfferId: string;
+  pausedOfferId: string;
+  applicationId: string;
 };
 
 type AdminClient = SupabaseClient;
@@ -218,6 +237,14 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
     videoSlotDate: futureDate(9),
     videoSharedSlotTime: "10:00",
     videoSecondSlotTime: "11:00",
+    publishedJobId: REGRESSION_IDS.publishedJob,
+    secondaryJobId: REGRESSION_IDS.secondaryJob,
+    pausedJobId: REGRESSION_IDS.pausedJob,
+    closedJobId: REGRESSION_IDS.closedJob,
+    publishedOfferId: REGRESSION_IDS.publishedOffer,
+    secondaryOfferId: REGRESSION_IDS.secondaryOffer,
+    pausedOfferId: REGRESSION_IDS.pausedOffer,
+    applicationId: REGRESSION_IDS.application,
   };
 }
 
@@ -330,6 +357,9 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
       description: "Reparación de fugas, sanitarios, lavamanos y tuberías para pruebas E2E.",
       priceAmount: 120000,
       priceType: "por_proyecto",
+      startedAt: "2019-01",
+      years: 7,
+      months: 0,
       active: true,
       modalities: ["in_person"],
     },
@@ -463,9 +493,227 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   await admin.from("bookings").delete().eq("client_id", clientUser.id).ilike("service_description", "E2E Regression%");
   await admin.from("bookings").delete().eq("professional_id", professional.id).ilike("service_description", "E2E Regression%");
   await admin.from("bookings").delete().eq("professional_id", videoProfessional.id).ilike("service_description", "E2E Regression%");
+  await admin.from("bookings").delete().eq("client_id", clientUser.id).ilike("service_description", "E2E review%");
   await admin.from("notifications").delete().in("user_id", [clientUser.id, proUser.id, videoProUser.id]);
   await admin.from("availability_slots").delete().eq("professional_id", professional.id);
   await admin.from("availability_slots").delete().eq("professional_id", videoProfessional.id);
+
+  const regressionJobIds = [
+    REGRESSION_IDS.publishedJob,
+    REGRESSION_IDS.secondaryJob,
+    REGRESSION_IDS.pausedJob,
+    REGRESSION_IDS.closedJob,
+  ];
+  const regressionOfferIds = [
+    REGRESSION_IDS.publishedOffer,
+    REGRESSION_IDS.secondaryOffer,
+    REGRESSION_IDS.pausedOffer,
+  ];
+  await admin.from("saved_items").delete().eq("user_id", clientUser.id).in("item_id", [...regressionJobIds, ...regressionOfferIds]);
+  await admin.from("job_applications").delete().in("job_id", regressionJobIds);
+  await admin.from("professional_activity").delete().in("content_id", [...regressionJobIds, ...regressionOfferIds]);
+  await admin.from("job_posts").delete().in("id", regressionJobIds);
+  await admin.from("professional_offers").delete().in("id", regressionOfferIds);
+  await admin.from("professional_follows").delete().eq("follower_id", clientUser.id).in("professional_id", [professional.id, videoProfessional.id]);
+
+  const { error: followError } = await admin.from("professional_follows").insert([
+    { follower_id: clientUser.id, professional_id: professional.id },
+    { follower_id: clientUser.id, professional_id: videoProfessional.id },
+  ]);
+  if (followError) throw followError;
+
+  const createdAt = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { error: jobsError } = await admin.from("job_posts").insert([
+    {
+      id: REGRESSION_IDS.publishedJob,
+      employer_id: professional.id,
+      title: "E2E Asistente de operaciones",
+      description: "Empleo publicado para validar postulaciones, guardados y estados del panel en la regresión E2E.",
+      responsibilities: ["Coordinar solicitudes de clientes", "Preparar reportes semanales"],
+      requirements: ["Comunicación clara", "Un año de experiencia"],
+      benefits: ["Horario flexible", "Capacitación"],
+      employment_type: "full_time",
+      workplace_type: "onsite",
+      provincia_id: "al",
+      canton_id: "al-al",
+      location_label: "Alajuela, Alajuela",
+      salary_min: 450000,
+      salary_max: 650000,
+      salary_period: "monthly",
+      currency: "CRC",
+      show_salary: true,
+      openings: 2,
+      application_deadline: futureDate(30),
+      status: "published",
+      service_category_id: "plomeria",
+      duration_label: "Permanente",
+      experience_level: "one_plus",
+      created_at: createdAt,
+      updated_at: createdAt,
+    },
+    {
+      id: REGRESSION_IDS.secondaryJob,
+      employer_id: videoProfessional.id,
+      title: "E2E Desarrollador web remoto",
+      description: "Vacante remota disponible para probar una postulación nueva y la navegación responsive completa.",
+      responsibilities: ["Crear interfaces accesibles", "Revisar cambios de código"],
+      requirements: ["Experiencia con aplicaciones web", "Inglés intermedio"],
+      benefits: ["Trabajo remoto"],
+      employment_type: "contract",
+      workplace_type: "remote",
+      location_label: "Costa Rica",
+      salary_min: 900000,
+      salary_max: 1300000,
+      salary_period: "monthly",
+      currency: "CRC",
+      show_salary: true,
+      openings: 1,
+      application_deadline: futureDate(45),
+      status: "published",
+      service_category_id: "desarrollo_web",
+      duration_label: "6 meses",
+      experience_level: "two_plus",
+      created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    },
+    {
+      id: REGRESSION_IDS.pausedJob,
+      employer_id: professional.id,
+      title: "E2E Técnico de mantenimiento",
+      description: "Vacante pausada para comprobar que el panel profesional conserva las acciones y el estado correcto.",
+      responsibilities: ["Atender mantenimientos preventivos"],
+      requirements: ["Disponibilidad para desplazarse"],
+      benefits: [],
+      employment_type: "temporary",
+      workplace_type: "hybrid",
+      provincia_id: "al",
+      canton_id: "al-at",
+      location_label: "Atenas, Alajuela",
+      salary_period: "monthly",
+      currency: "CRC",
+      show_salary: false,
+      openings: 1,
+      status: "paused",
+      service_category_id: "plomeria",
+      duration_label: "3 meses",
+      experience_level: "any",
+      created_at: createdAt,
+      updated_at: createdAt,
+    },
+    {
+      id: REGRESSION_IDS.closedJob,
+      employer_id: professional.id,
+      title: "E2E Coordinador de instalaciones",
+      description: "Vacante cerrada para validar filtros históricos y evitar acciones disponibles fuera de estado.",
+      responsibilities: ["Supervisar instalaciones"],
+      requirements: ["Experiencia coordinando equipos"],
+      benefits: [],
+      employment_type: "full_time",
+      workplace_type: "onsite",
+      provincia_id: "al",
+      canton_id: "al-al",
+      location_label: "Alajuela, Alajuela",
+      salary_period: "monthly",
+      currency: "CRC",
+      show_salary: false,
+      openings: 1,
+      status: "closed",
+      service_category_id: "plomeria",
+      experience_level: "three_plus",
+      created_at: createdAt,
+      updated_at: createdAt,
+    },
+  ]);
+  if (jobsError) throw jobsError;
+
+  const { error: offersError } = await admin.from("professional_offers").insert([
+    {
+      id: REGRESSION_IDS.publishedOffer,
+      professional_id: professional.id,
+      title: "E2E Mantenimiento residencial",
+      description: "Oferta publicada con imagen, descuento, cobertura y disponibilidad para las pruebas de regresión.",
+      offer_type: "service_offer",
+      service_label: "Plomería",
+      service_category_id: "plomeria",
+      image_urls: ["/showcase/sg-solutions.jpg"],
+      price_now: 25000,
+      price_before: 35000,
+      currency: "CRC",
+      price_unit: "total",
+      location_label: "Alajuela, Alajuela",
+      valid_until: futureDate(30),
+      quantity_available: 8,
+      status: "published",
+      created_at: createdAt,
+      updated_at: createdAt,
+    },
+    {
+      id: REGRESSION_IDS.secondaryOffer,
+      professional_id: videoProfessional.id,
+      title: "E2E Sitio web para pyme",
+      description: "Paquete sin imagen para comprobar el fallback visual y la navegación hacia el perfil profesional.",
+      offer_type: "package",
+      service_label: "Desarrollo web",
+      service_category_id: "desarrollo_web",
+      image_urls: [],
+      price_now: 180000,
+      currency: "CRC",
+      price_unit: "project",
+      location_label: "Todo Costa Rica",
+      quantity_available: 4,
+      status: "published",
+      created_at: createdAt,
+      updated_at: createdAt,
+    },
+    {
+      id: REGRESSION_IDS.pausedOffer,
+      professional_id: professional.id,
+      title: "E2E Diagnóstico de tuberías",
+      description: "Oferta pausada para validar acciones secundarias y filtros en el panel profesional.",
+      offer_type: "service_offer",
+      service_label: "Plomería",
+      service_category_id: "plomeria",
+      image_urls: [],
+      price_now: 15000,
+      currency: "CRC",
+      price_unit: "session",
+      location_label: "Alajuela, Alajuela",
+      status: "paused",
+      created_at: createdAt,
+      updated_at: createdAt,
+    },
+  ]);
+  if (offersError) throw offersError;
+
+  const { error: applicationError } = await admin.from("job_applications").insert({
+    id: REGRESSION_IDS.application,
+    job_id: REGRESSION_IDS.publishedJob,
+    applicant_id: clientUser.id,
+    applicant_email: E2E_USERS.client.email,
+    cover_letter: "E2E Regression: deseo participar en el proceso y cuento con la experiencia solicitada.",
+    phone: E2E_USERS.client.phone,
+    portfolio_url: "https://contratacr.com",
+    status: "reviewing",
+    created_at: createdAt,
+    updated_at: createdAt,
+  });
+  if (applicationError) throw applicationError;
+
+  const { error: savedError } = await admin.from("saved_items").insert([
+    {
+      user_id: clientUser.id,
+      item_type: "job",
+      item_id: REGRESSION_IDS.publishedJob,
+      snapshot: { title: "E2E Asistente de operaciones", employer: E2E_USERS.professional.fullName },
+    },
+    {
+      user_id: clientUser.id,
+      item_type: "offer",
+      item_id: REGRESSION_IDS.publishedOffer,
+      snapshot: { title: "E2E Mantenimiento residencial", professional: E2E_USERS.professional.fullName },
+    },
+  ]);
+  if (savedError) throw savedError;
 
   const slotDate = futureDate(8);
   const videoSlotDate = futureDate(9);
@@ -535,5 +783,13 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
     videoSlotDate,
     videoSharedSlotTime: "10:00",
     videoSecondSlotTime: "11:00",
+    publishedJobId: REGRESSION_IDS.publishedJob,
+    secondaryJobId: REGRESSION_IDS.secondaryJob,
+    pausedJobId: REGRESSION_IDS.pausedJob,
+    closedJobId: REGRESSION_IDS.closedJob,
+    publishedOfferId: REGRESSION_IDS.publishedOffer,
+    secondaryOfferId: REGRESSION_IDS.secondaryOffer,
+    pausedOfferId: REGRESSION_IDS.pausedOffer,
+    applicationId: REGRESSION_IDS.application,
   };
 }

@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, Navigation, LocateFixed,
-  Briefcase, BadgePercent, Compass, Wrench,
-  UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
+  Briefcase, Compass, Wrench,
+  UserRound, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -29,6 +29,7 @@ import { allLocationSuggestions, searchLocations, resolveLocation, type Location
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
+import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 
 /* --- Brand mark (the square "CR" icon) --- */
 export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
@@ -635,25 +636,22 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
    rendered in BOTH the default header row AND the compact/scrolled row
    without sharing state. */
 interface AccountMenuProps {
-  user: { email?: string | null };
   isPro: boolean;
   displayName: string;
-  avatarUrl: string | null;
-  avatarReady: boolean;
-  initials: string;
   professionalPanelHref: string;
   clientPanelHref: string;
+  profileHref: string;
   onSignOut: () => void;
 }
 
 export function AccountMenu({
-  user, isPro, displayName, avatarUrl, avatarReady, initials,
-  professionalPanelHref, clientPanelHref, onSignOut,
+  isPro, displayName, professionalPanelHref, clientPanelHref, profileHref, onSignOut,
 }: AccountMenuProps) {
   const t = useTranslations("header");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const menuItemClass = "flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors";
+  const menuItemClass = "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]";
 
   useEffect(() => {
     function onClickOutside(e: Event) {
@@ -675,16 +673,15 @@ export function AccountMenu({
     <div ref={ref} className="relative">
       <button
         onClick={toggle}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#1A2744] ring-2 ring-transparent transition-all hover:bg-[#f8fbfd] hover:text-[#009FD9] hover:ring-[#009FD9]/20"
-        aria-label={displayName || user.email || t("myPanel")}
+        className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+        aria-label={displayName || t("myPanel")}
       >
         <UserRound className="h-5 w-5" />
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-2 max-h-[min(720px,calc(100vh-92px))] w-72 overflow-y-auto bg-white border border-gray-100 rounded-2xl shadow-[0_22px_55px_-18px_rgba(15,23,42,0.45)] z-50 py-1.5">
-          <div className="px-3 py-2 border-b border-gray-50 mb-1">
-            {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
-            <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
+          <div className="mb-1 border-b border-gray-100 px-3 py-2.5">
+            <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myPanel")}</p>
           </div>
 
           <div className="pt-1">
@@ -696,14 +693,22 @@ export function AccountMenu({
               <UserRound className="h-4 w-4 text-[#009FD9]" />
               {t("myPanel")}
             </Link>
+            <Link
+              href={profileHref}
+              onClick={() => setOpen(false)}
+              className={menuItemClass}
+            >
+              <Settings className="h-4 w-4 text-[#009FD9]" />
+              {locale === "en" ? "Profile and account" : "Perfil y cuenta"}
+            </Link>
           </div>
 
           <button
             onClick={onSignOut}
-            className="w-full flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            className="mt-1 flex w-full items-center gap-2.5 border-t border-gray-100 px-3 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
           >
             <LogOut className="h-4 w-4" />
-            {t("signOut")}
+            {locale === "en" ? "Sign out" : "Cerrar sesión"}
           </button>
         </div>
       )}
@@ -749,7 +754,7 @@ function DrawerIcon({ children }: { children: ReactNode }) {
   );
 }
 
-function ResourceIcon({ name, className = "h-5 w-5 text-[#64748b]" }: { name: string; className?: string }) {
+function ResourceIcon({ name, className = "h-5 w-5 shrink-0" }: { name: string; className?: string }) {
   if (name === "howItWorks") return <ListChecks className={className} />;
   if (name === "helpCenter") return <HelpCircle className={className} />;
   if (name === "proTips") return <Lightbulb className={className} />;
@@ -790,6 +795,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [isSmallScreen, setIsSmallScreen] = useState(true);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const servicesMenuRef = useRef<HTMLDivElement>(null);
+  const exploreMenuRef = useRef<HTMLDivElement>(null);
   const resourcesMenuRef = useRef<HTMLDivElement>(null);
   const drawerTouchX = useRef<number | null>(null);
   const router = useRouter();
@@ -807,6 +813,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const { user, loading: authLoading } = useAuth();
   const nativeBottomNavVisible = nativeBottomShell && !!user;
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
+  const [accountBusinessName, setAccountBusinessName] = useState("");
   const isHomePage = pathname === "/";
   const compactEnabled = true;
   const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
@@ -938,6 +945,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const professionalPanelHref = `${panelHref}?mode=offer`;
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
+  const profilePanelHref = `${panelHref}?mode=${isPro && mode === "offer" ? "offer" : "use"}&tab=profile`;
+  const accountDisplayName =
+    accountBusinessName || String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
   const nativePanelHref = user ? primaryPanelHref : loginHref;
   const nativeMessagesHref = "/mensajes";
 
@@ -961,6 +971,28 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       cancelled = true;
     };
   }, [user]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user || !isPro) {
+      queueMicrotask(() => setAccountBusinessName(""));
+      return;
+    }
+
+    const loadBusinessName = async () => {
+      const { data } = await createClient()
+        .from("professionals")
+        .select("business_name")
+        .eq("profile_id", user.id)
+        .maybeSingle();
+      if (!cancelled) setAccountBusinessName(String(data?.business_name || "").trim());
+    };
+    void loadBusinessName();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPro, user]);
 
   // Warm the two most common destinations after the current page settles. This
   // keeps the initial render light while making the first panel/search transition
@@ -1097,10 +1129,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }, [compactEnabled]);
 
   useEffect(() => {
-    if (openMenu !== "categorias" && openMenu !== "recursos") return;
+    if (openMenu !== "categorias" && openMenu !== "explorar" && openMenu !== "recursos") return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (openMenu === "categorias" && servicesMenuRef.current?.contains(target)) return;
+      if (openMenu === "explorar" && exploreMenuRef.current?.contains(target)) return;
       if (openMenu === "recursos" && resourcesMenuRef.current?.contains(target)) return;
       setOpenMenu(null);
     };
@@ -1370,7 +1403,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 )}
                 aria-label={t("openMenu")}
               >
-                <Menu className="h-6 w-6 stroke-[3]" />
+                <Menu className="h-5 w-5 stroke-[2.5]" />
               </button>
 
               <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "min-w-0 justify-self-center")}>
@@ -1470,32 +1503,40 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Link
                   href="/buscar"
                   className={cn(
-                    "relative flex items-center rounded-xl py-2 text-sm font-medium text-[#1A2744] transition-colors after:absolute after:bottom-[-4px] after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:bg-gray-50 hover:text-[#009FD9] hover:after:opacity-100",
-                    marketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4"
+                    "relative flex items-center rounded-xl py-2 text-sm font-medium text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]",
+                    marketplaceDesktop ? "px-2.5" : "px-4"
                   )}
                 >
                   {locale === "en" ? "Find professionals" : "Buscar profesionales"}
                 </Link>
 
-                <Link
-                  href="/empleos"
-                  className={cn(
-                    "relative flex items-center rounded-xl py-2 text-sm font-medium text-[#1A2744] transition-colors after:absolute after:bottom-[-4px] after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:bg-gray-50 hover:text-[#009FD9] hover:after:opacity-100",
-                    marketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4"
+                <div ref={exploreMenuRef} className="relative">
+                  <button
+                    type="button"
+                    aria-expanded={openMenu === "explorar"}
+                    onClick={() => setOpenMenu(openMenu === "explorar" ? null : "explorar")}
+                    className={cn(
+                      "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors hover:bg-gray-50 hover:text-[#009FD9]",
+                      marketplaceDesktop ? "px-2.5" : "px-4",
+                      openMenu === "explorar" ? "text-[#009FD9]" : "text-[#1A2744]",
+                    )}
+                  >
+                    {locale === "en" ? "Explore" : "Explorar"}
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "explorar" && "rotate-180")} />
+                  </button>
+                  {openMenu === "explorar" && (
+                    <div className="absolute left-0 top-full z-50 mt-1.5 min-w-[220px] overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]">
+                      <Link href="/empleos" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                        <Briefcase className="h-5 w-5 shrink-0" />
+                        {locale === "en" ? "Jobs" : "Empleos"}
+                      </Link>
+                      <Link href="/ofertas" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                        <OfferTagPercentIcon className="h-5 w-5" />
+                        {locale === "en" ? "Deals" : "Ofertas"}
+                      </Link>
+                    </div>
                   )}
-                >
-                  {locale === "en" ? "Jobs" : "Empleos"}
-                </Link>
-
-                <Link
-                  href="/ofertas"
-                  className={cn(
-                    "relative flex items-center rounded-xl py-2 text-sm font-medium text-[#1A2744] transition-colors after:absolute after:bottom-[-4px] after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:bg-gray-50 hover:text-[#009FD9] hover:after:opacity-100",
-                    marketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4"
-                  )}
-                >
-                  {locale === "en" ? "Deals" : "Ofertas"}
-                </Link>
+                </div>
 
               </nav>
 
@@ -1525,6 +1566,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               placeholder={compactPlaceholder || (isSmallScreen ? t("servicePlaceholderShort") : t("servicePlaceholder"))}
                               className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                               role="combobox"
+                              aria-label={locale === "en" ? "Service" : "Servicio"}
                               aria-expanded={searchFocused && searchQuery.trim().length > 0}
                               aria-autocomplete="list"
                               aria-controls="navbar-service-suggestions"
@@ -1546,6 +1588,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               placeholder={t("location")}
                               className="flex-1 w-full text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                               role="combobox"
+                              aria-label={locale === "en" ? "Location" : "Ubicación"}
                               aria-expanded={navLocOpen}
                               aria-autocomplete="list"
                               aria-controls="navbar-location-suggestions"
@@ -1588,6 +1631,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                   key={s.id}
                                   type="button"
                                   onMouseDown={(e) => { e.preventDefault(); selectCompactSuggestion(s.id); }}
+                                  role="option"
+                                  aria-selected={i === searchActiveIdx}
                                   className={cn(
                                     "w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors",
                                     i === searchActiveIdx ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
@@ -1609,6 +1654,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 key={`${s.type}-${s.id}`}
                                 type="button"
                                 onMouseDown={(e) => { e.preventDefault(); selectNavLocation(s); }}
+                                role="option"
+                                aria-selected={i === navLocActive}
                                 className={cn(
                                   "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
                                   i === navLocActive ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
@@ -1706,7 +1753,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </HeaderIconLink>
                     )}
                     <NotificationBell scope="all" />
-                    <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
+                    <AccountMenu
+                      isPro={isPro}
+                      displayName={accountDisplayName}
+                      professionalPanelHref={professionalPanelHref}
+                      clientPanelHref={clientPanelHref}
+                      profileHref={profilePanelHref}
+                      onSignOut={() => void handleSignOut()}
+                    />
                   </div>
                 ) : (
                   <div className={cn("flex items-center justify-end gap-1", marketplaceDesktop ? "w-auto" : "w-[250px]")}>
@@ -1738,7 +1792,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 className="lg:hidden ml-auto grid h-10 w-10 place-items-center rounded-xl text-[#162543] hover:bg-gray-50 transition-colors"
                 aria-label={t("openMenu")}
               >
-                <Menu className="h-6 w-6 stroke-[3]" />
+                <Menu className="h-5 w-5 stroke-[2.5]" />
               </button>
             </div>
 
@@ -1788,6 +1842,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   placeholder={locale === "en" ? "Service" : "Servicio"}
                   className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#1A2744] placeholder:text-[#a5afbd] focus:outline-none"
                   aria-label={locale === "en" ? "Service" : "Servicio"}
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-controls="native-service-suggestions"
+                  aria-expanded={showNativeServiceSuggestions}
                 />
               </div>
               <div className="flex h-13 items-center rounded-xl border border-[#d8e4ec] bg-white px-3 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.7)]">
@@ -1812,6 +1870,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           placeholder={locale === "en" ? "Neighborhood, city or province" : "Barrio, cantón o provincia"}
                   className="min-w-0 flex-1 bg-transparent px-3 text-[17px] font-semibold text-[#1A2744] placeholder:text-[#a5afbd] focus:outline-none"
                           aria-label={locale === "en" ? "Location" : "Ubicación"}
+                          role="combobox"
+                          aria-autocomplete="list"
+                          aria-controls="native-location-suggestions"
+                          aria-expanded={!showNativeServiceSuggestions}
                 />
                 {navLocation && (
                   <button
@@ -1833,7 +1895,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
             <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
               {showNativeServiceSuggestions ? (
-                <div className="space-y-1">
+                <div id="native-service-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested services" : "Servicios sugeridos"}>
                   <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
                     {locale === "en" ? "Suggested services" : "Servicios sugeridos"}
                   </p>
@@ -1841,6 +1903,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <button
                       key={suggestion.id}
                       type="button"
+                      role="option"
+                      aria-selected={index === searchActiveIdx}
                       onClick={() => selectNativeCompactSuggestion(suggestion.id)}
                       className={cn(
                         "flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left active:bg-[#eef9fd]",
@@ -1860,7 +1924,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   ))}
                 </div>
               ) : (
-              <div className="space-y-1">
+              <div id="native-location-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested locations" : "Ubicaciones sugeridas"}>
                 <button
                   type="button"
                   onClick={searchCurrentLocation}
@@ -1873,6 +1937,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <button
                     key={`${suggestion.type}-${suggestion.id}-${suggestion.label}`}
                     type="button"
+                    role="option"
+                    aria-selected={suggestion.id === navLocationSel?.id}
                     onClick={() => {
                       setNavLocation(repairVisibleText(suggestion.label));
                       setNavLocationSel(suggestion);
@@ -1952,7 +2018,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
               </Link>
               <Link href="/ofertas" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                <DrawerIcon><BadgePercent /></DrawerIcon>
+                <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
               </Link>
               {user && isAdminUser && (
@@ -2069,7 +2135,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#eef2f6] px-4 py-3.5 text-base font-extrabold text-[#162543] transition-colors hover:bg-[#e2e8f0]"
               >
                 <LogOut className="h-5 w-5" />
-                {t("signOut")}
+                {locale === "en" ? "Sign out" : "Cerrar sesión"}
               </button>
             )}
           </div>

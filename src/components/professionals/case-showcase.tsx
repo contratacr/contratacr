@@ -100,7 +100,6 @@ export function CaseShowcase({
 
       <div className="grid grid-cols-1 gap-5">
         {shown.map((c) => {
-          const cover = c.photos[0];
           return (
             <div
               key={c.id}
@@ -108,22 +107,9 @@ export function CaseShowcase({
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCase(c); } }}
-              className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[#e2eaf2] bg-white shadow-[0_14px_34px_-30px_rgba(15,23,42,0.7)] transition-shadow hover:shadow-[0_22px_48px_-34px_rgba(15,23,42,0.8)]"
+              className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="grid sm:grid-cols-[minmax(190px,250px)_1fr]">
-                {cover && (
-                  <div className="relative h-48 overflow-hidden bg-[#eef1f5] sm:h-full sm:min-h-[220px]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={cldThumb(cover, 760)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
-                    <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/45 to-transparent" aria-hidden />
-                    {c.photos.length > 1 && (
-                      <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-[#162543] shadow-sm backdrop-blur">
-                        <Images className="h-3.5 w-3.5 text-[#009FD9]" /> {t("casosPhotos", { count: c.photos.length })}
-                      </span>
-                    )}
-                  </div>
-                )}
-                <div className="flex min-w-0 flex-col p-5">
+              <div className="p-5">
                 <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
                 <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0089bb]">{profLabel(c.profession)}</p>
@@ -137,15 +123,15 @@ export function CaseShowcase({
                   </p>
                 )}
                 </div>
-                {!cover && c.photos.length > 0 && (
+                {c.photos.length > 0 && (
                   <div className="flex shrink-0 -space-x-3 pt-1 sm:self-auto">
                     {c.photos.slice(0, 3).map((url, idx) => (
                       <div
                         key={`${c.id}-${url}`}
-                        className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-[#f3f4f6] shadow-sm sm:h-16 sm:w-16"
+                        className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-white p-1 shadow-sm sm:h-16 sm:w-16"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(url, 220)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+                        <img src={cldThumb(url, 220)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-contain" />
                         {idx === 2 && c.photos.length > 3 && (
                           <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - 3}</span>
                         )}
@@ -154,14 +140,13 @@ export function CaseShowcase({
                   </div>
                 )}
                 </div>
-                {!cover && c.photos.length > 1 && (
-                  <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+                {c.photos.length > 1 && (
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#f3f4f6] pt-3">
                     <span className="inline-flex w-fit items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
                       <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
                     </span>
                   </div>
                 )}
-                </div>
               </div>
             </div>
           );
@@ -233,10 +218,10 @@ export function CaseShowcase({
                         key={idx}
                         onClick={() => setPi(idx)}
                         aria-label={tg("workAlt", { n: idx + 1 })}
-                        className={cn("h-16 overflow-hidden rounded-xl bg-[#f3f4f6] transition-all", idx === pi ? "opacity-100 ring-2 ring-[#009FD9] ring-offset-2" : "opacity-55 hover:opacity-100")}
+                        className={cn("h-16 overflow-hidden rounded-xl bg-white p-1 transition-all", idx === pi ? "opacity-100 ring-2 ring-[#009FD9] ring-offset-2" : "opacity-55 hover:opacity-100")}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(p, 220)} alt="" className="h-full w-full object-cover" />
+                        <img src={cldThumb(p, 220)} alt="" className="h-full w-full object-contain" />
                       </button>
                     ))}
                   </div>

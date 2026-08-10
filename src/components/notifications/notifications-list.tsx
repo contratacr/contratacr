@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
-import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
+import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
@@ -157,14 +157,17 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
-  const notificationTitle = (n: Notification) =>
-    n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
+  const notificationTitle = (n: Notification) => {
+    const copy = localizedNotificationCopy(n, locale);
+    return n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? copy.title : t(`types.${n.type}`);
+  };
   const notificationMessage = (n: Notification) => {
+    const localizedMessage = localizedNotificationCopy(n, locale).message;
     const fullReason = n.data?.review_reason?.trim();
-    if (!fullReason) return n.message;
-    if (/\bMotivo:/i.test(n.message)) return n.message.replace(/\bMotivo:[\s\S]*$/i, `Motivo: ${fullReason}`);
-    if (/\bReason:/i.test(n.message)) return n.message.replace(/\bReason:[\s\S]*$/i, `Reason: ${fullReason}`);
-    return n.message;
+    if (!fullReason) return localizedMessage;
+    if (/\bMotivo:/i.test(localizedMessage)) return localizedMessage.replace(/\bMotivo:[\s\S]*$/i, `Motivo: ${fullReason}`);
+    if (/\bReason:/i.test(localizedMessage)) return localizedMessage.replace(/\bReason:[\s\S]*$/i, `Reason: ${fullReason}`);
+    return localizedMessage;
   };
   const notificationTime = (n: Notification) => {
     const projectCreatedAt = getNotificationProjectCreatedAt(n, projectTimes);

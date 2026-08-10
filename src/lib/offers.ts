@@ -55,19 +55,24 @@ export function effectiveOfferStatus(
 
 export function formatOfferPrice(
   offer: Pick<ProfessionalOffer, "price_now" | "currency" | "price_unit">,
+  locale = "es",
 ) {
-  if (offer.price_now == null) return "Consultar precio";
+  if (offer.price_now == null) return locale === "en" ? "Price negotiable" : "A convenir";
   const symbol = offer.currency === "USD" ? "$" : "₡";
-  const amount = `${symbol}${new Intl.NumberFormat("es-CR").format(offer.price_now)}`;
-  return offer.price_unit === "total" ? amount : `${amount} ${OFFER_PRICE_UNITS[offer.price_unit]}`;
+  const amount = `${symbol}${new Intl.NumberFormat(locale === "en" ? "en-US" : "es-CR").format(offer.price_now)}`;
+  const unit = locale === "en"
+    ? { total: "total", hour: "per hour", session: "per session", project: "per project", month: "per month" }[offer.price_unit]
+    : OFFER_PRICE_UNITS[offer.price_unit];
+  return offer.price_unit === "total" ? amount : `${amount} ${unit}`;
 }
 
 export function formatOfferBeforePrice(
   offer: Pick<ProfessionalOffer, "price_before" | "currency">,
+  locale = "es",
 ) {
   if (offer.price_before == null) return null;
   const symbol = offer.currency === "USD" ? "$" : "₡";
-  return `${symbol}${new Intl.NumberFormat("es-CR").format(offer.price_before)}`;
+  return `${symbol}${new Intl.NumberFormat(locale === "en" ? "en-US" : "es-CR").format(offer.price_before)}`;
 }
 
 export function sanitizeOfferImages(urls: string[]) {

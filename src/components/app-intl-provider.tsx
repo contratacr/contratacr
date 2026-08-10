@@ -8,6 +8,7 @@ export function AppIntlProvider({ children, messages, locale }: { children: Reac
   return (
     <NextIntlClientProvider
       locale={locale}
+      timeZone="America/Costa_Rica"
       messages={messages}
       onError={(error) => {
         if (error.code === IntlErrorCode.MISSING_MESSAGE) {

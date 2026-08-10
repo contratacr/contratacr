@@ -6,10 +6,9 @@ export const MAX_PORTFOLIO_PHOTOS = 5;
 const DEFAULT_CLOUDINARY_CLOUD_NAME = "dxxrjx2go";
 
 export function cloudinaryAssetUrl(publicIdWithExtension: string, transform = "f_auto,q_auto"): string {
-  const cloudName =
-    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
-    process.env.CLOUDINARY_CLOUD_NAME ||
-    DEFAULT_CLOUDINARY_CLOUD_NAME;
+  // This helper renders on both the server and the client. A server-only
+  // fallback would produce different HTML during hydration.
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || DEFAULT_CLOUDINARY_CLOUD_NAME;
   const normalizedPublicId = publicIdWithExtension.replace(/^\/+/, "");
   const normalizedTransform = transform.replace(/^\/+|\/+$/g, "");
   return `https://res.cloudinary.com/${cloudName}/image/upload/${normalizedTransform}/${normalizedPublicId}`;

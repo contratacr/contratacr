@@ -171,7 +171,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
 
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.body.action, JSON.stringify(response.body)).toBe("answer");
-    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/zona|area|ubicaci/i);
+    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/zona|[aá]rea|ubicaci/i);
     expect(response.body.answer, JSON.stringify(response.body)).not.toMatch(/Siquirres|Lim[oó]n/i);
     expect(response.body.searchHref ?? "", JSON.stringify(response.body)).not.toMatch(/provincia=|canton=/);
   });
@@ -396,7 +396,7 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(requestReady.body.action).toBe("publish_request");
     expect(requestReady.body.answer).toMatch(/abra el formulario/i);
     expect(requestReady.body.answer).not.toMatch(/voy a (?:proceder|crear|publicar)|creare|publicare/i);
-    expect(requestReady.body.ctaLabel).toBe("Crear solicitud");
+    expect(requestReady.body.ctaLabel).toBe("Crear proyecto");
     expect(requestReady.body.searchHref).toContain("tab=sent_projects");
     expect(requestReady.body.searchHref).toContain("openPublish=1");
     expect(requestReady.body.searchHref).toContain("categoria=carpinteria");
@@ -580,7 +580,7 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(injection.body.answer).not.toMatch(/sk-[A-Za-z0-9]|OPENAI_API_KEY|PRODUCT MANUAL|CURRENT CONTEXT/i);
   });
 
-  test("keeps account history private, persistent and deletable", async ({ page }) => {
+  test("keeps assistant history ephemeral and out of account storage", async ({ page }) => {
     const admin = regressionAdminClient();
     const id = crypto.randomUUID();
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
@@ -596,16 +596,16 @@ test.describe("@seeded ContrataCR AI", () => {
       },
     });
     expect(saved.status).toBe(200);
+    expect(saved.body).toMatchObject({ ok: true, persisted: false });
     const clientHistory = await apiJson<HistoryResponse>(page, "/api/ai-assistant/history");
-    expect(clientHistory.body.conversations?.some((item) => item.id === id)).toBe(true);
+    expect(clientHistory.body.conversations).toEqual([]);
+    const { data: clientStored } = await admin.from("ai_chat_sessions").select("id").eq("id", id).maybeSingle();
+    expect(clientStored).toBeNull();
 
     await resetAuth(page);
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     const professionalHistory = await apiJson<HistoryResponse>(page, "/api/ai-assistant/history");
-    expect(professionalHistory.body.conversations?.some((item) => item.id === id)).toBe(false);
-    await apiJson(page, `/api/ai-assistant/history?id=${id}`, { method: "DELETE" });
-    const { data: stillOwned } = await admin.from("ai_chat_sessions").select("id").eq("id", id).maybeSingle();
-    expect(stillOwned?.id).toBe(id);
+    expect(professionalHistory.body.conversations).toEqual([]);
 
     await resetAuth(page);
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
@@ -615,32 +615,23 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(removed).toBeNull();
   });
 
-  test("assistant UI persists through navigation and stays out of other dialogs", async ({ page }, testInfo) => {
+  test("keeps the retired assistant UI out of public navigation", async ({ page }, testInfo) => {
     await resetAuth(page);
     await gotoOK(page, "/es");
-    const openAssistant = async () => {
-      if (isMobileProject(testInfo)) {
-        await page.getByRole("button", { name: /Abrir men|Open menu/i }).click();
-        await page.getByRole("button", { name: /^(Asistente|Assistant)$/i }).click();
-        return;
-      }
 
-      const launcher = page.getByRole("button", { name: /Abrir asistente de ContrataCR/i });
-      await expect(launcher).toBeVisible();
-      await launcher.click();
+    const expectAssistantAbsent = async () => {
+      await expect(page.getByRole("button", { name: /Abrir asistente de ContrataCR|Open ContrataCR assistant/i })).toHaveCount(0);
+      await expect(page.getByRole("dialog", { name: /Asistente ContrataCR|ContrataCR assistant/i })).toHaveCount(0);
     };
-    await openAssistant();
-    const dialog = page.getByRole("dialog", { name: /Asistente ContrataCR/i });
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole("textbox", { name: /Pregunte o describa/i }).fill("¿Cómo funciona ContrataCR?");
-    await dialog.getByRole("button", { name: /Enviar mensaje/i }).click();
-    await expect(dialog.getByText(/mercado de servicios|encontrar profesionales|buscar profesionales/i).last()).toBeVisible({ timeout: 25_000 });
-    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("contratacr:ai-session:es"))).toContain("¿Cómo funciona ContrataCR?");
-    await dialog.getByRole("button", { name: /Ver cómo funciona/i }).click();
-    await expect(page).toHaveURL(/\/es\/como-funciona/);
-    expect(await page.evaluate(() => sessionStorage.getItem("contratacr:ai-session:es"))).toContain("¿Cómo funciona ContrataCR?");
-    await openAssistant();
-    await expect(page.getByRole("dialog", { name: /Asistente ContrataCR/i }).getByText("¿Cómo funciona ContrataCR?")).toBeVisible();
+
+    await expectAssistantAbsent();
+    if (isMobileProject(testInfo)) {
+      await page.getByRole("button", { name: /Abrir men|Open menu/i }).click();
+      await expect(page.getByText(/^Asistente$|^Assistant$/i).filter({ visible: true })).toHaveCount(0);
+    }
+
+    await gotoOK(page, "/es/como-funciona");
+    await expectAssistantAbsent();
     await expectNoHorizontalOverflow(page);
     await expectHealthyPage(page);
   });

@@ -14,6 +14,7 @@ import {
   Images,
   MapPin,
   Star,
+  Tags,
 } from "lucide-react";
 
 const PROFILE_ACTIONS = [
@@ -65,6 +66,29 @@ export default function AtraerClientesPage() {
         </section>
 
         <section className="px-4 py-12 sm:py-16">
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-7 max-w-2xl">
+              <h2 className="text-2xl font-extrabold text-[#162543]">{t("growthToolsTitle")}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("growthToolsSubtitle")}</p>
+            </div>
+            <div className="grid overflow-hidden rounded-lg border border-[#dfe5eb] bg-white md:grid-cols-2 md:divide-x md:divide-[#e5e7eb]">
+              <article className="border-b border-[#e5e7eb] p-6 md:border-b-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><BriefcaseBusiness className="h-5 w-5" /></div>
+                <h3 className="mt-4 text-base font-bold text-[#162543]">{t("jobsTitle")}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("jobsBody")}</p>
+                <Link href="/empleos" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb] hover:text-[#007aa7]">{t("jobsCta")}<ArrowRight className="h-4 w-4" /></Link>
+              </article>
+              <article className="p-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><Tags className="h-5 w-5" /></div>
+                <h3 className="mt-4 text-base font-bold text-[#162543]">{t("offersTitle")}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("offersBody")}</p>
+                <Link href="/ofertas" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb] hover:text-[#007aa7]">{t("offersCta")}<ArrowRight className="h-4 w-4" /></Link>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[#f4f7fa] px-4 py-12 sm:py-16">
           <div className="mx-auto max-w-4xl">
             <div className="mb-7">
               <h2 className="text-2xl font-extrabold text-[#162543]">{t("dosDontsTitle")}</h2>

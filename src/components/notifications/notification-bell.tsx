@@ -6,7 +6,8 @@ import { Bell, ArrowRight, CheckCheck } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationInMode } from "@/lib/notification-link";
+import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
+import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
@@ -18,7 +19,7 @@ type Notification = {
   message: string;
   read: boolean;
   created_at: string;
-  data?: { link?: string } | null;
+  data?: Record<string, unknown> | null;
 };
 
 export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "offer" }) {
@@ -149,6 +150,17 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     router.push(`/${locale}/notificaciones`);
   };
 
+  async function openNotification(item: Notification) {
+    setMenuOpen(false);
+    if (!item.read) {
+      updateNotifications((prev) => prev.map((entry) => entry.id === item.id ? { ...entry, read: true } : entry));
+      const supabase = createClient();
+      await supabase.from("notifications").update({ read: true }).eq("id", item.id);
+      window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    }
+    router.push(notificationActionHref(item, undefined, locale) ?? `/${locale}/notificaciones`);
+  }
+
   async function markAllRead() {
     if (!user) return;
     const ids = visible.filter((item) => !item.read).map((item) => item.id);
@@ -201,11 +213,13 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
 
           {previewItems.length > 0 ? (
             <div className="max-h-[18rem] overflow-y-auto py-1">
-              {previewItems.map((item) => (
+              {previewItems.map((item) => {
+                const copy = localizedNotificationCopy(item, locale);
+                return (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={openNotifications}
+                  onClick={() => void openNotification(item)}
                   className={cn(
                     "flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-[#f5fbfe]",
                     !item.read && "bg-[#f8fcff]",
@@ -216,14 +230,15 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-start gap-2">
-                      <span className="min-w-0 flex-1 truncate text-sm font-bold text-[#111827]">{item.title}</span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-bold text-[#111827]">{copy.title}</span>
                       {!item.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#009FD9]" />}
                     </span>
-                    <span className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#64748b]">{item.message}</span>
+                    <span className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#64748b]">{copy.message}</span>
                     <span className="mt-1 block text-[11px] font-semibold text-[#94a3b8]">{formatRelativeOrDate(item.created_at, locale)}</span>
                   </span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="px-4 py-6 text-center">

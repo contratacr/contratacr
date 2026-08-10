@@ -50,7 +50,7 @@ interface ServicesEditorProps {
   primaryCategory?: string;
   initialProfessions?: string[];
   initialServices?: ProService[];
-  onSaved?: () => void;
+  onSaved?: (intent?: "section" | "internal") => void;
   focusField?: string | null;
   focusKey?: number;
 }
@@ -279,7 +279,7 @@ export function ServicesEditor({
   async function persist(
     nextProfessions: string[],
     nextServices: ProService[],
-    options: { notifyParent?: boolean } = {},
+    options: { intent?: "section" | "internal" } = {},
   ): Promise<boolean> {
     if (!ensureAtLeastOneActiveService(nextProfessions, nextServices)) return false;
     setFormError(null);
@@ -297,16 +297,28 @@ export function ServicesEditor({
       update.coverage_provincias = [];
       update.coverage_country = false;
     }
-    await supabase
-      .from("professionals")
-      .update(update)
-      .eq("id", professionalId);
-    setSaving(false);
-    setSaved(true);
-    setDirty(false);
-    setTimeout(() => setSaved(false), 3000);
-    if (options.notifyParent !== false) onSaved?.();
-    return true;
+    try {
+      const { error } = await supabase
+        .from("professionals")
+        .update(update)
+        .eq("id", professionalId);
+      if (error) throw error;
+
+      setSaved(true);
+      setDirty(false);
+      setTimeout(() => setSaved(false), 3000);
+      onSaved?.(options.intent ?? "section");
+      return true;
+    } catch (error) {
+      console.error("[services-editor] service save failed", error);
+      setSaved(false);
+      setFormError(locale === "en"
+        ? "Could not save the service changes. Try again."
+        : "No se pudieron guardar los cambios del servicio. Intenta de nuevo.");
+      return false;
+    } finally {
+      setSaving(false);
+    }
   }
 
   // Add a service from the catalog picker → then go STRAIGHT to editing its information
@@ -538,7 +550,7 @@ export function ServicesEditor({
       }),
       info,
     ];
-    const didSave = await persist(nextProfessions, next, { notifyParent: false });
+    const didSave = await persist(nextProfessions, next, { intent: "internal" });
     if (!didSave) return;
     setProfessions(nextProfessions);
     setServices(next);
@@ -634,7 +646,7 @@ export function ServicesEditor({
         <>
           {/* ONE service per card: name + price (focal), description, then clearly grouped
               actions. No catalog image in the panel (it's for the public profile only). */}
-          <div className="grid min-w-0 grid-cols-1 gap-3.5 overflow-hidden">
+          <div className="grid min-w-0 grid-cols-1 gap-3.5">
             {professions.map((prof) => {
               const isPrincipal = professions.indexOf(prof) === 0;
               const info = serviceInfo(prof);

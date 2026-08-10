@@ -46,6 +46,7 @@ const CLIENT_TYPES = new Set([
   "proposal_withdrawn",
   "project_work_done",
   "job_application_status",
+  "followed_professional_activity",
 ]);
 
 export function notificationContext(type: string): NotificationContext {
@@ -158,6 +159,12 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
 
     case "job_application_status":
       href = n.data?.job_id ? `/empleos/${n.data.job_id}` : "/empleos";
+      break;
+
+    case "followed_professional_activity":
+      if (n.data?.activity_type === "offer" && n.data.content_id) href = `/ofertas/${n.data.content_id}`;
+      else if (n.data?.activity_type === "job" && n.data.content_id) href = `/empleos/${n.data.content_id}`;
+      else href = "/dashboard/cliente?tab=network";
       break;
 
     case "support_reply":

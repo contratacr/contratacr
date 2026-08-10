@@ -60,8 +60,8 @@ function ProfileSection({
         </span>
       </button>
       {open && (
-        <div className="border-t border-[#f3f4f6] px-4 pb-5 pt-4 sm:px-5" onFocusCapture={() => onActivate?.(id)} onPointerDownCapture={() => onActivate?.(id)}>
-          <div className="flex flex-col gap-4 rounded-2xl border border-[#eef2f6] bg-[#fbfcfd] px-3 py-3 sm:border-0 sm:bg-transparent sm:p-0">
+        <div className="px-4 pb-6 pt-5 sm:px-5 sm:pt-6" onFocusCapture={() => onActivate?.(id)} onPointerDownCapture={() => onActivate?.(id)}>
+          <div className="flex flex-col gap-5">
             {children}
           </div>
           {footer}
@@ -313,8 +313,13 @@ export function BasicProfileSection({
 
   return (
     <div className="mx-auto flex w-full max-w-none flex-col gap-4">
-      <div className="overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]">
-      <div className="divide-y divide-[#eef3f7]">
+      <div className={cn(
+        "bg-white",
+        mobileSectionFocused
+          ? "rounded-none border-0 shadow-none"
+          : "overflow-hidden rounded-2xl border border-[#dfe8f0] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]"
+      )}>
+      <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7]")}>
       <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
         <div className="min-w-0">
           <h2 className="text-xl font-bold text-[#111827]">{locale === "en" ? "Profile" : "Perfil"}</h2>
@@ -327,7 +332,7 @@ export function BasicProfileSection({
       </div>
       <ProfileSection id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection} footer={makeProfileFooter("basic")}>
       {/* Datos — nombre + teléfono */}
-      <div className="border-t border-[#f3f4f6] pt-5 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <div>
           <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
             {t("fullName")} <span className="text-red-500">*</span>

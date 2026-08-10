@@ -1,21 +1,39 @@
 const fs = require("fs");
 const { createClient } = require("@supabase/supabase-js");
 
-for (const envFile of [".env.test", ".env.local"]) {
-  if (!fs.existsSync(envFile)) continue;
-  for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
-    const match = line.match(/^([^#=]+)=(.*)$/);
-    if (match) {
-      process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
-    }
+const TEST_SUPABASE_REF = "sodegkfjjrdkbohycqyq";
+const envFile = process.env.DEMO_ENV_FILE || ".env.test";
+
+if (!fs.existsSync(envFile)) {
+  throw new Error(`Missing ${envFile}. The demo seed only runs with an explicit test environment file.`);
+}
+
+for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
+  const match = line.match(/^([^#=]+)=(.*)$/);
+  if (match) {
+    process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
   }
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } },
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseRef = (() => {
+  try {
+    return new URL(supabaseUrl).hostname.split(".")[0] || "unknown";
+  } catch {
+    return "invalid";
+  }
+})();
+
+if (supabaseRef !== TEST_SUPABASE_REF) {
+  throw new Error(`Refusing to seed Supabase project ${supabaseRef}; expected test project ${TEST_SUPABASE_REF}.`);
+}
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY in the test environment file.");
+}
+
+const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false },
+});
 
 const demo = "mobile-test-demo";
 const appUrl = process.env.DEMO_APP_URL || "https://contratacr-mobile-test.vercel.app";
@@ -563,7 +581,19 @@ async function main() {
   async function conversation({ proSlug, subject, last, unread = 0, messages = [] }) {
     const professional = bySlug.get(proSlug);
     if (!professional) return null;
-    const conv = await must("insert conversation", supabase.from("direct_conversations").insert({
+    const existing = await must(
+      "select existing conversation",
+      supabase
+        .from("direct_conversations")
+        .select("id")
+        .eq("client_id", isaac.id)
+        .eq("professional_id", professional.id)
+        .is("booking_id", null)
+        .is("project_id", null)
+        .is("proposal_id", null)
+        .maybeSingle(),
+    );
+    const conversationValues = {
       client_id: isaac.id,
       professional_id: professional.id,
       professional_profile_id: professional.profile_id,
@@ -576,16 +606,47 @@ async function main() {
       professional_unread_count: 0,
       created_at: iso(3),
       updated_at: iso(0),
-    }).select("*").single());
+    };
+    const conv = existing
+      ? await must(
+          "update existing conversation",
+          supabase
+            .from("direct_conversations")
+            .update(conversationValues)
+            .eq("id", existing.id)
+            .select("*")
+            .single(),
+        )
+      : await must(
+          "insert conversation",
+          supabase.from("direct_conversations").insert(conversationValues).select("*").single(),
+        );
 
-    await must("insert messages", supabase.from("direct_messages").insert(messages.map((message, index) => ({
+    const messageIds = {
+      "test-sg-solutions": [
+        "b5100000-0000-4000-8000-000000000001",
+        "b5100000-0000-4000-8000-000000000002",
+        "b5100000-0000-4000-8000-000000000003",
+      ],
+      "test-plomeros-del-valle": [
+        "b5200000-0000-4000-8000-000000000001",
+        "b5200000-0000-4000-8000-000000000002",
+      ],
+      "test-conta-clara": [
+        "b5300000-0000-4000-8000-000000000001",
+        "b5300000-0000-4000-8000-000000000002",
+      ],
+    }[proSlug] || [];
+
+    await must("upsert messages", supabase.from("direct_messages").upsert(messages.map((message, index) => ({
+      id: messageIds[index],
       conversation_id: conv.id,
       sender_id: message.from === "me" ? isaac.id : professional.profile_id,
       body: message.body,
       attachment_urls: message.attachments || [],
       read_at: message.from === "me" || !unread ? iso(0) : null,
       created_at: iso(messages.length - index),
-    }))));
+    })), { onConflict: "id" }));
     return conv;
   }
 

@@ -2,19 +2,22 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 
-const ROOTS = ["messages", "src", "scripts"];
-const TEXT_EXTENSIONS = new Set([".css", ".js", ".json", ".jsx", ".md", ".mjs", ".ts", ".tsx"]);
+const ROOTS = ["messages", "src", "scripts", "tests", "supabase/migrations"];
+const TEXT_EXTENSIONS = new Set([".css", ".js", ".json", ".jsx", ".md", ".mjs", ".sql", ".ts", ".tsx"]);
 const INTENTIONAL_REPAIR_FILE = path.normalize("src/lib/text/repair-visible-text.ts");
 const INTENTIONAL_TEXT_FILES = new Set([
   INTENTIONAL_REPAIR_FILE,
   path.normalize("scripts/check-text-encoding.mjs"),
   path.normalize("scripts/repair-text-encoding.mjs"),
-  path.normalize("scripts/seed-mobile-demo.js"),
+  path.normalize("tests/e2e/product-contract.spec.ts"),
 ]);
+const SEED_REPAIR_FILE = path.normalize("scripts/seed-mobile-demo.js");
 const MOJIBAKE = /(?:\u00c3[\u0080-\u017f]|\u00c2[\u0080-\u017f]|\u00e2[\u0080-\u017f]|\ufffd)/u;
 const BROKEN_SPANISH_WORD = /(?:\b(?:identificaci|informaci|ubicaci|verificaci|descripci|secci|opci|rese|contrase|canci|atenci|profesi|categor|plomer|jardiner|fotograf|tecnolog|mec|formaci|educaci|configuraci|conexi|instalaci|publicaci|conversaci|el)\?[A-Za-z\u00c0-\u017f]+|\b(?:a\?os?|casos de \?xito|b\?squeda|b\?sicos?|m\?s|est\?|c\?dula|pa\?s|d\?a|qu\?|c\?mo|cu\?ndo|qui\?n|despu\?s|tambi\?n)\b)/iu;
 const INVALID_CONTROL_CHARACTER = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u;
-const VISIBLE_UNICODE_ESCAPE = /\\u00[0-9a-fA-F]{2}/u;
+// A single source escape (for example \u00f3) renders as a real character.
+// Two source backslashes render the escape visibly and must fail the check.
+const VISIBLE_UNICODE_ESCAPE = /\\\\u00[0-9a-fA-F]{2}/u;
 const UTF8_DECODER = new TextDecoder("utf-8", { fatal: true });
 const BROKEN_INLINE_CHARACTER = /[A-Za-z\u00c0-\u017f][?][A-Za-z\u00c0-\u017f]/u;
 const BROKEN_COMMON_WORD_ENDING = /\b(?:qu|est|m|mant|t|p|gu|c|d|pa)\?(?=\s|[,.!;:]|$)/iu;
@@ -31,6 +34,46 @@ const REQUIRED_DYNAMIC_MESSAGE_PATHS = [
   ...["proposals", "sent_bookings", "sent_projects", "saved", "connections", "network"]
     .map((key) => `proPanel.subtitles.${key}`),
 ];
+const GUIDE_SOURCE_FILE = path.normalize("src/app/[locale]/dashboard/profesional/page.tsx");
+const GUIDE_ROUTE_ROOT = path.normalize("src/app/[locale]");
+
+function checkGuideContracts(failures) {
+  const source = fs.readFileSync(GUIDE_SOURCE_FILE, "utf8");
+  const guidePattern = /\{\s*id:\s*"([^"]+)"[\s\S]*?stepCount:\s*(\d+)\s*\}/gu;
+  const guides = [...source.matchAll(guidePattern)];
+
+  if (guides.length === 0) {
+    failures.push(`${GUIDE_SOURCE_FILE}:1: No se pudo validar GUIDE_ITEMS.`);
+    return;
+  }
+
+  for (const match of guides) {
+    const [, id, rawStepCount] = match;
+    const stepCount = Number(rawStepCount);
+    for (const [locale, catalog] of Object.entries(MESSAGE_CATALOGS)) {
+      const basePath = `proPanel.guides.items.${id}`;
+      for (const field of ["title", "body", "cta"]) {
+        if (typeof messageValue(catalog, `${basePath}.${field}`) !== "string") {
+          failures.push(`${GUIDE_SOURCE_FILE}:1: La guia "${id}" no tiene ${field} en ${locale}.`);
+        }
+      }
+      const steps = messageValue(catalog, `${basePath}.steps`);
+      if (!Array.isArray(steps) || steps.length !== stepCount) {
+        failures.push(
+          `${GUIDE_SOURCE_FILE}:1: La guia "${id}" declara ${stepCount} pasos, pero ${locale} contiene ${Array.isArray(steps) ? steps.length : 0}.`,
+        );
+      }
+    }
+
+    const href = match[0].match(/href:\s*"([^"]+)"/u)?.[1];
+    if (href) {
+      const routeFile = path.join(GUIDE_ROUTE_ROOT, href.replace(/^\//u, ""), "page.tsx");
+      if (!fs.existsSync(routeFile)) {
+        failures.push(`${GUIDE_SOURCE_FILE}:1: La guia "${id}" apunta a una ruta inexistente: ${href}.`);
+      }
+    }
+  }
+}
 
 function messageValue(catalog, fullPath) {
   return fullPath.split(".").reduce((current, segment) => (
@@ -177,6 +220,7 @@ for (const fullPath of REQUIRED_DYNAMIC_MESSAGE_PATHS) {
     failures.push(`messages:1: Falta mensaje i18n dinámico "${fullPath}" en ${missingLocales.join(", ")}.`);
   }
 }
+checkGuideContracts(failures);
 for (const root of ROOTS) {
   for (const file of collectFiles(root)) {
     const normalizedFile = path.normalize(file);
@@ -196,7 +240,8 @@ for (const root of ROOTS) {
     const lines = source.split(/\r?\n/u);
     const allowsEncodingPatterns = INTENTIONAL_TEXT_FILES.has(normalizedFile);
     lines.forEach((line, index) => {
-      const containsBrokenVisibleText = !allowsEncodingPatterns
+      const isSeedRepairPattern = normalizedFile === SEED_REPAIR_FILE && line.includes(".replace(/");
+      const containsBrokenVisibleText = !allowsEncodingPatterns && !isSeedRepairPattern
         && (MOJIBAKE.test(line) || BROKEN_SPANISH_WORD.test(line));
       const containsVisibleUnicodeEscape = !allowsEncodingPatterns && VISIBLE_UNICODE_ESCAPE.test(line);
       if (containsBrokenVisibleText || INVALID_CONTROL_CHARACTER.test(line) || containsVisibleUnicodeEscape) {

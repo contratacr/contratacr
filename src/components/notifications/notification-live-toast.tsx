@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { notificationActionHref, notificationInMode, notificationsCenterHref } from "@/lib/notification-link";
-import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
+import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
 
@@ -308,12 +308,13 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
 
   const latest = toast.latest;
   const grouped = toast.count > 1;
+  const latestCopy = localizedNotificationCopy(latest, locale);
   const title = grouped
     ? locale === "en"
       ? `${toast.count} new notifications`
       : `${toast.count} notificaciones nuevas`
     : latest.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(latest.type)
-      ? latest.title
+      ? latestCopy.title
       : t(`types.${latest.type}`);
   const detailLabel = grouped
     ? locale === "en" ? "View notifications" : "Ver notificaciones"

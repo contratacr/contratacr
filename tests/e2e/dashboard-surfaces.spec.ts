@@ -4,27 +4,29 @@ import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed"
 
 const professionalTabs = [
   { tab: "home", marker: /Panel profesional|Professional panel/i },
-  { tab: "profile", marker: /Mi perfil|My profile/i },
+  { tab: "profile", marker: /Perfil|Profile/i },
   { tab: "services", marker: /Servicios|Services/i },
   { tab: "photos", marker: /Casos de exito|Casos de .xito|Success cases|Success stories/i },
   { tab: "availability", marker: /Disponibilidad|Availability/i },
   { tab: "bookings", marker: /Solicitudes|Requests/i },
   { tab: "proposals", marker: /Proyectos|Projects/i },
+  { tab: "jobs", marker: /Empleos|Jobs/i },
+  { tab: "offers", marker: /Ofertas|Offers/i },
   { tab: "verificacion", marker: /Verificacion|Verificaci.n|Verification/i },
   { tab: "notifications", marker: /Notificaciones|Notifications/i },
-  { tab: "chat", marker: /Mensajes|Messages/i },
   { tab: "soporte", marker: /Soporte|Support/i },
   { tab: "cuenta", marker: /Cuenta y seguridad|Account (?:and|&) security/i },
 ] as const;
 
 const clientTabs = [
-  { tab: "home&mode=use", marker: /Panel cliente|Client panel/i },
-  { tab: "profile&mode=use", marker: /Mi perfil|My profile/i },
+  { tab: "home&mode=use", marker: /Mis solicitudes|My requests/i },
+  { tab: "profile&mode=use", marker: /Perfil|Profile/i },
   { tab: "sent_bookings", marker: /Solicitudes|Requests/i },
   { tab: "sent_projects", marker: /Mis proyectos|My projects/i },
-  { tab: "saved", marker: /Mis favoritos|My favorites/i },
+  { tab: "applications", marker: /Mis postulaciones|My applications/i },
+  { tab: "connections", marker: /Conexiones|Connections/i },
+  { tab: "saved", marker: /Favoritos|Favorites/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
-  { tab: "chat&mode=use", marker: /Mensajes|Messages/i },
   { tab: "soporte&mode=use", marker: /Soporte|Support/i },
   { tab: "cuenta&mode=use", marker: /Cuenta y seguridad|Account (?:and|&) security/i },
 ] as const;
@@ -92,13 +94,60 @@ test.describe("@seeded dashboard surfaces", () => {
     if (isMobileProject(testInfo)) {
       await expect(page).not.toHaveURL(/tab=bookings/);
       await expect(page.getByTestId("panel-tab-services").filter({ visible: true })).toHaveCount(1);
-      await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).click();
-      await expect(page.getByText(/Asistente|Assistant/i).filter({ visible: true }).first()).toBeVisible();
+      await page.getByRole("button", { name: /Abrir men|Open menu/i }).click();
+      await expect(page.getByText(/^Asistente$|^Assistant$/i).filter({ visible: true })).toHaveCount(0);
     } else {
-      await expect(page.getByRole("button", { name: /Abrir asistente de ContrataCR|Open ContrataCR assistant/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /Abrir asistente de ContrataCR|Open ContrataCR assistant/i })).toHaveCount(0);
     }
 
     await expectHealthyPage(page);
+  });
+
+  test("guides cover the current client, marketplace, and professional flows in both languages", async ({ page }) => {
+    test.slow();
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+
+    const locales = [
+      {
+        locale: "es",
+        dialogTitle: /Guías de ContrataCR/i,
+        guideButton: /^Guías$/i,
+        expected: [/Mis postulaciones/i, /Favoritos/i, /^Empleos$/i, /^Ofertas$/i, /Publicar empleos/i, /Publicar ofertas/i],
+        expandable: /Mis postulaciones/i,
+        profileGuide: /Perfil profesional$/i,
+        profileLastStep: /Usa Ver mi perfil para ver la versi.n p.blica/i,
+      },
+      {
+        locale: "en",
+        dialogTitle: /ContrataCR guides/i,
+        guideButton: /^Guides$/i,
+        expected: [/My applications/i, /Favorites/i, /^Jobs$/i, /^Offers$/i, /Post jobs/i, /Publish offers/i],
+        expandable: /My applications/i,
+        profileGuide: /Professional profile$/i,
+        profileLastStep: /Use View my profile to see the public version/i,
+      },
+    ] as const;
+
+    for (const copy of locales) {
+      await gotoOK(page, `/${copy.locale}/dashboard/profesional`);
+      const openGuides = page.getByRole("button", { name: copy.guideButton }).filter({ visible: true }).first();
+      await expect(openGuides).toBeVisible();
+      await openGuides.click();
+
+      const dialog = page.getByRole("dialog").filter({ hasText: copy.dialogTitle }).first();
+      await expect(dialog).toBeVisible();
+      for (const title of copy.expected) {
+        await expect(dialog.getByText(title).first()).toBeVisible();
+      }
+
+      await dialog.getByRole("button", { name: copy.expandable }).first().click();
+      await expect(dialog.getByRole("listitem").first()).toBeVisible();
+      await dialog.getByRole("button", { name: copy.profileGuide }).first().click();
+      await expect(dialog.getByText(copy.profileLastStep)).toBeVisible();
+      await expectHealthyPage(page);
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+    }
   });
 
   test("professional add-service picker keeps its scroll inside the modal", async ({ page }) => {

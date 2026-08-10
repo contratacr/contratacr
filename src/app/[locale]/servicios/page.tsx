@@ -135,7 +135,7 @@ export default function ServiciosPage() {
                 className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"
                 aria-label={mobileGroup ? (locale === "en" ? "Back to categories" : "Volver a categorías") : (locale === "en" ? "Open menu" : "Abrir menú")}
               >
-                {mobileGroup ? <ArrowLeft className="h-7 w-7 stroke-[2.2]" /> : <Menu className="h-7 w-7 stroke-[2.5]" />}
+                {mobileGroup ? <ArrowLeft className="h-7 w-7 stroke-[2.2]" /> : <Menu className="h-5 w-5 stroke-[2.5]" />}
               </button>
               <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">
                 {mobileGroup ? mobileGroup.label : servicesTitle}

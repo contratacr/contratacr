@@ -922,6 +922,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               onKeyDown={handleLocationKeyDown}
               placeholder={t("filters.locationPlaceholder")}
               role="combobox"
+              aria-label={t("filters.location")}
               aria-expanded={locationOpen}
               aria-autocomplete="list"
               className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"

@@ -38,7 +38,7 @@ test.describe("@seeded interaction surfaces", () => {
     await expect(publish).toBeVisible();
     await publish.click();
 
-    const dialog = page.getByRole("dialog", { name: /Crear un proyecto|Create a project/i });
+    const dialog = page.getByRole("dialog", { name: /Crear (?:un )?proyecto|Create a project/i });
     await expect(dialog).toBeVisible();
     await expectVisibleText(
       dialog,

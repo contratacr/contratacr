@@ -116,14 +116,19 @@ export type JobPost = {
   application_count?: number;
 };
 
-export function formatJobSalary(job: Pick<JobPost, "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary">) {
-  if (!job.show_salary || (job.salary_min == null && job.salary_max == null)) return "Salario a convenir";
+export function formatJobSalary(job: Pick<JobPost, "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary">, locale = "es") {
+  if (!job.show_salary || (job.salary_min == null && job.salary_max == null)) return locale === "en" ? "Salary negotiable" : "Salario a convenir";
   const symbol = job.currency === "USD" ? "$" : "\u20a1";
-  const format = (value: number) => `${symbol}${new Intl.NumberFormat("es-CR").format(value)}`;
+  const format = (value: number) => `${symbol}${new Intl.NumberFormat(locale === "en" ? "en-US" : "es-CR").format(value)}`;
   const range = job.salary_min != null && job.salary_max != null
     ? `${format(job.salary_min)} - ${format(job.salary_max)}`
-    : job.salary_min != null ? `Desde ${format(job.salary_min)}` : `Hasta ${format(job.salary_max!)}`;
-  return `${range} ${SALARY_PERIODS[job.salary_period]}`;
+    : job.salary_min != null
+      ? `${locale === "en" ? "From" : "Desde"} ${format(job.salary_min)}`
+      : `${locale === "en" ? "Up to" : "Hasta"} ${format(job.salary_max!)}`;
+  const period = locale === "en"
+    ? { hourly: "per hour", biweekly: "every two weeks", monthly: "per month", annual: "per year", project: "per project" }[job.salary_period]
+    : SALARY_PERIODS[job.salary_period];
+  return `${range} ${period}`;
 }
 
 export function splitJobLines(value: string) {

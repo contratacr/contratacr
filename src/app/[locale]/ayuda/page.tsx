@@ -8,12 +8,14 @@ import { InstallAppGuide } from "@/components/landing/install-app-card";
 import { Link } from "@/i18n/navigation";
 import {
   CalendarDays,
+  BriefcaseBusiness,
   ChevronDown,
   Headset,
   Search,
   ShieldCheck,
   Smartphone,
   Star,
+  Tags,
   UserCheck,
 } from "lucide-react";
 
@@ -24,6 +26,8 @@ const TOPICS = [
   { icon: CalendarDays, faq: 6 },
   { icon: Star, faq: 5 },
   { icon: Smartphone, faq: 8 },
+  { icon: BriefcaseBusiness, faq: 9 },
+  { icon: Tags, faq: 10 },
 ];
 
 export default function AyudaPage() {
@@ -89,7 +93,7 @@ export default function AyudaPage() {
                 <h2 className="text-xl font-extrabold text-[#162543]">{t("faqTitle")}</h2>
                 <p className="mt-1 text-sm text-[#6b7280]">{t("faqSubtitle")}</p>
               </div>
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((index) => (
                 <div key={index} id={`faq-${index}`} className="scroll-mt-28 border-b border-[#edf0f3] last:border-0">
                   <button type="button" onClick={() => setOpenFaq(openFaq === index ? null : index)} aria-expanded={openFaq === index} className="flex w-full items-center justify-between gap-4 py-5 text-left">
                     <span className="text-sm font-bold leading-6 text-[#162543]">{t(`faq${index}Q`)}</span>

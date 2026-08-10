@@ -64,7 +64,10 @@ export function StatusFilterTabs({
   // active = brand-blue underline + blue text + a filled blue count pill; inactive = grey
   // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
   return (
-    <div className="mx-4 flex max-w-full items-stretch gap-1 overflow-x-auto rounded-xl bg-[#f1f6f9] p-1 sm:mx-0 sm:w-fit sm:min-w-[22rem]">
+    <div className={cn(
+      "mx-4 flex max-w-full items-stretch gap-1 overflow-x-auto rounded-xl bg-[#f1f6f9] p-1 sm:mx-0 sm:w-fit",
+      tabs.length > 2 && "sm:min-w-[22rem]",
+    )}>
       {tabs.map((tab) => {
         const active = value === tab.id;
         const count = counts?.[tab.id] ?? 0;

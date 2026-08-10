@@ -14,16 +14,21 @@ export default async function OffersPage() {
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   const today = crTodayISO();
-  const [{ data }, { data: professional }] = await Promise.all([
+  const professionalColumns = user
+    ? "slug,business_name,whatsapp,allow_phone_call,call_phone,contact_email,profiles(full_name)"
+    : "slug,business_name,profiles(full_name)";
+  const [{ data, error: offersError }, { data: professional }] = await Promise.all([
     supabase
       .from("professional_offers")
-      .select("*, professionals!professional_offers_professional_id_fkey(slug,business_name,whatsapp,allow_phone_call,call_phone,contact_email,profiles(full_name))")
+      .select(`*, professionals!professional_offers_professional_id_fkey(${professionalColumns})`)
       .eq("status", "published")
       .or(`valid_until.is.null,valid_until.gte.${today}`)
       .order("created_at", { ascending: false })
       .limit(100),
     user ? supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+
+  if (offersError) throw offersError;
 
   const offers = ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
     const professional = row.professionals as { slug?: string; business_name?: string; whatsapp?: string | null; allow_phone_call?: boolean | null; call_phone?: string | null; contact_email?: string | null; profiles?: { full_name?: string } | null } | null;

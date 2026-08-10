@@ -134,7 +134,6 @@ function withAdvertisingDemoStats<T extends ProfessionalCardData>(professional: 
   if (isDemoContrataCr(professional)) {
     return {
       ...professional,
-      followerCount: 20,
       yearsExperience: 7,
       monthsExperience: 7,
       services: setServiceExperience(professional.services, 7, 7),
@@ -143,7 +142,6 @@ function withAdvertisingDemoStats<T extends ProfessionalCardData>(professional: 
   if (isDemoSgSolutions(professional)) {
     return {
       ...professional,
-      followerCount: 10,
       yearsExperience: 25,
       portfolioCount: 2,
       services: setServiceExperience(professional.services, 25),

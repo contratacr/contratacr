@@ -42,7 +42,7 @@ test.describe("@seeded extended lifecycle", () => {
           slotLocationLabel: "Alajuela, Alajuela",
         },
       });
-      expect(created.status).toBe(200);
+      expect(created.status, JSON.stringify(created.body)).toBe(200);
       bookingId = created.body.id ?? "";
       expect(bookingId).toBeTruthy();
 
@@ -190,7 +190,9 @@ test.describe("@seeded extended lifecycle", () => {
       const bio = page.locator('[data-field="bio"] textarea');
       await expect(bio).toBeVisible();
       await bio.fill(marker);
-      await bio.blur();
+      const saveProfile = page.getByRole("button", { name: /^Guardar cambios$/i }).filter({ visible: true });
+      await expect(saveProfile).toHaveCount(1);
+      await saveProfile.click();
       await expect.poll(async () => (await admin.from("professionals").select("bio").eq("id", seed.professionalId).single()).data?.bio).toBe(marker);
 
       await gotoOK(page, "/es/dashboard/profesional?tab=services&mode=offer");
@@ -201,6 +203,8 @@ test.describe("@seeded extended lifecycle", () => {
       await expect(dialog).toBeVisible();
       await dialog.locator("textarea").fill(`${marker} service`);
       await dialog.getByRole("button", { name: /Guardar cambios/i }).click();
+      await expect(dialog).toBeHidden();
+      await expect(serviceCard).toContainText(`${marker} service`);
       await expect.poll(async () => {
         const { data } = await admin.from("professionals").select("services").eq("id", seed.professionalId).single();
         const services = Array.isArray(data?.services) ? data.services as Array<{ description?: string }> : [];
@@ -231,6 +235,11 @@ test.describe("@seeded extended lifecycle", () => {
       await dialog.locator('input[maxlength="80"]').fill(marker);
       await dialog.locator("textarea").fill("Caso creado por la regresion automatizada.");
       await dialog.getByRole("button", { name: /^Guardar$/i }).click();
+      await expect(dialog).toBeHidden();
+      await expect(page.getByText(marker, { exact: true })).toBeVisible();
+      const saveSection = page.getByRole("button", { name: /^Guardar cambios$/i }).filter({ visible: true });
+      await expect(saveSection).toHaveCount(1);
+      await saveSection.click();
 
       await expect.poll(async () => {
         const { data } = await admin.from("professionals").select("portfolio_items").eq("id", seed.professionalId).single();
@@ -248,18 +257,25 @@ test.describe("@seeded extended lifecycle", () => {
     try {
       await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
       await gotoOK(page, "/es/dashboard/profesional?tab=availability&mode=offer");
-      const hide = page.getByRole("button", { name: /Hacer privada/i }).filter({ visible: true });
-      await expect(hide).toHaveCount(1);
-      await hide.click();
+      const privacy = page.getByRole("switch", { name: /Hacer (?:privada|p.blica)/i }).filter({ visible: true });
+      await expect(privacy).toHaveCount(1);
+      await expect(privacy).toHaveAttribute("aria-checked", "false");
+      await privacy.click();
+      await expect(privacy).toHaveAttribute("aria-checked", "true");
+      await page.getByRole("button", { name: /Guardar cambios/i }).filter({ visible: true }).click();
       await expectVisibleText(page.locator("body"), /Ocultar tu agenda/i);
       const confirm = page.getByRole("button", { name: /S., ocultar agenda/i }).filter({ visible: true });
       await expect(confirm).toHaveCount(1);
       await confirm.click();
       await expect.poll(async () => (await admin.from("professionals").select("availability_public").eq("id", seed.professionalId).single()).data?.availability_public).toBe(false);
 
-      const publish = page.getByRole("button", { name: /Hacer p.blica/i }).filter({ visible: true });
+      await gotoOK(page, "/es/dashboard/profesional?tab=availability&mode=offer");
+      const publish = page.getByRole("switch", { name: /Hacer (?:privada|p.blica)/i }).filter({ visible: true });
       await expect(publish).toHaveCount(1);
+      await expect(publish).toHaveAttribute("aria-checked", "true");
       await publish.click();
+      await expect(publish).toHaveAttribute("aria-checked", "false");
+      await page.getByRole("button", { name: /Guardar cambios/i }).filter({ visible: true }).click();
       await expect.poll(async () => (await admin.from("professionals").select("availability_public").eq("id", seed.professionalId).single()).data?.availability_public).toBe(true);
     } finally {
       await ensureRegressionSeed();

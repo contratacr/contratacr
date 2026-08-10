@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 import { getInitials, formatRelativeOrDate } from "@/lib/utils";
+import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 
 type Connection = {
   professionalId: string;
@@ -124,7 +125,7 @@ export function ClientConnections() {
             <div className="col-span-2 flex gap-2 sm:col-span-1 sm:shrink-0">
               {item.slug ? (
                 <Button variant="outline" size="sm" className="min-w-0 flex-1 rounded-xl sm:flex-none" asChild>
-                  <Link href={`/profesionales/${item.slug}`}>
+                  <Link href={`/profesionales/${item.slug}?from=${encodeURIComponent("/dashboard/cliente?tab=connections")}`} onClick={openInNewTabOnDesktop}>
                     <ExternalLink className="h-3.5 w-3.5" />
                     Ver perfil
                   </Link>

@@ -41,9 +41,8 @@ if (loadedTestEnv && !process.env.E2E_SEED) process.env.E2E_SEED = "1";
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 const localBaseURL = `http://localhost:${port}`;
-const testPreviewBaseURL = "https://contratacr-git-test-isanchezm421-6251s-projects.vercel.app";
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || (loadedTestEnv ? testPreviewBaseURL : localBaseURL);
-const useLocalServer = !process.env.PLAYWRIGHT_BASE_URL && !loadedTestEnv;
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || localBaseURL;
+const useLocalServer = !process.env.PLAYWRIGHT_BASE_URL;
 const webServerEnv = loadedTestEnv ? currentEnvWith({ NODE_ENV: "test" }) : undefined;
 const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const vercelBypassHeaders = vercelBypassSecret

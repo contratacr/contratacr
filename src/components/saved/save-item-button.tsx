@@ -15,6 +15,7 @@ type SaveItemButtonProps = {
   userId?: string | null;
   className?: string;
   withLabel?: boolean;
+  showIcon?: boolean;
   loginRedirect?: string;
 };
 
@@ -27,11 +28,19 @@ export function SaveItemButton({
   userId,
   className,
   withLabel = false,
+  showIcon = true,
   loginRedirect,
 }: SaveItemButtonProps) {
   const locale = useLocale();
   const [saved, setSaved] = useState(false);
   const payload = useMemo(() => ({ ...snapshot, id: itemId, type: itemType }), [itemId, itemType, snapshot]);
+  const labels = locale === "en"
+    ? itemType === "offer"
+      ? { save: "Save offer", saved: "Saved", remove: "Remove offer from favorites" }
+      : { save: "Save job", saved: "Saved", remove: "Remove job from favorites" }
+    : itemType === "offer"
+      ? { save: "Guardar oferta", saved: "Guardado", remove: "Quitar oferta de favoritos" }
+      : { save: "Guardar empleo", saved: "Guardado", remove: "Quitar empleo de favoritos" };
 
   useEffect(() => {
     let mounted = true;
@@ -96,7 +105,7 @@ export function SaveItemButton({
     <button
       type="button"
       onClick={toggle}
-      aria-label={saved ? "Quitar de guardados" : "Guardar"}
+      aria-label={saved ? labels.remove : labels.save}
       aria-pressed={saved}
       className={cn(
         withLabel
@@ -106,8 +115,8 @@ export function SaveItemButton({
         className,
       )}
     >
-      <Bookmark className={withLabel ? "h-4 w-4" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />
-      {withLabel && <span>{saved ? "Guardado" : "Guardar"}</span>}
+      {showIcon && <Bookmark className={withLabel ? "h-4 w-4" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
+      {withLabel && <span>{saved ? labels.saved : labels.save}</span>}
     </button>
   );
 }

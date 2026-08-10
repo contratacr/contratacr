@@ -6,11 +6,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { formatServicePrice } from "@/lib/pricing";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsavePro, type SavedPro } from "./save-button";
+import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 
 type SavedFilter = "all" | "professionals" | "offers" | "jobs";
 type SavedItemKind = "offer" | "job";
@@ -83,7 +85,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
 
       <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1 sm:shrink-0">
         <Button variant="outline" size="sm" className="min-w-0 flex-1 sm:flex-none" asChild>
-          <Link href={`/profesionales/${pro.slug}`}>
+          <Link href={`/profesionales/${pro.slug}?from=${encodeURIComponent("/dashboard/cliente?tab=saved")}`} onClick={openInNewTabOnDesktop}>
             <ExternalLink className="h-3.5 w-3.5" />
             {tSaved("viewProfile")}
           </Link>
@@ -104,7 +106,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
 function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item: SavedItem) => void }) {
   const snapshot = item.snapshot ?? {};
   const isJob = item.item_type === "job";
-  const title = text(snapshot.title, isJob ? "Empleo guardado" : "Oferta guardada");
+  const title = text(snapshot.title, isJob ? "Empleo favorito" : "Oferta favorita");
   const owner = text(snapshot.employer_name ?? snapshot.professional_name, "ContrataCR");
   const image = text(snapshot.image_url ?? snapshot.employer_avatar_url);
   const meta = isJob
@@ -138,7 +140,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
         <button
           type="button"
           onClick={() => onRemove(item)}
-          aria-label="Quitar de guardados"
+          aria-label="Quitar de favoritos"
           className="rounded-xl p-2 text-[#8fa1b6] transition-colors hover:bg-red-50 hover:text-red-500"
         >
           <Trash2 className="h-4 w-4" />
@@ -232,39 +234,41 @@ export function SavedProfessionalsTab() {
     return (
       <PanelEmptyState
         icon={Bookmark}
-        title="No tienes guardados"
+        title="No tienes favoritos"
         description="Guarda profesionales, ofertas y empleos para volver a encontrarlos rápido."
         action={<Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button>}
       />
     );
   }
 
-  const tabs: Array<[SavedFilter, string, number]> = [
-    ["all", "Todos", total],
-    ["professionals", "Profesionales", savedPros.length],
-    ["offers", "Ofertas", offers.length],
-    ["jobs", "Empleos", jobs.length],
-  ];
+  const tabs = [
+    { id: "all" },
+    { id: "professionals" },
+    { id: "offers" },
+    { id: "jobs" },
+  ] as const;
+  const tabLabels: Record<string, string> = {
+    all: "Todos",
+    professionals: "Profesionales",
+    offers: "Ofertas",
+    jobs: "Empleos",
+  };
+  const tabCounts = {
+    all: total,
+    professionals: savedPros.length,
+    offers: offers.length,
+    jobs: jobs.length,
+  };
 
   return (
     <div className="ccr-native-safe-list-end space-y-4">
-      <div className="scrollbar-none flex gap-2 overflow-x-auto">
-        {tabs.map(([id, label, count]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setFilter(id)}
-            className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-bold transition ${
-              filter === id
-                ? "border-[#009FD9] bg-[#eef9fd] text-[#007fae]"
-                : "border-[#d9e4ee] bg-white text-[#53657d] hover:border-[#b8d8e8]"
-            }`}
-          >
-            {label}
-            <span className="text-xs text-[#8fa1b6]">{count}</span>
-          </button>
-        ))}
-      </div>
+      <StatusFilterTabs
+        tabs={tabs}
+        value={filter}
+        onChange={(id) => setFilter(id as SavedFilter)}
+        counts={tabCounts}
+        labelFor={(id) => tabLabels[id] ?? id}
+      />
 
       <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white divide-y divide-[#f3f4f6]">
         {showPros && savedPros.map((pro) => <SavedProCard key={`pro-${pro.id}`} pro={pro} onUnsave={handleUnsavePro} />)}

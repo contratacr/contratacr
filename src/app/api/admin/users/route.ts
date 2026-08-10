@@ -286,7 +286,7 @@ export async function GET(req: Request) {
         profile_social: "Redes del perfil",
         booking: "Solicitud",
         project: "Proyecto",
-        favorites: "Guardados",
+        favorites: "Favoritos",
         api: "Guardado en backend",
         whatsapp_followup: "WhatsApp histórico",
         unknown: "Sin origen",

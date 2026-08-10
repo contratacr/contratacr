@@ -5,17 +5,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
-import { PanelToggleRow } from "@/components/dashboard/panel-toggle-row";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { Input } from "@/components/ui/input";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { AlertTriangle, Camera, X, Plus, ChevronDown, ChevronLeft, Lock, Award, Globe, Video, Pencil, Eye, Trash2 } from "lucide-react";
+import { AlertTriangle, Camera, X, Plus, ChevronDown, ChevronLeft, Lock, Award, Globe, Pencil, Eye, Trash2 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
@@ -114,6 +114,7 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
 
 function ProfileCheckRow({
   title,
+  description,
   checked,
   onToggle,
   ariaLabel,
@@ -125,16 +126,20 @@ function ProfileCheckRow({
   ariaLabel: string;
 }) {
   return (
-    <label className="inline-flex w-fit cursor-pointer items-center gap-3 text-sm font-semibold text-[#111827]">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onToggle}
-        aria-label={ariaLabel}
-        className="h-5 w-5 shrink-0 rounded-[4px] border-[#b8c5d3] bg-white text-[#009FD9] focus:ring-[#009FD9]"
-      />
-      <span>{title}</span>
-    </label>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      onClick={onToggle}
+      className="flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
+    >
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-[#111827]">{title}</span>
+        {description ? <span className="mt-0.5 block text-xs leading-5 text-[#64748b]">{description}</span> : null}
+      </span>
+      <ToggleSwitch checked={checked} />
+    </button>
   );
 }
 
@@ -361,6 +366,48 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const [activeDirtySection, setActiveDirtySection] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const emailIsValid = !showContactEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim());
+  const callPhoneIsValid = !allowPhoneCall || !callPhone.trim() || isPhoneComplete(callPhone);
+  const hasWorkplace = workplaces.length > 0 || (canOfferVideoConsult && videoConsult && videoCoverageCountry);
+  const socialIsValid =
+    (!website.trim() || isValidWebsiteUrl(website)) &&
+    SOCIAL_NETWORKS.every(({ key }) => {
+      const username = cleanUsername(social[key]);
+      return !username || isValidUsername(username);
+    });
+
+  function sectionValidationError(sectionId: string | null): string | null {
+    if (sectionId === "basic") {
+      if (!resolvedFullName.trim()) return locale === "en" ? "Full name is required." : "El nombre completo es obligatorio.";
+      if (!bio.trim()) return locale === "en" ? "Description is required." : "La descripción es obligatoria.";
+    }
+    if (sectionId === "certs" && certDraft) {
+      return locale === "en"
+        ? "Save or cancel the certification you are editing."
+        : "Guarda o cancela la certificación que estás editando.";
+    }
+    if (sectionId === "location" && !hasWorkplace) {
+      return locale === "en"
+        ? "Add a workplace or enable video consultations."
+        : "Agrega un lugar de trabajo o activa las videoconsultas.";
+    }
+    if (sectionId === "contact") {
+      if (!isPhoneComplete(whatsapp)) {
+        return locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.";
+      }
+      if (!callPhoneIsValid) {
+        return locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.";
+      }
+      if (!emailIsValid) {
+        return locale === "en" ? "Enter a valid contact email." : "Ingresa un correo de contacto válido.";
+      }
+    }
+    if (sectionId === "social" && !socialIsValid) {
+      return locale === "en" ? "Check the website and social links." : "Revisa el sitio web y los enlaces públicos.";
+    }
+    return null;
+  }
+
 
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedFlashSeq = useRef(0);
@@ -380,6 +427,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       savedTimer.current = null;
     }
     setSaved(false);
+    setError(null);
     setDirty(true);
     if (sectionId) setActiveDirtySection(sectionId);
     dirtyRef.current = true;
@@ -512,6 +560,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   }
 
   async function handleSave(): Promise<boolean> {
+    const validationError = sectionValidationError(activeDirtySection);
+    if (validationError) {
+      setError(validationError);
+      return false;
+    }
     const seq = ++saveSeq.current;
     setSaving(true);
     setError(null);
@@ -722,6 +775,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
   const makeSectionFooter = (sectionId: string) => {
     const sectionActive = dirty && activeDirtySection === sectionId;
+    const sectionInvalid = sectionValidationError(sectionId) !== null;
     return (
       <div className="mt-5 flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
         <button
@@ -735,7 +789,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         <button
           type="button"
           onClick={() => void handleSave()}
-          disabled={!sectionActive || saving || photoUploading}
+          disabled={!sectionActive || sectionInvalid || saving || photoUploading}
           className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
         >
           {saving || photoUploading ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
@@ -775,7 +829,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       {/* ONE cohesive settings card (instead of 6 separate boxes) — the sections are
           divider-separated rows; each expands inline into a soft inset field panel. */}
       <div className={cn(
-        "bg-white sm:rounded-none sm:border-0 sm:shadow-none",
+        "bg-white sm:overflow-hidden sm:rounded-2xl sm:border sm:border-[#dfe8f0] sm:shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]",
         mobileSectionFocused
           ? "rounded-none border-0 shadow-none"
           : "overflow-hidden rounded-2xl border border-[#dfe8f0] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]"
@@ -788,6 +842,65 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       </div>
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
       <Section footer={makeSectionFooter("basic")} id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
+        <div data-field="photo" className="flex items-center gap-4 border-b border-[#eef3f7] pb-5">
+          <ImagePreviewDialog
+            src={avatarPreview}
+            alt={t("photoAlt")}
+            open={photoMenuOpen}
+            onOpenChange={setPhotoMenuOpen}
+            openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+            closeLabel={locale === "en" ? "Close" : "Cerrar"}
+          >
+            <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-[#eef8fd] text-[#009FD9] ring-1 ring-[#d8e6ef]">
+              {avatarPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <Camera className="h-6 w-6" />
+              )}
+            </span>
+          </ImagePreviewDialog>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-[#162543]">{t("photoAlt")}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={photoUploading}
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Camera className="h-4 w-4 text-[#008fc3]" />
+                {avatarPreview
+                  ? (locale === "en" ? "Change photo" : "Cambiar foto")
+                  : (locale === "en" ? "Add photo" : "Agregar foto")}
+              </button>
+              {avatarPreview && (
+                <button
+                  type="button"
+                  onClick={handlePhotoRemove}
+                  disabled={photoUploading}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-white px-3 text-sm font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <X className="h-4 w-4" />
+                  {locale === "en" ? "Remove photo" : "Quitar foto"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept={IMAGE_ACCEPT}
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) handlePhotoSelect(file);
+              event.currentTarget.value = "";
+            }}
+          />
+        </div>
         {/* Official name — locked when verified / national cédula. The "Verificado" badge
             lives ONCE in the panel HEADER (next to the name+avatar); here the Lock icon +
             the help text below already convey the field is official + read-only, so we do
@@ -808,8 +921,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           <Input
             label={<>{t("fullName")} <span className="text-red-500">*</span></>}
             value={fullName}
+            error={dirty && activeDirtySection === "basic" && !fullName.trim()
+              ? (locale === "en" ? "Full name is required." : "El nombre completo es obligatorio.")
+              : undefined}
             maxLength={NAME_MAX_LENGTH}
-            onChange={(e) => { setFullName(limitText(e.target.value, NAME_MAX_LENGTH)); touch(); }}
+            onChange={(e) => { setFullName(limitText(e.target.value, NAME_MAX_LENGTH)); touch("basic"); }}
             placeholder={t("fullNamePlaceholder")}
           />
         )}
@@ -822,7 +938,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           onChange={(e) => {
             const next = limitText(e.target.value, NAME_MAX_LENGTH);
             setBusinessName(next);
-            touch();
+            touch("basic");
           }}
           placeholder={t("businessPlaceholder")}
         />
@@ -831,12 +947,18 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         <div data-field="bio">
           <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("description")} <span className="text-red-500">*</span></label>
           <textarea
-            className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+            aria-invalid={dirty && activeDirtySection === "basic" && !bio.trim()}
+            className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:border-transparent transition-all ${dirty && activeDirtySection === "basic" && !bio.trim() ? "border-red-400 focus:ring-red-400" : "border-[#e5e7eb] focus:ring-[#009FD9]"}`}
             placeholder={t("descPlaceholder")}
             value={bio}
             maxLength={PROFILE_BIO_MAX_LENGTH}
-            onChange={(e) => { setBio(limitText(e.target.value, PROFILE_BIO_MAX_LENGTH)); touch(); }}
+            onChange={(e) => { setBio(limitText(e.target.value, PROFILE_BIO_MAX_LENGTH)); touch("basic"); }}
           />
+          {dirty && activeDirtySection === "basic" && !bio.trim() ? (
+            <p className="mt-1 text-xs text-red-500">
+              {locale === "en" ? "Description is required." : "La descripción es obligatoria."}
+            </p>
+          ) : null}
         </div>
       </Section>
 
@@ -901,28 +1023,36 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             {t("workplaces")} <span className="text-red-500">*</span>
           </label>
           {canOfferVideoConsult ? (
-            <PanelToggleRow
-              onToggle={() => {
+            <button
+              type="button"
+              role="switch"
+              aria-checked={videoConsult && videoCoverageCountry}
+              aria-label={t("videoConsultOption")}
+              onClick={() => {
                 const next = !(videoConsult && videoCoverageCountry);
                 setVideoConsult(next);
                 setVideoCoverageCountry(next);
-                touch();
+                touch("location");
               }}
-              title={t("videoConsultOption")}
-              description={t("videoCountryHelp")}
-              checked={videoConsult && videoCoverageCountry}
-              icon={Video}
-              enabledLabel={locale === "en" ? "On" : "Activado"}
-              disabledLabel={locale === "en" ? "Off" : "Desactivado"}
-              ariaLabel={t("videoConsultOption")}
-              className="mb-3"
-            />
+              className="mb-4 flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
+            >
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-[#111827]">{t("videoConsultOption")}</span>
+                <span className="mt-0.5 block text-xs leading-5 text-[#64748b]">{t("videoCountryHelp")}</span>
+              </span>
+              <ToggleSwitch checked={videoConsult && videoCoverageCountry} />
+            </button>
           ) : null}
           <WorkplacesPicker
             value={workplaces}
-            onChange={(next) => { setWorkplaces(next); touch(); }}
+            onChange={(next) => { setWorkplaces(next); touch("location"); }}
             mapHeight={168}
           />
+          {dirty && activeDirtySection === "location" && !hasWorkplace ? (
+            <p className="mt-2 text-xs text-red-500">
+              {locale === "en" ? "Add a workplace or enable video consultations." : "Agrega un lugar de trabajo o activa las videoconsultas."}
+            </p>
+          ) : null}
         </div>
       </Section>
 
@@ -934,7 +1064,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             label={t("whatsapp")}
             required
             value={whatsapp}
-            onChange={(digits) => { setWhatsapp(digits); touch(); }}
+            error={dirty && activeDirtySection === "contact" && !isPhoneComplete(whatsapp)
+              ? (locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.")
+              : undefined}
+            onChange={(digits) => { setWhatsapp(digits); touch("contact"); }}
             className="w-full sm:max-w-[32rem]"
           />
         </div>
@@ -954,7 +1087,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               if (nv && !callPhone.trim() && whatsapp.trim()) setCallPhone(whatsapp);
               return nv;
             });
-            touch();
+            touch("contact");
           }}
           ariaLabel={t("allowCallLabel")}
         />
@@ -964,7 +1097,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             <PhoneInput
               label={<>{t("callNumber")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
               value={callPhone}
-              onChange={(digits) => { setCallPhone(digits); touch(); }}
+              error={dirty && activeDirtySection === "contact" && !callPhoneIsValid
+                ? (locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.")
+                : undefined}
+              onChange={(digits) => { setCallPhone(digits); touch("contact"); }}
               className="w-full sm:max-w-[32rem]"
             />
             <p className="mt-1.5 text-xs text-[#6b7280]">{t("callNumberHelp")}</p>
@@ -985,7 +1121,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               if (nv && !contactEmail.trim() && accountEmail) setContactEmail(accountEmail);
               return nv;
             });
-            touch();
+            touch("contact");
           }}
           ariaLabel={t("contactEmail")}
         />
@@ -997,7 +1133,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               inputMode="email"
               placeholder={t("emailPlaceholder")}
               value={contactEmail}
-              onChange={(e) => { setContactEmail(e.target.value); touch(); }}
+              aria-invalid={dirty && activeDirtySection === "contact" && !emailIsValid}
+              onChange={(e) => { setContactEmail(e.target.value); touch("contact"); }}
               className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             />
             {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) && (
@@ -1023,7 +1160,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               placeholder={t("websitePlaceholder")}
               value={website}
               maxLength={120}
-              onChange={(e) => { setWebsite(e.target.value.slice(0, 120)); touch(); }}
+              onChange={(e) => { setWebsite(e.target.value.slice(0, 120)); touch("social"); }}
               className={`h-11 w-full rounded-xl border bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[#009FD9] ${website.trim() && !isValidWebsiteUrl(website) ? "border-red-300" : "border-[#e5e7eb]"}`}
             />
             {website.trim() && !isValidWebsiteUrl(website) && <p className="text-xs text-red-500 mt-1">{t("websiteInvalid")}</p>}
@@ -1049,7 +1186,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
                     placeholder={t("socialUserPlaceholder")}
                     value={social[key]}
                     maxLength={50}
-                    onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value.slice(0, 50) })); touch(); }}
+                    onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value.slice(0, 50) })); touch("social"); }}
                     className="flex-1 min-w-0 px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none bg-transparent"
                   />
                 </div>
@@ -1071,7 +1208,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
             {t("languagesSpoken")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
           </label>
-          <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch(); }} />
+          <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch("lang"); }} />
         </div>
 
         {/* Aseguradoras — ONLY for health (es_salud) professionals */}
@@ -1081,7 +1218,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               {t("insurers")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
             </label>
             <p className="text-xs text-[#9ca3af] mb-2">{t("insurersHelp")}</p>
-            <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch(); }} />
+            <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch("lang"); }} />
           </div>
         )}
       </Section>

@@ -7,7 +7,7 @@ import { buildSocialUrl } from "@/lib/social";
 
 export const dynamic = "force-dynamic";
 
-export async function JobsPageContent({ initialSelectedJobId = null }: { initialSelectedJobId?: string | null } = {}) {
+export async function JobsPageContent({ initialSelectedJobId = null, returnTo = null, detailOnly = false }: { initialSelectedJobId?: string | null; returnTo?: string | null; detailOnly?: boolean } = {}) {
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   const [{ data }, { data: professional }, { data: profile }, { data: applications }] = await Promise.all([
@@ -44,12 +44,14 @@ export async function JobsPageContent({ initialSelectedJobId = null }: { initial
       jobs={jobs}
       canPost={!!professional}
       initialSelectedJobId={initialSelectedJobId}
+      returnTo={returnTo}
       currentProfessionalId={professional?.id ?? null}
       currentUserId={user?.id ?? null}
       currentUserEmail={profile?.email ?? user?.email ?? null}
       currentUserPhone={profile?.phone ?? null}
       currentUserLinkedIn={socialLinks.linkedin ? buildSocialUrl("linkedin", socialLinks.linkedin) : null}
       appliedJobIds={(applications ?? []).map((item) => item.job_id)}
+      detailOnly={detailOnly}
     />
   );
 }

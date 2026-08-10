@@ -13,6 +13,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   }
   return {
     locale,
+    timeZone: "America/Costa_Rica",
     messages: (await import(`../../messages/${locale}.json`)).default,
     // Safety net: a missing message renders a readable label, NEVER "namespace.key".
     getMessageFallback({ namespace, key }) {

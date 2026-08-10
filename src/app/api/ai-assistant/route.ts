@@ -67,8 +67,8 @@ const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CONTENT = 700;
-const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|request)/gi;
-const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|crear|hacer|abrir)|(?:publicar|crear|hacer|abrir)|(?:i want to|i need to|how can i)\s+(?:publish|create|open)|(?:publish|create|open))\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|request)\b/i;
+const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)/gi;
+const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|crear|hacer|abrir)|(?:publicar|crear|hacer|abrir)|(?:i want to|i need to|how can i)\s+(?:publish|create|open)|(?:publish|create|open))\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)\b/i;
 
 function localeKey(value: unknown): Locale {
   return value === "en" ? "en" : "es";

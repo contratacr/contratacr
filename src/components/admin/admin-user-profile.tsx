@@ -454,7 +454,7 @@ export function AdminUserProfile({
                   <AnalyticsTile label="WhatsApp" value={analytics.whatsappClicks} />
                   <AnalyticsTile label="Llamadas" value={analytics.phoneClicks} />
                   <AnalyticsTile label="Disponibilidad" value={analytics.availabilityActions} />
-                  <AnalyticsTile label="Guardados" value={analytics.favorites} />
+                  <AnalyticsTile label="Favoritos" value={analytics.favorites} />
                 </div>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                   <AnalyticsTile label="Solicitudes iniciadas" value={analytics.serviceRequestsStarted} />
