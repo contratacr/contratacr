@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { MessageLauncher } from "@/components/professionals/message-launcher";
-import { useAuth } from "@/hooks/use-auth";
 
 type DirectChatLauncherProps = {
   professionalId?: string;
@@ -45,7 +44,6 @@ export function DirectChatLauncher({
   isOwn = false,
   className = "",
   buttonLabel,
-  openDirectly = false,
   initialMessage = "",
   onSelfAction,
   tone = "primary",
@@ -54,12 +52,10 @@ export function DirectChatLauncher({
   const locale = useLocale();
   const isEn = locale === "en";
   const nativeApp = useNativeApp();
-  const { user, loading: authLoading } = useAuth();
-  const directMessagesEnabled = process.env.NEXT_PUBLIC_ENABLE_DIRECT_MESSAGES !== "false";
   const [loading, setLoading] = useState(false);
   const whatsappLabel = isEn ? "Contact on WhatsApp" : "Contactar por WhatsApp";
 
-  if (openDirectly && (nativeApp || directMessagesEnabled)) {
+  if (nativeApp) {
     const safeLabel = buttonLabel && !/whatsapp/i.test(buttonLabel) ? buttonLabel : undefined;
     return (
       <MessageLauncher
@@ -82,14 +78,6 @@ export function DirectChatLauncher({
   async function openChat() {
     if (isOwn) {
       onSelfAction?.();
-      return;
-    }
-    if (authLoading) return;
-    if (!user) {
-      const redirect = typeof window !== "undefined"
-        ? `${window.location.pathname}${window.location.search}${window.location.hash}`
-        : "/";
-      window.location.assign(`/${locale}/login?redirect=${encodeURIComponent(redirect)}`);
       return;
     }
 
@@ -141,7 +129,7 @@ export function DirectChatLauncher({
       )}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <WhatsAppLogo />}
-      {/whatsapp/i.test(buttonLabel || "") ? buttonLabel : whatsappLabel}
+      {buttonLabel || whatsappLabel}
     </button>
   );
 }

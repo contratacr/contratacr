@@ -152,7 +152,6 @@ export async function GET(req: Request) {
     let conversationsQuery = db.from("direct_conversations")
       .select("*, professionals(id, slug, business_name, profiles(full_name, avatar_url))")
       .or(`client_id.eq.${user.id},professional_profile_id.eq.${user.id}`)
-      .not("last_message_at", "is", null)
       .neq("status", "blocked");
     conversationsQuery = archived
       ? conversationsQuery.or(`and(client_id.eq.${user.id},client_archived_at.not.is.null),and(professional_profile_id.eq.${user.id},professional_archived_at.not.is.null)`)
