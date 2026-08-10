@@ -81,6 +81,12 @@ test.describe("@seeded core regression", () => {
   });
 
   test("support tickets keep the automatic first acknowledgement in the user panel", async ({ page }) => {
+    const renderWarnings: string[] = [];
+    page.on("console", (message) => {
+      if (message.text().includes("Cannot update a component") && message.text().includes("SupportTickets")) {
+        renderWarnings.push(message.text());
+      }
+    });
     const admin = regressionAdminClient();
     const subject = `E2E Regression support ${Date.now()}`;
     const firstMessage = "Necesito ayuda con una prueba automatizada de soporte.";
@@ -141,6 +147,7 @@ test.describe("@seeded core regression", () => {
       await expect(page.getByText(firstMessage).filter({ visible: true }).first()).toBeVisible();
       await expect(page.getByText(autoMessage).filter({ visible: true }).first()).toBeVisible();
       await expectNoHorizontalOverflow(page);
+      expect(renderWarnings, "Support ticket reads must not update the dashboard during render").toEqual([]);
     } finally {
       await admin.from("support_ticket_messages").delete().eq("ticket_id", ticket.id);
       await admin.from("support_tickets").delete().eq("id", ticket.id);
