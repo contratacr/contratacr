@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectNoHorizontalOverflow, gotoOK } from "./helpers";
+import { expectNoHorizontalOverflow, gotoOK, waitForInteractivePage } from "./helpers";
 
 test.describe("@smoke auth and support", () => {
   test("login page exposes password and OAuth entry points without submitting", async ({ page }) => {
@@ -27,6 +27,7 @@ test.describe("@smoke auth and support", () => {
 
   test("forgot-password validates the email and shows the privacy-safe confirmation state", async ({ page }) => {
     await gotoOK(page, "/es/olvide-contrasena");
+    await waitForInteractivePage(page);
 
     const email = page.getByLabel(/Correo/i).first();
     await expect(email).toBeVisible();

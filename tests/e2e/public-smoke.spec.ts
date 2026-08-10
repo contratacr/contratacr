@@ -55,6 +55,7 @@ test.describe("@smoke public routes", () => {
 
   test("navbar exposes the core public actions", async ({ page }, testInfo) => {
     await gotoOK(page, "/es");
+    await waitForInteractivePage(page);
     await expect(page.getByRole("link", { name: /ContrataCR/i }).first()).toBeVisible();
 
     if (isMobileProject(testInfo)) {

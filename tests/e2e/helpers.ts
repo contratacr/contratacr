@@ -58,6 +58,12 @@ export async function expectVisibleText(scope: Locator, matcher: string | RegExp
 export async function waitForInteractivePage(page: Page) {
   await page.waitForLoadState("load", { timeout: 10_000 }).catch(() => undefined);
   await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => undefined);
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }),
+  );
 }
 
 async function expectAuthCookie(page: Page) {
