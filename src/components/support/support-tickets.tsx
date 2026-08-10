@@ -125,16 +125,15 @@ export function SupportTickets({
   const [showModal, setShowModal] = useState(false);
   const [showNewTicketPage, setShowNewTicketPage] = useState(false);
 
+  useEffect(() => {
+    onUnreadChange?.(unread.size);
+  }, [onUnreadChange, unread]);
+
   const closeThread = useCallback(() => {
     setOpenId(null);
     setTicket(null);
     setMessages([]);
   }, []);
-
-  const setUnreadAndNotify = useCallback((s: Set<string>) => {
-    setUnread(s);
-    onUnreadChange?.(s.size);
-  }, [onUnreadChange]);
 
   const loadUnread = useCallback(async () => {
     if (!user) return;
@@ -151,8 +150,8 @@ export function SupportTickets({
       const tid = (r as any).data?.ticketId as string | undefined;
       if (tid) ids.add(tid);
     }
-    setUnreadAndNotify(ids);
-  }, [user, setUnreadAndNotify]);
+    setUnread(ids);
+  }, [user]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -202,10 +201,10 @@ export function SupportTickets({
         .eq("user_id", user.id).eq("type", "support_reply").eq("read", false)
         .contains("data", { ticketId: id });
       setUnread((prev) => {
-        const next = new Set(prev); next.delete(id); onUnreadChange?.(next.size); return next;
+        const next = new Set(prev); next.delete(id); return next;
       });
     }
-  }, [user, onUnreadChange]);
+  }, [user]);
 
   // Deep-link: open a specific ticket on mount (e.g. ?ticket=<id> from a support
   // email's "Ver conversación", carried through login → callback). Runs once.
