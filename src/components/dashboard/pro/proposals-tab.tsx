@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
+import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, MoreHorizontal, Users } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -18,7 +18,7 @@ import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, propo
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { useAppDialog } from "@/hooks/use-app-dialog";
-import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -324,6 +324,17 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   // Withdraw-a-proposal clean confirm modal (replaces the old browser confirm()).
   const [withdrawTarget, setWithdrawTarget] = useState<MyProposal | null>(null);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [actionsMenuFor, setActionsMenuFor] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!actionsMenuFor) return;
+    const close = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (!target?.closest(`[data-proposal-actions="${actionsMenuFor}"]`)) setActionsMenuFor(null);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [actionsMenuFor]);
 
   function startEdit(p: MyProposal) {
     setEditing(p.id);
@@ -555,7 +566,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   }
 
   if (loading) {
-    return <PanelSectionLoading />;
+    return <PanelListSkeleton rows={3} withTabs />;
   }
 
   return (
@@ -753,29 +764,39 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             </div>
                           )}
 
-                          {/* ACTIONS — surfaced as DIRECT buttons (no "···" overflow menu): a lone
-                              action shouldn't hide behind a menu. pending → Editar propuesta + Retirar
-                              propuesta (red, destructive); accepted+active → Contactar cliente (WhatsApp)
-                              + Marcar completado (while in progress); finalizada / rechazada /
-                              cliente-canceló → no actions. */}
+                          {/* Frequent actions stay visible. Destructive and archival actions use overflow. */}
                           {(() => {
                             const actions: ReactNode[] = [];
+                            const secondaryActions: ReactNode[] = [];
+                            const actionButtonClass = "min-h-10 w-full rounded-lg px-3 text-sm font-bold sm:min-w-[10rem] sm:flex-1";
                             if (p.status === "pending") {
-                              actions.push(<Button key="edit" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => startEdit(p)}>{t("editProposal")}</Button>);
-                              actions.push(<Button key="withdraw" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4 border-[#fecaca] text-[#dc2626] hover:bg-[#fef2f2] hover:text-[#b91c1c] hover:border-[#fca5a5]" onClick={() => setWithdrawTarget(p)}>{t("withdraw")}</Button>);
+                              actions.push(<Button key="edit" size="sm" variant="outline" className={actionButtonClass} onClick={() => startEdit(p)}>{t("editProposal")}</Button>);
+                              secondaryActions.push(<button key="withdraw" role="menuitem" type="button" className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50" onClick={() => { setActionsMenuFor(null); setWithdrawTarget(p); }}>{t("withdraw")}</button>);
                             } else if (p.status === "accepted") {
                               if (ps !== "cancelled") {
                                 actions.push(
-                                  <DirectChatLauncher key="chat" proposalId={p.id} professionalName={clientName || (locale === "en" ? "Client" : "Cliente")} contextTitle={p.projects?.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: p.projects?.title || t("projectFallback") })} tone={canMarkCompleted ? "contrast" : "primary"} className="min-h-9 flex-1 rounded-lg px-4 text-sm font-bold disabled:cursor-wait sm:flex-none" />
+                                  <DirectChatLauncher key="chat" proposalId={p.id} professionalName={clientName || (locale === "en" ? "Client" : "Cliente")} contextTitle={p.projects?.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: p.projects?.title || t("projectFallback") })} tone={canMarkCompleted ? "contrast" : "primary"} className={`${actionButtonClass} disabled:cursor-wait`} />
                                 );
                               }
-                              if (canMarkCompleted) actions.push(<Button key="done" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);
+                              if (canMarkCompleted) actions.push(<Button key="done" size="sm" className={actionButtonClass} onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);
                             }
                             if (p.status === "declined" || ps === "cancelled") {
-                              actions.push(<Button key="archive" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg border-red-100 px-4 text-red-600 hover:bg-red-50" onClick={() => archiveProposal(p.id)}>{t("archive")}</Button>);
+                              secondaryActions.push(<button key="archive" role="menuitem" type="button" className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]" onClick={() => { setActionsMenuFor(null); archiveProposal(p.id); }}>{t("archive")}</button>);
                             }
-                            if (actions.length === 0) return null;
-                            return <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">{actions}</div>;
+                            if (actions.length === 0 && secondaryActions.length === 0) return null;
+                            return (
+                              <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
+                                {actions.length > 0 && <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:flex sm:flex-wrap">{actions}</div>}
+                                {secondaryActions.length > 0 && (
+                                  <div className="relative ml-auto shrink-0" data-proposal-actions={p.id}>
+                                    <button type="button" aria-label={locale === "en" ? "More options" : "Más opciones"} aria-haspopup="menu" aria-expanded={actionsMenuFor === p.id} onClick={() => setActionsMenuFor((current) => current === p.id ? null : p.id)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]">
+                                      <MoreHorizontal className="h-5 w-5" />
+                                    </button>
+                                    {actionsMenuFor === p.id && <div role="menu" className="absolute right-0 top-[calc(100%+6px)] z-50 w-48 rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">{secondaryActions}</div>}
+                                  </div>
+                                )}
+                              </div>
+                            );
                           })()}
 
                           {/* Inline edit form (pending only) */}

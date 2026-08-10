@@ -1,3 +1,5 @@
+import { hasBrokenVisibleText, repairVisibleText } from "@/lib/text/repair-visible-text";
+
 export type CategoryItem = {
   id: string;
   label: string;
@@ -332,13 +334,13 @@ type CategorySegmentDefinition = Omit<CategoryGroup, "items"> & {
 
 const CATEGORY_SEGMENTS: CategorySegmentDefinition[] = [
   { id: "hogar", label: "Hogar", labelEn: "Home", emoji: "🏠", iconKey: "armchair" },
-  { id: "construccion_ingenieria", label: "Construcci\u00f3n", labelEn: "Construction", emoji: "\uD83D\uDC77", iconKey: "hard-hat" },
+  { id: "construccion_ingenieria", label: "Construcción", labelEn: "Construction", emoji: "👷", iconKey: "hard-hat" },
   { id: "limpieza", label: "Limpieza", labelEn: "Cleaning", emoji: "🧹", iconKey: "sparkles" },
   { id: "salud", label: "Salud", labelEn: "Health", emoji: "🩺", iconKey: "heart" },
-  { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "\uD83E\uDD1D", iconKey: "heart-handshake" },
-  { id: "belleza", label: "Belleza", labelEn: "Beauty & aesthetics", emoji: "\u2728", iconKey: "star" },
-  { id: "moda_y_cuidado_personal", label: "Moda", labelEn: "Fashion", emoji: "\uD83D\uDC55", iconKey: "shirt" },
-  { id: "automotriz", label: "Veh\u00edculos", labelEn: "Vehicles", emoji: "\uD83D\uDE97", iconKey: "car" },
+  { id: "bienestar", label: "Bienestar", labelEn: "Wellness", emoji: "🤝", iconKey: "heart-handshake" },
+  { id: "belleza", label: "Belleza", labelEn: "Beauty & aesthetics", emoji: "✨", iconKey: "star" },
+  { id: "moda_y_cuidado_personal", label: "Moda", labelEn: "Fashion", emoji: "👕", iconKey: "shirt" },
+  { id: "automotriz", label: "Vehículos", labelEn: "Vehicles", emoji: "🚗", iconKey: "car" },
   { id: "tecnologia", label: "Tecnología", labelEn: "Technology", emoji: "💻", iconKey: "laptop" },
   { id: "profesional", label: "Empresas", labelEn: "Business", emoji: "💼", iconKey: "briefcase" },
   { id: "comercios", label: "Comercios", labelEn: "Shops", emoji: "🏪", iconKey: "store" },
@@ -503,8 +505,8 @@ export function setCustomCategories(
       ...group,
       id,
       iconKey: resolveCategoryGroupIconKey(id, group.label, group.iconKey),
-      label: isOtherCategoryGroup(id, group.label) ? "Otras categorías" : group.label,
-      labelEn: isOtherCategoryGroup(id, group.label) ? "Other categories" : group.labelEn,
+      label: isOtherCategoryGroup(id, group.label) ? "Otras categorías" : repairVisibleText(group.label),
+      labelEn: isOtherCategoryGroup(id, group.label) ? "Other categories" : repairVisibleText(group.labelEn),
       sortOrder: isOtherCategoryGroup(id, group.label) ? Number.MAX_SAFE_INTEGER : group.sortOrder,
     });
   }
@@ -515,8 +517,8 @@ export function setCustomCategories(
     list
       .filter((c) => c && c.id && !c.isHidden && (c.label || c.labelEn || c.groupId))
       .map((c) => [c.id, {
-        label: c.label,
-        labelEn: c.labelEn,
+        label: repairVisibleText(c.label),
+        labelEn: repairVisibleText(c.labelEn),
         groupId: fixedById.get(c.id)?.groupId ?? (c.groupId ? normalizeSegmentGroupId(c.groupId) : undefined),
         keywords: c.keywords,
         isHidden: c.isHidden,
@@ -528,8 +530,8 @@ export function setCustomCategories(
       const groupId = normalizeSegmentGroupId(c.groupId);
       return {
         id: c.id,
-        label: c.label,
-        labelEn: c.labelEn,
+        label: repairVisibleText(c.label),
+        labelEn: repairVisibleText(c.labelEn),
         keywords: c.keywords ?? [],
         groupId,
         groupLabel: getCategoryGroupLabel(groupId),
@@ -630,13 +632,25 @@ export function getAllCategories(): (CategoryItem & { groupId: string; groupLabe
       const groupId = override?.groupId || category.groupId;
       return {
         ...category,
-        label: override?.label || category.label,
+        label: (() => {
+          const repairedOverride = repairVisibleText(override?.label);
+          return repairedOverride && !hasBrokenVisibleText(repairedOverride)
+            ? repairedOverride
+            : category.label;
+        })(),
         keywords: override?.keywords ?? category.keywords,
         groupId,
         groupLabel: getCategoryGroupLabel(groupId),
       };
     });
-  return CUSTOM_CATEGORIES.length ? [...fixed, ...CUSTOM_CATEGORIES] : fixed;
+  return CUSTOM_CATEGORIES.length
+    ? [...fixed, ...CUSTOM_CATEGORIES.map((category) => ({
+        ...category,
+        label: repairVisibleText(category.label),
+        labelEn: repairVisibleText(category.labelEn),
+        groupLabel: repairVisibleText(category.groupLabel),
+      }))]
+    : fixed;
 }
 
 /* ─── Normalize text for accent-insensitive comparison ─── */
@@ -1596,39 +1610,43 @@ export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   restaurantes: "Restaurants & food",
 };
 
+function repairCategoryLabel(label: string): string {
+  return repairVisibleText(label);
+}
+
 /* ─── Get category label from ID (locale-aware) ─── */
 export function getCategoryLabel(id: string, locale?: string): string {
   const override = CATEGORY_CATALOG_OVERRIDES.get(id);
   if (override) {
-    if (locale === "en" && override.labelEn) return override.labelEn;
-    if (override.label) return override.label;
+    if (locale === "en" && override.labelEn) return repairCategoryLabel(override.labelEn);
+    if (override.label) return repairCategoryLabel(override.label);
   }
-  if (locale === "en" && CATEGORY_LABELS_EN[id]) return CATEGORY_LABELS_EN[id];
+  if (locale === "en" && CATEGORY_LABELS_EN[id]) return repairCategoryLabel(CATEGORY_LABELS_EN[id]);
   if (id === "otro") return locale === "en" ? "Other service" : "Otro servicio";
   const found = ALL_CATEGORIES.find((c) => c.id === id);
-  if (found) return found.label;
+  if (found) return repairCategoryLabel(found.label);
   // Admin-approved custom category (loaded on the client) — its real label.
   const custom = CUSTOM_CATEGORIES.find((c) => c.id === id);
-  if (custom) return locale === "en" && custom.labelEn ? custom.labelEn : custom.label;
+  if (custom) return repairCategoryLabel(locale === "en" && custom.labelEn ? custom.labelEn : custom.label);
   // Unknown id → a readable label (never the raw key). New custom-category ids are
   // a clean slug (no prefix), but LEGACY ones were slugged as `sg_<name>`, so strip
   // that prefix before de-slugging (e.g. "sg_vendedor_de_botellas" → "Vendedor de
   // botellas") for back-compat — this is the server-side fallback when the dynamic
   // registry isn't loaded.
-  return id
+  return repairCategoryLabel(id
     .replace(/^sg_/, "")
     .replace(/_/g, " ")
-    .replace(/^\w/, (c) => c.toUpperCase());
+    .replace(/^\w/, (c) => c.toUpperCase()));
 }
 
 /* ─── Get category GROUP label from group ID (locale-aware) ─── */
 export function getCategoryGroupLabel(groupId: string, locale?: string): string {
   if (isOtherCategoryGroup(groupId)) return locale === "en" ? "Other categories" : "Otras categorías";
   const custom = CUSTOM_CATEGORY_GROUPS.find((group) => group.id === groupId);
-  if (custom) return locale === "en" && custom.labelEn ? custom.labelEn : custom.label;
-  if (locale === "en" && CATEGORY_GROUP_LABELS_EN[groupId]) return CATEGORY_GROUP_LABELS_EN[groupId];
+  if (custom) return repairCategoryLabel(locale === "en" && custom.labelEn ? custom.labelEn : custom.label);
+  if (locale === "en" && CATEGORY_GROUP_LABELS_EN[groupId]) return repairCategoryLabel(CATEGORY_GROUP_LABELS_EN[groupId]);
   const g = CATEGORY_GROUPS.find((x) => x.id === groupId);
-  return g?.label ?? groupId;
+  return repairCategoryLabel(g?.label ?? groupId);
 }
 
 /* ─── Health categories (es_salud) — drive DOB behaviour. AUTHORITATIVE flag,

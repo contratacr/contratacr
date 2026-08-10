@@ -14,9 +14,11 @@ create index if not exists professional_follows_professional_created_idx
 
 alter table public.professional_follows enable row level security;
 
+drop policy if exists "Follows are publicly viewable" on public.professional_follows;
 create policy "Follows are publicly viewable"
   on public.professional_follows for select using (true);
 
+drop policy if exists "Accounts can follow professionals" on public.professional_follows;
 create policy "Accounts can follow professionals"
   on public.professional_follows for insert
   with check (
@@ -28,6 +30,7 @@ create policy "Accounts can follow professionals"
     )
   );
 
+drop policy if exists "Accounts can unfollow professionals" on public.professional_follows;
 create policy "Accounts can unfollow professionals"
   on public.professional_follows for delete
   using (auth.uid() = follower_id);

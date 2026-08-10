@@ -2,11 +2,13 @@
 
 import {
   Bell,
+  BriefcaseBusiness,
   CalendarCheck,
   CalendarClock,
   ClipboardList,
   Handshake,
   Headset,
+  Megaphone,
   Star,
   UserPlus,
 } from "lucide-react";
@@ -36,6 +38,11 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
       return <Star className={className} />;
     case "professional_follow":
       return <UserPlus className={className} />;
+    case "followed_professional_activity":
+      return <Megaphone className={className} />;
+    case "job_application":
+    case "job_application_status":
+      return <BriefcaseBusiness className={className} />;
     case "proposal_received":
     case "proposal_updated":
     case "proposal_withdrawn":

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Lock, Camera, X, Info, Briefcase, ChevronDown } from "lucide-react";
+import { Lock, Camera, X, Info, Briefcase, ChevronDown, ChevronLeft, Pencil, Eye, Trash2 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ type ExtraProfileSection = {
   title: string;
   desc?: string;
   children: React.ReactNode;
+  footer?: React.ReactNode | null;
 };
 
 function ProfileSection({
@@ -31,26 +32,39 @@ function ProfileSection({
   title,
   desc,
   open,
+  mobileFocused,
   onToggle,
+  onActivate,
   children,
-}: ExtraProfileSection & { open: boolean; onToggle: (id: string) => void }) {
+  footer,
+}: ExtraProfileSection & { open: boolean; mobileFocused?: boolean; onToggle: (id: string) => void; onActivate?: (id: string) => void }) {
   return (
-    <div id={`sec-${id}`} className="scroll-mt-24">
+    <div id={`sec-${id}`} className={cn("scroll-mt-24", mobileFocused && !open && "max-sm:hidden", open && "max-sm:bg-white")}>
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className={cn("w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-4 text-left transition-colors", open ? "bg-[#fafafa]" : "hover:bg-[#fafafa]")}
+        className={cn("w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#fafafa] sm:flex" : "flex hover:bg-[#fafafa]")}
         aria-expanded={open}
       >
+        {open && (
+          <span className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#162543] max-sm:flex" aria-hidden="true">
+            <ChevronLeft className="h-5 w-5" />
+          </span>
+        )}
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold text-[#111827] leading-tight">{title}</p>
-          {desc && <p className="text-xs text-[#6b7280] mt-1">{desc}</p>}
+          <p className={cn("text-[15px] font-semibold text-[#111827] leading-tight", open && "max-sm:text-base")}>{title}</p>
+          {desc && <p className={cn("text-xs text-[#6b7280] mt-1", open && "max-sm:hidden")}>{desc}</p>}
         </div>
-        <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", open && "rotate-180")} />
+        <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#162543] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]", open && "max-sm:hidden")} aria-hidden="true">
+          {open ? <ChevronDown className="h-[18px] w-[18px] rotate-180" /> : <Pencil className="h-[18px] w-[18px]" />}
+        </span>
       </button>
       {open && (
-        <div className="px-4 sm:px-5 pb-5 pt-4 flex flex-col gap-4 border-t border-[#f3f4f6]">
-          {children}
+        <div className="px-4 pb-6 pt-5 sm:px-5 sm:pt-6" onFocusCapture={() => onActivate?.(id)} onPointerDownCapture={() => onActivate?.(id)}>
+          <div className="flex flex-col gap-5">
+            {children}
+          </div>
+          {footer}
         </div>
       )}
     </div>
@@ -58,7 +72,7 @@ function ProfileSection({
 }
 
 // The SEEKER's "Mi perfil" — basic identity every account has (photo + name +
-// phone), with the same reliable autosave standard as the rest of the app. Used
+// phone), with manual Guardar/Cancelar controls. Used
 // by the unified panel's "Usar servicios" mode. The "Ofrecer servicios" invitation
 // lives in the panel sidebar, so it is not repeated here.
 export function BasicProfileSection({
@@ -83,32 +97,31 @@ export function BasicProfileSection({
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileDirty, setProfileDirty] = useState(false);
-  const profileTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [activeDirtySection, setActiveDirtySection] = useState<string | null>(null);
   const profileDirtyRef = useRef(false);
   const profileFormRef = useRef(profileForm);
-  const saveProfileRef = useRef<() => Promise<void>>(async () => {});
   const saveProfileSeq = useRef(0);
   const mountedRef = useRef(true);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(["basic"]));
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const toggleSection = (id: string) =>
     setOpenSections((prev) => {
+      if (typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches) {
+        return prev.has(id) ? new Set() : new Set([id]);
+      }
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
-  function touchProfile() {
+  function touchProfile(sectionId?: string) {
     setProfileSaved(false);
     setProfileDirty(true);
+    if (sectionId) setActiveDirtySection(sectionId);
     profileDirtyRef.current = true;
-    if (profileTimer.current) clearTimeout(profileTimer.current);
-    profileTimer.current = setTimeout(() => { void saveProfile(); }, 1000);
-  }
-  function flushProfile() {
-    if (profileTimer.current) { clearTimeout(profileTimer.current); profileTimer.current = null; }
-    if (profileDirtyRef.current) void saveProfile();
   }
 
   const loadProfile = useCallback(() => {
@@ -144,6 +157,7 @@ export function BasicProfileSection({
     const currentForm = profileFormRef.current;
     if (mountedRef.current) {
       setProfileDirty(false);
+      setActiveDirtySection(null);
       setProfileSaving(true);
     }
     const supabase = createClient();
@@ -161,89 +175,77 @@ export function BasicProfileSection({
       }
       return;
     }
-    if (cleanPhone) {
-      const { error: professionalPhoneError } = await supabase.from("professionals").update({ whatsapp: cleanPhone }).eq("profile_id", user.id);
-      if (professionalPhoneError) {
-        if (!isCurrentSave()) return;
-        setProfileSaving(false);
-        void showMessage({ title: errorTitle, description: locale === "en" ? "We couldn't sync your contact number. Try again." : "No pudimos sincronizar tu número de contacto. Intenta de nuevo.", tone: "danger" });
-        return;
-      }
-    }
     if (!verified && cleanName) {
       const { error: authError } = await supabase.auth.updateUser({ data: { full_name: cleanName } });
       if (authError) console.warn("[basic-profile] auth metadata sync failed:", authError.message);
+    }
+    if (pendingAvatarFile) {
+      setPhotoUploading(true);
+      try {
+        const preparedFile = await prepareImageForUpload(pendingAvatarFile, { maxDimension: 1200 });
+        const fd = new FormData();
+        fd.append("file", preparedFile);
+        fd.append("type", "avatar");
+        const upload = await uploadPhotoFormDataWithRetry(fd);
+        if (!upload.ok || !upload.data.url) {
+          throw new Error(upload.data.error || t("photoError"));
+        }
+        const { url } = upload.data;
+        const { error: profilePhotoError } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+        if (profilePhotoError) throw new Error(t("photoError"));
+        const { error: authPhotoError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+        if (authPhotoError) throw new Error(t("photoError"));
+        setProfileAvatar(url);
+        setPendingAvatarFile(null);
+      } catch (error) {
+        const code = getImageUploadPreparationErrorCode(error);
+        void showMessage({ title: errorTitle, description: code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : error instanceof Error && error.message ? error.message : t("photoError"), tone: "danger" });
+        setProfileSaving(false);
+        setPhotoUploading(false);
+        return;
+      } finally {
+        setPhotoUploading(false);
+      }
+    } else if (profileAvatar === null && profileData?.avatar_url) {
+      await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
+      await supabase.auth.updateUser({ data: { avatar_url: null } });
     }
     window.dispatchEvent(new Event("ccr:profile-updated"));
     if (isCurrentSave()) {
       setProfileData((prev) => (prev ? { ...prev, phone: cleanPhone ?? "", ...(!verified && cleanName ? { full_name: cleanName } : {}) } : prev));
       setProfileSaving(false);
       setProfileSaved(true);
+      setActiveDirtySection(null);
       profileDirtyRef.current = false;
       setTimeout(() => {
         if (isCurrentSave()) setProfileSaved(false);
       }, 3000);
     }
-  }, [errorTitle, locale, profileData?.client_identity_status, showMessage, user]);
+  }, [errorTitle, locale, pendingAvatarFile, profileAvatar, profileData?.avatar_url, profileData?.client_identity_status, showMessage, t, user]);
   useEffect(() => {
     profileFormRef.current = profileForm;
-    saveProfileRef.current = saveProfile;
-  }, [profileForm, saveProfile]);
+  }, [profileForm]);
 
-  // Flush a pending save on unmount (e.g. switching tabs) — the data-loss fix.
   useEffect(() => () => {
     mountedRef.current = false;
-    if (profileTimer.current) clearTimeout(profileTimer.current);
-    if (profileDirtyRef.current) void saveProfileRef.current?.();
   }, []);
 
   useReportSaveStatus(profileSaving, profileSaved, profileDirty);
 
-  async function handlePhotoRemove() {
-    if (!user) return;
-    const supabase = createClient();
-    await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
-    await supabase.auth.updateUser({ data: { avatar_url: null } });
+  function handlePhotoRemove() {
     setProfileAvatar(null);
-    window.dispatchEvent(new Event("ccr:profile-updated"));
+    setPendingAvatarFile(null);
+    touchProfile("basic");
   }
 
-  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     const input = e.currentTarget;
-    setPhotoUploading(true);
-    try {
-      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1200 });
-      const fd = new FormData();
-      fd.append("file", preparedFile);
-      fd.append("type", "avatar");
-      const upload = await uploadPhotoFormDataWithRetry(fd);
-      if (!upload.ok || !upload.data.url) {
-        void showMessage({ title: errorTitle, description: upload.data.error || t("photoError"), tone: "danger" });
-        return;
-      }
-      const { url } = upload.data;
-      const supabase = createClient();
-      const { error: profilePhotoError } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
-      if (profilePhotoError) {
-        void showMessage({ title: errorTitle, description: t("photoError"), tone: "danger" });
-        return;
-      }
-      const { error: authPhotoError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
-      if (authPhotoError) {
-        void showMessage({ title: errorTitle, description: t("photoError"), tone: "danger" });
-        return;
-      }
-      setProfileAvatar(url);
-      window.dispatchEvent(new Event("ccr:profile-updated"));
-    } catch (error) {
-      const code = getImageUploadPreparationErrorCode(error);
-      void showMessage({ title: errorTitle, description: code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : t("photoError"), tone: "danger" });
-    } finally {
-      setPhotoUploading(false);
-      input.value = "";
-    }
+    setProfileAvatar(URL.createObjectURL(file));
+    setPendingAvatarFile(file);
+    touchProfile("basic");
+    input.value = "";
   }
 
   const displayName =
@@ -258,51 +260,79 @@ export function BasicProfileSection({
   const inputClass =
     "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
-  return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#eef0f2]">
-      <ProfileSection id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
-      {/* Foto */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB]">
-          <ImagePreviewDialog
-            src={profileAvatar}
-            alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
-            openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
-            closeLabel={locale === "en" ? "Close" : "Cerrar"}
-          >
-            {profileAvatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={profileAvatar} alt={locale === "en" ? "Profile photo" : "Foto"} className="h-16 w-16 rounded-full object-cover" />
-            ) : (
-              <span className="text-xl font-bold text-[#009FD9]">{getInitials(displayName)}</span>
-            )}
-          </ImagePreviewDialog>
-          {photoUploading && (
-            <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
-              <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-            </div>
-          )}
-        </div>
-        {profileAvatar ? (
-          <div className="min-w-[13rem] flex-1 basis-[13rem] flex flex-nowrap items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading} className="px-3">
-              <Camera className="h-4 w-4" /> {t("changePhoto")}
-            </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} disabled={photoUploading} className="shrink-0 px-2.5 text-red-500 hover:text-red-600">
-              <X className="h-4 w-4" /> {t("removePhoto")}
-            </Button>
-          </div>
-        ) : (
-          <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
-            <Camera className="h-4 w-4" /> {t("addPhoto")}
-          </Button>
-        )}
-        <input ref={photoInputRef} type="file" accept={IMAGE_ACCEPT} className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
-      </div>
+  function cancelProfileChanges() {
+    if (!profileData) return;
+    setProfileForm({ full_name: profileData.full_name ?? "", phone: profileData.phone ?? "" });
+    setProfileAvatar(profileData.avatar_url ?? null);
+    setPendingAvatarFile(null);
+    setProfileSaved(false);
+    setProfileDirty(false);
+    setActiveDirtySection(null);
+    profileDirtyRef.current = false;
+  }
 
+  const makeProfileFooter = (sectionId: string) => {
+    const sectionActive = profileDirty && activeDirtySection === sectionId;
+    return (
+      <div className="mt-5 flex flex-col gap-2 border-t border-[#f3f4f6] pt-4 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={cancelProfileChanges}
+          disabled={!sectionActive || profileSaving || photoUploading}
+          className="hidden h-10 rounded-xl px-4 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex sm:items-center sm:justify-center"
+        >
+          {locale === "en" ? "Cancel" : "Cancelar"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void saveProfile()}
+          disabled={!sectionActive || profileSaving || photoUploading}
+          className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
+        >
+          {profileSaving || photoUploading ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
+        </button>
+      </div>
+    );
+  };
+  const mobileSectionFocused = openSections.size > 0;
+  const activeMobileSectionId = Array.from(openSections)[0] ?? null;
+  const activeMobileSectionTitle =
+    activeMobileSectionId === "basic"
+      ? t("secBasic")
+      : extraSections.find((section) => section.id === activeMobileSectionId)?.title ?? null;
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("ccr:profile-mobile-section-title", { detail: mobileSectionFocused ? activeMobileSectionTitle : null }));
+  }, [activeMobileSectionTitle, mobileSectionFocused]);
+
+  useEffect(() => {
+    const close = () => setOpenSections(new Set());
+    window.addEventListener("ccr:profile-mobile-close-section", close);
+    return () => window.removeEventListener("ccr:profile-mobile-close-section", close);
+  }, []);
+
+  return (
+    <div className="mx-auto flex w-full max-w-none flex-col gap-4">
+      <div className={cn(
+        "bg-white",
+        mobileSectionFocused
+          ? "rounded-none border-0 shadow-none"
+          : "overflow-hidden rounded-2xl border border-[#dfe8f0] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]"
+      )}>
+      <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7]")}>
+      <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-[#111827]">{locale === "en" ? "Profile" : "Perfil"}</h2>
+          <p className="mt-1 text-sm text-[#6b7280]">
+            {locale === "en"
+              ? "Complete your basic information and keep your account up to date."
+              : "Completa tu información básica y mantén tu cuenta al día."}
+          </p>
+        </div>
+      </div>
+      <ProfileSection id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection} footer={makeProfileFooter("basic")}>
       {/* Datos — nombre + teléfono */}
-      <div className="border-t border-[#f3f4f6] pt-5 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <div>
           <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
             {t("fullName")} <span className="text-red-500">*</span>
@@ -315,13 +345,12 @@ export function BasicProfileSection({
               disabled={cedulaVerified}
               maxLength={NAME_MAX_LENGTH}
               onChange={(e) => { setProfileForm((f) => ({ ...f, full_name: limitText(e.target.value, NAME_MAX_LENGTH) })); touchProfile(); }}
-              onBlur={flushProfile}
             />
             {cedulaVerified && <Lock className="h-4 w-4 text-[#9ca3af] absolute right-3 top-1/2 -translate-y-1/2" />}
           </div>
           {cedulaVerified && (
             <p className="text-xs text-[#6b7280] mt-1.5">
-              {t.rich("nameLockedHelp", { link: (c) => <Link href={supportTab} className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
+              {t.rich("nameLockedHelp", { link: (c) => <Link href="/dashboard/profesional?tab=verificacion" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
             </p>
           )}
         </div>
@@ -331,10 +360,6 @@ export function BasicProfileSection({
             value={profileForm.phone}
             onChange={(digits) => { setProfileForm((f) => ({ ...f, phone: digits })); touchProfile(); }}
           />
-          <p className="mt-1.5 flex items-start gap-1.5 text-xs text-[#6b7280]">
-            <Info className="h-3.5 w-3.5 shrink-0 mt-px text-[#9ca3af]" />
-            <span>{t("phoneNotice")}</span>
-          </p>
         </div>
 
         {/* NO cédula verification SECTION here (sprint 513). A client gets verified by
@@ -364,15 +389,20 @@ export function BasicProfileSection({
           title={section.title}
           desc={section.desc}
           open={openSections.has(section.id)}
+          mobileFocused={mobileSectionFocused}
           onToggle={toggleSection}
+          onActivate={setActiveDirtySection}
+          footer={section.footer === undefined ? makeProfileFooter(section.id) : section.footer}
         >
           {section.children}
         </ProfileSection>
       ))}
       </div>
+      </div>
 
-      <UnsavedChangesGuard dirty={profileDirty} onSave={saveProfile} />
+      <UnsavedChangesGuard dirty={profileDirty} onSave={saveProfile} onDiscard={cancelProfileChanges} />
       {dialogNode}
     </div>
   );
 }
+

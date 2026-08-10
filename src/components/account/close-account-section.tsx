@@ -11,9 +11,12 @@ import { createClient } from "@/lib/supabase/client";
 export function CloseAccountSection({ initialDisabled = false }: { initialDisabled?: boolean }) {
   const t = useTranslations("closeAccount");
   const [open, setOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [disabled, setDisabled] = useState(initialDisabled);
 
   // Load the real disabled state (so a previously-disabled user sees "Reactivar").
@@ -56,6 +59,26 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
     } finally { setBusy(false); }
   }
 
+  async function deleteAccount() {
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch("/api/account/delete", { method: "POST" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDeleteError(json.error ?? t("deleteError"));
+        return;
+      }
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      window.location.assign("/es");
+    } catch {
+      setDeleteError(t("connError"));
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
+
   if (disabled) {
     return (
       <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] p-4">
@@ -69,15 +92,16 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
   }
 
   return (
-    <div className="rounded-xl border border-[#fecaca] bg-[#fef2f2] p-4">
-      <div className="flex items-start gap-2">
-        <AlertTriangle className="h-4 w-4 text-[#b91c1c] shrink-0 mt-0.5" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-[#b91c1c]">{t("closeTitle")}</p>
-          <p className="text-xs text-[#7f1d1d] mt-0.5">{t("closeBody")}</p>
+    <div className="space-y-3">
+      <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] p-4">
+        <div className="flex items-start gap-2">
+          <AlertTriangle className="h-4 w-4 text-[#b45309] shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-[#92400e]">{t("disableTitle")}</p>
+            <p className="text-xs text-[#92400e] mt-0.5">{t("disableBody")}</p>
           {!open ? (
-            <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-[#b91c1c] text-[#b91c1c] text-sm font-semibold px-4 py-2 hover:bg-red-50">
-              {t("closeCta")}
+            <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-[#b45309] text-[#92400e] text-sm font-semibold px-4 py-2 hover:bg-amber-50">
+              {t("disableCta")}
             </button>
           ) : (
             <div className="mt-3 flex flex-col gap-2">
@@ -92,12 +116,38 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
               {error && <p className="text-xs text-red-600">{error}</p>}
               <div className="flex gap-2">
                 <button onClick={disableAccount} disabled={busy} className="rounded-lg bg-[#b91c1c] text-white text-sm font-semibold px-4 py-2 hover:bg-[#991b1b] disabled:opacity-60">
-                  {busy ? t("closing") : t("confirmClose")}
+                  {busy ? t("disabling") : t("confirmDisable")}
                 </button>
                 <button onClick={() => { setOpen(false); setError(null); }} className="rounded-lg text-sm text-[#6b7280] px-3 py-2 hover:text-[#374151]">{t("cancel")}</button>
               </div>
             </div>
           )}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-[#fecaca] bg-[#fef2f2] p-4">
+        <div className="flex items-start gap-2">
+          <AlertTriangle className="h-4 w-4 text-[#b91c1c] shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-[#b91c1c]">{t("deleteTitle")}</p>
+            <p className="text-xs text-[#7f1d1d] mt-0.5">{t("deleteBody")}</p>
+            {!deleteOpen ? (
+              <button onClick={() => setDeleteOpen(true)} className="mt-3 rounded-lg border border-[#b91c1c] text-[#b91c1c] text-sm font-semibold px-4 py-2 hover:bg-red-50">
+                {t("deleteCta")}
+              </button>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={deleteAccount} disabled={deleteBusy} className="rounded-lg bg-[#b91c1c] text-white text-sm font-semibold px-4 py-2 hover:bg-[#991b1b] disabled:opacity-60">
+                    {deleteBusy ? t("deleting") : t("confirmDelete")}
+                  </button>
+                  <button onClick={() => { setDeleteOpen(false); setDeleteError(null); }} className="rounded-lg text-sm text-[#6b7280] px-3 py-2 hover:text-[#374151]">{t("cancel")}</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

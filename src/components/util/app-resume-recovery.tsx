@@ -2,10 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { APP_RESUME_EVENT } from "@/lib/app-events";
 
-export const APP_RESUME_EVENT = "contratacr:app-resume";
-
-const STALE_AFTER_MS = 60_000;
+const STALE_AFTER_MS = 15_000;
 const RECOVERY_THROTTLE_MS = 2_000;
 
 export function AppResumeRecovery() {
@@ -51,7 +50,8 @@ export function AppResumeRecovery() {
       window.dispatchEvent(new Event(APP_RESUME_EVENT));
 
       if (forceRefresh || (hiddenAt !== null && now - hiddenAt >= STALE_AFTER_MS)) {
-        window.requestAnimationFrame(() => router.refresh());
+        // Let Supabase resume its token refresh first, then reconcile server data.
+        window.setTimeout(() => router.refresh(), 100);
       }
     };
 
@@ -67,13 +67,20 @@ export function AppResumeRecovery() {
       recover(event.persisted);
     };
 
+    const onFocus = () => recover();
+    const onOnline = () => recover(true);
+
     if (document.visibilityState === "hidden") markHidden();
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
     };
   }, [router]);
 

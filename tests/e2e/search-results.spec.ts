@@ -29,10 +29,10 @@ test.describe("@seeded search results", () => {
     const href = await firstProfessionalHref(page);
     test.skip(!href, "No seeded professionals found in this environment.");
 
-    const firstCard = page.locator("article").first();
+    const firstCard = page.locator("article:visible").first();
     await expect(firstCard).toBeVisible();
     await expect(firstCard.getByRole("link").first()).toBeVisible();
-    await expect(firstCard.getByText(/Verificado|Sin rese|reviews|\d+\.\d/i).first()).toBeVisible();
+    await expect(firstCard.getByText(/Verificado|Sin rese|reviews|\d+\.\d/i).filter({ visible: true }).first()).toBeVisible();
     await expect(
       firstCard.getByRole("button", { name: /Ver horario completo|Ver disponibilidad|Enviar mensaje|Contact|Llamar|Solicitar/i }).or(
         firstCard.getByRole("link", { name: /Enviar mensaje|Contact|Llamar|Solicitar/i }),
@@ -99,19 +99,34 @@ test.describe("@seeded search results", () => {
     ).toBeVisible();
   });
 
-  test("location filter suggests Costa Rica provinces and cantons", async ({ page }, testInfo) => {
+  test("location search suggests Costa Rica provinces and cantons", async ({ page }, testInfo) => {
     await gotoOK(page, "/es/buscar");
     await waitForInteractivePage(page);
 
-    await openFiltersIfNeeded(page, testInfo);
+    if (isMobileProject(testInfo)) {
+      await page.getByRole("button", { name: /Qu[eé] servicio|What service/i }).filter({ visible: true }).first().click();
+      const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
+      await expect(location).toBeVisible();
+      await location.fill("Liber");
+      const liberia = page.getByRole("option", { name: /Liberia/i }).filter({ visible: true }).first();
+      await expect(liberia).toBeVisible();
+      await liberia.click();
 
-    const location = page.locator('input[placeholder*="ubicaci"]:visible, input[placeholder*="location" i]:visible').first();
-    await expect(location).toBeVisible();
-    await location.fill("Liber");
-    await expect(page.getByRole("option", { name: /Liberia/i }).first()).toBeVisible();
-    await page.getByRole("option", { name: /Liberia/i }).first().click();
+      const service = page.getByRole("combobox", { name: /^Servicio$|^Service$/i }).filter({ visible: true }).first();
+      await service.fill("plomeria");
+      const plumbing = page.getByRole("option", { name: /Plomer[ií]a|Plumbing/i }).filter({ visible: true }).first();
+      await expect(plumbing).toBeVisible();
+      await plumbing.click();
+    } else {
+      const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
+      await expect(location).toBeVisible();
+      await location.fill("Liber");
+      const liberia = page.getByRole("option", { name: /Liberia/i }).filter({ visible: true }).first();
+      await expect(liberia).toBeVisible();
+      await liberia.click();
+      await page.getByRole("button", { name: /^Buscar$|^Search$/i }).filter({ visible: true }).first().click();
+    }
 
-    await expect(page).toHaveURL(/provincia=gu/);
     await expect(page).toHaveURL(/canton=gu-li/);
     await expectHealthyPage(page);
   });
@@ -122,9 +137,14 @@ test.describe("@seeded search results", () => {
     await openFiltersIfNeeded(page, testInfo);
 
     const body = page.locator("body");
-    await expect(page.getByText(/Ubicaci[oó]n|Location/i).first()).toBeVisible();
-    await expect(page.getByText(/Idioma|Language/i).first()).toBeVisible();
-    await expect(page.getByText(/Selecciona un idioma|Select a language|Any language/i).first()).toBeVisible();
+    if (isMobileProject(testInfo)) {
+      await page.getByRole("button", { name: /^Idioma$|^Language$/i }).filter({ visible: true }).first().click();
+      await expect(page.getByText(/Idioma de atenci[oó]n|Service language/i).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: /Todos los idiomas|All languages/i }).filter({ visible: true }).first()).toBeVisible();
+    } else {
+      await expect(page.getByText(/Idioma|Language/i).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByText(/Selecciona un idioma|Select a language|Any language/i).filter({ visible: true }).first()).toBeVisible();
+    }
     await expect(body).not.toContainText(/Solo verificados|Only verified/i);
     await expect(body).not.toContainText(/Buscar profesionales cerca de m[ií]|Find professionals near me/i);
     await expect(body).not.toContainText(/Cercan[ií]a|Nearest/i);

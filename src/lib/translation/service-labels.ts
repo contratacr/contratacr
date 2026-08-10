@@ -1,4 +1,5 @@
 import { autoEnglishCategoryLabel, normalizeText } from "@/lib/data/categories";
+import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { createSign } from "crypto";
 
 const DEFAULT_LOCATION = "global";
@@ -29,7 +30,7 @@ function cleanPlainTranslation(value: unknown) {
 }
 
 export function normalizeServiceDisplayName(value: string) {
-  const clean = value.trim().replace(/\s+/g, " ");
+  const clean = repairVisibleText(value).trim().replace(/\s+/g, " ");
   if (!clean) return "";
   const lower = clean.toLocaleLowerCase("es-CR");
   return lower.charAt(0).toLocaleUpperCase("es-CR") + lower.slice(1);

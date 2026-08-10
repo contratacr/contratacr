@@ -7,7 +7,8 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, Bot, Sparkles, Repeat2, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, CheckCircle2, FileText, Search,
+  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, Check, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
+  BriefcaseBusiness, Star,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -20,11 +21,15 @@ import { ProfileCompletion, computeCompletion } from "@/components/dashboard/pro
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
-import { SaveStatusProvider, HeaderSaveStatus } from "@/components/dashboard/save-status-context";
+import { JobsPanel } from "@/components/dashboard/pro/jobs-panel";
+import { OffersPanel } from "@/components/dashboard/pro/offers-panel";
+import { SaveStatusProvider } from "@/components/dashboard/save-status-context";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
+import { ClientConnections } from "@/components/dashboard/client-connections";
+import { ClientJobApplications } from "@/components/dashboard/client-job-applications";
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
 import { applyPendingFollow } from "@/components/professionals/follow-button";
 import { FollowNetworkTab } from "@/components/professionals/follow-network-tab";
@@ -46,16 +51,18 @@ import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { Modal } from "@/components/ui/modal";
 import { notificationContext } from "@/lib/notification-link";
 import { Link, useRouter } from "@/i18n/navigation";
+import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { DashboardRouteLoading } from "@/components/ui/route-loading";
-import { AppTooltip } from "@/components/ui/app-tooltip";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import {
   dashboardBootstrapKey,
   type DashboardBootstrap,
   type DashboardProfileData,
 } from "@/lib/dashboard-bootstrap-cache";
+import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
 // "Usar servicios" (the seek capability, always available) and "Ofrecer servicios"
@@ -63,12 +70,19 @@ import {
 // is no separate client panel; everyone lives here.
 type Tab =
   | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
+  | "jobs" | "offers" | "completion"
   | "suscripcion"
-  | "sent_bookings" | "sent_projects" | "saved" | "network"
-  | "chat" | "assistant" | "notifications" | "soporte" | "cuenta" | "guides";
+  | "sent_bookings" | "sent_projects" | "applications" | "saved" | "connections" | "network"
+  | "chat" | "notifications" | "soporte" | "cuenta" | "guides";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
+
+const ALL_TABS = new Set<Tab>([
+  "home", "profile", "services", "photos", "availability", "bookings", "proposals", "verificacion",
+  "jobs", "offers", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
+  "network", "chat", "notifications", "soporte", "cuenta", "guides",
+]);
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
   home: <Home className="h-4 w-4" />,
@@ -82,31 +96,35 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   suscripcion: <CreditCard className="h-4 w-4" />,
   sent_bookings: <CalendarClock className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
+  applications: <BriefcaseBusiness className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
+  connections: <Users className="h-4 w-4" />,
   network: <Users className="h-4 w-4" />,
   chat: <MessageSquareMore className="h-4 w-4" />,
-  assistant: <Bot className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
   soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
   guides: <FileText className="h-4 w-4" />,
+  jobs: <BriefcaseBusiness className="h-4 w-4" />,
+  offers: <OfferTagPercentIcon className="h-4 w-4" />,
+  completion: <CheckCircle2 className="h-4 w-4" />,
 };
 
 // Tabs that show a one-line context note under the section title.
-const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_projects", "saved", "network"]);
+const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_projects", "saved", "connections", "network"]);
 
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
-const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion"]);
-const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
+const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
+const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "applications", "saved", "connections"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = [
-  "bookings", "proposals", "photos", "availability", "services", "soporte", "profile", "guides",
+  "bookings", "proposals", "jobs", "offers", "photos", "availability", "services", "soporte", "profile", "guides",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
-const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "saved", "soporte", "profile", "guides"];
+const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "applications", "connections", "saved", "soporte", "profile", "guides"];
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
@@ -114,12 +132,17 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   proposals: { es: "Proyectos Recibidos", en: "Received projects" },
   sent_bookings: { es: "Mis solicitudes", en: "My requests" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
+  applications: { es: "Mis postulaciones", en: "My applications" },
+  connections: { es: "Conexiones", en: "Connections" },
   photos: { es: "Casos de éxito", en: "Success cases" },
   availability: { es: "Disponibilidad", en: "Availability" },
   services: { es: "Servicios", en: "Services" },
-  saved: { es: "Favoritos", en: "Saved" },
+  saved: { es: "Favoritos", en: "Favorites" },
   soporte: { es: "Soporte", en: "Support" },
   profile: { es: "Perfil", en: "Profile" },
+  jobs: { es: "Empleos", en: "Jobs" },
+  offers: { es: "Ofertas", en: "Offers" },
+  completion: { es: "Completa tu perfil", en: "Complete your profile" },
   guides: { es: "Guías", en: "Guides" },
 };
 
@@ -133,22 +156,31 @@ type GuideItem = {
 };
 
 const GUIDE_ITEMS: GuideItem[] = [
-  { id: "clientPanel", section: "client", actionTab: "home", targetMode: "use", stepCount: 4 },
+  { id: "clientPanel", section: "client", actionTab: "home", targetMode: "use", stepCount: 5 },
   { id: "clientRequests", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 3 },
   { id: "clientProjects", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 3 },
-  { id: "clientSaved", section: "client", actionTab: "saved", targetMode: "use", stepCount: 3 },
+  { id: "clientApplications", section: "client", actionTab: "applications", targetMode: "use", stepCount: 4 },
+  { id: "clientSaved", section: "client", actionTab: "saved", targetMode: "use", stepCount: 4 },
+  { id: "clientConnections", section: "client", actionTab: "connections", targetMode: "use", stepCount: 3 },
   { id: "clientProfile", section: "client", actionTab: "profile", targetMode: "use", stepCount: 3 },
   { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
-  { id: "messages", section: "shared", href: "/mensajes", stepCount: 4 },
-  { id: "assistantGuide", section: "shared", actionTab: "assistant", stepCount: 3 },
+  { id: "jobsGuide", section: "shared", href: "/empleos", stepCount: 4 },
+  { id: "offersGuide", section: "shared", href: "/ofertas", stepCount: 4 },
+  { id: "followingGuide", section: "shared", actionTab: "network", stepCount: 4 },
+  { id: "notificationsGuide", section: "shared", actionTab: "notifications", stepCount: 5 },
+  { id: "reviewsGuide", section: "shared", href: "/buscar", stepCount: 4 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
+  { id: "accountSecurityGuide", section: "shared", actionTab: "cuenta", stepCount: 4 },
   { id: "professionalPanel", section: "professional", actionTab: "home", targetMode: "offer", stepCount: 4 },
+  { id: "completionGuide", section: "professional", actionTab: "completion", targetMode: "offer", stepCount: 4 },
   { id: "requests", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 3 },
   { id: "opportunities", section: "professional", actionTab: "proposals", targetMode: "offer", stepCount: 3 },
-  { id: "successCases", section: "professional", actionTab: "photos", targetMode: "offer", stepCount: 3 },
-  { id: "availability", section: "professional", actionTab: "availability", targetMode: "offer", stepCount: 3 },
+  { id: "successCases", section: "professional", actionTab: "photos", targetMode: "offer", stepCount: 4 },
+  { id: "availability", section: "professional", actionTab: "availability", targetMode: "offer", stepCount: 4 },
   { id: "services", section: "professional", actionTab: "services", targetMode: "offer", stepCount: 4 },
-  { id: "professionalProfile", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 4 },
+  { id: "jobsPanel", section: "professional", actionTab: "jobs", targetMode: "offer", stepCount: 4 },
+  { id: "offersPanel", section: "professional", actionTab: "offers", targetMode: "offer", stepCount: 4 },
+  { id: "professionalProfile", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 5 },
 ];
 
 function guideIcon(id: string) {
@@ -159,6 +191,23 @@ function guideIcon(id: string) {
     case "searchServices":
     case "searchFilters":
       return <Search className="h-4 w-4" />;
+    case "reviewsGuide":
+      return <Star className="h-4 w-4" />;
+    case "followingGuide":
+      return <Users className="h-4 w-4" />;
+    case "notificationsGuide":
+      return <Bell className="h-4 w-4" />;
+    case "accountSecurityGuide":
+      return <ShieldCheck className="h-4 w-4" />;
+    case "completionGuide":
+      return <Sparkles className="h-4 w-4" />;
+    case "jobsGuide":
+    case "jobsPanel":
+    case "clientApplications":
+      return <BriefcaseBusiness className="h-4 w-4" />;
+    case "offersGuide":
+    case "offersPanel":
+      return <OfferTagPercentIcon className="h-4 w-4" />;
     case "messages":
       return <MessageSquareMore className="h-4 w-4" />;
     case "clientRequests":
@@ -167,11 +216,11 @@ function guideIcon(id: string) {
       return <ClipboardList className="h-4 w-4" />;
     case "clientSaved":
       return <Bookmark className="h-4 w-4" />;
+    case "clientConnections":
+      return <Users className="h-4 w-4" />;
     case "clientProfile":
     case "professionalProfile":
       return <User className="h-4 w-4" />;
-    case "assistantGuide":
-      return <Bot className="h-4 w-4" />;
     case "supportGuide":
       return <Headset className="h-4 w-4" />;
     case "services":
@@ -199,6 +248,13 @@ function compactMobileDisplayName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length >= 4) return [parts[0], ...parts.slice(-2)].join(" ");
   return name;
+}
+
+function compactClientMobileDisplayName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return name;
+  const firstSurnameIndex = parts.length >= 4 ? parts.length - 2 : 1;
+  return `${parts[0]} ${parts[firstSurnameIndex]}`;
 }
 
 type OpportunityProjectSummary = { id?: string | null };
@@ -254,7 +310,7 @@ function QuickGuidesModal({
   const selectedGuide = selectedGuideId ? GUIDE_ITEMS.find((guide) => guide.id === selectedGuideId) : null;
 
   useEffect(() => {
-    if (open) setSelectedGuideId(null);
+    if (open) queueMicrotask(() => setSelectedGuideId(null));
   }, [open]);
 
   if (!open) return null;
@@ -278,8 +334,8 @@ function QuickGuidesModal({
       title={t("modalTitle")}
       subtitle={t("modalSubtitle")}
       size="lg"
-      mobilePresentation="center"
-      bodyClassName="bg-white px-5 py-5 sm:px-7 sm:py-6"
+      mobilePresentation="fullscreen"
+      bodyClassName="bg-white px-5 py-5 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-7 sm:py-6"
     >
       <div className="mx-auto max-w-[620px]">
         <p className="mx-auto max-w-[520px] text-center text-xs font-semibold leading-relaxed text-[#7c8ba0]">
@@ -312,7 +368,7 @@ function QuickGuidesModal({
                         selected && "bg-[#dfe5ec]",
                       )}
                     >
-                      <span className="w-7 shrink-0 text-right tabular-nums">{guideIndex + 1} -</span>
+                      <span className="w-10 shrink-0 whitespace-nowrap text-right tabular-nums">{guideIndex + 1} -</span>
                       <span className="min-w-0 flex-1 truncate">{t(`items.${guide.id}.title`)}</span>
                     </button>
                     {selected && (
@@ -340,14 +396,8 @@ function QuickGuidesModal({
         </div>
 
         <div className="mt-5 rounded-2xl border border-[#dfe8f0] bg-[#f8fbfe] px-4 py-4 sm:px-5">
-          <p className="text-sm font-semibold text-[#162543]">
-            {locale === "en" ? "Need more help?" : "¿Necesitas más ayuda?"}
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-[#526277]">
-            {locale === "en"
-              ? "If you still have questions, open support and we'll help you from there."
-              : "Si todavía tienes dudas, abre soporte y te ayudamos desde ahí."}
-          </p>
+          <p className="text-sm font-semibold text-[#162543]">{t("supportTitle")}</p>
+          <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("supportBody")}</p>
           <Button
             type="button"
             variant="outline"
@@ -357,7 +407,7 @@ function QuickGuidesModal({
               window.location.assign(`/${locale}/dashboard/profesional?tab=soporte`);
             }}
           >
-            {locale === "en" ? "Contact support" : "Contactar soporte"}
+            {t("supportCta")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -429,6 +479,50 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
     );
   }
 
+  if (id === "jobsGuide" || id === "jobsPanel") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h4 className="font-bold text-[#162543]">{t("preview.jobs.title")}</h4>
+          <span className="rounded-full bg-[#EBF5FB] px-2 py-1 text-xs font-bold text-[#0089bb]">{t("preview.jobs.badge")}</span>
+        </div>
+        <div className="space-y-3">
+          <div className="flex gap-3 rounded-xl border border-[#e5e7eb] p-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
+              <BriefcaseBusiness className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-[#111827]">{t("preview.jobs.role")}</p>
+              <p className="mt-0.5 text-xs font-semibold text-[#526277]">ContrataCR</p>
+              <p className="mt-1 text-xs text-[#6b7280]">{t("preview.jobs.meta")}</p>
+            </div>
+          </div>
+          <div className="rounded-xl bg-[#009FD9] px-3 py-2 text-center text-sm font-bold text-white">{t("preview.jobs.cta")}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (id === "offersGuide" || id === "offersPanel") {
+    return (
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h4 className="font-bold text-[#162543]">{t("preview.offers.title")}</h4>
+          <span className="rounded-full bg-[#EBF5FB] px-2 py-1 text-xs font-bold text-[#0089bb]">{t("preview.offers.badge")}</span>
+        </div>
+        <div className="overflow-hidden rounded-xl border border-[#e5e7eb]">
+          <div className="flex h-24 items-center justify-center bg-[#f4f8fb] text-[#009FD9]">
+            <OfferTagPercentIcon className="h-8 w-8" />
+          </div>
+          <div className="p-3">
+            <p className="text-sm font-bold text-[#111827]">{t("preview.offers.offer")}</p>
+            <p className="mt-1 text-xs text-[#6b7280]">{t("preview.offers.meta")}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (id === "requests" || id === "opportunities") {
     return (
       <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
@@ -480,18 +574,30 @@ export default function DashboardPage() {
   const requestedTab = (legacyVerificationTab ? "profile" : rawRequestedTab) as Tab | null;
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
+  const requestedReturnTo = searchParams.get("returnTo");
+  const externalReturnTo = requestedReturnTo === "/ofertas" || requestedReturnTo === "/empleos" ? requestedReturnTo : null;
   const shouldCheckOpportunityWelcome = searchParams.get("welcomeOpportunities") === "1";
   const opportunityWelcomeParamCount = Math.max(0, Number.parseInt(searchParams.get("welcomeOpportunityCount") ?? "0", 10) || 0);
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<DashboardProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
   const [chatUnread, setChatUnread] = useState(0);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
+  const [pendingProfileFocusField, setPendingProfileFocusField] = useState<string | null>(null);
+  const [pendingServiceFocusField, setPendingServiceFocusField] = useState<string | null>(null);
+  const [completionFlowField, setCompletionFlowField] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.sessionStorage.getItem("contratacr:profile-completion-field");
+  });
+  const [profileResetKey, setProfileResetKey] = useState(0);
+  const [mobileProfileSectionTitle, setMobileProfileSectionTitle] = useState<string | null>(null);
+  const [supportThreadTitle, setSupportThreadTitle] = useState<string | null>(null);
+  const [supportThreadRef, setSupportThreadRef] = useState<string | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [guidesOpen, setGuidesOpen] = useState(false);
@@ -500,8 +606,14 @@ export default function DashboardPage() {
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
+  const headerPhotoInputRef = useRef<HTMLInputElement>(null);
+  const headerPhotoMenuRef = useRef<HTMLDivElement>(null);
+  const [headerPhotoMenuOpen, setHeaderPhotoMenuOpen] = useState(false);
+  const [headerPhotoPreviewOpen, setHeaderPhotoPreviewOpen] = useState(false);
+  const [headerPhotoUploading, setHeaderPhotoUploading] = useState(false);
   const opportunityWelcomeCheckedRef = useRef(false);
   const opportunityWelcomeDismissedRef = useRef(false);
+  const proFetchSequenceRef = useRef(0);
   const [noProTries, setNoProTries] = useState(0);
   const focusKeyRef = useRef(0);
   const bootstrapHydratedForRef = useRef<string | null>(null);
@@ -510,9 +622,9 @@ export default function DashboardPage() {
     return focusKeyRef.current;
   }, []);
 
-  // The account CAN offer if it has a professional profile (authoritative once
-  // loaded) fall back to the metadata capability for an instant first paint.
-  const isProvider = !!pro || canOffer(user);
+  // Professional access is unlocked only by the real professionals row. Metadata
+  // can lag or be stale, so it must not authorize professional-only sections.
+  const isProvider = !!pro;
   const pendingProfessionalSignup =
     user?.user_metadata?.professional_signup_started === true &&
     user.user_metadata?.is_provider !== true;
@@ -522,16 +634,93 @@ export default function DashboardPage() {
   // navbar quick link) overrides it, and is persisted below so everything stays in sync.
   // A non-provider has no offer world: always "use".
   const { mode: globalMode, setMode } = useMode(isProvider);
+  const requestedOfferOnlyTab = !!requestedTab && OFFER_ONLY.has(requestedTab);
+  const allowedRequestedTab = requestedTab && (!requestedOfferOnlyTab || isProvider) ? requestedTab : null;
   const urlForcedMode: Mode | null =
-    legacyVerificationTab ? "offer" : requestedTab && OFFER_ONLY.has(requestedTab) ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
+    legacyVerificationTab && isProvider ? "offer" : requestedOfferOnlyTab && isProvider ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
   const defaultTab: Tab = mode === "offer" ? "bookings" : "sent_bookings";
-  const activeTab: Tab = requestedTab ?? (preferMobileMenuDefault ? "home" : defaultTab);
+  const activeTab: Tab = allowedRequestedTab ?? (preferMobileMenuDefault ? "home" : defaultTab);
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
   useEffect(() => {
     if (isProvider && urlForcedMode && urlForcedMode !== globalMode) setMode(urlForcedMode);
   }, [isProvider, urlForcedMode, globalMode, setMode]);
+
+  // Security guard: a client can use this unified dashboard route, but must never
+  // enter professional-only sections by editing the URL or reusing stale links.
+  useEffect(() => {
+    if (authLoading || loading || !user || isProvider || !requestedOfferOnlyTab) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("mode", "use");
+    params.set("tab", "sent_bookings");
+    params.delete("focus");
+    params.delete("flow");
+    router.replace('/dashboard/profesional?' + params.toString(), { scroll: false });
+  }, [authLoading, isProvider, loading, requestedOfferOnlyTab, router, searchParams, user]);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const title = (event as CustomEvent<string | null>).detail;
+      setMobileProfileSectionTitle(typeof title === "string" && title.trim() ? title : null);
+    };
+    window.addEventListener("ccr:profile-mobile-section-title", handler as EventListener);
+    return () => window.removeEventListener("ccr:profile-mobile-section-title", handler as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== "soporte" && supportThreadTitle) {
+      setSupportThreadTitle(null);
+      setSupportThreadRef(null);
+    }
+  }, [activeTab, supportThreadTitle]);
+
+  useEffect(() => {
+    if (!headerPhotoMenuOpen) return;
+
+    function closePhotoMenuOnOutsidePress(event: PointerEvent) {
+      if (!headerPhotoMenuRef.current?.contains(event.target as Node)) {
+        setHeaderPhotoMenuOpen(false);
+      }
+    }
+
+    function closePhotoMenuOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setHeaderPhotoMenuOpen(false);
+    }
+
+    document.addEventListener("pointerdown", closePhotoMenuOnOutsidePress);
+    document.addEventListener("keydown", closePhotoMenuOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closePhotoMenuOnOutsidePress);
+      document.removeEventListener("keydown", closePhotoMenuOnEscape);
+    };
+  }, [headerPhotoMenuOpen]);
+
+  useEffect(() => {
+    if (activeTab !== "profile") setMobileProfileSectionTitle(null);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!pendingProfileFocusField || activeTab !== "profile") return;
+    const field = pendingProfileFocusField;
+    setPendingProfileFocusField(null);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setProfileFocus({ field, key: nextFocusKey() });
+      });
+    });
+  }, [activeTab, nextFocusKey, pendingProfileFocusField]);
+
+  useEffect(() => {
+    if (!pendingServiceFocusField || activeTab !== "services") return;
+    const field = pendingServiceFocusField;
+    setPendingServiceFocusField(null);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setServiceFocus({ field, key: nextFocusKey() });
+      });
+    });
+  }, [activeTab, nextFocusKey, pendingServiceFocusField]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1023px)");
@@ -552,19 +741,28 @@ export default function DashboardPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.innerWidth >= 1024 && preferMobileMenuDefault) {
-      setPreferMobileMenuDefault(false);
-      setMobilePanelOpen(false);
+      queueMicrotask(() => {
+        setPreferMobileMenuDefault(false);
+        setMobilePanelOpen(false);
+      });
     }
   }, [preferMobileMenuDefault]);
 
   useEffect(() => {
     if (!legacyVerificationTab) return;
     const params = new URLSearchParams(searchParams.toString());
+    if (!isProvider) {
+      params.set("tab", "sent_bookings");
+      params.set("mode", "use");
+      params.delete("focus");
+      router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
+      return;
+    }
     params.set("tab", "profile");
     params.set("mode", "offer");
     params.set("focus", "verification");
     router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
-  }, [legacyVerificationTab, searchParams, router]);
+  }, [isProvider, legacyVerificationTab, searchParams, router]);
 
   useEffect(() => {
     if (requestedTab !== "chat") return;
@@ -572,15 +770,6 @@ export default function DashboardPage() {
     params.delete("tab");
     const qs = params.toString();
     router.replace(`/mensajes${qs ? `?${qs}` : ""}`, { scroll: false });
-  }, [requestedTab, searchParams, router]);
-
-  useEffect(() => {
-    if (requestedTab !== "assistant") return;
-    window.dispatchEvent(new Event("contratacr:open-ai"));
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("tab");
-    const qs = params.toString();
-    router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
   }, [requestedTab, searchParams, router]);
 
   useEffect(() => {
@@ -617,9 +806,9 @@ export default function DashboardPage() {
   }, [authLoading, user]);
 
   useEffect(() => {
-    if (authLoading || loading || !user || pro || !pendingProfessionalSignup) return;
+    if (authLoading || !user || !pendingProfessionalSignup) return;
     router.replace("/registro/profesional");
-  }, [authLoading, loading, pendingProfessionalSignup, pro, router, user]);
+  }, [authLoading, pendingProfessionalSignup, router, user]);
 
   // Deep-link focus: `?tab=profile&focus=location` opens the editor at that field.
   useEffect(() => {
@@ -673,7 +862,8 @@ export default function DashboardPage() {
   }, [user]);
 
   const fetchPro = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
-    if (!user) return;
+    if (!user) return null;
+    const requestSequence = ++proFetchSequenceRef.current;
     const supabase = createClient();
     setProLoadError(false);
     const { data, error } = await supabase
@@ -682,6 +872,9 @@ export default function DashboardPage() {
       .eq("profile_id", user.id)
       .maybeSingle();
 
+    // A slower request started before a save must never overwrite the freshly
+    // saved professional data when it finishes later.
+    if (requestSequence !== proFetchSequenceRef.current) return data;
     setPro((current) => JSON.stringify(current) === JSON.stringify(data) ? current : data);
     cacheDashboardBootstrap({ pro: data });
     if (data) {
@@ -699,16 +892,18 @@ export default function DashboardPage() {
       setNoProTries((n) => n + 1);
     }
     if (!silent) setLoading(false);
+    return data;
   }, [cacheDashboardBootstrap, setLoading, setNoProTries, setPro, setProLoadError, user]);
 
   const fetchProfile = useCallback(async () => {
-    if (!user) return;
+    if (!user) return null;
     const supabase = createClient();
     const { data } = await supabase.rpc("get_my_profile");
     if (data) {
       setProfile((current) => JSON.stringify(current) === JSON.stringify(data) ? current : data);
       cacheDashboardBootstrap({ profile: data });
     }
+    return data ?? null;
   }, [cacheDashboardBootstrap, setProfile, user]);
 
   useEffect(() => {
@@ -735,7 +930,11 @@ export default function DashboardPage() {
     if (!user) return;
     queueMicrotask(() => fetchProfile());
     window.addEventListener("ccr:profile-updated", fetchProfile);
-    return () => window.removeEventListener("ccr:profile-updated", fetchProfile);
+    window.addEventListener("ccr:identity-updated", fetchProfile);
+    return () => {
+      window.removeEventListener("ccr:profile-updated", fetchProfile);
+      window.removeEventListener("ccr:identity-updated", fetchProfile);
+    };
   }, [user, refreshKey, fetchProfile]);
 
   useEffect(() => {
@@ -896,15 +1095,88 @@ export default function DashboardPage() {
     });
   }
 
-  function setTab(tab: Tab) {
+  const requestUnsavedAction = useCallback((action: () => void) => {
+    if (typeof window === "undefined") {
+      action();
+      return;
+    }
+    const event = new CustomEvent("ccr:confirm-unsaved-action", {
+      cancelable: true,
+      detail: { proceed: action },
+    });
+    if (window.dispatchEvent(event)) action();
+  }, []);
+
+  function clearCompletionFlow() {
+    setCompletionFlowField(null);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("contratacr:profile-completion-field");
+    }
+  }
+
+  const SECTION_RETURN_STORAGE_KEY = "contratacr:dashboard-section-return";
+
+  function rememberSectionReturnTarget() {
+    if (typeof window === "undefined") return;
+    const target = { tab: activeTab, mode };
+    window.sessionStorage.setItem(SECTION_RETURN_STORAGE_KEY, JSON.stringify(target));
+  }
+
+  function takeSectionReturnTarget(): { tab: Tab; mode: Mode } | null {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.sessionStorage.getItem(SECTION_RETURN_STORAGE_KEY);
+      window.sessionStorage.removeItem(SECTION_RETURN_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { tab?: string; mode?: string };
+      if (!parsed.tab || !ALL_TABS.has(parsed.tab as Tab)) return null;
+      return {
+        tab: parsed.tab as Tab,
+        mode: parsed.mode === "use" ? "use" : "offer",
+      };
+    } catch {
+      window.sessionStorage.removeItem(SECTION_RETURN_STORAGE_KEY);
+      return null;
+    }
+  }
+
+  async function refreshDashboardAfterSave() {
+    await Promise.all([
+      fetchPro({ silent: true }),
+      fetchProfile(),
+    ]);
+  }
+
+  function setTab(tab: Tab, preserveCompletionFlow = false) {
+    if (!isProvider && OFFER_ONLY.has(tab)) {
+      setMobilePanelOpen(false);
+      setMode("use");
+      window.history.replaceState(null, "", `${window.location.pathname}?tab=sent_bookings&mode=use`);
+      scrollDashboardToPageTop();
+      return;
+    }
     setMobilePanelOpen(false);
+    if (!preserveCompletionFlow) {
+      clearCompletionFlow();
+      if (tab !== activeTab) rememberSectionReturnTarget();
+    }
     if (tab === "verificacion") {
       openProfileVerification();
+      return;
+    }
+    if (tab === "profile" && tab === activeTab) {
+      setProfileFocus(null);
+      setProfileResetKey((key) => key + 1);
+      scrollDashboardToPageTop();
       return;
     }
     if (tab === activeTab) return;
     if (OFFER_ONLY.has(tab)) setMode("offer");
     if (USE_ONLY.has(tab)) setMode("use");
+    if (tab === "profile") {
+      setProfileFocus(null);
+      setProfileResetKey((key) => key + 1);
+    }
     // Mode is persisted globally now, so the tab alone is enough; a mode-specific tab
     // also re-asserts its mode via the effect above, keeping the navbar switch in sync.
     // Query-only panel navigation should not request the same route again.
@@ -917,9 +1189,61 @@ export default function DashboardPage() {
   }
 
   function openProfileVerification() {
+    if (!isProvider) {
+      setTab("sent_bookings");
+      return;
+    }
     if (isProvider && mode !== "offer") setMode("offer");
     setProfileFocus({ field: "verification", key: nextFocusKey() });
     window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
+    scrollDashboardToPageTop();
+  }
+
+  function openCompletionTarget(tab: string, field?: string, { track = true }: { track?: boolean } = {}) {
+    if (track) {
+      const completionField = field ?? tab;
+      setCompletionFlowField(completionField);
+      window.sessionStorage.setItem("contratacr:profile-completion-field", completionField);
+    }
+    if (tab === "verificacion" || field === "verification") {
+      openProfileVerification();
+      return;
+    }
+    if (tab === "profile") {
+      if (isProvider && mode !== "offer") setMode("offer");
+      setMobilePanelOpen(false);
+      if (field) setPendingProfileFocusField(field);
+      window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
+      scrollDashboardToPageTop();
+      return;
+    }
+    if (field && tab === "services") {
+      setPendingServiceFocusField(field);
+    }
+    setTab(tab as Tab, true);
+    if (field && tab === "services") {
+      return;
+    }
+    if (field) setProfileFocus({ field, key: nextFocusKey() });
+  }
+
+  function hasActiveCompletionFlow() {
+    if (completionFlowField) return true;
+    if (typeof window === "undefined") return false;
+    return !!window.sessionStorage.getItem("contratacr:profile-completion-field");
+  }
+
+  function goToCompletionChecklist({ clearFlow = true }: { clearFlow?: boolean } = {}) {
+    setMobileProfileSectionTitle(null);
+    setProfileFocus(null);
+    setServiceFocus(null);
+    setPendingProfileFocusField(null);
+    setPendingServiceFocusField(null);
+    if (clearFlow) clearCompletionFlow();
+    setMode("offer");
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", `${window.location.pathname}?tab=completion&mode=offer`);
+    }
     scrollDashboardToPageTop();
   }
 
@@ -932,8 +1256,156 @@ export default function DashboardPage() {
     setTab(next === "offer" ? "bookings" : "sent_bookings");
   }
 
-  function handleSaved() {
-    setRefreshKey((k) => k + 1);
+  function returnAfterSectionSave() {
+    const isMobilePanel = typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
+
+    if (hasActiveCompletionFlow()) {
+      goToCompletionChecklist();
+      return;
+    }
+
+    if (activeTab === "profile") {
+      if (isMobilePanel) {
+        setMobileProfileSectionTitle(null);
+        setProfileFocus(null);
+        setProfileResetKey((key) => key + 1);
+        scrollDashboardToPageTop();
+      }
+      return;
+    }
+
+    if (!isMobilePanel) return;
+
+    const target = takeSectionReturnTarget();
+    if (target && target.tab !== activeTab) {
+      setMode(target.mode);
+      setTab(target.tab, true);
+      return;
+    }
+
+    setTab("home", true);
+  }
+
+  function handleSaved(intent: "section" | "internal" = "section") {
+    const storedCompletionField = typeof window !== "undefined"
+      ? window.sessionStorage.getItem("contratacr:profile-completion-field")
+      : null;
+    const cameFromCompletion = !!completionFlowField || !!storedCompletionField;
+
+    if (intent === "internal" && !cameFromCompletion) {
+      void refreshDashboardAfterSave();
+      return;
+    }
+
+    if (cameFromCompletion) {
+      goToCompletionChecklist({ clearFlow: false });
+      void Promise.all([
+        fetchPro({ silent: true }),
+        fetchProfile(),
+      ]).then(([nextPro]) => {
+        const latestPro = (nextPro ?? proForCompletion) as ProData | null;
+        const proId = latestPro && typeof latestPro.id === "string" ? latestPro.id : "profile";
+        let ignoredSteps: string[] = [];
+
+        if (typeof window !== "undefined") {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(`contratacr_completion_ignored_${proId}`) || "[]");
+            ignoredSteps = Array.isArray(parsed) ? parsed.filter((key) => typeof key === "string") : [];
+          } catch {
+            ignoredSteps = [];
+          }
+        }
+
+        const ignoredSet = new Set(ignoredSteps);
+        const missingSteps = latestPro
+          ? computeCompletion(latestPro).items.filter((item) => !item.done && !ignoredSet.has(item.key))
+          : [];
+
+        setMobileProfileSectionTitle(null);
+        setProfileFocus(null);
+        setServiceFocus(null);
+
+        if (missingSteps.length > 0) {
+          clearCompletionFlow();
+          scrollDashboardToPageTop();
+          return;
+        }
+
+        clearCompletionFlow();
+        setTab("home", true);
+      });
+      return;
+    }
+
+    void refreshDashboardAfterSave().then(returnAfterSectionSave);
+  }
+
+  async function updateHeaderAvatar(nextAvatarUrl: string | null) {
+    if (!user) return;
+    const supabase = createClient();
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: nextAvatarUrl })
+      .eq("id", user.id);
+    if (profileError) throw profileError;
+    await supabase.auth.updateUser({ data: { avatar_url: nextAvatarUrl } });
+    setProfile((current) => current ? { ...current, avatar_url: nextAvatarUrl ?? undefined } : current);
+    setPro((current) => {
+      if (!current) return current;
+      const currentProfile = Array.isArray(current.profiles) ? current.profiles[0] : current.profiles;
+      return {
+        ...current,
+        profiles: {
+          ...(currentProfile ?? {}),
+          avatar_url: nextAvatarUrl,
+        },
+      };
+    });
+    cacheDashboardBootstrap({
+      profile: profile ? { ...profile, avatar_url: nextAvatarUrl ?? undefined } : profile,
+      pro: pro ? {
+        ...pro,
+        profiles: {
+          ...((Array.isArray(pro.profiles) ? pro.profiles[0] : pro.profiles) ?? {}),
+          avatar_url: nextAvatarUrl,
+        },
+      } : pro,
+    });
+    window.dispatchEvent(new Event("ccr:profile-updated"));
+  }
+
+  async function handleHeaderPhotoUpload(file: File) {
+    setHeaderPhotoUploading(true);
+    setHeaderPhotoMenuOpen(false);
+    try {
+      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1200 });
+      const fd = new FormData();
+      fd.append("file", preparedFile);
+      fd.append("type", "avatar");
+      const upload = await uploadPhotoFormDataWithRetry(fd);
+      if (!upload.ok || !upload.data.url) throw new Error(upload.data.error || "No se pudo subir la foto.");
+      await updateHeaderAvatar(upload.data.url);
+      handleSaved("internal");
+    } catch (error) {
+      console.error("[dashboard] avatar upload failed", error);
+      window.alert(locale === "en" ? "Could not update the profile photo." : "No se pudo actualizar la foto de perfil.");
+    } finally {
+      setHeaderPhotoUploading(false);
+    }
+  }
+
+  async function handleHeaderPhotoRemove() {
+    setHeaderPhotoUploading(true);
+    setHeaderPhotoMenuOpen(false);
+    try {
+      await updateHeaderAvatar(null);
+      handleSaved("internal");
+    } catch (error) {
+      console.error("[dashboard] avatar remove failed", error);
+      window.alert(locale === "en" ? "Could not remove the profile photo." : "No se pudo eliminar la foto de perfil.");
+    } finally {
+      setHeaderPhotoUploading(false);
+    }
   }
 
   function dismissOpportunityWelcome() {
@@ -954,11 +1426,23 @@ export default function DashboardPage() {
     setTab("proposals");
   }
 
-  if (authLoading || loading || !user || (pendingProfessionalSignup && !pro)) {
-    return <DashboardRouteLoading title="Cargando panel" />;
+  // Never render the client dashboard as a temporary fallback for an account
+  // marked as a provider whose professional row is still missing. Keep the
+  // route behind the loading guard while fetchPro retries, then the effect
+  // below sends the account straight to professional registration.
+  const professionalRecordResolving = !!user && canOffer(user) && !pro && !proLoadError;
+  if (authLoading || loading || !user || (pendingProfessionalSignup && !pro) || professionalRecordResolving) {
+    return <DashboardRouteLoading />;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
+  const currentCedula = typeof profile?.cedula === "string" && profile.cedula.trim()
+    ? profile.cedula.trim()
+    : typeof proProfile?.cedula === "string" && proProfile.cedula.trim()
+      ? proProfile.cedula.trim()
+      : typeof user.user_metadata?.cedula === "string"
+        ? user.user_metadata.cedula.trim()
+        : null;
   const businessName = typeof pro?.business_name === "string" ? pro.business_name.trim() : "";
   const personalDisplayName =
     profile?.full_name ||
@@ -966,13 +1450,14 @@ export default function DashboardPage() {
     (user.user_metadata?.full_name as string) ||
     user.email?.split("@")[0] ||
     "";
-  const professionalDisplayName =
-    businessName && (pro?.public_business_name_only === true || pro?.publicBusinessNameOnly === true)
-      ? businessName
-      : personalDisplayName;
+  const professionalDisplayName = businessName || personalDisplayName;
   const displayName = mode === "offer" ? professionalDisplayName : personalDisplayName;
   const compactHeaderName = compactDisplayName(displayName);
-  const compactMobileHeaderName = compactMobileDisplayName(displayName);
+  const compactMobileHeaderName = mode === "use"
+    ? compactClientMobileDisplayName(personalDisplayName)
+    : businessName
+      ? compactMobileDisplayName(businessName)
+      : compactClientMobileDisplayName(personalDisplayName);
   const headerAvatar = profile?.avatar_url || proProfile?.avatar_url || null;
   const proForCompletion = pro && headerAvatar && !proProfile?.avatar_url
     ? { ...pro, profiles: { ...(proProfile ?? {}), avatar_url: headerAvatar } }
@@ -989,6 +1474,7 @@ export default function DashboardPage() {
             user.email?.split("@")[0] ||
             "",
           email: proProfile?.email || user.email || "",
+          cedula: proProfile?.cedula || currentCedula || null,
           avatar_url: proProfile?.avatar_url || headerAvatar || null,
         },
       }
@@ -1014,9 +1500,9 @@ export default function DashboardPage() {
   const sidebarTabs = modeTabs;
   const desktopSidebarTabs = sidebarTabs.filter((tab) => tab !== "guides");
   const mobileSectionTabs = sidebarTabs;
-  const mobileFullScreenTab = activeTab === "network";
+  const mobileFullScreenTab = activeTab !== "home";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
-  const singleSurfaceTab = activeTab === "profile" || activeTab === "availability";
+  const singleSurfaceTab = activeTab === "profile";
   const profileCompletionPercent = proForCompletion ? computeCompletion(proForCompletion).percent : null;
   const showProfileCompletion =
     mode === "offer" &&
@@ -1027,10 +1513,84 @@ export default function DashboardPage() {
     return PANEL_TAB_LABELS[tab]?.[locale === "en" ? "en" : "es"] ?? t(`tabs.${tab}`);
   }
 
-  function switchPanelLabel() {
-    return mode === "offer"
-      ? (locale === "en" ? "Go to client panel" : "Ir a panel cliente")
-      : (locale === "en" ? "Go to professional panel" : "Ir a panel profesional");
+  function openPanelDestination(tab: Tab) {
+    setTab(tab);
+  }
+
+  function panelModeTitle() {
+    return mode === "offer" ? t("panelProfessional") : t("panelClient");
+  }
+
+  function changePanelFromHeader(nextMode: Mode) {
+    if (nextMode === mode) return;
+    const isResponsivePanel = typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
+    if (!isResponsivePanel) {
+      handleSwitchMode(nextMode);
+      return;
+    }
+    setMode(nextMode);
+    setMobilePanelOpen(false);
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", "home");
+    params.delete("mode");
+    const query = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+    scrollDashboardToPageTop();
+  }
+
+  function panelModeSelector() {
+    if (!isProvider) return null;
+
+    const options: Array<{ value: Mode; label: string; icon: React.ReactNode }> = [
+      {
+        value: "use",
+        label: locale === "en" ? "Client panel" : "Panel cliente",
+        icon: <User className="h-4 w-4" />,
+      },
+      {
+        value: "offer",
+        label: locale === "en" ? "Professional panel" : "Panel profesional",
+        icon: <BriefcaseBusiness className="h-4 w-4" />,
+      },
+    ];
+
+    return (
+      <details className="group relative z-30 w-full">
+        <summary className="flex min-h-[56px] cursor-pointer list-none items-center gap-3 rounded-none bg-white px-4 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd] lg:px-5 lg:text-[14px] lg:font-semibold [&::-webkit-details-marker]:hidden">
+          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef8fc] text-[#009FD9]">
+            {mode === "offer" ? <BriefcaseBusiness className="h-4 w-4" /> : <User className="h-4 w-4" />}
+          </span>
+          <span className="min-w-0 flex-1 truncate">{panelModeTitle()}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 text-[#64748b] transition-transform group-open:rotate-180" />
+        </summary>
+
+        <div className="absolute left-0 right-0 top-full overflow-hidden rounded-b-xl border border-t-0 border-[#dfe8f0] bg-white p-1.5 pt-1 shadow-[0_16px_36px_-18px_rgba(15,23,42,0.45)]">
+          {options.map((option) => {
+            const active = option.value === mode;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={(event) => {
+                  event.currentTarget.closest("details")?.removeAttribute("open");
+                  if (!active) requestUnsavedAction(() => changePanelFromHeader(option.value));
+                }}
+                className={cn(
+                  "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold transition-colors",
+                  active ? "bg-[#eef8fc] text-[#007eae]" : "text-[#162543] hover:bg-[#f4f7f9]",
+                )}
+              >
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-current">
+                  {option.icon}
+                </span>
+                <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                {active && <Check className="h-4 w-4 shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      </details>
+    );
   }
 
   function navButton(tab: Tab) {
@@ -1041,15 +1601,11 @@ export default function DashboardPage() {
         key={tab}
         data-testid={`panel-tab-${tab}`}
         onClick={() => {
-          if (tab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
           if (tab === "guides") {
             setGuidesOpen(true);
             return;
           }
-          setTab(tab);
+          requestUnsavedAction(() => openPanelDestination(tab));
         }}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
@@ -1078,15 +1634,11 @@ export default function DashboardPage() {
         type="button"
         data-testid={`panel-tab-${tab}`}
         onClick={() => {
-          if (tab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
           if (tab === "guides") {
             setGuidesOpen(true);
             return;
           }
-          setTab(tab);
+          requestUnsavedAction(() => openPanelDestination(tab));
         }}
         className={cn(
           "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-1.5 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]",
@@ -1117,24 +1669,23 @@ export default function DashboardPage() {
         type="button"
         data-testid={`panel-tab-${tab}`}
         onClick={() => {
-          if (tab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
           if (tab === "guides") {
             setGuidesOpen(true);
             return;
           }
-          setTab(tab);
+          requestUnsavedAction(() => openPanelDestination(tab));
         }}
         className={cn(
-          "flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold transition-colors",
+          "relative flex min-h-[54px] w-full items-center gap-3 px-5 py-3 text-left text-[14px] font-semibold transition-colors",
           activeTab === tab
-            ? "bg-[#EBF5FB] text-[#009FD9]"
-            : "text-[#374151] hover:bg-[#f7fafc] hover:text-[#162543]"
+            ? "bg-[#f6fbfe] text-[#009FD9]"
+            : "text-[#162543] hover:bg-[#f8fbfd] hover:text-[#009FD9]"
         )}
       >
-        <span className="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
+        <span className={cn(
+          "relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors [&>svg]:h-4.5 [&>svg]:w-4.5",
+          activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#64748b]",
+        )}>
           {TAB_ICONS[tab]}
           {badge > 0 && (
             <span className="absolute -right-2 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
@@ -1147,106 +1698,20 @@ export default function DashboardPage() {
     );
   }
 
-  function desktopSwitchPanelButton() {
-    if (!isProvider) return null;
-    const nextMode: Mode = mode === "offer" ? "use" : "offer";
-    return (
-      <button
-        type="button"
-        onClick={() => handleSwitchMode(nextMode)}
-        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-1.5 text-[12px] font-bold text-[#526277] transition-colors hover:bg-[#f3f7fa] hover:text-[#162543] min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]"
-      >
-        <Repeat2 className="h-4 w-4 text-[#64748b]" />
-        {switchPanelLabel()}
-      </button>
-    );
-  }
-
   function desktopPanelNav() {
-    if (mobileFullScreenTab) return null;
     return (
       <aside className="hidden lg:block lg:w-[260px] lg:shrink-0">
-        <div className="sticky top-[6.5rem] overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white p-2 shadow-sm">
-          <div className="flex flex-col gap-1.5">
-            {isProvider && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleSwitchMode(mode === "offer" ? "use" : "offer")}
-                  className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#f7fafc] hover:text-[#162543]"
-                >
-                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#64748b]">
-                    <Repeat2 className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{switchPanelLabel()}</span>
-                </button>
-                <div className="my-1 h-px bg-[#e5edf3]" />
-              </>
-            )}
-            <nav className="flex flex-col gap-1">
-              {desktopSidebarTabs.map(desktopSidebarButton)}
-            </nav>
-            <div className="my-1 h-px bg-[#e5edf3]" />
-            <button
-              type="button"
-              onClick={() => setGuidesOpen(true)}
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#f7fafc] hover:text-[#162543]"
-            >
-              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#64748b]">
-                <FileText className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Guides" : "Guías"}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => signOutToHome(locale)}
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#fef2f2] hover:text-[#b91c1c]"
-            >
-              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#64748b]">
-                <LogOut className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Sign out" : "Cerrar sesión"}</span>
-            </button>
+        <div className="sticky top-[6.5rem]">
+          <div className="overflow-hidden rounded-[22px] border border-[#dfe8f0] bg-white shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]">
+            <div className="flex flex-col">
+              <nav className="flex flex-col divide-y divide-[#eef3f7]">
+                {panelModeSelector()}
+                {desktopSidebarTabs.map(desktopSidebarButton)}
+              </nav>
+            </div>
           </div>
         </div>
       </aside>
-    );
-  }
-
-  function switchPanelButton({ mobile = false }: { mobile?: boolean } = {}) {
-    if (!isProvider) return null;
-    const nextMode: Mode = mode === "offer" ? "use" : "offer";
-    return (
-      <button
-        type="button"
-        onClick={() => {
-          if (mobile) {
-            setMode(nextMode);
-            setMobilePanelOpen(false);
-            const params = new URLSearchParams(window.location.search);
-            params.set("tab", "home");
-            params.delete("mode");
-            const qs = params.toString();
-            window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
-            scrollDashboardToPageTop();
-            return;
-          }
-          handleSwitchMode(nextMode);
-        }}
-        className={cn(
-          "w-full flex items-center rounded-xl text-left font-semibold transition-colors",
-          mobile ? "min-h-14 gap-3 px-3.5 py-3 text-[15px]" : "gap-3 px-3 py-2.5 text-sm",
-          "text-[#162543] hover:bg-[#EBF5FB]",
-        )}
-      >
-        <span className={cn(
-          "relative inline-flex shrink-0 items-center justify-center text-[#64748b]",
-          mobile ? "h-8 w-8 [&>svg]:h-5 [&>svg]:w-5" : "mr-1.5",
-        )}>
-          <Repeat2 className="h-4 w-4" />
-        </span>
-        {switchPanelLabel()}
-      </button>
     );
   }
 
@@ -1263,20 +1728,54 @@ export default function DashboardPage() {
             scrollDashboardToPageTop();
             return;
           }
-          if (tab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
           if (tab === "guides") {
             setGuidesOpen(true);
             return;
           }
-          setTab(tab);
+          requestUnsavedAction(() => openPanelDestination(tab));
         }}
-        className="flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold text-[#374151] transition-colors hover:bg-[#f8fbfd]"
+        className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
       >
-        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
           {TAB_ICONS[tab]}
+        </span>
+        <span className="min-w-0 flex-1 truncate">{label}</span>
+      </button>
+    );
+  }
+
+  function mobileUtilityButton({
+    keyName,
+    label,
+    icon,
+    onClick,
+    danger = false,
+  }: {
+    keyName: string;
+    label: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+    danger?: boolean;
+  }) {
+    return (
+      <button
+        key={keyName}
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold transition-colors",
+          danger
+            ? "text-[#b91c1c] hover:bg-[#fef2f2]"
+            : "text-[#374151] hover:bg-[#f8fbfd]",
+        )}
+      >
+        <span
+          className={cn(
+            "inline-flex h-8 w-8 shrink-0 items-center justify-center [&>svg]:h-5 [&>svg]:w-5",
+            danger ? "text-[#b91c1c]" : "text-[#64748b]",
+          )}
+        >
+          {icon}
         </span>
         <span className="min-w-0 flex-1 truncate">{label}</span>
       </button>
@@ -1285,37 +1784,48 @@ export default function DashboardPage() {
 
   function identityBadge() {
     if (clientVerified || pro?.verification_status === "verified") {
-      return <Badge variant="verified">{t("identityVerified")}</Badge>;
+      return (
+        <Badge
+          variant="verified"
+          className="shrink-0 whitespace-nowrap px-2 py-1 text-[11px] leading-none sm:px-2.5 sm:py-0.5 sm:text-xs sm:leading-normal"
+        >
+          {t("identityVerified")}
+        </Badge>
+      );
     }
     if (!pro) return null;
     return (
       <button
         type="button"
         onClick={() => {
-          openProfileVerification();
+          requestUnsavedAction(() => openProfileVerification());
         }}
         title={t("verifyInvite")}
-        className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
+        className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2 py-1 text-[11px] font-medium leading-none text-[#6b7280] transition-colors hover:bg-[#e5e7eb] sm:px-2.5 sm:py-0.5 sm:text-xs sm:leading-normal"
       >
         {t("notVerifiedBadge")}
       </button>
     );
   }
 
+  // The proxy normally handles this before the page is served. Keep this
+  // client-side guard for SPA transitions and stale prefetched dashboard trees.
+  if (!authLoading && user && pendingProfessionalSignup) {
+    return <DashboardRouteLoading />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      <Navbar />
+      <Navbar mobileSearch={false} />
       <QuickGuidesModal
         open={guidesOpen}
         onClose={() => setGuidesOpen(false)}
         isProvider={isProvider}
         onGo={(guide) => {
-          if (guide.actionTab === "assistant") {
-            window.dispatchEvent(new Event("contratacr:open-ai"));
-            return;
-          }
-          if (guide.targetMode) setMode(guide.targetMode);
-          setTab(guide.actionTab ?? "home");
+          requestUnsavedAction(() => {
+            if (guide.targetMode) setMode(guide.targetMode);
+            setTab(guide.actionTab ?? "home");
+          });
         }}
       />
       {networkModal && (
@@ -1360,58 +1870,151 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      <main className="flex-1 min-h-[calc(100svh-88px)]">
+      <main className={cn(
+        "flex-1 min-h-[calc(100svh-88px)]",
+        mobileSectionOpen && "bg-white lg:bg-[#fafafa]",
+        mobileFullScreenTab && "bg-white lg:bg-[#fafafa]",
+      )}>
         <div className={cn(
           "dashboard-panel-content mx-auto max-w-7xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8",
           mobileSectionOpen && "px-0 pt-0 sm:px-0 lg:px-8 lg:pt-8",
           mobileFullScreenTab && "max-w-none px-0 pb-0 pt-0 sm:px-0 lg:max-w-7xl lg:px-8 lg:pb-8 lg:pt-8",
         )}>
-          {/* Header card — identity and status grouped in one surface on desktop. */}
-          <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", (mobileFullScreenTab || mobileSectionOpen) ? "hidden lg:block" : "block")}>
-            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6">
-            <div className="flex min-w-0 flex-1 items-center gap-4">
-              <ImagePreviewDialog
-                src={headerAvatar}
-                alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
-                openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
-              >
-                <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb] sm:h-20 sm:w-20">
-                  <AvatarImage src={headerAvatar ?? undefined} />
-                  <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
-                    {getInitials(displayName || "?")}
-                  </AvatarFallback>
-                </Avatar>
-              </ImagePreviewDialog>
-              <div className="min-w-0 flex-1">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
-                  {mode === "offer" ? t("panelProfessional") : t("panelClient")}
-                </p>
-                <div className="flex min-w-0 max-w-full items-center gap-1">
-                  <h1 className="min-w-0 truncate whitespace-nowrap text-lg font-bold leading-tight text-[#162543] sm:text-2xl" title={displayName}>
-                    <span className="hidden min-[430px]:inline sm:hidden">{displayName}</span>
-                    <span className="min-[430px]:hidden sm:hidden">{compactMobileHeaderName}</span>
+          {/* Header card - identity and status grouped in one surface on desktop. */}
+          <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", mobileSectionOpen ? "hidden lg:block" : "block")}>
+            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-[18px] shadow-sm sm:px-6 sm:py-5">
+            <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-5">
+              <div ref={headerPhotoMenuRef} className="relative h-[72px] w-[72px] shrink-0 sm:h-20 sm:w-20">
+                <button
+                  type="button"
+                  onClick={() => setHeaderPhotoMenuOpen((open) => !open)}
+                  disabled={headerPhotoUploading}
+                  className="relative block h-[72px] w-[72px] rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 disabled:opacity-70 sm:h-20 sm:w-20"
+                  aria-label={locale === "en" ? "Profile photo options" : "Opciones de foto de perfil"}
+                >
+                  <Avatar className="h-[72px] w-[72px] bg-transparent sm:h-20 sm:w-20">
+                    <AvatarImage src={headerAvatar ?? undefined} />
+                    <AvatarFallback className="bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">
+                      {getInitials(displayName || "?")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#009FD9] text-white shadow-sm sm:h-7 sm:w-7">
+                    {headerPhotoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                  </span>
+                </button>
+                {headerPhotoMenuOpen && (
+                  <div className="absolute left-0 top-[calc(100%+0.5rem)] z-40 w-56 overflow-hidden rounded-xl border border-[#dbe7ef] bg-white py-1 shadow-xl">
+                    {headerAvatar && (
+                      <button type="button" onClick={() => { setHeaderPhotoMenuOpen(false); setHeaderPhotoPreviewOpen(true); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]">
+                        <Eye className="h-4 w-4 text-[#009FD9]" />
+                        {locale === "en" ? "View photo" : "Ver foto"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => { setHeaderPhotoMenuOpen(false); headerPhotoInputRef.current?.click(); }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]"
+                    >
+                      <Camera className="h-4 w-4 text-[#009FD9]" />
+                      {headerAvatar ? (locale === "en" ? "Change photo" : "Cambiar foto") : (locale === "en" ? "Add photo" : "Agregar foto")}
+                    </button>
+                    {headerAvatar && (
+                      <button
+                        type="button"
+                        onClick={() => void handleHeaderPhotoRemove()}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {locale === "en" ? "Remove photo" : "Eliminar foto"}
+                      </button>
+                    )}
+                  </div>
+                )}
+                <input
+                  ref={headerPhotoInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.currentTarget.value = "";
+                    if (file) void handleHeaderPhotoUpload(file);
+                  }}
+                />
+                <ImagePreviewDialog
+                  src={headerAvatar}
+                  alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
+                  closeLabel={locale === "en" ? "Close" : "Cerrar"}
+                  open={headerPhotoPreviewOpen}
+                  onOpenChange={setHeaderPhotoPreviewOpen}
+                />
+              </div>
+              <div className="min-w-0 self-center">
+                <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-1.5 sm:gap-2">
+                  <h1 className="shrink-0 whitespace-nowrap text-[15px] font-bold leading-tight text-[#162543] sm:min-w-0 sm:shrink sm:truncate sm:text-2xl" title={displayName}>
+                    <span className="sm:hidden">{compactMobileHeaderName}</span>
                     <span className="hidden sm:inline">{compactHeaderName}</span>
                   </h1>
-                  {publicProfileHref && (
-                    <Link
-                      href={publicProfileHref}
-                      aria-label={locale === "en" ? "View my profile" : "Ver mi perfil"}
-                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-[#64748b] transition hover:text-[#0089bb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:h-7 sm:w-7"
-                    >
-                      <ExternalLink className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
-                    </Link>
-                  )}
-                </div>
-                <div className="-mt-0.5 flex min-h-[22px] flex-wrap items-center gap-x-2 gap-y-1">
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
+                </div>
+                <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-x-2.5 gap-y-1 sm:mt-1 sm:gap-x-2">
                   <div className="flex min-w-0 items-center">
                     <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                   </div>
+                  {publicProfileHref && (
+                    <Link
+                      href={publicProfileHref}
+                      onClick={openInNewTabOnDesktop}
+                      aria-label={locale === "en" ? "View my profile" : "Ver mi perfil"}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 text-[#162543]" />
+                      <span className="whitespace-nowrap">{locale === "en" ? "View profile" : "Ver mi perfil"}</span>
+                    </Link>
+                  )}
                 </div>
+              </div>
+              <div className="col-span-2 hidden flex-wrap items-center justify-center gap-2 border-t border-[#eef3f7] pt-3 sm:col-span-1 sm:flex sm:justify-end sm:border-t-0 sm:pt-0">
+                {publicProfileHref && (
+                  <Link
+                    href={publicProfileHref}
+                    onClick={openInNewTabOnDesktop}
+                    className="hidden h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb] sm:inline-flex"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    {locale === "en" ? "View profile" : "Ver mi perfil"}
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setGuidesOpen(true)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb]"
+                >
+                  <FileText className="h-4 w-4" />
+                  {locale === "en" ? "Guides" : "Guías"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => signOutToHome(locale)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#fef2f2] hover:text-[#b91c1c]"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {locale === "en" ? "Sign out" : "Cerrar sesión"}
+                </button>
               </div>
             </div>
             </div>
           </div>
+          {((activeTab === "home") || (mode === "offer" && activeTab !== "completion" && activeTab !== "chat")) && !mobileProfileSectionTitle && showProfileCompletion && proForCompletion && (
+            <div className="mx-auto mb-6 hidden w-full max-w-[79.5rem] empty:mb-0 lg:block lg:empty:hidden">
+              <ProfileCompletion
+                pro={proForCompletion}
+                variant="summary"
+                onViewSteps={() => setTab("completion", true)}
+                onGo={(tab, field) => requestUnsavedAction(() => openCompletionTarget(tab, field))}
+              />
+            </div>
+          )}
 
           {/* Offer mode, provider row still loading: spinner (avoids gate flash). */}
           {proLoadError ? (
@@ -1449,62 +2052,72 @@ export default function DashboardPage() {
             </Card>
           ) : (
             <>
-              {/* Profile-completion, offer mode only, hides itself once complete. */}
-              {showProfileCompletion && !mobileFullScreenTab && (
-                <div className={cn(mobileSectionOpen && "hidden lg:block")}>
-                <ProfileCompletion
-                  pro={proForCompletion}
-                  onGo={(tab, field) => {
-                    if (tab === "verificacion" || field === "verification") {
-                      openProfileVerification();
-                      return;
-                    }
-                    setTab(tab as Tab);
-                    if (field && tab === "services") setServiceFocus({ field, key: nextFocusKey() });
-                    else if (field) setProfileFocus({ field, key: nextFocusKey() });
-                  }}
-                />
-                </div>
-              )}
-
-              {activeTab !== "home" && !mobileFullScreenTab && (
+              {activeTab !== "home" && (
                 <div className="sticky top-0 z-20 grid min-h-16 grid-cols-[64px_minmax(0,1fr)_64px] items-center border-b border-[#e5e7eb] bg-white px-2 py-2 text-[#162543] lg:hidden">
                   <button
                     type="button"
-                    onClick={() => setTab("home")}
+                    onClick={() => {
+                      requestUnsavedAction(() => {
+                        if (hasActiveCompletionFlow()) {
+                          if (activeTab === "profile" && mobileProfileSectionTitle) {
+                            window.dispatchEvent(new Event("ccr:profile-mobile-close-section"));
+                          }
+                          goToCompletionChecklist();
+                          return;
+                        }
+                        if (activeTab === "profile" && mobileProfileSectionTitle) {
+                          window.dispatchEvent(new Event("ccr:profile-mobile-close-section"));
+                          return;
+                        }
+                        if (activeTab === "soporte" && supportThreadTitle) {
+                          window.dispatchEvent(new Event("ccr:support-close-thread"));
+                          return;
+                        }
+                        if ((activeTab === "offers" || activeTab === "jobs") && externalReturnTo) {
+                          router.push(`/${locale}${externalReturnTo}`);
+                          return;
+                        }
+                        setTab("home");
+                      });
+                    }}
                     aria-label={t("backToPanel")}
                     className="inline-flex h-10 shrink-0 items-center gap-1 justify-self-start rounded-lg px-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6]"
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
-                  <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
+                  {supportThreadTitle ? (
+                    <h2 className="flex min-w-0 items-baseline justify-center gap-1.5 px-1 text-center text-base font-bold">
+                      <span className="min-w-0 truncate">{supportThreadTitle}</span>
+                      {supportThreadRef && <span className="shrink-0 text-[11px] font-semibold text-[#6b7280]">#{supportThreadRef}</span>}
+                    </h2>
+                  ) : (
+                    <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
+                  )}
                   <div className="flex shrink-0 justify-self-end" />
                 </div>
               )}
 
               <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-                {activeTab !== "home" && !mobileFullScreenTab ? desktopPanelNav() : null}
+                {activeTab !== "home" ? desktopPanelNav() : null}
                 {/* Main content, min-w-0 so a long unbroken string inside a card can't
                     grow this flex column past the available width and break the page. */}
                 <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
                   <SaveStatusProvider>
-                    <HeaderSaveStatus />
                     <Card className={cn(
-                      activeTab === "home" && "lg:hidden",
+                      activeTab === "home" && "rounded-none border-0 bg-transparent shadow-none lg:hidden",
                       activeTab === "chat" && "overflow-hidden",
-                      activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && "lg:max-w-[62rem]",
-                      singleSurfaceTab && !mobileFullScreenTab && "border-0 bg-transparent shadow-none",
-                      mobileFullScreenTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none",
-                      !mobileFullScreenTab && mobileSectionOpen && !singleSurfaceTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:min-h-0 lg:rounded-xl lg:border lg:shadow-sm",
+                      activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[62rem]",
+                      singleSurfaceTab && "!border-0 !bg-transparent !shadow-none",
+                      mobileSectionOpen && !singleSurfaceTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-[#dfe8f0] lg:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]",
                     )}>
-                      {activeTab !== "chat" && activeTab !== "home" && !mobileFullScreenTab && !singleSurfaceTab && <CardHeader className="hidden px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3 lg:block">
+                      {activeTab !== "chat" && activeTab !== "home" && !singleSurfaceTab && <CardHeader className="hidden border-b border-[#eef3f7] bg-white px-5 py-4 sm:px-6 lg:block">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
-                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
+                            <h2 className="min-w-0 truncate text-[17px] font-bold text-[#162543]">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
                           </div>
                         </div>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
-                          <div className="mt-0.5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="mt-1 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <p className="text-sm text-[#6b7280]">{t(`subtitles.${activeTab}`)}</p>
                             {activeTab === "sent_projects" && (
                               <Button
@@ -1519,29 +2132,42 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </CardHeader>}
-                      <CardContent className={mobileFullScreenTab ? "min-h-[calc(100svh-88px)] p-0 sm:p-0" : cn(
+                      <CardContent className={mobileSectionOpen ? cn(
+                        "min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-white px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-5",
+                        singleSurfaceTab && "!bg-transparent lg:px-0 lg:pb-0 lg:pt-0"
+                      ) : cn(
                         "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6",
-                        singleSurfaceTab && "px-0 pt-0 pb-0 sm:px-0 sm:pt-0 sm:pb-0",
-                        mobileSectionOpen && !singleSurfaceTab && "dashboard-section-content px-5 pb-8 pt-5 sm:px-6 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-1",
+                        activeTab === "home" && "px-0 sm:px-0",
+                        singleSurfaceTab && "!bg-transparent px-0 pt-0 pb-0 sm:px-0 sm:pt-0 sm:pb-0",
                       )}>
                         {activeTab === "home" && (
                           <>
+                            {showProfileCompletion && proForCompletion && !mobileProfileSectionTitle && (
+                              <div className="pb-4 empty:pb-0 lg:hidden empty:hidden">
+                                <ProfileCompletion
+                                  pro={proForCompletion}
+                                  variant="summary"
+                                  onViewSteps={() => setTab("completion", true)}
+                                  onGo={(tab, field) => requestUnsavedAction(() => openCompletionTarget(tab, field))}
+                                />
+                              </div>
+                            )}
                             <div className="lg:hidden">
-                              <div className="space-y-1 pt-1">
-                                {switchPanelButton({ mobile: true })}
-                                {isProvider && <div className="my-2 border-t border-[#e5e7eb]" />}
-                                {mobileSectionTabs.map(mobileSectionButton)}
-                                <div className="my-3 border-t border-[#e5e7eb]" />
-                                <button
-                                  type="button"
-                                  onClick={() => signOutToHome(locale)}
-                                  className="flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827]"
-                                >
-                                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
-                                    <LogOut className="h-4 w-4" />
-                                  </span>
-                                  {locale === "en" ? "Sign out" : "Cerrar sesión"}
-                                </button>
+                              <div>
+                                <div className="overflow-hidden rounded-[22px] border border-[#dfe8f0] bg-white shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]">
+                                  <div className="divide-y divide-[#eef3f7]">
+                                    {panelModeSelector()}
+                                    {mobileSectionTabs.map(mobileSectionButton)}
+                                  </div>
+                                  <div className="mx-4 border-t border-[#eef3f7]" />
+                                  {mobileUtilityButton({
+                                    keyName: "mobile-signout",
+                                    label: locale === "en" ? "Sign out" : "Cerrar sesión",
+                                    icon: <LogOut className="h-5 w-5" />,
+                                    onClick: () => signOutToHome(locale),
+                                    danger: true,
+                                  })}
+                                </div>
                               </div>
                             </div>
                           </>
@@ -1553,9 +2179,11 @@ export default function DashboardPage() {
                             professionalId={pro.id}
                             profileId={user.id}
                             initial={proForEditor ?? pro}
-                            onSaved={handleSaved}
+                            onSaved={() => handleSaved("section")}
+                            collapseOnSave={!hasActiveCompletionFlow()}
                             focusField={profileFocus?.field ?? null}
                             focusKey={profileFocus?.key}
+                            resetKey={profileResetKey}
                             extraSections={[
                               {
                                 id: "verificacion",
@@ -1566,8 +2194,9 @@ export default function DashboardPage() {
                                     professionalId={pro.id}
                                     status={pro.verification_status ?? "pending"}
                                     reason={pro.verification_reason}
+                                    currentCedula={currentCedula}
                                     noCrId={pro.no_cr_id ?? false}
-                                    onSaved={handleSaved}
+                                    onSaved={() => handleSaved("section")}
                                   />
                                 ),
                               },
@@ -1575,6 +2204,7 @@ export default function DashboardPage() {
                                 id: "cuenta",
                                 title: t("tabs.cuenta"),
                                 desc: t("profileSections.accountDesc"),
+                                footer: null,
                                 children: (
                                   <div className="space-y-6">
                                     <AccountSecuritySection showHeading={false} />
@@ -1592,6 +2222,7 @@ export default function DashboardPage() {
                                 id: "cuenta",
                                 title: t("tabs.cuenta"),
                                 desc: t("profileSections.accountDesc"),
+                                footer: null,
                                 children: (
                                   <div className="space-y-6">
                                     <AccountSecuritySection showHeading={false} />
@@ -1609,7 +2240,7 @@ export default function DashboardPage() {
                             primaryCategory={pro.category_id}
                             initialProfessions={pro.professions ?? []}
                             initialServices={pro.services ?? []}
-                            onSaved={handleSaved}
+                            onSaved={(intent) => handleSaved(intent ?? "section")}
                             focusField={serviceFocus?.field ?? null}
                             focusKey={serviceFocus?.key}
                           />
@@ -1621,7 +2252,7 @@ export default function DashboardPage() {
                             initialItems={pro.portfolio_items ?? undefined}
                             professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
                             services={pro.services ?? []}
-                            onSaved={handleSaved}
+                            onSaved={() => handleSaved("section")}
                           />
                         )}
                         {activeTab === "availability" && pro && (
@@ -1630,9 +2261,10 @@ export default function DashboardPage() {
                             initialPublic={pro.availability_public ?? true}
                             initialContactPreference={pro.contact_preference ?? "ambas"}
                             workplaces={pro.workplaces ?? []}
+                            coverageCountry={!!pro.coverage_country}
                             videoConsultationAllowed={anyVideoConsultCategory((pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : []))}
                             initialVideoConsultation={!!pro.videoconsulta}
-                            onSaved={handleSaved}
+                            onSaved={() => handleSaved("section")}
                           />
                         )}
                         {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
@@ -1648,10 +2280,38 @@ export default function DashboardPage() {
                         {/* "Usar servicios", the seek capability. */}
                         {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
+                        {activeTab === "applications" && <ClientJobApplications />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
-                        {activeTab === "network" && <FollowNetworkTab onBack={() => setTab("home")} />}
+                        {activeTab === "connections" && <ClientConnections />}
+                        {activeTab === "network" && <FollowNetworkTab onBack={() => requestUnsavedAction(() => setTab("home"))} />}
                         {activeTab === "notifications" && <NotificationsList />}
-                        {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
+                        {activeTab === "soporte" && (
+                          <SupportTickets
+                            onUnreadChange={setSupportUnread}
+                            initialTicketId={searchParams.get("ticket")}
+                            initialNewSupport={searchParams.get("newSupport") === "1"}
+                            onThreadChange={({ open, title, reference }) => {
+                              setSupportThreadTitle(open ? title : null);
+                              setSupportThreadRef(open ? reference : null);
+                            }}
+                          />
+                        )}
+                        {activeTab === "jobs" && pro && <JobsPanel professionalId={pro.id} />}
+                        {activeTab === "offers" && pro && <OffersPanel professionalId={pro.id} />}
+                        {activeTab === "completion" && proForCompletion && (
+                          <ProfileCompletion
+                            pro={proForCompletion}
+                            variant="details"
+                            onComplete={() => {
+                              clearCompletionFlow();
+                              setTab("home", true);
+                              scrollDashboardToPageTop();
+                            }}
+                            onGo={(tab, field) => {
+                              requestUnsavedAction(() => openCompletionTarget(tab, field));
+                            }}
+                          />
+                        )}
                         {activeTab === "cuenta" && (
                           <div className="space-y-6">
                             <AccountSecuritySection showHeading={false} />
@@ -1676,3 +2336,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

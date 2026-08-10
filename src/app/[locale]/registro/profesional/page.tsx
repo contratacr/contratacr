@@ -34,6 +34,7 @@ import { writeStoredMode } from "@/hooks/use-mode";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { PanelSwitch } from "@/components/dashboard/panel-toggle-row";
 
 // Category data lives in src/lib/data/categories.ts (single source of truth).
 // The service catalog picker shares the same taxonomy and grouped UI used in
@@ -973,11 +974,12 @@ export default function RegisterProfessionalPage() {
           <button
             type="button"
             onClick={() => setPublicBusinessNameOnly((value) => !value)}
-            className={cn("relative h-6 w-11 shrink-0 rounded-full transition-all", publicBusinessNameOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+            className="shrink-0"
             aria-label={businessNameOnlyLabel}
-            aria-pressed={publicBusinessNameOnly}
+            role="checkbox"
+            aria-checked={publicBusinessNameOnly}
           >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", publicBusinessNameOnly ? "left-5" : "left-0.5")} />
+            <PanelSwitch checked={publicBusinessNameOnly} />
           </button>
         </div>
       )}

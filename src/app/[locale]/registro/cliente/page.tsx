@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -17,10 +18,12 @@ import { getInitials } from "@/lib/utils";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { applyPendingFollow, hasPendingFollow } from "@/components/professionals/follow-button";
 
 export default function RegisterClientPage() {
   const router = useRouter();
   const t = useTranslations("registerClient");
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   // An already-registered, logged-in user must never be pushed through account
   // creation — bounce them to their panel. Logged-out visitors (new email/password
@@ -40,6 +43,14 @@ export default function RegisterClientPage() {
   const [success, setSuccess] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
   const [oauthPhoto, setOauthPhoto] = useState<string | null>(null);
+  const panelHref = searchParams.get("redirect") || (hasPendingFollow() ? "/dashboard/profesional?tab=network&mode=use" : "/dashboard/profesional?mode=use");
+
+  async function completeSuccess() {
+    const { data } = await createClient().auth.getUser();
+    if (data.user?.id) await applyPendingFollow(data.user.id);
+    setOtpEmail(null);
+    setSuccess(true);
+  }
 
   // Pre-fill from OAuth user
   useEffect(() => {
@@ -145,6 +156,7 @@ export default function RegisterClientPage() {
       if (!user) {
         setOtpEmail(email);
       } else {
+        await applyPendingFollow(user.id);
         setSuccess(true);
       }
     } catch {
@@ -172,7 +184,7 @@ export default function RegisterClientPage() {
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
-              <OtpVerification email={otpEmail} onVerified={() => { setOtpEmail(null); setSuccess(true); }} />
+              <OtpVerification email={otpEmail} onVerified={() => { void completeSuccess(); }} />
             </div>
           </div>
         </main>
@@ -191,7 +203,7 @@ export default function RegisterClientPage() {
             <p className="text-[#6b7280] mb-8">
               {t("successBody")}
             </p>
-            <Button size="lg" className="w-full" onClick={() => router.push("/dashboard/profesional?mode=use")}>
+            <Button size="lg" className="w-full" onClick={() => router.push(panelHref)}>
               {t("goToPanel")}
             </Button>
             <Button variant="outline" size="lg" className="w-full mt-3" onClick={() => router.push("/buscar")}>

@@ -1,30 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronRight, X } from "lucide-react";
-import { AppTooltip } from "@/components/ui/app-tooltip";
-
-// Context-aware profile-completion (inspired by Airbnb's "complete your listing"
-// checklist + LinkedIn's profile-strength meter). The PERCENT counts only the
-// content the pro fully controls, so finishing the checklist always reaches 100%.
-// Identity verification is approval-gated (and can't auto-pass for non-padrón IDs),
-// so it's surfaced as a SEPARATE recommended action and never blocks 100%. Only
-// fields that APPLY are listed (aseguradoras only for health; Spanish-only and
-// "I have none" are never penalized). Each item is benefit-framed and jumps to the
-// exact tab that completes it.
+import { ChevronRight, ListChecks, X } from "lucide-react";
+import { serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
+import { countCases } from "@/lib/services";
 
 type ProRecord = Record<string, unknown>;
 
 export type CompletionItem = {
-  // `key` doubles as the i18n key (proPanel.completion.<key> / <key>Benefit).
   key: string;
   done: boolean;
   tab: string;
+  optional?: boolean;
 };
 
-function hasLen(v: unknown): boolean {
-  return Array.isArray(v) && v.length > 0;
+function hasLen(value: unknown): boolean {
+  return Array.isArray(value) && value.length > 0;
+}
+
+function hasText(value: unknown, min = 1): boolean {
+  return typeof value === "string" && value.trim().length >= min;
+}
+
+function firstObject(value: unknown): Record<string, unknown> {
+  if (Array.isArray(value)) {
+    const first = value.find((item) => item && typeof item === "object");
+    return (first ?? {}) as Record<string, unknown>;
+  }
+  return value && typeof value === "object" ? value as Record<string, unknown> : {};
+}
+
+function activeServices(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((service) => {
+    if (!service || typeof service !== "object") return false;
+    return (service as { active?: unknown }).active !== false;
+  }) as Array<Record<string, unknown>>;
+}
+
+function socialLinks(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? value as Record<string, unknown> : {};
+}
+
+function hasAnyText(...values: unknown[]) {
+  return values.some((value) => hasText(value));
 }
 
 export function computeCompletion(pro: ProRecord): {
@@ -32,13 +52,16 @@ export function computeCompletion(pro: ProRecord): {
   items: CompletionItem[];
   verified: boolean;
 } {
-  const profiles = (pro.profiles ?? {}) as { avatar_url?: string | null };
+  const profiles = firstObject(pro.profiles);
   const hasProfilePhoto =
-    !!profiles.avatar_url ||
+    hasText(profiles.avatar_url) ||
     (typeof pro.avatar_url === "string" && pro.avatar_url.trim().length > 0);
+  // Completion must follow the editor's actual rule: a saved, non-empty
+  // description is complete. Requiring a second hidden minimum here caused a
+  // correctly saved description to keep reappearing in the checklist.
+  const hasBio = [pro.bio, pro.description, profiles.bio, profiles.description]
+    .some((value) => hasText(value));
 
-  // Location is "done" as soon as ANY location signal exists — independent of how
-  // service_type is stored, so it never sticks for a pro who clearly set a zone.
   const hasLocation =
     hasLen(pro.workplaces) ||
     hasLen(pro.coverage_areas) ||
@@ -46,157 +69,304 @@ export function computeCompletion(pro: ProRecord): {
     !!pro.coverage_country ||
     !!pro.provincia_id ||
     !!pro.canton_id;
-  const hasSelectedServices = hasLen(pro.professions) || !!pro.category_id;
-  const hasServiceInfo = hasLen(pro.services);
-
+  const services = activeServices(pro.services);
+  const hasSelectedServices = services.length > 0;
+  const hasServiceDescription = services.some((service) => hasText(service.description));
+  const hasServicePrice = services.some((service) =>
+    service.priceType === "a_convenir" ||
+    (typeof service.priceAmount === "number" && service.priceAmount > 0) ||
+    hasText(service.price)
+  );
+  const hasServiceExperience = services.some((service) =>
+    (typeof service.startedAt === "string" && /^\d{4}-\d{2}$/.test(service.startedAt)) ||
+    (typeof service.years === "number" && service.years > 0) ||
+    (typeof service.months === "number" && service.months > 0)
+  );
+  const links = socialLinks(pro.social_links);
+  const hasPublicLinks = hasAnyText(links.website, links.instagram, links.facebook, links.tiktok, links.linkedin);
+  const hasLanguages = Array.isArray(pro.languages) && pro.languages.some((language) => hasText(language));
+  const hasEducation = hasLen(pro.certifications);
+  const hasPortfolio =
+    countCases(
+      Array.isArray(pro.portfolio_items) ? pro.portfolio_items : null,
+      Array.isArray(pro.portfolio_urls) ? pro.portfolio_urls : null
+    ) > 0 || hasLen(pro.portfolio);
+  const hasServiceImage = services.some((service) => hasText(service.imageUrl));
+  const credentialServices = services.filter((service) => {
+    const category = typeof service.category === "string" ? service.category : "";
+    return serviceSupportsProfessionalCredential(category);
+  });
+  const hasServiceCredential = credentialServices.length > 0 && credentialServices.every((service) =>
+    hasText(service.professionalCredentialNumber)
+  );
+  const hasVerification = pro.verification_status === "verified";
   const items: CompletionItem[] = [
     { key: "photo", done: hasProfilePhoto, tab: "profile" },
-    // Any non-empty description counts as done (no minimum length).
-    { key: "bio", done: typeof pro.bio === "string" && pro.bio.trim().length > 0, tab: "profile" },
-    { key: hasSelectedServices ? "serviceInfo" : "services", done: hasServiceInfo, tab: "services" },
+    { key: "bio", done: hasBio, tab: "profile" },
+    { key: "services", done: hasSelectedServices, tab: "services" },
+    { key: "serviceDescription", done: hasServiceDescription, tab: "services" },
+    { key: "servicePrice", done: hasServicePrice, tab: "services" },
+    { key: "serviceExperience", done: hasServiceExperience, tab: "services" },
     { key: "location", done: hasLocation, tab: "profile" },
-    { key: "whatsapp", done: typeof pro.whatsapp === "string" && pro.whatsapp.trim().length > 0, tab: "profile" },
+    { key: "whatsapp", done: hasText(pro.whatsapp), tab: "profile" },
+    { key: "languages", done: hasLanguages, tab: "profile", optional: true },
+    { key: "publicLinks", done: hasPublicLinks, tab: "profile", optional: true },
+    { key: "education", done: hasEducation, tab: "profile", optional: true },
+    { key: "verification", done: hasVerification, tab: "profile", optional: true },
+    { key: "serviceImage", done: hasServiceImage, tab: "services", optional: true },
+    ...(credentialServices.length > 0
+      ? [{ key: "serviceCredential", done: hasServiceCredential, tab: "services", optional: true }]
+      : []),
+    { key: "portfolio", done: hasPortfolio, tab: "photos", optional: true },
   ];
 
-  // Aseguradoras are OPTIONAL (even for health pros) — never a completion step, so
-  // they add no "incomplete profile" pressure.
-
-  const done = items.filter((i) => i.done).length;
+  const done = items.filter((item) => item.done).length;
   const percent = Math.round((done / items.length) * 100);
   return { percent, items, verified: pro.verification_status === "verified" };
 }
 
-export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: string, field?: string) => void }) {
+export function ProfileCompletion({
+  pro,
+  onGo,
+  variant = "header",
+  onViewSteps,
+  onComplete,
+}: {
+  pro: ProRecord;
+  onGo: (tab: string, field?: string) => void;
+  variant?: "header" | "summary" | "details";
+  onViewSteps?: () => void;
+  onComplete?: () => void;
+}) {
   const t = useTranslations("proPanel.completion");
-  const { percent, items, verified } = computeCompletion(pro);
-  const missing = items.filter((i) => !i.done);
-  const complete = percent === 100;
-
-  // The ONLY optional step in the completion flow is identity VERIFICATION (sprint 396 —
-  // kept the flow short; Disponibilidad and Casos de éxito are NOT flow steps, they're
-  // discoverable as their own sidebar tabs in Modo profesional). Dismissible, never nags
-  // again, and NEVER counts toward the %.
-  const proId = typeof pro.id === "string" ? pro.id : "";
-  const [dismissedVerify, setDismissedVerify] = useState(() => {
+  const { percent, items } = computeCompletion(pro);
+  const proId = typeof pro.id === "string" ? pro.id : "profile";
+  const storageKey = `contratacr_completion_dismissed_${proId}`;
+  const ignoredStorageKey = `contratacr_completion_ignored_${proId}`;
+  const [dismissed, setDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
-    try { return localStorage.getItem(`contratacr_verify_dismissed_${proId}`) === "1"; } catch { return false; }
+    try {
+      return localStorage.getItem(storageKey) === "1";
+    } catch {
+      return false;
+    }
   });
-  function dismiss() {
-    setDismissedVerify(true);
-    try { localStorage.setItem(`contratacr_verify_dismissed_${proId}`, "1"); } catch { /* noop */ }
+  const [ignored, setIgnored] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem(ignoredStorageKey) || "[]");
+      return Array.isArray(parsed) ? parsed.filter((key) => typeof key === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const ignoredSet = new Set(ignored);
+  const missing = items.filter((item) => !item.done && !ignoredSet.has(item.key));
+  const optionalMissing = missing.filter((item) => item.optional);
+  const ignoredCount = items.filter((item) => !item.done && ignoredSet.has(item.key)).length;
+  const profileComplete = missing.length === 0;
+  const checklistHidden = dismissed || missing.length === 0;
+
+  useEffect(() => {
+    if (profileComplete) onComplete?.();
+  }, [profileComplete, onComplete]);
+
+  if (profileComplete) return null;
+
+  function showSteps() {
+    setDismissed(false);
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      // The checklist still reopens for this render if storage is unavailable.
+    }
   }
 
-  const optionalItems: { key: string; titleKey: string; benefitKey: string; tab: string; field?: string; actionKey: string }[] = [];
-  if (!verified && !dismissedVerify)
-    optionalItems.push({ key: "verify", titleKey: "verifyTitle", benefitKey: "verifyBenefit", tab: "profile", field: "verification", actionKey: "verifyAction" });
+  function openSteps() {
+    showSteps();
+    onViewSteps?.();
+  }
 
-  // Nothing left to nudge: essentials complete AND verification done/dismissed.
-  if (complete && optionalItems.length === 0) return null;
+  if (variant === "header") {
+    return (
+      <button
+        type="button"
+        onClick={openSteps}
+        className="mt-2 flex w-full max-w-[17.5rem] items-center gap-2 rounded-2xl border border-[#d8edf6] bg-[#f7fcff] px-3 py-2 text-left text-[11px] font-bold text-[#526277] shadow-[0_8px_20px_-18px_rgba(15,23,42,0.5)] transition hover:border-[#bfe6f4] hover:bg-[#effaff] hover:text-[#0089bb] sm:max-w-[22rem] sm:text-xs"
+      >
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#e8f8fd] text-[10px] font-extrabold tabular-nums text-[#009FD9]">
+          {percent}%
+        </span>
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="block truncate text-[#162543]">{t("title")}</span>
+          <span className="mt-0.5 block truncate font-semibold text-[#64748b]">{t("stepsLeft", { count: missing.length })}</span>
+        </span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-[#8aa0b4]" />
+      </button>
+    );
+  }
+
+  if (variant === "summary") {
+    return (
+      <button
+        type="button"
+        onClick={openSteps}
+        className="flex w-full items-center gap-2 rounded-2xl border border-[#d8edf6] bg-[#f7fcff] px-3 py-2.5 text-left shadow-[0_10px_24px_-22px_rgba(15,23,42,0.5)] transition hover:border-[#bfe6f4] hover:bg-[#effaff]"
+      >
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#e8f8fd] text-[10px] font-extrabold tabular-nums text-[#009FD9]">
+          {percent}%
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13px] font-extrabold leading-tight text-[#162543]">{t("title")}</span>
+          <span className="mt-0.5 block truncate text-[11px] font-semibold leading-tight text-[#64748b]">
+            {t("stepsLeft", { count: missing.length })}
+          </span>
+        </span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-[#8aa0b4]" />
+      </button>
+    );
+  }
+  if (checklistHidden) {
+    return (
+      <section className="mb-4 rounded-[18px] border border-[#dbe7ef] bg-white px-3.5 py-3 shadow-[0_10px_28px_-24px_rgba(15,23,42,0.55)] sm:px-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[#009FD9]">
+            <ListChecks className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-extrabold text-[#111827]">{t("title")}</p>
+            <p className="truncate text-xs font-semibold text-[#64748b]">{t("compactProgress", { percent })}</p>
+          </div>
+          <button
+            type="button"
+            onClick={openSteps}
+            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#eef9fd] px-3 py-2 text-xs font-extrabold text-[#007eae] transition-colors hover:bg-[#dff4fb]"
+          >
+            {t("viewSteps")}
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  const next = missing[0];
+  const visibleSteps = missing;
+
+  function ignoreItem(key: string) {
+    setIgnored((current) => {
+      if (current.includes(key)) return current;
+      const nextIgnored = [...current, key];
+      try {
+        localStorage.setItem(ignoredStorageKey, JSON.stringify(nextIgnored));
+      } catch {
+        // Ignore storage failures; the card still updates for this render.
+      }
+      return nextIgnored;
+    });
+  }
+
+  function ignoreAll() {
+    const missingKeys = items.filter((item) => !item.done && item.optional).map((item) => item.key);
+    const nextIgnored = Array.from(new Set([...ignored, ...missingKeys]));
+    setIgnored(nextIgnored);
+    try {
+      localStorage.setItem(ignoredStorageKey, JSON.stringify(nextIgnored));
+    } catch {
+      // Ignore storage failures; the optional rows still hide for this render.
+    }
+  }
 
   return (
-    <section className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden mb-6">
-      {/* Header — motivating headline, big live percent, linear strength meter. */}
-      <div className="p-4 sm:p-6">
-        <div className="flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-semibold text-[#111827]">
-              {complete ? t("completeTitle") : t("title")}
-            </h2>
-            <p className="text-xs sm:text-sm text-[#6b7280] mt-0.5 leading-snug">
-              {complete ? t("completeSubtitle") : t("subtitle")}
-            </p>
+    <section className="w-full bg-white py-1">
+      <div className="w-full">
+        <button
+          type="button"
+          onClick={() => onGo(next.tab, next.key)}
+          className="group block w-full rounded-xl px-1 py-1 text-left transition-colors hover:bg-[#f8fbfd] sm:px-2 sm:py-2"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[19px] font-extrabold leading-tight text-[#111827] sm:text-[21px]">
+                {t("stepsLeft", { count: missing.length })}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[#64748b]">
+                {t("compactProgress", { percent })}
+                {ignoredCount > 0 ? ` - ${t("ignoredCount", { count: ignoredCount })}` : ""}
+              </p>
+            </div>
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[12px] font-extrabold tabular-nums text-[#009FD9] sm:h-14 sm:w-14 sm:text-sm">
+              {percent}%
+            </span>
           </div>
-          <div className="shrink-0 leading-none">
-            <span className="text-2xl sm:text-3xl font-bold tabular-nums text-[#111827]">{percent}</span>
-            <span className="text-sm font-semibold text-[#9ca3af]">%</span>
-          </div>
-        </div>
+          <span className="mt-4 block h-2 overflow-hidden rounded-full bg-[#edf4f8]">
+            <span
+              className="block h-full rounded-full bg-[#009FD9] transition-[width]"
+              style={{ width: `${percent}%` }}
+            />
+          </span>
+        </button>
 
-        <div className="mt-3 h-2 w-full rounded-full bg-[#eef2f5] overflow-hidden">
-          <div
-            className="h-full rounded-full transition-[width] duration-700 ease-out"
-            style={{
-              width: `${Math.max(percent, 4)}%`,
-              background: "linear-gradient(90deg,#009FD9,#33b4e0)",
-            }}
-          />
-        </div>
-        {!complete && (
-          <p className="mt-2 text-xs font-medium text-[#009FD9]">{t("stepsLeft", { count: missing.length })}</p>
-        )}
-      </div>
-
-      {/* Pending steps — flat rows split by light dividers (no nested boxes). Each
-          row is a ≥44px tap target that jumps straight to the section to finish. */}
-      {missing.length > 0 && (
-        <ul className="border-t border-[#f3f4f6]">
-          {missing.map((item) => (
-            <li key={item.key} className="border-b border-[#f3f4f6] last:border-b-0">
+        <div className="mt-5 divide-y divide-[#e8eef3] border-y border-[#e8eef3]">
+          {visibleSteps.map((item, index) => (
+            <div
+              key={item.key}
+              className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 px-1 py-4 text-left transition-colors hover:bg-[#f8fbfd] sm:gap-3 sm:px-2"
+            >
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[12px] font-extrabold text-[#009FD9]">
+                {index + 1}
+              </span>
               <button
                 type="button"
                 onClick={() => onGo(item.tab, item.key)}
-                className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 text-left transition-colors hover:bg-[#f9fbfd] min-h-[56px]"
+                className="min-w-0 text-left"
               >
-                <span className="h-4 w-4 shrink-0 rounded-full border-2 border-[#d1d5db] transition-colors group-hover:border-[#009FD9]" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-[#111827]">{t(item.key)}</span>
-                  <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t(`${item.key}Benefit`)}</span>
+                <span className="block text-[13px] font-extrabold leading-snug text-[#526277] group-hover:text-[#162543] sm:text-sm">
+                  {t(item.key)}
                 </span>
-                <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#009FD9] shrink-0">
-                  {t("completeAction")}
-                  <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </span>
-                <ChevronRight className="h-5 w-5 text-[#cbd5e1] shrink-0 sm:hidden" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* OPTIONAL extras — identity verification + profile ENHANCEMENTS (Disponibilidad,
-          Casos de éxito). Styled IDENTICALLY to the required rows (same hollow-circle
-          bullet, padding, divider, hover) — the ONLY differences are the "Opcional" tag,
-          the action CTA, and an explicit LABELED "✕ Ahora no" dismiss (so it reads as
-          "ignore this optional suggestion", not "missing"). None affect the %. */}
-      {optionalItems.length > 0 && (
-        <ul className="border-t border-[#f3f4f6]">
-          {optionalItems.map((opt) => (
-            <li key={opt.key} className="border-b border-[#f3f4f6] last:border-b-0">
-              <div className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 min-h-[56px] transition-colors hover:bg-[#f9fbfd]">
-                <span className="h-4 w-4 shrink-0 rounded-full border-2 border-[#d1d5db] transition-colors group-hover:border-[#009FD9]" />
-                <button type="button" onClick={() => onGo(opt.tab, opt.field)} className="min-w-0 flex-1 text-left">
-                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="text-sm font-medium text-[#111827] group-hover:text-[#009FD9] transition-colors">{t(opt.titleKey)}</span>
-                    <span className="rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#009FD9]">
-                      {t("optional")}
-                    </span>
+                {item.optional ? (
+                  <span className="mt-1 inline-flex w-fit rounded-full bg-[#f1f6f9] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.02em] text-[#7c8fa1]">
+                    {t("optionalShort")}
                   </span>
-                  <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t(opt.benefitKey)}</span>
-                </button>
+                ) : null}
+              </button>
+              <button
+                type="button"
+                onClick={() => onGo(item.tab, item.key)}
+                aria-label={t(item.key)}
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#94a3b8] transition-colors group-hover:text-[#009FD9]"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              {item.optional ? (
                 <button
                   type="button"
-                  onClick={() => onGo(opt.tab, opt.field)}
-                  className="hidden sm:inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#009FD9]"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    ignoreItem(item.key);
+                  }}
+                  aria-label={t("ignoreStep")}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#94a3b8] transition-colors hover:bg-[#f1f6f9] hover:text-[#162543]"
                 >
-                  {t(opt.actionKey)}
-                  <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  <X className="h-4 w-4" />
                 </button>
-                <AppTooltip label={t("dismissVerify")}>
-                  <button
-                    type="button"
-                    onClick={dismiss}
-                    aria-label={t("dismissVerify")}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                    {t("dismissVerify")}
-                  </button>
-                </AppTooltip>
-              </div>
-            </li>
+              ) : (
+                <span className="h-8 w-8" aria-hidden="true" />
+              )}
+            </div>
           ))}
-        </ul>
-      )}
+        </div>
+        {optionalMissing.length > 0 && (
+          <button
+            type="button"
+            onClick={ignoreAll}
+            className="mt-3 inline-flex rounded-full bg-[#f1f6f9] px-3 py-2 text-xs font-bold text-[#526277] transition-colors hover:bg-[#e7f0f5] hover:text-[#162543]"
+          >
+            {t("ignoreOptional")}
+          </button>
+        )}
+      </div>
     </section>
   );
 }

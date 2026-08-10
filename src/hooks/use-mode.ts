@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 // Full mode switch for accounts that can both hire and offer services:
 // - "use"   -> client context
@@ -39,18 +39,22 @@ export function writeStoredMode(mode: Mode) {
  * A provider uses their tab choice, defaulting to "offer" (their primary world).
  */
 export function useMode(canOffer: boolean): { mode: Mode; setMode: (m: Mode) => void } {
-  const [stored, setStored] = useState<Mode | null>(() => readStoredMode());
-
-  useEffect(() => {
-    function onEvent(e: Event) {
-      const next = (e as CustomEvent).detail;
-      if (next === "use" || next === "offer") setStored(next);
-    }
+  const stored = useSyncExternalStore(
+    (onStoreChange) => {
+      const onEvent = () => onStoreChange();
+      const onStorage = (event: StorageEvent) => {
+        if (event.storageArea === window.sessionStorage && event.key === KEY) onStoreChange();
+      };
     window.addEventListener(EVENT, onEvent);
-    return () => {
+      window.addEventListener("storage", onStorage);
+      return () => {
       window.removeEventListener(EVENT, onEvent);
-    };
-  }, []);
+        window.removeEventListener("storage", onStorage);
+      };
+    },
+    readStoredMode,
+    () => null,
+  );
 
   // A non-provider is always "use" (no offer world to switch into); a provider uses
   // the tab choice, defaulting to "offer".
@@ -58,7 +62,6 @@ export function useMode(canOffer: boolean): { mode: Mode; setMode: (m: Mode) => 
 
   const setMode = useCallback((m: Mode) => {
     writeStoredMode(m);
-    setStored(m);
   }, []);
 
   return { mode, setMode };

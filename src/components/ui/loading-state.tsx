@@ -4,13 +4,16 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandLoadingMark } from "@/components/ui/content-loading";
 import { useNativeApp } from "@/hooks/use-native-app";
+import { useTranslations } from "next-intl";
 
 export function FormLoadingState({ label, minHeight = "min-h-[360px]" }: { label?: string; minHeight?: string }) {
   const nativeApp = useNativeApp();
+  const t = useTranslations("loading");
+  const resolvedLabel = label ?? t("generic");
   if (nativeApp) {
     return (
       <BrandLoadingMark className={cn("ccr-form-loading-state px-5 py-10 sm:px-6", minHeight)}>
-        {label ? <span className="sr-only">{label}</span> : null}
+        <span className="sr-only">{resolvedLabel}</span>
       </BrandLoadingMark>
     );
   }
@@ -18,7 +21,7 @@ export function FormLoadingState({ label, minHeight = "min-h-[360px]" }: { label
     <div className={cn("ccr-delayed-loading ccr-form-loading-state flex flex-1 items-center justify-center px-5 py-10 sm:px-6", minHeight)}>
       <div className="flex flex-col items-center gap-3 text-center">
         <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" />
-        {label ? <p className="text-sm font-medium text-[#6b7280]">{label}</p> : null}
+        <p className="text-sm font-medium text-[#6b7280]">{resolvedLabel}</p>
       </div>
     </div>
   );

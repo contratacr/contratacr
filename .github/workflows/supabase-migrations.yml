@@ -1,6 +1,12 @@
 name: Supabase migrations
 
 on:
+  push:
+    branches:
+      - test
+    paths:
+      - "supabase/migrations/**"
+      - ".github/workflows/supabase-migrations.yml"
   workflow_dispatch:
     inputs:
       target:
@@ -17,20 +23,20 @@ on:
         default: true
 
 concurrency:
-  group: supabase-migrations-${{ inputs.target }}
+  group: supabase-migrations-${{ github.event_name == 'push' && 'test' || inputs.target }}
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: ${{ inputs.dry_run && 'Dry run' || 'Apply' }} migrations to ${{ inputs.target }}
+    name: Migrate ${{ github.event_name == 'push' && 'test' || inputs.target }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment: ${{ inputs.target }}
+    environment: ${{ github.event_name == 'push' && 'test' || inputs.target }}
     permissions:
       contents: read
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      TARGET_ENV: ${{ inputs.target }}
+      TARGET_ENV: ${{ github.event_name == 'push' && 'test' || inputs.target }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -64,7 +70,7 @@ jobs:
           fi
 
       - name: Apply migrations
-        if: ${{ inputs.dry_run == false }}
+        if: ${{ github.event_name == 'push' || inputs.dry_run == false }}
         run: |
           set -euo pipefail
           pending="$(npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run)"

@@ -8,20 +8,23 @@ import { Button } from "@/components/ui/button";
 
 // Custom, designed replacement for the browser's "Changes you may not be saved"
 // prompt. Intercepts in-app link navigations while there are unsaved edits and
-// shows a Spanish dialog with "Guardar y salir" / "Salir sin guardar" / "Seguir
+// shows a Spanish dialog with "Guardar cambios" / "Salir sin guardar" / "Seguir
 // editando". Hard unloads (tab close / refresh) still use the native prompt —
 // browsers don't allow a custom UI there — but in-app nav is fully styled.
 export function UnsavedChangesGuard({
   dirty,
   onSave,
+  onDiscard,
 }: {
   dirty: boolean;
   onSave?: () => Promise<boolean | void> | boolean | void;
+  onDiscard?: () => void;
 }) {
   const t = useTranslations("unsavedGuard");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const pendingAnchor = useRef<HTMLAnchorElement | null>(null);
+  const pendingAction = useRef<(() => void) | null>(null);
   const bypass = useRef(false);
 
   useEffect(() => {
@@ -49,22 +52,42 @@ export function UnsavedChangesGuard({
       e.preventDefault();
       e.stopPropagation();
       pendingAnchor.current = anchor;
+      pendingAction.current = null;
+      setOpen(true);
+    }
+
+    function onConfirmUnsavedAction(e: Event) {
+      if (bypass.current) return;
+      const detail = (e as CustomEvent<{ proceed?: () => void }>).detail;
+      if (typeof detail?.proceed !== "function") return;
+      e.preventDefault();
+      e.stopPropagation();
+      pendingAnchor.current = null;
+      pendingAction.current = detail.proceed;
       setOpen(true);
     }
 
     window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("ccr:confirm-unsaved-action", onConfirmUnsavedAction);
     document.addEventListener("click", onClickCapture, true);
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("ccr:confirm-unsaved-action", onConfirmUnsavedAction);
       document.removeEventListener("click", onClickCapture, true);
     };
   }, [dirty]);
 
   function proceed() {
     const anchor = pendingAnchor.current;
+    const action = pendingAction.current;
     pendingAnchor.current = null;
+    pendingAction.current = null;
     setOpen(false);
-    if (anchor) {
+    if (action) {
+      bypass.current = true;
+      action();
+      setTimeout(() => { bypass.current = false; }, 150);
+    } else if (anchor) {
       // Re-dispatch the original click; the capture handler lets it through.
       bypass.current = true;
       anchor.click();
@@ -72,7 +95,7 @@ export function UnsavedChangesGuard({
     }
   }
 
-  async function saveAndLeave() {
+  async function saveAndStay() {
     if (!onSave) return proceed();
     setSaving(true);
     let ok: boolean | void = false;
@@ -81,50 +104,60 @@ export function UnsavedChangesGuard({
     } finally {
       setSaving(false);
     }
-    if (ok !== false) proceed();
+    if (ok !== false) {
+      pendingAnchor.current = null;
+      pendingAction.current = null;
+      setOpen(false);
+    }
+  }
+
+  function leaveWithoutSaving() {
+    onDiscard?.();
+    proceed();
   }
 
   function keepEditing() {
     pendingAnchor.current = null;
+    pendingAction.current = null;
     setOpen(false);
   }
 
   return (
     <Dialog.Root open={open} onOpenChange={(nextOpen) => { if (nextOpen) setOpen(true); }}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-[#162543]/55 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         <Dialog.Content
           onEscapeKeyDown={(event) => event.preventDefault()}
           onInteractOutside={(event) => event.preventDefault()}
           onPointerDownOutside={(event) => event.preventDefault()}
-          className="fixed inset-x-0 bottom-0 z-50 w-full rounded-t-2xl bg-white shadow-2xl data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-4 data-[state=open]:fade-in-0 sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[92vw] sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:data-[state=open]:zoom-in-95 sm:data-[state=open]:slide-in-from-bottom-0"
+          className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-[24rem] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-[#dbe7ef] bg-white shadow-[0_24px_80px_rgba(22,37,67,0.28)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
-          <div className="p-6">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
+          <div className="px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20">
+                <AlertTriangle className="h-5 w-5 text-[#009FD9]" />
               </div>
-              <div className="min-w-0">
+              <div className="mt-3 min-w-0">
                 <Dialog.Title className="text-base font-bold text-[#111827]">
                   {t("title")}
                 </Dialog.Title>
-                <Dialog.Description className="text-sm text-[#6b7280] mt-1">
+                <Dialog.Description className="mx-auto mt-1.5 max-w-[18rem] text-sm leading-5 text-[#64748b]">
                   {t("body")}
                 </Dialog.Description>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 mt-5">
+            <div className="mt-5 flex flex-col gap-2">
               {onSave && (
-                <Button onClick={saveAndLeave} loading={saving} className="w-full">
-                  {saving ? t("saving") : <><Save className="h-4 w-4" /> {t("saveAndLeave")}</>}
+                <Button onClick={saveAndStay} loading={saving} className="h-11 w-full rounded-xl bg-[#009FD9] text-sm font-bold shadow-sm hover:bg-[#0089bb]">
+                  {saving ? t("saving") : <><Save className="h-4 w-4" /> {t("saveChanges")}</>}
                 </Button>
               )}
               <button
                 type="button"
-                onClick={proceed}
+                onClick={leaveWithoutSaving}
                 disabled={saving}
-                className="w-full h-10 rounded-xl border border-[#e5e7eb] text-sm font-semibold text-[#b91c1c] hover:bg-red-50 transition-colors disabled:opacity-50"
+                className="h-11 w-full rounded-xl border border-[#dbe7ef] bg-white text-sm font-bold text-[#162543] transition-colors hover:bg-[#f5f9fc] disabled:opacity-50"
               >
                 {t("leaveWithout")}
               </button>
@@ -132,14 +165,14 @@ export function UnsavedChangesGuard({
                 type="button"
                 onClick={keepEditing}
                 disabled={saving}
-                className="w-full h-10 rounded-xl text-sm font-medium text-[#6b7280] hover:bg-[#f9fafb] transition-colors disabled:opacity-50"
+                className="h-10 w-full rounded-xl text-sm font-semibold text-[#64748b] transition-colors hover:bg-[#f8fafc] disabled:opacity-50"
               >
                 {t("keepEditing")}
               </button>
             </div>
           </div>
           {saving && (
-            <div className="absolute inset-0 rounded-2xl bg-white/40 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/50">
               <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" />
             </div>
           )}

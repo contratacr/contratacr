@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { SlidersHorizontal } from "lucide-react";
+import { Loader2, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { GoogleMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/google-map-panel";
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
   filters: React.ReactNode; // the <SearchFilters/> desktop sidebar control
+  quickFilters?: React.ReactNode;
   /** The drawer variant of the filters (a <SearchFilters closable/> whose header X
    *  dispatches `ccr:close-filters`). Falls back to `filters` if omitted. */
   drawerFilters?: React.ReactNode;
@@ -46,17 +47,20 @@ const MAX = 0.74;
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, hasActiveFilters = false, mapFocusTarget = null, resetKey }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, hasActiveFilters = false, mapFocusTarget = null, resetKey }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const listRef = useRef<HTMLDivElement | null>(null);
   const [heightFr, setHeightFr] = useState(PEEK);
   const [dragging, setDragging] = useState(false);
+  const [areaSearching, setAreaSearching] = useState(false);
+  const [searchAreaVisible, setSearchAreaVisible] = useState(false);
   const draggingRef = useRef(false);
   const startRef = useRef({ y: 0, h: PEEK });
   const curRef = useRef(PEEK);
   const lastYRef = useRef(0);
   const velRef = useRef(0); // px/move event; negative = moving up (sheet grows)
+  const sheetExpanded = heightFr > (PEEK + FULL) / 2;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -72,6 +76,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     listRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    setAreaSearching(false);
   }, [resetKey]);
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
@@ -79,15 +84,33 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   useEffect(() => {
     const open = () => setShowFilters(true);
     const close = () => setShowFilters(false);
+    const setAreaVisible = (event: Event) => {
+      setSearchAreaVisible(Boolean((event as CustomEvent<boolean>).detail));
+      if (!(event as CustomEvent<boolean>).detail) setAreaSearching(false);
+    };
     window.addEventListener("ccr:open-filters", open);
     window.addEventListener("ccr:close-filters", close);
+    window.addEventListener("ccr:search-area-visible", setAreaVisible as EventListener);
     return () => {
       window.removeEventListener("ccr:open-filters", open);
       window.removeEventListener("ccr:close-filters", close);
+      window.removeEventListener("ccr:search-area-visible", setAreaVisible as EventListener);
     };
   }, []);
 
-  // ── Draggable bottom sheet (mobile) ──────────────────────────────────────────
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (!showFilters) {
+      document.body.classList.remove("ccr-search-filters-open");
+      return;
+    }
+    document.body.classList.add("ccr-search-filters-open");
+    return () => {
+      document.body.classList.remove("ccr-search-filters-open");
+    };
+  }, [showFilters]);
+
+  // Draggable bottom sheet (mobile)
   function onHandleDown(e: React.PointerEvent) {
     draggingRef.current = true;
     setDragging(true);
@@ -144,7 +167,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
   }, []);
 
   return (
-    <div className="ccr-search-results-layout flex h-[calc(100dvh-64px)] flex-col overflow-hidden lg:block lg:h-auto lg:overflow-visible">
+    <div className="ccr-search-results-layout flex h-[calc(100dvh-var(--ccr-native-header-height,64px))] flex-col overflow-hidden bg-[#f4f7fa] lg:block lg:h-auto lg:overflow-visible lg:bg-transparent">
       {/* Controls bar — "Filtros" drawer button ONLY at lg–xl (xl+ uses the sidebar). */}
       <div className="hidden lg:flex xl:hidden sticky top-16 z-30 mb-4 items-center gap-2">
         <button
@@ -174,7 +197,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
 
       {/* ONE flex container: mobile = the map fills the remaining height (the sheet floats
           over it); desktop = the 3-column shell (filters · cards · map) via `lg:order-*`. */}
-      <div className="relative flex min-h-0 flex-1 flex-col gap-0 lg:flex-row lg:gap-5">
+      <div className="relative flex min-h-0 flex-1 flex-col gap-0 bg-[#f4f7fa] lg:flex-row lg:gap-5 lg:bg-transparent">
         {/* Filters sidebar — desktop xl+ only (order-1). Hidden on mobile + lg–xl (drawer). */}
         <aside className="hidden xl:block lg:order-1 w-64 shrink-0">
           <div className="sticky top-20">{filters}</div>
@@ -183,18 +206,8 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
         {/* Map — mobile: full-bleed BACKGROUND, flex-fills the area under the header (the sheet
             overlays its lower part). Desktop: the sticky right column (order-3). ONE instance. */}
         <aside className="min-h-0 min-w-0 flex-1 lg:order-3">
-          <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-white lg:sticky lg:top-20">
+          <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:sticky lg:top-20 lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-transparent">
             <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />
-            <button
-              type="button"
-              aria-label={t("filters.title")}
-              onClick={() => setShowFilters(true)}
-              className="fixed left-3 top-[calc(env(safe-area-inset-top)+4.25rem)] z-40 inline-flex h-10 items-center justify-center gap-1.5 rounded-[3px] border border-[#d8e2ea] bg-white px-3 text-[13px] font-bold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition-transform active:scale-95 sm:px-3.5 lg:hidden"
-            >
-              <SlidersHorizontal className="h-[17px] w-[17px] text-[#0089bb]" />
-              <span>{t("filters.title")}</span>
-              {hasActiveFilters && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#008ce0]" />}
-            </button>
           </div>
         </aside>
 
@@ -202,7 +215,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
             scrolling card list. Desktop: `lg:contents` dissolves it so the card column
             (order-2) and the desktop map sit in the flex shell. */}
         <div
-          className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:shadow-none lg:contents"
+          className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"
           // maxHeight keeps the navbar AND the map controls visible even when the sheet is
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
           // the filter/map affordances at the top of the mobile map.
@@ -211,26 +224,52 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
           {/* Sheet header (handle + count) — the whole strip is the drag target; drag to
               resize, tap to toggle peek/full. `touch-none` keeps the gesture from scrolling
               the page. Mobile only (the desktop column shows none of this). */}
-          <div
-            onPointerDown={onHandleDown}
-            onPointerMove={onHandleMove}
-            onPointerUp={onHandleUp}
-            onPointerCancel={onHandleUp}
-            className="shrink-0 cursor-grab touch-none select-none rounded-t-[20px] active:cursor-grabbing lg:hidden"
-            role="button"
-            aria-label={t("filters.title")}
-          >
-            <div className="flex justify-center pb-1 pt-2.5">
-              <span className="h-1.5 w-10 rounded-full bg-[#d1d5db]" />
+          <div className="relative z-40 shrink-0 overflow-visible rounded-t-[20px] lg:hidden">
+            <div
+              onPointerDown={onHandleDown}
+              onPointerMove={onHandleMove}
+              onPointerUp={onHandleUp}
+              onPointerCancel={onHandleUp}
+              className="cursor-grab touch-none select-none rounded-t-[20px] active:cursor-grabbing"
+              role="button"
+              aria-label={t("filters.title")}
+            >
+              <div className="flex justify-center pb-1 pt-2">
+                <span className="h-1.5 w-10 rounded-full bg-[#d1d5db]" />
+              </div>
             </div>
-            {countLabel && <p className="px-4 pb-2.5 pt-0.5 text-[13px] font-semibold text-[#111827]">{countLabel}</p>}
+            {quickFilters && (
+              <div className={`px-4 pb-2 pt-1 ${sheetExpanded ? "ccr-search-filter-arrows-down" : "ccr-search-filter-arrows-up"}`}>
+                {quickFilters}
+              </div>
+            )}
+            {countLabel && <p className="px-4 pb-2 pt-0.5 text-[13px] font-semibold text-[#111827]">{countLabel}</p>}
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} className="ccr-search-sheet-scroll min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
+          <div ref={listRef} className="ccr-search-sheet-scroll min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
+            {quickFilters && <div className="mb-3 hidden lg:block xl:hidden">{quickFilters}</div>}
             {children}
           </div>
         </div>
+        {searchAreaVisible && (
+        <div className="pointer-events-none fixed inset-x-0 top-[calc(var(--ccr-native-header-height,124px)+0.75rem)] z-40 flex justify-center px-4 lg:hidden">
+          <button
+            type="button"
+            onClick={() => {
+              setAreaSearching(true);
+              window.dispatchEvent(new CustomEvent("ccr:search-this-area"));
+            }}
+            disabled={areaSearching}
+            className="pointer-events-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-full bg-white px-4 text-[12px] font-extrabold text-[#162543] shadow-[0_10px_28px_-18px_rgba(15,23,42,0.65)] ring-1 ring-[#dbe5ec]"
+          >
+            {areaSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[#009FD9]" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            {areaSearching
+              ? locale === "en" ? "Searching..." : "Buscando..."
+              : locale === "en" ? "Search this area" : "Buscar en esta zona"}
+          </button>
+        </div>
+        )}
       </div>
     </div>
   );

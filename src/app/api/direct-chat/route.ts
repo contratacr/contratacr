@@ -124,7 +124,7 @@ export async function GET(req: Request) {
     const deletedForParticipant = conversation && (conversation.client_id === user.id
       ? conversation.client_deleted_at
       : conversation.professional_deleted_at);
-    if (deletedForParticipant) return NextResponse.json({ error: "ConversaciÃ³n no encontrada" }, { status: 404 });
+    if (deletedForParticipant) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
     if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
     const { data: messages, error } = await db.from("direct_messages")
       .select("id, conversation_id, sender_id, body, attachment_urls, read_at, created_at")
@@ -152,6 +152,7 @@ export async function GET(req: Request) {
     let conversationsQuery = db.from("direct_conversations")
       .select("*, professionals(id, slug, business_name, profiles(full_name, avatar_url))")
       .or(`client_id.eq.${user.id},professional_profile_id.eq.${user.id}`)
+      .not("last_message_at", "is", null)
       .neq("status", "blocked");
     conversationsQuery = archived
       ? conversationsQuery.or(`and(client_id.eq.${user.id},client_archived_at.not.is.null),and(professional_profile_id.eq.${user.id},professional_archived_at.not.is.null)`)

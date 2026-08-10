@@ -67,15 +67,15 @@ const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CONTENT = 700;
-const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|request)/gi;
-const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|crear|hacer|abrir)|(?:publicar|crear|hacer|abrir)|(?:i want to|i need to|how can i)\s+(?:publish|create|open)|(?:publish|create|open))\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|request)\b/i;
+const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)/gi;
+const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|crear|hacer|abrir)|(?:publicar|crear|hacer|abrir)|(?:i want to|i need to|how can i)\s+(?:publish|create|open)|(?:publish|create|open))\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)\b/i;
 
 function localeKey(value: unknown): Locale {
   return value === "en" ? "en" : "es";
 }
 
 function normalizeText(value: string) {
-  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  return value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 }
 
 function includesAny(text: string, words: string[]) {
@@ -1527,7 +1527,7 @@ export async function POST(req: Request) {
       payload.action = "suggest_service";
       payload.answer = locale === "en"
         ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-        : "Ese servicio todavÃ­a no estÃ¡ en el catÃ¡logo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
+        : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
       payload.searchQuery = missingServiceName;
       payload.serviceId = null;
       payload.locationText = null;
@@ -1537,7 +1537,7 @@ export async function POST(req: Request) {
       payload.action = "answer";
       payload.answer = locale === "en"
         ? "Which service do you need? For example: plumbing, electricity, cleaning, repair or consulting."
-        : "Â¿QuÃ© tipo de servicio necesita? Por ejemplo: plomerÃ­a, electricidad, limpieza, reparaciÃ³n o asesorÃ­a.";
+        : "¿Qué tipo de servicio necesita? Por ejemplo: plomería, electricidad, limpieza, reparación o asesoría.";
       payload.searchQuery = null;
       payload.serviceId = null;
       payload.locationText = null;

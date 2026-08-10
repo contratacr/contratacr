@@ -132,6 +132,10 @@ export async function GET(request: NextRequest) {
         } catch { /* best-effort */ }
       }
 
+      const professionalSignupIncomplete =
+        data.user.user_metadata?.professional_signup_started === true &&
+        data.user.user_metadata?.is_provider !== true;
+
       // Explicit next PATH (e.g. password reset → /es/reset-password, or a support
       // email's ticket deep-link /es/dashboard/…?tab=soporte&ticket=…). `next` was
       // URL-encoded by the login page, so `searchParams.get` returns it decoded and
@@ -139,6 +143,9 @@ export async function GET(request: NextRequest) {
       // open-redirect. The "projects" alias is NOT a path — it falls through to the
       // role-aware resolution below.
       if (safeNext) {
+        if (professionalSignupIncomplete && /^\/(?:es|en)\/dashboard\/profesional(?:[/?]|$)/.test(safeNext)) {
+          return NextResponse.redirect(`${origin}/es/registro/profesional`);
+        }
         return NextResponse.redirect(`${origin}${withPostLoginActivity(safeNext)}`);
       }
 
@@ -161,6 +168,10 @@ export async function GET(request: NextRequest) {
       if (!onboardingDone) {
         // Genuinely new OAuth user, no role chosen yet → onboarding.
         return NextResponse.redirect(`${origin}/es/onboarding`);
+      }
+
+      if (professionalSignupIncomplete) {
+        return NextResponse.redirect(`${origin}/es/registro/profesional`);
       }
 
       // The "Publicar proyecto" CTA carries ?next=projects → land on "Solicitudes

@@ -6,6 +6,7 @@ import { FindByZone } from "@/components/landing/find-by-zone";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { getZoneCoverage } from "@/lib/queries/professionals";
+import { FeaturedBrands } from "@/components/landing/featured-brands";
 
 export default async function HomePage() {
   // Real zone coverage, without fabricated canton counts, for the find-by-zone band.
@@ -31,6 +32,9 @@ export default async function HomePage() {
         <FadeInUp delay={40}>
           <FindByZone coverage={coverage} />
         </FadeInUp>
+
+        {/* A continuous showcase of businesses present on ContrataCR. */}
+        <FeaturedBrands />
 
         <LandingFooter />
       </main>

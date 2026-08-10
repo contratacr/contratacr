@@ -17,6 +17,7 @@ export function isSigningOut() {
  *  history) and `scope: "local"` (clears the client session immediately — snappy). */
 export async function signOutToHome(locale: string) {
   _signingOut = true;
+  window.dispatchEvent(new CustomEvent("contratacr:signing-out"));
   try {
     await createClient().auth.signOut({ scope: "local" });
   } catch {

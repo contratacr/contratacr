@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { notifyVerificationDecision, notifyAppealReceived } from "@/lib/verification-notify";
-import { cleanId } from "@/lib/cedula";
+import { cleanId, detectIdType } from "@/lib/cedula";
 
 export type RunOutcome = "verified" | "pending" | "ticket" | "skipped";
 
@@ -53,6 +53,41 @@ export async function runIdentityVerification(
   const cedula = cleanId(profile?.cedula ?? "");
   const fullName: string = profile?.full_name ?? "";
   if (!cedula) return "skipped";
+
+  if (detectIdType(cedula) === "juridica") {
+    const now = new Date().toISOString();
+    const fromStatus = pro.verification_status as string;
+    await admin
+      .from("professionals")
+      .update({
+        verification_status: "pending",
+        verification_method: "manual",
+        verification_provider: "cedula_juridica",
+        verification_updated_at: now,
+      })
+      .eq("id", professionalId);
+    await admin
+      .from("profiles")
+      .update({
+        client_identity_status: "pending",
+        client_identity_verified_at: null,
+        client_identity_provider: "cedula_juridica",
+      })
+      .eq("id", pro.profile_id);
+    await admin.from("provider_verification_log").insert({
+      professional_id: professionalId,
+      admin_id: null,
+      admin_name: "Verificacion manual",
+      action: "legal_entity_pending",
+      from_status: fromStatus,
+      to_status: "pending",
+      reason: "Cedula juridica detectada; requiere revision manual y no se consulta en el padron de personas fisicas.",
+    });
+    if (fromStatus !== "pending" || opts.isInitial) {
+      await notifyVerificationDecision({ professionalId, kind: "pending", channel });
+    }
+    return "pending";
+  }
 
   const verifier = getIdentityVerifier();
   const result = await verifier.lookup(cedula);
@@ -208,3 +243,4 @@ export async function runIdentityVerification(
   }
   return "pending";
 }
+

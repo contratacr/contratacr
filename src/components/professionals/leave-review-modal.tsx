@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle, Star, X } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
@@ -8,12 +8,12 @@ import { SuccessIcon } from "@/components/ui/success-icon";
 interface LeaveReviewModalProps {
   professionalId: string;
   professionalName: string;
-  /** Tie the review to a specific finished item (per-job reviews). */
   bookingId?: string;
   projectId?: string;
   contactId?: string;
   onClose: () => void;
   onSuccess?: () => void;
+  embedded?: boolean;
 }
 
 export function LeaveReviewModal({
@@ -24,6 +24,7 @@ export function LeaveReviewModal({
   contactId,
   onClose,
   onSuccess,
+  embedded = false,
 }: LeaveReviewModalProps) {
   const t = useTranslations("reviewModal");
   const [rating, setRating] = useState(0);
@@ -34,38 +35,42 @@ export function LeaveReviewModal({
   const [success, setSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const backdropRef = useRef<HTMLDivElement>(null);
-
-  // Prefill from this item's existing review so it can be EDITED (stars filled).
   useEffect(() => {
     let active = true;
-    const qs = bookingId ? `bookingId=${bookingId}` : projectId ? `projectId=${projectId}` : contactId ? `contactId=${contactId}` : `professionalId=${professionalId}`;
-    (async () => {
+    const query = bookingId
+      ? `bookingId=${bookingId}`
+      : projectId
+        ? `projectId=${projectId}`
+        : contactId
+          ? `contactId=${contactId}`
+          : `professionalId=${professionalId}`;
+    void (async () => {
       try {
-        const res = await fetch(`/api/reviews?${qs}`);
-        const { review } = await res.json();
-        if (active && review) {
-          setRating(review.rating ?? 0);
-          setComment(review.comment ?? "");
+        const response = await fetch(`/api/reviews?${query}`);
+        const data = await response.json();
+        if (active && data.review) {
+          setRating(data.review.rating ?? 0);
+          setComment(data.review.comment ?? "");
           setIsEditing(true);
         }
-      } catch { /* ignore */ }
+      } catch {
+        // A new review can still be written if the prefill request fails.
+      }
     })();
     return () => { active = false; };
-  }, [professionalId, bookingId, projectId, contactId]);
+  }, [bookingId, contactId, professionalId, projectId]);
 
-  // Close on Escape (an explicit key — unlike an accidental outside-click, which is
-  // intentionally NOT a dismiss here so a half-written review is never lost).
   useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
+    if (embedded) return;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  }, [embedded, onClose]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     if (rating === 0) {
       setError(t("errRating"));
       return;
@@ -77,21 +82,21 @@ export function LeaveReviewModal({
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/reviews", {
+      const response = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ professionalId, rating, comment: comment.trim(), bookingId, projectId, contactId }),
       });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.error ?? t("errSubmit"));
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error ?? t("errSubmit"));
         return;
       }
       setSuccess(true);
-      setTimeout(() => {
+      window.setTimeout(() => {
         onSuccess?.();
-        onClose();
-      }, 1500);
+        if (!embedded) onClose();
+      }, 1200);
     } catch {
       setError(t("errConnection"));
     } finally {
@@ -100,156 +105,99 @@ export function LeaveReviewModal({
   }
 
   const displayRating = hovered || rating;
+  const formContent = success ? (
+    <div className={`flex flex-col items-center ${embedded ? "gap-2 py-4" : "gap-3 px-6 py-8"}`}>
+      <SuccessIcon size={embedded ? 40 : 52} />
+      <p className={`${embedded ? "text-base" : "text-lg"} font-semibold text-[#111827]`}>{t("thanks")}</p>
+      <div className="flex gap-1" aria-hidden>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star key={star} className={`h-7 w-7 ${rating >= star ? "fill-yellow-400 text-yellow-400" : "fill-[#d1d5db] text-[#d1d5db]"}`} />
+        ))}
+      </div>
+      <p className="text-center text-sm text-[#6b7280]">{t("thanksSub")}</p>
+    </div>
+  ) : (
+    <form onSubmit={handleSubmit} className={`flex flex-col ${embedded ? "gap-3 rounded-2xl border border-[#dbe7ef] bg-white p-3.5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.55)] sm:p-4" : "gap-4 px-6 py-5"}`}>
+      {embedded && (
+        <div className="min-w-0">
+          <p className="truncate text-sm font-extrabold text-[#162543]">
+            {isEditing ? t("titleEdit") : "¿Ya trabajaste con este profesional?"}
+          </p>
+        </div>
+      )}
+      <div>
+        {!embedded && <p className="mb-2 text-sm font-medium text-[#374151]">{t("ratingLabel")}</p>}
+        <div className={embedded ? "flex items-center justify-between gap-3" : "flex items-center gap-2"}>
+          <div className="flex gap-0.5" onMouseLeave={() => setHovered(0)}>
+            {[1, 2, 3, 4, 5].map((star) => {
+              const full = displayRating >= star;
+              const half = !full && displayRating >= star - 0.5;
+              return (
+                <div key={star} className={`relative ${embedded ? "h-7 w-7" : "h-9 w-9 sm:h-10 sm:w-10"}`}>
+                  <Star className={`absolute inset-0 fill-[#d1d5db] text-[#d1d5db] ${embedded ? "h-7 w-7" : "h-9 w-9 sm:h-10 sm:w-10"}`} />
+                  {(full || half) && (
+                    <span className="absolute inset-0 overflow-hidden" style={{ width: full ? "100%" : "50%" }}>
+                      <Star className={`fill-yellow-400 text-yellow-400 ${embedded ? "h-7 w-7" : "h-9 w-9 sm:h-10 sm:w-10"}`} />
+                    </span>
+                  )}
+                  <button type="button" aria-label={t("halfStarAria", { value: star - 0.5 })} onMouseEnter={() => setHovered(star - 0.5)} onClick={() => setRating(star - 0.5)} className="absolute inset-y-0 left-0 z-10 w-1/2 cursor-pointer focus:outline-none" />
+                  <button type="button" aria-label={t("starAria", { value: star })} onMouseEnter={() => setHovered(star)} onClick={() => setRating(star)} className="absolute inset-y-0 right-0 z-10 w-1/2 cursor-pointer focus:outline-none" />
+                </div>
+              );
+            })}
+          </div>
+          {displayRating > 0 && <span className="text-sm font-semibold tabular-nums text-[#374151]">{displayRating.toFixed(1)}</span>}
+        </div>
+      </div>
+      <div>
+        <div className={`flex items-center ${embedded ? "mb-1.5 justify-end" : "mb-1.5 justify-between"}`}>
+          {!embedded && <p className="text-sm font-medium text-[#374151]">{t("commentLabel")}</p>}
+          <span className="text-xs tabular-nums text-[#9ca3af]">{comment.length}/300</span>
+        </div>
+        <textarea
+          value={comment}
+          onChange={(event) => setComment(event.target.value)}
+          maxLength={300}
+          rows={embedded ? 3 : 4}
+          placeholder={t("commentPlaceholder")}
+          className={`w-full resize-none border border-[#dbe5ed] bg-white text-sm text-[#111827] placeholder:text-[#9ca3af] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 ${embedded ? "rounded-xl px-3.5 py-3" : "rounded-xl px-3.5 py-3"}`}
+        />
+      </div>
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-600">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
+        </div>
+      )}
+      <button type="submit" disabled={loading} className={`bg-[#009FD9] text-sm font-semibold text-white transition hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#009FD9]/40 ${embedded ? "ml-auto min-w-[146px] rounded-xl px-5 py-2.5" : "w-full rounded-xl px-4 py-3"}`}>
+        {loading ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            {t("sending")}
+          </span>
+        ) : isEditing ? t("submitUpdate") : t("submitNew")}
+      </button>
+      {!embedded && <button type="button" onClick={onClose} className="text-sm font-medium text-[#6b7280] transition hover:text-[#111827]">{t("skip")}</button>}
+    </form>
+  );
 
-  return (
-    <div
-      ref={backdropRef}
-      className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4"
-    >
-      <style>{`
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.94) translateY(8px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `}</style>
-      <div
-        style={{ animation: "modalIn 0.22s cubic-bezier(0.16,1,0.3,1) both" }}
-        className="app-bottom-sheet relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[420px] sm:rounded-2xl"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#f3f4f6]">
+  const panel = (
+    <div className={embedded ? "w-full" : "app-bottom-sheet relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[420px] sm:rounded-2xl"}>
+      {!embedded && (
+        <div className="flex items-center justify-between border-b border-[#f3f4f6] px-6 pb-4 pt-6">
           <div>
             <h2 className="text-lg font-bold text-[#111827]">{isEditing ? t("titleEdit") : t("titleNew")}</h2>
-            <p className="text-sm text-[#6b7280] mt-0.5">{professionalName}</p>
+            <p className="mt-0.5 text-sm text-[#6b7280]">{professionalName}</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors"
-          >
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-[#9ca3af] transition hover:bg-[#f3f4f6] hover:text-[#374151]">
             <X className="h-5 w-5" />
           </button>
         </div>
-
-        {success ? (
-          <div className="flex flex-col items-center gap-3 px-6 py-10">
-            <SuccessIcon size={56} />
-            <p className="text-lg font-semibold text-[#111827]">{t("thanks")}</p>
-            {/* Filled stars so the user can see their submitted rating (half-capable). */}
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((star) => {
-                const full = rating >= star;
-                const half = !full && rating >= star - 0.5;
-                return (
-                  <span key={star} className="relative h-7 w-7">
-                    <Star className="absolute inset-0 h-7 w-7 text-[#d1d5db] fill-[#d1d5db]" />
-                    {(full || half) && (
-                      <span className="absolute inset-0 overflow-hidden" style={{ width: full ? "100%" : "50%" }}>
-                        <Star className="h-7 w-7 text-yellow-400 fill-yellow-400" />
-                      </span>
-                    )}
-                  </span>
-                );
-              })}
-            </div>
-            <p className="text-sm text-[#6b7280] text-center">{t("thanksSub")}</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-5">
-            {/* Star rating */}
-            <div>
-              <p className="text-sm font-medium text-[#374151] mb-3">{t("ratingLabel")}</p>
-              {/* Half-star selection: the LEFT half of a star picks x.5, the RIGHT half
-                  picks the whole star. Hover previews the same. */}
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1.5" onMouseLeave={() => setHovered(0)}>
-                  {[1, 2, 3, 4, 5].map((star) => {
-                    const full = displayRating >= star;
-                    const half = !full && displayRating >= star - 0.5;
-                    return (
-                      <div key={star} className="relative h-10 w-10">
-                        <Star className="absolute inset-0 h-10 w-10 text-[#d1d5db] fill-[#d1d5db]" />
-                        {(full || half) && (
-                          <span className="absolute inset-0 overflow-hidden" style={{ width: full ? "100%" : "50%" }}>
-                            <Star className="h-10 w-10 text-yellow-400 fill-yellow-400" />
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          aria-label={t("halfStarAria", { value: star - 0.5 })}
-                          onMouseEnter={() => setHovered(star - 0.5)}
-                          onClick={() => setRating(star - 0.5)}
-                          className="absolute inset-y-0 left-0 z-10 w-1/2 cursor-pointer focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          aria-label={t("starAria", { value: star })}
-                          onMouseEnter={() => setHovered(star)}
-                          onClick={() => setRating(star)}
-                          className="absolute inset-y-0 right-0 z-10 w-1/2 cursor-pointer focus:outline-none"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-                {displayRating > 0 && (
-                  <span className="text-sm font-semibold tabular-nums text-[#374151]">{displayRating.toFixed(1)}</span>
-                )}
-              </div>
-            </div>
-
-            {/* Comment */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <p className="text-sm font-medium text-[#374151]">{t("commentLabel")}</p>
-                <span
-                  className={`text-xs tabular-nums ${
-                    comment.length > 300 ? "text-red-500" : "text-[#9ca3af]"
-                  }`}
-                >
-                  {comment.length}/300
-                </span>
-              </div>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                maxLength={300}
-                rows={4}
-                placeholder={t("commentPlaceholder")}
-                className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-[#fafafa] px-3.5 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 transition"
-              />
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-600">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {error}
-              </div>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-[#009FD9] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0089bb] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#009FD9]/40"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  {t("sending")}
-                </span>
-              ) : (
-                isEditing ? t("submitUpdate") : t("submitNew")
-              )}
-            </button>
-            {/* Reviewing is OPTIONAL — clear skip so the prompt never blocks. */}
-            <button type="button" onClick={onClose} className="text-sm font-medium text-[#6b7280] hover:text-[#111827] transition-colors">
-              {t("skip")}
-            </button>
-          </form>
-        )}
-      </div>
+      )}
+      {formContent}
     </div>
   );
+
+  if (embedded) return panel;
+  return <div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4">{panel}</div>;
 }

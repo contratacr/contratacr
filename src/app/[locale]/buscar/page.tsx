@@ -7,7 +7,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
-import { searchProfessionals } from "@/lib/queries/professionals";
+import { searchProfessionals, type ProService } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
 import { getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
@@ -27,6 +27,7 @@ interface SearchPageProps {
     q?: string;
     aseguradora?: string;
     idioma?: string;
+    precio?: "visible" | "quote" | "por_hora" | "por_consulta" | "por_proyecto";
     modalidad?: string;
     lat?: string;
     lng?: string;
@@ -43,6 +44,8 @@ interface SearchPageProps {
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAX_CARD_SLOTS_PER_PRO = 24;
 const RESULTS_PER_PAGE = 20;
+const SORT_OPTIONS = new Set(["rating", "experience"]);
+const PRICE_FILTER_OPTIONS = new Set(["visible", "quote", "por_hora", "por_consulta", "por_proyecto"]);
 
 type SearchWorkplace = {
   id?: string;
@@ -60,12 +63,14 @@ function isExactWorkplacePin(workplace: SearchWorkplace | undefined): workplace 
   return typeof workplace.address === "string" && workplace.address.trim().length > 0;
 }
 
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const t = await getTranslations("search");
   const locale = await getLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
-  const sortBy = params.sortBy && params.sortBy !== "cercania" ? params.sortBy : undefined;
+  const sortBy = params.sortBy && SORT_OPTIONS.has(params.sortBy) ? params.sortBy : undefined;
+  const priceType = params.precio && PRICE_FILTER_OPTIONS.has(params.precio) ? params.precio : undefined;
   const selectedCategory = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const effectiveQuery = selectedCategory ? undefined : params.q;
   const parsedNearLat = params.lat ? Number(params.lat) : undefined;
@@ -99,6 +104,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       query: effectiveQuery,
       insurerId: canFilterByInsurer ? params.aseguradora : undefined,
       languageId: params.idioma,
+      priceType,
       modality: params.modalidad === "video" || params.modalidad === "in_person" ? params.modalidad : "any",
       nearLat,
       nearLng,
@@ -181,6 +187,45 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
   }
 
+  const ratingTieBreak = (a: (typeof allResults)[number], b: (typeof allResults)[number]) =>
+    (b.ratingAvg ?? 0) - (a.ratingAvg ?? 0) ||
+    (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
+  const experienceMonths = (professional: (typeof allResults)[number]) => {
+    const services = professional.services as ProService[] | undefined;
+    const service = services?.find((item) => {
+      if (typeof item.startedAt === "string" && item.startedAt.trim()) return true;
+      const years = typeof item.years === "number" ? item.years : 0;
+      const months = typeof item.months === "number" ? item.months : 0;
+      return years > 0 || months > 0;
+    });
+    if (service?.startedAt && /^\d{4}-\d{2}$/.test(service.startedAt)) {
+      const [yearRaw, monthRaw] = service.startedAt.split("-");
+      const year = Number(yearRaw);
+      const month = Number(monthRaw);
+      if (Number.isFinite(year) && Number.isFinite(month) && month >= 1 && month <= 12) {
+        const now = new Date();
+        return Math.max(0, (now.getFullYear() * 12 + now.getMonth()) - (year * 12 + (month - 1)));
+      }
+    }
+    const years = typeof service?.years === "number" ? service.years : professional.yearsExperience ?? 0;
+    const months = typeof service?.months === "number" ? service.months : professional.monthsExperience ?? 0;
+    return Math.max(0, years) * 12 + Math.max(0, Math.min(11, months));
+  };
+
+  if (sortBy === "successCases") {
+    orderedResults = [...allResults].sort((a, b) =>
+      (b.portfolioCount ?? 0) - (a.portfolioCount ?? 0) || ratingTieBreak(a, b)
+    );
+  } else if (sortBy === "experience") {
+    orderedResults = [...allResults].sort((a, b) =>
+      experienceMonths(b) - experienceMonths(a) || ratingTieBreak(a, b)
+    );
+  } else if (sortBy === "followers") {
+    orderedResults = [...allResults].sort((a, b) =>
+      (b.followerCount ?? 0) - (a.followerCount ?? 0) || ratingTieBreak(a, b)
+    );
+  }
+
   // Map pins only represent exact workplace pins marked on the map. Broad
   // province/canton coverage and legacy professional coordinates stay card-only.
   // "Disponibilidad inmediata" sort: order by the soonest bookable slot, reusing
@@ -192,7 +237,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       if (ea && eb) return ea < eb ? -1 : ea > eb ? 1 : 0;
       if (ea) return -1;
       if (eb) return 1;
-      return 0;
+      return ratingTieBreak(a, b);
     });
   }
 
@@ -308,7 +353,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     modalidad: params.modalidad,
     aseguradora: params.aseguradora,
     idioma: params.idioma,
-    ubicacion: params.ubicacion,
+    precio: priceType,
+    ubicacion: params.ubicacion ?? (activeCanton && activeProvince ? `${activeCanton.name}, ${activeProvince.name}` : activeProvince?.name),
     lat: params.lat,
     lng: params.lng,
   };
@@ -356,6 +402,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     !!activeCanton ||
     !!mapBounds ||
     !!params.idioma ||
+    !!priceType ||
     !!nearLat ||
     (!!params.aseguradora && canFilterByInsurer) ||
     (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
@@ -425,7 +472,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Main content - 3-column shell (filters / results / map). On mobile the padding is
           zeroed so the Yelp map + bottom sheet go edge-to-edge; desktop keeps its gutters. */}
-      <main className="flex-1">
+      <main className="flex-1 bg-[#f4f7fa]">
         <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:py-4">
           <SearchResultsLayout
             mapData={mapData}
@@ -437,6 +484,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             mapFocusTarget={mapFocusTarget}
             resetKey={`${currentPage}:${paginationParams.toString()}`}
             filters={<Suspense fallback={filtersFallback}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
+            quickFilters={<Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>}
             drawerFilters={<Suspense fallback={filtersFallback}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
           >
 
@@ -524,7 +572,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                               <span>{t("pagination.prev")}</span>
                             </Link>
                           )}
-                          <div className="mx-1 flex items-center gap-1 rounded-full bg-[#f3f7fb] p-1">
+                          <div className="mx-1 flex shrink-0 items-center gap-1 rounded-full bg-[#f3f7fb] p-1">
                           {paginationPages.map((page, index) => page === "ellipsis" ? (
                             <span key={`ellipsis-${index}`} className="grid h-9 w-8 place-items-center text-sm font-semibold text-[#9ca3af]">...</span>
                           ) : page === currentPage ? (
@@ -537,7 +585,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </div>
                         </div>
                         {currentPage < totalPages && (
-                          <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
+                          <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
                             <span className="leading-none">{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4 shrink-0" />
                           </Link>
@@ -549,6 +597,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     </nav>
                   )}
 
+                  <div className="mt-6 -mx-4 lg:hidden">
+                    <LandingFooter />
+                  </div>
+
                 </>
               )}
             </div>
@@ -557,10 +609,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </main>
 
-      {/* Footer hidden on mobile - the Yelp map + bottom sheet fill the screen (no scroll). */}
-      <div className="hidden lg:block">
-        <LandingFooter />
-      </div>
+      <div className="hidden lg:block"><LandingFooter /></div>
     </div>
   );
 }

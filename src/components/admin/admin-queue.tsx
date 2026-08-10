@@ -15,11 +15,15 @@ import { getInitials } from "@/lib/utils";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
+type IdentityBucket = "cedula" | "juridica" | "dimex" | "nite" | "manual";
+
 type Row = {
   id: string;
   slug: string | null;
   detail_href?: string;
   role_label?: string;
+  identity_type?: IdentityBucket;
+  identity_type_label?: string;
   verification_status: VerificationStatus;
   category_id: string | null;
   professions: string[] | null;
@@ -29,6 +33,14 @@ type Row = {
 
 // Exception-only by default: the owner reviews flagged cases, not everyone.
 // Clean auto-verified pros are tucked behind "Verificados".
+const IDENTITY_FILTERS: { id: IdentityBucket; label: string }[] = [
+  { id: "cedula", label: "Nacional" },
+  { id: "juridica", label: "Jurídica" },
+  { id: "dimex", label: "DIMEX" },
+  { id: "nite", label: "NITE" },
+  { id: "manual", label: "Manual" },
+];
+
 const FILTERS: { value: string; label: string }[] = [
   { value: "pending", label: "Pendientes de revisión" },
   { value: "under_appeal", label: "Apelaciones (tickets)" },
@@ -41,6 +53,7 @@ export function AdminQueue() {
   const [status, setStatus] = useState<string>("pending");
   const [rows, setRows] = useState<Row[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [identityCounts, setIdentityCounts] = useState<Record<IdentityBucket, number>>({} as Record<IdentityBucket, number>);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
 
@@ -51,6 +64,7 @@ export function AdminQueue() {
       const data = await res.json();
       setRows(data.providers ?? []);
       setCounts(data.counts ?? {});
+      setIdentityCounts(data.identityCounts ?? {});
     } catch {
       setRows([]);
     } finally {
@@ -95,6 +109,15 @@ export function AdminQueue() {
       </div>
 
       <AdminFilterTabs tabs={FILTERS.map((f) => ({ id: f.value, label: f.label }))} value={status} onChange={setStatus} counts={filterCounts} />
+
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {IDENTITY_FILTERS.map((item) => (
+          <div key={item.id} className="rounded-xl border border-[#e5e7eb] bg-white px-3 py-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">{item.label}</p>
+            <p className="mt-0.5 text-lg font-bold text-[#0A2540]">{identityCounts[item.id] ?? 0}</p>
+          </div>
+        ))}
+      </div>
 
       <div className="bg-white rounded-xl border border-[#e5e7eb] overflow-hidden">
         {loading ? (

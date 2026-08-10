@@ -4,16 +4,18 @@ import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ImageUp, X, Loader2, Plus, Pencil, Trash2, Images, CalendarDays, Heart } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { cldThumb } from "@/lib/cloudinary";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { casoProfession, type ServiceLike } from "@/lib/services";
+import { CASE_PHOTOS_PER_CASE, casoProfession, type ServiceLike } from "@/lib/services";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 
@@ -34,8 +36,8 @@ export type SuccessCase = {
 // Legacy item shape (photos-only) — read for back-compat so nothing is lost.
 type LegacyItem = { url?: string; serviceId?: string; profession?: string };
 
-export const MAX_CASES_PER_PROFESSION = 3;
-export const MAX_PHOTOS_PER_CASE = 3;
+export const MAX_CASES_PER_PROFESSION = 10;
+export const MAX_PHOTOS_PER_CASE = CASE_PHOTOS_PER_CASE;
 
 interface PhotoGalleryProps {
   professionalId: string;
@@ -87,12 +89,14 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const primary = professions[0];
 
-  const [cases, setCases] = useState<SuccessCase[]>(() => seedCases(initialItems, initialUrls, services, primary));
+  const initialCasesRef = useRef<SuccessCase[]>(seedCases(initialItems, initialUrls, services, primary));
+  const [cases, setCases] = useState<SuccessCase[]>(() => initialCasesRef.current);
   // Filter is always a real profession (no "Todas") — defaults to the first.
   const [activeProf, setActiveProf] = useState<string>(professions[0] ?? "");
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
-  useReportSaveStatus(saving, justSaved);
+  const [dirty, setDirty] = useState(false);
+  useReportSaveStatus(saving, justSaved, dirty);
 
   // The add/edit case modal — `draft != null` means open.
   const [draft, setDraft] = useState<SuccessCase | null>(null);
@@ -118,6 +122,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     }
     setSaving(false);
     setJustSaved(true);
+    setDirty(false);
+    initialCasesRef.current = next;
     setTimeout(() => setJustSaved(false), 2500);
     onSaved?.();
   }
@@ -157,14 +163,26 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     } finally { setUploading(false); }
   }
 
-  async function saveCase() {
+  function saveCase() {
     if (!draft || draft.photos.length === 0) return;
     const exists = cases.some((c) => c.id === draft.id);
     const next = exists ? cases.map((c) => (c.id === draft.id ? draft : c)) : [...cases, draft];
     setDraft(null);
-    await persist(next);
+    setCases(next);
+    setDirty(true);
   }
-  async function deleteCase(id: string) { await persist(cases.filter((c) => c.id !== id)); }
+  function deleteCase(id: string) {
+    setCases(cases.filter((c) => c.id !== id));
+    setDirty(true);
+    setJustSaved(false);
+  }
+
+  function cancelChanges() {
+    setCases(initialCasesRef.current);
+    setDraft(null);
+    setDirty(false);
+    setJustSaved(false);
+  }
 
   const shownCases = cases.filter((c) => c.profession === selectedProf);
   const addProf = selectedProf || primary || "";
@@ -173,8 +191,6 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-sm text-[#6b7280]">{t.rich("introCases", { ...rich, perProf: MAX_CASES_PER_PROFESSION, perCase: MAX_PHOTOS_PER_CASE })}</p>
-
       {professions.length === 0 && (
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">{t.rich("noServices", rich)}</div>
       )}
@@ -264,11 +280,30 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       </div>
 
       {/* ── Add / edit case ─────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={cancelChanges}
+          disabled={!dirty || saving || uploading}
+          className="hidden h-10 rounded-xl px-4 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex sm:items-center sm:justify-center"
+        >
+          {locale === "en" ? "Cancel" : "Cancelar"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void persist(cases)}
+          disabled={!dirty || saving || uploading}
+          className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
+        >
+          {saving ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
+        </button>
+      </div>
       {draft && (
         <Modal
           onClose={() => setDraft(null)}
           title={draftIsEdit ? t("editCase") : t("newCase")}
           closeLabel={t("cancel")}
+          mobilePresentation="center"
           footer={
             <>
               <Button type="button" variant="outline" onClick={() => setDraft(null)}>{t("cancel")}</Button>
@@ -280,9 +315,14 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             {professions.length > 1 && (
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseProfession")}</label>
-                <select value={draft.profession} onChange={(e) => setDraft((d) => (d ? { ...d, profession: e.target.value } : d))} className={cn(inputClass, "cursor-pointer")}>
-                  {professions.map((p) => <option key={p} value={p}>{label(p)}</option>)}
-                </select>
+                <Select value={draft.profession} onValueChange={(value) => setDraft((d) => (d ? { ...d, profession: value } : d))}>
+                  <SelectTrigger className="border-[#e5e7eb] px-3.5 text-[#111827] focus-visible:ring-2 focus-visible:ring-[#009FD9]/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {professions.map((p) => <SelectItem key={p} value={p}>{label(p)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
@@ -326,7 +366,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           </div>
         </Modal>
       )}
+      <UnsavedChangesGuard dirty={dirty} onSave={() => persist(cases)} onDiscard={cancelChanges} />
       {dialogNode}
     </div>
   );
 }
+
+

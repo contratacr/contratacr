@@ -106,7 +106,8 @@ const COPY = {
     suggested: "Sugerencia enviada",
     error: "No pude responder en este momento. Inténtelo nuevamente.",
     notice: "La IA puede equivocarse. Revise los detalles antes de continuar.",
-    reset: "Iniciar una conversación nueva",
+    reset: "Nuevo chat",
+    resetHint: "Limpia esta conversacion y empieza de cero.",
   },
   en: {
     closedLabel: "Open ContrataCR assistant",
@@ -123,7 +124,8 @@ const COPY = {
     suggested: "Suggestion sent",
     error: "I could not answer right now. Please try again.",
     notice: "AI can be wrong. Review the details before continuing.",
-    reset: "Start a new conversation",
+    reset: "New chat",
+    resetHint: "Clear this conversation and start fresh.",
   },
 } as const;
 
@@ -170,32 +172,6 @@ function ProfessionalResult({ result, copy, onNavigate }: {
   copy: typeof COPY.es | typeof COPY.en;
   onNavigate: (href: string) => void;
 }) {
-  const locale = useLocale();
-  const [openingWhatsApp, setOpeningWhatsApp] = useState(false);
-
-  async function openWhatsApp() {
-    setOpeningWhatsApp(true);
-    try {
-      const response = await fetch("/api/contact/whatsapp-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          professionalId: result.id,
-          professionalName: result.name,
-          contextTitle: result.service,
-          locale,
-        }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.href) throw new Error("whatsapp_unavailable");
-      window.open(String(payload.href), "_blank", "noopener,noreferrer");
-    } catch {
-      window.alert(locale === "en" ? "No WhatsApp number is available for this contact." : "No hay un numero de WhatsApp disponible para este contacto.");
-    } finally {
-      setOpeningWhatsApp(false);
-    }
-  }
-
   return (
     <article className="overflow-hidden rounded-xl border border-[#dce8ef] bg-white shadow-[0_4px_16px_-12px_rgba(15,35,60,0.35)]">
       <button type="button" onClick={() => onNavigate(result.profileHref)} className="flex w-full gap-3 p-3 text-left">
@@ -219,16 +195,7 @@ function ProfessionalResult({ result, copy, onNavigate }: {
       </button>
       <div className="grid grid-cols-2 border-t border-[#edf2f5]">
         <button type="button" onClick={() => onNavigate(result.profileHref)} className="h-10 text-xs font-bold text-[#526277] hover:bg-[#f7fafc]">{copy.viewProfile}</button>
-        <button
-          type="button"
-          onClick={() => result.actionKind === "message" ? void openWhatsApp() : onNavigate(result.actionHref)}
-          disabled={openingWhatsApp}
-          aria-label={result.actionLabel}
-          className="inline-flex h-10 min-w-0 items-center justify-center gap-1.5 border-l border-[#edf2f5] bg-[#009FD9] px-3 text-xs font-extrabold text-white hover:bg-[#008fca] disabled:opacity-70"
-        >
-          {openingWhatsApp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-          <span className="truncate">{result.actionKind === "message" ? "WhatsApp" : result.actionLabel}</span>
-        </button>
+        <button type="button" onClick={() => onNavigate(result.actionHref)} className="h-10 border-l border-[#edf2f5] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{result.actionLabel}</button>
       </div>
     </article>
   );
@@ -248,12 +215,26 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState("");
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
+  const [compactViewport, setCompactViewport] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
   useContainedTouchScroll(scrollRef, open || embedded);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const update = () => setCompactViewport(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener("change", update);
+    window.addEventListener("resize", update);
+    return () => {
+      mediaQuery.removeEventListener("change", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
 
   useEffect(() => {
     if (embedded) return;
@@ -315,10 +296,13 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
     if (!shouldLockScroll) return;
     const root = document.documentElement;
+    const body = document.body;
     root.classList.add("contratacr-ai-open");
+    body.classList.add("contratacr-ai-open");
     const releaseBodyScroll = lockBodyScroll();
     return () => {
       root.classList.remove("contratacr-ai-open");
+      body.classList.remove("contratacr-ai-open");
       releaseBodyScroll();
     };
   }, [embedded, open]);
@@ -443,8 +427,9 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
+  const nativeAssistantShell = nativeApp && compactViewport;
   if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
-  if (!embedded && nativeApp && !open) return null;
+  if (!embedded && nativeAssistantShell && !open) return null;
   if (!embedded && !open) {
     return (
       <button
@@ -454,7 +439,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
         aria-label={copy.closedLabel}
         className={cn(
           "group fixed right-3 z-[95] hidden h-14 w-14 place-items-center overflow-visible bg-transparent transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 lg:grid sm:bottom-6 sm:right-6 sm:h-[72px] sm:w-[72px]",
-          nativeApp
+          nativeAssistantShell
             ? "bottom-auto right-[-10px] top-[38svh] h-16 w-16 sm:bottom-auto sm:right-[-10px] sm:top-[38svh] sm:h-[72px] sm:w-[72px]"
             : insideDashboard
             ? "bottom-[calc(1rem+env(safe-area-inset-bottom))] lg:bottom-6"
@@ -485,32 +470,40 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           : "fixed inset-x-0 top-0 z-[100] flex h-[var(--app-visual-viewport-height)] items-end justify-end overflow-hidden bg-[#071426]/35 backdrop-blur-[5px] sm:pointer-events-none sm:inset-0 sm:h-auto sm:bg-transparent sm:p-0 sm:backdrop-blur-none",
       )}
     >
-      <div className={cn(
-        "flex w-full flex-col overflow-hidden border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)]",
-        embedded
-          ? "h-full rounded-[28px] shadow-[0_18px_54px_-34px_rgba(4,37,77,0.6)] lg:rounded-2xl"
-          : "max-h-full h-[min(820px,calc(var(--app-visual-viewport-height)_-_0.5rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
-      )}>
-        <header className="relative flex shrink-0 items-center gap-2 border-b border-[#cfe3f4] bg-[linear-gradient(120deg,#ffffff_0%,#f3f9ff_100%)] px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
-          {embedded && (
+      <div
+        data-ai-concierge-panel
+        className={cn(
+          "flex w-full flex-col overflow-hidden border border-[#d7e8f5] bg-white shadow-[0_35px_100px_-25px_rgba(4,37,77,0.75)]",
+          embedded
+            ? "h-full rounded-[28px] shadow-[0_18px_54px_-34px_rgba(4,37,77,0.6)] lg:rounded-2xl"
+            : "max-h-full h-[min(820px,calc(var(--app-visual-viewport-height)_-_0.5rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
+        )}
+      >
+        <header className="relative flex shrink-0 items-center gap-1.5 border-b border-[#e3ebf1] bg-white px-2.5 py-3 sm:gap-3 sm:px-5 sm:py-4">
+          {(embedded || nativeAssistantShell) && (
             <button
               type="button"
-              onClick={onBack}
+              onClick={embedded ? onBack : () => setOpen(false)}
               aria-label={lang === "en" ? "Back" : "Atrás"}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#102f5b] transition hover:bg-[#eef7ff]"
+              className="ccr-ai-back-action grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#102f5b] transition hover:bg-[#eef7ff] sm:h-10 sm:w-10"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <div className="-my-2 -ml-1 h-[68px] w-[68px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
+          <div className="-my-2 -ml-1.5 h-[58px] w-[58px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
-            <h2 className="whitespace-nowrap text-[15px] font-black text-[#102746] sm:text-lg">{copy.title}</h2>
+            <h2 className="truncate text-[14px] font-black text-[#102746] min-[380px]:text-[15px] sm:text-lg">{copy.title}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <AppTooltip label={copy.reset}>
-              <button type="button" onClick={resetConversation} aria-label={copy.reset} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"><RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" /></button>
-            </AppTooltip>
-            {!embedded && (
+            <button
+              type="button"
+              onClick={resetConversation}
+              aria-label={copy.reset}
+              className="ccr-ai-reset-action grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"
+            >
+              <RotateCcw className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+            </button>
+            {!embedded && !nativeAssistantShell && (
               <AppTooltip label={copy.minimize}>
                 <button type="button" onClick={() => setOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>
               </AppTooltip>
@@ -518,7 +511,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           </div>
         </header>
 
-        <div ref={scrollRef} className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-[linear-gradient(180deg,#fbfdff_0%,#ffffff_100%)] px-4 py-5 overscroll-contain sm:px-6">
+        <div ref={scrollRef} data-ai-concierge-messages className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-[linear-gradient(180deg,#fbfdff_0%,#ffffff_100%)] px-4 py-5 overscroll-contain sm:px-6">
           {messages.map((message, index) => (
             <div key={`${message.role}-${index}`} className={cn("flex items-end gap-2 sm:items-start sm:gap-3", message.role === "user" && "justify-end")}>
               {message.role === "assistant" && <div className="mb-5 h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm sm:mb-0 sm:mt-1 sm:h-11 sm:w-11"><Image src="/brand/ai-assistant-robot.png" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>}
@@ -571,7 +564,8 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           )}
         </div>
 
-        <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-4">
+        <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3">
+          <p className="ccr-ai-footer-notice mb-2 text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:hidden">{copy.notice}</p>
           <form onSubmit={submit} className="flex items-end gap-2 rounded-[24px] border-2 border-[#009FD9] bg-white p-2 pl-4 shadow-[0_10px_30px_-18px_rgba(0,159,217,0.48)] focus-within:ring-4 focus-within:ring-[#009FD9]/10">
             <input
               type="text"
@@ -592,7 +586,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </button>
           </form>
-          <p className="mt-3 text-center text-[11px] font-medium leading-tight text-[#7d8fa8]">{copy.notice}</p>
+          <p className="ccr-ai-footer-notice mt-3 hidden text-center text-[11px] font-medium leading-tight text-[#7d8fa8] sm:block">{copy.notice}</p>
         </footer>
       </div>
     </section>

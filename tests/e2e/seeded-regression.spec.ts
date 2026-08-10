@@ -136,10 +136,10 @@ test.describe("@seeded core regression", () => {
 
       await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
       await gotoOK(page, `/es/dashboard/profesional?tab=soporte&mode=use&ticket=${ticket.id}`);
-      await expect(page.getByText(/SUP-/).first()).toBeVisible();
-      await expect(page.getByText(/Cuenta, inicio de sesi[oó]n o datos|Account, login/i).first()).toBeVisible();
-      await expect(page.getByText(firstMessage).first()).toBeVisible();
-      await expect(page.getByText(autoMessage).first()).toBeVisible();
+      await expect(page.getByText(/SUP-/).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByText(/Cuenta, inicio de sesi[oó]n o datos|Account, login/i).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByText(firstMessage).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByText(autoMessage).filter({ visible: true }).first()).toBeVisible();
       await expectNoHorizontalOverflow(page);
     } finally {
       await admin.from("support_ticket_messages").delete().eq("ticket_id", ticket.id);
@@ -558,11 +558,43 @@ test.describe("@seeded core regression", () => {
 
     await gotoOK(page, "/es/buscar?categoria=plomeria");
     const resultCard = page.locator("article", {
-      has: page.locator(`a[href="/es/profesionales/${seed.professionalSlug}"]`),
+      has: page.locator(`a[href^="/es/profesionales/${seed.professionalSlug}"]`),
     }).first();
     await expect(resultCard).toBeVisible();
     await expect(resultCard.getByRole("link", { name: /E2E Profesional/i }).first()).toBeVisible();
     await expect(resultCard).toContainText(/Plomer/i);
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("anonymous visitors can see seeded offers and open an offer detail", async ({ page }) => {
+    await resetAuth(page);
+    await gotoOK(page, "/es/ofertas");
+
+    await expect(page.getByText("E2E Mantenimiento residencial").first()).toBeVisible();
+    await expect(page.getByText("E2E Sitio web para pyme").first()).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    await gotoOK(page, `/es/ofertas/${seed.publishedOfferId}`);
+    await expect(page.getByRole("heading", { name: "E2E Mantenimiento residencial" })).toBeVisible();
+    await expect(page.getByText("Alajuela, Alajuela").first()).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("English offer listings and details render localized copy without leaking translation keys", async ({ page }) => {
+    await resetAuth(page);
+    await gotoOK(page, "/en/ofertas");
+
+    await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
+    await expect(page.getByText("Promotions from professionals")).toBeAttached();
+    await expect(page.getByText("E2E Mantenimiento residencial").first()).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    await gotoOK(page, `/en/ofertas/${seed.publishedOfferId}`);
+    await expect(page.getByRole("heading", { name: "E2E Mantenimiento residencial" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Details" })).toBeVisible();
+    await expect(page.getByText(/Published by/i)).toBeAttached();
+    await expect(page.getByText("Service offer").first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/(?:offers?\.|search\.filters\.|proPanel\.|verificationPanel\.)/);
     await expectNoHorizontalOverflow(page);
   });
 });

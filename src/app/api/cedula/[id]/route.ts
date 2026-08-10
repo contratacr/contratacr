@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
-import { isValidId } from "@/lib/cedula";
+import { detectIdType, isValidId } from "@/lib/cedula";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 // GET /api/cedula/[id]
@@ -49,6 +49,13 @@ export async function GET(
     );
   }
 
+  if (detectIdType(cedula) === "juridica") {
+    return NextResponse.json(
+      { found: false, review: true, idType: "juridica", error: "Cedula juridica: requiere revision manual." },
+      { status: 404 }
+    );
+  }
+
   const result = await getIdentityVerifier().lookup(cedula);
 
   if (result.unavailable) {
@@ -82,3 +89,4 @@ export async function GET(
     { status: 404 }
   );
 }
+

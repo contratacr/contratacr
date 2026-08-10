@@ -11,7 +11,9 @@ import { useCategoryCatalogReady, useCustomCategories } from "@/lib/data/use-cus
 import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import {
+  ArrowLeft,
   ChevronRight,
+  Menu,
   Search,
   X,
 } from "lucide-react";
@@ -25,6 +27,7 @@ export default function ServiciosPage() {
   const catalogReady = useCategoryCatalogReady();
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
+  const [mobileGroupKey, setMobileGroupKey] = useState<string | null>(null);
   const [searchGroupSelection, setSearchGroupSelection] = useState<{ query: string; key: string } | null>(null);
   const groups = getAllCategoryGroups().map((group) => {
     return {
@@ -76,6 +79,20 @@ export default function ServiciosPage() {
   const activeSearchGroup = visibleGroups.find((group) => group.key === selectedSearchGroupKey) ?? visibleGroups[0];
   const activeSearchIds = activeSearchGroup?.visibleIds ?? searchResults.map((item) => item.id);
   const activeGroupHasServices = activeGroup.ids.length > 0;
+  const mobileGroups = useMemo(() => [...visibleGroups].sort((a, b) => {
+    const aOther = isOtherCategoryGroup(a.key, a.label);
+    const bOther = isOtherCategoryGroup(b.key, b.label);
+    if (aOther !== bOther) return aOther ? 1 : -1;
+    if (matchedIds && a.bestScore !== b.bestScore) return b.bestScore - a.bestScore;
+    return a.label.localeCompare(b.label, locale);
+  }), [locale, matchedIds, visibleGroups]);
+  const mobileGroup = mobileGroupKey
+    ? mobileGroups.find((group) => group.key === mobileGroupKey) ?? null
+    : null;
+  const servicesTitle = locale === "en" ? "Services" : "Servicios";
+  const allCategoriesTitle = locale === "en" ? "All categories" : "Todas las categorías";
+  const serviceSearchPlaceholder = locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?";
+  const serviceResultsTitle = locale === "en" ? "Matching services" : "Servicios encontrados";
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -83,16 +100,154 @@ export default function ServiciosPage() {
       router.push("/buscar");
       return;
     }
-    const first = visibleGroups[0]?.visibleIds[0];
+    const first = searchResults[0]?.id;
     if (first) router.push(`/buscar?categoria=${first}`);
     else router.push("/buscar");
   }
 
+  function clearMobileSearch() {
+    setQuery("");
+    setMobileGroupKey(null);
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <LandingNavbar />
+      <div className="hidden lg:block">
+        <LandingNavbar />
+      </div>
+      <div className="lg:hidden">
+        <LandingNavbar mobileSearch={false} drawerOnly />
+      </div>
 
-      <main className="flex-1 bg-[#f7fafc]">
+      <main className="flex-1 bg-white lg:bg-[#f7fafc]">
+        <section className="mx-auto w-full bg-white pb-[calc(5rem+env(safe-area-inset-bottom))] lg:hidden">
+          <header className="sticky top-0 z-20 border-b border-[#d5d8dc] bg-white">
+            <div className="relative flex min-h-[56px] items-center justify-center px-14">
+              <button
+                type="button"
+                onClick={() => {
+                  if (mobileGroup) {
+                    setMobileGroupKey(null);
+                    return;
+                  }
+                  window.dispatchEvent(new Event("ccr:open-mobile-menu"));
+                }}
+                className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"
+                aria-label={mobileGroup ? (locale === "en" ? "Back to categories" : "Volver a categorías") : (locale === "en" ? "Open menu" : "Abrir menú")}
+              >
+                {mobileGroup ? <ArrowLeft className="h-7 w-7 stroke-[2.2]" /> : <Menu className="h-5 w-5 stroke-[2.5]" />}
+              </button>
+              <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">
+                {mobileGroup ? mobileGroup.label : servicesTitle}
+              </h1>
+            </div>
+
+            <form onSubmit={submitSearch} data-testid="services-page-mobile-search" className="px-4 pb-4">
+              <div className="flex h-12 items-center gap-3 rounded-xl bg-white px-3 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-1 ring-[#dfe5eb] focus-within:ring-2 focus-within:ring-[#009FD9]/25">
+                <Search className="h-5 w-5 shrink-0 text-[#162543]" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setMobileGroupKey(null);
+                  }}
+                  placeholder={serviceSearchPlaceholder}
+                  aria-label={serviceSearchPlaceholder}
+                  className="h-11 min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
+                />
+                {query && (
+                  <button type="button" onClick={clearMobileSearch} className="grid h-8 w-8 place-items-center rounded-full text-[#8b96a5]" aria-label={tp("clearSearch")}>
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </form>
+          </header>
+
+          {!catalogReady ? (
+            <div className="mx-4 mt-3 overflow-hidden rounded border border-[#d2d6dc] bg-white">
+              {Array.from({ length: 10 }).map((_, index) => (
+                <div key={index} className="flex h-16 items-center border-b border-[#d7dbe0] px-4 last:border-b-0">
+                  <span className="h-4 w-44 rounded-full bg-[#edf1f5]" />
+                </div>
+              ))}
+            </div>
+          ) : query.trim() && resultCount === 0 ? (
+            <section className="mx-4 mt-4 rounded border border-[#d2d6dc] bg-white px-5 py-12 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#eef8fd] text-[#009FD9]">
+                <Search className="h-6 w-6" />
+              </div>
+              <h2 className="mt-4 text-xl font-extrabold text-[#162543]">{tp("notListed")}</h2>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[#64748b]">{tp("suggestDescription")}</p>
+              <div className="mx-auto mt-5 flex max-w-xl flex-col items-center">
+                <CategorySuggestionBox
+                  prominent
+                  defaultName={query}
+                  notListedLabel={tp("suggestCta")}
+                  placeholder={tp("suggestPlaceholder")}
+                  sendLabel={tp("suggestSend")}
+                  sendingLabel={tp("suggestSending")}
+                  cancelLabel={tp("cancel")}
+                  thanksLabel={tp("suggestThanks")}
+                />
+              </div>
+            </section>
+          ) : query.trim() && resultCount > 0 ? (
+            <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d2d6dc] bg-white">
+              <p className="border-b border-[#d7dbe0] px-4 py-3 text-[13px] font-bold uppercase tracking-wide text-[#64748b]">
+                {serviceResultsTitle}
+              </p>
+              {searchResults.map(({ id, groupLabel }) => (
+                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center justify-between gap-4 border-b border-[#d7dbe0] px-4 py-3 last:border-b-0">
+                  <span className="min-w-0">
+                    <span className="block text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                      {getCategoryLabel(id, locale)}
+                    </span>
+                    <span className="mt-0.5 block text-xs font-semibold text-[#7b8794]">{groupLabel}</span>
+                  </span>
+                  <ChevronRight className="h-6 w-6 shrink-0 text-[#c2c7cc]" />
+                </Link>
+              ))}
+            </section>
+          ) : mobileGroup ? (
+            <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d2d6dc] bg-white">
+              <Link
+                href={`/buscar?grupo=${mobileGroup.key}`}
+                className="flex min-h-[62px] items-center border-b border-[#d7dbe0] px-4 py-3 text-[16px] font-extrabold leading-tight text-[#009FD9]"
+              >
+                {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}
+              </Link>
+              {mobileGroup.visibleIds.map((id) => (
+                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center border-b border-[#d7dbe0] px-4 py-3 last:border-b-0">
+                  <span className="min-w-0 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                    {getCategoryLabel(id, locale)}
+                  </span>
+                </Link>
+              ))}
+            </section>
+          ) : (
+            <>
+              <p className="mx-4 mt-4 text-[15px] font-bold text-[#526277]">{allCategoriesTitle}</p>
+              <section className="mx-4 mt-2 overflow-hidden rounded border border-[#d2d6dc] bg-white">
+                {mobileGroups.map((group) => (
+                  <button
+                    key={group.key}
+                    type="button"
+                    data-testid="services-mobile-group-option"
+                    onClick={() => setMobileGroupKey(group.key)}
+                    className="flex min-h-[62px] w-full items-center justify-between gap-4 border-b border-[#d7dbe0] bg-white px-4 py-3 text-left last:border-b-0"
+                  >
+                    <span className="min-w-0 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">{group.label}</span>
+                    <ChevronRight className="h-6 w-6 shrink-0 text-[#c2c7cc]" />
+                  </button>
+                ))}
+              </section>
+            </>
+          )}
+        </section>
+
+        <div className="hidden lg:block">
         <section className="relative z-30 px-4 pb-5 pt-24 sm:pt-28">
           <div className="mx-auto max-w-6xl">
             <div className="max-w-3xl">
@@ -120,8 +275,8 @@ export default function ServiciosPage() {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={tp("searchPlaceholder")}
-                  aria-label={tp("searchAria")}
+                  placeholder={serviceSearchPlaceholder}
+                  aria-label={serviceSearchPlaceholder}
                   className="h-[50px] min-w-0 flex-1 bg-transparent text-base text-gray-700 placeholder:text-gray-400 focus:outline-none"
                 />
                 {query && (
@@ -183,59 +338,29 @@ export default function ServiciosPage() {
                 </div>
               </section>
             ) : query.trim() && resultCount > 0 ? (
-              <section className="grid scroll-mt-32 lg:min-h-[460px] lg:grid-cols-[300px_minmax(0,1fr)]">
-                <aside className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-[#f8fafc] p-2 lg:border-b-0 lg:border-r">
-                  <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
-                    {visibleGroups.map((group) => {
-                      const Icon = group.Icon;
-                      const active = group.key === activeSearchGroup?.key;
-                      return (
-                        <button
-                          key={group.key}
-                          type="button"
-                          onClick={() => setSearchGroupSelection({ query: normalizedQuery, key: group.key })}
-                          className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors lg:w-full ${
-                            active ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"
-                          }`}
-                        >
-                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? "bg-[#EAF7FD] text-[#0089bb]" : "bg-white text-[#8a94a6] group-hover:text-[#0089bb]"}`}>
-                            <Icon className="h-4 w-4" />
-                          </span>
-                          <span className="min-w-[130px] flex-1 lg:min-w-0">
-                            <span className="block text-sm font-bold leading-tight [overflow-wrap:anywhere]">{group.label}</span>
-                            <span className="mt-0.5 block text-[11px] font-medium text-[#9ca3af]">
-                              {tp("optionsCount", { count: group.visibleIds.length })}
-                            </span>
-                          </span>
-                          <ChevronRight className={`h-4 w-4 shrink-0 ${active ? "text-[#009FD9]" : "text-[#cbd5e1]"}`} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </aside>
-
+              <section className="scroll-mt-32 lg:min-h-[460px]">
                 <div className="min-w-0 p-4">
                   <div className="mb-3 flex items-end justify-between gap-3">
                     <div className="min-w-0">
                       <h2 className="truncate text-lg font-extrabold leading-tight text-[#162543]">
-                        {activeSearchGroup?.label}
+                        {serviceResultsTitle}
                       </h2>
                       <p className="mt-0.5 text-[11px] font-medium text-[#9ca3af]">
-                        {tp("optionsCount", { count: activeSearchIds.length })}
+                        {tp("optionsCount", { count: searchResults.length })}
                       </p>
                     </div>
                   </div>
 
-                  <div className={`grid gap-1.5 ${activeSearchIds.length === 1 ? "max-w-[260px] grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
-                    {activeSearchIds.map((id) => (
+                  <div className={`grid gap-1.5 ${searchResults.length === 1 ? "max-w-[320px] grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
+                    {searchResults.map(({ id, groupLabel }) => (
                       <Link
                         key={id}
                         href={`/buscar?categoria=${id}`}
-                        className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
+                        className="group flex min-h-12 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
                       >
-                        <span className="min-w-0 [overflow-wrap:anywhere]">
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          {getCategoryLabel(id, locale) || t(id as any)}
+                        <span className="min-w-0">
+                          <span className="block [overflow-wrap:anywhere]">{getCategoryLabel(id, locale)}</span>
+                          <span className="mt-0.5 block text-[11px] font-semibold text-[#8a94a6] group-hover:text-[#6b7280]">{groupLabel}</span>
                         </span>
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#cbd5e1] transition-colors group-hover:bg-[#EAF7FD] group-hover:text-[#009FD9]">
                           <ChevronRight className="h-4 w-4" />
@@ -319,6 +444,7 @@ export default function ServiciosPage() {
           </div>
           </div>
         </section>
+        </div>
       </main>
 
       <LandingFooter />

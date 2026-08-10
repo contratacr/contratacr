@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npm run text:check",
     "dev": "node ./scripts/dev-local-test-env.js",
-    "build": "next build",
+    "build": "npm run text:check && next build",
     "start": "next start",
+    "prelint": "npm run text:check",
     "lint": "eslint",
+    "text:check": "node scripts/check-text-encoding.mjs",
     "security:env": "node scripts/check-private-env-files.mjs",
     "security:smoke": "node scripts/security-smoke.mjs",
     "supabase:templates:validate": "node scripts/sync-supabase-email-templates.mjs --validate-only",
@@ -14,6 +17,7 @@
     "padron:check": "node scripts/check-padron.mjs",
     "padron:load": "node scripts/load-padron.mjs",
     "padron:prepare-copy": "node scripts/prepare-padron-copy.mjs",
+    "seed:test:full": "node scripts/seed-mobile-demo.js && node scripts/seed-regression-marketplace.js",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:ui": "playwright test --ui"

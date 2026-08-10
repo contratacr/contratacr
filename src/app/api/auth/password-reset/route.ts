@@ -9,6 +9,10 @@ function requestOrigin(req: NextRequest) {
   return `${proto}://${requestHost(req)}`;
 }
 
+function isValidEmail(value: string) {
+  return value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 export async function POST(req: NextRequest) {
   const rl = enforceRateLimit(req, "password-reset", 8, 60_000);
   if (rl) return rl;
@@ -23,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  if (!email) {
+  if (!isValidEmail(email)) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
 

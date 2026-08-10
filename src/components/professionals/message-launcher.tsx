@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, MessageSquareText } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -31,15 +30,21 @@ function buildDraftHref({
   proposalId,
   contextTitle,
   initialMessage,
-}: MessageLauncherProps) {
+}: MessageLauncherProps, isEn: boolean) {
   const params = new URLSearchParams({ draftChat: "1" });
+  const contextKind = bookingId ? "booking" : proposalId ? "proposal" : projectId ? "project" : "profile";
+  const defaultDraftMessage = initialMessage || (contextTitle && contextKind !== "profile"
+    ? isEn
+      ? `Hi, I am writing about the ${contextKind === "booking" ? "request" : contextKind === "proposal" ? "proposal" : "post"}: ${contextTitle}.`
+      : `Hola, te escribo por ${contextKind === "booking" ? "la solicitud" : contextKind === "proposal" ? "la propuesta" : "la publicación"}: ${contextTitle}.`
+    : "");
   if (professionalId) params.set("professionalId", professionalId);
   if (professionalName) params.set("professionalName", professionalName);
   if (bookingId) params.set("bookingId", bookingId);
   if (projectId) params.set("projectId", projectId);
   if (proposalId) params.set("proposalId", proposalId);
   if (contextTitle) params.set("contextTitle", contextTitle);
-  if (initialMessage) params.set("draftMessage", initialMessage);
+  if (defaultDraftMessage) params.set("draftMessage", defaultDraftMessage);
   return `/mensajes?${params.toString()}`;
 }
 
@@ -61,7 +66,6 @@ export function MessageLauncher(props: MessageLauncherProps) {
   const isEn = locale === "en";
   const router = useRouter();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
   const label = buttonLabel || (isEn ? "Send message" : "Enviar mensaje");
 
   async function openMessage() {
@@ -70,51 +74,26 @@ export function MessageLauncher(props: MessageLauncherProps) {
       return;
     }
 
-    const draftHref = buildDraftHref(props);
+    const draftHref = buildDraftHref(props, isEn);
     if (!user) {
       router.push(`/login?redirect=${encodeURIComponent(draftHref)}`);
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await fetch("/api/direct-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          professionalId,
-          bookingId,
-          projectId,
-          proposalId,
-          contextTitle,
-          initialMessage,
-          openConversation: true,
-        }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (response.ok && payload.conversationId) {
-        router.push(`/mensajes?conversation=${encodeURIComponent(String(payload.conversationId))}`);
-        return;
-      }
-      router.push(draftHref);
-    } finally {
-      setLoading(false);
-    }
+    router.push(draftHref);
   }
 
   return (
     <button
       type="button"
       onClick={() => void openMessage()}
-      disabled={loading}
-      aria-busy={loading}
       className={cn(
         buttonVariants({ variant: tone === "contrast" ? "chat" : "default", size: "md" }),
         "gap-1.5 disabled:opacity-60",
         className || "w-full rounded-full py-2.5 text-[13px] font-semibold",
       )}
     >
-      {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <MessageSquareText className="h-5 w-5 shrink-0" strokeWidth={2.25} />}
+      <MessageSquareText className="h-5 w-5 shrink-0" strokeWidth={2.25} />
       {label}
     </button>
   );

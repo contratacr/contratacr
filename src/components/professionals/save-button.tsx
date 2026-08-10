@@ -61,6 +61,7 @@ export type SavedPro = {
   isVerified: boolean;
   videoconsulta?: boolean;
   coverage?: { country?: boolean } | null;
+  followerCount?: number;
 };
 
 export function getSavedPros(userId?: string): SavedPro[] {
@@ -209,7 +210,7 @@ interface SaveButtonProps {
   /** True when the viewer is looking at their OWN professional profile — block
       self-favoriting with a friendly explanation instead of saving. */
   isOwn?: boolean;
-  /** Labeled pill variant for the PROFILE page (icon + "Guardar"/"Guardado").
+  /** Labeled pill variant for the PROFILE page ("Guardar"/"Guardado").
       Default (cards) is the bare, subtle top-right bookmark icon. Both share the
       exact same favorites logic, storage and self-action block, so the saved state
       stays consistent between a /buscar card and the profile. */
@@ -285,17 +286,16 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
           onClick={toggle}
           aria-label={saved ? t("unsave") : t("save")}
           aria-pressed={saved}
-          className={cn(
-            "inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors duration-200",
+      className={cn(
+        "inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors duration-200",
             saved
               ? "border-[#009FD9] bg-[#EBF5FB] text-[#009FD9]"
               : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9]",
-            className
-          )}
-        >
-          <Bookmark className="h-4 w-4 shrink-0" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
-          {saved ? t("savedLabel") : t("saveLabel")}
-        </button>
+        className
+      )}
+    >
+      {saved ? t("savedLabel") : t("saveLabel")}
+    </button>
       ) : (
         <button
           data-save-button
@@ -333,8 +333,12 @@ export function SaveableCard({ pro, children, isOwn = false }: CardWrapperProps)
       {children}
       {/* Always-visible favorites button. Keep it INSIDE the card on mobile so the
           search bottom sheet/map container can never clip it. */}
-      <div className="absolute right-3 top-1.5 z-20">
-        <SaveButton pro={pro} isOwn={isOwn} />
+      <div className="absolute right-3 top-4 z-20 lg:right-5 lg:top-4">
+        <SaveButton
+          pro={pro}
+          isOwn={isOwn}
+          className="p-0 text-[#9ca3af] hover:text-[#162543]"
+        />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Minus, Plus, Search } from "lucide-react";
+import { Loader2, MapPin, RefreshCw, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 
@@ -198,8 +198,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // programmatically fit the map to the results).
   const router = useRouter();
   const [showArea, setShowArea] = useState(false);
+  const [areaSearching, setAreaSearching] = useState(false);
   const suppressMoveRef = useRef(false);
   const searchMapReadyRef = useRef(false);
+
+  function setSearchAreaVisible(visible: boolean) {
+    setShowArea(visible);
+    if (!visible) setAreaSearching(false);
+    window.dispatchEvent(new CustomEvent("ccr:search-area-visible", { detail: visible }));
+  }
 
   function markSearchMapLoading() {
     searchMapReadyRef.current = false;
@@ -311,7 +318,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     popupKeyRef.current = pro.id;
     const href = `/${locale}/profesionales/${pro.slug}`;
     const profs = (pro.professions ?? []).filter(Boolean).slice(0, 2).join(" · ") || pro.categoryLabel || "";
-    const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName, pro.publicBusinessNameOnly);
+    const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName);
     const primaryName = displayName.primaryDesktop;
     const secondaryName = displayName.secondaryDesktop;
     const wrap = document.createElement("div");
@@ -353,7 +360,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     if (lastFocusKeyRef.current === target.key) return true;
     lastFocusKeyRef.current = target.key;
     suppressMoveRef.current = true;
-    const done = () => { suppressMoveRef.current = false; setShowArea(false); };
+    const done = () => { suppressMoveRef.current = false; setSearchAreaVisible(false); };
     const zoom = target.zoom ?? 12;
     if (typeof target.lat === "number" && typeof target.lng === "number") {
       map.setCenter({ lat: target.lat, lng: target.lng });
@@ -414,17 +421,14 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     sp.set("s", fixed(sw.lat()));
     sp.set("e", fixed(ne.lng()));
     sp.set("w", fixed(sw.lng()));
-    setShowArea(false);
+    setAreaSearching(true);
     router.push(`${window.location.pathname}?${sp.toString()}`);
   }
 
-  function zoomMap(delta: number) {
-    const map = mapInstanceRef.current;
-    if (!map) return;
-    const current = map.getZoom?.() ?? 11;
-    map.setZoom(Math.max(4, Math.min(18, current + delta)));
-    setShowArea(true);
-  }
+  useEffect(() => {
+    window.addEventListener("ccr:search-this-area", searchThisArea);
+    return () => window.removeEventListener("ccr:search-this-area", searchThisArea);
+  });
 
   function ensureMap() {
     if (mapInstanceRef.current || !mapRef.current) return null;
@@ -455,8 +459,8 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     map.addListener("idle", markSearchMapReady);
     map.addListener("tilesloaded", markSearchMapReady);
     // Show "Buscar en esta área" after a user pan/zoom (ignored during programmatic fits).
-    map.addListener("dragend", () => { if (!suppressMoveRef.current) setShowArea(true); });
-    map.addListener("zoom_changed", () => { if (!suppressMoveRef.current) setShowArea(true); });
+    map.addListener("dragend", () => { if (!suppressMoveRef.current) setSearchAreaVisible(true); });
+    map.addListener("zoom_changed", () => { if (!suppressMoveRef.current) setSearchAreaVisible(true); });
     return map;
   }
 
@@ -468,7 +472,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     if (!map) return;
 
     closePopup();
-    setShowArea(false); // fresh results reflect the (just-searched) area
+    setSearchAreaVisible(false); // fresh results reflect the (just-searched) area
     for (const marker of markersRef.current) marker.map = null;
     markersRef.current = [];
     pinsByProRef.current = new Map();
@@ -487,7 +491,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       const el = teardropEl(num ?? "");
       el.dataset.basez = String(z);
 
-      const titleName = getProfessionalDisplayName(pro.fullName, pro.businessName, pro.publicBusinessNameOnly).primaryDesktop || pro.fullName;
+      const titleName = getProfessionalDisplayName(pro.fullName, pro.businessName).primaryDesktop || pro.fullName;
       const marker = new g.marker.AdvancedMarkerElement({ map, position: pos, content: el, zIndex: z, title: titleName });
       // Keep a back-ref so setPinActive can raise zIndex without a marker lookup.
       (el as unknown as { _marker: unknown })._marker = marker;
@@ -579,6 +583,24 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     return () => ro.disconnect();
   }, []);
 
+  // Google Maps keeps the controls it received at construction time. Keep them
+  // in sync when DevTools or device rotation crosses the responsive breakpoint.
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 1023px)");
+    const syncNativeControls = () => {
+      const map = mapInstanceRef.current;
+      if (!map) return;
+      map.setOptions({
+        zoomControl: !media.matches,
+        fullscreenControl: !media.matches,
+      });
+    };
+
+    syncNativeControls();
+    media.addEventListener("change", syncNativeControls);
+    return () => media.removeEventListener("change", syncNativeControls);
+  }, []);
+
   if (!apiKey) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-center p-6">
@@ -607,40 +629,17 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           <button
             type="button"
             onClick={searchThisArea}
-            className="absolute left-1/2 top-3 z-20 hidden h-10 -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-[3px] border border-[#d8e2ea] bg-white px-3 text-sm font-semibold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 lg:inline-flex"
+            disabled={areaSearching}
+            className="absolute left-1/2 top-3 z-20 hidden h-10 -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-4 text-sm font-extrabold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 disabled:cursor-wait disabled:opacity-90 lg:inline-flex"
           >
-            <Search className="h-4 w-4 shrink-0 text-[#008ce0]" />
-            <span className="min-w-0 truncate">{locale === "en" ? "Search here" : "Buscar aquí"}</span>
+            {areaSearching ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[#009FD9]" /> : <RefreshCw className="h-4 w-4 shrink-0 text-[#162543]" />}
+            <span className="min-w-0 truncate">
+              {areaSearching
+                ? locale === "en" ? "Searching..." : "Buscando..."
+                : locale === "en" ? "Search this area" : "Buscar en esta zona"}
+            </span>
           </button>
         )}
-        {showArea && (
-        <button
-          type="button"
-          onClick={searchThisArea}
-          className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+4.25rem)] z-40 inline-flex h-10 max-w-[calc(100vw-12.5rem)] -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-[3px] border border-[#d8e2ea] bg-white px-3 text-sm font-semibold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 max-[374px]:px-2 max-[374px]:text-[13px] lg:hidden"
-        >
-          <Search className="h-4 w-4 shrink-0 text-[#008ce0]" />
-          <span className="min-w-0 truncate">{locale === "en" ? "Search here" : "Buscar aquí"}</span>
-        </button>
-        )}
-        <div className="fixed right-3 top-[calc(env(safe-area-inset-top)+4.25rem)] z-40 flex overflow-hidden rounded-[3px] border border-[#d8e2ea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.16)] lg:hidden">
-          <button
-            type="button"
-            onClick={() => zoomMap(-1)}
-            aria-label={locale === "en" ? "Zoom out" : "Alejar mapa"}
-            className="flex h-[38px] w-10 items-center justify-center border-r border-[#e5e7eb] text-[#162543] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
-          >
-            <Minus className="h-[18px] w-[18px]" strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            onClick={() => zoomMap(1)}
-            aria-label={locale === "en" ? "Zoom in" : "Acercar mapa"}
-            className="flex h-[38px] w-10 items-center justify-center text-[#162543] transition hover:bg-[#f9fafb] active:bg-[#eef2f6]"
-          >
-            <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
-          </button>
-        </div>
       </div>
     </>
   );

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VERIFICATION_STATUSES, type VerificationStatus } from "@/lib/verification";
+import { cleanId, detectIdType, idTypeLabel, type IdType } from "@/lib/cedula";
 
 // GET /api/admin/providers?status=pending|authorized|rejected|under_appeal|all
 // Review queue, filterable by verification status. Admin-only.
@@ -51,6 +52,15 @@ export async function GET(req: Request) {
     const profileId = pro.profiles?.id;
     if (profileId) proByProfile.set(profileId, pro);
   }
+  type IdentityBucket = IdType | "manual";
+
+  function identityInfo(cedula?: string | null): { identity_type: IdentityBucket; identity_type_label: string } {
+    const clean = cleanId(cedula ?? "");
+    const type = clean ? detectIdType(clean) : null;
+    if (!type) return { identity_type: "manual", identity_type_label: "Manual / sin identificación" };
+    return { identity_type: type, identity_type_label: idTypeLabel(type) };
+  }
+
 
   function accountStatus(profileStatus?: string | null, proStatus?: string | null): VerificationStatus {
     if ((VERIFICATION_STATUSES as string[]).includes(proStatus ?? "")) return proStatus as VerificationStatus;
@@ -76,6 +86,7 @@ export async function GET(req: Request) {
       role_label: "Cliente",
       detail_href: `/admin/usuarios/${profile.id}?from=verificacion`,
       profiles: profile,
+      ...identityInfo(profile.cedula),
     }));
 
   const unified = [
@@ -84,6 +95,7 @@ export async function GET(req: Request) {
       account_id: pro.profiles?.id ?? null,
       role_label: "Cliente y profesional",
       detail_href: pro.profiles?.id ? `/admin/usuarios/${pro.profiles.id}?from=verificacion` : `/admin/proveedores/${pro.id}`,
+      ...identityInfo(pro.profiles?.cedula),
     })),
     ...clientRows,
   ];
@@ -96,6 +108,8 @@ export async function GET(req: Request) {
 
   const counts: Record<string, number> = {};
   for (const s of VERIFICATION_STATUSES) counts[s] = unified.filter((row) => row.verification_status === s).length;
+  const identityCounts: Record<IdentityBucket, number> = { cedula: 0, juridica: 0, dimex: 0, nite: 0, manual: 0 };
+  for (const row of unified) identityCounts[row.identity_type as IdentityBucket] += 1;
 
-  return NextResponse.json({ providers: filtered.slice(0, 200), counts });
+  return NextResponse.json({ providers: filtered.slice(0, 200), counts, identityCounts });
 }

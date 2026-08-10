@@ -9,12 +9,12 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
-import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
+import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
-import { PanelEmptyState, PanelSectionLoading } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 
@@ -58,12 +58,12 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     : (readCachedNotifications(user?.id) as Notification[] | null) ?? [];
   const [busy, setBusy] = useState(initialCache === null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
-  const [itemMenuOpenId, setItemMenuOpenId] = useState<string | null>(null);
-  const bulkMenuRef = useRef<HTMLDivElement | null>(null);
-  const itemMenuRef = useRef<HTMLDivElement | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
+  const [itemMenuOpenId, setItemMenuOpenId] = useState<string | null>(null);
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const globalMenuRef = useRef<HTMLDivElement | null>(null);
+  const itemMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const projectTimes = useNotificationProjectTimes(items);
 
   const loadNotifications = useCallback(() => {
@@ -132,40 +132,42 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   }, [instanceId, loadNotifications, user]);
 
   useEffect(() => {
-    if (!bulkMenuOpen && !itemMenuOpenId) return;
-
-    function closeMenus(event: PointerEvent) {
-      const target = event.target as Node | null;
-      if (target && (bulkMenuRef.current?.contains(target) || itemMenuRef.current?.contains(target))) return;
-      setBulkMenuOpen(false);
+    if (!globalMenuOpen && !itemMenuOpenId) return;
+    function onPointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (globalMenuOpen && globalMenuRef.current?.contains(target)) return;
+      if (itemMenuOpenId && itemMenuRefs.current[itemMenuOpenId]?.contains(target)) return;
+      setGlobalMenuOpen(false);
       setItemMenuOpenId(null);
     }
-
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      setBulkMenuOpen(false);
-      setItemMenuOpenId(null);
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setGlobalMenuOpen(false);
+        setItemMenuOpenId(null);
+      }
     }
-
-    document.addEventListener("pointerdown", closeMenus);
-    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("pointerdown", closeMenus);
-      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
     };
-  }, [bulkMenuOpen, itemMenuOpenId]);
+  }, [globalMenuOpen, itemMenuOpenId]);
 
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
-  const notificationTitle = (n: Notification) =>
-    n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? n.title : t(`types.${n.type}`);
+  const notificationTitle = (n: Notification) => {
+    const copy = localizedNotificationCopy(n, locale);
+    return n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? copy.title : t(`types.${n.type}`);
+  };
   const notificationMessage = (n: Notification) => {
+    const localizedMessage = localizedNotificationCopy(n, locale).message;
     const fullReason = n.data?.review_reason?.trim();
-    if (!fullReason) return n.message;
-    if (/\bMotivo:/i.test(n.message)) return n.message.replace(/\bMotivo:[\s\S]*$/i, `Motivo: ${fullReason}`);
-    if (/\bReason:/i.test(n.message)) return n.message.replace(/\bReason:[\s\S]*$/i, `Reason: ${fullReason}`);
-    return n.message;
+    if (!fullReason) return localizedMessage;
+    if (/\bMotivo:/i.test(localizedMessage)) return localizedMessage.replace(/\bMotivo:[\s\S]*$/i, `Motivo: ${fullReason}`);
+    if (/\bReason:/i.test(localizedMessage)) return localizedMessage.replace(/\bReason:[\s\S]*$/i, `Reason: ${fullReason}`);
+    return localizedMessage;
   };
   const notificationTime = (n: Notification) => {
     const projectCreatedAt = getNotificationProjectCreatedAt(n, projectTimes);
@@ -178,8 +180,6 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   // como leídas", the list is mode-scoped + short, and each title makes its type obvious.
 
   async function markAllRead() {
-    setBulkMenuOpen(false);
-    setItemMenuOpenId(null);
     if (!user) return;
     const ids = visible.filter((n) => !n.read).map((n) => n.id);
     if (ids.length === 0) return;
@@ -209,8 +209,6 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const role = user?.user_metadata?.role as string | undefined;
 
   function open(n: Notification) {
-    setBulkMenuOpen(false);
-    setItemMenuOpenId(null);
     const href = notificationActionHref(n, role, locale);
     if (!n.read) {
       setNotificationState((prev) => {
@@ -241,8 +239,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   async function doDeleteAll() {
     setConfirmDelete(false);
-    setBulkMenuOpen(false);
-    setItemMenuOpenId(null);
+    setGlobalMenuOpen(false);
     if (!user || visible.length === 0) return;
     // Delete only the CURRENT mode's notifications (the list is per-mode).
     const ids = visible.map((n) => n.id);
@@ -256,67 +253,67 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
+  const headingTitle = locale === "en" ? "Notifications" : "Notificaciones";
+
   return (
-    <div className="ccr-notifications-list flex min-h-0 flex-1 flex-col">
-      {visible.length > 0 && (
-        <div className="ccr-notifications-toolbar relative mb-3 flex shrink-0 items-center justify-between gap-3 px-1 sm:justify-end sm:px-0">
-          <div className="min-w-0 sm:hidden">
-            <p className="text-sm font-semibold text-[#162543]">{t("title")}</p>
-            {unread > 0 && (
-              <p className="text-xs text-[#6b7280]">
-                {unread} {locale === "en" ? "unread" : "sin leer"}
-              </p>
-            )}
-          </div>
-          {unread > 0 && (
-            <button onClick={markAllRead} className="hidden min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#009FD9] hover:bg-[#eef8fc] sm:flex">
-              <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
-            </button>
+    <div className="ccr-notifications-list flex h-full min-h-0 flex-col">
+      <div className="ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3 rounded-2xl bg-white px-1 py-1 sm:px-0 sm:py-0">
+        <div className="min-w-0">
+          {scope === "all" ? (
+            <h1 className="text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl">{headingTitle}</h1>
+          ) : (
+            <h3 className="text-lg font-extrabold leading-tight text-[#162543] sm:text-[1.15rem]">{headingTitle}</h3>
           )}
-          <button onClick={() => setConfirmDelete(true)} className="hidden min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-red-500 hover:bg-red-50 sm:flex">
-            <Trash2 className="h-4 w-4" /> {t("deleteAll")}
+          <p className="mt-1 inline-flex w-fit items-center rounded-full bg-[#eef6fb] px-2.5 py-1 text-xs font-extrabold text-[#526277]">
+            {unread} {locale === "en" ? "unread" : "sin leer"}
+          </p>
+        </div>
+        <div ref={globalMenuRef} className="relative shrink-0">
+          <button
+            type="button"
+            aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
+            aria-haspopup="menu"
+            aria-expanded={globalMenuOpen}
+            onClick={() => {
+              setItemMenuOpenId(null);
+              setGlobalMenuOpen((open) => !open);
+            }}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#162543] ring-1 ring-[#dbe7ef] transition-colors hover:bg-[#eef6fb]"
+          >
+            <MoreHorizontal className="h-5 w-5" strokeWidth={3} />
           </button>
-          <div ref={bulkMenuRef} className="relative ml-auto sm:hidden">
-            <button
-              type="button"
-              onClick={() => {
-                setItemMenuOpenId(null);
-                setBulkMenuOpen((open) => !open);
-              }}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#dfe8f0] bg-white text-[#526174] shadow-sm hover:bg-[#f5f8fb]"
-              aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
-              aria-expanded={bulkMenuOpen}
-            >
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
-            {bulkMenuOpen && (
-              <div className="absolute right-0 top-11 z-20 min-w-52 rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-lg">
-                {unread > 0 && (
-                  <button
-                    type="button"
-                    onClick={markAllRead}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#009FD9] hover:bg-[#eef8fc]"
-                  >
-                    <CheckCheck className="h-4 w-4" />
-                    {t("markAllRead")}
-                  </button>
-                )}
+          {globalMenuOpen && (
+            <div role="menu" className="absolute right-0 top-full z-30 mt-2 min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl">
+              {unread > 0 && (
                 <button
                   type="button"
+                  role="menuitem"
                   onClick={() => {
-                    setBulkMenuOpen(false);
-                    setConfirmDelete(true);
+                    setGlobalMenuOpen(false);
+                    void markAllRead();
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50"
+                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
                 >
-                  <Trash2 className="h-4 w-4" />
-                  {t("deleteAll")}
+                  <CheckCheck className="h-4 w-4 text-[#009FD9]" />
+                  {t("markAllRead")}
                 </button>
-              </div>
-            )}
-          </div>
+              )}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setGlobalMenuOpen(false);
+                  setConfirmDelete(true);
+                }}
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t("deleteAll")}
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {confirmDelete && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
@@ -332,10 +329,11 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           </div>
         </div>
       )}
-      <div className="ccr-notifications-scroll min-h-0 flex-1 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
+      <div className="ccr-notifications-scroll min-h-0 flex-1 rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
         {busy ? (
-          <PanelSectionLoading
-            className={scope === "all" ? "min-h-[calc(100dvh-13rem)] sm:min-h-[18rem]" : "min-h-[16rem] sm:min-h-[18rem]"}
+          <PanelListSkeleton
+            rows={4}
+            className={scope === "all" ? "min-h-[calc(100dvh-13rem)] p-4 sm:min-h-[18rem]" : "min-h-[16rem] p-4 sm:min-h-[18rem]"}
           />
         ) : visible.length === 0 ? (
           <PanelEmptyState
@@ -411,57 +409,52 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                 </div>
                 {/* Two distinct actions, intentionally different icons so they're
                     never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
-                <div ref={itemMenuOpenId === n.id ? itemMenuRef : null} className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setBulkMenuOpen(false);
-                      setItemMenuOpenId((current) => (current === n.id ? null : n.id));
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#718096] hover:bg-[#eef3f8] sm:hidden"
-                    aria-label={locale === "en" ? "Notification actions" : "Opciones de notificación"}
-                    aria-expanded={itemMenuOpenId === n.id}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                  {itemMenuOpenId === n.id && (
-                    <div
-                      className="absolute right-0 top-9 z-20 min-w-44 rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-lg sm:hidden"
-                      onClick={(event) => event.stopPropagation()}
+                <div
+                  ref={(node) => {
+                    itemMenuRefs.current[n.id] = node;
+                  }}
+                  className="absolute top-2.5 right-2.5"
+                >
+                  <AppTooltip label={locale === "en" ? "Notification options" : "Opciones"}>
+                    <button
+                      type="button"
+                      aria-label={locale === "en" ? "Notification options" : "Opciones"}
+                      aria-haspopup="menu"
+                      aria-expanded={itemMenuOpenId === n.id}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setGlobalMenuOpen(false);
+                        setItemMenuOpenId((current) => (current === n.id ? null : n.id));
+                      }}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#eef4f8] hover:text-[#162543]"
                     >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                  </AppTooltip>
+                  {itemMenuOpenId === n.id && (
+                    <div role="menu" className="absolute right-0 top-full z-30 mt-1.5 min-w-[190px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl">
                       {!n.read && (
                         <button
                           type="button"
-                          onClick={(event) => markOneRead(event, n.id)}
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#15803d] hover:bg-[#dcfce7]"
+                          role="menuitem"
+                          onClick={(event) => void markOneRead(event, n.id)}
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
                         >
-                          <Check className="h-4 w-4" />
+                          <Check className="h-4 w-4 text-[#15803d]" />
                           {t("markRead")}
                         </button>
                       )}
                       <button
                         type="button"
-                        onClick={(event) => dismiss(event, n.id)}
-                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50"
+                        role="menuitem"
+                        onClick={(event) => void dismiss(event, n.id)}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                         {t("delete")}
                       </button>
                     </div>
                   )}
-                  {!n.read && (
-                    <AppTooltip label={t("markRead")}>
-                      <button onClick={(e) => markOneRead(e, n.id)} className="hidden rounded-md p-1 text-[#9ca3af] transition-colors hover:bg-[#dcfce7] hover:text-[#15803d] sm:flex" aria-label={t("markRead")}>
-                        <Check className="h-3.5 w-3.5" />
-                      </button>
-                    </AppTooltip>
-                  )}
-                  <AppTooltip label={t("delete")}>
-                    <button onClick={(e) => dismiss(e, n.id)} className="hidden rounded-md p-1 text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500 sm:flex" aria-label={t("delete")}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </AppTooltip>
                 </div>
               </li>
               );

@@ -62,7 +62,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
   }
 
   return (
-    <section className="relative py-20 sm:py-28 overflow-hidden bg-gradient-to-b from-white to-[#eef4f9]">
+    <section className="relative overflow-hidden bg-white py-20 sm:py-28">
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744]">

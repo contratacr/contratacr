@@ -124,6 +124,16 @@ export async function proxy(request: NextRequest) {
   if (needsAuthGate) {
     const onboardingDone = user.user_metadata?.onboarding_completed === true;
     if (!onboardingDone) return redirectKeepingCookies(`/${locale}/onboarding`, request, response);
+
+    // A professional registration that was started but not completed must never
+    // render the unified dashboard first. Redirect at the request boundary so
+    // there is no panel flash while client-side professional data is loading.
+    const professionalSignupIncomplete =
+      user.user_metadata?.professional_signup_started === true &&
+      user.user_metadata?.is_provider !== true;
+    if (professionalSignupIncomplete && withoutLocale.startsWith("/dashboard/profesional")) {
+      return redirectKeepingCookies(`/${locale}/registro/profesional`, request, response);
+    }
   }
 
   return response;

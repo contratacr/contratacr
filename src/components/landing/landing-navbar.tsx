@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin,
-  LayoutDashboard, Briefcase, Compass, Wrench,
-  UserRound, LogOut, FileText, ShieldCheck, MessageSquareText,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, Navigation, LocateFixed,
+  Briefcase, Compass, Wrench,
+  UserRound, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { signOutToHome } from "@/lib/auth/sign-out";
@@ -24,12 +25,13 @@ import { useNativeApp } from "@/hooks/use-native-app";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
+import { allLocationSuggestions, searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
-import { APP_RESUME_EVENT } from "@/components/util/app-resume-recovery";
 import { createClient } from "@/lib/supabase/client";
+import { repairVisibleText } from "@/lib/text/repair-visible-text";
+import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 
-/* ─── Brand mark (the square "CR" icon) ─── */
+/* --- Brand mark (the square "CR" icon) --- */
 export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
   const src = tone === "dark" ? "/logo-mark-dark.png" : "/logo-mark-transparent.png";
   return (
@@ -43,8 +45,7 @@ export function ContrataCRMark({ className, tone = "light" }: { className?: stri
     />
   );
 }
-
-/* ─── Logo (mark + wordmark). `size="lg"` gives the header more brand presence. ─── */
+/* --- Logo (mark + wordmark). `size="lg"` gives the header more brand presence. --- */
 export function ContrataCRLogo({ className, chip = false, size = "md", tone = "light" }: { className?: string; chip?: boolean; size?: "md" | "lg"; tone?: "light" | "dark" }) {
   const lg = size === "lg";
   const markCls = lg ? "h-8 w-8 sm:h-9 sm:w-9" : "h-7 w-7";
@@ -69,7 +70,7 @@ export function ContrataCRLogo({ className, chip = false, size = "md", tone = "l
   );
 }
 
-/* ─── Language switch — shared locale-change helper ─── */
+/* --- Language switch - shared locale-change helper --- */
 function useTypedPlaceholder(examples: string[], active: boolean) {
   const [text, setText] = useState(examples[0] ?? "");
 
@@ -112,9 +113,52 @@ function useTypedPlaceholder(examples: string[], active: boolean) {
   return text;
 }
 
+function useRotatingWord(words: string[], active: boolean) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (!active || words.length <= 1) return;
+    const id = window.setInterval(() => setIndex((current) => (current + 1) % words.length), 2200);
+    return () => window.clearInterval(id);
+  }, [active, words.length]);
+
+  return words[index] ?? words[0] ?? "";
+}
+
+function useSlidingWords(words: string[], active: boolean) {
+  const [index, setIndex] = useState(0);
+  const [cycle, setCycle] = useState(0);
+  const [sliding, setSliding] = useState(false);
+
+  useEffect(() => {
+    if (!active || words.length <= 1) {
+      setSliding(false);
+      return;
+    }
+    let settleTimer: number | null = null;
+    const id = window.setInterval(() => {
+      setCycle((current) => current + 1);
+      setSliding(true);
+      settleTimer = window.setTimeout(() => {
+        setIndex((current) => (current + 1) % words.length);
+        setSliding(false);
+      }, 520);
+    }, 2200);
+    return () => {
+      window.clearInterval(id);
+      if (settleTimer) window.clearTimeout(settleTimer);
+    };
+  }, [active, words.length]);
+
+  const current = words[index] ?? words[0] ?? "";
+  const next = words[(index + 1) % words.length] ?? current;
+  return { current, next, cycle, sliding };
+}
+
 function useSwitchLang() {
   const router = useRouter();
   const pathname = usePathname();
+  const currentSearchParams = useSearchParams();
   return (lang: string) => {
     const currentState =
       typeof window === "undefined" ? "" : `${window.location.search}${window.location.hash}`;
@@ -128,7 +172,7 @@ function useSwitchLang() {
   };
 }
 
-/* ─── Language menu (DESKTOP navbar) ─── */
+/* --- Language menu (DESKTOP navbar) --- */
 function LanguageMenu() {
   const locale = useLocale();
   const switchLang = useSwitchLang();
@@ -147,22 +191,22 @@ function LanguageMenu() {
   );
 }
 
-/* ─── Mode segmented control (Cliente ⇆ Profesional) ───
+/* --- Mode segmented control (Cliente / Profesional)
    The canonical pattern for switching between two views/contexts: BOTH modes
    shown side by side, the active one FILLED (brand), the inactive one muted but
-   clearly tappable — tapping it switches the whole experience. (Carbon-style
+   clearly tappable - tapping it switches the whole experience. (Carbon-style
    content switcher / iOS segmented control.) Accessible (role=tablist/tab,
    ArrowLeft/Right operable), smooth fill transition, fits the navbar at ~360px.
    `block` makes the two segments share the full width (used in the account menu
    + mobile drawer); the inline default is used in the navbar bar.
-   NO notification badge — context switchers stay clean; notifications live in the
+   NO notification badge - context switchers stay clean; notifications live in the
    bell (modern-app practice). */
 /* In the navbar itself we still keep one compact account entry point. Inside that
    account menu/drawer, providers can switch Cliente/Profesional in place. */
 
-/* ─── Header data ───
-   The "Categorías" mega-menu (desktop) is built from the FULL catalog `CATEGORY_GROUPS`
-   (sprint 525) — every group + its categories, organized with group headers. On mobile the
+/* --- Header data ---
+   The "Categorias" mega-menu (desktop) is built from the FULL catalog `CATEGORY_GROUPS`
+   (sprint 525) - every group + its categories, organized with group headers. On mobile the
    drawer shows just a single "Servicios" link -> /servicios. */
 
 // `key` resolves to header.resourceLinks.<key> for the translated label.
@@ -173,10 +217,128 @@ const RESOURCES_LINKS: { key: string; href: string }[] = [
   { key: "support",    href: "/soporte" },
 ];
 
-/* ─── Accent- and typo-tolerant category matcher ───
+const CURRENT_LOCATION_STORAGE_KEY = "contratacr_current_location_hint";
+
+const CANTON_CENTER_HINTS: Record<string, { lat: number; lng: number }> = {
+  "sj-sj": { lat: 9.932, lng: -84.08 },
+  "sj-es": { lat: 9.918, lng: -84.139 },
+  "sj-de": { lat: 9.899, lng: -84.061 },
+  "sj-sa": { lat: 9.932, lng: -84.182 },
+  "sj-go": { lat: 9.948, lng: -84.056 },
+  "sj-ti": { lat: 9.958, lng: -84.079 },
+  "sj-mo2": { lat: 9.963, lng: -84.048 },
+  "sj-mu": { lat: 9.936, lng: -84.051 },
+  "sj-cu": { lat: 9.911, lng: -84.034 },
+  "al-al": { lat: 10.016, lng: -84.214 },
+  "al-at": { lat: 9.979, lng: -84.379 },
+  "al-gr": { lat: 10.073, lng: -84.312 },
+  "al-sa": { lat: 10.088, lng: -84.47 },
+  "al-sc": { lat: 10.323, lng: -84.428 },
+  "ca-ca": { lat: 9.864, lng: -83.919 },
+  "ca-lu": { lat: 9.907, lng: -83.987 },
+  "ca-pa": { lat: 9.838, lng: -83.865 },
+  "he-he": { lat: 9.998, lng: -84.117 },
+  "he-be": { lat: 9.978, lng: -84.183 },
+  "he-fl": { lat: 10.0, lng: -84.158 },
+  "he-sa2": { lat: 10.456, lng: -84.016 },
+  "gu-li": { lat: 10.635, lng: -85.437 },
+  "gu-ni": { lat: 10.148, lng: -85.452 },
+  "gu-sc": { lat: 10.262, lng: -85.586 },
+  "pu-pu": { lat: 9.977, lng: -84.833 },
+  "pu-es": { lat: 9.994, lng: -84.665 },
+  "pu-ag": { lat: 9.431, lng: -84.162 },
+  "li-li": { lat: 9.991, lng: -83.036 },
+  "li-po": { lat: 10.217, lng: -83.785 },
+  "li-si": { lat: 9.991, lng: -83.67 },
+};
+
+function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+function provinceSuggestions() {
+  return allLocationSuggestions().filter(
+    (suggestion): suggestion is Extract<LocationSuggestion, { type: "province" }> => suggestion.type === "province",
+  );
+}
+
+function nearbyLocationSuggestions(coords: { latitude: number; longitude: number }, limit = 7): LocationSuggestion[] {
+  const all = allLocationSuggestions();
+  const byId = new Map(all.map((suggestion) => [suggestion.id, suggestion]));
+  const nearestCantons = Object.entries(CANTON_CENTER_HINTS)
+    .map(([id, center]) => ({ id, distance: distanceKm({ lat: coords.latitude, lng: coords.longitude }, center) }))
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, Math.max(1, limit - 1))
+    .map(({ id }) => byId.get(id))
+    .filter((suggestion): suggestion is LocationSuggestion => Boolean(suggestion));
+  const firstCanton = nearestCantons.find(
+    (suggestion): suggestion is Extract<LocationSuggestion, { type: "canton" }> => suggestion.type === "canton",
+  );
+  const province = firstCanton ? byId.get(firstCanton.provinceId) : null;
+  return [firstCanton, ...nearestCantons.filter((suggestion) => suggestion.id !== firstCanton?.id), province]
+    .filter((suggestion): suggestion is LocationSuggestion => Boolean(suggestion))
+    .filter((suggestion, index, list) => list.findIndex((item) => item.id === suggestion.id) === index)
+    .slice(0, limit);
+}
+
+function orderCurrentLocationSuggestions(suggestions: LocationSuggestion[], coords: { latitude: number; longitude: number }, limit = 7): LocationSuggestion[] {
+  const byId = new Map(allLocationSuggestions().map((suggestion) => [suggestion.id, suggestion]));
+  const distanceFor = (suggestion: LocationSuggestion) => {
+    const center = CANTON_CENTER_HINTS[suggestion.id as keyof typeof CANTON_CENTER_HINTS];
+    return center ? distanceKm({ lat: coords.latitude, lng: coords.longitude }, center) : Number.POSITIVE_INFINITY;
+  };
+  const cantons = suggestions
+    .filter((suggestion): suggestion is Extract<LocationSuggestion, { type: "canton" }> => suggestion.type === "canton")
+    .sort((a, b) => distanceFor(a) - distanceFor(b));
+  const nearestCanton = cantons[0];
+  const nearestProvince = nearestCanton ? byId.get(nearestCanton.provinceId) : null;
+  const provinces = [
+    nearestProvince,
+    ...suggestions.filter((suggestion): suggestion is Extract<LocationSuggestion, { type: "province" }> => suggestion.type === "province"),
+  ].filter((suggestion): suggestion is LocationSuggestion => Boolean(suggestion));
+
+  return [...cantons, ...provinces]
+    .filter((suggestion, index, list) => list.findIndex((item) => item.id === suggestion.id) === index)
+    .slice(0, limit);
+}
+
+async function currentLocationSuggestionsFromCoords(coords: { latitude: number; longitude: number }): Promise<LocationSuggestion[]> {
+  const nearby = nearbyLocationSuggestions(coords);
+  try {
+    const response = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.latitude}&longitude=${coords.longitude}&localityLanguage=es`,
+      { cache: "no-store" },
+    );
+    if (!response.ok) return nearby;
+    const data = (await response.json()) as {
+      city?: string;
+      locality?: string;
+      principalSubdivision?: string;
+      localityInfo?: { administrative?: Array<{ name?: string; adminLevel?: number }> };
+    };
+    const names = [
+      data.city,
+      data.locality,
+      ...(data.localityInfo?.administrative ?? []).map((item) => item.name),
+      data.principalSubdivision,
+    ].filter((name): name is string => typeof name === "string" && name.trim().length > 0);
+    const resolved = names.flatMap((name) => searchLocations(name, 2));
+    return orderCurrentLocationSuggestions([...resolved, ...nearby], coords, 7);
+  } catch {
+    return nearby;
+  }
+}
+
+/* --- Accent- and typo-tolerant category matcher ---
    `searchCategories` already does accent-insensitive substring matching over
    labels + keywords; if that yields nothing we fall back to a small edit-
-   distance match so minor typos ("plomeria"→"plomeira", "electicidad") still
+   distance match so minor typos ("plomeria"->"plomeira", "electicidad") still
    resolve. ALL_CATEGORIES is ~90 items, so this stays cheap. */
 function editDistance(a: string, b: string): number {
   const m = a.length, n = b.length;
@@ -213,10 +375,10 @@ function matchCategories(query: string, limit = 8, locale?: string): CatMatch[] 
     .map((x) => x.item);
 }
 
-/* ─── Categorías mega-menu panel ───
+/* --- Categorias mega-menu panel ---
    ONE clean container: the search field FILTERS the curated category list IN PLACE as
-   you type — never a second floating dropdown stacked on top of the mega-menu. Empty →
-   the curated 3-column grid; typing → matching categories inline; no match → the shared
+   you type - never a second floating dropdown stacked on top of the mega-menu. Empty ->
+   the curated 3-column grid; typing -> matching categories inline; no match -> the shared
    suggest flow + a clean "Ver todos". */
 function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const t = useTranslations("header");
@@ -276,7 +438,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
 
   return (
     <div className="flex max-h-[calc(100vh-7rem)] min-h-0 flex-col overflow-hidden">
-      {/* Search — inline; typing filters the list below IN PLACE (no portal/overlay). */}
+      {/* Search - inline; typing filters the list below IN PLACE (no portal/overlay). */}
       <div className="mb-4 flex h-11 shrink-0 items-center rounded-xl border border-gray-200 bg-gray-50/70 px-3.5 transition-all focus-within:border-[#009FD9] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20">
         <Search className="h-4 w-4 shrink-0 text-gray-400" />
         <input
@@ -364,7 +526,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
             </div>
           </div>
         ) : (
-          // No match → consistent wording + the shared suggest flow, all INSIDE this same
+          // No match -> consistent wording + the shared suggest flow, all INSIDE this same
           // container. The "Ver todos los profesionales" link was removed (sprint 305).
           <div className="py-2 text-center">
             <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
@@ -469,30 +631,27 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   );
 }
 
-/* ─── Account menu (avatar trigger + dropdown) ───
+/* --- Account menu (avatar trigger + dropdown) ---
    Self-contained: owns its open state + tap-away handling, so it can be
    rendered in BOTH the default header row AND the compact/scrolled row
    without sharing state. */
 interface AccountMenuProps {
-  user: { email?: string | null };
   isPro: boolean;
   displayName: string;
-  avatarUrl: string | null;
-  avatarReady: boolean;
-  initials: string;
   professionalPanelHref: string;
   clientPanelHref: string;
+  profileHref: string;
   onSignOut: () => void;
 }
 
 export function AccountMenu({
-  user, isPro, displayName, avatarUrl, avatarReady, initials,
-  professionalPanelHref, clientPanelHref, onSignOut,
+  isPro, displayName, professionalPanelHref, clientPanelHref, profileHref, onSignOut,
 }: AccountMenuProps) {
   const t = useTranslations("header");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const menuItemClass = "flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors";
+  const menuItemClass = "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]";
 
   useEffect(() => {
     function onClickOutside(e: Event) {
@@ -514,30 +673,15 @@ export function AccountMenu({
     <div ref={ref} className="relative">
       <button
         onClick={toggle}
-        className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent hover:ring-[#009FD9]/30 transition-all"
-        title={displayName || user.email || ""}
+        className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+        aria-label={displayName || t("myPanel")}
       >
-        {!avatarReady ? (
-          // Avatar state not resolved yet → a NEUTRAL skeleton, never the initials
-          // circle, so an account WITH a photo never flashes the no-photo state.
-          <span className="block h-8 w-8 animate-pulse rounded-full bg-gray-200" />
-        ) : (
-          <span
-            className={cn(
-              "grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-[#009FD9] bg-cover bg-center text-[13px] font-bold text-white",
-              avatarUrl && "text-transparent",
-            )}
-            style={avatarUrl ? { backgroundImage: `url("${avatarUrl}")` } : undefined}
-          >
-            <span aria-hidden>{initials}</span>
-          </span>
-        )}
+        <UserRound className="h-5 w-5" />
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-2 max-h-[min(720px,calc(100vh-92px))] w-72 overflow-y-auto bg-white border border-gray-100 rounded-2xl shadow-[0_22px_55px_-18px_rgba(15,23,42,0.45)] z-50 py-1.5">
-          <div className="px-3 py-2 border-b border-gray-50 mb-1">
-            {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
-            <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
+          <div className="mb-1 border-b border-gray-100 px-3 py-2.5">
+            <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myPanel")}</p>
           </div>
 
           <div className="pt-1">
@@ -546,17 +690,25 @@ export function AccountMenu({
               onClick={() => setOpen(false)}
               className={menuItemClass}
             >
-              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+              <UserRound className="h-4 w-4 text-[#009FD9]" />
               {t("myPanel")}
+            </Link>
+            <Link
+              href={profileHref}
+              onClick={() => setOpen(false)}
+              className={menuItemClass}
+            >
+              <Settings className="h-4 w-4 text-[#009FD9]" />
+              {locale === "en" ? "Profile and account" : "Perfil y cuenta"}
             </Link>
           </div>
 
           <button
             onClick={onSignOut}
-            className="w-full flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            className="mt-1 flex w-full items-center gap-2.5 border-t border-gray-100 px-3 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
           >
             <LogOut className="h-4 w-4" />
-            {t("signOut")}
+            {locale === "en" ? "Sign out" : "Cerrar sesión"}
           </button>
         </div>
       )}
@@ -564,9 +716,9 @@ export function AccountMenu({
   );
 }
 
-/* ─── Navbar ───
+/* --- Navbar ---
    `mobileInline` (optional): content injected into the MOBILE header row only (<lg),
-   between the logo and the hamburger — used by /buscar to put the search + filters on the
+   between the logo and the hamburger - used by /buscar to put the search + filters on the
    SAME single line as the logo + menu. When present, the mobile logo compacts to the mark
    (the wordmark would crowd the row at ~360px). Desktop + pages that don't pass it are
    unchanged. */
@@ -575,8 +727,7 @@ function PanelIconLink({ href, label }: { href: string; label: string }) {
     <Link
       href={href}
       aria-label={label}
-      title={label}
-      className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+      className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744]"
     >
       <UserRound className="h-5 w-5" />
     </Link>
@@ -588,7 +739,6 @@ function HeaderIconLink({ href, label, children }: { href: string; label: string
     <Link
       href={href}
       aria-label={label}
-      title={label}
       className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
     >
       {children}
@@ -604,14 +754,16 @@ function DrawerIcon({ children }: { children: ReactNode }) {
   );
 }
 
-function ResourceIcon({ name, className = "h-5 w-5 text-[#64748b]" }: { name: string; className?: string }) {
+function ResourceIcon({ name, className = "h-5 w-5 shrink-0" }: { name: string; className?: string }) {
   if (name === "howItWorks") return <ListChecks className={className} />;
   if (name === "helpCenter") return <HelpCircle className={className} />;
   if (name === "proTips") return <Lightbulb className={className} />;
+  if (name === "contact") return <Mail className={className} />;
+  if (name === "terms" || name === "privacy") return <Shield className={className} />;
   return <Headset className={className} />;
 }
 
-export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean } = {}) {
+export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = true, marketplaceDesktop = false, drawerOnly = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -624,6 +776,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const [searchCategoryId, setSearchCategoryId] = useState<string | null>(null);
   const [searchActiveIdx, setSearchActiveIdx] = useState(-1);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [nativeSearchOpen, setNativeSearchOpen] = useState(false);
+  const [currentLocationSuggestions, setCurrentLocationSuggestions] = useState<LocationSuggestion[] | null>(null);
+  const [navCurrentCoords, setNavCurrentCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   // Location is a typeable autocomplete (provinces + cantones), like the hero.
   const [navLocation, setNavLocation] = useState("");
   const [navLocationSel, setNavLocationSel] = useState<LocationSuggestion | null>(null);
@@ -632,12 +787,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const navLocBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const compactSvcRef = useRef<HTMLDivElement>(null);
   const compactLocRef = useRef<HTMLDivElement>(null);
+  const nativeSearchInputRef = useRef<HTMLInputElement>(null);
+  const nativeLocationInputRef = useRef<HTMLInputElement>(null);
   const nativePendingTimer = useRef<number | null>(null);
   const nativeBottomNavRef = useRef<HTMLElement>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
   const [isSmallScreen, setIsSmallScreen] = useState(true);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const servicesMenuRef = useRef<HTMLDivElement>(null);
+  const exploreMenuRef = useRef<HTMLDivElement>(null);
+  const resourcesMenuRef = useRef<HTMLDivElement>(null);
   const drawerTouchX = useRef<number | null>(null);
   const router = useRouter();
   const t = useTranslations("header");
@@ -646,21 +805,96 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const alternateLocale = locale === "en" ? "es" : "en";
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
   const pathname = usePathname();
+  const currentSearchParams = useSearchParams();
   const nativeApp = useNativeApp();
-  const nativeSearchRoute = /(^|\/)buscar(\/|$)/.test(pathname);
-  const nativeHeaderShell = nativeApp;
-  const nativeBottomShell = nativeApp && !nativeSearchRoute;
+  const [hydrated, setHydrated] = useState(false);
+  const nativeHeaderShell = hydrated && nativeApp;
+  const nativeBottomShell = hydrated && nativeApp;
   const { user, loading: authLoading } = useAuth();
-  const nativeBottomNavVisible = nativeBottomShell && (Boolean(user) || authLoading);
-  const centerMobileLogo = !nativeHeaderShell && !mobileInline;
+  const nativeBottomNavVisible = nativeBottomShell && !!user;
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
-  const compactEnabled = !pathname.startsWith("/dashboard");
-  const effectiveCompact = compactEnabled && (forceCompactSearch || compact);
+  const [accountBusinessName, setAccountBusinessName] = useState("");
+  const isHomePage = pathname === "/";
+  const compactEnabled = true;
+  const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
+  const showDesktopCompactSearch = effectiveCompact && !marketplaceDesktop;
+  // The global navbar is navigation-only. /buscar explicitly opts into its
+  // contextual professional search; every other destination owns its search.
+  const showMobileNavbarSearch = mobileSearch && effectiveCompact && !mobileInline;
   const compactSearchExamples = useMemo(() => {
     const raw = t.raw(isSmallScreen ? "searchExamples" : "searchExamplesDesktop");
     return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
   }, [isSmallScreen, t]);
   const compactPlaceholder = useTypedPlaceholder(compactSearchExamples, effectiveCompact && !searchFocused && !searchQuery.trim());
+  const nativeSearchServices = useMemo(
+    () =>
+      locale === "en"
+        ? ["electrician", "plumber", "accountant", "mechanic", "photographer", "lawyer"]
+        : ["electricista", "plomero", "contador", "mecánico", "fotógrafo", "abogado"],
+    [locale],
+  );
+  const mobileSlidingService = useSlidingWords(
+    nativeSearchServices,
+    showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim(),
+  );
+  const headerCategoryId = currentSearchParams.get("categoria");
+  const explicitHeaderService =
+    headerCategoryId && headerCategoryId !== "todas"
+      ? getCategoryLabel(headerCategoryId, locale)
+      : currentSearchParams.get("q")?.trim() || "";
+  const headerServiceLabel =
+    explicitHeaderService || mobileSlidingService.current || nativeSearchServices[0] || (locale === "en" ? "electrician" : "electricista");
+  const headerNextServiceLabel = mobileSlidingService.next || headerServiceLabel;
+  const headerServiceShouldSlide = !explicitHeaderService && showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim() && nativeSearchServices.length > 1;
+  const desktopRotatingService = useRotatingWord(
+    nativeSearchServices,
+    effectiveCompact && !isSmallScreen && !searchFocused && !searchQuery.trim(),
+  );
+  const desktopSearchPlaceholder =
+    locale === "en"
+      ? `Search ${desktopRotatingService || nativeSearchServices[0] || "electrician"}`
+      : `Buscar ${desktopRotatingService || nativeSearchServices[0] || "electricista"}`;
+  const hasSearchService = searchQuery.trim().length > 0 || !!searchCategoryId;
+  const hasSearchLocation = navLocation.trim().length > 0 || !!navLocationSel || !!navCurrentCoords;
+
+  useEffect(() => {
+    queueMicrotask(() => setHydrated(true));
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(CURRENT_LOCATION_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { latitude?: number; longitude?: number } | null;
+      if (typeof parsed?.latitude !== "number" || typeof parsed?.longitude !== "number") return;
+      const coords = { latitude: parsed.latitude, longitude: parsed.longitude };
+      setCurrentLocationSuggestions(nearbyLocationSuggestions(coords));
+      void currentLocationSuggestionsFromCoords(coords).then((suggestions) => {
+        if (suggestions.length > 0) setCurrentLocationSuggestions(suggestions);
+      });
+    } catch {
+      window.localStorage.removeItem(CURRENT_LOCATION_STORAGE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const roots = [document.documentElement, document.body];
+    const updateHeaderHeight = () => {
+      const mobile = window.matchMedia("(max-width: 1023px)").matches;
+      root.style.setProperty("--ccr-native-header-height", mobile && showMobileNavbarSearch ? "124px" : "64px");
+      roots.forEach((item) => item.classList.toggle("ccr-mobile-navbar-search-visible", mobile && showMobileNavbarSearch));
+    };
+    updateHeaderHeight();
+    window.addEventListener("resize", updateHeaderHeight);
+    window.visualViewport?.addEventListener("resize", updateHeaderHeight);
+    return () => {
+      window.removeEventListener("resize", updateHeaderHeight);
+      window.visualViewport?.removeEventListener("resize", updateHeaderHeight);
+      root.style.removeProperty("--ccr-native-header-height");
+      roots.forEach((item) => item.classList.remove("ccr-mobile-navbar-search-visible"));
+    };
+  }, [showMobileNavbarSearch]);
 
   useEffect(() => {
     const roots = [document.documentElement, document.body];
@@ -693,14 +927,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
   // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
   // social-only detection). NO `redirect` param: the navbar only sits on PUBLIC
-  // pages and login must land on the user's DASHBOARD — a generic public redirect
+  // pages and login must land on the user's DASHBOARD - a generic public redirect
   // would OVERRIDE the role-based panel redirect (the "login lands on the main page"
   // bug). Meaningful deep-links (support tickets, gated pages) carry their OWN
   // ?redirect= via the proxy and are still honored by /login.
   const loginHref = "/login";
 
   // `isPro` = the account can OFFER services (Airbnb "host" capability). It only
-  // controls menu LABELS/grouping now — everyone uses the ONE unified panel.
+  // controls menu LABELS/grouping now - everyone uses the ONE unified panel.
   const isPro = canOffer(user);
   const isAdminUser = user?.user_metadata?.role === "admin" || (!!user && profileRole?.userId === user.id && profileRole.role === "admin");
   const { mode } = useMode(isPro);
@@ -711,6 +945,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   const professionalPanelHref = `${panelHref}?mode=offer`;
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
+  const profilePanelHref = `${panelHref}?mode=${isPro && mode === "offer" ? "offer" : "use"}&tab=profile`;
+  const accountDisplayName =
+    accountBusinessName || String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
+  const nativePanelHref = user ? primaryPanelHref : loginHref;
+  const nativeMessagesHref = "/mensajes";
 
   useEffect(() => {
     let cancelled = false;
@@ -733,12 +972,33 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     };
   }, [user]);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!user || !isPro) {
+      queueMicrotask(() => setAccountBusinessName(""));
+      return;
+    }
+
+    const loadBusinessName = async () => {
+      const { data } = await createClient()
+        .from("professionals")
+        .select("business_name")
+        .eq("profile_id", user.id)
+        .maybeSingle();
+      if (!cancelled) setAccountBusinessName(String(data?.business_name || "").trim());
+    };
+    void loadBusinessName();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPro, user]);
+
   // Warm the two most common destinations after the current page settles. This
   // keeps the initial render light while making the first panel/search transition
   // use Next's prefetched route payload instead of waiting after the click.
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      router.prefetch("/");
       router.prefetch("/buscar");
       if (user && !pathname.startsWith("/dashboard/profesional")) {
         router.prefetch(primaryPanelHref);
@@ -760,10 +1020,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     prefetchDashboardBootstrap(user.id);
   }, [nativeApp, primaryPanelHref, router, user]);
 
-  const visibleResourceLinks = useMemo(
-    () => RESOURCES_LINKS.filter((link) => link.key !== "proTips" || !user || isPro),
-    [isPro, user],
-  );
+  const visibleResourceLinks = useMemo(() => RESOURCES_LINKS, []);
   const mobileDrawerItemClass =
     "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[16px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
   const mobileDrawerTextClass = "min-w-0 flex-1 whitespace-normal break-words";
@@ -777,13 +1034,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     setMobileOpen(true);
   }, []);
 
+  useEffect(() => {
+    const handleExternalMenuOpen = () => openMobileMenu();
+    window.addEventListener("ccr:open-mobile-menu", handleExternalMenuOpen);
+    return () => window.removeEventListener("ccr:open-mobile-menu", handleExternalMenuOpen);
+  }, [openMobileMenu]);
+
   const nativeBottomNavClass = useCallback(
     (href: string) => {
       const baseHref = href.split("?")[0] ?? href;
       const isActive = nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
       return cn(
-        "flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-extrabold text-[#64748b] active:bg-[#eef9fd] active:text-[#009FD9]",
-        isActive && "bg-[#eef9fd] text-[#009FD9]",
+        "flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#526277] transition-colors active:bg-[#eef9fd] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]",
+        isActive && "bg-[#eef9fd] text-[#102746]",
       );
     },
     [nativePendingHref, panelHref, pathname],
@@ -809,7 +1072,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   }, [pathname]);
 
   const compactSuggestions = matchCategories(searchQuery, 8, locale);
+  const showNativeServiceSuggestions =
+    nativeSearchOpen && searchFocused && searchQuery.trim().length >= 2 && compactSuggestions.length > 0;
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
+  const nativeLocationSuggestions = useMemo(() => {
+    const typed = searchLocations(navLocation).filter((suggestion) => suggestion.type === "province" || suggestion.type === "canton");
+    if (typed.length > 0) return typed;
+    return currentLocationSuggestions?.length ? currentLocationSuggestions : provinceSuggestions();
+  }, [currentLocationSuggestions, navLocation]);
 
   // Track small screens so the compact search placeholder can shorten to fit.
   useEffect(() => {
@@ -827,32 +1097,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   }, [mobileOpen]);
 
   useEffect(() => {
-    const resetTransientNavigation = () => {
-      setMobileOpen(false);
-      setMobileLegalOpen(false);
-      setMobileHelpOpen(false);
-      setOpenMenu(null);
-      setNavLocOpen(false);
-      setSearchFocused(false);
-      setNativePendingHref(null);
-      if (nativePendingTimer.current) {
-        window.clearTimeout(nativePendingTimer.current);
-        nativePendingTimer.current = null;
-      }
-    };
-
-    window.addEventListener(APP_RESUME_EVENT, resetTransientNavigation);
-    return () => window.removeEventListener(APP_RESUME_EVENT, resetTransientNavigation);
-  }, []);
-
-  useEffect(() => {
     return () => {
       if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
     };
   }, []);
 
   async function handleSignOut() {
-    // Go STRAIGHT home — `signOutToHome` flags the in-flight sign-out so protected
+    // Go STRAIGHT home - `signOutToHome` flags the in-flight sign-out so protected
     // pages (dashboards, etc.) don't bounce the now-absent user to /login mid-logout.
     await signOutToHome(locale);
   }
@@ -877,43 +1128,64 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     return () => observer.disconnect();
   }, [compactEnabled]);
 
-  function openDropdown(id: string) {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = null;
-    setOpenMenu(id);
-  }
-  function closeDropdown() {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => {
+  useEffect(() => {
+    if (openMenu !== "categorias" && openMenu !== "explorar" && openMenu !== "recursos") return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (openMenu === "categorias" && servicesMenuRef.current?.contains(target)) return;
+      if (openMenu === "explorar" && exploreMenuRef.current?.contains(target)) return;
+      if (openMenu === "recursos" && resourcesMenuRef.current?.contains(target)) return;
       setOpenMenu(null);
-      closeTimer.current = null;
-    }, 220);
-  }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [openMenu]);
 
 
   // Build params from current state and navigate. Runs ONLY on Buscar/Enter.
-  function runCompactSearch() {
+  function runCompactSearch(
+    overrides: {
+      location?: LocationSuggestion | null;
+      coords?: { latitude: number; longitude: number };
+      locationLabel?: string;
+    } = {},
+  ) {
     const params = new URLSearchParams();
-    const svc = searchQuery.trim();
+    const svc = repairVisibleText(searchQuery).trim();
     const picked = compactSuggestions.find((c) => c.id === searchCategoryId);
-    if (searchCategoryId && picked && picked.label === searchQuery) {
+    if (searchCategoryId && picked && normalizeText(repairVisibleText(picked.label)) === normalizeText(svc)) {
       params.set("categoria", searchCategoryId);
     } else if (svc) {
       const inferred = resolveCategoryIntent(svc, locale);
       if (inferred) params.set("categoria", inferred.id);
       else params.set("q", svc);
     }
-    const loc = navLocationSel && navLocationSel.label === navLocation ? navLocationSel : resolveLocation(navLocation);
+    const currentLocationLabel = locale === "en" ? "Current location" : "Ubicación actual";
+    const activeCurrentCoords =
+      overrides.coords ??
+      (navCurrentCoords && normalizeText(navLocation) === normalizeText(currentLocationLabel) ? navCurrentCoords : null);
+    const loc = activeCurrentCoords
+      ? null
+      : "location" in overrides
+        ? overrides.location
+        : navLocationSel && navLocationSel.label === navLocation
+          ? navLocationSel
+          : resolveLocation(navLocation);
     if (loc) {
       if (loc.type === "province") params.set("provincia", loc.id);
       else params.set("canton", loc.id);
+    }
+    if (activeCurrentCoords) {
+      params.set("lat", activeCurrentCoords.latitude.toFixed(5));
+      params.set("lng", activeCurrentCoords.longitude.toFixed(5));
+      params.set("ubicacion", overrides.locationLabel ?? currentLocationLabel);
     }
     setSearchFocused(false);
     setNavLocOpen(false);
     trackMetaEvent("Search", {
       content_type: "professional_service",
       search_string: params.get("categoria") ? "category" : params.get("q") ? "text" : "general",
-      has_location: params.has("provincia") || params.has("canton"),
+      has_location: params.has("provincia") || params.has("canton") || params.has("lat") || params.has("lng"),
       source: "navbar",
     });
     router.push(`/buscar?${params.toString()}`);
@@ -924,22 +1196,125 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     runCompactSearch();
   }
 
-  // Selecting a suggestion FILLS the field — it does NOT search immediately.
+  function openNativeSearch() {
+    setNativeSearchOpen(true);
+    setSearchFocused(true);
+    window.setTimeout(() => nativeSearchInputRef.current?.focus(), 80);
+  }
+
+  function closeNativeSearch() {
+    setNativeSearchOpen(false);
+    setSearchFocused(false);
+    setNavLocOpen(false);
+  }
+
+  function searchCurrentLocation() {
+      const label = locale === "en" ? "Current location" : "Ubicación actual";
+    if (!navigator.geolocation) {
+      const fallback = resolveLocation("Costa Rica");
+      setNavLocation(fallback?.label ?? "Costa Rica");
+      setNavLocationSel(fallback);
+      setNavCurrentCoords(null);
+      setNavLocOpen(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const currentCoords = { latitude: coords.latitude, longitude: coords.longitude };
+        const nearby = nearbyLocationSuggestions(currentCoords);
+        setCurrentLocationSuggestions(nearby);
+        try {
+          window.localStorage.setItem(CURRENT_LOCATION_STORAGE_KEY, JSON.stringify(currentCoords));
+        } catch {
+          // Ignore storage failures; search still works for this session.
+        }
+        void currentLocationSuggestionsFromCoords(currentCoords).then((suggestions) => {
+          if (suggestions.length > 0) setCurrentLocationSuggestions(suggestions);
+        });
+        setNavLocation(label);
+        setNavLocationSel(null);
+        setNavCurrentCoords(currentCoords);
+        setNavLocOpen(false);
+        if (!nativeSearchOpen) {
+          window.setTimeout(() => runCompactSearch({ coords: currentCoords, locationLabel: label }), 0);
+          return;
+        }
+        if (nativeSearchOpen && hasSearchService) {
+          closeNativeSearch();
+          window.setTimeout(() => runCompactSearch({ coords: currentCoords, locationLabel: label }), 0);
+          return;
+        }
+        nativeSearchInputRef.current?.focus();
+      },
+      () => {
+        const fallback = resolveLocation("Costa Rica");
+        setNavLocation(fallback?.label ?? "Costa Rica");
+        setNavLocationSel(fallback);
+        setNavCurrentCoords(null);
+        setNavLocOpen(false);
+      },
+      { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 },
+    );
+  }
+
+  useEffect(() => {
+    const open = () => openNativeSearch();
+    window.addEventListener("ccr:open-native-search", open);
+    return () => window.removeEventListener("ccr:open-native-search", open);
+  }, []);
+
+  useEffect(() => {
+    if (!nativeSearchOpen) return;
+    const roots = [document.documentElement, document.body];
+    roots.forEach((root) => root.classList.add("ccr-native-search-overlay-open"));
+    const unlock = lockBodyScroll();
+    return () => {
+      unlock();
+      roots.forEach((root) => root.classList.remove("ccr-native-search-overlay-open"));
+    };
+  }, [nativeSearchOpen]);
+
+  // Selecting a suggestion FILLS the field - it does NOT search immediately.
   function selectCompactSuggestion(id: string) {
     const picked = compactSuggestions.find((c) => c.id === id);
     if (picked) {
-      setSearchQuery(picked.label);
+      setSearchQuery(repairVisibleText(picked.label));
       setSearchCategoryId(id);
     }
     setSearchActiveIdx(-1);
     setSearchFocused(false);
   }
 
+  function selectNativeCompactSuggestion(id: string) {
+    const picked = compactSuggestions.find((c) => c.id === id);
+    if (picked) {
+      setSearchQuery(repairVisibleText(picked.label));
+      setSearchCategoryId(id);
+    }
+    setSearchActiveIdx(-1);
+    setSearchFocused(false);
+    if (hasSearchLocation) {
+      closeNativeSearch();
+      window.setTimeout(() => runCompactSearch(), 0);
+      return;
+    }
+    window.setTimeout(() => {
+      nativeLocationInputRef.current?.focus();
+      setNavLocOpen(true);
+    }, 50);
+  }
+
   function selectNavLocation(s: LocationSuggestion) {
-    setNavLocation(s.label);
+    setNavLocation(repairVisibleText(s.label));
     setNavLocationSel(s);
+    setNavCurrentCoords(null);
     setNavLocOpen(false);
     setNavLocActive(-1);
+    if (nativeSearchOpen && hasSearchService) {
+      closeNativeSearch();
+      window.setTimeout(() => runCompactSearch({ location: s }), 0);
+    }
   }
 
   function handleCompactSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -954,7 +1329,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
         return;
       } else if (e.key === "Enter" && searchActiveIdx >= 0) {
         e.preventDefault();
-        selectCompactSuggestion(compactSuggestions[searchActiveIdx].id);
+        if (nativeSearchOpen) selectNativeCompactSuggestion(compactSuggestions[searchActiveIdx].id);
+        else selectCompactSuggestion(compactSuggestions[searchActiveIdx].id);
         return;
       } else if (e.key === "Escape") {
         setSearchFocused(false);
@@ -963,6 +1339,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     }
     if (e.key === "Enter") {
       e.preventDefault();
+      if (nativeSearchOpen && !navLocation.trim()) {
+        nativeLocationInputRef.current?.focus();
+        setNavLocOpen(true);
+        return;
+      }
+      if (nativeSearchOpen) closeNativeSearch();
       runCompactSearch();
     }
   }
@@ -988,6 +1370,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
     }
     if (e.key === "Enter") {
       e.preventDefault();
+      if (nativeSearchOpen) closeNativeSearch();
       runCompactSearch();
     }
   }
@@ -995,12 +1378,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
   return (
     <>
       <header
-        className="ccr-app-header fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80"
+        className={cn(
+          "ccr-app-header fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80",
+          drawerOnly && "hidden",
+        )}
       >
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="relative h-16">
+          <div className={cn(
+            "relative h-16 transition-[height] duration-200",
+            showMobileNavbarSearch && "h-[124px] lg:h-16",
+          )}>
             <div className={cn(
-              "absolute inset-0 lg:hidden",
+              "absolute left-0 right-0 top-0 h-16 lg:hidden",
               nativeHeaderShell
                 ? "grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-0"
                 : "flex items-center gap-2",
@@ -1009,25 +1398,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 type="button"
                 onClick={openMobileMenu}
                 className={cn(
-                  "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1a2744] transition-colors hover:bg-gray-50",
+                  "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50",
                   nativeHeaderShell && "justify-self-start",
                 )}
                 aria-label={t("openMenu")}
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5 stroke-[2.5]" />
               </button>
 
-              <Link
-                href="/"
-                aria-label="ContrataCR inicio"
-                onTouchStart={() => prepareNativeNavigation("/")}
-                onPointerDown={() => prepareNativeNavigation("/")}
-                className={cn(
-                  "shrink-0",
-                  nativeHeaderShell && "min-w-0 justify-self-center",
-                  centerMobileLogo && "absolute left-1/2 -translate-x-1/2",
-                )}
-              >
+              <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "min-w-0 justify-self-center")}>
                 {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
               </Link>
 
@@ -1041,37 +1420,35 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     <NotificationBell scope="all" />
                   </div>
                 ) : (
-                  <Link
-                    href={loginHref}
-                    aria-label={t("login")}
-                    className="grid h-10 w-10 justify-self-end place-items-center rounded-xl text-[#1A2744] transition-colors active:bg-[#eef9fd] active:text-[#009FD9]"
-                  >
-                    <UserRound className="h-5 w-5" />
-                  </Link>
+                  <span className="h-10 w-10 justify-self-end" aria-hidden />
                 )
               ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">
                 {user && <NotificationBell scope="all" />}
-                <Link
-                  href={user ? primaryPanelHref : loginHref}
-                  aria-label={user ? t("myPanel") : t("login")}
-                  className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-gray-50"
-                >
-                  <UserRound className="h-5 w-5" />
-                </Link>
+                {!user && <span className="h-10 w-10" aria-hidden />}
               </div>
               )}
             </div>
 
-            {/* ── Default row ── */}
-            <div className="relative hidden h-full items-center gap-4 lg:flex">
-              <Link
-                href="/"
-                aria-label="ContrataCR inicio"
-                onTouchStart={() => prepareNativeNavigation("/")}
-                onPointerDown={() => prepareNativeNavigation("/")}
-                className="shrink-0"
+            {/* -- Default row -- */}
+            {showMobileNavbarSearch && (
+              <button
+                type="button"
+                onClick={openNativeSearch}
+                className="absolute left-0 right-0 top-16 z-10 flex h-[56px] items-start px-4 text-left lg:hidden"
+                aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
               >
+                <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">
+                  <Search className="h-5 w-5 shrink-0 text-[#162543]" />
+                  <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
+                    {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                  </span>
+                </div>
+              </button>
+            )}
+
+            <div className="relative hidden h-16 items-center gap-4 lg:flex">
+              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
                 {mobileInline ? (
                   <>
                     {/* Compact mark on mobile ONLY when the inline search is present (it needs the
@@ -1080,35 +1457,31 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     <span className="hidden lg:inline-flex"><ContrataCRLogo size="lg" /></span>
                   </>
                 ) : (
-                  /* Mode switch left the navbar (sprint 518) → there's room for the FULL logo +
+                  /* Mode switch left the navbar (sprint 518) -> there's room for the FULL logo +
                      "ContrataCR" wordmark on mobile again. */
                   <ContrataCRLogo size="lg" />
                 )}
               </Link>
 
-              {/* MOBILE inline slot (search + filters) — only when provided, only <lg. */}
+              {/* MOBILE inline slot (search + filters) - only when provided, only <lg. */}
               {mobileInline && (
                 <div className="lg:hidden flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
               )}
 
-              <nav className="hidden lg:flex items-center gap-0.5">
-                {/* Categorías — mega-menu with autocomplete + curated columns */}
+              <nav className={cn("relative z-[70] hidden shrink-0 lg:flex items-center gap-0.5", marketplaceDesktop && "gap-0")}>
+              {/* Categorias - mega-menu with autocomplete + curated columns */}
                 <div
+                  ref={servicesMenuRef}
                   className="relative"
-                  onMouseEnter={() => openDropdown("categorias")}
-                  onMouseLeave={closeDropdown}
                 >
                   <button
                     type="button"
                     aria-expanded={openMenu === "categorias"}
-                    onPointerEnter={() => openDropdown("categorias")}
-                    onFocus={() => openDropdown("categorias")}
-                    onClick={() => openDropdown("categorias")}
+                    onClick={() => setOpenMenu(openMenu === "categorias" ? null : "categorias")}
                     className={cn(
-                      "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                      openMenu === "categorias"
-                        ? "text-[#1a2744] bg-gray-50 after:opacity-0"
-                        : "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
+                      "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors after:absolute after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
+                      marketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4",
+                      "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
                     )}
                   >
                     {t("categories")}
@@ -1116,91 +1489,256 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   </button>
 
                   {openMenu === "categorias" && (
-                    <>
-                      <div className="absolute left-0 top-full z-40 h-3 w-[840px] max-w-[calc(100vw-2rem)]" aria-hidden />
-                      <div
-                        data-testid="services-mega-menu"
-                        className="absolute top-full left-0 z-50 mt-1.5 flex max-h-[calc(100vh-5rem)] w-[840px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]"
-                        style={{ animation: "tab-cards-in 0.15s ease both" }}
-                      >
-                        {/* ONE container: typing in the search FILTERS the categories in place. */}
-                        <CategoriesMegaPanel onNavigate={() => setOpenMenu(null)} />
-                      </div>
-                    </>
+                    <div
+                      data-testid="services-mega-menu"
+                      className="absolute top-full left-0 z-50 mt-1.5 flex max-h-[calc(100vh-5rem)] w-[840px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]"
+                      style={{ animation: "tab-cards-in 0.15s ease both" }}
+                    >
+                      {/* ONE container: typing in the search FILTERS the categories in place. */}
+                      <CategoriesMegaPanel onNavigate={() => setOpenMenu(null)} />
+                    </div>
                   )}
                 </div>
 
-                {/* Recursos — simple dropdown */}
-                <div
-                  className="relative"
-                  onMouseEnter={() => openDropdown("recursos")}
-                  onMouseLeave={closeDropdown}
+                <Link
+                  href="/buscar"
+                  className={cn(
+                    "relative flex items-center rounded-xl py-2 text-sm font-medium text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]",
+                    marketplaceDesktop ? "px-2.5" : "px-4"
+                  )}
                 >
+                  {locale === "en" ? "Find professionals" : "Buscar profesionales"}
+                </Link>
+
+                <div ref={exploreMenuRef} className="relative">
                   <button
                     type="button"
-                    aria-expanded={openMenu === "recursos"}
-                    onPointerEnter={() => openDropdown("recursos")}
-                    onFocus={() => openDropdown("recursos")}
-                    onClick={() => openDropdown("recursos")}
+                    aria-expanded={openMenu === "explorar"}
+                    onClick={() => setOpenMenu(openMenu === "explorar" ? null : "explorar")}
                     className={cn(
-                      "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                      openMenu === "recursos" ? "text-[#1a2744] bg-gray-50 after:opacity-0" : "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
+                      "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors hover:bg-gray-50 hover:text-[#009FD9]",
+                      marketplaceDesktop ? "px-2.5" : "px-4",
+                      openMenu === "explorar" ? "text-[#009FD9]" : "text-[#1A2744]",
                     )}
                   >
-                    {t("resources")}
-                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "recursos" && "rotate-180")} />
+                    {locale === "en" ? "Explore" : "Explorar"}
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "explorar" && "rotate-180")} />
                   </button>
-                  {openMenu === "recursos" && (
-                    <>
-                      <div className="absolute left-0 top-full z-40 h-3 min-w-[280px]" aria-hidden />
-                      <div
-                        className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-3 z-50 min-w-[280px]"
-                        style={{ animation: "tab-cards-in 0.15s ease both" }}
-                      >
-                        <ul className="space-y-1">
-                          {visibleResourceLinks.map((link) => (
-                            <li key={link.href}>
-                              {link.key === "support" ? (
-                                <SupportLink
-                                  onNavigate={() => setOpenMenu(null)}
-                                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
-                                >
-                                  <ResourceIcon name={link.key} />
-                                  {t(`resourceLinks.${link.key}`)}
-                                </SupportLink>
-                              ) : (
-                                <Link
-                                  href={link.href}
-                                  onClick={() => setOpenMenu(null)}
-                                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
-                                >
-                                  <ResourceIcon name={link.key} />
-                                  {t(`resourceLinks.${link.key}`)}
-                                </Link>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </>
+                  {openMenu === "explorar" && (
+                    <div className="absolute left-0 top-full z-50 mt-1.5 min-w-[220px] overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]">
+                      <Link href="/empleos" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                        <Briefcase className="h-5 w-5 shrink-0" />
+                        {locale === "en" ? "Jobs" : "Empleos"}
+                      </Link>
+                      <Link href="/ofertas" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                        <OfferTagPercentIcon className="h-5 w-5" />
+                        {locale === "en" ? "Deals" : "Ofertas"}
+                      </Link>
+                    </div>
                   )}
                 </div>
+
               </nav>
 
-              {/* Spacer — on mobile the inline slot (when present) is the flex filler instead,
-                  so hide this one to avoid two competing flex-1 (which would halve the search). */}
-              <div className={cn("flex-1", mobileInline && "hidden lg:block")} />
+              {marketplaceDesktop ? (
+                <div className="pointer-events-auto relative z-[75] mr-3 hidden h-11 min-w-[280px] flex-1 lg:block xl:mr-5">
+                  <div id="ccr-marketplace-navbar-slot" className="h-full w-full" />
+                </div>
+              ) : (
+                <>
+                  {/* Desktop compact search lives in the navbar flow, so it never covers links/actions. */}
+                  <div
+                    className="hidden min-w-0 flex-1 items-center transition-opacity duration-200 lg:flex"
+                    style={{ opacity: showDesktopCompactSearch ? 1 : 0, pointerEvents: showDesktopCompactSearch ? "auto" : "none" }}
+                  >
+                    <form onSubmit={handleCompactSearch} className="flex min-w-0 flex-1">
+                      <div className="relative w-full">
+                        <div className="flex w-full items-center h-11 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-4 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
+                          <div ref={compactSvcRef} className="flex h-full min-w-0 flex-[3_1_0%] items-center gap-2 sm:gap-3">
+                            <Search className="hidden h-5 w-5 shrink-0 text-gray-300 sm:block" />
+                            <input
+                              type="text"
+                              value={searchQuery}
+                              onChange={(e) => { setSearchQuery(repairVisibleText(e.target.value)); setSearchCategoryId(null); setSearchActiveIdx(-1); }}
+                              onKeyDown={handleCompactSearchKeyDown}
+                              onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
+                              onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
+                              placeholder={compactPlaceholder || (isSmallScreen ? t("servicePlaceholderShort") : t("servicePlaceholder"))}
+                              className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                              role="combobox"
+                              aria-label={locale === "en" ? "Service" : "Servicio"}
+                              aria-expanded={searchFocused && searchQuery.trim().length > 0}
+                              aria-autocomplete="list"
+                              aria-controls="navbar-service-suggestions"
+                            />
+                          </div>
+                          <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
+                          <div ref={compactLocRef} className="hidden h-full min-w-0 flex-[2_1_0%] items-center gap-2 sm:flex">
+                            <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
+                            <input
+                              type="text"
+                              value={navLocation}
+                              onChange={(e) => { setNavLocation(repairVisibleText(e.target.value)); setNavLocationSel(null); setNavCurrentCoords(null); setNavLocOpen(true); setNavLocActive(-1); }}
+                              onKeyDown={handleNavLocKeyDown}
+                              onFocus={() => {
+                                if (navLocBlurTimer.current) clearTimeout(navLocBlurTimer.current);
+                                if (navLocation.trim() && navLocSug.length > 0) setNavLocOpen(true);
+                              }}
+                              onBlur={() => { navLocBlurTimer.current = setTimeout(() => setNavLocOpen(false), 150); }}
+                              placeholder={t("location")}
+                              className="flex-1 w-full text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                              role="combobox"
+                              aria-label={locale === "en" ? "Location" : "Ubicación"}
+                              aria-expanded={navLocOpen}
+                              aria-autocomplete="list"
+                              aria-controls="navbar-location-suggestions"
+                            />
+                            <button
+                              type="button"
+                              onClick={searchCurrentLocation}
+                              aria-label={locale === "en" ? "Search near me" : "Buscar cerca de mí"}
+                              title={locale === "en" ? "Search near me" : "Buscar cerca de mí"}
+                              className="mr-1 grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]"
+                            >
+                              <LocateFixed className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <button
+                            type="submit"
+                            aria-label={t("search")}
+                            className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-6 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
+                          >
+                            <Search className="h-4 w-4 sm:hidden" />
+                            <span className="hidden sm:inline">{t("search")}</span>
+                          </button>
+                        </div>
+
+                        {/* Service autocomplete - selecting FILLS the field; search
+                            runs only on Buscar/Enter. */}
+                        <AnchoredDropdown anchorRef={compactSvcRef} open={searchFocused && searchQuery.trim().length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
+                          <div id="navbar-service-suggestions" role="listbox" className="py-1.5">
+                            {compactSuggestions.length === 0 ? (
+                              <button
+                                type="button"
+                                onMouseDown={(e) => { e.preventDefault(); runCompactSearch(); }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
+                              >
+                                {t("searchAll", { q: searchQuery.trim() })}
+                              </button>
+                            ) : (
+                              compactSuggestions.map((s, i) => (
+                                <button
+                                  key={s.id}
+                                  type="button"
+                                  onMouseDown={(e) => { e.preventDefault(); selectCompactSuggestion(s.id); }}
+                                  role="option"
+                                  aria-selected={i === searchActiveIdx}
+                                  className={cn(
+                                    "w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors",
+                                    i === searchActiveIdx ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
+                                  )}
+                                >
+                                  <span className="text-sm font-medium text-[#1a2744]">{getCategoryLabel(s.id, locale)}</span>
+                                  <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </AnchoredDropdown>
+
+                        {/* Location autocomplete (desktop) - selecting FILLS the field. */}
+                        <AnchoredDropdown anchorRef={compactLocRef} open={navLocOpen && navLocation.trim().length > 0 && navLocSug.length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
+                          <div id="navbar-location-suggestions" role="listbox" className="py-1.5">
+                            {navLocSug.map((s, i) => (
+                              <button
+                                key={`${s.type}-${s.id}`}
+                                type="button"
+                                onMouseDown={(e) => { e.preventDefault(); selectNavLocation(s); }}
+                                role="option"
+                                aria-selected={i === navLocActive}
+                                className={cn(
+                                  "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                                  i === navLocActive ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
+                                )}
+                              >
+                                <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
+                                <span className="flex-1 min-w-0">
+                                  <span className="block text-sm font-medium text-[#1a2744] truncate">{s.label}</span>
+                                  {s.type === "canton" && <span className="block text-[11px] text-gray-400 truncate">{s.sublabel}</span>}
+                                </span>
+                                <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">{s.type === "province" ? t("province") : t("canton")}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </AnchoredDropdown>
+                      </div>
+                    </form>
+
+                  </div>
+                </>
+              )}
 
               {/* Right actions */}
-              <div className="relative z-[60] hidden w-[340px] justify-end lg:flex items-center gap-2 shrink-0">
+              <div className="relative z-[60] ml-auto hidden min-w-0 shrink-0 items-center justify-end gap-2.5 lg:flex">
                 {authLoading && !user ? (
                   <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
                     <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
                     <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
                   </div>
                 ) : user ? (
-                  <div className="flex w-[220px] items-center justify-end gap-1">
-                    {!isPro && (
+                  <div className="flex w-auto min-w-0 items-center justify-end gap-1">                 {/* Sobre ContrataCR - simple dropdown */}
+                    <div
+                      ref={resourcesMenuRef}
+                      className="relative"
+                    >
+                      <button
+                        type="button"
+                        aria-expanded={openMenu === "recursos"}
+                        onClick={() => setOpenMenu(openMenu === "recursos" ? null : "recursos")}
+                        className={cn(
+                          "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors after:absolute after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
+                          marketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4",
+                          "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
+                        )}
+                      >
+                        {t("resources")}
+                        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "recursos" && "rotate-180")} />
+                      </button>
+                      {openMenu === "recursos" && (
+                        <div
+                          className="absolute top-full right-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-3 z-50 min-w-[300px]"
+                          style={{ animation: "tab-cards-in 0.15s ease both" }}
+                        >
+                          <ul className="space-y-1">
+                            {visibleResourceLinks.map((link) => (
+                              <li key={link.href}>
+                                {link.key === "support" ? (
+                                  <SupportLink
+                                    onNavigate={() => setOpenMenu(null)}
+                                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
+                                  >
+                                    <ResourceIcon name={link.key} />
+                                    {t(`resourceLinks.${link.key}`)}
+                                  </SupportLink>
+                                ) : (
+                                  <Link
+                                    href={link.href}
+                                    onClick={() => setOpenMenu(null)}
+                                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
+                                  >
+                                    <ResourceIcon name={link.key} />
+                                    {t(`resourceLinks.${link.key}`)}
+                                  </Link>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-1" aria-hidden="true" />
+
+                    {!marketplaceDesktop && !isPro && (
                       <Link
                         href="/registro/profesional"
                         className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl text-[#009FD9] hover:bg-[#EBF5FB] transition-colors whitespace-nowrap"
@@ -1215,16 +1753,25 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                       </HeaderIconLink>
                     )}
                     <NotificationBell scope="all" />
-                    <PanelIconLink href={primaryPanelHref} label={t("myPanel")} />
+                    <AccountMenu
+                      isPro={isPro}
+                      displayName={accountDisplayName}
+                      professionalPanelHref={professionalPanelHref}
+                      clientPanelHref={clientPanelHref}
+                      profileHref={profilePanelHref}
+                      onSignOut={() => void handleSignOut()}
+                    />
                   </div>
                 ) : (
-                  <div className="flex w-[250px] items-center justify-end gap-1">
-                    <Link
-                      href="/registro/profesional"
-                      className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
-                    >
-                      {t("registerPro")}
-                    </Link>
+                  <div className={cn("flex items-center justify-end gap-1", marketplaceDesktop ? "w-auto" : "w-[250px]")}>
+                    {!marketplaceDesktop && (
+                      <Link
+                        href="/registro/profesional"
+                        className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
+                      >
+                        {t("registerPro")}
+                      </Link>
+                    )}
                     <Link
                       href={loginHref}
                       className="text-sm font-medium px-3 py-2 rounded-xl text-[#1A2744] hover:bg-gray-50 transition-colors"
@@ -1233,139 +1780,196 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                     </Link>
                   </div>
                 )}
-                {/* Discreet, quiet globe + code dropdown — visually subordinate to the
+                {/* Discreet, quiet globe + code dropdown - visually subordinate to the
                     prominent MODE segmented control (never a competing toggle). */}
                 <LanguageMenu />
               </div>
 
-              {/* Mobile toggle — opens the left drawer. */}
+              {/* Mobile toggle - opens the left drawer. */}
               <button
                 type="button"
                 onClick={openMobileMenu}
-                className="lg:hidden ml-auto grid h-10 w-10 place-items-center rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
+                className="lg:hidden ml-auto grid h-10 w-10 place-items-center rounded-xl text-[#162543] hover:bg-gray-50 transition-colors"
                 aria-label={t("openMenu")}
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5 stroke-[2.5]" />
               </button>
             </div>
 
-            {/* ── Scroll search overlay — inserts search without moving the base navbar. ── */}
-            <div
-              className="absolute inset-y-0 left-[320px] right-[390px] hidden items-center transition-opacity duration-200 lg:flex xl:left-[340px]"
-              style={{ opacity: effectiveCompact ? 1 : 0, pointerEvents: effectiveCompact ? "auto" : "none" }}
-            >
-              <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
-                <div className="relative w-full max-w-3xl">
-                  <div className="flex w-full items-center h-11 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-4 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
-                    <div ref={compactSvcRef} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
-                      <Search className="hidden h-5 w-5 shrink-0 text-gray-300 sm:block" />
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setSearchCategoryId(null); setSearchActiveIdx(-1); }}
-                        onKeyDown={handleCompactSearchKeyDown}
-                        onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
-                        onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
-                        placeholder={compactPlaceholder || (isSmallScreen ? t("servicePlaceholderShort") : t("servicePlaceholder"))}
-                        className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
-                        role="combobox"
-                        aria-expanded={searchFocused && searchQuery.trim().length > 0}
-                        aria-autocomplete="list"
-                        aria-controls="navbar-service-suggestions"
-                      />
-                    </div>
-                    <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
-                    <div ref={compactLocRef} className="hidden sm:flex items-center gap-2 min-w-[150px] shrink-0 h-full">
-                      <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
-                      <input
-                        type="text"
-                        value={navLocation}
-                        onChange={(e) => { setNavLocation(e.target.value); setNavLocationSel(null); setNavLocOpen(true); setNavLocActive(-1); }}
-                        onKeyDown={handleNavLocKeyDown}
-                        onFocus={() => { if (navLocBlurTimer.current) clearTimeout(navLocBlurTimer.current); if (navLocSug.length > 0) setNavLocOpen(true); }}
-                        onBlur={() => { navLocBlurTimer.current = setTimeout(() => setNavLocOpen(false), 150); }}
-                        placeholder={t("location")}
-                        className="flex-1 w-full text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
-                        role="combobox"
-                        aria-expanded={navLocOpen}
-                        aria-autocomplete="list"
-                        aria-controls="navbar-location-suggestions"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      aria-label={t("search")}
-                      className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-6 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
-                    >
-                      <Search className="h-4 w-4 sm:hidden" />
-                      <span className="hidden sm:inline">{t("search")}</span>
-                    </button>
-                  </div>
 
-                  {/* Service autocomplete — selecting FILLS the field; search
-                      runs only on Buscar/Enter. */}
-                  <AnchoredDropdown anchorRef={compactSvcRef} open={searchFocused && searchQuery.trim().length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
-                    <div id="navbar-service-suggestions" role="listbox" className="py-1.5">
-                      {compactSuggestions.length === 0 ? (
-                        <button
-                          type="button"
-                          onMouseDown={(e) => { e.preventDefault(); runCompactSearch(); }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
-                        >
-                          {t("searchAll", { q: searchQuery.trim() })}
-                        </button>
-                      ) : (
-                        compactSuggestions.map((s, i) => (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onMouseDown={(e) => { e.preventDefault(); selectCompactSuggestion(s.id); }}
-                            className={cn(
-                              "w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors",
-                              i === searchActiveIdx ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
-                            )}
-                          >
-                            <span className="text-sm font-medium text-[#1a2744]">{getCategoryLabel(s.id, locale)}</span>
-                            <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </AnchoredDropdown>
-
-                  {/* Location autocomplete (desktop) — selecting FILLS the field. */}
-                  <AnchoredDropdown anchorRef={compactLocRef} open={navLocOpen && navLocSug.length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
-                    <div id="navbar-location-suggestions" role="listbox" className="py-1.5">
-                      {navLocSug.map((s, i) => (
-                        <button
-                          key={`${s.type}-${s.id}`}
-                          type="button"
-                          onMouseDown={(e) => { e.preventDefault(); selectNavLocation(s); }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
-                            i === navLocActive ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
-                          )}
-                        >
-                          <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-                          <span className="flex-1 min-w-0">
-                            <span className="block text-sm font-medium text-[#1a2744] truncate">{s.label}</span>
-                            {s.type === "canton" && <span className="block text-[11px] text-gray-400 truncate">{s.sublabel}</span>}
-                          </span>
-                          <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">{s.type === "province" ? t("province") : t("canton")}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </AnchoredDropdown>
-                </div>
-              </form>
-
-            </div>
 
           </div>
         </div>
       </header>
 
-      {/* Mobile menu — slide-in LEFT drawer + transparent outside click layer (OUTSIDE <header>: the
+      {nativeSearchOpen && (
+        <div
+          className="fixed left-0 right-0 top-0 z-[80] overflow-hidden bg-white px-4 pb-0 pt-[calc(env(safe-area-inset-top)+1rem)] lg:hidden"
+          style={{
+            bottom: nativeBottomNavVisible ? "var(--ccr-native-bottom-nav-total)" : "0px",
+          }}
+        >
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              closeNativeSearch();
+              runCompactSearch();
+            }}
+            className="mx-auto flex h-full max-w-[560px] flex-col"
+          >
+            <div className="space-y-3">
+              <div className="flex h-13 items-center rounded-xl border border-[#d8e4ec] bg-white px-3 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.7)]">
+                <button
+                  type="button"
+                  onClick={closeNativeSearch}
+                  aria-label={locale === "en" ? "Back" : "Volver"}
+                  className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]"
+                >
+                  <ChevronRight className="h-6 w-6 rotate-180" />
+                </button>
+                <input
+                  ref={nativeSearchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(event) => {
+                    setSearchQuery(repairVisibleText(event.target.value));
+                    setSearchCategoryId(null);
+                    setSearchActiveIdx(-1);
+                    setSearchFocused(true);
+                  }}
+                  onFocus={() => setSearchFocused(true)}
+                  onKeyDown={handleCompactSearchKeyDown}
+                  placeholder={locale === "en" ? "Service" : "Servicio"}
+                  className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#1A2744] placeholder:text-[#a5afbd] focus:outline-none"
+                  aria-label={locale === "en" ? "Service" : "Servicio"}
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-controls="native-service-suggestions"
+                  aria-expanded={showNativeServiceSuggestions}
+                />
+              </div>
+              <div className="flex h-13 items-center rounded-xl border border-[#d8e4ec] bg-white px-3 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.7)]">
+                <MapPin className="ml-2 h-6 w-6 shrink-0 text-[#1A2744]" />
+                <input
+                  ref={nativeLocationInputRef}
+                  type="text"
+                  value={navLocation}
+                  onChange={(event) => {
+                    setNavLocation(repairVisibleText(event.target.value));
+                    setNavLocationSel(null);
+                    setNavCurrentCoords(null);
+                    setNavLocActive(-1);
+                    setNavLocOpen(true);
+                    setSearchFocused(false);
+                  }}
+                  onFocus={() => {
+                    setNavLocOpen(true);
+                    setSearchFocused(false);
+                  }}
+                  onKeyDown={handleNavLocKeyDown}
+                          placeholder={locale === "en" ? "Neighborhood, city or province" : "Barrio, cantón o provincia"}
+                  className="min-w-0 flex-1 bg-transparent px-3 text-[17px] font-semibold text-[#1A2744] placeholder:text-[#a5afbd] focus:outline-none"
+                          aria-label={locale === "en" ? "Location" : "Ubicación"}
+                          role="combobox"
+                          aria-autocomplete="list"
+                          aria-controls="native-location-suggestions"
+                          aria-expanded={!showNativeServiceSuggestions}
+                />
+                {navLocation && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNavLocation("");
+                      setNavLocationSel(null);
+                      setNavCurrentCoords(null);
+                      nativeLocationInputRef.current?.focus();
+                    }}
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef2f6] text-[#8a97a8]"
+                          aria-label={locale === "en" ? "Clear location" : "Limpiar ubicación"}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+              {showNativeServiceSuggestions ? (
+                <div id="native-service-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested services" : "Servicios sugeridos"}>
+                  <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
+                    {locale === "en" ? "Suggested services" : "Servicios sugeridos"}
+                  </p>
+                  {compactSuggestions.map((suggestion, index) => (
+                    <button
+                      key={suggestion.id}
+                      type="button"
+                      role="option"
+                      aria-selected={index === searchActiveIdx}
+                      onClick={() => selectNativeCompactSuggestion(suggestion.id)}
+                      className={cn(
+                        "flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left active:bg-[#eef9fd]",
+                        index === searchActiveIdx && "bg-[#eef9fd]",
+                      )}
+                    >
+                      <Search className="h-5 w-5 shrink-0 text-[#009FD9]" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[16px] font-bold text-[#1A2744]">
+                          {getCategoryLabel(suggestion.id, locale)}
+                        </span>
+                        <span className="block truncate text-[12px] font-semibold text-[#6b7280]">
+                          {getCategoryGroupLabel(suggestion.groupId, locale)}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+              <div id="native-location-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested locations" : "Ubicaciones sugeridas"}>
+                <button
+                  type="button"
+                  onClick={searchCurrentLocation}
+                  className="flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left text-[16px] font-bold text-[#009FD9] active:bg-[#eef9fd]"
+                >
+                  <Navigation className="h-6 w-6" />
+                      <span>{locale === "en" ? "Search near me" : "Buscar cerca de mí"}</span>
+                </button>
+                {nativeLocationSuggestions.slice(0, 7).map((suggestion) => (
+                  <button
+                    key={`${suggestion.type}-${suggestion.id}-${suggestion.label}`}
+                    type="button"
+                    role="option"
+                    aria-selected={suggestion.id === navLocationSel?.id}
+                    onClick={() => {
+                      setNavLocation(repairVisibleText(suggestion.label));
+                      setNavLocationSel(suggestion);
+                      setNavCurrentCoords(null);
+                      setNavLocOpen(false);
+                      setNavLocActive(-1);
+                      if (hasSearchService) {
+                        closeNativeSearch();
+                        window.setTimeout(() => runCompactSearch({ location: suggestion }), 0);
+                        return;
+                      }
+                      nativeSearchInputRef.current?.focus();
+                      setSearchFocused(true);
+                    }}
+                    className="flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left text-[16px] font-bold text-[#1A2744] active:bg-[#f4f7fa]"
+                  >
+                    <MapPin className="h-6 w-6 text-[#1A2744]" />
+                    <span>
+                      {suggestion.label}
+                      {suggestion.type === "canton" && <span className="block text-[12px] font-semibold text-[#6b7280]">{suggestion.sublabel}</span>}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              )}
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Mobile menu - slide-in LEFT drawer + transparent outside click layer (OUTSIDE <header>: the
           header's backdrop-filter would otherwise become the containing block
           for these `fixed` elements, breaking full-viewport positioning). */}
         <div
@@ -1392,11 +1996,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
             mobileOpen ? "visible translate-x-0 pointer-events-auto" : "invisible -translate-x-full pointer-events-none"
           )}
         >
-          <div className="flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
+          <div className="ccr-mobile-drawer-scroll flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
             <nav className="flex flex-col gap-1">
               {user ? (
                 <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  <DrawerIcon><LayoutDashboard /></DrawerIcon>
+                  <DrawerIcon><UserRound /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                 </Link>
               ) : !user ? (
@@ -1408,6 +2012,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
               <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 <DrawerIcon><Search /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
+              </Link>
+              <Link href="/empleos" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                <DrawerIcon><Briefcase /></DrawerIcon>
+                <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
+              </Link>
+              <Link href="/ofertas" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
+                <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
               </Link>
               {user && isAdminUser && (
                 <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
@@ -1501,11 +2113,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                   <div className="mt-1 grid gap-1">
                     <Link href="/terminos" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f4f7fa]">
                       <FileText className="h-4 w-4 text-[#6b7a90]" />
-                      {locale === "en" ? "Terms and conditions" : "Términos y condiciones"}
+                    {locale === "en" ? "Terms and conditions" : "Términos y condiciones"}
                     </Link>
                     <Link href="/privacidad" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f4f7fa]">
                       <ShieldCheck className="h-4 w-4 text-[#6b7a90]" />
-                      {locale === "en" ? "Privacy policy" : "Política de privacidad"}
+                    {locale === "en" ? "Privacy policy" : "Política de privacidad"}
                     </Link>
                   </div>
                 )}
@@ -1523,7 +2135,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#eef2f6] px-4 py-3.5 text-base font-extrabold text-[#162543] transition-colors hover:bg-[#e2e8f0]"
               >
                 <LogOut className="h-5 w-5" />
-                {t("signOut")}
+                {locale === "en" ? "Sign out" : "Cerrar sesión"}
               </button>
             )}
           </div>
@@ -1532,20 +2144,20 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false }: { mo
           <nav
             ref={nativeBottomNavRef}
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
-            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)]"
+            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-1.5 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] min-[360px]:px-2"
           >
-            <div className="mx-auto grid max-w-[390px] grid-cols-4 gap-1">
-              <Link href={primaryPanelHref} onPointerDown={() => prepareNativeNavigation(primaryPanelHref)} className={nativeBottomNavClass(primaryPanelHref)}>
-                <LayoutDashboard className="h-5 w-5" />
-                <span>Panel</span>
+            <div className="mx-auto grid w-full max-w-[430px] grid-cols-[repeat(3,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
+              <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
+                <UserRound className="h-5 w-5" />
+                <span className="max-w-full truncate">Panel</span>
               </Link>
               <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
                 <Search className="h-5 w-5" />
-                <span>{locale === "en" ? "Search" : "Buscar"}</span>
+                <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
-              <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} className={nativeBottomNavClass("/mensajes")}>
+              <Link href={nativeMessagesHref} onPointerDown={() => prepareNativeNavigation(nativeMessagesHref)} className={nativeBottomNavClass(nativeMessagesHref)}>
                 <MessageSquareText className="h-5 w-5" />
-                <span>{locale === "en" ? "Messages" : "Mensajes"}</span>
+                <span className="max-w-full truncate">{locale === "en" ? "Messages" : "Mensajes"}</span>
               </Link>
             </div>
           </nav>

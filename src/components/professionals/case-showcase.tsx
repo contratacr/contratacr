@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { Images, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { cldThumb, cldLarge } from "@/lib/cloudinary";
-import { CaseLikeButton } from "@/components/professionals/case-like-button";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { cn } from "@/lib/utils";
 
@@ -17,28 +16,23 @@ export type ShowcaseCase = {
   recipient?: string;
   date?: string;
   photos: string[];
-  likes?: number;
-  likeable?: boolean;
 };
 
 // Client-facing "Casos de éxito" showcase (the public profile). A profession filter
 // ("Todos" + per-profession counts) over one-per-row vertical case cards: cover photo + N-fotos
-// badge + profession tag + title + short description + recipient/date + "Me gusta".
+// badge + profession tag + title + short description + recipient/date.
 // Tapping a card opens a spacious CASE-DETAIL modal (sprint 527): the full info (service ·
 // recipient · date · description) beside a LARGER, browsable photo viewer — an overlay in
 // the same page, not a separate route.
 export function CaseShowcase({
-  professionalId,
   cases,
   professions,
-  isOwn = false,
+  initialCaseId,
 }: {
-  professionalId: string;
   cases: ShowcaseCase[];
   /** The pro's professions, in display order — used to order + label the filter chips. */
   professions: string[];
-  /** Own public profile preview: the pro can view cases, but cannot like them. */
-  isOwn?: boolean;
+  initialCaseId?: string | null;
 }) {
   const locale = useLocale();
   const t = useTranslations("profile");
@@ -66,6 +60,15 @@ export function CaseShowcase({
   const countFor = (p: string) => cases.filter((c) => c.profession === p).length;
   const selectedActive = distinctProfs.includes(active) ? active : distinctProfs[0] ?? "";
   const shown = cases.filter((c) => c.profession === selectedActive);
+
+  useEffect(() => {
+    if (!initialCaseId || detail) return;
+    const target = cases.find((item) => item.id === initialCaseId);
+    if (!target) return;
+    setActive(target.profession);
+    setDetail(target);
+    setPi(0);
+  }, [cases, detail, initialCaseId]);
 
   // ── Detail modal nav (Esc / ← / →) ──
   function openCase(c: ShowcaseCase) { setDetail(c); setPi(0); }
@@ -125,10 +128,10 @@ export function CaseShowcase({
                     {c.photos.slice(0, 3).map((url, idx) => (
                       <div
                         key={`${c.id}-${url}`}
-                        className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-[#f3f4f6] shadow-sm sm:h-16 sm:w-16"
+                        className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-white p-1 shadow-sm sm:h-16 sm:w-16"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(url, 220)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+                        <img src={cldThumb(url, 220)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-contain" />
                         {idx === 2 && c.photos.length > 3 && (
                           <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - 3}</span>
                         )}
@@ -137,23 +140,11 @@ export function CaseShowcase({
                   </div>
                 )}
                 </div>
-                {(c.photos.length > 1 || c.likeable) && (
+                {c.photos.length > 1 && (
                   <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#f3f4f6] pt-3">
-                    {c.photos.length > 1 ? (
-                      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
-                        <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
-                      </span>
-                    ) : <span />}
-                    {c.likeable && !isOwn && (
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <CaseLikeButton
-                          professionalId={professionalId}
-                          caseId={c.id}
-                          label={t("likeLabel")}
-                          className="grid h-8 w-8 place-items-center rounded-full bg-[#f9fafb] text-[#6b7280] transition-colors hover:bg-white hover:text-[#e11d48] hover:shadow-sm"
-                        />
-                      </div>
-                    )}
+                    <span className="inline-flex w-fit items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
+                      <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
+                    </span>
                   </div>
                 )}
               </div>
@@ -227,10 +218,10 @@ export function CaseShowcase({
                         key={idx}
                         onClick={() => setPi(idx)}
                         aria-label={tg("workAlt", { n: idx + 1 })}
-                        className={cn("h-16 overflow-hidden rounded-xl bg-[#f3f4f6] transition-all", idx === pi ? "opacity-100 ring-2 ring-[#009FD9] ring-offset-2" : "opacity-55 hover:opacity-100")}
+                        className={cn("h-16 overflow-hidden rounded-xl bg-white p-1 transition-all", idx === pi ? "opacity-100 ring-2 ring-[#009FD9] ring-offset-2" : "opacity-55 hover:opacity-100")}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(p, 220)} alt="" className="h-full w-full object-cover" />
+                        <img src={cldThumb(p, 220)} alt="" className="h-full w-full object-contain" />
                       </button>
                     ))}
                   </div>

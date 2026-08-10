@@ -47,12 +47,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   // /api/cedula/[id] from the panel.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cedula = cleanId((pro.profiles as any)?.cedula ?? "");
+  const detectedIdType = cedula ? detectIdType(cedula) : null;
   const idAssist = cedula
     ? {
         value: cedula,
         valid: isValidId(cedula),
-        type: detectIdType(cedula),
-        typeLabel: detectIdType(cedula) ? idTypeLabel(detectIdType(cedula)!) : null,
+        type: detectedIdType,
+        typeLabel: detectedIdType ? idTypeLabel(detectedIdType) : null,
       }
     : { value: "", valid: false, type: null, typeLabel: null };
 
@@ -60,8 +61,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   // Read-only/transient — not stored on the profile (data minimization).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const enteredName: string = (pro.profiles as any)?.full_name ?? "";
-  let padron: { found: boolean; name: string; score: number; matched: boolean } | null = null;
-  if (cedula) {
+  let padron: { found: boolean; name: string; score: number; matched: boolean; skipped?: boolean; reason?: string } | null = null;
+  if (cedula && detectedIdType === "juridica") {
+    padron = {
+      found: false,
+      name: "",
+      score: 0,
+      matched: false,
+      skipped: true,
+      reason: "La cédula jurídica no devuelve nombre desde el padrón TSE. Revísala manualmente con la documentación o datos de la empresa.",
+    };
+  } else if (cedula) {
     const { data: row } = await db.from("padron").select("nombre, papellido, sapellido").eq("cedula", cedula).maybeSingle();
     if (row) {
       const name = [row.nombre, row.papellido, row.sapellido].filter(Boolean).join(" ");

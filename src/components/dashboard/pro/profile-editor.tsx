@@ -5,16 +5,18 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { Input } from "@/components/ui/input";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { Camera, X, Plus, ChevronDown, Lock, Award, Globe, Video } from "lucide-react";
+import { AlertTriangle, Camera, X, Plus, ChevronDown, ChevronLeft, Lock, Award, Globe, Pencil, Eye, Trash2 } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -36,11 +38,13 @@ interface ProfileEditorProps {
   profileId: string;
   initial: ProData;
   onSaved?: () => void;
+  collapseOnSave?: boolean;
   /** A "Completa tu perfil" item the user clicked — opens the matching section
    *  and scrolls to the field. `focusKey` changes on every click so repeats fire. */
   focusField?: string | null;
   focusKey?: number;
-  extraSections?: Array<{ id: string; title: string; desc?: string; children: React.ReactNode }>;
+  resetKey?: number;
+  extraSections?: Array<{ id: string; title: string; desc?: string; children: React.ReactNode; footer?: React.ReactNode | null }>;
 }
 
 // "Completa tu perfil" field → which collapsible section holds it.
@@ -49,9 +53,16 @@ const FIELD_SECTION: Record<string, string> = {
   bio: "basic",
   location: "location",
   whatsapp: "contact",
+  publicLinks: "social",
+  languages: "lang",
+  education: "certs",
   insurers: "lang",
   verification: "verificacion",
 };
+
+// These completion steps represent the whole section. Opening the section at
+// the top feels better than jumping to the first input.
+const SECTION_TOP_COMPLETION_FIELDS = new Set(["publicLinks", "education"]);
 
 // Collapsible section — groups the long profile form into digestible blocks so
 // it's quick to scan and edit. Presentation only; all fields still live in the
@@ -64,30 +75,71 @@ function stableJson(value: Record<string, string>) {
   }, {}));
 }
 
-function Section({ id, title, desc, open, onToggle, children }: { id: string; title: string; desc?: string; open: boolean; onToggle: (id: string) => void; children: React.ReactNode }) {
+function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, children, footer }: { id: string; title: string; desc?: string; open: boolean; mobileFocused?: boolean; onToggle: (id: string) => void; onActivate?: (id: string) => void; children: React.ReactNode; footer?: React.ReactNode }) {
   return (
     // A borderless ROW inside the shared settings card (the card + divide-y dividers live in
     // the editor's wrapper). Tappable header (white, hover tint) + an inline field area set
     // off by a hairline; the open header gets a faint tint so the active row is obvious.
-    <div id={`sec-${id}`} className="scroll-mt-24">
+    <div id={`sec-${id}`} className={cn("scroll-mt-24", mobileFocused && !open && "max-sm:hidden", open && "max-sm:bg-white")}>
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className={cn("w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-4 text-left transition-colors", open ? "bg-[#fafafa]" : "hover:bg-[#fafafa]")}
+        className={cn("w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#fafafa] sm:flex" : "flex hover:bg-[#fafafa]")}
         aria-expanded={open}
       >
+        {open && (
+          <span className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#162543] max-sm:flex" aria-hidden="true">
+            <ChevronLeft className="h-5 w-5" />
+          </span>
+        )}
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold text-[#111827] leading-tight">{title}</p>
-          {desc && <p className="text-xs text-[#6b7280] mt-1">{desc}</p>}
+          <p className={cn("text-[15px] font-semibold text-[#111827] leading-tight", open && "max-sm:text-base")}>{title}</p>
+          {desc && <p className={cn("text-xs text-[#6b7280] mt-1", open && "max-sm:hidden")}>{desc}</p>}
         </div>
-        <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", open && "rotate-180")} />
+        <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#162543] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]", open && "max-sm:hidden")} aria-hidden="true">
+          {open ? <ChevronDown className="h-[18px] w-[18px] rotate-180" /> : <Pencil className="h-[18px] w-[18px]" />}
+        </span>
       </button>
       {open && (
-        <div className="px-4 sm:px-5 pb-5 pt-4 flex flex-col gap-4 border-t border-[#f3f4f6]">
-          {children}
+        <div className="px-4 pb-6 pt-5 sm:px-5 sm:pt-6" onFocusCapture={() => onActivate?.(id)} onPointerDownCapture={() => onActivate?.(id)}>
+          <div className="flex flex-col gap-5">
+            {children}
+          </div>
+          {footer}
         </div>
       )}
     </div>
+  );
+}
+
+function ProfileCheckRow({
+  title,
+  description,
+  checked,
+  onToggle,
+  ariaLabel,
+}: {
+  title: string;
+  description?: string;
+  checked: boolean;
+  onToggle: () => void;
+  ariaLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      onClick={onToggle}
+      className="flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
+    >
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-[#111827]">{title}</span>
+        {description ? <span className="mt-0.5 block text-xs leading-5 text-[#64748b]">{description}</span> : null}
+      </span>
+      <ToggleSwitch checked={checked} />
+    </button>
   );
 }
 
@@ -97,7 +149,13 @@ function Section({ id, title, desc, open, onToggle, children }: { id: string; ti
 // search presence. (Whole-province / whole-country legacy coverage isn't a zone, so
 // it isn't seeded — the pro re-picks their cantón.)
 function seedZones(init: ProData): Workplace[] {
-  if (Array.isArray(init.workplaces) && init.workplaces.length > 0) return init.workplaces.map((wp, index) => normalizeWorkplaceId(wp, index));
+  const seededCountry =
+    init.coverage_country && !init.videoconsulta
+      ? [{ id: "wp_todo_costa_rica", name: "Todo Costa Rica", address: "", level: "country" as const }]
+      : [];
+  if (Array.isArray(init.workplaces) && init.workplaces.length > 0) {
+    return [...seededCountry, ...init.workplaces.map((wp, index) => normalizeWorkplaceId(wp, index))];
+  }
   const out: Workplace[] = [];
   const cov = Array.isArray(init.coverage_areas) ? init.coverage_areas : [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,10 +176,10 @@ function seedZones(init: ProData): Workplace[] {
       address: "", provinciaId: init.provincia_id, cantonId: init.canton_id,
     });
   }
-  return out;
+  return [...seededCountry, ...out];
 }
 
-export function ProfileEditor({ professionalId, profileId, initial, onSaved, focusField, focusKey, extraSections = [] }: ProfileEditorProps) {
+export function ProfileEditor({ professionalId, profileId, initial, onSaved, collapseOnSave = true, focusField, focusKey, resetKey, extraSections = [] }: ProfileEditorProps) {
   const locale = useLocale();
   const t = useTranslations("profileEditor");
   const initialProfile = Array.isArray(initial.profiles) ? initial.profiles[0] : initial.profiles;
@@ -131,28 +189,57 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // Which collapsible sections are open. Empty = all collapsed (default), so a
   // pro lands on a tidy, scannable list and opens what they want.
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
-  const toggleSection = (id: string) =>
+  const [pendingSectionToggle, setPendingSectionToggle] = useState<string | null>(null);
+  const didMountResetEffect = useRef(false);
+  const isMobileProfileLayout = () =>
+    typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches;
+  const applySectionToggle = (id: string) =>
     setOpenSections((prev) => {
+      if (isMobileProfileLayout()) {
+        return prev.has(id) ? new Set() : new Set([id]);
+      }
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  const toggleSection = (id: string) => {
+    const isClosingDirtySection = openSections.has(id) && activeDirtySection === id;
+    const isLeavingDirtySection = isMobileProfileLayout() && activeDirtySection && activeDirtySection !== id;
+    if (dirty && (isClosingDirtySection || isLeavingDirtySection)) {
+      setPendingSectionToggle(id);
+      return;
+    }
+    applySectionToggle(id);
+  };
+  const discardAndToggleSection = () => {
+    const id = pendingSectionToggle;
+    setPendingSectionToggle(null);
+    cancelChanges();
+    if (id) applySectionToggle(id);
+  };
 
-  // A "Completa tu perfil" item was clicked → open its section, then scroll to
-  // the exact field and flash it. focusKey changes per click so repeats re-fire.
+  // A "Completa tu perfil" item was clicked -> open its section, then either
+  // align the section top or scroll to the exact missing field.
   useEffect(() => {
     if (!focusField) return;
     const sec = FIELD_SECTION[focusField];
-    const openTmr = sec ? setTimeout(() => setOpenSections((prev) => new Set(prev).add(sec)), 0) : null;
+    const openTmr = sec ? setTimeout(() => setOpenSections((prev) => {
+      if (isMobileProfileLayout()) return new Set([sec]);
+      return new Set(prev).add(sec);
+    }), 0) : null;
     const tmr = setTimeout(() => {
-      const el = document.querySelector(`[data-field="${focusField}"]`);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      const section = sec ? document.getElementById(`sec-${sec}`) : null;
+      const shouldOpenAtSectionTop = SECTION_TOP_COMPLETION_FIELDS.has(focusField);
+      const el = shouldOpenAtSectionTop ? null : document.querySelector(`[data-field="${focusField}"]`);
+      const isMobile = isMobileProfileLayout();
+      if (shouldOpenAtSectionTop && isMobile) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (el) {
+        (isMobile ? section ?? el : el).scrollIntoView({ behavior: "smooth", block: "start" });
         el.classList.add("field-flash");
         setTimeout(() => el.classList.remove("field-flash"), 1600);
-      } else if (sec) {
-        const section = document.getElementById(`sec-${sec}`);
-        section?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        section?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }, 160);
     return () => {
@@ -160,6 +247,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       clearTimeout(tmr);
     };
   }, [focusField, focusKey]);
+
+  useEffect(() => {
+    if (!didMountResetEffect.current) {
+      didMountResetEffect.current = true;
+      return;
+    }
+    if (resetKey == null) return;
+    const tmr = window.setTimeout(() => setOpenSections(new Set()), 0);
+    return () => window.clearTimeout(tmr);
+  }, [resetKey]);
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const photoInputRef = useRef<HTMLInputElement>(null);
 
@@ -208,6 +305,20 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       setHasNationalCedula(!!ced && detectIdType(String(ced)) === "cedula");
     });
   }, []);
+  useEffect(() => {
+    function onIdentityUpdated(event: Event) {
+      const detail = (event as CustomEvent<{ fullName?: string | null; cedula?: string | null; verified?: boolean }>).detail;
+      const nextName = typeof detail?.fullName === "string" ? detail.fullName.trim() : "";
+      const nextCedula = typeof detail?.cedula === "string" ? detail.cedula.trim() : "";
+      if (nextName) setFullName(nextName);
+      if (nextCedula) setHasNationalCedula(detectIdType(nextCedula) === "cedula");
+      setDirty(false);
+      setActiveDirtySection(null);
+      dirtyRef.current = false;
+    }
+    window.addEventListener("ccr:identity-updated", onIdentityUpdated);
+    return () => window.removeEventListener("ccr:identity-updated", onIdentityUpdated);
+  }, []);
   const nameLocked = verified || hasNationalCedula;
   const resolvedFullName = fullName.trim() || initialFullName;
   const seedProfessions: string[] =
@@ -226,8 +337,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // Keep the stored value so an existing address column isn't wiped on save.
   const address = (initial.address as string) ?? "";
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
-  const [publicBusinessNameOnly, setPublicBusinessNameOnly] = useState<boolean>(!!initial.business_name && initial.public_business_name_only === true);
-  const publicBusinessNameOnlyRef = useRef(publicBusinessNameOnly);
   const [workplaces, setWorkplaces] = useState<Workplace[]>(() => seedZones(initial));
   // Default to "Español" (most professionals) so a Spanish-only pro is never
   // treated as "missing" languages. Extra languages are an optional bonus.
@@ -243,34 +352,67 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const [certDraft, setCertDraft] = useState<{ profession?: string; name: string; institution: string; year: string } | null>(null);
   const [certError, setCertError] = useState<string | null>(null);
   const [videoConsult, setVideoConsult] = useState(!!initial.videoconsulta && canOfferVideoConsult);
-  const [videoCoverageCountry, setVideoCoverageCountry] = useState(!!initial.coverage_country && canOfferVideoConsult);
+  const [videoCoverageCountry, setVideoCoverageCountry] = useState(!!initial.videoconsulta && !!initial.coverage_country && canOfferVideoConsult);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initialAvatarUrl
   );
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
 
   const [saving, setSaving] = useState(false);
-  const [autoSaving, setAutoSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [activeDirtySection, setActiveDirtySection] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const hasBusinessName = businessName.trim().length > 0;
 
-  // ── App-wide RELIABLE autosave (the "Save standard"; see contratacr-context.md) ──
-  // touch() marks dirty + debounces a save; flush() saves NOW (used on field blur);
-  // and any pending save is FLUSHED on unmount. The unmount flush is the key
-  // data-loss fix: switching dashboard tabs unmounts this editor, and firing the
-  // pending save in cleanup (the fetch survives a same-page tab-switch unmount)
-  // guarantees a change made right before leaving is never silently lost.
-  const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const emailIsValid = !showContactEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim());
+  const callPhoneIsValid = !allowPhoneCall || !callPhone.trim() || isPhoneComplete(callPhone);
+  const hasWorkplace = workplaces.length > 0 || (canOfferVideoConsult && videoConsult && videoCoverageCountry);
+  const socialIsValid =
+    (!website.trim() || isValidWebsiteUrl(website)) &&
+    SOCIAL_NETWORKS.every(({ key }) => {
+      const username = cleanUsername(social[key]);
+      return !username || isValidUsername(username);
+    });
+
+  function sectionValidationError(sectionId: string | null): string | null {
+    if (sectionId === "basic") {
+      if (!resolvedFullName.trim()) return locale === "en" ? "Full name is required." : "El nombre completo es obligatorio.";
+      if (!bio.trim()) return locale === "en" ? "Description is required." : "La descripción es obligatoria.";
+    }
+    if (sectionId === "certs" && certDraft) {
+      return locale === "en"
+        ? "Save or cancel the certification you are editing."
+        : "Guarda o cancela la certificación que estás editando.";
+    }
+    if (sectionId === "location" && !hasWorkplace) {
+      return locale === "en"
+        ? "Add a workplace or enable video consultations."
+        : "Agrega un lugar de trabajo o activa las videoconsultas.";
+    }
+    if (sectionId === "contact") {
+      if (!isPhoneComplete(whatsapp)) {
+        return locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.";
+      }
+      if (!callPhoneIsValid) {
+        return locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.";
+      }
+      if (!emailIsValid) {
+        return locale === "en" ? "Enter a valid contact email." : "Ingresa un correo de contacto válido.";
+      }
+    }
+    if (sectionId === "social" && !socialIsValid) {
+      return locale === "en" ? "Check the website and social links." : "Revisa el sitio web y los enlaces públicos.";
+    }
+    return null;
+  }
+
+
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedFlashSeq = useRef(0);
   const dirtyRef = useRef(false);
-  const saveRef = useRef<(auto?: boolean) => Promise<boolean>>(async () => true);
   const saveSeq = useRef(0);
-  useEffect(() => {
-    saveRef.current = handleSave;
-  });
 
   useEffect(() => {
     if (!dirtyRef.current && initialFullName && !fullName.trim()) {
@@ -279,30 +421,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     }
   }, [initialFullName, fullName]);
 
-  function touch() {
+  function touch(sectionId?: string) {
     if (savedTimer.current) {
       clearTimeout(savedTimer.current);
       savedTimer.current = null;
     }
     setSaved(false);
+    setError(null);
     setDirty(true);
+    if (sectionId) setActiveDirtySection(sectionId);
     dirtyRef.current = true;
-    if (autoTimer.current) clearTimeout(autoTimer.current);
-    // Fire the LATEST handleSave via the ref — NOT this render's `handleSave`. `touch`
-    // runs synchronously inside an onChange BEFORE React re-renders, so the `handleSave`
-    // in scope here closes over PRE-change state. A discrete single edit (e.g. adding the
-    // first workplace: [] → [A]) would otherwise autosave the stale value ([]), "succeed",
-    // and clear `dirty` — so the new place was shown in the UI but never persisted (the
-    // real "Ubicación y cobertura no guarda" bug). `saveRef.current` is reassigned every
-    // render, so by the time the timer fires it points at a handleSave that sees [A].
-    autoTimer.current = setTimeout(() => { void saveRef.current?.(true); }, 1000);
-  }
-
-  // Persist pending edits immediately (cancel the debounce). Bound to input blur
-  // and used by the unsaved-changes guard. No-op when nothing is pending.
-  function flush() {
-    if (autoTimer.current) { clearTimeout(autoTimer.current); autoTimer.current = null; }
-    if (dirtyRef.current) void handleSave(true);
   }
 
   function showSavedConfirmation() {
@@ -317,9 +445,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   }
 
   useEffect(() => () => {
-    if (autoTimer.current) clearTimeout(autoTimer.current);
     if (savedTimer.current) clearTimeout(savedTimer.current);
-    if (dirtyRef.current) void saveRef.current?.(true);
   }, []);
 
   function openCertForm(profession?: string) {
@@ -340,93 +466,107 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     setCertifications((prev) => [...prev, { id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name, institution, year, profession: certDraft.profession }]);
     setCertDraft(null);
     setCertError(null);
-    touch();
+    touch("certs");
   }
   function removeCertification(id: string) {
     setCertifications((prev) => prev.filter((c) => c.id !== id));
-    touch();
+    touch("certs");
   }
 
-  // Auto-upload the photo as soon as it's picked — no "Guardar cambios" needed.
-  // Shows an instant local preview, then swaps in the hosted URL on success.
-  async function handlePhotoSelect(file: File) {
+  function cancelChanges() {
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    setBio(initial.bio ?? "");
+    setWhatsapp(initial.whatsapp ?? "");
+    setCallPhone(initial.call_phone ?? "");
+    setAllowPhoneCall(!!initial.allow_phone_call);
+    setContactEmail(initial.contact_email ?? accountEmail);
+    setShowContactEmail(!!initial.contact_email);
+    setSocial({
+      instagram: cleanUsername(initial.social_links?.instagram),
+      facebook: cleanUsername(initial.social_links?.facebook),
+      tiktok: cleanUsername(initial.social_links?.tiktok),
+      linkedin: cleanUsername(initial.social_links?.linkedin),
+    });
+    setWebsite(cleanWebsiteUrl(initial.social_links?.website));
+    setFullName(initialFullName);
+    setBusinessName(initial.business_name ?? "");
+    setWorkplaces(seedZones(initial));
+    setLanguages(Array.isArray(initial.languages) && initial.languages.length > 0 ? initial.languages : ["Español"]);
+    setInsurers(Array.isArray(initial.insurance_networks) ? initial.insurance_networks : []);
+    setCertifications(Array.isArray(initial.certifications) ? initial.certifications : []);
+    setCertDraft(null);
+    setCertError(null);
+    setVideoConsult(!!initial.videoconsulta && canOfferVideoConsult);
+    setVideoCoverageCountry(!!initial.videoconsulta && !!initial.coverage_country && canOfferVideoConsult);
+    setAvatarPreview(initialAvatarUrl);
+    setPendingAvatarFile(null);
+    setError(null);
+    setSaved(false);
+    setDirty(false);
+    setActiveDirtySection(null);
+    dirtyRef.current = false;
+  }
+
+  async function savePendingPhoto() {
+    if (pendingAvatarFile) {
+      setPhotoUploading(true);
+      try {
+        const preparedFile = await prepareImageForUpload(pendingAvatarFile, { maxDimension: 1200 });
+        const fd = new FormData();
+        fd.append("file", preparedFile);
+        fd.append("type", "avatar");
+        const upload = await uploadPhotoFormDataWithRetry(fd);
+        if (!upload.ok || !upload.data.url) {
+          throw new Error(upload.data.error || t("photoError"));
+        }
+        const { url } = upload.data;
+        const supabase = createClient();
+        const { error: upErr } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", profileId);
+        if (upErr) throw new Error(t("photoError"));
+        const { error: authErr } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+        if (authErr) throw new Error(t("photoError"));
+        setAvatarPreview(url);
+        setPendingAvatarFile(null);
+      } finally {
+        setPhotoUploading(false);
+      }
+      return;
+    }
+    if (avatarPreview === null && initialAvatarUrl) {
+      setPhotoUploading(true);
+      try {
+        const supabase = createClient();
+        const { error: removeError } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", profileId);
+        if (removeError) throw new Error(t("photoError"));
+        await supabase.auth.updateUser({ data: { avatar_url: null } });
+      } finally {
+        setPhotoUploading(false);
+      }
+    }
+  }
+
+  function handlePhotoSelect(file: File) {
     setError(null);
     setAvatarPreview(URL.createObjectURL(file));
-    setPhotoUploading(true);
-    try {
-      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1200 });
-      const fd = new FormData();
-      fd.append("file", preparedFile);
-      fd.append("type", "avatar");
-      const upload = await uploadPhotoFormDataWithRetry(fd);
-      if (!upload.ok || !upload.data.url) {
-        throw new Error(upload.data.error || t("photoError"));
-      }
-      const { url } = upload.data;
-      const supabase = createClient();
-      const { error: upErr } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", profileId);
-      if (upErr) throw new Error(t("photoError"));
-      const { error: authErr } = await supabase.auth.updateUser({ data: { avatar_url: url } });
-      if (authErr) throw new Error(t("photoError"));
-      setAvatarPreview(url);
-      showSavedConfirmation();
-      onSaved?.();
-    } catch (e) {
-      // Revert the optimistic preview and show the specific reason (size/format).
-      setAvatarPreview(initialAvatarUrl);
-      const code = getImageUploadPreparationErrorCode(e);
-      setError(code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : e instanceof Error && e.message ? e.message : t("photoError"));
-    } finally {
-      setPhotoUploading(false);
-    }
+    setPendingAvatarFile(file);
+    touch("basic");
   }
 
-  async function handlePhotoRemove() {
-    setAutoSaving(true);
+  function handlePhotoRemove() {
     setError(null);
     setAvatarPreview(null);
-    try {
-      const supabase = createClient();
-      const { error: removeError } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", profileId);
-      if (removeError) throw new Error(t("photoError"));
-      await supabase.auth.updateUser({ data: { avatar_url: null } });
-      showSavedConfirmation();
-      onSaved?.();
-    } catch (e) {
-      setAvatarPreview(initialAvatarUrl);
-      setError(e instanceof Error && e.message ? e.message : t("photoError"));
-    } finally {
-      setAutoSaving(false);
-    }
+    setPendingAvatarFile(null);
+    touch("basic");
   }
 
-  async function saveBusinessNameVisibility(nextOnly: boolean) {
-    const cleanBusinessName = limitText(businessName.trim(), NAME_MAX_LENGTH);
-    if (!cleanBusinessName) return;
-    setAutoSaving(true);
-    setError(null);
-    const supabase = createClient();
-    try {
-      const { error: businessError } = await supabase
-        .from("professionals")
-        .update({
-          business_name: cleanBusinessName,
-          public_business_name_only: nextOnly,
-        })
-        .eq("id", professionalId);
-      if (businessError) throw businessError;
-      showSavedConfirmation();
-      onSaved?.();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t("saveError"));
-    } finally {
-      setAutoSaving(false);
+  async function handleSave(): Promise<boolean> {
+    const validationError = sectionValidationError(activeDirtySection);
+    if (validationError) {
+      setError(validationError);
+      return false;
     }
-  }
-
-  async function handleSave(auto = false): Promise<boolean> {
     const seq = ++saveSeq.current;
-    if (auto) setAutoSaving(true); else setSaving(true);
+    setSaving(true);
     setError(null);
     const supabase = createClient();
 
@@ -439,14 +579,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // mean fixed workplaces; zones without a pin mean client-location coverage.
       // provincia_id/canton_id keep the PRIMARY area for back-compat display;
       // search_* arrays drive location-aware /buscar.
-      const effectiveWorkplaces = workplaces.map((wp, index) => normalizeWorkplaceId(wp, index));
+      const normalizedWorkplaces = workplaces.map((wp, index) => normalizeWorkplaceId(wp, index));
+      const hasCountryWorkplace = normalizedWorkplaces.some((wp) => wp.level === "country");
+      const effectiveWorkplaces = normalizedWorkplaces.filter((wp) => wp.level !== "country");
       const effectiveVideoConsult = canOfferVideoConsult && videoConsult;
-      const onlineCoverage = effectiveVideoConsult && videoCoverageCountry ? [{ level: "country" as const }] : [];
+      const coverageAreas = hasCountryWorkplace || (effectiveVideoConsult && videoCoverageCountry) ? [{ level: "country" as const }] : [];
       const hasExactWorkplace = effectiveWorkplaces.some((w) => w.lat != null && w.lng != null);
       const hasCoverageZone = effectiveWorkplaces.some((w) => w.lat == null || w.lng == null);
       const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
-      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effectiveWorkplaces, onlineCoverage);
-      const primary = primaryArea(effectiveWorkplaces, onlineCoverage);
+      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effectiveWorkplaces, coverageAreas);
+      const primary = primaryArea(effectiveWorkplaces, coverageAreas);
 
       const baseUpdate: Record<string, unknown> = {
         bio: limitText(bio, PROFILE_BIO_MAX_LENGTH),
@@ -468,10 +610,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       const cleanBusinessName = limitText(businessName.trim(), NAME_MAX_LENGTH);
       const businessIdentityFields = {
         business_name: cleanBusinessName || null,
-        public_business_name_only: !!cleanBusinessName && publicBusinessNameOnlyRef.current,
       };
       const identityFields = {
-        coverage_areas: onlineCoverage,
+        coverage_areas: coverageAreas,
         coverage_provincias: coverageProvincias,
         coverage_country: coverageCountry,
         insurance_networks: insurers,
@@ -487,14 +628,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         .eq("id", professionalId);
       if (baseError) throw baseError;
 
-      const cleanWhatsapp = whatsapp.trim();
-      if (cleanWhatsapp) {
-        const { error: accountPhoneError } = await supabase
-          .from("profiles")
-          .update({ phone: cleanWhatsapp })
-          .eq("id", profileId);
-        if (accountPhoneError) throw accountPhoneError;
-      }
+      await savePendingPhoto();
 
       // 2) LOCATIONS — saved in their OWN update so an unrelated, possibly-unmigrated
       // optional column (contact_email, coverage_*, …) can NEVER drop them. This was
@@ -611,6 +745,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // but does NOT keep the form dirty.
       if (seq === saveSeq.current) {
         setDirty(false);
+        setActiveDirtySection(null);
         dirtyRef.current = false;
         if (socialWarning) {
           setError(socialWarning);
@@ -618,7 +753,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           showSavedConfirmation();
         }
       }
-      if (seq === saveSeq.current) onSaved?.();
+      if (seq === saveSeq.current) {
+        if (collapseOnSave) setOpenSections(new Set());
+        onSaved?.();
+      }
       return true;
     } catch (err: unknown) {
       if (seq === saveSeq.current) {
@@ -628,17 +766,60 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     } finally {
       if (seq === saveSeq.current) {
         setSaving(false);
-        setAutoSaving(false);
       }
     }
   }
 
 
-  // App-wide autosave: report status to the section title row (inline, no layout shift).
-  useReportSaveStatus(saving || autoSaving || photoUploading, saved, dirty);
+  useReportSaveStatus(saving || photoUploading, saved, dirty);
+
+  const makeSectionFooter = (sectionId: string) => {
+    const sectionActive = dirty && activeDirtySection === sectionId;
+    const sectionInvalid = sectionValidationError(sectionId) !== null;
+    return (
+      <div className="mt-5 flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={cancelChanges}
+          disabled={!sectionActive || saving || photoUploading}
+          className="hidden h-10 rounded-xl px-4 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex sm:items-center sm:justify-center"
+        >
+          {locale === "en" ? "Cancel" : "Cancelar"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={!sectionActive || sectionInvalid || saving || photoUploading}
+          className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
+        >
+          {saving || photoUploading ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
+        </button>
+      </div>
+    );
+  };
+  const mobileSectionFocused = openSections.size > 0;
+  const activeMobileSectionId = Array.from(openSections)[0] ?? null;
+  const activeMobileSectionTitle =
+    activeMobileSectionId === "basic" ? t("secBasic")
+    : activeMobileSectionId === "certs" ? t("secCerts")
+    : activeMobileSectionId === "location" ? t("secLocation")
+    : activeMobileSectionId === "contact" ? t("secContact")
+    : activeMobileSectionId === "social" ? t("secSocial")
+    : activeMobileSectionId === "lang" ? (isHealthPro ? t("secLangInsurers") : t("secLang"))
+    : extraSections.find((section) => section.id === activeMobileSectionId)?.title ?? null;
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("ccr:profile-mobile-section-title", { detail: mobileSectionFocused ? activeMobileSectionTitle : null }));
+  }, [activeMobileSectionTitle, mobileSectionFocused]);
+
+  useEffect(() => {
+    const close = () => setOpenSections(new Set());
+    window.addEventListener("ccr:profile-mobile-close-section", close);
+    return () => window.removeEventListener("ccr:profile-mobile-close-section", close);
+  }, []);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-none flex-col gap-4">
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {error}
@@ -647,63 +828,79 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
       {/* ONE cohesive settings card (instead of 6 separate boxes) — the sections are
           divider-separated rows; each expands inline into a soft inset field panel. */}
-      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#eef0f2]">
+      <div className={cn(
+        "bg-white sm:overflow-hidden sm:rounded-2xl sm:border sm:border-[#dfe8f0] sm:shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]",
+        mobileSectionFocused
+          ? "rounded-none border-0 shadow-none"
+          : "overflow-hidden rounded-2xl border border-[#dfe8f0] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]"
+      )}>
+      <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7]")}>
+      <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-[#111827]">{locale === "en" ? "Profile" : "Perfil"}</h2>
+        </div>
+      </div>
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
-      <Section id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
-        {/* Photo — explicit buttons, no hover-to-change */}
-        <div data-field="photo" className="flex items-center gap-4">
-          <div className="relative h-20 w-20 shrink-0 rounded-full">
-            <ImagePreviewDialog
-              src={avatarPreview}
-              alt={t("photoAlt")}
-              openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
-              closeLabel={locale === "en" ? "Close" : "Cerrar"}
-            >
+      <Section footer={makeSectionFooter("basic")} id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
+        <div data-field="photo" className="flex items-center gap-4 border-b border-[#eef3f7] pb-5">
+          <ImagePreviewDialog
+            src={avatarPreview}
+            alt={t("photoAlt")}
+            open={photoMenuOpen}
+            onOpenChange={setPhotoMenuOpen}
+            openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+            closeLabel={locale === "en" ? "Close" : "Cerrar"}
+          >
+            <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-[#eef8fd] text-[#009FD9] ring-1 ring-[#d8e6ef]">
               {avatarPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={avatarPreview}
-                  alt={t("photoAlt")}
-                  className="h-20 w-20 rounded-full border-2 border-[#e5e7eb] object-cover"
-                />
+                <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-[#bfdbfe] bg-[#EBF5FB]">
-                  <Camera className="h-7 w-7 text-[#009FD9]" />
-                </div>
+                <Camera className="h-6 w-6" />
               )}
-            </ImagePreviewDialog>
-            {photoUploading && (
-              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
-                <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-              </div>
-            )}
+            </span>
+          </ImagePreviewDialog>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-[#162543]">{t("photoAlt")}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={photoUploading}
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Camera className="h-4 w-4 text-[#008fc3]" />
+                {avatarPreview
+                  ? (locale === "en" ? "Change photo" : "Cambiar foto")
+                  : (locale === "en" ? "Add photo" : "Agregar foto")}
+              </button>
+              {avatarPreview && (
+                <button
+                  type="button"
+                  onClick={handlePhotoRemove}
+                  disabled={photoUploading}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-white px-3 text-sm font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <X className="h-4 w-4" />
+                  {locale === "en" ? "Remove photo" : "Quitar foto"}
+                </button>
+              )}
+            </div>
           </div>
-          <div className="min-w-0 flex-1 flex flex-col gap-2">
-            <p className="text-sm font-medium text-[#374151]">{t("profilePhoto")}</p>
-            {avatarPreview ? (
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} className="shrink-0 px-3">
-                  <Camera className="h-4 w-4" /> {t("changePhoto")}
-                </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} className="shrink-0 px-2.5 text-red-500 hover:text-red-600">
-                  <X className="h-4 w-4" /> {t("removePhoto")}
-                </Button>
-              </div>
-            ) : (
-              <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} className="self-start">
-                <Camera className="h-4 w-4" /> {t("addPhoto")}
-              </Button>
-            )}
-          </div>
+
           <input
             ref={photoInputRef}
             type="file"
             accept={IMAGE_ACCEPT}
             className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) void handlePhotoSelect(f); e.target.value = ""; }}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) handlePhotoSelect(file);
+              event.currentTarget.value = "";
+            }}
           />
         </div>
-
         {/* Official name — locked when verified / national cédula. The "Verificado" badge
             lives ONCE in the panel HEADER (next to the name+avatar); here the Lock icon +
             the help text below already convey the field is official + read-only, so we do
@@ -717,16 +914,18 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               rightIcon={<Lock className="h-4 w-4" />}
             />
             <p className="text-xs text-[#6b7280] mt-1.5">
-              {t.rich("nameLockedHelp", { ...rich, link: (c) => <Link href="/dashboard/profesional?tab=soporte" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
+              {t.rich("nameLockedHelp", { ...rich, link: (c) => <Link href="/dashboard/profesional?tab=verificacion" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
             </p>
           </div>
         ) : (
           <Input
             label={<>{t("fullName")} <span className="text-red-500">*</span></>}
             value={fullName}
+            error={dirty && activeDirtySection === "basic" && !fullName.trim()
+              ? (locale === "en" ? "Full name is required." : "El nombre completo es obligatorio.")
+              : undefined}
             maxLength={NAME_MAX_LENGTH}
-            onChange={(e) => { setFullName(limitText(e.target.value, NAME_MAX_LENGTH)); touch(); }}
-            onBlur={flush}
+            onChange={(e) => { setFullName(limitText(e.target.value, NAME_MAX_LENGTH)); touch("basic"); }}
             placeholder={t("fullNamePlaceholder")}
           />
         )}
@@ -739,42 +938,27 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           onChange={(e) => {
             const next = limitText(e.target.value, NAME_MAX_LENGTH);
             setBusinessName(next);
-            if (!next.trim()) setPublicBusinessNameOnly(false);
-            touch();
+            touch("basic");
           }}
-          onBlur={flush}
           placeholder={t("businessPlaceholder")}
         />
-        {hasBusinessName && (
-          <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-            <p className="text-sm font-medium text-[#111827]">{t("businessNameOnly")}</p>
-            <button
-              type="button"
-              onClick={() => {
-                const next = !publicBusinessNameOnly;
-                publicBusinessNameOnlyRef.current = next;
-                setPublicBusinessNameOnly(next);
-                void saveBusinessNameVisibility(next);
-              }}
-              className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", publicBusinessNameOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-              aria-label={t("businessNameOnly")}
-            >
-              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", publicBusinessNameOnly ? "left-5" : "left-0.5")} />
-            </button>
-          </div>
-        )}
 
         {/* Description */}
         <div data-field="bio">
           <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("description")} <span className="text-red-500">*</span></label>
           <textarea
-            className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+            aria-invalid={dirty && activeDirtySection === "basic" && !bio.trim()}
+            className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:border-transparent transition-all ${dirty && activeDirtySection === "basic" && !bio.trim() ? "border-red-400 focus:ring-red-400" : "border-[#e5e7eb] focus:ring-[#009FD9]"}`}
             placeholder={t("descPlaceholder")}
             value={bio}
             maxLength={PROFILE_BIO_MAX_LENGTH}
-            onChange={(e) => { setBio(limitText(e.target.value, PROFILE_BIO_MAX_LENGTH)); touch(); }}
-            onBlur={flush}
+            onChange={(e) => { setBio(limitText(e.target.value, PROFILE_BIO_MAX_LENGTH)); touch("basic"); }}
           />
+          {dirty && activeDirtySection === "basic" && !bio.trim() ? (
+            <p className="mt-1 text-xs text-red-500">
+              {locale === "en" ? "Description is required." : "La descripción es obligatoria."}
+            </p>
+          ) : null}
         </div>
       </Section>
 
@@ -784,7 +968,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       {/* ── Certificaciones — POR PROFESIÓN. Saved certs are read-only rows; a
              cert is ADDED via an explicit form whose "Guardar certificación"
              button requires all three fields. ─────── */}
-      <Section id="certs" title={t("secCerts")} desc={t("secCertsDesc")} open={openSections.has("certs")} onToggle={toggleSection}>
+      <Section footer={makeSectionFooter("certs")} id="certs" title={t("secCerts")} desc={t("secCertsDesc")} open={openSections.has("certs")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
         {(professions.length > 0 ? professions : [""]).map((prof) => {
           const certsForProf = certifications.filter((c) => (c.profession || professions[0] || "") === prof);
           const draftHere = !!certDraft && (certDraft.profession ?? "") === (prof || "");
@@ -832,94 +1016,91 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       </Section>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
-      <Section id="location" title={t("secLocation")} desc={t("secLocationDesc")} open={openSections.has("location")} onToggle={toggleSection}>
+      <Section footer={makeSectionFooter("location")} id="location" title={t("secLocation")} desc={t("secLocationDesc")} open={openSections.has("location")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
         {/* Work zones — provincia/cantón first (drives /buscar), optional exact pin. */}
         <div data-field="location">
           <label className="text-sm font-medium text-[#374151] block mb-2">
             {t("workplaces")} <span className="text-red-500">*</span>
           </label>
+          {canOfferVideoConsult ? (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={videoConsult && videoCoverageCountry}
+              aria-label={t("videoConsultOption")}
+              onClick={() => {
+                const next = !(videoConsult && videoCoverageCountry);
+                setVideoConsult(next);
+                setVideoCoverageCountry(next);
+                touch("location");
+              }}
+              className="mb-4 flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
+            >
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-[#111827]">{t("videoConsultOption")}</span>
+                <span className="mt-0.5 block text-xs leading-5 text-[#64748b]">{t("videoCountryHelp")}</span>
+              </span>
+              <ToggleSwitch checked={videoConsult && videoCoverageCountry} />
+            </button>
+          ) : null}
           <WorkplacesPicker
             value={workplaces}
-            onChange={(next) => { setWorkplaces(next); touch(); }}
+            onChange={(next) => { setWorkplaces(next); touch("location"); }}
             mapHeight={168}
-            extraActions={canOfferVideoConsult ? (
-              <div className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#f9fafb] p-3.5">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
-                    <Video className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#111827]">{t("videoConsultOption")}</p>
-                    <p className="mt-0.5 text-xs text-[#6b7280]">{t("videoCountryHelp")}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = !(videoConsult && videoCoverageCountry);
-                    setVideoConsult(next);
-                    setVideoCoverageCountry(next);
-                    touch();
-                  }}
-                  className={cn(
-                    "relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-all duration-200",
-                    videoConsult && videoCoverageCountry ? "bg-[#009FD9]" : "bg-[#d1d5db]"
-                  )}
-                  aria-label={t("videoConsultOption")}
-                >
-                  <span className={cn(
-                    "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200",
-                    videoConsult && videoCoverageCountry ? "left-5" : "left-0.5"
-                  )} />
-                </button>
-              </div>
-            ) : null}
           />
+          {dirty && activeDirtySection === "location" && !hasWorkplace ? (
+            <p className="mt-2 text-xs text-red-500">
+              {locale === "en" ? "Add a workplace or enable video consultations." : "Agrega un lugar de trabajo o activa las videoconsultas."}
+            </p>
+          ) : null}
         </div>
       </Section>
 
       {/* ── Contacto ──────────────────────────────────────────────────── */}
-      <Section id="contact" title={t("secContact")} desc={t("secContactDesc")} open={openSections.has("contact")} onToggle={toggleSection}>
+      <Section footer={makeSectionFooter("contact")} id="contact" title={t("secContact")} desc={t("secContactDesc")} open={openSections.has("contact")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
         {/* WhatsApp — required contact channel. */}
         <div data-field="whatsapp">
           <PhoneInput
             label={t("whatsapp")}
             required
             value={whatsapp}
-            onChange={(digits) => { setWhatsapp(digits); touch(); }}
+            error={dirty && activeDirtySection === "contact" && !isPhoneComplete(whatsapp)
+              ? (locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.")
+              : undefined}
+            onChange={(digits) => { setWhatsapp(digits); touch("contact"); }}
             className="w-full sm:max-w-[32rem]"
           />
-          <p className="mt-1.5 text-xs text-[#6b7280]">{t("whatsappHelp")}</p>
         </div>
 
         {/* Progressive disclosure: turning on "Permitir contacto por llamada"
             reveals the optional separate call line. Empty → the WhatsApp number
             is used for calls too (so the toggle alone is self-explanatory). */}
-        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-          <p className="text-sm font-medium text-[#111827]">{t("allowCallLabel")}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setAllowPhoneCall((v) => {
-                const nv = !v;
-                if (nv && !callPhone.trim() && whatsapp.trim()) setCallPhone(whatsapp);
-                return nv;
-              });
-              touch();
-            }}
-            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", allowPhoneCall ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label={t("allowCallLabel")}
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
-          </button>
-        </div>
+        <ProfileCheckRow
+          title={t("allowCallLabel")}
+          description={locale === "en"
+            ? "Let clients call you directly. If you don't add another number, we'll use your WhatsApp number."
+            : "Permite que te llamen directamente. Si no agregas otro número, usaremos tu número de WhatsApp."}
+          checked={allowPhoneCall}
+          onToggle={() => {
+            setAllowPhoneCall((v) => {
+              const nv = !v;
+              if (nv && !callPhone.trim() && whatsapp.trim()) setCallPhone(whatsapp);
+              return nv;
+            });
+            touch("contact");
+          }}
+          ariaLabel={t("allowCallLabel")}
+        />
 
         {allowPhoneCall && (
           <div>
             <PhoneInput
               label={<>{t("callNumber")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
               value={callPhone}
-              onChange={(digits) => { setCallPhone(digits); touch(); }}
+              error={dirty && activeDirtySection === "contact" && !callPhoneIsValid
+                ? (locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.")
+                : undefined}
+              onChange={(digits) => { setCallPhone(digits); touch("contact"); }}
               className="w-full sm:max-w-[32rem]"
             />
             <p className="mt-1.5 text-xs text-[#6b7280]">{t("callNumberHelp")}</p>
@@ -928,24 +1109,22 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
         {/* Optional public contact email — opt-in via a toggle (consistent with the
             call-number pattern). Off → no email is shown; turning it off clears it. */}
-        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-          <p className="text-sm font-medium text-[#111827]">{t("contactEmail")}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setShowContactEmail((v) => {
-                const nv = !v;
-                if (nv && !contactEmail.trim() && accountEmail) setContactEmail(accountEmail);
-                return nv;
-              });
-              touch();
-            }}
-            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", showContactEmail ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label={t("contactEmail")}
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", showContactEmail ? "left-5" : "left-0.5")} />
-          </button>
-        </div>
+        <ProfileCheckRow
+          title={t("contactEmail")}
+          description={locale === "en"
+            ? "Show a public email in your profile so clients can contact you there too."
+            : "Muestra un correo público en tu perfil para que también puedan contactarte por ahí."}
+          checked={showContactEmail}
+          onToggle={() => {
+            setShowContactEmail((v) => {
+              const nv = !v;
+              if (nv && !contactEmail.trim() && accountEmail) setContactEmail(accountEmail);
+              return nv;
+            });
+            touch("contact");
+          }}
+          ariaLabel={t("contactEmail")}
+        />
 
         {showContactEmail && (
           <div className="w-full sm:max-w-[40rem]">
@@ -954,8 +1133,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               inputMode="email"
               placeholder={t("emailPlaceholder")}
               value={contactEmail}
-              onChange={(e) => { setContactEmail(e.target.value); touch(); }}
-              onBlur={flush}
+              aria-invalid={dirty && activeDirtySection === "contact" && !emailIsValid}
+              onChange={(e) => { setContactEmail(e.target.value); touch("contact"); }}
               className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             />
             {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) && (
@@ -966,7 +1145,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       </Section>
 
       {/* ── Redes sociales — USERNAME only; we build the link (additive to casos). ── */}
-      <Section id="social" title={t("secSocial")} desc={t("secSocialDesc")} open={openSections.has("social")} onToggle={toggleSection}>
+      <Section footer={makeSectionFooter("social")} id="social" title={t("secSocial")} desc={t("secSocialDesc")} open={openSections.has("social")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
         <div className="flex flex-col gap-3">
           <div className="w-full sm:max-w-[40rem]">
             <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
@@ -981,8 +1160,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               placeholder={t("websitePlaceholder")}
               value={website}
               maxLength={120}
-              onChange={(e) => { setWebsite(e.target.value.slice(0, 120)); touch(); }}
-              onBlur={flush}
+              onChange={(e) => { setWebsite(e.target.value.slice(0, 120)); touch("social"); }}
               className={`h-11 w-full rounded-xl border bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[#009FD9] ${website.trim() && !isValidWebsiteUrl(website) ? "border-red-300" : "border-[#e5e7eb]"}`}
             />
             {website.trim() && !isValidWebsiteUrl(website) && <p className="text-xs text-red-500 mt-1">{t("websiteInvalid")}</p>}
@@ -1008,8 +1186,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
                     placeholder={t("socialUserPlaceholder")}
                     value={social[key]}
                     maxLength={50}
-                    onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value.slice(0, 50) })); touch(); }}
-                    onBlur={flush}
+                    onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value.slice(0, 50) })); touch("social"); }}
                     className="flex-1 min-w-0 px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none bg-transparent"
                   />
                 </div>
@@ -1025,13 +1202,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           Aseguradoras only apply to HEALTH categories (es_salud) — a plumber
           has nothing to do with insurance, so we hide the field entirely for
           non-health pros (it isn't part of their profile at all). */}
-      <Section id="lang" title={isHealthPro ? t("secLangInsurers") : t("secLang")} desc={t("secLangDesc")} open={openSections.has("lang")} onToggle={toggleSection}>
+      <Section footer={makeSectionFooter("lang")} id="lang" title={isHealthPro ? t("secLangInsurers") : t("secLang")} desc={t("secLangDesc")} open={openSections.has("lang")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
         {/* Languages — defaults to Español; extra languages are an optional bonus */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
             {t("languagesSpoken")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
           </label>
-          <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch(); }} />
+          <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch("lang"); }} />
         </div>
 
         {/* Aseguradoras — ONLY for health (es_salud) professionals */}
@@ -1041,32 +1218,86 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               {t("insurers")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
             </label>
             <p className="text-xs text-[#9ca3af] mb-2">{t("insurersHelp")}</p>
-            <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch(); }} />
+            <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch("lang"); }} />
           </div>
         )}
       </Section>
 
       {extraSections.map((section) => (
         <Section
+          footer={section.footer === undefined ? makeSectionFooter(section.id) : section.footer}
           key={section.id}
           id={section.id}
           title={section.title}
           desc={section.desc}
           open={openSections.has(section.id)}
+          mobileFocused={mobileSectionFocused}
           onToggle={toggleSection}
+          onActivate={setActiveDirtySection}
         >
           {section.children}
         </Section>
       ))}
       </div>
+      </div>
 
       {/* Contact preference lives in the Disponibilidad tab now. */}
 
-      {/* No save button — changes autosave (debounced) and the SaveStatus at the
-          top reflects the state. The guard still flushes pending edits on nav. */}
 
       {/* Designed unsaved-changes dialog (replaces the browser default) */}
-      <UnsavedChangesGuard dirty={dirty} onSave={() => handleSave(false)} />
+      <UnsavedChangesGuard dirty={dirty} onSave={() => handleSave()} onDiscard={cancelChanges} />
+      <Dialog.Root open={pendingSectionToggle !== null} onOpenChange={(open) => { if (!open) setPendingSectionToggle(null); }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[240] bg-black/55 backdrop-blur-sm" />
+          <Dialog.Content className="fixed inset-x-4 bottom-4 z-[241] rounded-2xl bg-white p-5 shadow-2xl sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:w-[92vw] sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              </div>
+              <div className="min-w-0">
+                <Dialog.Title className="text-base font-bold text-[#111827]">
+                  {locale === "en" ? "Unsaved changes" : "Cambios sin guardar"}
+                </Dialog.Title>
+                <Dialog.Description className="mt-1 text-sm leading-snug text-[#64748b]">
+                  {locale === "en"
+                    ? "Save before leaving this section or your changes will be lost."
+                    : "Guarda antes de salir de esta sección o perderás los cambios."}
+                </Dialog.Description>
+              </div>
+            </div>
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => void handleSave().then((ok) => { if (ok !== false) { const id = pendingSectionToggle; setPendingSectionToggle(null); if (id) applySectionToggle(id); } })}
+                disabled={saving || photoUploading}
+                className="h-11 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:bg-[#cbd5e1]"
+              >
+                {saving || photoUploading ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
+              </button>
+              <button
+                type="button"
+                onClick={discardAndToggleSection}
+                disabled={saving || photoUploading}
+                className="h-11 rounded-xl border border-[#e5e7eb] px-4 text-sm font-bold text-[#b91c1c] transition-colors hover:bg-red-50 disabled:opacity-50"
+              >
+                {locale === "en" ? "Leave without saving" : "Salir sin guardar"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingSectionToggle(null)}
+                disabled={saving || photoUploading}
+                className="h-10 rounded-xl px-4 text-sm font-semibold text-[#64748b] transition-colors hover:bg-[#f8fafc] disabled:opacity-50"
+              >
+                {locale === "en" ? "Cancel" : "Cancelar"}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }
+
+
+
+

@@ -24,7 +24,10 @@ test.describe("@seeded professional profile", () => {
       return;
     }
 
-    const response = await request.get(`${href}/opengraph-image?e2e=${Date.now()}`, { timeout: 30_000 });
+    const profileUrl = new URL(href, page.url());
+    profileUrl.pathname = `${profileUrl.pathname.replace(/\/$/, "")}/opengraph-image`;
+    profileUrl.search = `e2e=${Date.now()}`;
+    const response = await request.get(profileUrl.toString(), { timeout: 30_000 });
 
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toContain("image/png");

@@ -10,6 +10,8 @@ export type ServiceLike = {
   category?: string;
 };
 
+export const CASE_PHOTOS_PER_CASE = 5;
+
 /**
  * Build id → display label, disambiguating duplicate names: when a name repeats,
  * append the description snippet if present, else an ordinal "(2)", "(3)". So the
@@ -49,9 +51,9 @@ export function countCases(items?: readonly unknown[] | null, urls?: readonly un
       if (it && Array.isArray(it.photos)) cases++;
       else if (it && it.url) legacyPhotos++;
     }
-    return cases + Math.ceil(legacyPhotos / 3);
+    return cases + Math.ceil(legacyPhotos / CASE_PHOTOS_PER_CASE);
   }
-  return Math.ceil((urls?.length ?? 0) / 3);
+  return Math.ceil((urls?.length ?? 0) / CASE_PHOTOS_PER_CASE);
 }
 
 export function serviceLabelMap(services: ServiceLike[]): Map<string, string> {

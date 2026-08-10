@@ -64,7 +64,10 @@ export function StatusFilterTabs({
   // active = brand-blue underline + blue text + a filled blue count pill; inactive = grey
   // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[#eef0f2]">
+    <div className={cn(
+      "mx-4 flex max-w-full items-stretch gap-1 overflow-x-auto rounded-xl bg-[#f1f6f9] p-1 sm:mx-0 sm:w-fit",
+      tabs.length > 2 && "sm:min-w-[22rem]",
+    )}>
       {tabs.map((tab) => {
         const active = value === tab.id;
         const count = counts?.[tab.id] ?? 0;
@@ -74,15 +77,20 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group -mb-px inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-[13px] font-semibold transition-colors sm:text-[14px]",
-              active ? "border-[#009FD9] text-[#009FD9]" : "border-transparent text-[#6b7280] hover:text-[#162543]"
+              "group inline-flex min-h-10 min-w-fit flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-semibold transition-all sm:min-w-[6.75rem] sm:flex-none sm:text-[14px]",
+              active
+                ? "bg-white text-[#008fbe] shadow-[0_1px_3px_rgba(15,23,42,0.12)]"
+                : "text-[#5f6f82] hover:bg-white/60 hover:text-[#162543]"
             )}
+            aria-pressed={active}
           >
             {label(tab.id)}
             {count > 0 && (
               <span className={cn(
-                "shrink-0 text-[11px] font-semibold leading-none tabular-nums transition-colors",
-                active ? "text-[#0089bb]" : "text-[#9ca3af] group-hover:text-[#6b7280]"
+                "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none tabular-nums transition-colors",
+                active
+                  ? "bg-[#e5f6fc] text-[#007fae]"
+                  : "bg-[#e4ebf0] text-[#718096] group-hover:bg-[#dce6ec] group-hover:text-[#526277]"
               )}>
                 {count > 99 ? "99+" : count}
               </span>

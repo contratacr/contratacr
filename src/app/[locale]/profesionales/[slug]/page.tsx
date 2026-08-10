@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
-  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
-  Share2, Flag, Award, SearchX, FileText, Globe, Users,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
+  Share2, Flag, Award, SearchX, Globe, BadgePercent, Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
@@ -16,7 +16,6 @@ import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
-import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, proDisplayName, cn } from "@/lib/utils";
 import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
@@ -40,16 +39,19 @@ import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
+import { cldLarge, cldThumb } from "@/lib/cloudinary";
+import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
+import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
 // ─── Tab types ────────────────────────────────────────────────────────────────
-type Tab = "servicios" | "casos" | "certificaciones" | "resenas" | "sobre";
+type Tab = "servicios" | "ofertas" | "empleos" | "casos" | "certificaciones" | "resenas" | "sobre";
 
 function initialTabFromUrl(): Tab {
   if (typeof window === "undefined") return "servicios";
   const tab = new URLSearchParams(window.location.search).get("tab");
-  return (["servicios", "casos", "certificaciones", "resenas", "sobre"] as const).includes(tab as Tab)
+  return (["servicios", "ofertas", "empleos", "casos", "certificaciones", "resenas", "sobre"] as const).includes(tab as Tab)
     ? (tab as Tab)
     : "servicios";
 }
@@ -57,7 +59,7 @@ function searchParamFromUrl(key: string): string | null {
   if (typeof window === "undefined") return null;
   return new URLSearchParams(window.location.search).get(key);
 }
-function safeSearchReturnHref(value: string | null): string {
+function safeProfileReturnHref(value: string | null): string {
   if (!value) return "/buscar";
   let href = value;
   try {
@@ -65,13 +67,54 @@ function safeSearchReturnHref(value: string | null): string {
   } catch {
     href = value;
   }
-  const path = href.split("?")[0] ?? href;
-  return path === "/buscar" ? href : "/buscar";
+  if (!href.startsWith("/") || href.startsWith("//") || href.includes("\\")) return "/buscar";
+  const path = href.split(/[?#]/u)[0]?.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+  const allowed = path === "/"
+    || path === "/buscar"
+    || path === "/ofertas"
+    || path.startsWith("/ofertas/")
+    || path === "/empleos"
+    || path.startsWith("/empleos/")
+    || path.startsWith("/dashboard/cliente")
+    || path.startsWith("/dashboard/profesional");
+  return allowed ? href : "/buscar";
+}
+
+function profileReturnLabel(href: string, locale: string) {
+  const path = href.split(/[?#]/u)[0]?.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+  const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
+  if (path.startsWith("/ofertas")) return locale === "en" ? "Back to offers" : "Volver a ofertas";
+  if (path.startsWith("/empleos")) return locale === "en" ? "Back to jobs" : "Volver a empleos";
+  if (path.startsWith("/dashboard/profesional")) return locale === "en" ? "Back to my dashboard" : "Volver a mi panel";
+  if (path.startsWith("/dashboard/cliente")) {
+    if (params.get("tab") === "connections") return locale === "en" ? "Back to connections" : "Volver a conexiones";
+    if (params.get("tab") === "saved") return locale === "en" ? "Back to favorites" : "Volver a favoritos";
+    return locale === "en" ? "Back to my dashboard" : "Volver a mi panel";
+  }
+  if (path === "/") return locale === "en" ? "Back to home" : "Volver al inicio";
+  return locale === "en" ? "Back to results" : "Volver a resultados";
+}
+
+function initialProfileReturnHref() {
+  const explicit = searchParamFromUrl("from");
+  if (explicit) return safeProfileReturnHref(explicit);
+  if (typeof document !== "undefined" && document.referrer) {
+    try {
+      const referrer = new URL(document.referrer);
+      if (referrer.origin === window.location.origin && !referrer.pathname.includes("/profesionales/")) {
+        return safeProfileReturnHref(`${referrer.pathname}${referrer.search}${referrer.hash}`);
+      }
+    } catch {
+      return "/buscar";
+    }
+  }
+  return "/buscar";
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const t = useTranslations("profile");
+  const tLoading = useTranslations("loading");
   const locale = useLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
   const routeParams = useParams();
@@ -79,6 +122,8 @@ export default function ProfilePage() {
   const routeSlug = Array.isArray(routeSlugParam) ? routeSlugParam[0] : routeSlugParam;
   const [professional, setProfessional] = useState<ProfessionalDetail | null>(null);
   const [profileSlots, setProfileSlots] = useState<ScheduleSlot[]>([]);
+  const [publicOffers, setPublicOffers] = useState<ProfessionalOffer[]>([]);
+  const [publicJobs, setPublicJobs] = useState<JobPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [proNotFound, setProNotFound] = useState(false);
   // The logged-in viewer's role-aware panel route — drives the "Volver a mi panel"
@@ -86,7 +131,7 @@ export default function ProfilePage() {
   // stranded. `null` = logged out (that screen then shows only "Buscar profesionales").
   const [panelHref, setPanelHref] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>(() => initialTabFromUrl());
-  const [searchReturnHref] = useState(() => safeSearchReturnHref(searchParamFromUrl("from")));
+  const [profileReturnHref] = useState(initialProfileReturnHref);
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
   // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
@@ -119,22 +164,48 @@ export default function ProfilePage() {
       if (!res.ok) { setProNotFound(true); setLoading(false); return; }
       const pro: ProfessionalDetail | null = await res.json();
       if (!pro) { setProNotFound(true); setLoading(false); return; }
-      setProfessional(pro);
-      setLoading(false);
-
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const today = new Date().toISOString().slice(0, 10);
+      const [offersResult, jobsResult, availability, authResult] = await Promise.all([
+        supabase
+          .from("professional_offers")
+          .select("id, professional_id, service_category_id, title, description, offer_type, service_label, image_urls, price_now, price_before, currency, price_unit, location_label, valid_until, quantity_available, status, created_at")
+          .eq("professional_id", pro.id)
+          .eq("status", "published")
+          .order("created_at", { ascending: false })
+          .limit(8),
+        supabase
+          .from("job_posts")
+          .select("id, employer_id, service_category_id, duration_label, experience_level, title, description, responsibilities, requirements, benefits, employment_type, workplace_type, provincia_id, canton_id, location_label, salary_min, salary_max, salary_period, currency, show_salary, openings, application_deadline, status, created_at")
+          .eq("employer_id", pro.id)
+          .eq("status", "published")
+          .order("created_at", { ascending: false })
+          .limit(8),
+        fetch(`/api/public-availability?professionalId=${pro.id}`, { cache: "no-store" })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
+        supabase.auth.getUser(),
+      ]);
+      setProfessional(pro);
+      setProfileSlots(Array.isArray(availability?.slots) ? availability.slots : []);
+      setPublicOffers(
+        ((offersResult.data ?? []) as unknown as ProfessionalOffer[]).filter(
+          (offer) => !offer.valid_until || offer.valid_until >= today,
+        ),
+      );
+      setPublicJobs(
+        ((jobsResult.data ?? []) as unknown as JobPost[]).filter(
+          (job) => !job.application_deadline || job.application_deadline >= today,
+        ),
+      );
+      const { data: { user } } = authResult;
       setIsAuthenticated(!!user);
       setViewerId(user?.id ?? null);
       if (user?.id !== pro.profileId) {
         trackInteraction({ type: "profile_view", professionalId: pro.id, source: "profile", locale });
       }
 
-      // Upcoming slots for the contact card, already excluding active bookings.
-      const availability = await fetch(`/api/public-availability?professionalId=${pro.id}`, { cache: "no-store" })
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null);
-      setProfileSlots(Array.isArray(availability?.slots) ? availability.slots : []);
+      setLoading(false);
     }
     load();
   }, [locale, routeSlug]);
@@ -204,7 +275,7 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" aria-hidden />
             <p className="text-sm font-medium text-[#6b7280]">
-              {locale === "en" ? "Loading profile..." : "Cargando perfil..."}
+              {tLoading("profile")}
             </p>
           </div>
         </main>
@@ -346,8 +417,11 @@ export default function ProfilePage() {
     videoconsulta: professional.videoconsulta,
     coverage: professional.coverage,
   };
+  const displayName = getProfessionalDisplayName(professional.fullName, professional.businessName);
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
+    ...(publicOffers.length > 0 ? [{ id: "ofertas" as Tab, label: locale === "en" ? "Offers" : "Ofertas" }] : []),
+    ...(publicJobs.length > 0 ? [{ id: "empleos" as Tab, label: locale === "en" ? "Jobs" : "Empleos" }] : []),
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     ...(hasCerts ? [{ id: "certificaciones" as Tab, label: t("tabs.certificaciones") }] : []),
     { id: "resenas",        label: t("tabs.resenas") },
@@ -359,7 +433,7 @@ export default function ProfilePage() {
       <Navbar />
 
       <main className="flex-1 py-8">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
           {previewMode ? (
@@ -370,9 +444,9 @@ export default function ProfilePage() {
               </Link>
             </div>
           ) : (
-            <Link href={searchReturnHref} className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
+            <Link href={profileReturnHref} className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
               <ArrowLeft className="h-4 w-4" />
-              {t("back")}
+              {profileReturnLabel(profileReturnHref, locale)}
             </Link>
           )}
 
@@ -383,34 +457,27 @@ export default function ProfilePage() {
           {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
-          <div className="relative bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-5 sm:p-6 mb-6">
-            {/* Same bare favorite bookmark used in /buscar: no circle, border or shadow. */}
-            <SaveButton pro={savedPro} isOwn={isOwn} className="absolute right-3 top-3 z-10" />
-            <div className="flex flex-col gap-4 pr-10 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-4 min-w-0">
+          <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-4">
                 <ImagePreviewDialog
                   src={professional.avatarUrl}
                   alt={professional.fullName}
                   openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
                   closeLabel={locale === "en" ? "Close" : "Cerrar"}
                 >
-                  <Avatar className="h-20 w-20 sm:h-[88px] sm:w-[88px] shrink-0">
+                  <Avatar className="h-20 w-20 shrink-0 sm:h-[88px] sm:w-[88px]">
                     <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
                     <AvatarFallback className="text-2xl bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
                   </Avatar>
                 </ImagePreviewDialog>
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <h1 className="text-2xl font-bold leading-tight text-[#111827]">
-                      {getProfessionalDisplayName(professional.fullName, professional.businessName, professional.publicBusinessNameOnly).primaryDesktop}
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                    <h1 className="min-w-0 truncate text-2xl font-bold leading-tight text-[#111827]">
+                      {displayName.primaryDesktop}
                     </h1>
                     {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
                   </div>
-                  {getProfessionalDisplayName(professional.fullName, professional.businessName, professional.publicBusinessNameOnly).hasSecondary && (
-                    <p className="mt-0.5 text-sm font-medium text-[#6b7280]">
-                      {getProfessionalDisplayName(professional.fullName, professional.businessName, professional.publicBusinessNameOnly).secondaryDesktop}
-                    </p>
-                  )}
                   <p className="mt-1 text-sm text-[#6b7280]">
                     {(professional.professions && professional.professions.length > 0 ? professional.professions : [professional.categoryId])
                       .filter(Boolean)
@@ -423,18 +490,31 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
-                  <FollowButton
-                    professionalId={professional.id}
-                    isOwn={isOwn}
-                    initialFollowers={professional.followerCount ?? 0}
-                    onCountChange={updateFollowerCount}
-                    className="mt-3 w-fit"
-                  />
+                  <div className="mt-3 grid w-[320px] max-w-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2">
+                    <FollowButton
+                      professionalId={professional.id}
+                      isOwn={isOwn}
+                      compact
+                      initialFollowers={professional.followerCount ?? 0}
+                      onCountChange={updateFollowerCount}
+                      onSelfAction={() => setSelfMsg(SELF_MSG.follow)}
+                      className="box-border h-10 w-full min-w-0 rounded-xl border border-transparent bg-[#009fd9] px-3 text-white hover:bg-[#008fc3] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
+                    />
+                    <SaveButton
+                      pro={savedPro}
+                      isOwn={isOwn}
+                      withLabel
+                      className="box-border h-10 w-full min-w-0 whitespace-nowrap rounded-xl border border-[#d9e1ea] bg-white px-3 py-0 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] hover:text-[#102746] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:border-transparent aria-pressed:hover:bg-[#e5e9ee] aria-pressed:hover:text-[#111827]"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Stats strip — rating · años de exp · casos de éxito. */}
-              <div className="flex items-center gap-5 self-start shrink-0 sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5">
+              <div className={cn(
+                "grid w-full shrink-0 gap-2 self-start sm:w-auto sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5",
+                expYears > 0 ? "grid-cols-3 sm:min-w-[18rem]" : "grid-cols-2 sm:min-w-[13rem]",
+              )}>
                 <button type="button" onClick={() => setActiveTab("resenas")} className="text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
@@ -450,15 +530,6 @@ export default function ProfilePage() {
                     </div>
                     <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statYears")}</p>
                   </div>
-                )}
-                {hasCasos && (
-                  <button type="button" onClick={() => setActiveTab("casos")} className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Camera className="h-4 w-4 text-[#009FD9]" />
-                      <span className="text-[15px] font-bold text-[#111827]">{casosCount}</span>
-                    </div>
-                    <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statCasos")}</p>
-                  </button>
                 )}
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1">
@@ -651,23 +722,56 @@ export default function ProfilePage() {
                                 : t("priceConsult");
                               const title = getCategoryLabel(cat, locale);
                               const description = rep?.description?.trim() ?? "";
+                              const serviceImageUrl = typeof (rep as { imageUrl?: unknown } | undefined)?.imageUrl === "string"
+                                ? ((rep as { imageUrl: string }).imageUrl).trim()
+                                : "";
+                              const credential = rep as {
+                                professionalCredentialLabel?: string;
+                                professionalCredentialNumber?: string;
+                                professionalCredentialIssuer?: string;
+                              } | undefined;
+                              const credentialNumber = credential?.professionalCredentialNumber?.trim();
+                              const credentialLabel = credential?.professionalCredentialLabel?.trim() || (locale === "en" ? "Professional credential" : "Credencial profesional");
+                              const credentialIssuer = credential?.professionalCredentialIssuer?.trim();
                               const hasFullDescription = description.length > 150;
                               const priceParts = splitPricingLabel(priceLabel);
                               return (
-                                <div key={cat} className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-                                  <div className="flex flex-1 flex-col">
-                                    <p className="min-h-[44px] text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:min-h-[22px]">{title}</p>
-                                    <div className="mt-2 h-[92px]">
+                                <article key={cat} className="flex min-h-[280px] flex-col overflow-hidden rounded-2xl border border-[#dfe6ee] bg-white shadow-sm transition-colors hover:border-[#bdd7e5]">
+                                  {serviceImageUrl && (
+                                    <ImagePreviewDialog
+                                      src={serviceImageUrl}
+                                      alt={title}
+                                      openLabel={locale === "en" ? `View image for ${title}` : `Ver imagen de ${title}`}
+                                      closeLabel={locale === "en" ? "Close" : "Cerrar"}
+                                      className="block w-full"
+                                      imageClassName="sm:max-w-[900px]"
+                                    >
+                                      <span className="flex aspect-[16/7] w-full items-center justify-center overflow-hidden border-b border-[#e8edf2] bg-white p-3">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={cldLarge(serviceImageUrl, 900)} alt={title} loading="lazy" className="h-full w-full object-contain" />
+                                      </span>
+                                    </ImagePreviewDialog>
+                                  )}
+                                  <div className="flex flex-1 flex-col p-4 sm:p-5">
+                                    <div className="flex min-w-0 items-start justify-between gap-3">
+                                      <h3 className="min-w-0 text-base font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{title}</h3>
+                                      <p className="shrink-0 text-right leading-tight">
+                                        <span className="block text-sm font-bold text-[#009FD9]">{priceParts.amount}</span>
+                                        {priceParts.unit && <span className="block text-[11px] font-semibold text-[#6b7280]">{priceParts.unit}</span>}
+                                        {priceParts.taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span>}
+                                      </p>
+                                    </div>
+                                    <div className="mt-2.5">
                                       {description ? (
                                         <>
-                                        <p className="line-clamp-3 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{description}</p>
+                                        <p className="line-clamp-2 text-sm leading-relaxed text-[#526277] [overflow-wrap:anywhere]">{description}</p>
                                           <button
                                             type="button"
                                             onClick={() => hasFullDescription && setServiceDescriptionOpen({ title, description })}
                                             aria-hidden={!hasFullDescription}
                                             tabIndex={hasFullDescription ? 0 : -1}
                                             className={cn(
-                                              "mt-1.5 text-left text-[13px] font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]",
+                                              "mt-1 text-left text-xs font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]",
                                               !hasFullDescription && "invisible pointer-events-none"
                                             )}
                                           >
@@ -676,19 +780,18 @@ export default function ProfilePage() {
                                         </>
                                       ) : (
                                         <>
-                                          <p className="text-[13px] leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
-                                          <span className="invisible mt-1.5 block text-[13px] font-semibold">{t("readFullDescription")}</span>
+                                          <p className="text-sm leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
                                         </>
                                       )}
                                     </div>
-                                    <div className="mt-3 min-h-[46px] space-y-1.5 text-[14px]">
+                                    <div className="mt-3 space-y-2 text-sm">
                                       {serviceYears ? (
                                         <p className="flex items-center gap-2 text-[#374151]">
                                           <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
                                           <span className="font-semibold">{t("yearsExperienceValue", { years: serviceYears })}</span>
                                         </p>
                                       ) : null}
-                                      <p className="flex items-center gap-2 text-[#111827]">
+                                      <p className="hidden items-center gap-2 text-[#111827]">
                                         <Banknote className="h-4 w-4 shrink-0 text-[#009FD9]" />
                                         <span className="font-bold [overflow-wrap:anywhere]">
                                           {priceParts.amount}
@@ -696,10 +799,20 @@ export default function ProfilePage() {
                                           {priceParts.taxSuffix && <span className="ml-1 text-[10px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span>}
                                         </span>
                                       </p>
+                                      {credentialNumber && (
+                                        <p className="flex items-start gap-2 border-t border-[#edf1f5] pt-3 text-xs font-semibold leading-snug text-[#526277]">
+                                          <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
+                                          <span className="min-w-0">
+                                            <span className="font-bold text-[#162543]">{credentialLabel}:</span>{" "}
+                                            <span>{credentialNumber}</span>
+                                            {credentialIssuer && <span className="text-[#6b7280]"> · {credentialIssuer}</span>}
+                                          </span>
+                                        </p>
+                                      )}
                                     </div>
                                     {canBookService ? <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4"><span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">{t("serviceRequest")}</span></button> : <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={catLabel(cat)} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.request)} buttonLabel="WhatsApp" analyticsSource="profile_service" className="mt-auto w-full rounded-xl px-4 py-2.5 text-sm font-semibold" />}
                                   </div>
-                                </div>
+                                </article>
                               );
                             })}
                           </div>
@@ -713,6 +826,102 @@ export default function ProfilePage() {
                       section here would only duplicate it. */}
 
                   {/* ── TAB: Casos de éxito (grouped per profession/service) ── */}
+                  {activeTab === "ofertas" && (
+                    <section className="space-y-5">
+                      <div>
+                        <h2 className="text-lg font-semibold text-[#111827]">
+                          {locale === "en" ? "Offers" : "Ofertas"}
+                        </h2>
+                        <p className="mt-1 text-sm text-[#6b7280]">
+                          {locale === "en"
+                            ? "Active promotions from this professional."
+                            : "Promociones activas de este profesional."}
+                        </p>
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {publicOffers.map((offer) => {
+                          const cover = offer.image_urls?.[0];
+                          return (
+                            <Link
+                              key={offer.id}
+                              href={`/ofertas/${offer.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=ofertas`)}`}
+                              className="group overflow-hidden rounded-xl border border-[#dbe4ee] bg-white transition-colors hover:border-[#009FD9]"
+                            >
+                              <div className="flex h-40 items-center justify-center overflow-hidden border-b border-[#edf1f5] bg-white p-3 sm:h-44 sm:p-4">
+                                {cover ? (
+                                  <img
+                                    src={cldLarge(cover, 900)}
+                                    alt={offer.title}
+                                    loading="lazy"
+                                    className="h-full w-full object-contain"
+                                  />
+                                ) : (
+                                  <BadgePercent className="h-9 w-9 text-[#009FD9]" />
+                                )}
+                              </div>
+                              <div className="space-y-1.5 p-4">
+                                <p className="line-clamp-2 font-semibold leading-snug text-[#111827] group-hover:text-[#009FD9]">
+                                  {offer.title}
+                                </p>
+                                {offer.service_label && (
+                                  <p className="truncate text-sm text-[#6b7280]">{offer.service_label}</p>
+                                )}
+                                <div className="flex items-end justify-between gap-3">
+                                  <p className="font-bold text-[#009FD9]">{formatOfferPrice(offer)}</p>
+                                  {offer.location_label && (
+                                    <p className="truncate text-xs text-[#7b8798]">{offer.location_label}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+
+                  {activeTab === "empleos" && (
+                    <section className="space-y-5">
+                      <div>
+                        <h2 className="text-lg font-semibold text-[#111827]">
+                          {locale === "en" ? "Jobs" : "Empleos"}
+                        </h2>
+                        <p className="mt-1 text-sm text-[#6b7280]">
+                          {locale === "en"
+                            ? "Open opportunities published by this professional."
+                            : "Oportunidades abiertas publicadas por este profesional."}
+                        </p>
+                      </div>
+                      <div className="divide-y divide-[#e5eaf0] overflow-hidden rounded-xl border border-[#dbe4ee] bg-white">
+                        {publicJobs.map((job) => (
+                          <Link
+                            key={job.id}
+                            href={`/empleos/${job.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=empleos`)}`}
+                            className="group block min-w-0 px-5 py-4 transition-colors hover:bg-[#f4fbfe]"
+                          >
+                            <span className="block min-w-0">
+                              <span className="block truncate text-base font-semibold text-[#111827] group-hover:text-[#009FD9]">
+                                {job.title}
+                              </span>
+                              <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#6b7280]">
+                                <span>{WORKPLACE_TYPES[job.workplace_type]}</span>
+                                {job.location_label && (
+                                  <>
+                                    <span aria-hidden="true" className="text-[#c4ccd6]">&middot;</span>
+                                    <span className="min-w-0 truncate">{job.location_label}</span>
+                                  </>
+                                )}
+                              </span>
+                              <span className="mt-1.5 block text-sm font-bold text-[#009FD9]">
+                                {formatJobSalary(job)}
+                              </span>
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
                   {activeTab === "casos" && (
                     <div className="flex flex-col gap-6">
                       <div>
@@ -735,12 +944,12 @@ export default function ProfilePage() {
                           const raw: any[] = (professional.portfolioItems && professional.portfolioItems.length > 0)
                             ? professional.portfolioItems
                             : (professional.portfolioUrls ?? []).map((url) => ({ url }));
-                          type Caso = { id: string; profession: string; title?: string; description?: string; recipient?: string; date?: string; photos: string[]; likes?: number; likeable?: boolean };
+                          type Caso = { id: string; profession: string; title?: string; description?: string; recipient?: string; date?: string; photos: string[] };
                           const caseList: Caso[] = [];
                           const legacyByProf = new Map<string, string[]>();
                           for (const it of raw) {
                             if (Array.isArray(it?.photos) && it.id) {
-                              caseList.push({ id: String(it.id), profession: it.profession ?? primaryProf, title: it.title, description: it.description, recipient: it.recipient, date: it.date, photos: it.photos, likes: Number(it.likes) || 0, likeable: true });
+                              caseList.push({ id: String(it.id), profession: it.profession ?? primaryProf, title: it.title, description: it.description, recipient: it.recipient, date: it.date, photos: it.photos });
                             } else if (it?.url) {
                               const prof = profOf(it) || primaryProf || "";
                               const arr = legacyByProf.get(prof) ?? []; arr.push(it.url); legacyByProf.set(prof, arr);
@@ -750,7 +959,7 @@ export default function ProfilePage() {
                             for (let i = 0; i < photos.length; i += 3) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
                           }
                           // Client-facing showcase: profession filter + a polished case-card grid.
-                          return <CaseShowcase professionalId={professional.id} cases={caseList} professions={profsOrder} isOwn={isOwn} />;
+                          return <CaseShowcase cases={caseList} professions={profsOrder} initialCaseId={searchParamFromUrl("case")} />;
                         })()
                       ) : (
                         <p className="text-sm text-[#9ca3af]">{t("noCasos")}</p>
@@ -795,19 +1004,6 @@ export default function ProfilePage() {
                   {/* ── TAB: Reseñas ── */}
                   {activeTab === "resenas" && (
                     <div>
-                      {/* Real aggregate ONLY when real reviews exist. Zero reviews →
-                          honest empty state; never a fabricated score or per-category
-                          breakdown (those were hardcoded fakes and were removed). */}
-                      {professional.reviewCount > 0 && (
-                        <div className="flex items-center gap-3 mb-5">
-                          <span className="text-4xl font-extrabold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                          <div className="flex flex-col">
-                            <StarRating rating={professional.ratingAvg} size="sm" />
-                            <span className="text-xs text-[#9ca3af] mt-0.5">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
-                          </div>
-                        </div>
-                      )}
-
                       <ReviewSection
                         professionalId={professional.id}
                         professionalName={professional.fullName}
@@ -847,12 +1043,6 @@ export default function ProfilePage() {
                         .filter(Boolean),
                       locationText,
                     ].filter(Boolean)));
-                    if (professional.bio) facts.push({
-                      key: "bio",
-                      icon: <FileText className="h-5 w-5" />,
-                      label: t("description"),
-                      value: <span className="block whitespace-pre-line text-[15px] font-normal leading-7 text-[#374151]">{professional.bio}</span>,
-                    });
                     const profileCategoryIds = (professional.professions && professional.professions.length > 0)
                       ? professional.professions
                       : (professional.categoryId ? [professional.categoryId] : []);
@@ -882,13 +1072,21 @@ export default function ProfilePage() {
                       ),
                     });
                     return (
-                      <div className="flex flex-col gap-5">
+                      <div className="flex flex-col gap-6">
+                        {professional.bio && (
+                          <section>
+                            <h2 className="text-lg font-semibold text-[#111827]">{t("tabs.sobre")}</h2>
+                            <p className="mt-2 whitespace-pre-line text-[15px] leading-7 text-[#374151] [overflow-wrap:anywhere]">
+                              {professional.bio}
+                            </p>
+                          </section>
+                        )}
                         {facts.length > 0 && (
-                          <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+                          <section className={professional.bio ? "border-t border-[#eef2f6]" : ""}>
                             <div className="divide-y divide-[#eef2f6]">
                               {facts.map((f) => (
-                                <div key={f.key} className="flex items-start gap-3.5 px-4 py-4 sm:px-5">
-                                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">{f.icon}</span>
+                                <div key={f.key} className="flex items-start gap-3.5 py-4">
+                                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center text-[#009FD9]">{f.icon}</span>
                                   <div className="min-w-0 flex-1">
                                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{f.label}</p>
                                     <div className="mt-1 text-[15px] font-medium text-[#374151] [overflow-wrap:anywhere]">{f.value}</div>

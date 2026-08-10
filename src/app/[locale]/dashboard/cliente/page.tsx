@@ -11,6 +11,7 @@ const TAB_MAP: Record<string, string> = {
   bookings: "sent_bookings",
   projects: "sent_projects",
   saved: "saved",
+  network: "network",
   notifications: "notifications",
   soporte: "soporte",
   profile: "profile",
