@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin, Navigation, LocateFixed,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail,
@@ -68,61 +68,6 @@ export function ContrataCRLogo({ className, chip = false, size = "md", tone = "l
       </span>
     </div>
   );
-}
-
-/* --- Language switch - shared locale-change helper --- */
-function useTypedPlaceholder(examples: string[], active: boolean) {
-  const [text, setText] = useState(examples[0] ?? "");
-
-  useEffect(() => {
-    if (!active || examples.length === 0) return;
-
-    let exampleIndex = 0;
-    let charIndex = 0;
-    let deleting = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const tick = () => {
-      const phrase = examples[exampleIndex] ?? "";
-      setText(phrase.slice(0, charIndex));
-
-      if (!deleting && charIndex < phrase.length) {
-        charIndex += 1;
-        timer = setTimeout(tick, 48);
-        return;
-      }
-      if (!deleting) {
-        deleting = true;
-        timer = setTimeout(tick, 1350);
-        return;
-      }
-      if (charIndex > 0) {
-        charIndex -= 1;
-        timer = setTimeout(tick, 24);
-        return;
-      }
-      deleting = false;
-      exampleIndex = (exampleIndex + 1) % examples.length;
-      timer = setTimeout(tick, 260);
-    };
-
-    timer = setTimeout(tick, 250);
-    return () => { if (timer) clearTimeout(timer); };
-  }, [active, examples]);
-
-  return text;
-}
-
-function useRotatingWord(words: string[], active: boolean) {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (!active || words.length <= 1) return;
-    const id = window.setInterval(() => setIndex((current) => (current + 1) % words.length), 2200);
-    return () => window.clearInterval(id);
-  }, [active, words.length]);
-
-  return words[index] ?? words[0] ?? "";
 }
 
 function useSlidingWords(words: string[], active: boolean) {
@@ -815,17 +760,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
   const [accountBusinessName, setAccountBusinessName] = useState("");
   const isHomePage = pathname === "/";
+  const isMarketplaceEditor = /\/(?:empleos|ofertas)\/(?:publicar|[^/]+\/editar)\/?$/.test(pathname);
+  const isMarketplaceRoute = /\/(?:empleos|ofertas)(?:\/|$)/.test(pathname);
+  const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
   const compactEnabled = true;
   const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
-  const showDesktopCompactSearch = effectiveCompact && !marketplaceDesktop;
+  const showDesktopCompactSearch = effectiveCompact && !effectiveMarketplaceDesktop;
   // The global navbar is navigation-only. /buscar explicitly opts into its
   // contextual professional search; every other destination owns its search.
   const showMobileNavbarSearch = mobileSearch && effectiveCompact && !mobileInline;
-  const compactSearchExamples = useMemo(() => {
-    const raw = t.raw(isSmallScreen ? "searchExamples" : "searchExamplesDesktop");
-    return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
-  }, [isSmallScreen, t]);
-  const compactPlaceholder = useTypedPlaceholder(compactSearchExamples, effectiveCompact && !searchFocused && !searchQuery.trim());
   const nativeSearchServices = useMemo(
     () =>
       locale === "en"
@@ -846,14 +789,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     explicitHeaderService || mobileSlidingService.current || nativeSearchServices[0] || (locale === "en" ? "electrician" : "electricista");
   const headerNextServiceLabel = mobileSlidingService.next || headerServiceLabel;
   const headerServiceShouldSlide = !explicitHeaderService && showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim() && nativeSearchServices.length > 1;
-  const desktopRotatingService = useRotatingWord(
-    nativeSearchServices,
-    effectiveCompact && !isSmallScreen && !searchFocused && !searchQuery.trim(),
-  );
-  const desktopSearchPlaceholder =
-    locale === "en"
-      ? `Search ${desktopRotatingService || nativeSearchServices[0] || "electrician"}`
-      : `Buscar ${desktopRotatingService || nativeSearchServices[0] || "electricista"}`;
   const hasSearchService = searchQuery.trim().length > 0 || !!searchCategoryId;
   const hasSearchLocation = navLocation.trim().length > 0 || !!navLocationSel || !!navCurrentCoords;
 
@@ -1301,7 +1236,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     }
     window.setTimeout(() => {
       nativeLocationInputRef.current?.focus();
-      setNavLocOpen(true);
+      setNavLocOpen(navLocation.trim().length >= 2);
     }, 50);
   }
 
@@ -1341,7 +1276,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       e.preventDefault();
       if (nativeSearchOpen && !navLocation.trim()) {
         nativeLocationInputRef.current?.focus();
-        setNavLocOpen(true);
+        setNavLocOpen(false);
         return;
       }
       if (nativeSearchOpen) closeNativeSearch();
@@ -1386,10 +1321,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         <div className="px-4 sm:px-6 lg:px-8">
           <div className={cn(
             "relative h-16 transition-[height] duration-200",
-            showMobileNavbarSearch && "h-[124px] lg:h-16",
+            showMobileNavbarSearch && "h-[124px] min-[1200px]:h-16",
           )}>
             <div className={cn(
-              "absolute left-0 right-0 top-0 h-16 lg:hidden",
+              "absolute left-0 right-0 top-0 h-16 min-[1200px]:hidden",
               nativeHeaderShell
                 ? "grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-0"
                 : "flex items-center gap-2",
@@ -1435,7 +1370,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               <button
                 type="button"
                 onClick={openNativeSearch}
-                className="absolute left-0 right-0 top-16 z-10 flex h-[56px] items-start px-4 text-left lg:hidden"
+                className="absolute -left-4 -right-4 top-16 z-10 flex h-[56px] items-start px-4 text-left min-[1200px]:hidden"
                 aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
               >
                 <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">
@@ -1447,7 +1382,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               </button>
             )}
 
-            <div className="relative hidden h-16 items-center gap-4 lg:flex">
+            <div className="relative hidden h-16 items-center gap-2 min-[1200px]:flex xl:gap-3">
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
                 {mobileInline ? (
                   <>
@@ -1468,7 +1403,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <div className="lg:hidden flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
               )}
 
-              <nav className={cn("relative z-[70] hidden shrink-0 lg:flex items-center gap-0.5", marketplaceDesktop && "gap-0")}>
+              <nav className={cn("relative z-[70] hidden shrink-0 lg:flex items-center gap-0.5", effectiveMarketplaceDesktop && "gap-0")}>
               {/* Categorias - mega-menu with autocomplete + curated columns */}
                 <div
                   ref={servicesMenuRef}
@@ -1480,7 +1415,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     onClick={() => setOpenMenu(openMenu === "categorias" ? null : "categorias")}
                     className={cn(
                       "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors after:absolute after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                      marketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4",
+                      effectiveMarketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4",
                       "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
                     )}
                   >
@@ -1503,8 +1438,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Link
                   href="/buscar"
                   className={cn(
-                    "relative flex items-center rounded-xl py-2 text-sm font-medium text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]",
-                    marketplaceDesktop ? "px-2.5" : "px-4"
+                    "relative hidden items-center rounded-xl py-2 text-sm font-medium text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9] min-[1360px]:flex",
+                    effectiveMarketplaceDesktop ? "px-2.5" : "px-4"
                   )}
                 >
                   {locale === "en" ? "Find professionals" : "Buscar profesionales"}
@@ -1517,7 +1452,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     onClick={() => setOpenMenu(openMenu === "explorar" ? null : "explorar")}
                     className={cn(
                       "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors hover:bg-gray-50 hover:text-[#009FD9]",
-                      marketplaceDesktop ? "px-2.5" : "px-4",
+                      effectiveMarketplaceDesktop ? "px-2.5" : "px-4",
                       openMenu === "explorar" ? "text-[#009FD9]" : "text-[#1A2744]",
                     )}
                   >
@@ -1540,22 +1475,29 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
               </nav>
 
-              {marketplaceDesktop ? (
-                <div className="pointer-events-auto relative z-[75] mr-3 hidden h-11 min-w-[280px] flex-1 lg:block xl:mr-5">
+              {effectiveMarketplaceDesktop ? (
+                <div className="pointer-events-auto relative z-[75] mr-2 hidden h-11 min-w-[360px] flex-1 min-[1200px]:block xl:mr-3 xl:min-w-[430px]">
                   <div id="ccr-marketplace-navbar-slot" className="h-full w-full" />
                 </div>
               ) : (
                 <>
                   {/* Desktop compact search lives in the navbar flow, so it never covers links/actions. */}
                   <div
-                    className="hidden min-w-0 flex-1 items-center transition-opacity duration-200 lg:flex"
+                    className="mr-3 hidden min-w-0 flex-1 items-center transition-opacity duration-200 lg:flex xl:mr-4"
                     style={{ opacity: showDesktopCompactSearch ? 1 : 0, pointerEvents: showDesktopCompactSearch ? "auto" : "none" }}
                   >
                     <form onSubmit={handleCompactSearch} className="flex min-w-0 flex-1">
                       <div className="relative w-full">
                         <div className="flex w-full items-center h-11 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-4 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
                           <div ref={compactSvcRef} className="flex h-full min-w-0 flex-[3_1_0%] items-center gap-2 sm:gap-3">
-                            <Search className="hidden h-5 w-5 shrink-0 text-gray-300 sm:block" />
+                            <button
+                              type="submit"
+                              aria-label={t("search")}
+                              title={t("search")}
+                              className="hidden h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 sm:grid"
+                            >
+                              <Search className="h-5 w-5" />
+                            </button>
                             <input
                               type="text"
                               value={searchQuery}
@@ -1563,7 +1505,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               onKeyDown={handleCompactSearchKeyDown}
                               onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                               onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
-                              placeholder={compactPlaceholder || (isSmallScreen ? t("servicePlaceholderShort") : t("servicePlaceholder"))}
+                              placeholder={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
                               className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                               role="combobox"
                               aria-label={locale === "en" ? "Service" : "Servicio"}
@@ -1578,39 +1520,29 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             <input
                               type="text"
                               value={navLocation}
-                              onChange={(e) => { setNavLocation(repairVisibleText(e.target.value)); setNavLocationSel(null); setNavCurrentCoords(null); setNavLocOpen(true); setNavLocActive(-1); }}
+                              onChange={(e) => {
+                                const value = repairVisibleText(e.target.value);
+                                setNavLocation(value);
+                                setNavLocationSel(null);
+                                setNavCurrentCoords(null);
+                                setNavLocOpen(value.trim().length >= 2);
+                                setNavLocActive(-1);
+                              }}
                               onKeyDown={handleNavLocKeyDown}
                               onFocus={() => {
                                 if (navLocBlurTimer.current) clearTimeout(navLocBlurTimer.current);
-                                if (navLocation.trim() && navLocSug.length > 0) setNavLocOpen(true);
+                                setNavLocOpen(navLocation.trim().length >= 2);
                               }}
                               onBlur={() => { navLocBlurTimer.current = setTimeout(() => setNavLocOpen(false), 150); }}
                               placeholder={t("location")}
                               className="flex-1 w-full text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                               role="combobox"
                               aria-label={locale === "en" ? "Location" : "Ubicación"}
-                              aria-expanded={navLocOpen}
+                              aria-expanded={navLocOpen && navLocation.trim().length >= 2}
                               aria-autocomplete="list"
                               aria-controls="navbar-location-suggestions"
                             />
-                            <button
-                              type="button"
-                              onClick={searchCurrentLocation}
-                              aria-label={locale === "en" ? "Search near me" : "Buscar cerca de mí"}
-                              title={locale === "en" ? "Search near me" : "Buscar cerca de mí"}
-                              className="mr-1 grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]"
-                            >
-                              <LocateFixed className="h-4 w-4" />
-                            </button>
                           </div>
-                          <button
-                            type="submit"
-                            aria-label={t("search")}
-                            className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-6 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
-                          >
-                            <Search className="h-4 w-4 sm:hidden" />
-                            <span className="hidden sm:inline">{t("search")}</span>
-                          </button>
                         </div>
 
                         {/* Service autocomplete - selecting FILLS the field; search
@@ -1647,8 +1579,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         </AnchoredDropdown>
 
                         {/* Location autocomplete (desktop) - selecting FILLS the field. */}
-                        <AnchoredDropdown anchorRef={compactLocRef} open={navLocOpen && navLocation.trim().length > 0 && navLocSug.length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
+                        <AnchoredDropdown anchorRef={compactLocRef} open={navLocOpen && navLocation.trim().length >= 2} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
                           <div id="navbar-location-suggestions" role="listbox" className="py-1.5">
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                searchCurrentLocation();
+                              }}
+                              className="flex w-full items-center gap-2.5 whitespace-nowrap border-b border-[#eef2f6] px-3.5 py-3 text-left text-sm font-semibold text-[#009FD9] transition-colors hover:bg-[#EBF5FB]"
+                            >
+                              <MapPin className="h-4 w-4 shrink-0" />
+                              <span>{locale === "en" ? "Search near me" : "Buscar cerca de mí"}</span>
+                            </button>
                             {navLocSug.map((s, i) => (
                               <button
                                 key={`${s.type}-${s.id}`}
@@ -1679,7 +1622,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               )}
 
               {/* Right actions */}
-              <div className="relative z-[60] ml-auto hidden min-w-0 shrink-0 items-center justify-end gap-2.5 lg:flex">
+              <div className="relative z-[60] ml-auto hidden min-w-0 shrink-0 items-center justify-end gap-1.5 min-[1200px]:flex xl:gap-2.5">
                 {authLoading && !user ? (
                   <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
                     <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
@@ -1697,7 +1640,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         onClick={() => setOpenMenu(openMenu === "recursos" ? null : "recursos")}
                         className={cn(
                           "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors after:absolute after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                          marketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4",
+                          effectiveMarketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4",
                           "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
                         )}
                       >
@@ -1738,7 +1681,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </div>
                     <div className="w-1" aria-hidden="true" />
 
-                    {!marketplaceDesktop && !isPro && (
+                    {!effectiveMarketplaceDesktop && !isPro && (
                       <Link
                         href="/registro/profesional"
                         className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl text-[#009FD9] hover:bg-[#EBF5FB] transition-colors whitespace-nowrap"
@@ -1763,8 +1706,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     />
                   </div>
                 ) : (
-                  <div className={cn("flex items-center justify-end gap-1", marketplaceDesktop ? "w-auto" : "w-[250px]")}>
-                    {!marketplaceDesktop && (
+                  <div className={cn("flex items-center justify-end gap-1", effectiveMarketplaceDesktop ? "w-auto" : "w-[250px]")}>
+                    {!effectiveMarketplaceDesktop && (
                       <Link
                         href="/registro/profesional"
                         className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
@@ -1855,15 +1798,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   type="text"
                   value={navLocation}
                   onChange={(event) => {
-                    setNavLocation(repairVisibleText(event.target.value));
+                    const value = repairVisibleText(event.target.value);
+                    setNavLocation(value);
                     setNavLocationSel(null);
                     setNavCurrentCoords(null);
                     setNavLocActive(-1);
-                    setNavLocOpen(true);
+                    setNavLocOpen(value.trim().length >= 2);
                     setSearchFocused(false);
                   }}
                   onFocus={() => {
-                    setNavLocOpen(true);
+                    setNavLocOpen(navLocation.trim().length >= 2);
                     setSearchFocused(false);
                   }}
                   onKeyDown={handleNavLocKeyDown}
@@ -1873,7 +1817,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           role="combobox"
                           aria-autocomplete="list"
                           aria-controls="native-location-suggestions"
-                          aria-expanded={!showNativeServiceSuggestions}
+                          aria-expanded={!showNativeServiceSuggestions && navLocOpen && navLocation.trim().length >= 2}
                 />
                 {navLocation && (
                   <button
@@ -1930,7 +1874,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   onClick={searchCurrentLocation}
                   className="flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left text-[16px] font-bold text-[#009FD9] active:bg-[#eef9fd]"
                 >
-                  <Navigation className="h-6 w-6" />
+                  <MapPin className="h-5 w-5 shrink-0" />
                       <span>{locale === "en" ? "Search near me" : "Buscar cerca de mí"}</span>
                 </button>
                 {nativeLocationSuggestions.slice(0, 7).map((suggestion) => (

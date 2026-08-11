@@ -22,20 +22,20 @@ type Connection = {
 
 export async function GET() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const admin = createAdminClient();
   const [bookingsResult, projectsResult] = await Promise.all([
     admin
       .from("bookings")
       .select("id, professional_id, status, service_description, category_id, scheduled_date, created_at, updated_at")
-      .eq("client_id", session.user.id)
+      .eq("client_id", user.id)
       .in("status", BOOKING_CONNECTION_STATUSES),
     admin
       .from("projects")
       .select("id, accepted_professional_id, status, title, category_id, created_at, updated_at, completed_at, work_done_at")
-      .eq("client_id", session.user.id)
+      .eq("client_id", user.id)
       .in("status", PROJECT_CONNECTION_STATUSES)
       .not("accepted_professional_id", "is", null),
   ]);

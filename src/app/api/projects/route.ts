@@ -88,10 +88,10 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-    const uid = session.user.id;
+    const uid = user.id;
     const admin = createAdminClient();
     const categoryIsHealth = await resolveCategoryIsHealth(admin, categoryId);
     const forSomeoneElse = categoryIsHealth && requestedForSomeoneElse;
@@ -156,14 +156,14 @@ export async function POST(req: NextRequest) {
     // project snapshot so Oportunidades can show it without exposing the ID.
     await admin.from("profiles").upsert({
       id: uid,
-      email: session.user.email ?? "",
+      email: user.email ?? "",
       full_name: officialName ||
                  existingProfile?.full_name ||
                  requestedFullName ||
-                 (session.user.user_metadata?.full_name as string) ||
-                 (session.user.user_metadata?.name as string) ||
-                 session.user.email?.split("@")[0] || "",
-      role: existingProfile?.role || (session.user.user_metadata?.role as string) || "client",
+                 (user.user_metadata?.full_name as string) ||
+                 (user.user_metadata?.name as string) ||
+                 user.email?.split("@")[0] || "",
+      role: existingProfile?.role || (user.user_metadata?.role as string) || "client",
       onboarding_completed: true,
       ...(cedula ? { cedula } : {}),
       client_identity_status: clientIdentityStatus,
@@ -200,11 +200,11 @@ export async function POST(req: NextRequest) {
         officialName ||
         existingProfile?.full_name ||
         requestedFullName ||
-        (session.user.user_metadata?.full_name as string) ||
-        (session.user.user_metadata?.name as string) ||
-        session.user.email?.split("@")[0] ||
+        (user.user_metadata?.full_name as string) ||
+        (user.user_metadata?.name as string) ||
+        user.email?.split("@")[0] ||
         "Cliente",
-      client_email_snapshot: existingProfile?.email || session.user.email || null,
+      client_email_snapshot: existingProfile?.email || user.email || null,
       client_phone_snapshot: existingProfile?.phone ?? null,
       ...writeSourceColumns(req),
     };
@@ -314,8 +314,8 @@ export async function GET(req: NextRequest) {
   const categoryId = searchParams.get("category");
 
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   if (role === "client") {
     // Use the admin client (scoped to this client's id) so a freshly created
@@ -324,7 +324,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await admin
       .from("projects")
       .select(`*, proposals(id, status)`)
-      .eq("client_id", session.user.id)
+      .eq("client_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -343,7 +343,7 @@ export async function GET(req: NextRequest) {
   const { data: proRow } = await admin
     .from("professionals")
     .select("category_id, professions")
-    .eq("profile_id", session.user.id)
+    .eq("profile_id", user.id)
     .maybeSingle();
 
   const professions: string[] =
@@ -361,7 +361,7 @@ export async function GET(req: NextRequest) {
     .select(`*, profiles:client_id(full_name, avatar_url), proposals(id)`)
     .eq("status", "open")
     // No self-service: never list the pro's OWN projects in the "propose" feed.
-    .neq("client_id", session.user.id)
+    .neq("client_id", user.id)
     .order("created_at", { ascending: false })
     .limit(30);
 
@@ -413,10 +413,10 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
 
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const uid = session.user.id;
+  const uid = user.id;
   const admin = createAdminClient();
 
   if (action === "archive") {
@@ -620,15 +620,15 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "Falta el id" }, { status: 400 });
 
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const admin = createAdminClient();
   // Authorize against the row, then delete with the service-role client — the
   // RLS-bound delete could silently affect 0 rows (same class as the bookings bug).
   const { data: ownRow } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
   if (!ownRow) return NextResponse.json({ success: true }); // already gone
-  if (ownRow.client_id !== session.user.id) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  if (ownRow.client_id !== user.id) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   if (ownRow.status !== "cancelled") {
     return NextResponse.json({ error: "Solo puedes eliminar solicitudes canceladas." }, { status: 409 });
   }
@@ -641,7 +641,7 @@ export async function DELETE(req: NextRequest) {
   const { error } = await admin.from("projects").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   await auditUserAction(admin, req, {
-    actorUserId: session.user.id,
+    actorUserId: user.id,
     actorRole: "client",
     action: "project.delete",
     entityTable: "projects",

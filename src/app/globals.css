@@ -1236,6 +1236,33 @@ input::-ms-clear {
   background: #8b949e;
 }
 
+@media (min-width: 1024px) {
+  .ccr-marketplace-card-list {
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: auto;
+    scrollbar-color: #8b949e #f3f5f7;
+  }
+
+  .ccr-marketplace-card-list::-webkit-scrollbar {
+    width: 11px;
+  }
+
+  .ccr-marketplace-card-list::-webkit-scrollbar-track {
+    background: #f3f5f7;
+  }
+
+  .ccr-marketplace-card-list::-webkit-scrollbar-thumb {
+    border: 2px solid #f3f5f7;
+    border-radius: 999px;
+    background: #8b949e;
+  }
+
+  .ccr-marketplace-card-list::-webkit-scrollbar-thumb:hover {
+    background: #6f7882;
+  }
+}
+
 /* ─── App section phone drift ─── */
 @keyframes phone-drift {
   0%, 100% { transform: translateY(0) rotate(2deg); }

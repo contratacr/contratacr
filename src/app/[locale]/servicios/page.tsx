@@ -143,7 +143,7 @@ export default function ServiciosPage() {
             </div>
 
             <form onSubmit={submitSearch} data-testid="services-page-mobile-search" className="px-4 pb-4">
-              <div className="flex h-12 items-center gap-3 rounded-xl bg-white px-3 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-1 ring-[#dfe5eb] focus-within:ring-2 focus-within:ring-[#009FD9]/25">
+              <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_4px_14px_rgba(15,23,42,0.08)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">
                 <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                 <input
                   type="text"
@@ -268,7 +268,7 @@ export default function ServiciosPage() {
               <form
                 onSubmit={submitSearch}
                 data-testid="services-page-search"
-                className="flex h-[54px] items-center gap-3 rounded-2xl border border-[#dbe5ee] bg-[#fbfdff] px-4 text-left transition-all focus-within:border-[#009FD9] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20"
+                className="flex h-12 w-full items-center gap-3 rounded-xl border border-[#dfe5eb] bg-white px-4 text-left shadow-[0_4px_14px_rgba(15,23,42,0.08)] transition focus-within:border-[#b9d9e8] focus-within:ring-2 focus-within:ring-[#009FD9]/20"
               >
                 <Search className="h-5 w-5 shrink-0 text-[#8a94a6]" />
                 <input
@@ -277,7 +277,7 @@ export default function ServiciosPage() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={serviceSearchPlaceholder}
                   aria-label={serviceSearchPlaceholder}
-                  className="h-[50px] min-w-0 flex-1 bg-transparent text-base text-gray-700 placeholder:text-gray-400 focus:outline-none"
+                  className="h-11 min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-gray-700 placeholder:text-gray-400 focus:outline-none"
                 />
                 {query && (
                   <button type="button" onClick={() => setQuery("")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151]" aria-label={tp("clearSearch")}>

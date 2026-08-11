@@ -54,14 +54,7 @@ export function ClientJobApplications() {
   const [loading, setLoading] = useState(true);
 
   function resumeDownloadUrl(application: Application) {
-    if (!application.resumeUrl) return "";
-    try {
-      const url = new URL(application.resumeUrl);
-      url.searchParams.set("download", application.resumeName || "CV");
-      return url.toString();
-    } catch {
-      return application.resumeUrl;
-    }
+    return application.resumeUrl ?? "";
   }
   const load = useCallback(async () => {
     setLoading(true);

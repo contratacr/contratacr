@@ -79,6 +79,24 @@ jobs:
       - name: Ensure private env files are not tracked
         run: npm run security:env
 
+      - name: Seed complete regression fixtures
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6; do
+            if npm run seed:test:full; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 6 ]; then
+              echo "::error::Could not seed the complete test fixtures after waiting for the test schema."
+              exit 1
+            fi
+            echo "Test schema may still be updating; retrying fixtures in 15 seconds."
+            sleep 15
+          done
+
+      - name: Verify complete regression fixtures
+        run: npm run seed:test:verify
+
       - name: Typecheck regression and application contracts
         run: npx tsc --noEmit
 

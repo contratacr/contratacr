@@ -187,7 +187,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                           </div>
                           {(application.resume_url || application.portfolio_url) && (
                             <div className="mt-3 flex flex-wrap gap-2">
-                              {application.resume_url && <a href={application.resume_url} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]"><FileText className="h-4 w-4 text-[#008fc3]" />{copy.viewCv}</a>}
+                              {application.resume_url && <a href={`/api/jobs/applications/${application.id}/resume`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]"><FileText className="h-4 w-4 text-[#008fc3]" />{copy.viewCv}</a>}
                               {application.portfolio_url && <a href={application.portfolio_url} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center rounded-lg border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]">{copy.viewPortfolio}</a>}
                             </div>
                           )}

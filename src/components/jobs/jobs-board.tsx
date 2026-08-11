@@ -28,7 +28,7 @@ type Props = {
   detailOnly?: boolean;
 };
 
-const MARKETPLACE_LIST_CLASS = "ccr-marketplace-result-list min-w-0 overflow-y-auto bg-white lg:max-h-[calc(100vh-190px)] lg:border-r lg:border-[#dfe6ec]";
+const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-[calc(100dvh-190px)] lg:min-h-[420px] lg:overflow-y-scroll lg:border-r lg:border-[#dfe6ec]";
 
 const JOBS_COPY = {
   es: {
@@ -38,7 +38,7 @@ const JOBS_COPY = {
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
     myJobs: "Mis empleos", publishJob: "Publicar empleo", jobs: "Empleos", opportunities: "Oportunidades en Costa Rica", job: "Empleo", openMenu: "Abrir menú",
     salary: "Salario", publishedBy: "Publicado por", editJob: "Editar empleo", manageJob: "Administrar empleo", applicationSent: "Postulación enviada", apply: "Postularme",
-    noJobs: "No encontramos empleos", emptyHelp: "Prueba otra búsqueda o cambia los filtros.", publishSubtitle: "Describe la oportunidad con información clara y verificable.", editSubtitle: "Actualiza la información de esta publicación.", sendApplication: "Enviar postulación",
+    noResults: "No encontramos empleos", noJobs: "Todavía no hay empleos", emptyHelp: "Prueba otra búsqueda o cambia los filtros.", futureJobs: "Las nuevas oportunidades laborales aparecerán aquí.", viewAll: "Ver todos los empleos", publishFirst: "Publicar el primer empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.", editSubtitle: "Actualiza la información de esta publicación.", sendApplication: "Enviar postulación",
     location: "Ubicación", wholeCountry: "Todo Costa Rica", openings: "Vacantes", opening: "vacante", openingPlural: "vacantes", duration: "Duración", about: "Sobre el empleo", responsibilities: "Responsabilidades", requirements: "Requisitos", benefits: "Beneficios",
     professionalFallback: "Profesional en ContrataCR", professionalPhoto: "Foto de profesional",
   },
@@ -49,7 +49,7 @@ const JOBS_COPY = {
     workplace: "Workplace", anyWorkplace: "Any workplace", experience: "Experience", anyExperience: "Any experience", employmentType: "Job type", anyEmploymentType: "Any type",
     myJobs: "My jobs", publishJob: "Post a job", jobs: "Jobs", opportunities: "Opportunities in Costa Rica", job: "Job", openMenu: "Open menu",
     salary: "Salary", publishedBy: "Posted by", editJob: "Edit job", manageJob: "Manage job", applicationSent: "Application sent", apply: "Apply",
-    noJobs: "No jobs found", emptyHelp: "Try another search or change the filters.", publishSubtitle: "Describe the opportunity with clear, verifiable information.", editSubtitle: "Update this job post.", sendApplication: "Submit application",
+    noResults: "No jobs found", noJobs: "There are no jobs yet", emptyHelp: "Try another search or change the filters.", futureJobs: "New job opportunities will appear here.", viewAll: "View all jobs", publishFirst: "Post the first job", publishSubtitle: "Describe the opportunity with clear, verifiable information.", editSubtitle: "Update this job post.", sendApplication: "Submit application",
     location: "Location", wholeCountry: "All Costa Rica", openings: "Openings", opening: "opening", openingPlural: "openings", duration: "Duration", about: "About the job", responsibilities: "Responsibilities", requirements: "Requirements", benefits: "Benefits",
     professionalFallback: "Professional on ContrataCR", professionalPhoto: "Professional photo",
   },
@@ -104,7 +104,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const [editingJob, setEditingJob] = useState<JobPost | null>(null);
   const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
   const [submittedJobIds, setSubmittedJobIds] = useState(() => new Set(appliedJobIds));
-  const initialLocation = searchParams.get("location")?.trim().toLocaleLowerCase("es-CR") ?? "";
+  const initialLocation = searchParams.get("location")?.trim() ?? "";
+  const [locationFilter, setLocationFilter] = useState(initialLocation);
   const [workplace, setWorkplace] = useState("all");
   const [employment, setEmployment] = useState("all");
   const [experience, setExperience] = useState("all");
@@ -116,9 +117,12 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     const cleanQuery = query.trim();
     if (cleanQuery) params.set("q", cleanQuery);
     else params.delete("q");
+    const cleanLocation = locationFilter.trim();
+    if (cleanLocation) params.set("location", cleanLocation);
+    else params.delete("location");
     const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
     window.history.replaceState(null, "", nextUrl);
-  }, [query]);
+  }, [locationFilter, query]);
 
   useEffect(() => {
     const applyId = searchParams.get("apply");
@@ -131,22 +135,61 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     const matchesQuery = jobMatchesSearch(query, [job.title, job.employer_name, job.location_label, job.description, ...(job.requirements ?? []), ...(job.responsibilities ?? [])]);
     const age = Date.now() - new Date(job.created_at).getTime();
     const matchesDate = published === "all" || age <= Number(published) * 86_400_000;
-    const matchesLocation = !initialLocation || job.workplace_type === "remote" || job.location_label?.toLocaleLowerCase("es-CR").includes(initialLocation);
+    const matchesLocation = !locationFilter || job.workplace_type === "remote" || job.location_label?.toLocaleLowerCase("es-CR").includes(locationFilter.toLocaleLowerCase("es-CR"));
     return matchesQuery && matchesLocation && matchesDate
       && (workplace === "all" || job.workplace_type === workplace)
       && (employment === "all" || job.employment_type === employment)
       && (experience === "all" || (job.experience_level ?? "any") === experience);
-  }), [employment, experience, initialLocation, jobs, published, query, workplace]);
+  }), [employment, experience, jobs, locationFilter, published, query, workplace]);
 
   const selected = filtered.find((job) => job.id === selectedId) ?? filtered[0] ?? null;
   const suggestions = [...new Set([...jobs.map((job) => job.title), ...COMMON_JOB_TITLES])];
+  const locationSuggestions = useMemo(
+    () => [...new Set(jobs.map((job) => job.location_label?.trim()).filter((value): value is string => Boolean(value)))],
+    [jobs],
+  );
+  const hasActiveFilters =
+    Boolean(query.trim()) ||
+    Boolean(locationFilter) ||
+    workplace !== "all" ||
+    employment !== "all" ||
+    experience !== "all" ||
+    published !== "all";
+
+  function clearSearchAndFilters() {
+    setQuery("");
+    setWorkplace("all");
+    setEmployment("all");
+    setExperience("all");
+    setPublished("all");
+    setLocationFilter("");
+    const params = new URLSearchParams(window.location.search);
+    params.delete("location");
+    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+    window.history.replaceState(null, "", nextUrl);
+  }
 
   useEffect(() => {
     if (filtered.length > 0 && !filtered.some((job) => job.id === selectedId)) setSelectedId(filtered[0].id);
   }, [filtered, selectedId]);
 
   const renderSearch = () => (
-    <MarketplaceSearch value={query} onChange={setQuery} placeholder={copy.searchPlaceholder} suggestions={suggestions} recentStorageKey="ccr-job-search-recents" />
+    <MarketplaceSearch
+      value={query}
+      onChange={setQuery}
+      placeholder={copy.searchPlaceholder}
+      suggestions={suggestions}
+      recentStorageKey="ccr-job-search-recents"
+      secondary={{
+        value: locationFilter,
+        onChange: setLocationFilter,
+        placeholder: copy.location,
+        ariaLabel: copy.location,
+        suggestions: locationSuggestions,
+        icon: "location",
+        clearLabel: locale === "en" ? "Clear location" : "Limpiar ubicación",
+      }}
+    />
   );
   const renderFilters = () => (
     <>
@@ -157,18 +200,18 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     </>
   );
   const renderActions = () => (
-    <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+    <div className={canPost ? "grid w-full grid-cols-2 gap-2 sm:w-[296px] [&>*]:w-full" : "flex w-full sm:w-auto"}>
       {canPost && (
-        <Link href="/dashboard/profesional?mode=offer&tab=jobs&returnTo=%2Fempleos" className="inline-flex h-10 flex-1 items-center justify-center rounded-lg border border-[#cddae6] bg-white px-5 text-sm font-bold text-[#162543] transition hover:border-[#b7c8d9] hover:bg-[#f8fafc] sm:flex-none">
+        <Link href="/dashboard/profesional?mode=offer&tab=jobs&returnTo=%2Fempleos" className="inline-flex h-[42px] items-center justify-center rounded-lg border border-[#cddae6] bg-white px-4 text-sm font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb]">
           {copy.myJobs}
         </Link>
       )}
       {canPost ? (
         <>
-          <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-10 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:inline-flex">
+          <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-[42px] items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
             {copy.publishJob}
           </button>
-          <Link href="/empleos/publicar" className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:hidden">
+          <Link href="/empleos/publicar" className="inline-flex h-[42px] items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
             {copy.publishJob}
           </Link>
         </>
@@ -268,12 +311,38 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       </div>
     )}
     {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:pt-3`}>
-      <div className="lg:grid lg:max-h-[calc(100vh-190px)] lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] lg:overflow-hidden lg:rounded-lg lg:border lg:border-[#dfe8f0] lg:bg-white">
-        <section className={MARKETPLACE_LIST_CLASS}>
+      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:max-h-[calc(100vh-190px)] lg:overflow-hidden lg:rounded-lg lg:border lg:border-[#dfe8f0] lg:bg-white`}>
+        <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
           <div className="border-b border-[#e7edf2] px-4 py-3"><p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}</p><p className="text-xs text-[#68778d]">{copy.country}</p></div>
           <div>
             {filtered.map((job) => <JobRow key={job.id} job={job} selected={selected?.id === job.id} onSelect={() => setSelectedId(job.id)} />)}
-            {filtered.length === 0 && <div className="px-6 py-16 text-center"><BriefcaseBusiness className="mx-auto h-8 w-8 text-[#9aabc0]" /><h2 className="mt-3 font-bold">{copy.noJobs}</h2><p className="mt-1 text-sm text-[#68778d]">{copy.emptyHelp}</p></div>}
+            {filtered.length === 0 && (
+              <div className="flex min-h-[320px] flex-col items-center justify-center px-7 py-12 text-center lg:min-h-[360px]">
+                <span className="grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
+                  <BriefcaseBusiness className="h-6 w-6" strokeWidth={2} />
+                </span>
+                <h2 className="mt-4 text-lg font-extrabold text-[#162543]">
+                  {hasActiveFilters ? copy.noResults : copy.noJobs}
+                </h2>
+                <p className="mt-1.5 max-w-sm text-sm leading-6 text-[#68778d]">
+                  {hasActiveFilters ? copy.emptyHelp : copy.futureJobs}
+                </p>
+                {hasActiveFilters ? (
+                  <button type="button" onClick={clearSearchAndFilters} className="mt-5 inline-flex h-10 items-center justify-center rounded-lg border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">
+                    {copy.viewAll}
+                  </button>
+                ) : canPost ? (
+                  <>
+                    <button type="button" onClick={() => setPublishOpen(true)} className="mt-5 hidden h-10 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
+                      {copy.publishFirst}
+                    </button>
+                    <Link href="/empleos/publicar" className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
+                      {copy.publishFirst}
+                    </Link>
+                  </>
+                ) : null}
+              </div>
+            )}
           </div>
         </section>
         {selected && <JobPreview job={selected} isOwner={selected.employer_id === currentProfessionalId} userId={currentUserId} hasApplied={submittedJobIds.has(selected.id)} onApply={() => setApplyingJobId(selected.id)} onEdit={() => setEditingJob(selected)} />}

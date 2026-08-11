@@ -18,6 +18,25 @@ function withPostLoginActivity(path: string): string {
   return `${pathname}${qs ? `?${qs}` : ""}${hash ? `#${hash}` : ""}`;
 }
 
+async function reactivateAccount(userId: string): Promise<void> {
+  try {
+    const { error } = await createAdminClient()
+      .from("profiles")
+      .update({ is_disabled: false, disabled_reason: null, disabled_at: null })
+      .eq("id", userId)
+      .eq("is_disabled", true);
+
+    if (error) {
+      console.error("[account-reactivation] OAuth callback update failed", {
+        userId,
+        code: error.code,
+      });
+    }
+  } catch (error) {
+    console.error("[account-reactivation] OAuth callback failed", { userId, error });
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -55,7 +74,7 @@ export async function GET(request: NextRequest) {
     // MUST be finalized with verifyOtp, or the change is NEVER applied and the user
     // lands on the error page (= the main page). The token_hash flow needs NO PKCE
     // code_verifier (so it works from any browser/device) and NO redirect_to allowlist.
-    const hadSessionBeforeVerification = !!(await supabase.auth.getSession()).data.session;
+    const hadSessionBeforeVerification = !!(await supabase.auth.getUser()).data.user;
     const { data, error } = tokenHash
       ? await supabase.auth.verifyOtp({ type: (type ?? "email") as EmailOtpType, token_hash: tokenHash })
       : await supabase.auth.exchangeCodeForSession(code!);
@@ -122,6 +141,8 @@ export async function GET(request: NextRequest) {
           return NextResponse.redirect(`${origin}/es/login?autherror=use_password`);
         }
       }
+
+      await reactivateAccount(data.user.id);
 
       // Guest→account linking: attach prior GUEST tickets with this (now
       // verified) email to the account so the history continues in-app.

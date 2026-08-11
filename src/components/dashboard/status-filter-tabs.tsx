@@ -63,10 +63,16 @@ export function StatusFilterTabs({
   // UNDERLINE — status tabs with a clean count badge after each label (owner image):
   // active = brand-blue underline + blue text + a filled blue count pill; inactive = grey
   // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
+  const compactTabSet = tabs.length <= 3;
+
   return (
     <div className={cn(
-      "mx-4 flex max-w-full items-stretch gap-1 overflow-x-auto rounded-xl bg-[#f1f6f9] p-1 sm:mx-0 sm:w-fit",
-      tabs.length > 2 && "sm:min-w-[22rem]",
+      "mx-4 max-w-full items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1 sm:mx-0",
+      compactTabSet
+        ? "grid overflow-hidden sm:w-fit sm:min-w-[22rem]"
+        : "flex overflow-x-auto sm:w-fit",
+      tabs.length === 2 && "grid-cols-2",
+      tabs.length === 3 && "grid-cols-3",
     )}>
       {tabs.map((tab) => {
         const active = value === tab.id;
@@ -77,7 +83,10 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group inline-flex min-h-10 min-w-fit flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-semibold transition-all sm:min-w-[6.75rem] sm:flex-none sm:text-[14px]",
+              "group inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg py-2 text-[13px] font-semibold transition-all sm:text-[14px]",
+              compactTabSet
+                ? "min-w-0 px-2"
+                : "min-w-fit flex-1 px-3 sm:min-w-[6.75rem] sm:flex-none",
               active
                 ? "bg-white text-[#008fbe] shadow-[0_1px_3px_rgba(15,23,42,0.12)]"
                 : "text-[#5f6f82] hover:bg-white/60 hover:text-[#162543]"

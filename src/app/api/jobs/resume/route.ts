@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { JOB_RESUME_BUCKET, resumeOriginalName, resumeStoragePath } from "@/lib/jobs/resume-storage";
 
 export const runtime = "nodejs";
 
-const BUCKET = "direct-message-attachments";
 const MAX_BYTES = 8 * 1024 * 1024;
 const PDF_MIME = "application/pdf";
 const DOC_MIME = "application/msword";
@@ -38,22 +38,6 @@ function sniffResumeMime(buffer: Buffer, fileName: string) {
   return null;
 }
 
-function resumePathFromSignedUrl(value: string) {
-  try {
-    const marker = `/object/sign/${BUCKET}/`;
-    const pathname = new URL(value).pathname;
-    const index = pathname.indexOf(marker);
-    return index >= 0 ? decodeURIComponent(pathname.slice(index + marker.length)) : null;
-  } catch {
-    return null;
-  }
-}
-
-function originalResumeName(path: string) {
-  const storedName = path.split("/").pop() ?? "CV";
-  return storedName.replace(/^\d+-[0-9a-f-]{36}-/i, "") || "CV";
-}
-
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -70,19 +54,16 @@ export async function GET() {
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const path = application?.resume_url ? resumePathFromSignedUrl(application.resume_url) : null;
+  const path = resumeStoragePath(application?.resume_url);
   if (!path) return NextResponse.json({ resume: null });
-
-  const { data: signed, error: signedError } = await db.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 30);
-  if (signedError || !signed?.signedUrl) return NextResponse.json({ resume: null });
 
   return NextResponse.json({
     resume: {
-      url: signed.signedUrl,
-      name: originalResumeName(path),
+      url: path,
+      name: resumeOriginalName(path),
       usedAt: application?.created_at ?? null,
     },
-  });
+  }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function POST(req: Request) {
@@ -114,12 +95,11 @@ export async function POST(req: Request) {
 
   const name = safeFileName(file.name);
   const path = `job-applications/${jobId}/${user.id}/${Date.now()}-${crypto.randomUUID()}-${name}`;
-  const { error: uploadError } = await db.storage.from(BUCKET).upload(path, buffer, {
+  const { error: uploadError } = await db.storage.from(JOB_RESUME_BUCKET).upload(path, buffer, {
     contentType: mime,
     upsert: false,
   });
   if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
 
-  const { data: signed } = await db.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 30);
-  return NextResponse.json({ url: signed?.signedUrl ?? null, name, path });
+  return NextResponse.json({ url: path, name, path }, { headers: { "Cache-Control": "private, no-store" } });
 }

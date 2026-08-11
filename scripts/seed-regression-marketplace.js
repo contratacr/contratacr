@@ -5,13 +5,13 @@ const TEST_SUPABASE_REF = "sodegkfjjrdkbohycqyq";
 const SEED = "full-app-regression-v1";
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";
 
-if (!fs.existsSync(envFile)) {
-  throw new Error(`Missing ${envFile}. This seed only runs with an explicit test environment file.`);
-}
-
-for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
-  const match = line.match(/^([^#=]+)=(.*)$/);
-  if (match) process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
+if (fs.existsSync(envFile)) {
+  for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match) process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
+  }
+} else if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error(`Missing ${envFile} and explicit test Supabase environment variables.`);
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -80,6 +80,28 @@ async function must(label, promise) {
   return data;
 }
 
+async function findMirroredProfessionalByBusinessName(businessName) {
+  const professionals = await must(
+    `find ${businessName} professionals`,
+    supabase
+      .from("professionals")
+      .select("id,profile_id,slug,business_name,category_id")
+      .ilike("business_name", businessName),
+  );
+  if (!professionals.length) return null;
+
+  const profiles = await must(
+    `find ${businessName} profiles`,
+    supabase.from("profiles").select("id,email").in("id", professionals.map((row) => row.profile_id)),
+  );
+  const mirroredProfileIds = new Set(
+    profiles
+      .filter((profile) => /^prod\+.*@mirror\.contratacr\.test$/i.test(profile.email || ""))
+      .map((profile) => profile.id),
+  );
+  return professionals.find((row) => mirroredProfileIds.has(row.profile_id)) || professionals[0];
+}
+
 async function deleteTaggedNotifications() {
   const rows = await must(
     "read regression notifications",
@@ -141,17 +163,7 @@ async function main() {
 
   await assertMarketplaceNotificationSchema(isaac.id);
 
-  let sg = await must(
-    "find SG Solutions",
-    supabase.from("professionals").select("id,profile_id,slug,business_name,category_id").eq("slug", "test-sg-solutions").maybeSingle(),
-  );
-  if (!sg) {
-    const [fallback] = await must(
-      "find SG Solutions by name",
-      supabase.from("professionals").select("id,profile_id,slug,business_name,category_id").ilike("business_name", "%SG Solutions%").limit(1),
-    );
-    sg = fallback;
-  }
+  const sg = await findMirroredProfessionalByBusinessName("SG Solutions");
   if (!sg) throw new Error("SG Solutions was not found in test. Run seed-mobile-demo.js first.");
 
   const candidatePros = await must(

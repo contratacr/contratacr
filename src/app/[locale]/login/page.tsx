@@ -79,6 +79,22 @@ function setPostLoginPrompt(userId = "") {
   }
 }
 
+async function reactivateSignedInAccount(): Promise<void> {
+  try {
+    const response = await fetch("/api/account/disable", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reactivate" }),
+    });
+    if (!response.ok) {
+      console.warn("[account-reactivation] Could not reactivate the signed-in account");
+    }
+  } catch {
+    // Keep login available. The account screen still provides a manual recovery
+    // action if this best-effort request is interrupted.
+  }
+}
+
 export default function LoginPage() {
   const t = useTranslations("auth.login");
   const locale = useLocale();
@@ -130,6 +146,9 @@ export default function LoginPage() {
     await waitForAuthCookie();
 
     const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      await reactivateSignedInAccount();
+    }
     setPostLoginPrompt(userData.user?.id);
     const metadata = userData.user?.user_metadata ?? {};
     if (metadata.professional_signup_started === true && metadata.is_provider !== true) {

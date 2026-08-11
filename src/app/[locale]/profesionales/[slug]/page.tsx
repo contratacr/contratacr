@@ -42,6 +42,7 @@ import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
+import { Skeleton } from "@/components/ui/content-loading";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -269,14 +270,59 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen bg-[#f4f7fa] text-[#162543]">
         <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" aria-hidden />
-            <p className="text-sm font-medium text-[#6b7280]">
-              {tLoading("profile")}
-            </p>
+        <main className="ccr-delayed-loading mx-auto w-full max-w-[1240px] px-4 pb-12 pt-5 sm:px-6 lg:px-8" aria-busy="true" role="status">
+          <span className="sr-only">{tLoading("profile")}</span>
+          <section className="rounded-2xl border border-[#dfe8f0] bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.65)] sm:p-7">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-4">
+                <Skeleton className="h-20 w-20 shrink-0 rounded-full sm:h-24 sm:w-24" />
+                <div className="min-w-0 flex-1 space-y-3">
+                  <Skeleton className="h-6 w-52 max-w-full rounded-full" />
+                  <Skeleton className="h-4 w-32 rounded-full" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-9 w-28 rounded-xl" />
+                    <Skeleton className="h-9 w-32 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 sm:min-w-[330px]">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="space-y-2 text-center">
+                    <Skeleton className="mx-auto h-5 w-12 rounded-full" />
+                    <Skeleton className="mx-auto h-3 w-20 max-w-full rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <section className="overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white">
+              <div className="flex gap-6 overflow-hidden border-b border-[#e4ebf1] px-5 py-4">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Skeleton key={index} className="h-4 w-24 shrink-0 rounded-full" />
+                ))}
+              </div>
+              <div className="space-y-5 p-5 sm:p-6">
+                <Skeleton className="h-6 w-44 rounded-full" />
+                <Skeleton className="aspect-[16/7] w-full rounded-xl" />
+                <Skeleton className="h-5 w-2/5 rounded-full" />
+                <Skeleton className="h-3 w-4/5 rounded-full" />
+                <Skeleton className="h-11 w-full rounded-xl" />
+              </div>
+            </section>
+            <aside className="hidden h-fit space-y-4 rounded-2xl border border-[#dfe8f0] bg-white p-5 lg:block">
+              <Skeleton className="h-6 w-36 rounded-full" />
+              <Skeleton className="h-4 w-24 rounded-full" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <div className="grid grid-cols-2 gap-2">
+                <Skeleton className="h-10 w-full rounded-xl" />
+                <Skeleton className="h-10 w-full rounded-xl" />
+              </div>
+            </aside>
           </div>
         </main>
       </div>

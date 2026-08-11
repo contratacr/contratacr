@@ -41,12 +41,9 @@ export async function POST(req: NextRequest) {
     // registration before the session exists). Attach the user id when present.
     const supabase = await createClient();
     const admin = createAdminClient();
-    const [{ data: { session } }, { data: { user }, error: userError }] = await Promise.all([
-      supabase.auth.getSession(),
-      supabase.auth.getUser(),
-    ]);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    let resolvedUserId = session?.user?.id || (!userError ? user?.id : null);
+    let resolvedUserId = !userError ? user?.id ?? null : null;
     if (!resolvedUserId && isValidUuid(userId)) {
       const normalizedUserId = userId.trim().toLowerCase();
       const { data: profile, error: profileError } = await admin

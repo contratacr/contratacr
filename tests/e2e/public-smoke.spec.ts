@@ -73,33 +73,32 @@ test.describe("@smoke public routes", () => {
     await expectHealthyPage(page);
   });
 
-  test("home near-me search uses the app tooltip and proximity params", async ({ page }, testInfo) => {
+  test("home near-me search uses proximity params", async ({ page }, testInfo) => {
     await page.context().setGeolocation({ latitude: 9.9281, longitude: -84.0907 });
     await gotoOK(page, "/es");
     await waitForInteractivePage(page);
     await page.context().grantPermissions(["geolocation"], { origin: new URL(page.url()).origin });
 
-    const nearMe = page.getByTestId("landing-near-me").filter({ visible: true }).first();
-    await expect(nearMe).toBeVisible();
-    await expect(nearMe).not.toHaveAttribute("title", /.+/);
-    await expect(nearMe).toHaveAttribute("aria-label", /Buscar profesionales cerca de m[ií]|Search professionals near me/i);
+    const location = page
+      .getByPlaceholder(/Ubicaci[oó]n|Location/i)
+      .filter({ visible: true })
+      .first();
+    await location.fill("San");
 
-    if (!isMobileProject(testInfo)) {
-      await nearMe.hover();
-      await expect(page.getByText(/Cerca de m[ií]|Near me/i).first()).toBeVisible();
-    }
+    const nearMe = page
+      .getByRole("button", { name: /Buscar cerca de m[ií]|Search near me/i })
+      .filter({ visible: true })
+      .first();
+    await expect(nearMe).toBeVisible();
 
     await nearMe.click();
-    const homeForm = nearMe.locator("xpath=ancestor::form[1]");
-    await expect(
-      homeForm.locator('input[placeholder="Ubicación"], input[placeholder="Location"]').filter({ visible: true }).first(),
-    ).toHaveValue(/Cerca de m[ií]|Near me/i);
-    await homeForm.getByRole("button", { name: /^Buscar$|^Search$/ }).click();
-
+    if (isMobileProject(testInfo)) {
+      await expect(location).toHaveValue(/Cerca de m[ií]|Near me/i);
+      await page.getByRole("button", { name: /^Buscar$|^Search$/i }).filter({ visible: true }).first().click();
+    }
     await expect(page).toHaveURL(/\/es\/buscar/);
     await expect(page).toHaveURL(/lat=9\.92810/);
     await expect(page).toHaveURL(/lng=-84\.09070/);
-    await expect(page).toHaveURL(/sortBy=cercania/);
   });
 
   test("services navigation keeps the matching section context", async ({ page }, testInfo) => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, LocateFixed, Search, MapPin } from "lucide-react";
+import { Loader2, Search, MapPin } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
@@ -152,58 +152,6 @@ function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minW
   return pos;
 }
 
-function IconTooltip({
-  anchorRef,
-  open,
-  label,
-}: {
-  anchorRef: RefObject<HTMLElement | null>;
-  open: boolean;
-  label: string;
-}) {
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-
-  useEffect(() => {
-    if (!open || !anchorRef.current) {
-      setPos(null);
-      return;
-    }
-
-    const update = () => {
-      const rect = anchorRef.current?.getBoundingClientRect();
-      if (!rect || (rect.width === 0 && rect.height === 0)) {
-        setPos(null);
-        return;
-      }
-      setPos({
-        left: Math.min(Math.max(rect.left + rect.width / 2, 96), window.innerWidth - 96),
-        top: rect.bottom + 8,
-      });
-    };
-
-    update();
-    window.addEventListener("scroll", update, true);
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update, true);
-      window.removeEventListener("resize", update);
-    };
-  }, [anchorRef, open]);
-
-  if (!open || !pos || typeof document === "undefined") return null;
-
-  return createPortal(
-    <span
-      role="tooltip"
-      style={{ position: "fixed", left: pos.left, top: pos.top, transform: "translateX(-50%)", zIndex: 10000 }}
-      className="pointer-events-none whitespace-nowrap rounded-lg bg-[#0f2747] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg"
-    >
-      {label}
-    </span>,
-    document.body
-  );
-}
-
 /* ─── Autocomplete dropdown (service/profession) — PORTALED to <body> ─── */
 function SuggestionsDropdown({
   anchorRef,
@@ -264,6 +212,9 @@ function LocationDropdown({
   activeIdx,
   onPick,
   onPickAddress,
+  onNearMe,
+  nearMeLabel,
+  geoLoading,
 }: {
   anchorRef: RefObject<HTMLElement | null>;
   open: boolean;
@@ -272,8 +223,11 @@ function LocationDropdown({
   activeIdx: number;
   onPick: (s: LocationSuggestion) => void;
   onPickAddress: (a: AddressSuggestion) => void;
+  onNearMe: () => void;
+  nearMeLabel: string;
+  geoLoading: boolean;
 }) {
-  const show = open && (suggestions.length > 0 || addresses.length > 0);
+  const show = open;
   const pos = useAnchoredRect(anchorRef, show, 260);
   if (!show || !pos || typeof document === "undefined") return null;
   return createPortal(
@@ -282,6 +236,17 @@ function LocationDropdown({
       className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-y-auto overscroll-contain py-1 text-left"
       role="listbox"
     >
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={onNearMe}
+        disabled={geoLoading}
+        className="flex w-full items-center gap-2.5 whitespace-nowrap border-b border-[#eef2f6] px-3.5 py-3 text-left text-sm font-semibold text-[#009FD9] transition-colors hover:bg-[#EBF5FB] disabled:opacity-60"
+      >
+        {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+        <span>{nearMeLabel}</span>
+      </button>
+
       {/* Our province/cantón taxonomy (keyboard-navigable). */}
       {suggestions.map((s, i) => (
         <button
@@ -342,10 +307,6 @@ export function LandingHero() {
   const svcMobileRef = useRef<HTMLDivElement>(null);
   const locDesktopRef = useRef<HTMLDivElement>(null);
   const locMobileRef = useRef<HTMLDivElement>(null);
-  const nearMeDesktopRef = useRef<HTMLButtonElement>(null);
-  const nearMeMobileRef = useRef<HTMLButtonElement>(null);
-  const [nearMeTooltip, setNearMeTooltip] = useState<"desktop" | "mobile" | null>(null);
-
   // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
   const [location, setLocation] = useState("");
   const [locationSel, setLocationSel] = useState<LocationSuggestion | null>(null);
@@ -515,12 +476,10 @@ export function LandingHero() {
       if (locationOverride.lat != null && locationOverride.lng != null) {
         params.set("lat", locationOverride.lat.toFixed(5));
         params.set("lng", locationOverride.lng.toFixed(5));
-        params.set("sortBy", "cercania");
       }
     } else if (locationOverride?.kind === "nearMe") {
       params.set("lat", locationOverride.lat.toFixed(5));
       params.set("lng", locationOverride.lng.toFixed(5));
-      params.set("sortBy", "cercania");
     } else if (picked && picked.label === location && (picked.provinceId || picked.lat != null)) {
       if (picked.provinceId) {
         params.set("provincia", picked.provinceId);
@@ -529,12 +488,10 @@ export function LandingHero() {
       if (picked.lat != null && picked.lng != null) {
         params.set("lat", picked.lat.toFixed(5));
         params.set("lng", picked.lng.toFixed(5));
-        params.set("sortBy", "cercania");
       }
     } else if (nearMe && location === nearMeActiveLabel) {
       params.set("lat", nearMe.lat.toFixed(5));
       params.set("lng", nearMe.lng.toFixed(5));
-      params.set("sortBy", "cercania");
     } else {
       const loc = locationSel && locationSel.label === location ? locationSel : resolveLocation(location);
       if (loc) {
@@ -662,7 +619,7 @@ export function LandingHero() {
     setLocationSel(null);
     nearMeRef.current = null;
     setGeoError(null);
-    setOpenLoc(true);
+    setOpenLoc(value.trim().length >= 2);
   }
 
   return (
@@ -715,7 +672,7 @@ export function LandingHero() {
                   value={location}
                   onChange={(e) => handleLocationChange(e.target.value)}
                   onKeyDown={handleLocKeyDown}
-                  onFocus={() => { if (locSug.length > 0) setOpenLoc(true); }}
+                  onFocus={() => setOpenLoc(location.trim().length >= 2)}
                   onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
                   placeholder={t("location")}
                   className="flex-1 w-full text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
@@ -723,23 +680,7 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
-                <button
-                  ref={nearMeDesktopRef}
-                  type="button"
-                  data-testid="landing-near-me"
-                  onClick={() => { setNearMeTooltip(null); requestNearMe(); }}
-                  onPointerEnter={() => setNearMeTooltip("desktop")}
-                  onPointerLeave={() => setNearMeTooltip(null)}
-                  onFocus={() => setNearMeTooltip("desktop")}
-                  onBlur={() => setNearMeTooltip(null)}
-                  disabled={geoLoading}
-                  aria-label={t("nearMe")}
-                  className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] disabled:cursor-wait disabled:opacity-70"
-                >
-                  {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
-                </button>
-                <IconTooltip anchorRef={nearMeDesktopRef} open={nearMeTooltip === "desktop"} label={t("nearMe")} />
-                <LocationDropdown anchorRef={locDesktopRef} open={openLoc} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
+                <LocationDropdown anchorRef={locDesktopRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
               </div>
               {/* Buscar button */}
               <button
@@ -780,7 +721,7 @@ export function LandingHero() {
                   value={location}
                   onChange={(e) => handleLocationChange(e.target.value)}
                   onKeyDown={handleLocKeyDown}
-                  onFocus={() => { if (locSug.length > 0) setOpenLoc(true); }}
+                  onFocus={() => setOpenLoc(location.trim().length >= 2)}
                   onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
                   placeholder={t("location")}
                   className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
@@ -788,24 +729,8 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
-                <button
-                  ref={nearMeMobileRef}
-                  type="button"
-                  data-testid="landing-near-me"
-                  onClick={() => { setNearMeTooltip(null); requestNearMe(); }}
-                  onPointerEnter={() => setNearMeTooltip("mobile")}
-                  onPointerLeave={() => setNearMeTooltip(null)}
-                  onFocus={() => setNearMeTooltip("mobile")}
-                  onBlur={() => setNearMeTooltip(null)}
-                  disabled={geoLoading}
-                  aria-label={t("nearMe")}
-                  className="relative ml-2 grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] disabled:cursor-wait disabled:opacity-70"
-                >
-                  {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
-                </button>
-                <IconTooltip anchorRef={nearMeMobileRef} open={nearMeTooltip === "mobile"} label={t("nearMe")} />
               </div>
-              <LocationDropdown anchorRef={locMobileRef} open={openLoc} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
+              <LocationDropdown anchorRef={locMobileRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
             </div>
             <button
               type="submit"

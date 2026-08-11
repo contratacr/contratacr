@@ -15,9 +15,8 @@ export async function GET() {
   }
 }
 
-// Soft-disable / reactivate the current user's account (item 17). A disabled
-// account is hidden from search (for pros) and can be reactivated by the user.
-// The reason is stored and surfaced to admins.
+// A disabled account stays hidden until the next successful login automatically
+// reactivates it. The reason remains available to admins.
 export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
     ? { is_disabled: true, disabled_reason: reason, disabled_at: new Date().toISOString() }
     : { is_disabled: false, disabled_reason: null, disabled_at: null };
 
-  let { error } = await admin.from("profiles").update(update).eq("id", user.id);
+  const { error } = await admin.from("profiles").update(update).eq("id", user.id);
   if (error && /is_disabled|disabled_reason|disabled_at|column|schema cache|PGRST204/i.test(error.message)) {
     return NextResponse.json({ error: "Función no disponible todavía. Intenta más tarde." }, { status: 503 });
   }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown, ChevronRight, Clock3, Search, Wrench, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Search, Wrench, X } from "lucide-react";
 import { useLocale } from "next-intl";
 
 const MARKETPLACE_CONTROL_COPY = {
@@ -93,6 +93,8 @@ type MarketplaceSecondarySearch = {
   placeholder: string;
   suggestions?: string[];
   ariaLabel?: string;
+  icon?: "service" | "location";
+  clearLabel?: string;
 };
 
 export function MarketplaceSearch({
@@ -114,6 +116,9 @@ export function MarketplaceSearch({
 }) {
   const locale = useLocale() === "en" ? "en" : "es";
   const copy = MARKETPLACE_CONTROL_COPY[locale];
+  const desktopPlaceholder = placeholder;
+  const SecondaryIcon = secondary?.icon === "location" ? MapPin : Wrench;
+  const secondaryClearLabel = secondary?.clearLabel ?? copy.clearService;
   const [open, setOpen] = useState(false);
   const [desktopField, setDesktopField] = useState<"primary" | "secondary" | null>(null);
   const [mobileField, setMobileField] = useState<"primary" | "secondary">("primary");
@@ -240,7 +245,7 @@ export function MarketplaceSearch({
 
   return (
     <div ref={rootRef} className="relative min-w-0 flex-1">
-      <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_4px_14px_rgba(15,23,42,0.08)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25 lg:h-11 lg:rounded-[6px] lg:border lg:border-[#dfe5eb] lg:bg-white lg:px-4 lg:shadow-[0_4px_16px_rgba(15,23,42,0.08)] lg:ring-0 lg:focus-within:border-[#b9d9e8] lg:focus-within:ring-0">
+      <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25 lg:h-11 lg:rounded-[6px] lg:border lg:border-[#dfe5eb] lg:bg-white lg:px-4 lg:shadow-[0_8px_28px_rgba(0,0,0,0.14)] lg:ring-0 lg:focus-within:border-[#b9d9e8] lg:focus-within:ring-0">
         <Search className="h-5 w-5 shrink-0 text-[#162543] lg:text-gray-300" />
         <div className="relative min-w-0 flex-[1.85]">
           <input
@@ -249,7 +254,7 @@ export function MarketplaceSearch({
             onChange={(event) => { onChange(event.target.value); setDesktopField("primary"); }}
             onFocus={() => { openMobileSearch(); if (window.innerWidth >= 1024) setDesktopField("primary"); }}
             onClick={openMobileSearch}
-            placeholder={placeholder}
+            placeholder={desktopPlaceholder}
             enterKeyHint="search"
             onKeyDown={(event) => {
               if (event.key === "Enter") submitSearch();
@@ -284,10 +289,10 @@ export function MarketplaceSearch({
         {secondary && (
           <>
             <span aria-hidden="true" className="hidden h-6 w-px shrink-0 bg-[#dfe5eb] lg:block" />
-            <div className="relative hidden min-w-[180px] flex-1 lg:block">
-              <Wrench className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a1adbb]" aria-hidden="true" />
-              <input value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className="h-10 w-full bg-transparent pl-7 pr-8 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400" />
-              {secondary.value && <button type="button" onClick={() => secondary.onChange("")} aria-label={copy.clearService} className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
+            <div className="relative hidden min-w-[140px] flex-1 lg:block xl:min-w-[180px]">
+              <SecondaryIcon className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#a1adbb]" aria-hidden="true" />
+              <input value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className="h-10 w-full bg-transparent pl-8 pr-8 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400" />
+              {secondary.value && <button type="button" onClick={() => secondary.onChange("")} aria-label={secondaryClearLabel} className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
             {desktopField === "secondary" && visibleSecondarySuggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-xl border border-[#d7e1ea] bg-white py-1 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.8)]">
                 {visibleSecondarySuggestions.map((suggestion) => (
@@ -309,7 +314,7 @@ export function MarketplaceSearch({
       </div>
       {open && (
         <div className="fixed inset-0 z-[1300] bg-white text-[#162543] lg:hidden">
-          <div className="border-b border-[#e7edf2] px-4 py-4">
+          <div className="space-y-3 px-4 py-4">
             <div className="flex h-13 min-w-0 items-center rounded-xl border border-[#d8e4ec] bg-white px-3 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.7)]">
               <button type="button" onClick={closeMobileSearch} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
                 <ChevronRight className="h-6 w-6 rotate-180" />
@@ -330,27 +335,27 @@ export function MarketplaceSearch({
                 className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#1A2744] outline-none placeholder:text-[#a5afbd]"
               />
             </div>
-          </div>
-          {secondary && (
-            <div className="border-b border-[#e7edf2] px-4 py-3">
-              <label className="flex h-12 items-center gap-3 rounded-xl border border-[#d7e1ea] bg-white px-3 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
-                <Wrench className="h-5 w-5 shrink-0 text-[#162543]" />
+            {secondary && (
+              <label className="flex h-13 items-center rounded-xl border border-[#d8e4ec] bg-white px-3 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.7)]">
+                <span className="grid h-10 w-10 shrink-0 place-items-center" aria-hidden="true">
+                  <SecondaryIcon className="h-6 w-6 text-[#162543]" />
+                </span>
                 <input
                   value={secondary.value}
                   onChange={(event) => { secondary.onChange(event.target.value); setMobileField("secondary"); }}
                   onFocus={() => setMobileField("secondary")}
                   placeholder={secondary.placeholder}
                   aria-label={secondary.ariaLabel ?? secondary.placeholder}
-                  className="h-11 min-w-0 flex-1 bg-transparent text-base font-semibold text-[#162543] outline-none placeholder:text-[#9aa8ba]"
+                  className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#162543] outline-none placeholder:text-[#9aa8ba]"
                 />
                 {secondary.value && (
-                  <button type="button" onClick={() => secondary.onChange("")} aria-label={copy.clearService} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#edf3f7] text-[#64748b]">
+                  <button type="button" onClick={() => secondary.onChange("")} aria-label={secondaryClearLabel} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#edf3f7] text-[#64748b]">
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </label>
-            </div>
-          )}
+            )}
+          </div>
           <div className="px-6 py-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-base font-extrabold">{mobileField === "secondary" || cleanValue ? copy.suggestions : copy.recents}</h2>
