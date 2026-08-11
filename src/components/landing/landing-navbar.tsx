@@ -1606,10 +1606,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <button
                             type="submit"
                             aria-label={t("search")}
-                            className="h-full self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:px-6 sm:text-[15px] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
+                            className="inline-flex h-full w-12 shrink-0 items-center justify-center self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] text-white transition-colors hover:bg-[#0089bb]"
                           >
-                            <Search className="h-4 w-4 sm:hidden" />
-                            <span className="hidden sm:inline">{t("search")}</span>
+                            <Search className="h-5 w-5" aria-hidden="true" />
                           </button>
                         </div>
 
