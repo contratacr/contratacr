@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-// "Cerrar cuenta / Deshabilitar cuenta" — soft-disable with a required reason.
-// Recoverable (the user can reactivate by logging back in). The reason is stored
-// and surfaced to admins.
+// Soft-disable requires a reason and is recoverable. A later sign-in normally
+// reactivates the account automatically; the manual action below is a fallback
+// for an interrupted login request.
 export function CloseAccountSection({ initialDisabled = false }: { initialDisabled?: boolean }) {
   const t = useTranslations("closeAccount");
   const [open, setOpen] = useState(false);
@@ -36,7 +36,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       });
       const json = await res.json();
       if (!res.ok) { setError(json.error ?? t("processError")); return; }
-      // Sign out — the account is now hidden; logging back in reactivates options.
+      // Sign out after hiding the account. The next successful login reactivates it.
       const supabase = createClient();
       await supabase.auth.signOut();
       window.location.assign("/es");
@@ -64,9 +64,8 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
     setDeleteError(null);
     try {
       const res = await fetch("/api/account/delete", { method: "POST" });
-      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setDeleteError(json.error ?? t("deleteError"));
+        setDeleteError(t("deleteError"));
         return;
       }
       const supabase = createClient();

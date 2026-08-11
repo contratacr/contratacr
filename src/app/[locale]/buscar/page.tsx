@@ -28,6 +28,7 @@ interface SearchPageProps {
     aseguradora?: string;
     idioma?: string;
     precio?: "visible" | "quote" | "por_hora" | "por_consulta" | "por_proyecto";
+    unidadPrecio?: string;
     modalidad?: string;
     lat?: string;
     lng?: string;
@@ -44,8 +45,22 @@ interface SearchPageProps {
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAX_CARD_SLOTS_PER_PRO = 24;
 const RESULTS_PER_PAGE = 20;
-const SORT_OPTIONS = new Set(["rating", "experience"]);
-const PRICE_FILTER_OPTIONS = new Set(["visible", "quote", "por_hora", "por_consulta", "por_proyecto"]);
+const SORT_OPTIONS = new Set(["rating", "cercania", "experience"]);
+const PRICE_AVAILABILITY_OPTIONS = new Set(["visible", "quote"]);
+const PRICE_UNIT_OPTIONS = new Set(["por_hora", "por_consulta", "por_proyecto"]);
+type PriceUnit = "por_hora" | "por_consulta" | "por_proyecto";
+
+function isPriceUnit(value: string | undefined): value is PriceUnit {
+  return value !== undefined && PRICE_UNIT_OPTIONS.has(value);
+}
+
+function parseMultiParam(value: string | undefined): string[] {
+  return [...new Set((value ?? "").split(",").map((item) => item.trim()).filter(Boolean))];
+}
+
+function isModality(value: string): value is "in_person" | "video" {
+  return value === "in_person" || value === "video";
+}
 
 type SearchWorkplace = {
   id?: string;
@@ -69,14 +84,31 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const t = await getTranslations("search");
   const locale = await getLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
-  const sortBy = params.sortBy && SORT_OPTIONS.has(params.sortBy) ? params.sortBy : undefined;
-  const priceType = params.precio && PRICE_FILTER_OPTIONS.has(params.precio) ? params.precio : undefined;
+  const requestedSortBy = params.sortBy && SORT_OPTIONS.has(params.sortBy) ? params.sortBy : undefined;
+  const legacyPriceUnit = isPriceUnit(params.precio) ? params.precio : undefined;
+  const priceType = params.precio && PRICE_AVAILABILITY_OPTIONS.has(params.precio)
+    ? params.precio as "visible" | "quote"
+    : legacyPriceUnit
+      ? "visible"
+      : undefined;
+  const parsedPriceUnits = parseMultiParam(params.unidadPrecio).filter(isPriceUnit);
+  const priceUnits = parsedPriceUnits.length > 0
+    ? parsedPriceUnits
+    : legacyPriceUnit
+      ? [legacyPriceUnit]
+      : [];
+  const modalities = parseMultiParam(params.modalidad).filter(isModality);
+  const videoOnly = modalities.length === 1 && modalities[0] === "video";
+  const inPersonOnly = modalities.length === 1 && modalities[0] === "in_person";
   const selectedCategory = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const effectiveQuery = selectedCategory ? undefined : params.q;
   const parsedNearLat = params.lat ? Number(params.lat) : undefined;
   const parsedNearLng = params.lng ? Number(params.lng) : undefined;
   const nearLat = typeof parsedNearLat === "number" && Number.isFinite(parsedNearLat) ? parsedNearLat : undefined;
   const nearLng = typeof parsedNearLng === "number" && Number.isFinite(parsedNearLng) ? parsedNearLng : undefined;
+  const sortBy = nearLat !== undefined && nearLng !== undefined && requestedSortBy === "cercania"
+    ? "rating"
+    : requestedSortBy;
 
   // Who is viewing - so we can hide self-service actions on a pro's OWN card.
   // safeGetUser never throws on a stale session (would otherwise crash this
@@ -93,6 +125,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     : undefined;
 
   const canFilterByInsurer = isHealthCategory(params.categoria);
+  const insurerIds = canFilterByInsurer ? parseMultiParam(params.aseguradora) : [];
+  // Language is a single-choice filter. Older shared URLs may still contain a
+  // comma-separated value, so keep the first valid choice for compatibility.
+  const languageId = parseMultiParam(params.idioma)[0];
 
   const [viewer, allResults] = await Promise.all([
     viewerPromise,
@@ -102,10 +138,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       cantonId: params.canton,
       sortBy,
       query: effectiveQuery,
-      insurerId: canFilterByInsurer ? params.aseguradora : undefined,
-      languageId: params.idioma,
+      insurerIds,
+      languageId,
       priceType,
-      modality: params.modalidad === "video" || params.modalidad === "in_person" ? params.modalidad : "any",
+      priceUnits,
+      modalities,
       nearLat,
       nearLng,
       bounds: mapBounds,
@@ -113,17 +150,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   ]);
   const viewerProfileId = viewer?.id;
 
-  // "Disponibilidad inmediata" sort - order pros by their SOONEST upcoming bookable
-  // slot (those with no upcoming slots go last). Done here (not in the SQL query)
-  // because slots live in a separate table; best-effort, falls back to default order.
   let orderedResults = allResults;
 
   // Fetch upcoming published slots for the professionals on THIS page so each
   // card can show inline availability (Hulihealth-style). Private pros are
   // skipped - their slots must not appear.
   const slotsByPro: Record<string, ScheduleSlot[]> = {};
-  const earliestByPro: Record<string, string> = {};
-  const videoMode = params.modalidad === "video";
+  const videoMode = videoOnly;
   const publicIds = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
   // Resolve availability in one grouped read. Fetching it card-by-card caused one
   // serverless invocation per professional every time search results rendered.
@@ -171,8 +204,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         const date = r.slot_date as string;
         const time = String(r.slot_time).slice(0, 5);
         if (taken.has(`${professionalId}:${date}:${time}`)) continue;
-        const key = `${date}T${time}`;
-        if (!earliestByPro[professionalId] || key < earliestByPro[professionalId]) earliestByPro[professionalId] = key;
         const visibleSlots = (slotsByPro[professionalId] ??= []);
         if (visibleSlots.length >= MAX_CARD_SLOTS_PER_PRO) continue;
         visibleSlots.push({
@@ -187,9 +218,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
   }
 
-  const ratingTieBreak = (a: (typeof allResults)[number], b: (typeof allResults)[number]) =>
-    (b.ratingAvg ?? 0) - (a.ratingAvg ?? 0) ||
-    (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
   const experienceMonths = (professional: (typeof allResults)[number]) => {
     const services = professional.services as ProService[] | undefined;
     const service = services?.find((item) => {
@@ -211,6 +239,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     const months = typeof service?.months === "number" ? service.months : professional.monthsExperience ?? 0;
     return Math.max(0, years) * 12 + Math.max(0, Math.min(11, months));
   };
+  const ratingTieBreak = (a: (typeof allResults)[number], b: (typeof allResults)[number]) =>
+    (b.ratingAvg ?? 0) - (a.ratingAvg ?? 0) ||
+    (b.reviewCount ?? 0) - (a.reviewCount ?? 0) ||
+    experienceMonths(b) - experienceMonths(a);
 
   if (sortBy === "successCases") {
     orderedResults = [...allResults].sort((a, b) =>
@@ -228,19 +260,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // Map pins only represent exact workplace pins marked on the map. Broad
   // province/canton coverage and legacy professional coordinates stay card-only.
-  // "Disponibilidad inmediata" sort: order by the soonest bookable slot, reusing
-  // the same availability read that powers the card strips.
-  if (sortBy === "availability") {
-    orderedResults = [...allResults].sort((a, b) => {
-      const ea = earliestByPro[a.id];
-      const eb = earliestByPro[b.id];
-      if (ea && eb) return ea < eb ? -1 : ea > eb ? 1 : 0;
-      if (ea) return -1;
-      if (eb) return 1;
-      return ratingTieBreak(a, b);
-    });
-  }
-
   const requestedPage = Number.parseInt(params.page ?? "1", 10);
   const totalPages = Math.max(1, Math.ceil(orderedResults.length / RESULTS_PER_PAGE));
   const currentPage = Number.isFinite(requestedPage)
@@ -318,7 +337,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   function shouldPreferVideoLocation(pro: (typeof results)[number]) {
-    if (params.modalidad === "in_person") return false;
+    if (inPersonOnly) return false;
     if (!videoCompatibleSearch || (!pro.videoconsulta && !pro.coverage?.country)) return false;
     if (videoMode) return true;
     if (!activeProvince && !activeCanton && !exactLocationActive) return false;
@@ -328,7 +347,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   function shouldShowContactOnly(pro: (typeof results)[number]) {
     const preferVideo = shouldPreferVideoLocation(pro);
     if (preferVideo) return !(slotsByPro[pro.id] ?? []).some((slot) => slot.locationId === "videoconsulta");
-    if (params.modalidad === "in_person") return false;
+    if (inPersonOnly) return false;
     if (!videoCompatibleSearch || (!pro.videoconsulta && !pro.coverage?.country)) return false;
     if (!activeProvince && !activeCanton && !exactLocationActive) return false;
     return !matchesSelectedPhysicalLocation(pro);
@@ -352,8 +371,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     sortBy: params.sortBy,
     modalidad: params.modalidad,
     aseguradora: params.aseguradora,
-    idioma: params.idioma,
+    idioma: languageId,
     precio: priceType,
+    unidadPrecio: priceUnits.join(",") || undefined,
     ubicacion: params.ubicacion ?? (activeCanton && activeProvince ? `${activeCanton.name}, ${activeProvince.name}` : activeProvince?.name),
     lat: params.lat,
     lng: params.lng,
@@ -401,8 +421,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     !!activeProvince ||
     !!activeCanton ||
     !!mapBounds ||
-    !!params.idioma ||
+    !!languageId ||
     !!priceType ||
+    priceUnits.length > 0 ||
     !!nearLat ||
     (!!params.aseguradora && canFilterByInsurer) ||
     (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||

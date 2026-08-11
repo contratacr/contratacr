@@ -75,12 +75,16 @@ export type SearchFilters = {
   verifiedOnly?: boolean;
   /** Filter by an insurance network (aseguradora) the pro belongs to. */
   insurerId?: string;
+  insurerIds?: string[];
   /** Filter by a language the professional can attend in. */
   languageId?: string;
   /** Filter by service price type without ranking incompatible prices. */
-  priceType?: "visible" | "quote" | Extract<PricingType, "por_hora" | "por_consulta" | "por_proyecto">;
+  priceType?: "visible" | "quote";
+  priceUnit?: Extract<PricingType, "por_hora" | "por_consulta" | "por_proyecto">;
+  priceUnits?: Array<Extract<PricingType, "por_hora" | "por_consulta" | "por_proyecto">>;
   /** How the client wants to be attended. Video is only shown for compatible services. */
   modality?: "any" | "in_person" | "video";
+  modalities?: Array<"in_person" | "video">;
   /** User coordinates (geolocation) - enables the "cerca de m?" proximity sort. */
   nearLat?: number;
   nearLng?: number;
@@ -201,23 +205,25 @@ function primaryPriceAmount(p: ProfessionalCardData): number | null {
   return null;
 }
 
-function serviceMatchesPriceFilter(
+function serviceMatchesPriceFilters(
   services: ProService[] | undefined,
   priceType: SearchFilters["priceType"],
+  priceUnits: NonNullable<SearchFilters["priceUnits"]>,
   requestedCategoryIds: Set<string>
 ): boolean {
-  if (!priceType) return true;
+  if (!priceType && priceUnits.length === 0) return true;
   const list = (services ?? []).filter((service) =>
     requestedCategoryIds.size === 0 || (service.category && requestedCategoryIds.has(service.category))
   );
   if (list.length === 0) return false;
-  if (priceType === "visible") {
-    return list.some((service) => typeof service.priceAmount === "number" && service.priceAmount > 0 && service.priceType !== "a_convenir");
-  }
-  if (priceType === "quote") {
-    return list.some((service) => service.priceType === "a_convenir");
-  }
-  return list.some((service) => service.priceType === priceType);
+  return list.some((service) => {
+    const matchesAvailability = !priceType
+      || (priceType === "visible"
+        ? typeof service.priceAmount === "number" && service.priceAmount > 0 && service.priceType !== "a_convenir"
+        : service.priceType === "a_convenir");
+    const matchesUnit = priceUnits.length === 0 || (service.priceType != null && priceUnits.includes(service.priceType as NonNullable<SearchFilters["priceUnits"]>[number]));
+    return matchesAvailability && matchesUnit;
+  });
 }
 
 type ProfessionalWorkplace = NonNullable<ProfessionalCardData["workplaces"]>[number];
@@ -271,6 +277,11 @@ export type Review = {
 // ---------------------------------------------------------------------------
 
 function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
+  const insurerIds = uniqueIds(filters.insurerIds ?? (filters.insurerId ? [filters.insurerId] : []));
+  const priceUnits = [...new Set(filters.priceUnits ?? (filters.priceUnit ? [filters.priceUnit] : []))];
+  const modalities = [...new Set(filters.modalities ?? (
+    filters.modality && filters.modality !== "any" ? [filters.modality] : []
+  ))];
   const normalized: SearchFilters = {
     categoryId: filters.categoryId || undefined,
     provinceId: filters.provinceId || undefined,
@@ -278,10 +289,11 @@ function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
     sortBy: filters.sortBy || undefined,
     query: filters.query?.trim() || undefined,
     verifiedOnly: filters.verifiedOnly || undefined,
-    insurerId: filters.insurerId || undefined,
-    languageId: filters.languageId || undefined,
+    insurerIds: insurerIds.length > 0 ? insurerIds : undefined,
+    languageId: filters.languageId?.trim() || undefined,
     priceType: filters.priceType || undefined,
-    modality: filters.modality ?? "any",
+    priceUnits: priceUnits.length > 0 ? priceUnits : undefined,
+    modalities: modalities.length > 0 ? modalities : undefined,
   };
   if (typeof filters.nearLat === "number" && Number.isFinite(filters.nearLat)) normalized.nearLat = filters.nearLat;
   if (typeof filters.nearLng === "number" && Number.isFinite(filters.nearLng)) normalized.nearLng = filters.nearLng;
@@ -306,6 +318,12 @@ const searchProfessionalsCached = unstable_cache(
 async function searchProfessionalsUncached(
   filters: SearchFilters
 ): Promise<ProfessionalCardData[]> {
+  const selectedInsurerIds = filters.insurerIds ?? [];
+  const selectedLanguageId = filters.languageId;
+  const selectedPriceUnits = filters.priceUnits ?? [];
+  const selectedModalities = filters.modalities ?? [];
+  const videoOnly = selectedModalities.length === 1 && selectedModalities[0] === "video";
+  const inPersonOnly = selectedModalities.length === 1 && selectedModalities[0] === "in_person";
   if (SUPABASE_CONFIGURED) {
     try {
       const supabase = createAdminClient();
@@ -334,14 +352,14 @@ async function searchProfessionalsUncached(
         // are never visible.
         if (modern) query = query.neq("verification_status", "rejected");
         const includeVideoNationwide =
-          filters.modality !== "in_person" &&
-          (filters.modality === "video" ||
+          !inPersonOnly &&
+          (videoOnly ||
             (!!filters.categoryId && filters.categoryId !== "todas" && supportsVideoConsultCategory(filters.categoryId)));
 
-        if (modern && filters.insurerId && filters.insurerId !== "todas") {
-          query = query.contains("insurance_networks", [filters.insurerId]);
+        if (modern && selectedInsurerIds.length > 0) {
+          query = query.overlaps("insurance_networks", selectedInsurerIds);
         }
-        if (modern && filters.modality === "video") {
+        if (modern && videoOnly) {
           query = query.or("videoconsulta.eq.true,coverage_country.eq.true");
         }
 
@@ -390,7 +408,7 @@ async function searchProfessionalsUncached(
           const keywordCategoryIds = getMatchingCategoryIds(filters.query.trim());
           const queryIncludesVideoNationwide =
             includeVideoNationwide ||
-            (filters.modality !== "in_person" && keywordCategoryIds.some((id) => supportsVideoConsultCategory(id)));
+            (!inPersonOnly && keywordCategoryIds.some((id) => supportsVideoConsultCategory(id)));
           const locationMatches = getMatchingLocationIds(filters.query.trim());
           const locationFilterParts = locationMatches.flatMap((loc) => {
             if (loc.type === "province") {
@@ -524,7 +542,7 @@ async function searchProfessionalsUncached(
         publicBusinessNameOnly: !!row.business_name && row.public_business_name_only === true,
         workplaces: (row.workplaces as ProfessionalCardData["workplaces"]) ?? [],
         verificationStatus: (row.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
-        languages: (row.languages as string[]) ?? [],
+        languages: Array.isArray(row.languages) && row.languages.length > 0 ? row.languages as string[] : ["es"],
         lat: row.lat ?? null,
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,
@@ -549,13 +567,22 @@ async function searchProfessionalsUncached(
         mapped = mapped.filter((p) => (p.professions ?? []).some((id) => requestedCategoryIds.has(id)));
       }
 
-      if (filters.languageId && filters.languageId !== "todos") {
-        const wanted = new Set(languageSearchValues(filters.languageId).map((value) => normalizeText(value)));
+      if (selectedLanguageId) {
+        const wanted = new Set(languageSearchValues(selectedLanguageId).map((value) => normalizeText(value)));
         mapped = mapped.filter((p) => (p.languages ?? []).some((language) => wanted.has(normalizeText(language))));
       }
 
-      if (filters.priceType) {
-        mapped = mapped.filter((p) => serviceMatchesPriceFilter(p.services, filters.priceType, requestedCategoryIds));
+      if (selectedInsurerIds.length > 0) {
+        mapped = mapped.filter((p) => (p.insuranceNetworks ?? []).some((id) => selectedInsurerIds.includes(id)));
+      }
+
+      if (filters.priceType || selectedPriceUnits.length > 0) {
+        mapped = mapped.filter((p) => serviceMatchesPriceFilters(
+          p.services,
+          filters.priceType,
+          selectedPriceUnits,
+          requestedCategoryIds,
+        ));
       }
 
       if (!filters.sortBy || filters.sortBy === "rating") {
@@ -608,8 +635,8 @@ async function searchProfessionalsUncached(
       if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
         const { nearLat, nearLng } = filters;
         const includeVideoNationwideForNear =
-          filters.modality !== "in_person" &&
-          (filters.modality === "video" ||
+          !inPersonOnly &&
+          (videoOnly ||
             (!!filters.categoryId && filters.categoryId !== "todas" && supportsVideoConsultCategory(filters.categoryId)));
         const distOfExactPin = (p: ProfessionalCardData): number => {
           const distances: number[] = [];
@@ -651,8 +678,8 @@ async function searchProfessionalsUncached(
       if (filters.bounds) {
         const b = filters.bounds;
         const includeVideoNationwideForBounds =
-          filters.modality !== "in_person" &&
-          (filters.modality === "video" ||
+          !inPersonOnly &&
+          (videoOnly ||
             (!!filters.categoryId && filters.categoryId !== "todas" && supportsVideoConsultCategory(filters.categoryId)));
         const within = (lat: number, lng: number) => lat <= b.north && lat >= b.south && lng <= b.east && lng >= b.west;
         return mapped.filter((p) => {
@@ -930,7 +957,7 @@ export async function getProfessionalBySlug(
         services: visibleServices,
         availabilityPublic: proRow.availability_public ?? true,
         contactPreference: (proRow.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
-        languages: (proRow.languages as string[]) ?? [],
+        languages: Array.isArray(proRow.languages) && proRow.languages.length > 0 ? proRow.languages as string[] : ["es"],
         businessName: (proRow.business_name as string) ?? undefined,
         publicBusinessNameOnly: !!proRow.business_name && proRow.public_business_name_only === true,
         workplaces: (proRow.workplaces as ProfessionalCardData["workplaces"]) ?? [],

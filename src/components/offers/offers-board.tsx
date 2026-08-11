@@ -38,13 +38,14 @@ type Props = {
 };
 
 const MARKETPLACE_LIST_CLASS =
-  "ccr-marketplace-result-list min-w-0 overflow-y-auto bg-white lg:max-h-[calc(100vh-190px)] lg:border-r lg:border-[#dfe6ec]";
+  "ccr-marketplace-card-list min-w-0 bg-white lg:h-[calc(100dvh-190px)] lg:min-h-[420px] lg:overflow-y-scroll lg:border-r lg:border-[#dfe6ec]";
 
 const OFFERS_COPY = {
   es: {
     allServices: "Todos los servicios",
     searchPlaceholder: "¿Qué oferta estás buscando?",
     service: "Servicio",
+    servicePlaceholder: "Servicio",
     date: "Fecha",
     anyDate: "Cualquier fecha",
     last24Hours: "Últimas 24 horas",
@@ -84,6 +85,7 @@ const OFFERS_COPY = {
     allServices: "All services",
     searchPlaceholder: "What offer are you looking for?",
     service: "Service",
+    servicePlaceholder: "Service",
     date: "Date posted",
     anyDate: "Any date",
     last24Hours: "Past 24 hours",
@@ -139,6 +141,7 @@ export function OffersBoard({
   );
   const initialLocation =
     searchParams.get("location")?.trim().toLocaleLowerCase("es-CR") ?? "";
+  const [locationFilter, setLocationFilter] = useState(initialLocation);
   const [type, setType] = useState("all");
   const [serviceQuery, setServiceQuery] = useState(
     () => searchParams.get("service")?.trim() ?? "",
@@ -171,8 +174,7 @@ export function OffersBoard({
       unique.set(option.label, option.label),
     );
     offers.forEach((offer) => {
-      const id = offer.service_category_id || offer.service_label;
-      if (id && offer.service_label) unique.set(id, offer.service_label);
+      if (offer.service_label) unique.set(offer.service_label, offer.service_label);
     });
     return [["all", copy.allServices], ...unique.entries()] as Array<
       [string, string]
@@ -206,10 +208,10 @@ export function OffersBoard({
         Date.now() - new Date(offer.created_at).getTime() <=
           Number(published) * 86_400_000;
       const matchesLocation =
-        !initialLocation ||
+        !locationFilter ||
         offer.location_label
           ?.toLocaleLowerCase("es-CR")
-          .includes(initialLocation);
+          .includes(locationFilter);
       return (
         matchesQuery &&
         matchesService &&
@@ -221,7 +223,7 @@ export function OffersBoard({
   }, [
     deferredQuery,
     deferredServiceQuery,
-    initialLocation,
+    locationFilter,
     offers,
     published,
     type,
@@ -232,16 +234,10 @@ export function OffersBoard({
     () => [...new Set(offers.map((offer) => offer.title).filter(Boolean))],
     [offers],
   );
-  const serviceSuggestions = useMemo(
-    () =>
-      serviceOptions
-        .map(([, label]) => label)
-        .filter((label) => label !== copy.allServices),
-    [copy.allServices, serviceOptions],
-  );
   const hasActiveFilters =
     Boolean(query.trim()) ||
     Boolean(serviceQuery.trim()) ||
+    Boolean(locationFilter) ||
     type !== "all" ||
     published !== "all";
 
@@ -254,6 +250,11 @@ export function OffersBoard({
     setType("all");
     setServiceQuery("");
     setPublished("all");
+    setLocationFilter("");
+    const params = new URLSearchParams(window.location.search);
+    params.delete("location");
+    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+    window.history.replaceState(null, "", nextUrl);
   }
 
   useEffect(() => {
@@ -274,9 +275,11 @@ export function OffersBoard({
       secondary={{
         value: serviceQuery,
         onChange: setServiceQuery,
-        placeholder: copy.service,
+        placeholder: copy.servicePlaceholder,
         ariaLabel: copy.service,
-        suggestions: serviceSuggestions,
+        suggestions: serviceOptions.slice(1).map(([, label]) => label),
+        icon: "service",
+        clearLabel: locale === "en" ? "Clear service" : "Limpiar servicio",
       }}
     />
   );
@@ -309,11 +312,11 @@ export function OffersBoard({
     </>
   );
   const renderActions = () => (
-    <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+    <div className={canPost ? "grid w-full grid-cols-2 gap-2 sm:w-[296px] [&>*]:w-full" : "flex w-full sm:w-auto"}>
       {canPost && (
         <Link
           href="/dashboard/profesional?mode=offer&tab=offers&returnTo=%2Fofertas"
-          className="inline-flex h-10 flex-1 items-center justify-center rounded-lg border border-[#cddae6] bg-white px-5 text-sm font-bold text-[#162543] transition hover:border-[#b7c8d9] hover:bg-[#f8fafc] sm:flex-none"
+          className="inline-flex h-[42px] items-center justify-center rounded-lg border border-[#cddae6] bg-white px-4 text-sm font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb]"
         >
           {copy.myOffers}
         </Link>
@@ -323,13 +326,13 @@ export function OffersBoard({
           <button
             type="button"
             onClick={() => setPublishOpen(true)}
-            className="hidden h-10 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:inline-flex"
+            className="hidden h-[42px] items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
           >
             {copy.publishOffer}
           </button>
           <Link
             href="/ofertas/publicar"
-            className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:hidden"
+            className="inline-flex h-[42px] items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
           >
             {copy.publishOffer}
           </Link>
@@ -396,8 +399,8 @@ export function OffersBoard({
       </div>
 
       <div className="mx-auto max-w-7xl px-0 sm:px-6 sm:py-5 lg:pt-3">
-        <div className="lg:grid lg:max-h-[calc(100vh-190px)] lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] lg:overflow-hidden lg:rounded-lg lg:border lg:border-[#dfe8f0] lg:bg-white">
-          <section className={MARKETPLACE_LIST_CLASS}>
+        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:max-h-[calc(100vh-190px)] lg:overflow-hidden lg:rounded-lg lg:border lg:border-[#dfe8f0] lg:bg-white`}>
+          <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
             <div className="border-b border-[#e7edf2] px-4 py-3">
               <p className="font-bold">
                  {filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}
@@ -414,7 +417,7 @@ export function OffersBoard({
                 />
               ))}
               {filtered.length === 0 && (
-                <div className="flex min-h-[300px] flex-col items-center justify-center px-7 py-12 text-center">
+                <div className="flex min-h-[320px] flex-col items-center justify-center px-7 py-12 text-center lg:min-h-[360px]">
                   <span className="grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
                     <Store className="h-6 w-6" strokeWidth={2} />
                   </span>
@@ -437,12 +440,21 @@ export function OffersBoard({
                        {copy.viewAll}
                     </button>
                   ) : canPost ? (
-                    <Link
-                      href="/ofertas/publicar"
-                      className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]"
-                    >
-                       {copy.publishFirst}
-                    </Link>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setPublishOpen(true)}
+                        className="mt-5 hidden h-10 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
+                      >
+                        {copy.publishFirst}
+                      </button>
+                      <Link
+                        href="/ofertas/publicar"
+                        className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
+                      >
+                        {copy.publishFirst}
+                      </Link>
+                    </>
                   ) : null}
                 </div>
               )}

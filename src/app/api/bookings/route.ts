@@ -35,22 +35,22 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient();
 
-    // Check if an authenticated user session exists to link the booking
-    const { data: { session } } = await supabase.auth.getSession();
+    // Revalidate an authenticated user before linking the booking.
+    const { data: { user } } = await supabase.auth.getUser();
     const cleanClientCedula = cleanId(typeof clientCedula === "string" ? clientCedula : "");
     if (cleanClientCedula && !isValidId(cleanClientCedula)) {
       return NextResponse.json({ error: "Ingresa un numero de identificacion valido." }, { status: 400 });
     }
 
     // Self-interaction guard: a professional cannot request a service from themselves.
-    if (session?.user) {
+    if (user) {
       const admin = createAdminClient();
       const { data: targetPro } = await admin
         .from("professionals")
         .select("profile_id")
         .eq("id", professionalId)
         .maybeSingle();
-      if (targetPro?.profile_id === session.user.id) {
+      if (targetPro?.profile_id === user.id) {
         return NextResponse.json({ error: "No puedes solicitarte un servicio a ti mismo." }, { status: 400 });
       }
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
           .from("profiles")
           .select("id")
           .eq("cedula", cleanClientCedula)
-          .neq("id", session.user.id)
+          .neq("id", user.id)
           .maybeSingle();
 
         if (dupe) {
@@ -94,14 +94,14 @@ export async function POST(req: NextRequest) {
             client_identity_verified_at: accountIdentityStatus === "verified" ? new Date().toISOString() : null,
             client_identity_provider: identityProvider,
           })
-          .eq("id", session.user.id);
+          .eq("id", user.id);
 
-        await syncProfessionalVerificationFromAccount(admin, session.user.id, accountIdentityStatus, identityProvider);
+        await syncProfessionalVerificationFromAccount(admin, user.id, accountIdentityStatus, identityProvider);
 
         if (officialName) {
           try {
-            const { data: authUser } = await admin.auth.admin.getUserById(session.user.id);
-            await admin.auth.admin.updateUserById(session.user.id, {
+            const { data: authUser } = await admin.auth.admin.getUserById(user.id);
+            await admin.auth.admin.updateUserById(user.id, {
               user_metadata: { ...(authUser?.user?.user_metadata ?? {}), full_name: officialName },
             });
           } catch { /* profile is the source of truth */ }
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
 
     const baseBooking = {
       professional_id: professionalId,
-      client_id: session?.user?.id ?? null,
+      client_id: user?.id ?? null,
       client_cedula: cleanClientCedula || null,
       client_name: limitTrimmedText(clientName, NAME_MAX_LENGTH) || "Cliente",
       client_email: clientEmail ?? null,
@@ -203,14 +203,14 @@ export async function POST(req: NextRequest) {
     // has no birth date, and this is NEVER shown as a profile/account field). Self →
     // profiles.date_of_birth; beneficiary → beneficiary_dob keyed by (owner, cédula).
     // Best-effort: the booking already succeeded, so a save miss must never fail it.
-    if (session?.user) {
+    if (user) {
       try {
         if (!forSomeoneElse && clientDob) {
-          await adminInsert.from("profiles").update({ date_of_birth: clientDob }).eq("id", session.user.id);
+          await adminInsert.from("profiles").update({ date_of_birth: clientDob }).eq("id", user.id);
         }
         if (forSomeoneElse && beneficiaryCedula && beneficiaryDob) {
           await adminInsert.from("beneficiary_dob").upsert(
-            { owner_id: session.user.id, cedula: String(beneficiaryCedula).replace(/\D/g, ""), dob: beneficiaryDob, updated_at: new Date().toISOString() },
+            { owner_id: user.id, cedula: String(beneficiaryCedula).replace(/\D/g, ""), dob: beneficiaryDob, updated_at: new Date().toISOString() },
             { onConflict: "owner_id,cedula" }
           );
         }
@@ -219,15 +219,15 @@ export async function POST(req: NextRequest) {
 
     // Notify the professional (in-app + optional WhatsApp). Best-effort.
     await auditUserAction(adminInsert, req, {
-      actorUserId: session?.user?.id ?? null,
-      actorRole: session?.user ? "client" : "guest",
+      actorUserId: user?.id ?? null,
+      actorRole: user ? "client" : "guest",
       action: "booking.create",
       entityTable: "bookings",
       entityId: data.id,
-      entityOwnerUserId: session?.user?.id ?? null,
+      entityOwnerUserId: user?.id ?? null,
       afterData: {
         professional_id: professionalId,
-        client_id: session?.user?.id ?? null,
+        client_id: user?.id ?? null,
         service_description: limitTrimmedText(serviceDescription, LONG_TEXT_MAX_LENGTH),
         scheduled_date: scheduledDate ?? null,
         scheduled_time: scheduledTime ?? null,
@@ -240,7 +240,7 @@ export async function POST(req: NextRequest) {
     await recordServerInteraction(adminInsert, req, {
       type: "service_request_created",
       professionalId,
-      viewerUserId: session?.user?.id ?? null,
+      viewerUserId: user?.id ?? null,
       source: "booking",
       categoryId: categoryId ?? null,
       metadata: {
@@ -259,7 +259,7 @@ export async function POST(req: NextRequest) {
     });
 
     // If email provided and no session, send magic link to create / sign in account
-    if (clientEmail && !session?.user) {
+    if (clientEmail && !user) {
       await supabase.auth.signInWithOtp({
         email: clientEmail,
         options: {
@@ -299,15 +299,15 @@ export async function GET(req: NextRequest) {
 
   const supabase = await createClient();
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (role === "professional") {
     // Get professional ID for this user
     const { data: pro } = await supabase
       .from("professionals")
       .select("id")
-      .eq("profile_id", session.user.id)
+      .eq("profile_id", user.id)
       .single();
 
     if (!pro) return NextResponse.json({ bookings: [] });
@@ -337,14 +337,14 @@ export async function GET(req: NextRequest) {
   // (authorized by the session above). RLS row-policy changes on `bookings` would
   // otherwise silently filter the client's own sent requests to an empty list.
   const adminClient = createAdminClient();
-  await autoConfirmStale(adminClient, { client_id: session.user.id });
+  await autoConfirmStale(adminClient, { client_id: user.id });
   // NOTE: professionals↔categories has no FK (category_id is plain text), so an
   // embedded categories(...) join 500s and silently drops every booking. Select
   // category_id as a column instead.
   const { data, error } = await adminClient
     .from("bookings")
     .select("*, professionals(slug, category_id, profiles(full_name, avatar_url))")
-    .eq("client_id", session.user.id)
+    .eq("client_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -362,15 +362,15 @@ export async function PATCH(req: NextRequest) {
   const isReschedule = !!scheduledDate && !!scheduledTime;
 
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   // Identify who is updating (professional vs client) to set ownership fields and
   // notify the OTHER party on every state change.
   const { data: actorPro } = await supabase
     .from("professionals")
     .select("id")
-    .eq("profile_id", session.user.id)
+    .eq("profile_id", user.id)
     .maybeSingle();
 
   // Authorize against the actual row, then persist with the service-role client.
@@ -385,7 +385,7 @@ export async function PATCH(req: NextRequest) {
   if (!bookingRow) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
 
   const isOwnerPro = !!actorPro && bookingRow.professional_id === actorPro.id;
-  const isOwnerClient = bookingRow.client_id === session.user.id;
+  const isOwnerClient = bookingRow.client_id === user.id;
   if (!isOwnerPro && !isOwnerClient) {
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   }
@@ -398,7 +398,7 @@ export async function PATCH(req: NextRequest) {
     const { error: archiveError } = await admin.from("bookings").update(archivePatch).eq("id", id);
     if (archiveError) return NextResponse.json({ error: archiveError.message }, { status: 500 });
     await auditUserAction(admin, req, {
-      actorUserId: session.user.id,
+      actorUserId: user.id,
       actorRole: isOwnerPro ? "professional" : "client",
       action: "booking.archive",
       entityTable: "bookings",
@@ -457,7 +457,7 @@ export async function PATCH(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await auditUserAction(admin, req, {
-    actorUserId: session.user.id,
+    actorUserId: user.id,
     actorRole: isOwnerPro ? "professional" : "client",
     action: isReschedule ? "booking.reschedule" : `booking.status.${status}`,
     entityTable: "bookings",

@@ -84,7 +84,9 @@ export function computeCompletion(pro: ProRecord): {
   );
   const links = socialLinks(pro.social_links);
   const hasPublicLinks = hasAnyText(links.website, links.instagram, links.facebook, links.tiktok, links.linkedin);
-  const hasLanguages = Array.isArray(pro.languages) && pro.languages.some((language) => hasText(language));
+  // An empty legacy value means the platform default: Spanish.
+  const hasLanguages = !Array.isArray(pro.languages) || pro.languages.length === 0 ||
+    pro.languages.some((language) => hasText(language));
   const hasEducation = hasLen(pro.certifications);
   const hasPortfolio =
     countCases(

@@ -138,12 +138,17 @@ test.describe("@seeded search results", () => {
 
     const body = page.locator("body");
     if (isMobileProject(testInfo)) {
-      await page.getByRole("button", { name: /^Idioma$|^Language$/i }).filter({ visible: true }).first().click();
-      await expect(page.getByText(/Idioma de atenci[oó]n|Service language/i).filter({ visible: true }).first()).toBeVisible();
-      await expect(page.getByRole("button", { name: /Todos los idiomas|All languages/i }).filter({ visible: true }).first()).toBeVisible();
+      await page
+        .getByRole("button", { name: /Idioma de atenci[oó]n|Service language/i })
+        .filter({ visible: true })
+        .first()
+        .click();
+      const languageDialog = page.getByRole("dialog", { name: /Idioma de atenci[oó]n|Service language/i });
+      await expect(languageDialog).toBeVisible();
+      await expect(languageDialog.getByRole("button", { name: /Cualquier idioma|Any language/i })).toBeVisible();
     } else {
-      await expect(page.getByText(/Idioma|Language/i).filter({ visible: true }).first()).toBeVisible();
-      await expect(page.getByText(/Selecciona un idioma|Select a language|Any language/i).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByText(/Idioma de atenci[oó]n|Service language/i).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByRole("combobox", { name: /Idioma de atenci[oó]n|Service language/i }).filter({ visible: true }).first()).toContainText(/Cualquier idioma|Any language/i);
     }
     await expect(body).not.toContainText(/Solo verificados|Only verified/i);
     await expect(body).not.toContainText(/Buscar profesionales cerca de m[ií]|Find professionals near me/i);

@@ -30,6 +30,9 @@ export function WhatsAppReviewFollowUp() {
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const handledFollowUpId = useRef<string | null>(null);
+  const followUpRequestInFlight = useRef(false);
+  const lastFollowUpCheckAt = useRef(0);
+  const userId = user?.id ?? null;
 
   const act = useCallback(async (item: FollowUp, action: "hired" | "not_now" | "not_hired") => {
     const response = await fetch("/api/contact/follow-up", {
@@ -47,6 +50,8 @@ export function WhatsAppReviewFollowUp() {
   }, [locale]);
 
   const checkFollowUp = useCallback(async (active = true) => {
+    if (followUpRequestInFlight.current) return;
+    followUpRequestInFlight.current = true;
     try {
       const response = await fetch("/api/contact/follow-up", { cache: "no-store" });
       const payload = await response.json();
@@ -62,7 +67,7 @@ export function WhatsAppReviewFollowUp() {
         return;
       }
 
-      if (item.status === "hire_intent" && user) {
+      if (item.status === "hire_intent" && userId) {
         const result = await act(item, "hired");
         if (active && result?.review) setReviewTarget(result.review);
         return;
@@ -70,8 +75,11 @@ export function WhatsAppReviewFollowUp() {
       setFollowUp(item);
     } catch {
       // Follow-up is optional and must never interrupt the page being used.
+    } finally {
+      lastFollowUpCheckAt.current = Date.now();
+      followUpRequestInFlight.current = false;
     }
-  }, [act, user]);
+  }, [act, userId]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -85,18 +93,22 @@ export function WhatsAppReviewFollowUp() {
         if (active) void checkFollowUp(active);
       }, 65 * 1000);
     };
+    const onVisibilityChange = () => {
+      const checkIsStale = Date.now() - lastFollowUpCheckAt.current >= 60 * 1000;
+      if (document.visibilityState === "visible" && active && checkIsStale) {
+        void checkFollowUp(active);
+      }
+    };
     window.addEventListener("contratacr:whatsapp-contacted", onWhatsAppContacted);
-    const interval = window.setInterval(() => {
-      if (!followUp && active) void checkFollowUp(active);
-    }, 15 * 1000);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
       active = false;
       window.clearTimeout(initialTimer);
       window.removeEventListener("contratacr:whatsapp-contacted", onWhatsAppContacted);
-      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [authLoading, checkFollowUp, followUp]);
+  }, [authLoading, checkFollowUp]);
 
   async function handle(action: "hired" | "not_now" | "not_hired") {
     if (!followUp || submitting) return;

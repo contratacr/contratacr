@@ -51,7 +51,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setGeoLoading(false);
-        router.push(`/buscar?sortBy=cercania&lat=${latitude.toFixed(5)}&lng=${longitude.toFixed(5)}`);
+        router.push(`/buscar?lat=${latitude.toFixed(5)}&lng=${longitude.toFixed(5)}`);
       },
       () => {
         setGeoLoading(false);

@@ -2,16 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { createClient } from "@/lib/supabase/server";
-
-function resumeNameFromUrl(value: string | null) {
-  if (!value) return null;
-  try {
-    const storedName = decodeURIComponent(new URL(value).pathname.split("/").pop() ?? "");
-    return storedName.replace(/^\d+-[0-9a-f-]{36}-/i, "") || "CV";
-  } catch {
-    return "CV";
-  }
-}
+import { resumeOriginalName } from "@/lib/jobs/resume-storage";
 
 export async function GET() {
   const supabase = await createClient();
@@ -44,8 +35,8 @@ export async function GET() {
     const employer = job ? employerById.get(job.employer_id) : null;
     return {
       id: application.id, status: application.status, createdAt: application.created_at,
-      resumeUrl: application.resume_url,
-      resumeName: resumeNameFromUrl(application.resume_url),
+      resumeUrl: application.resume_url ? `/api/jobs/applications/${application.id}/resume` : null,
+      resumeName: resumeOriginalName(application.resume_url),
       coverLetter: application.cover_letter,
       portfolioUrl: application.portfolio_url,
       job: job ? {

@@ -587,21 +587,50 @@ test.describe("@seeded core regression", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("anonymous visitors can see seeded jobs and open a job detail", async ({ page }) => {
+    await resetAuth(page);
+    await gotoOK(page, "/es/empleos");
+
+    await expect(page.getByText("E2E Asistente de operaciones").first()).toBeVisible();
+    await expect(page.getByText("E2E Desarrollador web remoto").first()).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    await gotoOK(page, `/es/empleos/${seed.publishedJobId}`);
+    await expect(page.getByRole("heading", { name: "E2E Asistente de operaciones" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Responsabilidades" })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("English offer listings and details render localized copy without leaking translation keys", async ({ page }) => {
     await resetAuth(page);
     await gotoOK(page, "/en/ofertas");
 
     await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
-    await expect(page.getByText("Promotions from professionals")).toBeAttached();
+    await expect(page.getByText("Promotions from professionals").first()).toBeAttached();
     await expect(page.getByText("E2E Mantenimiento residencial").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, `/en/ofertas/${seed.publishedOfferId}`);
     await expect(page.getByRole("heading", { name: "E2E Mantenimiento residencial" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Details" })).toBeVisible();
-    await expect(page.getByText(/Published by/i)).toBeAttached();
+    await expect(page.getByText(/Published by/i).first()).toBeAttached();
     await expect(page.getByText("Service offer").first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/(?:offers?\.|search\.filters\.|proPanel\.|verificationPanel\.)/);
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("English job listings and details render localized copy without leaking translation keys", async ({ page }) => {
+    await resetAuth(page);
+    await gotoOK(page, "/en/empleos");
+
+    await expect(page.getByRole("heading", { name: "Jobs" })).toBeVisible();
+    await expect(page.getByText("E2E Asistente de operaciones").first()).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    await gotoOK(page, `/en/empleos/${seed.publishedJobId}`);
+    await expect(page.getByRole("heading", { name: "E2E Asistente de operaciones" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Responsibilities" })).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/(?:jobs?\.|search\.filters\.|proPanel\.|verificationPanel\.)/);
     await expectNoHorizontalOverflow(page);
   });
 });

@@ -253,10 +253,10 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
       setSelfMsg(SELF_MSG.favorite);
       return;
     }
-    // During hydration `useAuth` may briefly contain a cached user. Confirm the
-    // live Supabase session before deciding whether this is a guest action.
+    // During hydration `useAuth` may briefly contain a cached user. Revalidate
+    // the identity before deciding whether this is a guest action.
     const activeUser = authLoading
-      ? (await createClient().auth.getSession()).data.session?.user ?? null
+      ? (await createClient().auth.getUser()).data.user ?? null
       : user;
     if (!saved && !activeUser) {
       writePendingSave(pro);

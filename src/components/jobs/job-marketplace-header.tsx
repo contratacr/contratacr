@@ -22,6 +22,8 @@ const JOB_HEADER_COPY = {
     anyExperience: "Cualquier experiencia",
     employment: "Tipo de empleo",
     anyEmployment: "Cualquier tipo",
+    location: "Ubicación",
+    clearLocation: "Limpiar ubicación",
     close: "Cerrar empleos",
     title: "Empleos",
   },
@@ -38,6 +40,8 @@ const JOB_HEADER_COPY = {
     anyExperience: "Any experience",
     employment: "Employment type",
     anyEmployment: "Any type",
+    location: "Location",
+    clearLocation: "Clear location",
     close: "Close jobs",
     title: "Jobs",
   },
@@ -45,13 +49,16 @@ const JOB_HEADER_COPY = {
 
 type JobMarketplaceHeaderProps = {
   initialQuery?: string;
+  initialLocation?: string;
   suggestions?: string[];
 };
 
-function buildJobsUrl({ query, published, workplace, experience, employment }: { query: string; published: string; workplace: string; experience: string; employment: string }) {
+function buildJobsUrl({ query, location, published, workplace, experience, employment }: { query: string; location: string; published: string; workplace: string; experience: string; employment: string }) {
   const params = new URLSearchParams();
   const cleanQuery = query.trim();
   if (cleanQuery) params.set("q", cleanQuery);
+  const cleanLocation = location.trim();
+  if (cleanLocation) params.set("location", cleanLocation);
   if (published !== "all") params.set("published", published);
   if (workplace !== "all") params.set("workplace", workplace);
   if (experience !== "all") params.set("experience", experience);
@@ -59,20 +66,22 @@ function buildJobsUrl({ query, published, workplace, experience, employment }: {
   return `/empleos${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
-export function JobMarketplaceHeader({ initialQuery = "", suggestions = [] }: JobMarketplaceHeaderProps) {
+export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", suggestions = [] }: JobMarketplaceHeaderProps) {
   const router = useRouter();
   const locale = marketplaceLocale(useLocale());
   const copy = JOB_HEADER_COPY[locale];
   const [query, setQuery] = useState(initialQuery);
+  const [location, setLocation] = useState(initialLocation);
   const [published, setPublished] = useState("all");
   const [workplace, setWorkplace] = useState("all");
   const [experience, setExperience] = useState("all");
   const [employment, setEmployment] = useState("all");
   const mergedSuggestions = [...new Set([...suggestions, ...(locale === "es" ? COMMON_JOB_TITLES : [])])];
 
-  function go(next: Partial<{ query: string; published: string; workplace: string; experience: string; employment: string }>) {
+  function go(next: Partial<{ query: string; location: string; published: string; workplace: string; experience: string; employment: string }>) {
     const values = {
       query: next.query ?? query,
+      location: next.location ?? location,
       published: next.published ?? published,
       workplace: next.workplace ?? workplace,
       experience: next.experience ?? experience,
@@ -81,7 +90,24 @@ export function JobMarketplaceHeader({ initialQuery = "", suggestions = [] }: Jo
     router.push(buildJobsUrl(values));
   }
 
-  const search = <MarketplaceSearch value={query} onChange={setQuery} onSubmit={() => go({ query })} placeholder={copy.placeholder} suggestions={mergedSuggestions} recentStorageKey="ccr-job-search-recents" />;
+  const search = (
+    <MarketplaceSearch
+      value={query}
+      onChange={setQuery}
+      onSubmit={() => go({ query, location })}
+      placeholder={copy.placeholder}
+      suggestions={mergedSuggestions}
+      recentStorageKey="ccr-job-search-recents"
+      secondary={{
+        value: location,
+        onChange: setLocation,
+        placeholder: copy.location,
+        ariaLabel: copy.location,
+        icon: "location",
+        clearLabel: copy.clearLocation,
+      }}
+    />
+  );
   const filters = (
     <>
       <MarketplaceFilterChip label={copy.published} value={published} onChange={(value) => { setPublished(value); go({ published: value }); }} options={[["all", copy.anyDate], ["1", copy.lastDay], ["7", copy.lastWeek], ["30", copy.lastMonth]]} />

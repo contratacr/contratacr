@@ -19,14 +19,14 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const admin = createAdminClient();
     const { data: pro, error: proError } = await admin
       .from("professionals")
       .select("id, profiles:profile_id(full_name, email)")
-      .eq("profile_id", session.user.id)
+      .eq("profile_id", user.id)
       .limit(1)
       .maybeSingle();
 
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     // No self-service: a professional cannot send a proposal to their OWN project.
     const { data: project } = await admin
       .from("projects").select("client_id, title").eq("id", projectId).maybeSingle();
-    if (project?.client_id === session.user.id) {
+    if (project?.client_id === user.id) {
       return NextResponse.json({ error: "No puedes enviar una propuesta a tu propia solicitud." }, { status: 400 });
     }
 
@@ -47,9 +47,9 @@ export async function POST(req: NextRequest) {
     const proposalInsert = {
       project_id: projectId,
       professional_id: pro.id,
-      professional_user_id_snapshot: session.user.id,
+      professional_user_id_snapshot: user.id,
       professional_name_snapshot: profile?.full_name ?? null,
-      professional_email_snapshot: profile?.email ?? session.user.email ?? null,
+      professional_email_snapshot: profile?.email ?? user.email ?? null,
       price: parseMoneyAmount(price),
       message: safeMessage,
       status: "pending",
@@ -77,12 +77,12 @@ export async function POST(req: NextRequest) {
     }
 
     await auditUserAction(admin, req, {
-      actorUserId: session.user.id,
+      actorUserId: user.id,
       actorRole: "professional",
       action: "proposal.create",
       entityTable: "proposals",
       entityId: data.id,
-      entityOwnerUserId: session.user.id,
+      entityOwnerUserId: user.id,
       afterData: {
         project_id: projectId,
         professional_id: pro.id,
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     await recordServerInteraction(admin, req, {
       type: "proposal_sent",
       professionalId: pro.id,
-      viewerUserId: session.user.id,
+      viewerUserId: user.id,
       source: "project",
       metadata: {
         project_id: projectId,
@@ -130,15 +130,15 @@ export async function GET(req: NextRequest) {
   const mine = searchParams.get("mine");
 
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   if (mine === "true") {
     // Professional: my sent proposals
     const { data: pro } = await supabase
       .from("professionals")
       .select("id")
-      .eq("profile_id", session.user.id)
+      .eq("profile_id", user.id)
       .single();
     if (!pro) return NextResponse.json({ proposals: [] });
 
@@ -216,12 +216,12 @@ export async function PATCH(req: NextRequest) {
     if (!id) return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
 
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     // ── Professional edits their OWN pending proposal (price / message) ──────
     if (action === "archive") {
-      const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", session.user.id).maybeSingle();
+      const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
       if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
       const admin = createAdminClient();
       const { data: prop } = await admin
@@ -241,7 +241,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (status === undefined && (price !== undefined || message !== undefined)) {
-      const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", session.user.id).maybeSingle();
+      const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
       if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
       const { data: prop } = await supabase.from("proposals").select("status, professional_id").eq("id", id).maybeSingle();
       if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
@@ -255,12 +255,12 @@ export async function PATCH(req: NextRequest) {
       const { error: e } = await admin.from("proposals").update(patch).eq("id", id);
       if (e) return NextResponse.json({ error: e.message }, { status: 500 });
       await auditUserAction(admin, req, {
-        actorUserId: session.user.id,
+        actorUserId: user.id,
         actorRole: "professional",
         action: "proposal.edit",
         entityTable: "proposals",
         entityId: id,
-        entityOwnerUserId: session.user.id,
+        entityOwnerUserId: user.id,
         afterData: patch,
         metadata: { professional_id: pro.id },
       });
@@ -297,7 +297,7 @@ export async function PATCH(req: NextRequest) {
       .maybeSingle();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const projectOwnerId = (statusProposal as any)?.projects?.client_id;
-    if (!statusProposal || projectOwnerId !== session.user.id) {
+    if (!statusProposal || projectOwnerId !== user.id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
@@ -309,7 +309,7 @@ export async function PATCH(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await auditUserAction(adminStatus, req, {
-      actorUserId: session.user.id,
+      actorUserId: user.id,
       actorRole: "client",
       action: `proposal.status.${status}`,
       entityTable: "proposals",
@@ -413,7 +413,7 @@ export async function PATCH(req: NextRequest) {
             await recordServerInteraction(admin, req, {
               type: "proposal_accepted",
               professionalId: prop.professional_id,
-              viewerUserId: session.user.id,
+              viewerUserId: user.id,
               source: "project",
               metadata: {
                 project_id: prop.project_id,
@@ -441,10 +441,10 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "Falta el id" }, { status: 400 });
 
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", session.user.id).maybeSingle();
+  const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
   if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
   const { data: prop } = await supabase
@@ -463,12 +463,12 @@ export async function DELETE(req: NextRequest) {
   const { error } = await admin.from("proposals").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   await auditUserAction(admin, req, {
-    actorUserId: session.user.id,
+    actorUserId: user.id,
     actorRole: "professional",
     action: "proposal.delete",
     entityTable: "proposals",
     entityId: id,
-    entityOwnerUserId: session.user.id,
+    entityOwnerUserId: user.id,
     beforeData: { status: prop.status, project_id: prop.project_id, professional_id: prop.professional_id },
     afterData: { deleted: true },
   });

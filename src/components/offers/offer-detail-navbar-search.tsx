@@ -9,24 +9,20 @@ import { marketplaceLocale } from "@/lib/marketplace-copy";
 const COPY = {
   es: {
     placeholder: "¿Qué oferta estás buscando?",
-    service: "Servicio",
   },
   en: {
     placeholder: "What offer are you looking for?",
-    service: "Service",
   },
 } as const;
 
-export function OfferDetailNavbarSearch({ title, service }: { title: string; service?: string | null }) {
+export function OfferDetailNavbarSearch({ title }: { title: string }) {
   const router = useRouter();
   const copy = COPY[marketplaceLocale(useLocale())];
   const [query, setQuery] = useState("");
-  const [serviceQuery, setServiceQuery] = useState("");
 
-  function openOffers(nextQuery = query, nextService = serviceQuery) {
+  function openOffers(nextQuery = query) {
     const params = new URLSearchParams();
     if (nextQuery.trim()) params.set("q", nextQuery.trim());
-    if (nextService.trim()) params.set("service", nextService.trim());
     router.push(`/ofertas${params.size ? `?${params.toString()}` : ""}`);
   }
 
@@ -42,13 +38,6 @@ export function OfferDetailNavbarSearch({ title, service }: { title: string; ser
               placeholder={copy.placeholder}
               suggestions={[title]}
               recentStorageKey="ccr-offer-search-recents"
-              secondary={{
-                value: serviceQuery,
-                onChange: setServiceQuery,
-                placeholder: copy.service,
-                ariaLabel: copy.service,
-                suggestions: service ? [service] : [],
-              }}
             />
           </div>
         </div>

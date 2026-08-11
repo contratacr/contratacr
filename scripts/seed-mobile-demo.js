@@ -4,15 +4,15 @@ const { createClient } = require("@supabase/supabase-js");
 const TEST_SUPABASE_REF = "sodegkfjjrdkbohycqyq";
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";
 
-if (!fs.existsSync(envFile)) {
-  throw new Error(`Missing ${envFile}. The demo seed only runs with an explicit test environment file.`);
-}
-
-for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
-  const match = line.match(/^([^#=]+)=(.*)$/);
-  if (match) {
-    process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
+if (fs.existsSync(envFile)) {
+  for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match) {
+      process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
+    }
   }
+} else if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error(`Missing ${envFile} and explicit test Supabase environment variables.`);
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -35,6 +35,28 @@ const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY
   auth: { persistSession: false },
 });
 
+async function findMirroredProfessionalByBusinessName(businessName) {
+  const professionals = await must(
+    `find ${businessName} professionals`,
+    supabase
+      .from("professionals")
+      .select("id,slug,profile_id,category_id,provincia_id,canton_id,lat,lng")
+      .ilike("business_name", businessName),
+  );
+  if (!professionals.length) return null;
+
+  const profiles = await must(
+    `find ${businessName} profiles`,
+    supabase.from("profiles").select("id,email").in("id", professionals.map((row) => row.profile_id)),
+  );
+  const mirroredProfileIds = new Set(
+    profiles
+      .filter((profile) => /^prod\+.*@mirror\.contratacr\.test$/i.test(profile.email || ""))
+      .map((profile) => profile.id),
+  );
+  return professionals.find((row) => mirroredProfileIds.has(row.profile_id)) || professionals[0];
+}
+
 const demo = "mobile-test-demo";
 const appUrl = process.env.DEMO_APP_URL || "https://contratacr-mobile-test.vercel.app";
 const hiddenDemoSlugs = new Set(["test-contratacr-1n0wba32", "test-contratacr-web"]);
@@ -46,8 +68,20 @@ const iso = (daysAgo = 0, h = 9) => {
   return date.toISOString();
 };
 
+const repairMojibake = (value = "") => {
+  let repaired = String(value);
+  for (let pass = 0; pass < 2 && /[\u00c3\u00c2]/.test(repaired); pass += 1) {
+    const candidate = Buffer.from(repaired, "latin1").toString("utf8");
+    const currentMarkers = (repaired.match(/[\u00c3\u00c2\ufffd]/g) || []).length;
+    const candidateMarkers = (candidate.match(/[\u00c3\u00c2\ufffd]/g) || []).length;
+    if (candidateMarkers >= currentMarkers) break;
+    repaired = candidate;
+  }
+  return repaired;
+};
+
 const fixAccentArtifacts = (value = "") =>
-  String(value)
+  repairMojibake(value)
     .replace(/conexi\?n/g, "conexi\u00f3n")
     .replace(/d\?a/g, "d\u00eda")
     .replace(/P\?rez/g, "P\u00e9rez")
@@ -187,6 +221,8 @@ const contratacrWebService = {
   price: "Consultar precio",
   priceType: "a_convenir",
   modalities: ["video"],
+  startedAt: "2025-01",
+  imageUrl: `${appUrl}/og-image.png`,
   description: [
     "Dise\u00f1o y desarrollo sitios web, landing pages, paneles internos y aplicaciones web completas para negocios que necesitan vender, atender mejor y operar con m\u00e1s orden.",
     "Puedo ayudarle desde una p\u00e1gina comercial sencilla hasta una plataforma con usuarios, perfiles, formularios, reservas, mensajes, notificaciones, mapas, pagos, anal\u00edtica, panel administrativo e integraciones con servicios externos.",
@@ -247,6 +283,31 @@ const contratacrPortfolioItems = [
   }
 ];
 const contratacrPortfolioUrls = contratacrPortfolioItems.flatMap((item) => item.photos).slice(0, 5);
+const sgService = {
+  id: "redes_e_internet",
+  name: "Redes e internet",
+  category: "redes_e_internet",
+  active: true,
+  price: "Consultar precio",
+  priceType: "a_convenir",
+  modalities: ["presencial", "video"],
+  startedAt: "2018-01",
+  imageUrl: `${appUrl}/test-professionals/sg-solutions.png`,
+  description: "Instalaci\u00f3n, diagn\u00f3stico y mantenimiento de redes, WiFi, cableado estructurado y conectividad para hogares, comercios y oficinas.",
+};
+const sgPortfolioItems = [
+  {
+    id: "sg-red-empresarial",
+    serviceId: sgService.id,
+    profession: "redes_e_internet",
+    title: "Red empresarial y cobertura WiFi",
+    description: "Diagn\u00f3stico, cableado y configuraci\u00f3n de una red estable para una oficina en Atenas.",
+    recipient: "Cliente empresarial de prueba",
+    date: "2026",
+    photos: [`${appUrl}/test-professionals/sg-solutions.png`],
+    likes: 8,
+  },
+];
 
 function demoPlace(slug, professional, location = demoLocations[slug] || isaacLocation) {
   const [name, lat, lng, provinciaIdOverride, cantonIdOverride] = location;
@@ -291,6 +352,18 @@ async function main() {
     category_id: "desarrollo_web",
     portfolio_items: contratacrPortfolioItems,
     portfolio_urls: contratacrPortfolioUrls,
+    languages: ["es", "en"],
+    contact_email: isaac.email,
+    whatsapp: "+506 8888 8888",
+    call_phone: "+506 8888 8888",
+    social_links: {
+      website: "https://contratacr.com",
+      linkedin: "https://www.linkedin.com/company/contratacr",
+      instagram: "https://www.instagram.com/contratacr",
+    },
+    certifications: [
+      { id: "contratacr-full-stack", name: "Desarrollo web full stack", institution: "ContrataCR Labs", year: 2026, profession: "desarrollo_web" },
+    ],
     years_experience: 1,
     rating_avg: 5,
     review_count: 5,
@@ -316,28 +389,56 @@ async function main() {
 
   const pros = await must("demo professionals", supabase.from("professionals").select("id,slug,profile_id,category_id,provincia_id,canton_id,lat,lng").in("slug", Object.keys(proFix)));
   const bySlug = new Map(pros.map((p) => [p.slug, p]));
+  const sgSolutions = await findMirroredProfessionalByBusinessName("SG Solutions");
+  if (sgSolutions) bySlug.set("test-sg-solutions", sgSolutions);
 
   for (const [slug, [business, service, bio]] of Object.entries(proFix)) {
     const professional = bySlug.get(slug);
     if (!professional) continue;
     const hidden = hiddenDemoSlugs.has(slug);
-    await must(`profile ${slug}`, supabase.from("profiles").update({
-      full_name: profileNames[slug],
+    const repairedBusiness = fixAccentArtifacts(business);
+    const repairedService = fixAccentArtifacts(service);
+    const repairedBio = fixAccentArtifacts(bio);
+    const isSgSolutions = slug === "test-sg-solutions";
+    const profileUpdate = {
       avatar_url: avatars[slug],
       onboarding_completed: true,
       is_provider: true,
       is_disabled: hidden,
       updated_at: new Date().toISOString(),
       created_app_environment: hidden ? `${demo}-hidden` : demo,
-    }).eq("id", professional.profile_id));
+    };
+    if (!isSgSolutions) profileUpdate.full_name = fixAccentArtifacts(profileNames[slug]);
+    await must(`profile ${slug}`, supabase.from("profiles").update(profileUpdate).eq("id", professional.profile_id));
 
     const rating = slug.includes("contratacr-1n0wba32") ? 4.9 : 4.7 + (slug.length % 4) * 0.1;
     const place = demoPlace(slug, professional);
     await must(`professional ${slug}`, supabase.from("professionals").update({
-      business_name: business,
-      bio,
-      services: [{ id: professional.category_id || service.toLowerCase().replace(/\s+/g, "_"), name: service, price: "Consultar precio", priceType: "a_convenir" }],
-      professions: [service],
+      business_name: repairedBusiness,
+      bio: repairedBio,
+      services: isSgSolutions
+        ? [sgService]
+        : [{
+            id: professional.category_id || repairedService.toLowerCase().replace(/\s+/g, "_"),
+            name: repairedService,
+            active: true,
+            price: "Consultar precio",
+            priceType: "a_convenir",
+            modalities: ["presencial"],
+            startedAt: "2020-01",
+            description: repairedBio,
+          }],
+      professions: [repairedService],
+      portfolio_items: isSgSolutions ? sgPortfolioItems : [],
+      portfolio_urls: isSgSolutions ? sgPortfolioItems[0].photos : [],
+      languages: isSgSolutions ? ["es", "en"] : ["es"],
+      contact_email: isSgSolutions ? "sg-solutions-regression@example.com" : null,
+      social_links: isSgSolutions
+        ? { website: "https://example.com/sg-solutions", instagram: "https://www.instagram.com/sg.solutions.test" }
+        : {},
+      certifications: isSgSolutions
+        ? [{ id: "sg-redes", name: "Redes y cableado estructurado", institution: "Fixture de regresi\u00f3n", year: 2025, profession: "redes_e_internet" }]
+        : [],
       is_verified: !hidden,
       verification_status: hidden ? "rejected" : "verified",
       is_available: !hidden,
@@ -432,10 +533,11 @@ async function main() {
   const saveIds = saves.filter((s) => s.snapshot?.demoSeed === demo).map((s) => s.id);
   if (saveIds.length) await must("delete saved professionals", supabase.from("saved_professionals").delete().in("id", saveIds));
 
-  const demoPros = ["test-sg-solutions", "test-plomeros-del-valle", "test-conta-clara", "test-limpieza-total", "test-web-norte", "test-redes-central", "test-muebles-barrantes", "test-vet-en-casa"]
+  const demoProfessionalSlugs = ["test-sg-solutions", "test-plomeros-del-valle", "test-conta-clara", "test-limpieza-total", "test-web-norte", "test-redes-central", "test-muebles-barrantes", "test-vet-en-casa"];
+  const demoPros = demoProfessionalSlugs
     .map((slug) => bySlug.get(slug))
     .filter(Boolean);
-  const cat = Object.fromEntries(demoPros.map((p) => [p.slug, p.category_id]));
+  const cat = Object.fromEntries(demoProfessionalSlugs.map((slug) => [slug, bySlug.get(slug)?.category_id]));
   if (demoPros.length) {
     await must("delete saved demo professionals", supabase.from("saved_professionals").delete().eq("client_id", isaac.id).in("professional_id", demoPros.map((p) => p.id)));
   }
@@ -664,11 +766,11 @@ async function main() {
   const conv2 = await conversation({
     proSlug: "test-plomeros-del-valle",
     subject: "Plomeria en Atenas",
-    last: "Tengo espacio manana en la manana.",
+    last: "Tengo espacio ma\u00f1ana en la ma\u00f1ana.",
     unread: 1,
     messages: [
       { from: "me", body: "Tengo una fuga pequena debajo del fregadero." },
-      { from: "pro", body: "Tengo espacio manana en la manana." },
+      { from: "pro", body: "Tengo espacio ma\u00f1ana en la ma\u00f1ana." },
     ],
   });
   const conv3 = await conversation({

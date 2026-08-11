@@ -54,6 +54,8 @@ const vercelBypassHeaders = vercelBypassSecret
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // Direct messages remain parked while WhatsApp is the production contact flow.
+  testIgnore: ["**/direct-chat.spec.ts"],
   globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 60_000,
   expect: { timeout: 12_000 },

@@ -132,8 +132,8 @@ export default function ResetPasswordPage() {
           });
           if (sessionError && active) setError(t("error"));
         } else {
-          const { data } = await supabase.auth.getSession();
-          if (!data.session && active) setError(t("error"));
+          const { data } = await supabase.auth.getUser();
+          if (!data.user && active) setError(t("error"));
         }
 
         if (code || accessToken || refreshToken || urlError) {
@@ -154,8 +154,8 @@ export default function ResetPasswordPage() {
     setSubmitting(true);
     setError(null);
     const supabase = createClient();
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
       setSubmitting(false);
       setError(t("error"));
       return;

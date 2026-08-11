@@ -341,7 +341,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   // Default to "Español" (most professionals) so a Spanish-only pro is never
   // treated as "missing" languages. Extra languages are an optional bonus.
   const [languages, setLanguages] = useState<string[]>(
-    Array.isArray(initial.languages) && initial.languages.length > 0 ? initial.languages : ["Español"]
+    Array.isArray(initial.languages) && initial.languages.length > 0 ? initial.languages : ["es"]
   );
   const [insurers, setInsurers] = useState<string[]>(Array.isArray(initial.insurance_networks) ? initial.insurance_networks : []);
   // Certifications — text entries: nombre + institución + año (all required).
@@ -491,7 +491,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     setFullName(initialFullName);
     setBusinessName(initial.business_name ?? "");
     setWorkplaces(seedZones(initial));
-    setLanguages(Array.isArray(initial.languages) && initial.languages.length > 0 ? initial.languages : ["Español"]);
+    setLanguages(Array.isArray(initial.languages) && initial.languages.length > 0 ? initial.languages : ["es"]);
     setInsurers(Array.isArray(initial.insurance_networks) ? initial.insurance_networks : []);
     setCertifications(Array.isArray(initial.certifications) ? initial.certifications : []);
     setCertDraft(null);

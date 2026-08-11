@@ -7,7 +7,6 @@ import { Search, X, Loader2, MapPin, SlidersHorizontal, ChevronDown, Check } fro
 import { useLocale, useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { matchProvinceCanton, PROVINCES } from "@/lib/data/cr-geography";
-import { CategorySearch } from "@/components/ui/category-search";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { searchCategories, getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { resolveLocation, searchLocations, type LocationSuggestion } from "@/lib/data/location-search";
@@ -30,17 +29,41 @@ const FILTER_TRIGGER = "text-sm";
 const FILTER_CONTENT = "min-w-0 w-[var(--radix-select-trigger-width)]";
 // Sentinel for the in-dropdown "Cualquier aseguradora" reset item (Radix Select forbids
 // an empty-string value, so we map this back to "" = no insurer filter).
-const ANY_INSURER = "__any__";
-const ANY_LANGUAGE = "__any_language__";
 const ANY_PRICE = "__any_price__";
+const ANY_LANGUAGE = "__any_language__";
 const ANY_MODALITY = "any";
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-const SORT_OPTIONS = ["rating", "experience"] as const;
-const PRICE_OPTIONS = ["visible", "quote", "por_hora", "por_consulta", "por_proyecto"] as const;
+const SORT_OPTIONS = ["rating", "cercania", "experience"] as const;
+const BASE_SORT_OPTIONS = ["rating", "experience"] as const;
+const PRICE_AVAILABILITY_OPTIONS = ["quote"] as const;
+const PRICE_UNIT_OPTIONS = ["por_hora", "por_consulta", "por_proyecto"] as const;
+const PRICE_CHOICES = [ANY_PRICE, "quote", ...PRICE_UNIT_OPTIONS] as const;
 const normalizeSort = (value: string) =>
   SORT_OPTIONS.includes(value as (typeof SORT_OPTIONS)[number]) ? value : "rating";
 const normalizePriceFilter = (value: string) =>
-  PRICE_OPTIONS.includes(value as (typeof PRICE_OPTIONS)[number]) ? value : "";
+  PRICE_AVAILABILITY_OPTIONS.includes(value as (typeof PRICE_AVAILABILITY_OPTIONS)[number]) ? value : "";
+const normalizePriceUnit = (value: string) =>
+  PRICE_UNIT_OPTIONS.includes(value as (typeof PRICE_UNIT_OPTIONS)[number]) ? value : "";
+const priceChoiceFromFilters = (availability: string, units: string[]) => {
+  const unit = units.find((value) => PRICE_UNIT_OPTIONS.includes(value as (typeof PRICE_UNIT_OPTIONS)[number]));
+  return unit || (availability === "quote" ? "quote" : ANY_PRICE);
+};
+const filtersFromPriceChoice = (choice: string) => {
+  if (PRICE_UNIT_OPTIONS.includes(choice as (typeof PRICE_UNIT_OPTIONS)[number])) {
+    return { availability: "", units: [choice] };
+  }
+  if (choice === "quote") return { availability: choice, units: [] };
+  return { availability: "", units: [] };
+};
+const parseMultiParam = (value?: string | null) =>
+  Array.from(new Set((value ?? "").split(",").map((item) => item.trim()).filter(Boolean)));
+const parseSingleParam = (value?: string | null) => parseMultiParam(value)[0] ?? "";
+const serializeMultiParam = (values: string[]) => values.join(",");
+const toggleMultiValue = (values: string[], value: string) =>
+  values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
+type SearchModality = "in_person" | "video";
+const isSearchModality = (value: string): value is SearchModality =>
+  value === "in_person" || value === "video";
 
 type AddressSuggestion = {
   type: "address";
@@ -133,6 +156,272 @@ function FilterSheet({
   );
 }
 
+function MultiFilterSheet({
+  open,
+  title,
+  values,
+  options,
+  onClose,
+  onApply,
+}: {
+  open: boolean;
+  title: string;
+  values: string[];
+  options: FilterSheetOption[];
+  onClose: () => void;
+  onApply: (values: string[]) => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <MultiFilterSheetContent
+      title={title}
+      values={values}
+      options={options}
+      onClose={onClose}
+      onApply={onApply}
+    />
+  );
+}
+
+function MultiFilterSheetContent({
+  title,
+  values,
+  options,
+  onClose,
+  onApply,
+}: Omit<React.ComponentProps<typeof MultiFilterSheet>, "open">) {
+  const t = useTranslations("search");
+  const [draftValues, setDraftValues] = useState(values);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
+      <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
+      <section role="dialog" aria-modal="true" aria-label={title} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
+        <div className="flex items-center justify-between border-b border-[#edf1f5] px-5 py-4">
+          <div>
+            <h2 className="text-[20px] font-extrabold text-[#162543]">{title}</h2>
+            {draftValues.length > 0 && <p className="mt-0.5 text-xs font-semibold text-[#64748b]">{draftValues.length} seleccionadas</p>}
+          </div>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="inline-flex h-9 w-9 items-center justify-center text-[#162543]">
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-1">
+          {draftValues.length > 0 && (
+            <button type="button" onClick={() => setDraftValues([])} className="flex min-h-[50px] w-full items-center text-left text-sm font-bold text-[#009FD9]">
+              {t("filters.clearAll")}
+            </button>
+          )}
+          {options.map((option) => {
+            const selected = draftValues.includes(option.value);
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setDraftValues((current) => toggleMultiValue(current, option.value))}
+                className="flex min-h-[56px] w-full items-center justify-between gap-4 border-b border-[#f0f3f6] py-3 text-left last:border-b-0"
+              >
+                <span className={cn("text-[15px] font-semibold", selected ? "text-[#008fbe]" : "text-[#162543]")}>{option.label}</span>
+                <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-[6px] border-2", selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5df] bg-white")}>
+                  {selected && <Check className="h-4 w-4 stroke-[3] text-white" />}
+                </span>
+              </button>
+            );
+          })}
+          <button type="button" onClick={() => onApply(draftValues)} className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-[8px] bg-[#009FD9] px-5 text-[15px] font-bold text-white">
+            {t("filters.showResults")}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function DesktopMultiSelect({
+  label,
+  emptyLabel,
+  values,
+  options,
+  onChange,
+}: {
+  label: string;
+  emptyLabel: string;
+  values: string[];
+  options: FilterSheetOption[];
+  onChange: (values: string[]) => void;
+}) {
+  const t = useTranslations("search");
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const selectedLabels = options.filter((option) => values.includes(option.value)).map((option) => option.label);
+  const summary = selectedLabels.length === 0 ? emptyLabel : selectedLabels.length === 1 ? selectedLabels[0] : `${label} (${selectedLabels.length})`;
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("click", close);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("click", close);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className={cn(
+          "flex h-10 w-full items-center justify-between gap-2 rounded-xl border bg-white px-4 py-2.5 text-left text-sm transition-all duration-150 outline-none",
+          open
+            ? "border-[#009FD9]"
+            : "border-[#e5e7eb] hover:border-[#8ccfe8] hover:bg-[#fbfdff]",
+        )}
+      >
+        <span className={cn("min-w-0 truncate", values.length ? "font-semibold text-[#162543]" : "text-[#9ca3af]")}>{summary}</span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          {values.length > 1 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#EBF5FB] px-1 text-[11px] font-extrabold text-[#008fbe]">{values.length}</span>}
+          <ChevronDown className={cn("h-4 w-4 text-[#64748b] transition-transform", open && "rotate-180")} />
+        </span>
+      </button>
+      <AnchoredDropdown open={open} anchorRef={triggerRef} className="z-[210] max-h-72 w-[var(--anchor-width)] min-w-[220px] overflow-y-auto rounded-[10px] border border-[#dbe4ec] bg-white p-1.5 shadow-xl">
+        <div ref={menuRef}>
+          {values.length > 0 && <button type="button" onClick={() => onChange([])} className="flex min-h-10 w-full items-center rounded-[7px] px-3 text-left text-sm font-bold text-[#009FD9] hover:bg-[#f4f9fc]">{t("filters.clearAll")}</button>}
+          {options.map((option) => {
+            const selected = values.includes(option.value);
+            return <button key={option.value} type="button" onClick={() => onChange(toggleMultiValue(values, option.value))} className={cn("flex min-h-10 w-full items-center justify-between gap-3 rounded-[7px] px-3 text-left text-sm font-semibold hover:bg-[#f4f9fc]", selected ? "text-[#008fbe]" : "text-[#162543]")}>
+              <span>{option.label}</span>
+              <span className={cn("grid h-5 w-5 shrink-0 place-items-center rounded-[5px] border-2", selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5df]")}>{selected && <Check className="h-3.5 w-3.5 stroke-[3] text-white" />}</span>
+            </button>;
+          })}
+        </div>
+      </AnchoredDropdown>
+    </div>
+  );
+}
+
+function PriceFilterSheet({
+  open,
+  availability,
+  units,
+  onClose,
+  onApply,
+}: {
+  open: boolean;
+  availability: string;
+  units: string[];
+  onClose: () => void;
+  onApply: (availability: string, units: string[]) => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <PriceFilterSheetContent
+      availability={availability}
+      units={units}
+      onClose={onClose}
+      onApply={onApply}
+    />
+  );
+}
+
+function PriceFilterSheetContent({
+  availability,
+  units,
+  onClose,
+  onApply,
+}: Omit<React.ComponentProps<typeof PriceFilterSheet>, "open">) {
+  const t = useTranslations("search");
+  const [draftChoice, setDraftChoice] = useState(() => priceChoiceFromFilters(availability, units));
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [onClose]);
+
+  const option = (value: string, label: string, selected: boolean, onSelect: () => void) => (
+    <button
+      key={value}
+      type="button"
+      onClick={onSelect}
+      className="flex min-h-[52px] w-full items-center justify-between gap-4 border-b border-[#f0f3f6] py-2.5 text-left last:border-b-0"
+    >
+      <span className={cn("text-[15px] font-semibold", selected ? "text-[#008fbe]" : "text-[#162543]")}>{label}</span>
+      <span className={cn(
+        "grid h-6 w-6 shrink-0 place-items-center rounded-full border-2",
+        selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5df] bg-white",
+      )}>
+        {selected && <Check className="h-4 w-4 stroke-[3] text-white" />}
+      </span>
+    </button>
+  );
+
+  return (
+    <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
+      <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
+      <section role="dialog" aria-modal="true" aria-label={t("filters.price")} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
+        <div className="flex items-center justify-between border-b border-[#edf1f5] px-5 py-4">
+          <h2 className="text-[20px] font-extrabold text-[#162543]">{t("filters.price")}</h2>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="inline-flex h-9 w-9 items-center justify-center text-[#162543]">
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto px-5 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <div className="py-3">
+            {PRICE_CHOICES.map((value) => option(
+              value,
+              value === ANY_PRICE ? t("filters.anyPrice") : t(`priceFilter.${value}`),
+              draftChoice === value,
+              () => setDraftChoice(value),
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const next = filtersFromPriceChoice(draftChoice);
+              onApply(next.availability, next.units);
+            }}
+            className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-[8px] bg-[#009FD9] px-5 text-[15px] font-bold text-white"
+          >
+            {t("filters.showResults")}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function locationFilterLabel(provinceId: string, cantonId: string) {
   if (!provinceId || provinceId === "todas") return "";
   const province = PROVINCES.find((p) => p.id === provinceId);
@@ -217,6 +506,7 @@ type SearchFiltersInitialValues = {
   aseguradora?: string;
   idioma?: string;
   precio?: string;
+  unidadPrecio?: string;
   ubicacion?: string;
   lat?: string;
   lng?: string;
@@ -276,23 +566,24 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const initialSort = initialParam("sortBy");
   const [sortBy, setSortBy] = useState(normalizeSort(initialSort));
   const sortLabel = t(`sort.${SORT_OPTIONS.includes(sortBy as (typeof SORT_OPTIONS)[number]) ? sortBy : "rating"}`);
-  const [modality, setModality] = useState(initialParam("modalidad") || ANY_MODALITY);
-  const modalityLabel = modality === "video"
-    ? t("filters.attentionVideo")
-    : modality === "in_person"
-    ? t("filters.attentionInPerson")
-    : t("filters.attentionAny");
-  const [aseguradora, setAseguradora] = useState(() =>
-    isHealthCategory(initialCategory) ? initialParam("aseguradora") : ""
+  const [modalities, setModalities] = useState<SearchModality[]>(() =>
+    parseMultiParam(initialParam("modalidad")).filter(isSearchModality)
   );
-  const [language, setLanguage] = useState(initialParam("idioma"));
-  const [priceFilter, setPriceFilter] = useState(normalizePriceFilter(initialParam("precio")));
-  const [openChip, setOpenChip] = useState<"sort" | "price" | "language" | null>(null);
+  const [insurers, setInsurers] = useState(() =>
+    isHealthCategory(initialCategory) ? parseMultiParam(initialParam("aseguradora")) : []
+  );
+  const [language, setLanguage] = useState(() => parseSingleParam(initialParam("idioma")));
+  const initialPrice = initialParam("precio");
+  const initialPriceUnits = parseMultiParam(initialParam("unidadPrecio") || initialPrice).map(normalizePriceUnit).filter(Boolean);
+  const [priceFilter, setPriceFilter] = useState(normalizePriceFilter(initialPrice));
+  const [priceUnits, setPriceUnits] = useState(initialPriceUnits);
+  const [openChip, setOpenChip] = useState<"sort" | "price" | "language" | "modality" | "insurer" | null>(null);
   // Geolocation ("cerca de mí") - opt-in, requested only when the user taps the
   // control, never auto-popped. Denied/unavailable -> text search still works.
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const geoActive = !!params.get("lat") && !!params.get("lng");
+  const selectableSortOptions = geoActive ? BASE_SORT_OPTIONS : SORT_OPTIONS;
 
   // Official list = static INSURERS + admin-approved additions from the DB.
   // The filter never offers a "Ninguna / Todas / sin seguros" entry - those are a
@@ -312,23 +603,29 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     const nextProvince = params.get("provincia") ?? initialValues?.provincia ?? "";
     const nextCanton = params.get("canton") ?? initialValues?.canton ?? "";
     const nextSort = params.get("sortBy") ?? initialValues?.sortBy ?? "";
-    const nextModality = params.get("modalidad") ?? initialValues?.modalidad ?? ANY_MODALITY;
-    const nextInsurer = params.get("aseguradora") ?? initialValues?.aseguradora ?? "";
-    const nextLanguage = params.get("idioma") ?? initialValues?.idioma ?? "";
+    const nextModalities = parseMultiParam(params.get("modalidad") ?? initialValues?.modalidad ?? "").filter((value) => value === "video" || value === "in_person");
+    const nextInsurers = parseMultiParam(params.get("aseguradora") ?? initialValues?.aseguradora ?? "");
+    const nextLanguage = parseSingleParam(params.get("idioma") ?? initialValues?.idioma ?? "");
     const nextPrice = params.get("precio") ?? initialValues?.precio ?? "";
+    const nextPriceUnitRaw = params.get("unidadPrecio") ?? initialValues?.unidadPrecio ?? "";
+    const nextPriceUnits = parseMultiParam(nextPriceUnitRaw || nextPrice).map(normalizePriceUnit).filter(Boolean);
     const nextLat = params.get("lat") ?? initialValues?.lat ?? "";
     const nextLng = params.get("lng") ?? initialValues?.lng ?? "";
     const nextLocation = params.get("ubicacion") ?? initialValues?.ubicacion ?? "";
 
+    // URL navigation is the external source of truth for the filter controls.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCategory(nextCategory);
     setQuery(nextQuery || (nextCategory && nextCategory !== "todas" ? getCategoryLabel(nextCategory, locale) : ""));
     setProvince(nextProvince);
     setCanton(nextCanton);
-    setSortBy(normalizeSort(nextSort));
-    setModality(supportsVideoConsultCategory(nextCategory) ? nextModality : ANY_MODALITY);
-    setAseguradora(isHealthCategory(nextCategory) ? nextInsurer : "");
+    const normalizedNextSort = normalizeSort(nextSort);
+    setSortBy(nextLat && nextLng && normalizedNextSort === "cercania" ? "rating" : normalizedNextSort);
+    setModalities(supportsVideoConsultCategory(nextCategory) ? nextModalities : []);
+    setInsurers(isHealthCategory(nextCategory) ? nextInsurers : []);
     setLanguage(nextLanguage);
     setPriceFilter(normalizePriceFilter(nextPrice));
+    setPriceUnits(nextPriceUnits);
     setLocationQuery(
       nextLocation
         ? nextLocation
@@ -348,6 +645,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     initialValues?.categoria,
     initialValues?.idioma,
     initialValues?.precio,
+    initialValues?.unidadPrecio,
     initialValues?.lat,
     initialValues?.lng,
     initialValues?.modalidad,
@@ -459,10 +757,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         provincia: province,
         canton,
         sortBy,
-        modalidad: modality,
-        aseguradora,
+        modalidad: serializeMultiParam(modalities),
+        aseguradora: serializeMultiParam(insurers),
         idioma: language,
         precio: priceFilter,
+        unidadPrecio: serializeMultiParam(priceUnits),
         lat: params.get("lat") ?? "",
         lng: params.get("lng") ?? "",
         ubicacion: params.get("ubicacion") ?? "",
@@ -484,10 +783,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
       if (vals.canton && vals.canton !== "todos" && vals.provincia) next.set("canton", vals.canton);
       if (vals.sortBy && vals.sortBy !== "rating") next.set("sortBy", vals.sortBy);
-      if (supportsVideoConsultCategory(vals.categoria) && vals.modalidad && vals.modalidad !== ANY_MODALITY) next.set("modalidad", vals.modalidad);
-      if (isHealthCategory(vals.categoria) && vals.aseguradora && vals.aseguradora !== "todas") next.set("aseguradora", vals.aseguradora);
-      if (vals.idioma && vals.idioma !== "todos") next.set("idioma", vals.idioma);
+      if (supportsVideoConsultCategory(vals.categoria) && vals.modalidad) next.set("modalidad", vals.modalidad);
+      if (isHealthCategory(vals.categoria) && vals.aseguradora) next.set("aseguradora", vals.aseguradora);
+      if (vals.idioma) next.set("idioma", vals.idioma);
       if (vals.precio && vals.precio !== "todos") next.set("precio", vals.precio);
+      if (vals.unidadPrecio) next.set("unidadPrecio", vals.unidadPrecio);
       // Carry the geolocation coords so changing another filter keeps proximity.
       if (vals.lat && vals.lng) { next.set("lat", vals.lat); next.set("lng", vals.lng); }
       if (vals.ubicacion && vals.lat && vals.lng) next.set("ubicacion", vals.ubicacion);
@@ -501,12 +801,12 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       }
       router.push(`${pathname}?${next.toString()}`);
     },
-    [query, category, province, canton, sortBy, modality, aseguradora, language, priceFilter, params, router, pathname, variant, showVideoFilter]
+    [query, category, province, canton, sortBy, modalities, insurers, language, priceFilter, priceUnits, params, router, pathname, variant]
   );
 
-  // Request geolocation on demand (item 11). Granted -> proximity sort + autofill
-  // the nearest provincia. Denied/unavailable -> keep the text-based search.
-  function requestMyLocation(nextSortBy = sortBy) {
+  // Request geolocation on demand. Coordinates define the search area while
+  // results keep the default quality ordering.
+  function requestMyLocation() {
     if (geoActive) {
       // Toggle OFF - drop the proximity sort + coords, keep other filters.
       setGeoError(null);
@@ -529,7 +829,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         setCanton("");
         setLocationQuery(t("filters.nearMeActive"));
         setGeoLoading(false);
-        applyFilters({ sortBy: nextSortBy, provincia: "", canton: "", ubicacion: "", lat: String(latitude.toFixed(5)), lng: String(longitude.toFixed(5)) });
+        setSortBy("rating");
+        applyFilters({ sortBy: "rating", provincia: "", canton: "", ubicacion: "", lat: String(latitude.toFixed(5)), lng: String(longitude.toFixed(5)) });
       },
       () => {
         setGeoLoading(false);
@@ -543,46 +844,53 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setQuery(value);
     // Free text supersedes any picked category (mutually exclusive).
     if (category) setCategory("");
-    if (modality !== ANY_MODALITY) setModality(ANY_MODALITY);
-    if (aseguradora) setAseguradora("");
+    if (modalities.length) setModalities([]);
+    if (insurers.length) setInsurers([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => applyFilters({ q: value, categoria: "", aseguradora: "", modalidad: ANY_MODALITY }), 400);
+    const hasCategorySuggestions = value.trim().length >= 2 && searchCategories(value).length > 0;
+    if (hasCategorySuggestions) return;
+    debounceRef.current = setTimeout(() => applyFilters({ q: value, categoria: "", aseguradora: "", modalidad: "" }), 400);
   }
 
   function handleQueryKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       setCategory("");
-      setModality(ANY_MODALITY);
-      setAseguradora("");
-      applyFilters({ q: query, categoria: "", aseguradora: "", modalidad: ANY_MODALITY });
+      setModalities([]);
+      setInsurers([]);
+      applyFilters({ q: query, categoria: "", aseguradora: "", modalidad: "" });
     }
   }
 
   // Picking a category suggestion -> set `categoria`, clear the free-text `q`, and cancel
   // any pending free-text debounce (so it can't fire afterward and wipe the category).
   function pickCategory(id: string) {
+    if (searchBlurRef.current) {
+      clearTimeout(searchBlurRef.current);
+      searchBlurRef.current = null;
+    }
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    const nextInsurer = isHealthCategory(id) ? aseguradora : "";
-    const nextModality = supportsVideoConsultCategory(id) ? modality : ANY_MODALITY;
+    const nextInsurers = isHealthCategory(id) ? insurers : [];
+    const nextModalities = supportsVideoConsultCategory(id) ? modalities : [];
     setCategory(id);
-    if (!nextInsurer) setAseguradora("");
-    if (nextModality === ANY_MODALITY) setModality(ANY_MODALITY);
+    if (!nextInsurers.length) setInsurers([]);
+    if (!nextModalities.length) setModalities([]);
     setQuery(getCategoryLabel(id, locale));
     setSearchOpen(false);
-    applyFilters({ categoria: id, q: "", aseguradora: nextInsurer, modalidad: nextModality });
+    applyFilters({ categoria: id, q: "", aseguradora: serializeMultiParam(nextInsurers), modalidad: serializeMultiParam(nextModalities) });
   }
 
   function clearQuery() {
-    setQuery(""); setCategory(""); setModality(ANY_MODALITY); setAseguradora("");
+    setQuery(""); setCategory(""); setModalities([]); setInsurers([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    applyFilters({ q: "", categoria: "", aseguradora: "", modalidad: ANY_MODALITY });
+    applyFilters({ q: "", categoria: "", aseguradora: "", modalidad: "" });
   }
 
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (locationBlurRef.current) clearTimeout(locationBlurRef.current);
+      if (searchBlurRef.current) clearTimeout(searchBlurRef.current);
     };
   }, []);
 
@@ -702,7 +1010,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   }
 
   function clearAll() {
-    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModality(ANY_MODALITY); setAseguradora(""); setLanguage(""); setPriceFilter("");
+    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModalities([]); setInsurers([]); setLanguage(""); setPriceFilter(""); setPriceUnits([]);
     setAddressSuggestions([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push(pathname);
@@ -716,10 +1024,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const activeCount =
     (serviceActive ? 1 : 0) +
     (locationFilterActive ? 1 : 0) +
-    (showVideoFilter && modality !== ANY_MODALITY ? 1 : 0) +
+    (showVideoFilter && modalities.length ? 1 : 0) +
     (areaActive ? 1 : 0) +
-    (showInsurerFilter && aseguradora ? 1 : 0) +
+    (showInsurerFilter && insurers.length ? 1 : 0) +
     (priceFilter ? 1 : 0) +
+    (priceUnits.length ? 1 : 0) +
     (language ? 1 : 0);
 
   // -- MOBILE chips variant --------------------------------------------------
@@ -727,19 +1036,20 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   // search input - that's the separate MobileServiceSearch). Reuses every handler above,
   // so the filtering/URL logic is identical; only the presentation differs.
   if (variant === "chips") {
-    const sortOptions = SORT_OPTIONS.map((option) => ({ value: option, label: t(`sort.${option}`) }));
-    const priceOptions = [
-      { value: ANY_PRICE, label: t("filters.anyPrice") },
-      ...PRICE_OPTIONS.map((option) => ({ value: option, label: t(`priceFilter.${option}`) })),
-    ];
+    const sortOptions = selectableSortOptions.map((option) => ({ value: option, label: t(`sort.${option}`) }));
     const languageOptions = [
-      { value: ANY_LANGUAGE, label: t("filters.allLanguages") },
+      { value: ANY_LANGUAGE, label: t("filters.anyLanguage") },
       ...LANGUAGES.map((item) => ({ value: item.id, label: languageLabel(item.id, locale) })),
     ];
-    const priceValue = priceFilter || ANY_PRICE;
-    const priceText = priceFilter ? t(`priceFilter.${priceFilter}`) : t("filters.price");
-    const languageValue = language || ANY_LANGUAGE;
-    const languageText = language ? languageLabel(language, locale) : (locale === "en" ? "Language" : "Idioma");
+    const modalityOptions = [
+      { value: "in_person", label: t("filters.attentionInPerson") },
+      { value: "video", label: t("filters.attentionVideo") },
+    ];
+    const priceChoice = priceChoiceFromFilters(priceFilter, priceUnits);
+    const priceText = priceChoice === ANY_PRICE ? t("filters.price") : t(`priceFilter.${priceChoice}`);
+    const languageText = language
+      ? languageOptions.find((option) => option.value === language)?.label ?? t("filters.language")
+      : t("filters.language");
     const pill = "ccr-search-filter-chip inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2.5 text-[11px] font-bold text-[#162543] shadow-sm";
     return (
       <div className="hide-scrollbar -mx-1 flex max-w-full items-center justify-start gap-1.5 overflow-x-auto overflow-y-visible px-1 pb-0.5">
@@ -752,30 +1062,52 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <button type="button" onClick={() => setOpenChip("language")} className={pill}>
           <span>{languageText}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
         </button>
+        {showVideoFilter && <button type="button" onClick={() => setOpenChip("modality")} className={pill}>
+          <span>{modalities.length ? `${t("filters.attention")} (${modalities.length})` : t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
+        </button>}
+        {showInsurerFilter && <button type="button" onClick={() => setOpenChip("insurer")} className={pill}>
+          <span>{insurers.length ? `${t("filters.insurer")} (${insurers.length})` : t("filters.insurer")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
+        </button>}
         <FilterSheet
           open={openChip === "sort"}
           title={locale === "en" ? "Sort" : "Ordenar"}
           value={sortBy}
           options={sortOptions}
           onClose={() => setOpenChip(null)}
-          onSelect={(value) => { setSortBy(value); applyFilters({ sortBy: value }); setOpenChip(null); }}
+          onSelect={(value) => {
+            setSortBy(value);
+            if (value === "cercania" && !geoActive) requestMyLocation();
+            else applyFilters({ sortBy: value });
+            setOpenChip(null);
+          }}
         />
-        <FilterSheet
+        <PriceFilterSheet
           open={openChip === "price"}
-          title={t("filters.price")}
-          value={priceValue}
-          options={priceOptions}
+          availability={priceFilter}
+          units={priceUnits}
           onClose={() => setOpenChip(null)}
-          onSelect={(value) => { const next = value === ANY_PRICE ? "" : value; setPriceFilter(next); applyFilters({ precio: next }); setOpenChip(null); }}
+          onApply={(nextAvailability, nextUnits) => {
+            setPriceFilter(nextAvailability);
+            setPriceUnits(nextUnits);
+            applyFilters({ precio: nextAvailability, unidadPrecio: serializeMultiParam(nextUnits) });
+            setOpenChip(null);
+          }}
         />
         <FilterSheet
           open={openChip === "language"}
-          title={locale === "en" ? "Service language" : "Idioma de atención"}
-          value={languageValue}
+          title={t("filters.language")}
+          value={language || ANY_LANGUAGE}
           options={languageOptions}
           onClose={() => setOpenChip(null)}
-          onSelect={(value) => { const next = value === ANY_LANGUAGE ? "" : value; setLanguage(next); applyFilters({ idioma: next }); setOpenChip(null); }}
+          onSelect={(value) => {
+            const nextLanguage = value === ANY_LANGUAGE ? "" : value;
+            setLanguage(nextLanguage);
+            applyFilters({ idioma: nextLanguage });
+            setOpenChip(null);
+          }}
         />
+        {showVideoFilter && <MultiFilterSheet open={openChip === "modality"} title={t("filters.attention")} values={modalities} options={modalityOptions} onClose={() => setOpenChip(null)} onApply={(next) => { const nextModalities = next.filter(isSearchModality); setModalities(nextModalities); applyFilters({ modalidad: serializeMultiParam(nextModalities) }); setOpenChip(null); }} />}
+        {showInsurerFilter && <MultiFilterSheet open={openChip === "insurer"} title={t("filters.insurer")} values={insurers} options={insurerOptions.map((item) => ({ value: item.id, label: item.label }))} onClose={() => setOpenChip(null)} onApply={(next) => { setInsurers(next); applyFilters({ aseguradora: serializeMultiParam(next) }); setOpenChip(null); }} />}
       </div>
     );
   }
@@ -835,8 +1167,20 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 type="text"
                 value={query}
                 onChange={(e) => { handleQueryChange(e.target.value); setSearchActive(-1); setSearchOpen(true); }}
-                onFocus={() => { if (searchSug.length > 0) setSearchOpen(true); }}
-                onBlur={() => { searchBlurRef.current = setTimeout(() => setSearchOpen(false), 150); }}
+                onFocus={() => {
+                  if (searchBlurRef.current) {
+                    clearTimeout(searchBlurRef.current);
+                    searchBlurRef.current = null;
+                  }
+                  if (searchSug.length > 0) setSearchOpen(true);
+                }}
+                onBlur={() => {
+                  if (searchBlurRef.current) clearTimeout(searchBlurRef.current);
+                  searchBlurRef.current = setTimeout(() => {
+                    setSearchOpen(false);
+                    searchBlurRef.current = null;
+                  }, 150);
+                }}
                 onKeyDown={(e) => {
                   if (searchOpen && searchSug.length > 0) {
                     if (e.key === "ArrowDown") { e.preventDefault(); setSearchActive((i) => Math.min(i + 1, searchSug.length - 1)); return; }
@@ -880,8 +1224,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                         type="button"
                         role="option"
                         aria-selected={i === searchActive}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => pickCategory(s.id)}
+                        onPointerDown={(e) => {
+                          // Select before the input blur can close the portalled list.
+                          e.preventDefault();
+                          pickCategory(s.id);
+                        }}
                         className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${i === searchActive ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
                       >
                         <Search className="h-4 w-4 shrink-0 text-[#009FD9]" />
@@ -917,7 +1264,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                   applyFilters({ provincia: "", canton: "", lat: "", lng: "", ubicacion: "" });
                 }
               }}
-              onFocus={() => { if (locationQuery.trim().length >= 2) setLocationOpen(true); }}
+              onFocus={() => setLocationOpen(locationQuery.trim().length >= 2)}
               onBlur={() => { locationBlurRef.current = setTimeout(() => setLocationOpen(false), 150); }}
               onKeyDown={handleLocationKeyDown}
               placeholder={t("filters.locationPlaceholder")}
@@ -936,24 +1283,30 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               >
                 <X className="h-3.5 w-3.5" />
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => requestMyLocation()}
-                disabled={geoLoading}
-                className={`group absolute right-2.5 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full transition-colors ${
-                  geoActive ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#009FD9]"
-                }`}
-                aria-label={geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}
-              >
-                {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
-                <span className="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-50 hidden whitespace-nowrap rounded-lg bg-[#0f2747] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg group-hover:block group-focus-visible:block">
-                  {t("filters.nearMeActive")}
-                </span>
-              </button>
-            )}
-            <AnchoredDropdown anchorRef={locationFieldRef} open={locationOpen && locationSug.length > 0} maxHeight={288}>
+            ) : null}
+            <AnchoredDropdown
+              anchorRef={locationFieldRef}
+              open={locationOpen && locationQuery.trim().length >= 2}
+              maxHeight={288}
+            >
               <ul className="py-1" role="listbox">
+                {!geoActive && (
+                  <li>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setLocationOpen(false);
+                        requestMyLocation();
+                      }}
+                      disabled={geoLoading}
+                      className="flex w-full items-center gap-2.5 whitespace-nowrap border-b border-[#eef2f6] px-3.5 py-3 text-left text-sm font-semibold text-[#009FD9] transition-colors hover:bg-[#EBF5FB] disabled:opacity-60"
+                    >
+                      {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                      <span>{t("filters.nearMe")}</span>
+                    </button>
+                  </li>
+                )}
                 {locationSug.map((suggestion, i) => (
                   <li key={suggestion.type === "address" ? `address-${suggestion.placeId}` : `${suggestion.type}-${suggestion.type === "province" ? suggestion.id : `${suggestion.provinceId}-${suggestion.id}`}`}>
                     <button
@@ -979,11 +1332,12 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <label className={fieldLabel}>{t("filters.sortBy")}</label>
           <Select value={sortBy} onValueChange={(v) => {
             setSortBy(v);
-            applyFilters({ sortBy: v });
+            if (v === "cercania" && !geoActive) requestMyLocation();
+            else applyFilters({ sortBy: v });
           }}>
             <SelectTrigger className={FILTER_TRIGGER}><SelectValue>{sortLabel}</SelectValue></SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
-              {SORT_OPTIONS.map((option) => (
+              {selectableSortOptions.map((option) => (
                 <SelectItem key={option} value={option}>{t(`sort.${option}`)}</SelectItem>
               ))}
             </SelectContent>
@@ -993,22 +1347,22 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <div>
           <label className={fieldLabel}>{t("filters.price")}</label>
           <Select
-            value={priceFilter || undefined}
-            onValueChange={(v) => {
-              const next = v === ANY_PRICE ? "" : v;
-              setPriceFilter(next);
-              applyFilters({ precio: next });
+            value={priceChoiceFromFilters(priceFilter, priceUnits)}
+            onValueChange={(choice) => {
+              const next = filtersFromPriceChoice(choice);
+              setPriceFilter(next.availability);
+              setPriceUnits(next.units);
+              applyFilters({ precio: next.availability, unidadPrecio: serializeMultiParam(next.units) });
             }}
           >
             <SelectTrigger className={FILTER_TRIGGER}>
-              <SelectValue placeholder={t("filters.anyPrice")}>
-                {priceFilter ? t(`priceFilter.${priceFilter}`) : <span className="text-[#9ca3af]">{t("filters.anyPrice")}</span>}
-              </SelectValue>
+              <SelectValue />
             </SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
-              {priceFilter && <SelectItem value={ANY_PRICE} className="text-[#6b7280]">{t("filters.anyPrice")}</SelectItem>}
-              {PRICE_OPTIONS.map((option) => (
-                <SelectItem key={option} value={option}>{t(`priceFilter.${option}`)}</SelectItem>
+              {PRICE_CHOICES.map((choice) => (
+                <SelectItem key={choice} value={choice}>
+                  {choice === ANY_PRICE ? t("filters.anyPrice") : t(`priceFilter.${choice}`)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -1017,31 +1371,39 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         {showVideoFilter && (
           <div>
             <label className={fieldLabel}>{t("filters.attention")}</label>
-            <Select value={modality} onValueChange={(v) => { setModality(v); applyFilters({ modalidad: v }); }}>
-            <SelectTrigger className={FILTER_TRIGGER}><SelectValue>{modalityLabel}</SelectValue></SelectTrigger>
-              <SelectContent className={FILTER_CONTENT}>
-                <SelectItem value={ANY_MODALITY}>{t("filters.attentionAny")}</SelectItem>
-                <SelectItem value="in_person">{t("filters.attentionInPerson")}</SelectItem>
-                <SelectItem value="video">{t("filters.attentionVideo")}</SelectItem>
-              </SelectContent>
-            </Select>
+            <DesktopMultiSelect
+              label={t("filters.attention")}
+              emptyLabel={t("filters.attentionAny")}
+              values={modalities}
+              options={[
+                { value: "in_person", label: t("filters.attentionInPerson") },
+                { value: "video", label: t("filters.attentionVideo") },
+              ]}
+              onChange={(next) => {
+                const nextModalities = next.filter(isSearchModality);
+                setModalities(nextModalities);
+                applyFilters({ modalidad: serializeMultiParam(nextModalities) });
+              }}
+            />
           </div>
         )}
 
         <div>
           <label className={fieldLabel}>{t("filters.language")}</label>
           <Select
-            value={language || undefined}
-            onValueChange={(v) => { const next = v === ANY_LANGUAGE ? "" : v; setLanguage(next); applyFilters({ idioma: next }); }}
+            value={language || ANY_LANGUAGE}
+            onValueChange={(value) => {
+              const nextLanguage = value === ANY_LANGUAGE ? "" : value;
+              setLanguage(nextLanguage);
+              applyFilters({ idioma: nextLanguage });
+            }}
           >
-            <SelectTrigger className={FILTER_TRIGGER}>
-              <SelectValue placeholder={t("filters.anyLanguage")}>
-                {language ? languageLabel(language, locale) : <span className="text-[#9ca3af]">{t("filters.anyLanguage")}</span>}
-              </SelectValue>
-            </SelectTrigger>
+            <SelectTrigger className={FILTER_TRIGGER} aria-label={t("filters.language")}><SelectValue /></SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
-              {language && <SelectItem value={ANY_LANGUAGE} className="text-[#6b7280]">{t("filters.allLanguages")}</SelectItem>}
-              {LANGUAGES.map((item) => <SelectItem key={item.id} value={item.id}>{languageLabel(item.id, locale)}</SelectItem>)}
+              <SelectItem value={ANY_LANGUAGE}>{t("filters.anyLanguage")}</SelectItem>
+              {LANGUAGES.map((item) => (
+                <SelectItem key={item.id} value={item.id}>{languageLabel(item.id, locale)}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -1049,28 +1411,16 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         {showInsurerFilter && (
         <div>
           <label className={fieldLabel}>{t("filters.insurer")}</label>
-          {/* Non-filtering default: nothing selected shows "Cualquier aseguradora"
-              (greyed, like a placeholder, so it reads as NOT an active filter - most
-              pros don't work with insurers). Pick one to filter. Clearing is the
-              in-dropdown "Cualquier aseguradora" item (shown only when one is picked) so
-              the field stays the SAME full-width size as every other filter - an external
-              X button used to shrink this control ~40px narrower than the rest. */}
-          <Select
-            value={aseguradora || undefined}
-            onValueChange={(v) => { const next = v === ANY_INSURER ? "" : v; setAseguradora(next); applyFilters({ aseguradora: next }); }}
-          >
-            <SelectTrigger className={FILTER_TRIGGER}>
-              <SelectValue placeholder={t("filters.anyInsurer")}>
-                {aseguradora
-                  ? insurerOptions.find((i) => i.id === aseguradora)?.label
-                  : <span className="text-[#9ca3af]">{t("filters.anyInsurer")}</span>}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className={FILTER_CONTENT}>
-              {aseguradora && <SelectItem value={ANY_INSURER} className="text-[#6b7280]">{t("filters.anyInsurer")}</SelectItem>}
-              {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <DesktopMultiSelect
+            label={t("filters.insurer")}
+            emptyLabel={t("filters.anyInsurer")}
+            values={insurers}
+            options={insurerOptions.map((item) => ({ value: item.id, label: item.label }))}
+            onChange={(next) => {
+              setInsurers(next);
+              applyFilters({ aseguradora: serializeMultiParam(next) });
+            }}
+          />
         </div>
         )}
       </div>
@@ -1087,7 +1437,7 @@ export function MobileFiltersButton() {
   const hasActiveInsurer = !!params.get("aseguradora") && isHealthCategory(params.get("categoria"));
   const hasActive =
     !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
-    hasActiveInsurer || !!params.get("idioma") || !!params.get("lat") ||
+    hasActiveInsurer || !!params.get("idioma") || !!params.get("precio") || !!params.get("unidadPrecio") || !!params.get("lat") ||
     (!!params.get("sortBy") && params.get("sortBy") !== "rating") || (!!params.get("modalidad") && params.get("modalidad") !== ANY_MODALITY);
   return (
     <button

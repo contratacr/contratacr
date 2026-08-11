@@ -9,17 +9,19 @@ import fs from "node:fs";
 // a previously reviewed file.
 const reviewed = new Map([
   ["src/hooks/use-auth.ts", { count: 9, reason: "authenticated user/avatar render cache" }],
-  ["src/hooks/use-mode.ts", { count: 2, reason: "device presentation preference" }],
+  ["src/hooks/use-mode.ts", { count: 3, reason: "tab-scoped panel-mode preference and its storage-event subscription" }],
   ["src/components/auth/otp-verification.tsx", { count: 2, reason: "short-lived OTP auto-resend cooldown; auth state stays in Supabase" }],
   ["src/components/auth/client-registration-modal.tsx", { count: 2, reason: "short-lived booking registration handoff" }],
   ["src/components/booking/booking-modal.tsx", { count: 4, reason: "short-lived booking registration handoff" }],
-  ["src/components/dashboard/pro/profile-completion.tsx", { count: 2, reason: "dismissed optional UI prompt" }],
-  ["src/components/landing/landing-navbar.tsx", { count: 1, reason: "language preference; not account-owned data" }],
+  ["src/components/dashboard/pro/profile-completion.tsx", { count: 5, reason: "dismissed and ignored optional checklist presentation state; completion truth remains in Supabase" }],
+  ["src/components/landing/landing-navbar.tsx", { count: 4, reason: "language preference and coarse current-location search cache; no account-owned records" }],
+  ["src/components/marketplace/marketplace-controls.tsx", { count: 2, reason: "device-local marketplace recent-search history" }],
   ["src/components/landing/ai-concierge.tsx", { count: 8, reason: "tab-scoped anonymous conversation and post-auth intent handoff; authenticated history persists in Supabase" }],
   ["src/components/dashboard/pro/proposals-tab.tsx", { count: 2, reason: "dismissed opportunity UI state" }],
   ["src/components/status/operational-status-banner.tsx", { count: 2, reason: "dismissed operational notice" }],
   ["src/app/api/portfolio-like/route.ts", { count: 1, reason: "documentation for anonymous browser guard" }],
   ["src/components/professionals/save-button.tsx", { count: 16, reason: "Supabase-backed favorites cache and login handoff" }],
+  ["src/components/professionals/follow-button.tsx", { count: 7, reason: "Supabase-backed follows cache and short-lived post-login follow handoff" }],
   ["src/lib/dashboard-prefetch-cache.ts", { count: 6, reason: "five-minute backend response cache" }],
   ["src/components/professionals/case-like-button.tsx", { count: 3, reason: "anonymous like guard; count persists in backend" }],
   ["src/components/notifications/notification-live-toast.tsx", { count: 3, reason: "notification presentation state; records persist in backend" }],
@@ -28,7 +30,7 @@ const reviewed = new Map([
   ["src/components/push/push-token-manager.tsx", { count: 15, reason: "native push permission presentation, navigation handoff, and token deduplication; tokens persist in Supabase" }],
   ["src/lib/notifications-cache.ts", { count: 2, reason: "backend notification render cache; Supabase remains the source of truth" }],
   ["src/app/[locale]/login/page.tsx", { count: 1, reason: "short-lived post-login presentation handoff" }],
-  ["src/app/[locale]/dashboard/profesional/page.tsx", { count: 2, reason: "seen opportunity modal UI state" }],
+  ["src/app/[locale]/dashboard/profesional/page.tsx", { count: 12, reason: "seen opportunity presentation state, section-return handoff, and profile-completion navigation cache; backend remains authoritative" }],
 ]);
 
 const trackedSource = execFileSync("git", ["ls-files", "src"], { encoding: "utf8" })
