@@ -100,7 +100,7 @@ export function Modal({
               : "items-start justify-between",
           )}
         >
-          <div className={cn("min-w-0", fullscreenMobile && "text-center sm:text-left")}>
+          <div className={cn("min-w-0", fullscreenMobile && "px-10 text-center sm:px-0 sm:text-left")}>
             <h2 className="text-lg font-bold text-[#111827] leading-tight">{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-[#6b7280]">{subtitle}</p>}
           </div>

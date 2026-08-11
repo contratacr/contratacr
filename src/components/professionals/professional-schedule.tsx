@@ -424,11 +424,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             to hidden makes it strictly a HORIZONTAL tab scroll; vertical touch-drags then bubble
             to the page/sheet scroll (default touch-action). */}
         <div
-          className="flex min-w-0 items-center gap-3 pb-[2px]"
+          className="flex min-w-0 items-center gap-2 pb-[2px]"
           role="tablist"
           aria-label={t("location")}
         >
-          {primaryLocationTabs.map((o) => {
+          {primaryLocationTabs.map((o, locationIndex) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
             const isVideoTab = o.id === "videoconsulta" || (!hasRealLoc && (professional.videoconsulta || professional.coverage?.country));
             return (
@@ -445,7 +445,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                       setOffset(0);
                     }
                   : (e) => e.stopPropagation()}
-                className={`inline-flex min-w-0 items-center gap-1 whitespace-nowrap py-0 pl-0 pr-0.5 text-[12px] font-semibold transition-colors ${extraLocationCount > 0 ? "max-w-[36%]" : primaryLocationTabs.length > 2 ? "max-w-[32%]" : primaryLocationTabs.length > 1 ? "max-w-[48%]" : "max-w-full"} ${
+                className={`inline-flex items-center gap-1 whitespace-nowrap py-0 pl-0 pr-0.5 text-[12px] font-semibold transition-colors ${locationIndex === 0 ? "shrink-0" : "min-w-0 flex-1"} ${
                   active
                     ? "text-[#009FD9]"
                     : "text-[#6b7280] hover:text-[#009FD9]"
@@ -453,7 +453,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                 title={locTabLabel(o.label)}
               >
                 {isVideoTab ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
-                <span className="min-w-0 truncate">{locTabLabel(o.label)}</span>
+                <span className={locationIndex === 0 ? "whitespace-nowrap" : "min-w-0 truncate"}>{locTabLabel(o.label)}</span>
               </button>
             );
           })}
@@ -468,7 +468,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               }}
               className="ml-auto inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] font-bold text-[#5f6f86] transition-colors hover:text-[#009FD9]"
             >
-              +{extraLocationCount} {locale === "en" ? "locations" : "lugares"}
+              <span aria-hidden="true">+{extraLocationCount}</span>
+              <span className="sr-only">{locale === "en" ? `${extraLocationCount} more locations` : `${extraLocationCount} lugares más`}</span>
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${locationMenuOpen ? "rotate-180" : ""}`} />
             </button>
           )}
