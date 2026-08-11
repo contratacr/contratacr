@@ -842,7 +842,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       </div>
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
       <Section footer={makeSectionFooter("basic")} id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
-        <div data-field="photo" className="flex items-center gap-4 border-b border-[#eef3f7] pb-5">
+        <div data-field="photo" className="flex items-center gap-3 border-b border-[#eef3f7] pb-5 sm:gap-4">
           <ImagePreviewDialog
             src={avatarPreview}
             alt={t("photoAlt")}
@@ -862,13 +862,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           </ImagePreviewDialog>
 
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-[#162543]">{t("photoAlt")}</p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <p className="hidden text-sm font-semibold text-[#162543] sm:block">{t("photoAlt")}</p>
+            <div className="grid grid-cols-2 items-center gap-2 sm:mt-2 sm:flex sm:flex-wrap">
               <button
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
                 disabled={photoUploading}
-                className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d7e1ea] bg-white px-2 text-xs font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-3 sm:text-sm"
               >
                 <Camera className="h-4 w-4 text-[#008fc3]" />
                 {avatarPreview
@@ -880,7 +880,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
                   type="button"
                   onClick={handlePhotoRemove}
                   disabled={photoUploading}
-                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-white px-3 text-sm font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 bg-white px-2 text-xs font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-3 sm:text-sm"
                 >
                   <X className="h-4 w-4" />
                   {locale === "en" ? "Remove photo" : "Quitar foto"}
@@ -1297,7 +1297,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     </div>
   );
 }
-
 
 
 
