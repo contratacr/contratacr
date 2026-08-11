@@ -1555,7 +1555,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <div className="relative w-full">
                         <div className="flex w-full items-center h-11 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-4 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
                           <div ref={compactSvcRef} className="flex h-full min-w-0 flex-[3_1_0%] items-center gap-2 sm:gap-3">
-                            <Search className="hidden h-5 w-5 shrink-0 text-gray-300 sm:block" />
+                            <button
+                              type="submit"
+                              aria-label={t("search")}
+                              className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-300 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 sm:inline-flex"
+                            >
+                              <Search className="h-5 w-5" aria-hidden="true" />
+                            </button>
                             <input
                               type="text"
                               value={searchQuery}
@@ -1603,17 +1609,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               <LocateFixed className="h-4 w-4" />
                             </button>
                           </div>
-                          <button
-                            type="submit"
-                            aria-label={t("search")}
-                            className="inline-flex h-full w-12 shrink-0 items-center justify-center self-stretch rounded-none rounded-r-[5px] bg-[#009FD9] text-white transition-colors hover:bg-[#0089bb]"
-                          >
-                            <Search className="h-5 w-5" aria-hidden="true" />
-                          </button>
                         </div>
 
-                        {/* Service autocomplete - selecting FILLS the field; search
-                            runs only on Buscar/Enter. */}
+                        {/* Service autocomplete fills the field; the search runs from the leading icon or Enter. */}
                         <AnchoredDropdown anchorRef={compactSvcRef} open={searchFocused && searchQuery.trim().length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
                           <div id="navbar-service-suggestions" role="listbox" className="py-1.5">
                             {compactSuggestions.length === 0 ? (
