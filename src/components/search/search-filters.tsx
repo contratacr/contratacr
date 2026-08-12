@@ -365,7 +365,7 @@ function PriceFilterSheetContent({
   onApply,
 }: Omit<React.ComponentProps<typeof PriceFilterSheet>, "open">) {
   const t = useTranslations("search");
-  const [draftChoice, setDraftChoice] = useState(() => priceChoiceFromFilters(availability, units));
+  const currentChoice = priceChoiceFromFilters(availability, units);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -413,20 +413,13 @@ function PriceFilterSheetContent({
             {PRICE_CHOICES.map((value) => option(
               value,
               value === ANY_PRICE ? t("filters.anyPrice") : t(`priceFilter.${value}`),
-              draftChoice === value,
-              () => setDraftChoice(value),
+              currentChoice === value,
+              () => {
+                const next = filtersFromPriceChoice(value);
+                onApply(next.availability, next.units);
+              },
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              const next = filtersFromPriceChoice(draftChoice);
-              onApply(next.availability, next.units);
-            }}
-            className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-[8px] bg-[#009FD9] px-5 text-[15px] font-bold text-white"
-          >
-            {t("filters.showResults")}
-          </button>
         </div>
       </section>
     </div>

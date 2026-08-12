@@ -142,7 +142,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
     activeCategory && allProfessions.includes(activeCategory)
       ? [activeCategory, ...allProfessions.filter((id) => id !== activeCategory)]
       : allProfessions;
-  const mobileProfessionList = mobileDisplayProfessions.slice(0, 2);
+  const mobileProfessionList = mobileDisplayProfessions.slice(0, 1);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
