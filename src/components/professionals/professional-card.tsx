@@ -163,7 +163,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
   const wideDesktopExtraProfessions = allProfessions.length - wideDesktopProfessionList.length;
   const serviceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[11px] font-semibold leading-snug text-[#6b7280]";
-  const mobileServiceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]";
+  const mobileServiceChipClass = "inline-flex min-w-0 max-w-full shrink items-center whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]";
   const moreProfessionsClass = "relative z-10 inline-flex shrink-0 text-[10px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
@@ -372,9 +372,9 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                   data-testid="professional-card-service-summary"
                   data-service-summary-version="mobile-primary-plus-count-v2"
                 >
-                  <div className="flex min-w-0 items-baseline gap-1.5 overflow-hidden">
+                  <div className="flex min-w-0 items-baseline gap-1 overflow-hidden">
                     {mobileProfessionList.map((cat) => (
-                      <span key={`mobile-service-${cat}`} data-testid="professional-card-mobile-service" data-full-label="true" data-extra-count={mobileExtraProfessions} className={`${mobileServiceChipClass} min-w-0 flex-1 truncate`} title={catLabel(cat)}>
+                      <span key={`mobile-service-${cat}`} data-testid="professional-card-mobile-service" data-full-label="true" data-extra-count={mobileExtraProfessions} className={`${mobileServiceChipClass} truncate`} title={catLabel(cat)}>
                         {catLabel(cat)}
                       </span>
                     ))}
