@@ -1049,19 +1049,21 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     const priceText = priceChoice === ANY_PRICE ? t("filters.price") : t(`priceFilter.${priceChoice}`);
     const languageText = language
       ? languageOptions.find((option) => option.value === language)?.label ?? t("filters.language")
-      : t("filters.language");
-    const pill = "ccr-search-filter-chip inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2.5 text-[11px] font-bold text-[#162543] shadow-sm";
+      : locale === "en" ? "Service language" : "Idioma de atención";
+    const pill = "ccr-search-filter-chip inline-flex h-8 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2 text-[9px] font-bold text-[#162543] shadow-sm min-[350px]:px-2.5 min-[350px]:text-[10px] min-[390px]:text-[11px]";
     return (
-      <div className="hide-scrollbar -mx-1 flex max-w-full items-center justify-start gap-1.5 overflow-x-auto overflow-y-visible px-1 pb-0.5">
-        <button type="button" onClick={() => setOpenChip("sort")} className={pill}>
-          <span>{sortLabel}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
-        </button>
-        <button type="button" onClick={() => setOpenChip("price")} className={pill}>
-          <span>{priceText}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
-        </button>
-        <button type="button" onClick={() => setOpenChip("language")} className={pill}>
-          <span>{languageText}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
-        </button>
+      <div className="hide-scrollbar flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
+        <div className="flex w-max min-w-full items-center justify-start gap-1">
+          <button type="button" onClick={() => setOpenChip("sort")} className={pill}>
+            <span className="min-w-0 whitespace-nowrap">{sortLabel}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
+          </button>
+          <button type="button" onClick={() => setOpenChip("price")} className={pill}>
+            <span className="min-w-0 whitespace-nowrap">{priceText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
+          </button>
+          <button type="button" onClick={() => setOpenChip("language")} className={pill}>
+            <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
+          </button>
+        </div>
         {showVideoFilter && <button type="button" onClick={() => setOpenChip("modality")} className={pill}>
           <span>{modalities.length ? `${t("filters.attention")} (${modalities.length})` : t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
         </button>}
