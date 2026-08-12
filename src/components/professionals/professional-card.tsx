@@ -148,7 +148,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
     if (items.length < maxItems && currentLength + labelLength <= maxReadableLength) return [...items, id];
     return items;
   }, []);
-  const mobileProfessionList = mobileDisplayProfessions.slice(0, 2);
+  const mobileProfessionList = mobileDisplayProfessions.slice(0, 1);
   const desktopProfessionList = fitProfessionLabels(displayProfessions, 38, 2);
   const wideDesktopProfessionList = fitProfessionLabels(displayProfessions, 55, 3);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
@@ -310,9 +310,6 @@ export async function ProfessionalCard({ professional, className, highlightMetri
       </span>
     </div>
   ) : null;
-  const mobilePriceInlineWithService = mobileProfessionList.length <= 1;
-  const mobilePriceInlineWithReviews = !mobilePriceInlineWithService;
-
   // Location data for the schedule's location control (now rendered in the LEFT
   // column under the rating — see ProfessionalSchedule). The per-place TABS +
   // street addresses come from the pro's workplaces; here we only supply the
@@ -371,47 +368,40 @@ export async function ProfessionalCard({ professional, className, highlightMetri
               </div>
               {(displayProfessions.length > 0 || professional.isFeatured) && (
                 <div
-                  className={`mt-1 flex w-full min-w-0 max-w-full items-baseline gap-2 overflow-hidden lg:hidden ${mobilePriceInlineWithService && mobilePrice ? "justify-between" : ""}`}
+                  className="mt-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-baseline gap-2 overflow-hidden lg:hidden"
                   data-testid="professional-card-service-summary"
-                  data-service-summary-version="mobile-under-verified-v1"
+                  data-service-summary-version="mobile-primary-plus-count-v2"
                 >
-                  <div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
-                    {mobileProfessionList.map((cat, index) => (
-                      <div key={`mobile-service-row-${cat}`} className="flex min-w-0 items-center gap-1.5">
-                        <span data-testid="professional-card-mobile-service" data-full-label="true" data-extra-count={mobileExtraProfessions} className={`${mobileServiceChipClass} min-w-0 flex-1 truncate`} title={catLabel(cat)}>
-                          {catLabel(cat)}
-                        </span>
-                        {index === mobileProfessionList.length - 1 && mobileExtraProfessions > 0 && (
-                          <Link href={profileHref} title={tCard("moreProfessions")} aria-label={tCard("moreProfessions")} data-testid="professional-card-more-services" className={moreProfessionsClass}>+{mobileExtraProfessions}</Link>
-                        )}
-                        {index === mobileProfessionList.length - 1 && professional.isFeatured && (
-                          <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">{tCard("featured")}</span>
-                        )}
-                      </div>
+                  <div className="flex min-w-0 items-baseline gap-1.5 overflow-hidden">
+                    {mobileProfessionList.map((cat) => (
+                      <span key={`mobile-service-${cat}`} data-testid="professional-card-mobile-service" data-full-label="true" data-extra-count={mobileExtraProfessions} className={`${mobileServiceChipClass} min-w-0 flex-1 truncate`} title={catLabel(cat)}>
+                        {catLabel(cat)}
+                      </span>
                     ))}
+                    {mobileExtraProfessions > 0 && (
+                      <Link href={profileHref} title={tCard("moreProfessions")} aria-label={tCard("moreProfessions")} data-testid="professional-card-more-services" className={moreProfessionsClass}>+{mobileExtraProfessions}</Link>
+                    )}
                     {mobileProfessionList.length === 0 && professional.isFeatured && (
                       <span className="inline-flex w-fit shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">{tCard("featured")}</span>
                     )}
+                    {mobileProfessionList.length > 0 && professional.isFeatured && (
+                      <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">{tCard("featured")}</span>
+                    )}
                   </div>
-                  {mobilePriceInlineWithService ? mobilePrice : null}
+                  {mobilePrice}
                 </div>
               )}
-              {(professional.reviewCount > 0 || mobilePriceInlineWithReviews) && (
+              {professional.reviewCount > 0 && (
                 <div className="mt-1.5 flex min-w-0 items-center gap-2 lg:hidden">
-                  {professional.reviewCount > 0 ? (
-                    <Link
-                      href={reviewsHref}
-                      className="relative z-10 inline-flex min-w-0 w-fit items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-                      aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
-                    >
-                      <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
-                      <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                      <span>{ratingLabel}</span>
-                    </Link>
-                  ) : (
-                    <div />
-                  )}
-                  {mobilePriceInlineWithReviews ? <div className="ml-auto">{mobilePrice}</div> : null}
+                  <Link
+                    href={reviewsHref}
+                    className="relative z-10 inline-flex min-w-0 w-fit items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus-visible:ring-[#009FD9]/30"
+                    aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+                  >
+                    <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
+                    <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+                    <span>{ratingLabel}</span>
+                  </Link>
                 </div>
               )}
             </div>
