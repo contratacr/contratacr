@@ -561,28 +561,28 @@ export default function ProfilePage() {
                 "grid w-full shrink-0 gap-2 self-start sm:w-auto sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5",
                 expYears > 0 ? "grid-cols-3 sm:min-w-[18rem]" : "grid-cols-2 sm:min-w-[13rem]",
               )}>
-                <button type="button" onClick={() => setActiveTab("resenas")} className="text-center">
+                <button type="button" onClick={() => setActiveTab("resenas")} className="min-w-0 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
                     <span className="text-[15px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
                   </div>
-                  <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("reviewCountLabel", { count: professional.reviewCount })}</p>
+                  <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">{t("reviewCountLabel", { count: professional.reviewCount })}</p>
                 </button>
                 {expYears > 0 && (
-                  <div className="text-center">
+                  <div className="min-w-0 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Briefcase className="h-4 w-4 text-[#009FD9]" />
                       <span className="text-[15px] font-bold text-[#111827]">{expYears}</span>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statYears")}</p>
+                    <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none tracking-[-0.02em] text-[#8b95a5] sm:text-[11px] sm:tracking-normal">{t("statYears")}</p>
                   </div>
                 )}
-                <div className="text-center">
+                <div className="min-w-0 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Users className="h-4 w-4 text-[#009FD9]" />
                     <span className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
                   </div>
-                  <p className="mt-0.5 text-[11px] text-[#9ca3af]">
+                  <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">
                     {locale === "en"
                       ? ((professional.followerCount ?? 0) === 1 ? "follower" : "followers")
                       : ((professional.followerCount ?? 0) === 1 ? "seguidor" : "seguidores")}
