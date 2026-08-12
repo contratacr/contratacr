@@ -132,7 +132,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                   {/* Province name has priority — never truncate it. */}
                   <span className="block text-xl font-extrabold text-[#1a2744] leading-tight">{province.name}</span>
                   {count > 0 ? (
-                    <span className="block text-[12px] font-semibold text-[#16a34a]">
+                    <span className="block text-[12px] font-semibold text-[#0089bb]">
                       {t("coverageCount", { count })}
                     </span>
                   ) : (
@@ -160,7 +160,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                       onClick={() => router.push(`/buscar?provincia=${activeId}&canton=${c.id}`)}
                       className="group inline-flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white pl-2.5 pr-3.5 py-1.5 text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors"
                     >
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#16a34a] group-hover:bg-[#009FD9]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9]" />
                       {c.name}
                     </button>
                   ))}

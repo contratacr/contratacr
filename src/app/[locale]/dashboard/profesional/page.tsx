@@ -416,7 +416,6 @@ function QuickGuidesModal({
     </Modal>
   );
 }
-
 function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslations<"proPanel.guides">> }) {
   if (id === "services") {
     return (
@@ -1785,12 +1784,13 @@ export default function DashboardPage() {
   function identityBadge() {
     if (clientVerified || pro?.verification_status === "verified") {
       return (
-        <Badge
-          variant="verified"
-          className="shrink-0 whitespace-nowrap px-2 py-1 text-[11px] leading-none sm:px-2.5 sm:py-0.5 sm:text-xs sm:leading-normal"
+        <span
+          aria-label={t("identityVerified")}
+          title={t("identityVerified")}
+          className="inline-flex shrink-0 text-[#009FD9]"
         >
-          {t("identityVerified")}
-        </Badge>
+          <CheckCircle2 aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
+        </span>
       );
     }
     if (!pro) return null;

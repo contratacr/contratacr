@@ -1521,9 +1521,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             <button
                               type="submit"
                               aria-label={t("search")}
-                              className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-300 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 sm:inline-flex"
+                              title={t("search")}
+                              className="hidden h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 sm:grid"
                             >
-                              <Search className="h-5 w-5" aria-hidden="true" />
+                              <Search className="h-5 w-5" />
                             </button>
                             <input
                               type="text"
@@ -1572,7 +1573,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           </div>
                         </div>
 
-                        {/* Service autocomplete fills the field; the search runs from the leading icon or Enter. */}
+                        {/* Service autocomplete - selecting FILLS the field; search
+                            runs only on Buscar/Enter. */}
                         <AnchoredDropdown anchorRef={compactSvcRef} open={searchFocused && searchQuery.trim().length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
                           <div id="navbar-service-suggestions" role="listbox" className="py-1.5">
                             {compactSuggestions.length === 0 ? (
@@ -1973,15 +1975,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><UserRound /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                 </Link>
-              ) : !user ? (
-                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  <DrawerIcon><Briefcase /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
-                </Link>
               ) : null}
               <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 <DrawerIcon><Search /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
+              </Link>
+              <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                <DrawerIcon><Wrench /></DrawerIcon>
+                <span className={mobileDrawerTextClass}>{t("categories")}</span>
               </Link>
               <Link href="/empleos" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 <DrawerIcon><Briefcase /></DrawerIcon>
@@ -1991,6 +1992,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
               </Link>
+              {(!user || !isPro) && (
+                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={user ? mobileDrawerItemClass : mobileDrawerStrongItemClass}>
+                  <DrawerIcon><Briefcase /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
+                </Link>
+              )}
               {user && isAdminUser && (
                 <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><Shield /></DrawerIcon>
@@ -2009,17 +2016,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <span className={mobileDrawerTextClass}>{t("login")}</span>
                 </Link>
               )}
-
-              {user && !isPro && (
-                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                  <DrawerIcon><Briefcase /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
-                </Link>
-              )}
-              <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                <DrawerIcon><Wrench /></DrawerIcon>
-                <span className={mobileDrawerTextClass}>{t("categories")}</span>
-              </Link>
 
               <div className="mt-1">
                 <button

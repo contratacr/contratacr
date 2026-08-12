@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { GoogleMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/google-map-panel";
+import { APP_RESUME_EVENT } from "@/lib/app-events";
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
@@ -164,6 +165,25 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   }, [children]);
 
   useEffect(() => {
+    const recoverInteractionState = () => {
+      draggingRef.current = false;
+      setDragging(false);
+      const points = mobileSheetSnapPoints();
+      const target = points[snapIndex(curRef.current, points)];
+      curRef.current = target;
+      setHeightFr(target);
+      window.requestAnimationFrame(() => {
+        const max = points[points.length - 1];
+        if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${(max - target) * 100}dvh, 0)`;
+        updateMobileScrollThumb();
+        window.dispatchEvent(new Event("resize"));
+      });
+    };
+    window.addEventListener(APP_RESUME_EVENT, recoverInteractionState);
+    return () => window.removeEventListener(APP_RESUME_EVENT, recoverInteractionState);
+  }, []);
+
+  useEffect(() => {
     const setSearchView = (event: Event) => {
       const points = mobileSheetSnapPoints();
       const requestedView = (event as CustomEvent<{ view?: "list" | "map" }>).detail?.view;
@@ -197,6 +217,8 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     const dy = startRef.current.y - e.clientY; // up = grow
     const h = Math.min(max, Math.max(min, startRef.current.h + dy / vh));
     curRef.current = h;
+    // Move the already-laid-out sheet on the compositor layer. Animating its
+    // height would force the browser to recalculate every result card.
     if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${(max - h) * 100}dvh, 0)`;
   }
   function onHandleUp() {
@@ -213,11 +235,15 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     const direction = deltaFr > 0 ? 1 : -1;
     const adjacentIndex = Math.max(0, Math.min(snapPoints.length - 1, startIndex + direction));
     const adjacentDistancePx = Math.abs(snapPoints[adjacentIndex] - snapPoints[startIndex]) * viewportHeight;
+    // Require enough travel to distinguish an intended drag from finger jitter,
+    // but scale the threshold so every gap between snap points feels equally easy.
     const travelThresholdPx = Math.max(28, Math.min(48, adjacentDistancePx * 0.18));
     let target: number;
     if (adjacentIndex === startIndex || movedPx < 28 || (movedPx < travelThresholdPx && speed < 0.42)) {
       target = snapPoints[startIndex];
     } else {
+      // One intentional gesture advances exactly one state. This avoids skipping
+      // from map-first to fully expanded because of a short, fast flick.
       target = snapPoints[adjacentIndex];
     }
     curRef.current = target;

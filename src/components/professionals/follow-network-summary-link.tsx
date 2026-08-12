@@ -15,11 +15,11 @@ export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "followin
   const locale = useLocale();
   const es = locale !== "en";
   const { user } = useAuth();
-  const [counts, setCounts] = useState<Counts>({ following: 0, followers: 0 });
+  const [counts, setCounts] = useState<Counts | null>(null);
 
   const load = useCallback(async () => {
     if (!user) {
-      setCounts({ following: 0, followers: 0 });
+      setCounts(null);
       return;
     }
 
@@ -53,7 +53,11 @@ export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "followin
         onClick={() => onOpen?.("following")}
         className="flex min-w-12 flex-col items-center gap-1 rounded-md text-center transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
       >
-        <strong className="text-sm leading-none text-[#162543]">{counts.following}</strong>
+        {counts ? (
+          <strong className="text-sm leading-none text-[#162543]">{counts.following}</strong>
+        ) : (
+          <span aria-hidden="true" className="h-3.5 w-5 animate-pulse rounded bg-[#e5edf3]" />
+        )}
         <span className="whitespace-nowrap">{es ? "seguidos" : "following"}</span>
       </button>
       <button
@@ -61,7 +65,11 @@ export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "followin
         onClick={() => onOpen?.("followers")}
         className="flex min-w-12 flex-col items-center gap-1 rounded-md text-center transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
       >
-        <strong className="text-sm leading-none text-[#162543]">{counts.followers}</strong>
+        {counts ? (
+          <strong className="text-sm leading-none text-[#162543]">{counts.followers}</strong>
+        ) : (
+          <span aria-hidden="true" className="h-3.5 w-5 animate-pulse rounded bg-[#e5edf3]" />
+        )}
         <span className="whitespace-nowrap">{es ? "seguidores" : "followers"}</span>
       </button>
     </div>

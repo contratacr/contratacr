@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, MapPin, RefreshCw, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { getProfessionalDisplayName } from "@/lib/display-name";
+import { APP_RESUME_EVENT } from "@/lib/app-events";
 
 export interface MapProfessional {
   id: string;
@@ -571,16 +572,22 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // Relayout + re-fit when the container becomes visible / resizes.
   useEffect(() => {
     const el = mapRef.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => {
+    if (!el) return;
+    const relayout = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const g = (window as any).google?.maps;
       const map = mapInstanceRef.current;
       if (!g || !map || el.offsetWidth === 0) return;
+      g.event.trigger(map, "resize");
       if (boundsRef.current && markerCountRef.current > 0) fitToMarkers(map, g, boundsRef.current, markerCountRef.current);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
+    };
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(relayout);
+    ro?.observe(el);
+    window.addEventListener(APP_RESUME_EVENT, relayout);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener(APP_RESUME_EVENT, relayout);
+    };
   }, []);
 
   // Google Maps keeps the controls it received at construction time. Keep them

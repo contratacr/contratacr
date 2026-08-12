@@ -4,12 +4,10 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 
-const STALE_AFTER_MS = 15_000;
 const RECOVERY_THROTTLE_MS = 2_000;
 
 export function AppResumeRecovery() {
   const router = useRouter();
-  const hiddenAtRef = useRef<number | null>(null);
   const lastRecoveryRef = useRef(0);
 
   useEffect(() => {
@@ -33,23 +31,15 @@ export function AppResumeRecovery() {
       return;
     }
 
-    const markHidden = () => {
-      hiddenAtRef.current ??= Date.now();
-    };
-
     const recover = (forceRefresh = false) => {
       if (document.visibilityState === "hidden") return;
 
       const now = Date.now();
-      const hiddenAt = hiddenAtRef.current;
-      hiddenAtRef.current = null;
-
-      if (now - lastRecoveryRef.current < RECOVERY_THROTTLE_MS) return;
-      lastRecoveryRef.current = now;
-
       window.dispatchEvent(new Event(APP_RESUME_EVENT));
 
-      if (forceRefresh || (hiddenAt !== null && now - hiddenAt >= STALE_AFTER_MS)) {
+      if (forceRefresh) {
+        if (now - lastRecoveryRef.current < RECOVERY_THROTTLE_MS) return;
+        lastRecoveryRef.current = now;
         // Let Supabase resume its token refresh first, then reconcile server data.
         window.setTimeout(() => router.refresh(), 100);
       }
@@ -57,7 +47,6 @@ export function AppResumeRecovery() {
 
     const onVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        markHidden();
         return;
       }
       recover();
@@ -70,7 +59,6 @@ export function AppResumeRecovery() {
     const onFocus = () => recover();
     const onOnline = () => recover(true);
 
-    if (document.visibilityState === "hidden") markHidden();
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("pageshow", onPageShow);
     window.addEventListener("focus", onFocus);

@@ -4,10 +4,9 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
-  MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, CheckCircle2, Languages,
   Share2, Flag, Award, SearchX, Globe, BadgePercent, Users,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
@@ -518,11 +517,16 @@ export default function ProfilePage() {
                   </Avatar>
                 </ImagePreviewDialog>
                 <div className="min-w-0">
-                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                    <h1 className="min-w-0 truncate text-2xl font-bold leading-tight text-[#111827]">
+                  <div className="min-w-0">
+                    <h1 className="line-clamp-2 min-w-0 text-xl font-bold leading-tight text-[#111827] [overflow-wrap:normal] sm:text-2xl">
                       {displayName.primaryDesktop}
+                      {professional.verificationStatus === "verified" && (
+                        <CheckCircle2
+                          aria-label={t("identityVerified")}
+                          className="ml-1.5 inline-block h-[0.85em] w-[0.85em] align-[-0.05em] text-[#009FD9]"
+                        />
+                      )}
                     </h1>
-                    {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
                   </div>
                   {locationText && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-sm text-[#6b7280]">
@@ -596,7 +600,6 @@ export default function ProfilePage() {
                     (avatar/name/verificado/rating/location) now lives in the HEADER card
                     above, so it's not repeated here. */}
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("from")}</span>
                   {(() => {
                     const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
                     const { amount, unit, taxSuffix } = splitPricingLabel(label);

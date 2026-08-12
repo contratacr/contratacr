@@ -2,7 +2,8 @@
 
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Search, X, Loader2, MapPin, SlidersHorizontal, ChevronDown, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -79,6 +80,11 @@ type FilterSheetOption = {
   label: string;
 };
 
+function ViewportPortal({ children }: { children: ReactNode }) {
+  if (typeof document === "undefined") return null;
+  return createPortal(children, document.body);
+}
+
 function FilterSheet({
   open,
   title,
@@ -111,6 +117,7 @@ function FilterSheet({
   if (!open) return null;
 
   return (
+    <ViewportPortal>
     <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
       <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
       <section
@@ -153,6 +160,7 @@ function FilterSheet({
         </div>
       </section>
     </div>
+    </ViewportPortal>
   );
 }
 
@@ -208,6 +216,7 @@ function MultiFilterSheetContent({
   }, [onClose]);
 
   return (
+    <ViewportPortal>
     <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
       <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
       <section role="dialog" aria-modal="true" aria-label={title} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
@@ -248,6 +257,7 @@ function MultiFilterSheetContent({
         </div>
       </section>
     </div>
+    </ViewportPortal>
   );
 }
 
@@ -388,6 +398,7 @@ function PriceFilterSheetContent({
   );
 
   return (
+    <ViewportPortal>
     <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
       <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
       <section role="dialog" aria-modal="true" aria-label={t("filters.price")} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
@@ -419,6 +430,7 @@ function PriceFilterSheetContent({
         </div>
       </section>
     </div>
+    </ViewportPortal>
   );
 }
 
