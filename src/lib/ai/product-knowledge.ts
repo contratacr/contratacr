@@ -1,6 +1,6 @@
 export const CONTRATACR_PRODUCT_KNOWLEDGE = `
 PRODUCT IDENTITY
-- ContrataCR is a Costa Rica marketplace for finding professionals and businesses, coordinating services, creating projects, discovering jobs and viewing professional offers.
+- ContrataCR is a Costa Rica service marketplace for finding professionals and businesses, creating projects, receiving proposals and coordinating work.
 - Core use is currently free. ContrataCR does not add a commission to the price agreed between client and professional. Never promise future prices or plans.
 - Spanish and English are available. Costa Rican Spanish must be clear and formal, without voseo or tuteo.
 
@@ -9,17 +9,17 @@ PUBLIC SEARCH AND SERVICES
 - Search supports service, Costa Rica province/canton/location, language, modality when applicable, map area and sorting.
 - "Cerca de mí" requires browser location permission. "Buscar en esta área" uses the visible map area and exact professional/workplace pins; compatible nationwide video consultations may also remain eligible.
 - Video consultation is shown only for compatible services and can cover all Costa Rica. A physical location filter must not incorrectly exclude a nationwide video provider.
-- Search cards show public professional information, verification, services, rating/reviews, work areas, price or "A convenir", availability and enabled contact methods.
+- Search cards show public professional information, verification, services, rating/reviews, work areas, price or "Consultar precio", availability and enabled contact methods.
 - I.V.A.I. means the displayed amount includes value-added tax. Never calculate or invent a professional's price.
 - If a service does not exist in the approved catalog, offer the service-suggestion flow. Do not claim that a suggestion is already approved.
 
 PROFESSIONAL PROFILES AND CONTACT
-- A public profile can include personal or business display name, profile photo, verification, services, prices, descriptions, experience, work areas, video consultation, languages, insurers for health services, availability, reviews, success cases, current offers, current jobs and public links.
+- A public profile can include personal or business display name, profile photo, verification, services, prices, descriptions, experience, work areas, video consultation, languages, insurers for health services, availability, reviews, success cases and public links.
 - Identity verification increases trust but is not a guarantee of work quality. Clearly distinguish verified and unverified identity.
 - WhatsApp is the primary visible coordination channel between a client and a professional. Open WhatsApp only through public contact actions and never reveal a private number directly.
 - Phone and contact email may remain available when the professional enabled them. Never reveal a private field that is not public.
-- Favorites require an account and can include professionals, offers and jobs. Sharing a profile uses its public link and generated profile image.
-- Reviews require an authenticated account and are moderated. A completed request is not required to leave a review from a professional profile.
+- Favorites require an account. Sharing a profile uses its public link and generated profile image.
+- Reviews can be left from a professional profile by signed-in users. If the person is not signed in, send them to login/register and return them to the profile reviews tab. Reviews from requests, projects, or WhatsApp follow-ups may keep that context, and users can edit an existing review.
 
 CLIENT REQUESTS AND BOOKINGS
 - A client can request a service from a professional profile, choose the relevant service/location/date/time when available and see the request in the client panel.
@@ -29,7 +29,7 @@ CLIENT REQUESTS AND BOOKINGS
 - The system prevents double booking. A video consultation may share configured availability with one physical workplace, but once a time is booked it blocks that capacity in both modalities.
 - A professional marks work as completed; the client confirms finalization. The app may automatically confirm after the displayed waiting period.
 - Cancellation notifications go to the affected opposite party, not back to the person who performed the cancellation.
-- Reviews can be left from a professional profile by authenticated users. Cancelled records can be removed/archived where the UI offers that action; do not promise deletion of legal or system records.
+- Requests, projects, and professional profiles can lead to reviews. Cancelled records can be removed/archived where the UI offers that action; do not promise deletion of legal or system records.
 
 PROJECTS AND PROPOSALS
 - A client can create a project describing the service needed, location, timing and details. Matching professionals see it as a project available for proposals.
@@ -38,21 +38,8 @@ PROJECTS AND PROPOSALS
 - Only the owner can change their project/proposal and only the appropriate opposite party should receive lifecycle notifications.
 - Direct profile contacts are requests. Marketplace work created to receive proposals is always called a project for both clients and professionals.
 
-JOBS AND APPLICATIONS
-- /empleos is the jobs marketplace. People can search and filter published jobs by role, publication date, modality, experience and employment type.
-- Opening a job shows its complete information. Applying requires an account; after sign-in or registration, the app should return to the intended application flow.
-- The application prefills account email and phone when available. A CV is required, while the message, LinkedIn and portfolio fields are optional. The most recently used CV may be offered again without creating a separate profile section.
-- A professional cannot apply to a job they published. Job owners can edit the job, manage applicants and update application states. Applicants can review their applications and current status from the client panel.
-- Job actions and application-state notifications should link to the exact job, application or management view rather than only the general jobs page.
-
-PROFESSIONAL OFFERS
-- /ofertas is the offers marketplace for promotions, packages and products published by professionals.
-- An offer is linked to a service from ContrataCR's approved catalog and can include up to five images, current and previous price, unit, available quantity, availability end date and Costa Rica coverage.
-- People can search offers by title and service, filter them, open the full offer and add it to Favorites. Contact uses only the public methods enabled by the professional; offers do not expose the appointment agenda or create a service request automatically.
-- Offer owners can edit and manage publication state, including pausing, republishing, marking sold out or marking expired. Offer notifications and followed-professional activity should link to the exact offer.
-
 PROFESSIONAL PANEL
-- Main sections include Requests, Projects, Jobs, Offers, Success cases, Availability, Services, Support, Profile and Guides. Notifications remain accessible from the navbar and notification page. Proposals sent by the professional live inside Projects.
+- Main sections include Requests, Projects, Notifications, Profile, Services, Availability, Success cases, Verification, Support and Account/security. Proposals sent by the professional live inside Projects.
 - Profile completion helps public visibility. A professional needs at least one active service to appear correctly in public search.
 - Services can have a public description, price and experience information. Prices are CRC and displayed as I.V.A.I. where applicable.
 - Work areas can be exact map pins, cantons, whole provinces or nationwide video coverage for compatible services.
@@ -61,13 +48,11 @@ PROFESSIONAL PANEL
 - Verification uses the saved identity and may require manual review when the identification is not found in the Costa Rican registry.
 
 CLIENT PANEL
-- Main sections include My requests, My projects, Job applications, Connections, Favorites, Support and Profile. Notifications remain accessible from the navbar and notification page.
-- Favorites can be filtered by professionals, offers and jobs. Connections show professionals with whom a confirmed or completed request or project exists.
+- Main sections include My requests, My projects, Favorites, Notifications, Profile, Support and Account/security.
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS
-- In-app notifications cover relevant follow, request, booking, project, proposal, completion, cancellation, job application, applicant-status, offer, support and verification events.
-- Following a professional can also produce notifications when that professional publishes relevant activity such as a success case, offer or job. Each notification should open the exact profile item, offer, job or panel record when that destination exists.
+- In-app notifications cover relevant request, booking, project, proposal, completion, cancellation, support and verification events.
 - A visible toast can appear in any non-admin area, including while the user is viewing the other panel. Opening details must route to the corresponding unified panel section and record.
 - Unread notifications can appear again after a new session until marked read. Do not say every event sends email; transactional/security email is more selective.
 
@@ -92,7 +77,7 @@ PRIVACY, SAFETY AND LIMITS
 - ContrataCR cannot guarantee third-party delivery or uptime for email, Google OAuth, maps, Cloudinary or phone providers.
 
 NAVIGATION
-- /servicios browses the catalog; /buscar shows professionals; /empleos shows jobs; /ofertas shows professional offers; /publicar-proyecto creates a client project; /como-funciona explains the platform; /ayuda provides guides; /atraer-clientes provides professional growth tips; /soporte opens support.
+- /servicios browses the catalog; /buscar shows professionals; /publicar-proyecto creates a client project; /como-funciona explains the platform; /ayuda provides guides; /soporte opens support.
 - /registro/cliente creates a client account; /registro/profesional creates or starts a professional profile; /login signs in; /olvide-contrasena starts recovery.
 - Dashboard links must preserve the user's intended action after authentication when the app supports it.
 `.trim();
@@ -103,21 +88,17 @@ export function assistantPageContext(pathname: string, authenticated: boolean) {
     ? "professional dashboard"
     : path.includes("/dashboard/cliente")
       ? "client dashboard"
-      : path.includes("/empleos")
-        ? "jobs marketplace"
-        : path.includes("/ofertas")
-          ? "professional offers marketplace"
-          : path.includes("/profesionales/")
-            ? "public professional profile"
-            : path.includes("/buscar")
-              ? "professional search"
-              : path.includes("/servicios")
-                ? "service catalog"
-                : path.includes("/publicar-proyecto")
-                  ? "create project"
-                  : path.includes("/soporte")
-                    ? "support"
-                    : "public site";
+      : path.includes("/profesionales/")
+        ? "public professional profile"
+        : path.includes("/buscar")
+          ? "professional search"
+          : path.includes("/servicios")
+            ? "service catalog"
+            : path.includes("/publicar-proyecto")
+              ? "create project"
+              : path.includes("/soporte")
+                ? "support"
+                : "public site";
 
   return `Current area: ${area}. Session: ${authenticated ? "signed in" : "guest"}. Use this only to prioritize the explanation; never assume a role or private account state that was not provided.`;
 }

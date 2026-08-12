@@ -13,10 +13,7 @@ import { getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { safeGetUser } from "@/lib/supabase/get-user";
-import { crTodayISO } from "@/lib/time-cr";
-import type { ScheduleSlot } from "@/components/professionals/professional-schedule";
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -43,7 +40,6 @@ interface SearchPageProps {
 }
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-const MAX_CARD_SLOTS_PER_PRO = 24;
 const RESULTS_PER_PAGE = 20;
 const SORT_OPTIONS = new Set(["rating", "cercania", "experience"]);
 const PRICE_AVAILABILITY_OPTIONS = new Set(["visible", "quote"]);
@@ -152,71 +148,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   let orderedResults = allResults;
 
-  // Fetch upcoming published slots for the professionals on THIS page so each
-  // card can show inline availability (Hulihealth-style). Private pros are
-  // skipped - their slots must not appear.
-  const slotsByPro: Record<string, ScheduleSlot[]> = {};
   const videoMode = videoOnly;
-  const publicIds = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
-  // Resolve availability in one grouped read. Fetching it card-by-card caused one
-  // serverless invocation per professional every time search results rendered.
-  if (publicIds.length > 0) {
-    try {
-      const supabase = createAdminClient();
-      const todayISO = crTodayISO();
-      const taken = new Set<string>();
-      const slotLimit = 3000;
-      const [takenResult, slotResult] = await Promise.all([
-        supabase
-          .from("bookings")
-          .select("professional_id, scheduled_date, scheduled_time")
-          .in("professional_id", publicIds)
-          .in("status", ["pending", "confirmed", "in_progress", "awaiting_confirmation"])
-          .not("scheduled_date", "is", null)
-          .not("scheduled_time", "is", null),
-        supabase
-          .from("availability_slots")
-          .select("professional_id, slot_date, slot_time, location_id, category_id")
-          .in("professional_id", publicIds)
-          .gte("slot_date", todayISO)
-          .order("slot_date")
-          .order("slot_time")
-          .limit(slotLimit),
-      ]);
-      const takenRows = takenResult.data;
-      for (const b of takenRows ?? []) {
-        taken.add(`${b.professional_id}:${b.scheduled_date}:${String(b.scheduled_time).slice(0, 5)}`);
-      }
-      let slotRows = slotResult.data as Record<string, unknown>[] | null;
-      if (!slotRows) {
-        // Pre-migration fallback (no category_id column).
-        ({ data: slotRows } = await supabase
-          .from("availability_slots")
-          .select("professional_id, slot_date, slot_time, location_id")
-          .in("professional_id", publicIds)
-          .gte("slot_date", todayISO)
-          .order("slot_date")
-          .order("slot_time")
-          .limit(slotLimit));
-      }
-      for (const r of slotRows ?? []) {
-        const professionalId = r.professional_id as string;
-        const date = r.slot_date as string;
-        const time = String(r.slot_time).slice(0, 5);
-        if (taken.has(`${professionalId}:${date}:${time}`)) continue;
-        const visibleSlots = (slotsByPro[professionalId] ??= []);
-        if (visibleSlots.length >= MAX_CARD_SLOTS_PER_PRO) continue;
-        visibleSlots.push({
-          date,
-          time,
-          locationId: (r as { location_id?: string }).location_id ?? null,
-          categoryId: (r as { category_id?: string }).category_id ?? null,
-        });
-      }
-    } catch {
-      /* best-effort - cards just render without the strip */
-    }
-  }
 
   const experienceMonths = (professional: (typeof allResults)[number]) => {
     const services = professional.services as ProService[] | undefined;
@@ -346,7 +278,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   function shouldShowContactOnly(pro: (typeof results)[number]) {
     const preferVideo = shouldPreferVideoLocation(pro);
-    if (preferVideo) return !(slotsByPro[pro.id] ?? []).some((slot) => slot.locationId === "videoconsulta");
+    if (preferVideo) return false;
     if (inPersonOnly) return false;
     if (!videoCompatibleSearch || (!pro.videoconsulta && !pro.coverage?.country)) return false;
     if (!activeProvince && !activeCanton && !exactLocationActive) return false;
@@ -504,9 +436,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
             resetKey={`${currentPage}:${paginationParams.toString()}`}
-            filters={<Suspense fallback={filtersFallback}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
+            filters={<Suspense fallback={null}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
             quickFilters={<Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>}
-            drawerFilters={<Suspense fallback={filtersFallback}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
+            drawerFilters={<Suspense fallback={null}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
           >
 
             {/* Results list */}
@@ -537,8 +469,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
                           <ProfessionalCard
                             professional={pro}
-                            slots={slotsByPro[pro.id] ?? []}
-                            slotsInitiallyLoaded
+                            slots={[]}
+                            slotsInitiallyLoaded={false}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={i + 1}

@@ -890,7 +890,7 @@ export function AdminCategories() {
                 const flags = flagsOf(i);
                 const sender = suggestionSender(i);
                 return (
-                  <div key={i.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 xl:grid-cols-[minmax(0,1fr)_220px_210px_auto] xl:items-center">
+                  <div key={i.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 xl:grid-cols-[minmax(0,1fr)_220px_210px_auto] xl:items-start">
                     <div className="min-w-0">
                       {status === "pending" ? (
                         <div className="grid gap-2 sm:grid-cols-2">
@@ -946,11 +946,11 @@ export function AdminCategories() {
                             {groups.map((group) => <option key={group.id} value={group.id}>{group.label}</option>)}
                           </select>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-1.5 xl:pt-5">
                           <Toggle checked={flags.esSalud} label="Salud" onChange={(v) => setFlagEdits((p) => ({ ...p, [i.id]: { ...flags, esSalud: v } }))} />
                           <Toggle checked={flags.supportsVideoconsulta} label="Video" onChange={(v) => setFlagEdits((p) => ({ ...p, [i.id]: { ...flags, supportsVideoconsulta: v } }))} />
                         </div>
-                        <div className="flex flex-wrap justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-2 xl:pt-5">
                           <button onClick={() => decide(i, "approved")} disabled={busy === i.id} className="inline-flex h-9 items-center gap-1 rounded-lg bg-[#16a34a] px-3 text-sm font-medium text-white hover:bg-[#15803d] disabled:opacity-50">
                             {busy === i.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Aprobar
                           </button>

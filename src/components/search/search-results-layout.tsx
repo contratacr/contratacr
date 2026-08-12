@@ -24,15 +24,35 @@ interface SearchResultsLayoutProps {
   resetKey?: string;
 }
 
-// Bottom-sheet snap points (fraction of the viewport height). PEEK = collapsed (map is the
-// dominant background, a compact card-list peek over the bottom); FULL = expanded
-// (browse the whole list, header still visible on top). FOCUS = the rest height the sheet
-// springs to when a map pin is tapped, so the focused card is comfortably visible.
-const PEEK = 0.32;
-const FULL = 0.72;
-const FOCUS = 0.58;
-const MIN = 0.18;
-const MAX = 0.74;
+// Three mobile snap points: map-first, one-card browsing, and expanded.
+// The expanded height stops below "Buscar en esta zona" so that map action stays reachable.
+const MAP_PEEK = 0.16;
+const CARD_PEEK = 0.5;
+const FULL = 0.92;
+const SHEET_TOP_GAP = 58;
+
+function mobileSheetSnapPoints(): readonly number[] {
+  if (typeof window === "undefined") return [MAP_PEEK, 0.34, CARD_PEEK, 0.82];
+  const viewportHeight = window.innerHeight || 1;
+  const headerValue = getComputedStyle(document.documentElement)
+    .getPropertyValue("--ccr-native-header-height");
+  const headerHeight = Number.parseFloat(headerValue) || 124;
+  const expanded = Math.max(CARD_PEEK + 0.2, Math.min(FULL, (viewportHeight - headerHeight - SHEET_TOP_GAP) / viewportHeight));
+  const oneCard = Math.min(CARD_PEEK, expanded - 0.2);
+  const mapPriority = Math.max(MAP_PEEK + 0.1, Math.min(0.34, oneCard - 0.08));
+  return [MAP_PEEK, mapPriority, oneCard, expanded];
+}
+
+function snapIndex(value: number, points = mobileSheetSnapPoints()) {
+  return points.reduce((nearestIndex, point, index) =>
+    Math.abs(point - value) < Math.abs(points[nearestIndex] - value) ? index : nearestIndex
+  , 0);
+}
+
+function nearestSnap(value: number) {
+  const points = mobileSheetSnapPoints();
+  return points[snapIndex(value, points)];
+}
 
 /**
  * Responsive search shell — ONE map instance + ONE card list, repositioned via classes.
@@ -51,16 +71,20 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const listRef = useRef<HTMLDivElement | null>(null);
-  const [heightFr, setHeightFr] = useState(PEEK);
+  const [heightFr, setHeightFr] = useState(CARD_PEEK);
   const [dragging, setDragging] = useState(false);
   const [areaSearching, setAreaSearching] = useState(false);
   const [searchAreaVisible, setSearchAreaVisible] = useState(false);
   const draggingRef = useRef(false);
-  const startRef = useRef({ y: 0, h: PEEK });
-  const curRef = useRef(PEEK);
+  const startRef = useRef({ y: 0, h: CARD_PEEK });
+  const curRef = useRef(CARD_PEEK);
   const lastYRef = useRef(0);
   const velRef = useRef(0); // px/move event; negative = moving up (sheet grows)
-  const sheetExpanded = heightFr > (PEEK + FULL) / 2;
+  const currentSnapPoints = mobileSheetSnapPoints();
+  const expandedStart = currentSnapPoints[currentSnapPoints.length - 2] ?? CARD_PEEK;
+  const expandedEnd = currentSnapPoints[currentSnapPoints.length - 1] ?? FULL;
+  const sheetScrollable = heightFr > (expandedStart + expandedEnd) / 2;
+  const sheetFullyExpanded = sheetScrollable;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -112,6 +136,12 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
 
   // Draggable bottom sheet (mobile)
   function onHandleDown(e: React.PointerEvent) {
+    const target = e.target as HTMLElement;
+    if (target.closest("button, a, input, select, textarea, [role='button']")) return;
+    const scrollBody = target.closest<HTMLElement>(".ccr-search-sheet-scroll");
+    // Once expanded, preserve normal list scrolling. Pulling down from the top of the
+    // list (or dragging anywhere while collapsed) still controls the whole sheet.
+    if (sheetScrollable && scrollBody && scrollBody.scrollTop > 0) return;
     draggingRef.current = true;
     setDragging(true);
     startRef.current = { y: e.clientY, h: heightFr };
@@ -123,10 +153,13 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   function onHandleMove(e: React.PointerEvent) {
     if (!draggingRef.current) return;
     const vh = window.innerHeight || 1;
+    const snapPoints = mobileSheetSnapPoints();
+    const min = snapPoints[0];
+    const max = snapPoints[snapPoints.length - 1];
     velRef.current = e.clientY - lastYRef.current;
     lastYRef.current = e.clientY;
     const dy = startRef.current.y - e.clientY; // up = grow
-    const h = Math.min(MAX, Math.max(MIN, startRef.current.h + dy / vh));
+    const h = Math.min(max, Math.max(min, startRef.current.h + dy / vh));
     curRef.current = h;
     setHeightFr(h);
   }
@@ -136,15 +169,20 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     setDragging(false);
     const moved = Math.abs(curRef.current - startRef.current.h);
     const v = velRef.current;
+    const snapPoints = mobileSheetSnapPoints();
+    const currentIndex = snapIndex(curRef.current, snapPoints);
     let target: number;
     if (moved < 0.03 && Math.abs(v) < 4) {
-      target = startRef.current.h > (PEEK + 0.03) ? PEEK : FULL; // a tap toggles
+      const startIndex = snapIndex(startRef.current.h, snapPoints);
+      // A tap on the handle cycles through all three useful views. This also
+      // makes the map-first position discoverable without requiring a swipe.
+      target = snapPoints[(startIndex + 1) % snapPoints.length];
     } else if (v < -3) {
-      target = FULL; // flick up
+      target = snapPoints[Math.min(snapPoints.length - 1, currentIndex + 1)];
     } else if (v > 3) {
-      target = PEEK; // flick down
+      target = snapPoints[Math.max(0, currentIndex - 1)];
     } else {
-      target = curRef.current > (PEEK + FULL) / 2 ? FULL : PEEK; // settle to nearest
+      target = nearestSnap(curRef.current);
     }
     setHeightFr(target);
   }
@@ -156,7 +194,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     const onFocus = (e: Event) => {
       if (typeof window === "undefined" || !window.matchMedia("(max-width: 1023px)").matches) return;
       const proId = (e as CustomEvent<string>).detail;
-      setHeightFr((h) => Math.max(h, FOCUS));
+      setHeightFr((h) => Math.max(h, CARD_PEEK));
       // Wait for the sheet to grow before scrolling the card to the middle of the list.
       window.setTimeout(() => {
         document.getElementById(`pro-card-${proId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -215,22 +253,23 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             scrolling card list. Desktop: `lg:contents` dissolves it so the card column
             (order-2) and the desktop map sit in the flex shell. */}
         <div
+          onPointerDown={onHandleDown}
+          onPointerMove={onHandleMove}
+          onPointerUp={onHandleUp}
+          onPointerCancel={onHandleUp}
           className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"
           // maxHeight keeps the navbar AND the map controls visible even when the sheet is
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
           // the filter/map affordances at the top of the mobile map.
-          style={{ height: `${heightFr * 100}dvh`, maxHeight: "calc(100dvh - 164px)", transition: dragging ? "none" : "height .3s cubic-bezier(.32,.72,0,1)" }}
+          style={{ height: `${heightFr * 100}dvh`, maxHeight: `calc(100dvh - var(--ccr-native-header-height, 124px) - ${SHEET_TOP_GAP}px)`, transition: dragging ? "none" : "height .3s cubic-bezier(.32,.72,0,1)" }}
         >
           {/* Sheet header (handle + count) — the whole strip is the drag target; drag to
               resize, tap to toggle peek/full. `touch-none` keeps the gesture from scrolling
               the page. Mobile only (the desktop column shows none of this). */}
-          <div className="relative z-40 shrink-0 overflow-visible rounded-t-[20px] lg:hidden">
+          <div className="relative z-40 shrink-0 cursor-grab touch-none select-none overflow-visible rounded-t-[20px] active:cursor-grabbing lg:hidden">
             <div
-              onPointerDown={onHandleDown}
-              onPointerMove={onHandleMove}
-              onPointerUp={onHandleUp}
-              onPointerCancel={onHandleUp}
-              className="cursor-grab touch-none select-none rounded-t-[20px] active:cursor-grabbing"
+              data-sheet-drag-handle
+              className="touch-none rounded-t-[20px]"
               role="button"
               aria-label={t("filters.title")}
             >
@@ -239,7 +278,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
               </div>
             </div>
             {quickFilters && (
-              <div className={`px-4 pb-2 pt-1 ${sheetExpanded ? "ccr-search-filter-arrows-down" : "ccr-search-filter-arrows-up"}`}>
+              <div className={`px-4 pb-2 pt-1 ${sheetFullyExpanded ? "ccr-search-filter-arrows-down" : "ccr-search-filter-arrows-up"}`}>
                 {quickFilters}
               </div>
             )}
@@ -247,7 +286,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} className="ccr-search-sheet-scroll min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
+          <div ref={listRef} className={`ccr-search-sheet-scroll min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px] ${sheetScrollable ? "touch-pan-y" : "touch-none"}`}>
             {quickFilters && <div className="mb-3 hidden lg:block xl:hidden">{quickFilters}</div>}
             {children}
           </div>
