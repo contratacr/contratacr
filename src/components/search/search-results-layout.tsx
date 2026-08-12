@@ -32,26 +32,20 @@ const FULL = 0.92;
 const SHEET_TOP_GAP = 58;
 
 function mobileSheetSnapPoints(): readonly number[] {
-  if (typeof window === "undefined") return [MAP_PEEK, 0.34, CARD_PEEK, 0.82];
+  if (typeof window === "undefined") return [MAP_PEEK, CARD_PEEK, 0.82];
   const viewportHeight = window.innerHeight || 1;
   const headerValue = getComputedStyle(document.documentElement)
     .getPropertyValue("--ccr-native-header-height");
   const headerHeight = Number.parseFloat(headerValue) || 124;
   const expanded = Math.max(CARD_PEEK + 0.2, Math.min(FULL, (viewportHeight - headerHeight - SHEET_TOP_GAP) / viewportHeight));
   const oneCard = Math.min(CARD_PEEK, expanded - 0.2);
-  const mapPriority = Math.max(MAP_PEEK + 0.1, Math.min(0.34, oneCard - 0.08));
-  return [MAP_PEEK, mapPriority, oneCard, expanded];
+  return [MAP_PEEK, oneCard, expanded];
 }
 
 function snapIndex(value: number, points = mobileSheetSnapPoints()) {
   return points.reduce((nearestIndex, point, index) =>
     Math.abs(point - value) < Math.abs(points[nearestIndex] - value) ? index : nearestIndex
   , 0);
-}
-
-function nearestSnap(value: number) {
-  const points = mobileSheetSnapPoints();
-  return points[snapIndex(value, points)];
 }
 
 /**
@@ -70,21 +64,38 @@ function nearestSnap(value: number) {
 export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, hasActiveFilters = false, mapFocusTarget = null, resetKey }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
+  const sheetRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const scrollThumbRef = useRef<HTMLDivElement | null>(null);
   const [heightFr, setHeightFr] = useState(CARD_PEEK);
   const [dragging, setDragging] = useState(false);
   const [areaSearching, setAreaSearching] = useState(false);
   const [searchAreaVisible, setSearchAreaVisible] = useState(false);
   const draggingRef = useRef(false);
   const startRef = useRef({ y: 0, h: CARD_PEEK });
+  const dragStartedAtRef = useRef(0);
   const curRef = useRef(CARD_PEEK);
-  const lastYRef = useRef(0);
-  const velRef = useRef(0); // px/move event; negative = moving up (sheet grows)
   const currentSnapPoints = mobileSheetSnapPoints();
-  const expandedStart = currentSnapPoints[currentSnapPoints.length - 2] ?? CARD_PEEK;
+  const expandedStart = currentSnapPoints[1] ?? CARD_PEEK;
   const expandedEnd = currentSnapPoints[currentSnapPoints.length - 1] ?? FULL;
   const sheetScrollable = heightFr > (expandedStart + expandedEnd) / 2;
   const sheetFullyExpanded = sheetScrollable;
+
+  function updateMobileScrollThumb() {
+    const list = listRef.current;
+    const thumb = scrollThumbRef.current;
+    if (!list || !thumb) return;
+    const scrollable = list.scrollHeight > list.clientHeight + 1;
+    thumb.style.opacity = scrollable ? "1" : "0";
+    if (!scrollable) return;
+    const inset = 10;
+    const trackHeight = Math.max(0, list.clientHeight - inset * 2);
+    const thumbHeight = Math.min(trackHeight, Math.max(88, trackHeight * (list.clientHeight / list.scrollHeight)));
+    const progress = list.scrollTop / Math.max(1, list.scrollHeight - list.clientHeight);
+    const top = list.offsetTop + inset + Math.max(0, trackHeight - thumbHeight) * progress;
+    thumb.style.height = `${thumbHeight}px`;
+    thumb.style.transform = `translateY(${top}px)`;
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -134,20 +145,47 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     };
   }, [showFilters]);
 
+  useEffect(() => {
+    curRef.current = heightFr;
+    const points = mobileSheetSnapPoints();
+    const listDominant = snapIndex(heightFr, points) === points.length - 1;
+    window.dispatchEvent(new CustomEvent("ccr:search-view-state", { detail: { listDominant } }));
+    window.requestAnimationFrame(updateMobileScrollThumb);
+  }, [heightFr]);
+
+  useEffect(() => {
+    const update = () => updateMobileScrollThumb();
+    window.addEventListener("resize", update);
+    const frame = window.requestAnimationFrame(update);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.cancelAnimationFrame(frame);
+    };
+  }, [children]);
+
+  useEffect(() => {
+    const setSearchView = (event: Event) => {
+      const points = mobileSheetSnapPoints();
+      const requestedView = (event as CustomEvent<{ view?: "list" | "map" }>).detail?.view;
+      const target = requestedView === "list" ? points[points.length - 1] : points[0];
+      curRef.current = target;
+      setHeightFr(target);
+      if (requestedView === "list") listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("ccr:set-search-view", setSearchView);
+    return () => window.removeEventListener("ccr:set-search-view", setSearchView);
+  }, []);
+
   // Draggable bottom sheet (mobile)
   function onHandleDown(e: React.PointerEvent) {
     const target = e.target as HTMLElement;
-    if (target.closest("button, a, input, select, textarea, [role='button']")) return;
-    const scrollBody = target.closest<HTMLElement>(".ccr-search-sheet-scroll");
-    // Once expanded, preserve normal list scrolling. Pulling down from the top of the
-    // list (or dragging anywhere while collapsed) still controls the whole sheet.
-    if (sheetScrollable && scrollBody && scrollBody.scrollTop > 0) return;
+    const interactive = target.closest("button, a, input, select, textarea");
+    if (interactive && !target.closest("[data-sheet-drag-handle]")) return;
     draggingRef.current = true;
     setDragging(true);
     startRef.current = { y: e.clientY, h: heightFr };
+    dragStartedAtRef.current = performance.now();
     curRef.current = heightFr;
-    lastYRef.current = e.clientY;
-    velRef.current = 0;
     try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* noop */ }
   }
   function onHandleMove(e: React.PointerEvent) {
@@ -156,34 +194,43 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     const snapPoints = mobileSheetSnapPoints();
     const min = snapPoints[0];
     const max = snapPoints[snapPoints.length - 1];
-    velRef.current = e.clientY - lastYRef.current;
-    lastYRef.current = e.clientY;
     const dy = startRef.current.y - e.clientY; // up = grow
     const h = Math.min(max, Math.max(min, startRef.current.h + dy / vh));
     curRef.current = h;
-    setHeightFr(h);
+    if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${(max - h) * 100}dvh, 0)`;
   }
   function onHandleUp() {
     if (!draggingRef.current) return;
     draggingRef.current = false;
     setDragging(false);
-    const moved = Math.abs(curRef.current - startRef.current.h);
-    const v = velRef.current;
+    const viewportHeight = window.innerHeight || 1;
+    const deltaFr = curRef.current - startRef.current.h;
+    const movedPx = Math.abs(deltaFr) * viewportHeight;
+    const elapsedMs = Math.max(1, performance.now() - dragStartedAtRef.current);
+    const speed = movedPx / elapsedMs;
     const snapPoints = mobileSheetSnapPoints();
-    const currentIndex = snapIndex(curRef.current, snapPoints);
+    const startIndex = snapIndex(startRef.current.h, snapPoints);
+    const direction = deltaFr > 0 ? 1 : -1;
+    const adjacentIndex = Math.max(0, Math.min(snapPoints.length - 1, startIndex + direction));
+    const adjacentDistancePx = Math.abs(snapPoints[adjacentIndex] - snapPoints[startIndex]) * viewportHeight;
+    const travelThresholdPx = Math.max(28, Math.min(48, adjacentDistancePx * 0.18));
     let target: number;
-    if (moved < 0.03 && Math.abs(v) < 4) {
-      const startIndex = snapIndex(startRef.current.h, snapPoints);
-      // A tap on the handle cycles through all three useful views. This also
-      // makes the map-first position discoverable without requiring a swipe.
-      target = snapPoints[(startIndex + 1) % snapPoints.length];
-    } else if (v < -3) {
-      target = snapPoints[Math.min(snapPoints.length - 1, currentIndex + 1)];
-    } else if (v > 3) {
-      target = snapPoints[Math.max(0, currentIndex - 1)];
+    if (adjacentIndex === startIndex || movedPx < 28 || (movedPx < travelThresholdPx && speed < 0.42)) {
+      target = snapPoints[startIndex];
     } else {
-      target = nearestSnap(curRef.current);
+      target = snapPoints[adjacentIndex];
     }
+    curRef.current = target;
+    setHeightFr(target);
+  }
+
+  function onHandleCancel() {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    setDragging(false);
+    const snapPoints = mobileSheetSnapPoints();
+    const target = snapPoints[snapIndex(startRef.current.h, snapPoints)];
+    curRef.current = target;
     setHeightFr(target);
   }
 
@@ -253,29 +300,45 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             scrolling card list. Desktop: `lg:contents` dissolves it so the card column
             (order-2) and the desktop map sit in the flex shell. */}
         <div
-          onPointerDown={onHandleDown}
-          onPointerMove={onHandleMove}
-          onPointerUp={onHandleUp}
-          onPointerCancel={onHandleUp}
+          ref={sheetRef}
           className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"
           // maxHeight keeps the navbar AND the map controls visible even when the sheet is
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
           // the filter/map affordances at the top of the mobile map.
-          style={{ height: `${heightFr * 100}dvh`, maxHeight: `calc(100dvh - var(--ccr-native-header-height, 124px) - ${SHEET_TOP_GAP}px)`, transition: dragging ? "none" : "height .3s cubic-bezier(.32,.72,0,1)" }}
+          style={{
+            height: `${expandedEnd * 100}dvh`,
+            maxHeight: `calc(100dvh - var(--ccr-native-header-height, 124px) - ${SHEET_TOP_GAP}px)`,
+            transform: `translate3d(0, ${(expandedEnd - heightFr) * 100}dvh, 0)`,
+            transition: dragging ? "none" : "transform .18s cubic-bezier(.22,.8,.3,1)",
+            willChange: "transform",
+          }}
         >
-          {/* Sheet header (handle + count) — the whole strip is the drag target; drag to
-              resize, tap to toggle peek/full. `touch-none` keeps the gesture from scrolling
-              the page. Mobile only (the desktop column shows none of this). */}
-          <div className="relative z-40 shrink-0 cursor-grab touch-none select-none overflow-visible rounded-t-[20px] active:cursor-grabbing lg:hidden">
+          {/* Sheet header (handle + count) — only the visible handle strip is draggable.
+              A press without movement keeps the current snap point. `touch-none` keeps the
+              gesture from scrolling the page. Mobile only (desktop shows none of this). */}
+          <div
+            onPointerDown={onHandleDown}
+            onPointerMove={onHandleMove}
+            onPointerUp={onHandleUp}
+            onPointerCancel={onHandleCancel}
+            onLostPointerCapture={onHandleUp}
+            className="relative z-40 shrink-0 cursor-grab touch-none select-none overflow-visible rounded-t-[20px] pb-1 active:cursor-grabbing lg:hidden"
+          >
             <div
               data-sheet-drag-handle
-              className="touch-none rounded-t-[20px]"
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                const points = mobileSheetSnapPoints();
+                const current = snapIndex(heightFr, points);
+                setHeightFr(points[(current + 1) % points.length]);
+              }}
+              className="flex h-8 touch-none items-start justify-center rounded-t-[20px] pt-2"
               role="button"
-              aria-label={t("filters.title")}
+              tabIndex={0}
+              aria-label={locale === "en" ? "Resize results panel" : "Cambiar tamaño del panel de resultados"}
             >
-              <div className="flex justify-center pb-1 pt-2">
-                <span className="h-1.5 w-10 rounded-full bg-[#d1d5db]" />
-              </div>
+              <span className="h-1.5 w-10 rounded-full bg-[#d1d5db]" />
             </div>
             {quickFilters && (
               <div className={`px-4 pb-2 pt-1 ${sheetFullyExpanded ? "ccr-search-filter-arrows-down" : "ccr-search-filter-arrows-up"}`}>
@@ -286,10 +349,11 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} className={`ccr-search-sheet-scroll min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px] ${sheetScrollable ? "touch-pan-y" : "touch-none"}`}>
+          <div ref={listRef} onScroll={updateMobileScrollThumb} className="ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 pb-8 pt-0.5 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
             {quickFilters && <div className="mb-3 hidden lg:block xl:hidden">{quickFilters}</div>}
             {children}
           </div>
+          <div ref={scrollThumbRef} aria-hidden className="pointer-events-none absolute right-0 top-0 z-50 w-[3px] rounded-full bg-[#64748b] opacity-0 shadow-[0_0_0_1px_rgba(255,255,255,0.45)] transition-opacity duration-150 lg:hidden" />
         </div>
         {searchAreaVisible && (
         <div className="pointer-events-none fixed inset-x-0 top-[calc(var(--ccr-native-header-height,124px)+0.75rem)] z-40 flex justify-center px-4 lg:hidden">

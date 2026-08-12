@@ -148,7 +148,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
     if (items.length < maxItems && currentLength + labelLength <= maxReadableLength) return [...items, id];
     return items;
   }, []);
-  const mobileProfessionList = fitProfessionLabels(mobileDisplayProfessions, 80, 2);
+  const mobileProfessionList = mobileDisplayProfessions.slice(0, 2);
   const desktopProfessionList = fitProfessionLabels(displayProfessions, 38, 2);
   const wideDesktopProfessionList = fitProfessionLabels(displayProfessions, 55, 3);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
@@ -163,6 +163,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   const desktopExtraProfessions = allProfessions.length - desktopProfessionList.length;
   const wideDesktopExtraProfessions = allProfessions.length - wideDesktopProfessionList.length;
   const serviceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[11px] font-semibold leading-snug text-[#6b7280]";
+  const mobileServiceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]";
   const moreProfessionsClass = "relative z-10 inline-flex shrink-0 text-[10px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
@@ -309,13 +310,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
       </span>
     </div>
   ) : null;
-  const mobileServiceLineLength =
-    mobileProfessionList.reduce((sum, id) => sum + catLabel(id).length, 0) +
-    (mobileProfessionList.length > 1 ? mobileProfessionList.length - 1 : 0) +
-    (mobileExtraProfessions > 0 ? `+${mobileExtraProfessions}`.length : 0);
-  const mobilePriceInlineWithService =
-    mobileProfessionList.length <= 1 ||
-    (mobileProfessionList.length <= 2 && mobileServiceLineLength + priceAmount.length <= 46);
+  const mobilePriceInlineWithService = mobileProfessionList.length <= 1;
   const mobilePriceInlineWithReviews = !mobilePriceInlineWithService;
 
   // Location data for the schedule's location control (now rendered in the LEFT
@@ -376,38 +371,26 @@ export async function ProfessionalCard({ professional, className, highlightMetri
               </div>
               {(displayProfessions.length > 0 || professional.isFeatured) && (
                 <div
-                  className={`mt-1 flex w-full min-w-0 max-w-full items-center gap-2 overflow-hidden lg:hidden ${mobilePriceInlineWithService && mobilePrice ? "justify-between" : ""}`}
+                  className={`mt-1 flex w-full min-w-0 max-w-full items-baseline gap-2 overflow-hidden lg:hidden ${mobilePriceInlineWithService && mobilePrice ? "justify-between" : ""}`}
                   data-testid="professional-card-service-summary"
                   data-service-summary-version="mobile-under-verified-v1"
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                    {mobileProfessionList.map((cat) => (
-                      <span
-                        key={`mobile-service-summary-${cat}`}
-                        data-testid="professional-card-mobile-service"
-                        data-full-label="true"
-                        data-extra-count={mobileExtraProfessions}
-                        className={`${serviceChipClass} min-w-0 truncate ${mobileProfessionList.length > 1 ? "shrink basis-auto" : "flex-1"}`}
-                        title={catLabel(cat)}
-                      >
-                        {catLabel(cat)}
-                      </span>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
+                    {mobileProfessionList.map((cat, index) => (
+                      <div key={`mobile-service-row-${cat}`} className="flex min-w-0 items-center gap-1.5">
+                        <span data-testid="professional-card-mobile-service" data-full-label="true" data-extra-count={mobileExtraProfessions} className={`${mobileServiceChipClass} min-w-0 flex-1 truncate`} title={catLabel(cat)}>
+                          {catLabel(cat)}
+                        </span>
+                        {index === mobileProfessionList.length - 1 && mobileExtraProfessions > 0 && (
+                          <Link href={profileHref} title={tCard("moreProfessions")} aria-label={tCard("moreProfessions")} data-testid="professional-card-more-services" className={moreProfessionsClass}>+{mobileExtraProfessions}</Link>
+                        )}
+                        {index === mobileProfessionList.length - 1 && professional.isFeatured && (
+                          <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">{tCard("featured")}</span>
+                        )}
+                      </div>
                     ))}
-                    {mobileExtraProfessions > 0 && (
-                      <Link
-                        href={profileHref}
-                        title={tCard("moreProfessions")}
-                        aria-label={tCard("moreProfessions")}
-                        data-testid="professional-card-more-services"
-                        className={moreProfessionsClass}
-                      >
-                        +{mobileExtraProfessions}
-                      </Link>
-                    )}
-                    {professional.isFeatured && (
-                      <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                        {tCard("featured")}
-                      </span>
+                    {mobileProfessionList.length === 0 && professional.isFeatured && (
+                      <span className="inline-flex w-fit shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">{tCard("featured")}</span>
                     )}
                   </div>
                   {mobilePriceInlineWithService ? mobilePrice : null}
