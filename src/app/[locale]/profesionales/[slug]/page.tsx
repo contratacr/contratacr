@@ -524,12 +524,6 @@ export default function ProfilePage() {
                     </h1>
                     {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
                   </div>
-                  <p className="mt-1 text-sm text-[#6b7280]">
-                    {(professional.professions && professional.professions.length > 0 ? professional.professions : [professional.categoryId])
-                      .filter(Boolean)
-                      .map((cat) => catLabel(cat))
-                      .join(" · ")}
-                  </p>
                   {locationText && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-sm text-[#6b7280]">
                       <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
