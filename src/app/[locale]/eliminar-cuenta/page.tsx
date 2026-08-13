@@ -24,7 +24,7 @@ export default async function DeleteAccountPage({ params }: { params: Promise<{ 
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
 
-  const accountSecurityHref = "/dashboard/profesional?tab=profile&mode=offer";
+  const accountSecurityHref = "/dashboard/profesional?tab=cuenta";
   const supportSubject = en ? "Account access for deletion" : "Acceso a mi cuenta para eliminación";
   const supportMessage = en
     ? "Hello ContrataCR support,\n\nI cannot access my account and need help recovering access or processing my deletion request.\n\nEmail linked to the account:\nReason:"
