@@ -19,6 +19,7 @@
     "padron:prepare-copy": "node scripts/prepare-padron-copy.mjs",
     "seed:test:full": "node scripts/seed-regression-pair.js && node scripts/seed-regression-coverage.js",
     "seed:test:verify": "node scripts/verify-regression-pair.js",
+    "test:account-deletion": "node scripts/verify-account-deletion-isolation.js",
     "mobile:validate": "node scripts/validate-mobile-native-config.mjs",
     "mobile:sync": "npx cap sync",
     "mobile:android:debug": "node scripts/mobile-android-build.mjs debug",
