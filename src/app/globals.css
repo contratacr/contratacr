@@ -533,6 +533,22 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   animation: ccr-brand-loading-glow 1.55s ease-in-out infinite;
 }
 
+.ccr-page-route-loading {
+  min-height: calc(100dvh - var(--ccr-native-header-height, 64px));
+}
+
+@media (max-width: 767px) {
+  .ccr-page-route-loading {
+    align-items: start;
+    padding-top: clamp(7.5rem, 16dvh, 9rem);
+  }
+
+  .ccr-page-route-loading .ccr-brand-loading-mark {
+    height: 72px;
+    width: 72px;
+  }
+}
+
 @keyframes ccr-brand-loading-glow {
   0%, 100% {
     filter: brightness(1);

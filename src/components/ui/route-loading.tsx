@@ -11,9 +11,8 @@ export function PageRouteLoading() {
   return (
     <div className="min-h-screen bg-[#f4f7fa] text-[#162543]" aria-busy="true">
       <Navbar />
-      <div className="ccr-navbar-spacer h-16" aria-hidden />
-      <main className="mx-auto w-full max-w-[1240px] px-4 pb-12 sm:px-6 lg:px-8">
-        <BrandLoadingMark className="min-h-[calc(100dvh-64px)]" />
+      <main className="mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8">
+        <BrandLoadingMark className="ccr-page-route-loading" />
       </main>
     </div>
   );
