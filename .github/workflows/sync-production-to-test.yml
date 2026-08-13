@@ -183,11 +183,16 @@ jobs:
 
           rollback() {
             echo "::warning::Sync failed; restoring test from the ephemeral rollback."
+            set +e
             "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
               --file=scripts/sync/truncate-test-data.sql
             "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
               --no-owner --no-acl --exit-on-error \
               "$mirror/test-rollback.dump"
+            rollback_status=$?
+            "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
+              --file=scripts/sync/enable-test-restore-trigger.sql
+            return "$rollback_status"
           }
           trap rollback ERR
 
@@ -200,9 +205,13 @@ jobs:
           } > "$mirror/prepare-test-mirror.generated.sql"
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
             --file="$mirror/prepare-test-mirror.generated.sql"
+          "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
+            --file=scripts/sync/disable-test-restore-trigger.sql
           "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
             --no-owner --no-acl --exit-on-error \
             "$mirror/production-public-data.dump"
+          "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
+            --file=scripts/sync/enable-test-restore-trigger.sql
 
           regression_password="${REGRESSION_TEST_PASSWORD:-ContrataCR!2026}"
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
