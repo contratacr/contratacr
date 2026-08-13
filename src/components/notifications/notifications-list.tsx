@@ -49,7 +49,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   // notifications, matching the navbar bell.
   const { mode } = useMode(canOffer(user));
   // Keep the server render and the first browser render deterministic. Reading
-  // localStorage during render made the server show 0 unread while hydration
+  // the browser notification cache during render made the server show 0 unread while hydration
   // immediately showed the cached count, which triggered a full React re-render.
   // The mounted effect below restores the cache without a hydration mismatch.
   const [notificationState, setNotificationState] = useState<{
