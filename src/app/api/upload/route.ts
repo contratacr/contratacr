@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateUpload, IMAGE_KINDS } from "@/lib/upload-validation";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { createClient } from "@/lib/supabase/server";
+import { safeGetUser } from "@/lib/supabase/get-user";
+import { recordCloudinaryAsset } from "@/lib/cloudinary-ownership";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   const rl = enforceRateLimit(req, "upload", 12, 60_000);
   if (rl) return rl;
+
+  const user = await safeGetUser(await createClient());
+  if (!user) return NextResponse.json({ error: "Inicia sesión para subir imágenes." }, { status: 401 });
 
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
@@ -52,6 +58,13 @@ export async function POST(req: NextRequest) {
           .end(buffer);
       }
     );
+
+    await recordCloudinaryAsset({
+      userId: user.id,
+      publicId: result.public_id,
+      resourceType: "image",
+      secureUrl: result.secure_url,
+    });
 
     return NextResponse.json({ url: result.secure_url, publicId: result.public_id });
   } catch (err) {

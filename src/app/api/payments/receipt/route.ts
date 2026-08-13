@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { getApiAdmin } from "@/lib/auth/admin";
+import { recordCloudinaryAsset } from "@/lib/cloudinary-ownership";
 
 export const runtime = "nodejs";
 
@@ -46,6 +47,12 @@ export async function POST(req: Request) {
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: "contratacr/comprobantes",
       resource_type: "auto",
+    });
+    await recordCloudinaryAsset({
+      userId: user.id,
+      publicId: result.public_id,
+      resourceType: result.resource_type || "image",
+      secureUrl: result.secure_url,
     });
     return NextResponse.json({ url: result.secure_url });
   } catch (err) {

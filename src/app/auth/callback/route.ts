@@ -18,9 +18,18 @@ function withPostLoginActivity(path: string): string {
   return `${pathname}${qs ? `?${qs}` : ""}${hash ? `#${hash}` : ""}`;
 }
 
-async function reactivateAccount(userId: string): Promise<void> {
+async function reactivateAccount(userId: string): Promise<"ok" | "deletion-pending"> {
   try {
-    const { error } = await createAdminClient()
+    const admin = createAdminClient();
+    const { data: deletion } = await admin
+      .from("account_deletion_requests")
+      .select("id")
+      .eq("user_id", userId)
+      .in("status", ["pending", "processing", "failed"])
+      .maybeSingle();
+    if (deletion) return "deletion-pending";
+
+    const { error } = await admin
       .from("profiles")
       .update({ is_disabled: false, disabled_reason: null, disabled_at: null })
       .eq("id", userId)
@@ -35,6 +44,7 @@ async function reactivateAccount(userId: string): Promise<void> {
   } catch (error) {
     console.error("[account-reactivation] OAuth callback failed", { userId, error });
   }
+  return "ok";
 }
 
 export async function GET(request: NextRequest) {
@@ -142,7 +152,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      await reactivateAccount(data.user.id);
+      if (await reactivateAccount(data.user.id) === "deletion-pending") {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(`${origin}/es/login?autherror=account_deletion_pending`);
+      }
 
       // Guest→account linking: attach prior GUEST tickets with this (now
       // verified) email to the account so the history continues in-app.

@@ -2,12 +2,18 @@ import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { validateUpload, IMAGE_KINDS, MIME_FOR } from "@/lib/upload-validation";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { createClient } from "@/lib/supabase/server";
+import { safeGetUser } from "@/lib/supabase/get-user";
+import { recordCloudinaryAsset } from "@/lib/cloudinary-ownership";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const rl = enforceRateLimit(req, "upload-photo", 12, 60_000);
   if (rl) return rl;
+
+  const user = await safeGetUser(await createClient());
+  if (!user) return NextResponse.json({ error: "Inicia sesión para subir imágenes." }, { status: 401 });
 
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
@@ -57,6 +63,13 @@ export async function POST(req: Request) {
       transformation: isAvatar
         ? [{ width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto", fetch_format: "auto" }]
         : [{ width: 1600, height: 1600, crop: "limit", quality: "auto", fetch_format: "auto" }],
+    });
+
+    await recordCloudinaryAsset({
+      userId: user.id,
+      publicId: result.public_id,
+      resourceType: result.resource_type || "image",
+      secureUrl: result.secure_url,
     });
 
     return NextResponse.json({ url: result.secure_url, publicId: result.public_id });

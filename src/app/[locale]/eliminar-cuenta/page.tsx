@@ -18,8 +18,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       };
 }
 
-export default async function DeleteAccountPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function DeleteAccountPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ status?: string }>;
+}) {
   const { locale } = await params;
+  const { status } = await searchParams;
   const en = locale === "en";
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
@@ -39,6 +46,20 @@ export default async function DeleteAccountPage({ params }: { params: Promise<{ 
       <LandingNavbar />
       <main className="flex-1 px-4 pb-16 pt-28 sm:pt-32">
         <div className="mx-auto max-w-2xl">
+          {(status === "pending" || status === "completed") && (
+            <div className="mb-6 rounded-xl border border-[#bde7d1] bg-[#f0fbf5] p-4 text-center">
+              <p className="font-bold text-[#166534]">
+                {status === "completed"
+                  ? (en ? "Your account was deleted" : "Tu cuenta fue eliminada")
+                  : (en ? "Your account deletion has started" : "La eliminación de tu cuenta fue iniciada")}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-[#3f6f55]">
+                {status === "completed"
+                  ? (en ? "The account and its associated personal data are no longer active in ContrataCR." : "La cuenta y sus datos personales asociados ya no están activos en ContrataCR.")
+                  : (en ? "The account is already hidden and blocked. Any provider cleanup that remains will be retried safely." : "La cuenta ya está oculta y bloqueada. Cualquier limpieza pendiente con proveedores se reintentará de forma segura.")}
+              </p>
+            </div>
+          )}
           <header className="text-center">
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fd] text-[#0089bb]">
               <Trash2 className="h-6 w-6" />

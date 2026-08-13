@@ -31,6 +31,17 @@ export async function POST(req: Request) {
   }
 
   const admin = createAdminClient();
+  if (action === "reactivate") {
+    const { data: deletion } = await admin
+      .from("account_deletion_requests")
+      .select("id")
+      .eq("user_id", user.id)
+      .in("status", ["pending", "processing", "failed"])
+      .maybeSingle();
+    if (deletion) {
+      return NextResponse.json({ error: "La eliminación permanente de esta cuenta ya fue iniciada." }, { status: 409 });
+    }
+  }
   const update = action === "disable"
     ? { is_disabled: true, disabled_reason: reason, disabled_at: new Date().toISOString() }
     : { is_disabled: false, disabled_reason: null, disabled_at: null };
