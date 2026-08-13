@@ -528,9 +528,10 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   width: 64px;
   object-fit: contain;
   image-rendering: auto;
+  opacity: 1;
   transform-origin: center;
-  will-change: transform, opacity, filter;
-  animation: ccr-brand-loading-glow 1.55s ease-in-out infinite;
+  will-change: transform;
+  animation: ccr-brand-loading-breathe 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite both;
 }
 
 .ccr-page-route-loading {
@@ -548,16 +549,12 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   }
 }
 
-@keyframes ccr-brand-loading-glow {
+@keyframes ccr-brand-loading-breathe {
   0%, 100% {
-    filter: brightness(1);
-    opacity: 0.88;
-    transform: scale(0.985);
+    transform: scale(0.965);
   }
   50% {
-    filter: brightness(1.12);
-    opacity: 1;
-    transform: scale(1.02);
+    transform: scale(1.045);
   }
 }
 
@@ -622,6 +619,11 @@ body {
   .ccr-delayed-loading {
     opacity: 1;
     animation: none;
+  }
+
+  .ccr-brand-loading-mark {
+    animation: none;
+    transform: none;
   }
 
   .ccr-skeleton-shimmer::after {
