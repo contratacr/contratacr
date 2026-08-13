@@ -23,6 +23,7 @@ import { AppIntlProvider } from "@/components/app-intl-provider";
 import { GlobalActionLoading } from "@/components/global-action-loading";
 import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
+import { AiConcierge } from "@/components/landing/ai-concierge";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -167,6 +168,7 @@ export default async function LocaleLayout({
         <PushTokenManager />
         {children}
         <WhatsAppReviewFollowUp />
+        <AiConcierge />
       </AuthProvider>
     </AppIntlProvider>
   );

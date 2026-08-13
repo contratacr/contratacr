@@ -19,6 +19,10 @@
     "padron:prepare-copy": "node scripts/prepare-padron-copy.mjs",
     "seed:test:full": "node scripts/seed-regression-pair.js && node scripts/seed-regression-coverage.js",
     "seed:test:verify": "node scripts/verify-regression-pair.js",
+    "mobile:validate": "node scripts/validate-mobile-native-config.mjs",
+    "mobile:sync": "npx cap sync",
+    "mobile:android:debug": "node scripts/mobile-android-build.mjs debug",
+    "mobile:android:release": "node scripts/mobile-android-build.mjs release",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:ui": "playwright test --ui"
@@ -27,6 +31,8 @@
     "@capacitor/core": "^8.4.2",
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/push-notifications": "^8.1.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "@hookform/resolvers": "^5.4.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -56,6 +62,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "8.0.1",
