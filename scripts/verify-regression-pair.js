@@ -70,6 +70,16 @@ async function must(label, promise) {
   return data;
 }
 
+async function optionalPushTable(label, promise) {
+  const { data, error } = await promise;
+  if (!error) return data;
+  const missingMigration = error.code === "42P01"
+    || error.code === "PGRST205"
+    || /notification_push_outbox.*(?:not found|does not exist|schema cache)/i.test(error.message);
+  if (missingMigration) return [];
+  throw new Error(`${label}: ${error.message}`);
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -238,6 +248,17 @@ async function verifyPrivateActorIsolation(owners) {
       && row.data?.professional_id === activity.professional_id
       && professionalIds.has(activity.professional_id);
   });
+
+  const [pushTokens, pushOutbox] = await Promise.all([
+    must("private push tokens", admin.from("user_push_tokens").select("id,user_id").limit(5000)),
+    optionalPushTable("private push outbox", admin.from("notification_push_outbox").select("id,user_id,status").limit(5000)),
+  ]);
+  assertRows("push tokens", pushTokens, (row) => profileIds.has(row.user_id));
+  assertRows("push outbox", pushOutbox, (row) => profileIds.has(row.user_id));
+  assert(
+    !pushOutbox.some((row) => row.status === "processing"),
+    "Push outbox has a leased regression row after cleanup.",
+  );
 
   const allowedNotificationIds = new Set([
     ...profileIds,

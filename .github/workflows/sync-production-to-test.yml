@@ -83,6 +83,7 @@ jobs:
             account_deletion_requests ai_chat_sessions beneficiary_dob bookings category_suggestions
             direct_conversations direct_messages interaction_events job_applications
             notification_deliveries notifications professional_follows projects proposals
+            notification_push_deliveries notification_push_outbox
             provider_appeals provider_verification_log reports reviews saved_items
             saved_professionals subscription_payments subscriptions support_messages
             support_ticket_messages support_tickets user_action_audit user_media_assets user_push_tokens

@@ -1,4 +1,6 @@
+import { notificationPushUrl } from "@/lib/push/payload";
 import { sendUserPush } from "@/lib/push/send";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 type NotificationPushInput = {
   userId?: string | null;
@@ -14,45 +16,42 @@ export type StoredNotificationPush = {
   data?: unknown;
 };
 
-function notificationUrl(data: unknown): string {
-  if (!data || typeof data !== "object") return "/es/notificaciones";
+let durableOutboxDetected = false;
 
-  const payload = data as {
-    link?: unknown;
-    booking_id?: unknown;
-    project_id?: unknown;
-    proposal_id?: unknown;
-    conversation_id?: unknown;
-  };
-  const raw = typeof payload.link === "string" && payload.link.startsWith("/")
-    ? payload.link
-    : "/es/notificaciones";
-  const target = new URL(raw, "https://contratacr.com");
+async function hasDurablePushOutbox() {
+  if (durableOutboxDetected) return true;
+  const { error } = await createAdminClient()
+    .from("notification_push_outbox")
+    .select("id")
+    .limit(1);
+  if (!error) durableOutboxDetected = true;
+  if (!error) return true;
 
-  if (typeof payload.booking_id === "string" && payload.booking_id) {
-    target.searchParams.set("booking", payload.booking_id);
-  }
-  if (typeof payload.project_id === "string" && payload.project_id) {
-    target.searchParams.set("project", payload.project_id);
-  }
-  if (typeof payload.proposal_id === "string" && payload.proposal_id) {
-    target.searchParams.set("proposal", payload.proposal_id);
-  }
-  if (typeof payload.conversation_id === "string" && payload.conversation_id) {
-    target.searchParams.set("conversation", payload.conversation_id);
-  }
-
-  return `${target.pathname}${target.search}${target.hash}`;
+  // Compatibility is needed only while migration 167 is genuinely absent.
+  // A timeout, permissions error, or transient PostgREST failure must fail
+  // closed: the INSERT trigger may already have captured the notification and
+  // an inline fallback would then deliver it twice.
+  const missingTable = error.code === "42P01"
+    || error.code === "PGRST205"
+    || /notification_push_outbox.*(?:not found|does not exist|schema cache)/i.test(error.message);
+  if (missingTable) return false;
+  throw new Error("push_outbox_detection_failed");
 }
 
 export async function sendNotificationPush({ userId, title, message, data }: NotificationPushInput) {
   if (!userId || !title || !message) return;
+  // Migration 167 captures the corresponding notification INSERT in the
+  // durable outbox. Until that migration exists, preserve the legacy inline
+  // path so deploying compatible code before SQL cannot lose notifications.
+  // A negative result is deliberately not cached: a long-lived instance must
+  // switch to the outbox immediately after the migration lands.
   try {
+    if (await hasDurablePushOutbox()) return;
     await sendUserPush({
       userId,
       title,
       body: message,
-      url: notificationUrl(data),
+      url: notificationPushUrl(data),
     });
   } catch (error) {
     console.error("[push] notification delivery failed:", error);

@@ -25,6 +25,7 @@ export async function sendUserPush({ userId, title, body, url = "/es/notificacio
     .from("user_push_tokens")
     .select("id, token")
     .eq("user_id", userId)
+    .eq("transport", "fcm")
     .eq("is_active", true);
 
   if (error) {

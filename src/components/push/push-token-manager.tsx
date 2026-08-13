@@ -15,14 +15,60 @@ function isNativeMobile() {
   return Capacitor.getPlatform() === "ios" || Capacitor.getPlatform() === "android";
 }
 
-function safePostToken(payload: { token: string; platform: "android" | "ios"; deviceId?: string; appVersion?: string }) {
-  return fetch("/api/push/register", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  }).catch(() => null);
+type PushTokenPayload = {
+  token: string;
+  platform: "android" | "ios";
+  deviceId?: string;
+  appVersion?: string;
+};
+
+const TOKEN_POST_RETRY_DELAYS_MS = [0, 750, 2_500] as const;
+
+function waitForRetry(delayMs: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, delayMs));
+}
+
+async function safePostToken(payload: PushTokenPayload) {
+  for (let attempt = 0; attempt < TOKEN_POST_RETRY_DELAYS_MS.length; attempt += 1) {
+    const delay = TOKEN_POST_RETRY_DELAYS_MS[attempt] ?? 0;
+    if (delay > 0) await waitForRetry(delay);
+
+    try {
+      const response = await fetch("/api/push/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) return true;
+
+      const retryable = response.status === 408 || response.status === 425
+        || response.status === 429 || response.status >= 500;
+      if (!retryable) return false;
+    } catch {
+      // The last failure returns false; registration is retried on the next
+      // native startup because a failed token is never cached as acknowledged.
+    }
+  }
+  return false;
+}
+
+function deactivateRegisteredToken(userId: string) {
+  if (typeof window === "undefined") return;
+  for (const platform of ["android", "ios"] as const) {
+    for (const key of [
+      `ccr:push-token-registered:v2:${userId}:${platform}`,
+      `ccr:push-token:${userId}:${platform}`,
+    ]) {
+      const token = window.localStorage.getItem(key);
+      if (!token) continue;
+      void fetch("/api/push/register", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+        keepalive: true,
+      }).finally(() => window.localStorage.removeItem(key));
+    }
+  }
 }
 
 function normalizePushUrl(rawUrl: unknown) {
@@ -122,13 +168,23 @@ export function PushTokenManager() {
     const platform = Capacitor.getPlatform() === "ios" ? "ios" : "android";
 
     const onToken = async (token: Token) => {
-      const key = `ccr:push-token:${user.id}:${platform}`;
+      const key = `ccr:push-token-registered:v2:${user.id}:${platform}`;
       if (typeof window !== "undefined") {
         const previous = window.localStorage.getItem(key);
         if (previous === token.value) return;
-        window.localStorage.setItem(key, token.value);
       }
-      await safePostToken({ token: token.value, platform, deviceId: Capacitor.getPlatform(), appVersion: navigator.userAgent?.slice(0, 64) });
+
+      // Capacitor exposes the APNs device token on iOS. The backend currently
+      // sends through FCM, so this value must never be mislabeled as FCM.
+      if (platform === "ios") return;
+
+      const saved = await safePostToken({
+        token: token.value,
+        platform,
+        deviceId: Capacitor.getPlatform(),
+        appVersion: navigator.userAgent?.slice(0, 64),
+      });
+      if (saved && typeof window !== "undefined") window.localStorage.setItem(key, token.value);
     };
 
     const onError = (error: unknown) => {
@@ -193,7 +249,9 @@ export function PushTokenManager() {
     // Do not flash the prompt while the native bridge verifies a permission that
     // this user has already granted on this installation.
     if (window.localStorage.getItem(grantedKey) === "1") {
-      setPromptVisible(false);
+      queueMicrotask(() => {
+        if (!cancelled) setPromptVisible(false);
+      });
     }
 
     const init = async () => {
@@ -245,6 +303,13 @@ export function PushTokenManager() {
   }, [loading, router, user]);
 
   useEffect(() => cleanupListeners, [cleanupListeners]);
+
+  useEffect(() => {
+    if (!user) return;
+    const deactivate = () => deactivateRegisteredToken(user.id);
+    window.addEventListener("contratacr:signing-out", deactivate);
+    return () => window.removeEventListener("contratacr:signing-out", deactivate);
+  }, [user]);
 
   if (loading || !promptVisible || !user || !isNativeMobile()) return null;
 

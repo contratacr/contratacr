@@ -130,6 +130,12 @@ jobs:
           fi
           npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --yes
 
+      - name: Verify push outbox schema contract
+        run: npm run test:push-schema
+
+      - name: Verify isolated notification push outbox
+        run: npm run test:push-isolation
+
       - name: Seed ContrataCR and SG Solutions regression fixtures
         run: |
           set -euo pipefail
@@ -166,6 +172,10 @@ jobs:
       - name: Verify regression fixtures were restored
         if: always()
         run: npm run seed:test:verify
+
+      - name: Verify push outbox has no leased work after regression
+        if: always()
+        run: npm run test:push-isolation
 
       - name: Upload Playwright report
         if: always()

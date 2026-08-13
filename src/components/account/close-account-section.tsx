@@ -43,6 +43,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       if (!res.ok) { setError(json.error ?? t("processError")); return; }
       // Sign out after hiding the account. The next successful login reactivates it.
       if (accountId) clearAccountLocalCache(accountId);
+      window.dispatchEvent(new CustomEvent("contratacr:signing-out"));
       await supabase.auth.signOut();
       window.location.assign(`/${locale}`);
     } catch {
@@ -88,6 +89,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
         return;
       }
       if (accountId) clearAccountLocalCache(accountId);
+      window.dispatchEvent(new CustomEvent("contratacr:signing-out"));
       await supabase.auth.signOut();
       const status = result?.status === "completed" ? "completed" : "pending";
       window.location.assign(`/${locale}?accountDeletion=${status}`);
