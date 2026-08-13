@@ -1088,13 +1088,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       </>
                                     )}
                                     {!locked && (proposal.status === "accepted" || proposal.status === "declined") && (
-                                      <Button size="sm" variant="outline" className="w-full px-3 sm:w-auto sm:min-w-[132px] sm:flex-none" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
+                                      <Button size="sm" variant="outline" className="h-10 w-full px-3 sm:w-auto sm:min-w-[156px] sm:flex-none" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
                                     )}
                                     {project.status === "awaiting_confirmation" && isAccepted && (
                                       <Button size="sm" className="w-full px-3 sm:w-auto sm:min-w-[150px] sm:flex-none" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>
                                     )}
                                     {proposal.professionals?.id && (
-                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} tone={(proposal.status === "pending" && !locked) || (project.status === "awaiting_confirmation" && isAccepted) ? "contrast" : "primary"} className="min-h-9 w-full rounded-lg px-3 text-sm font-bold disabled:cursor-wait sm:w-auto sm:min-w-[104px] sm:flex-none" />
+                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} tone={(proposal.status === "pending" && !locked) || (project.status === "awaiting_confirmation" && isAccepted) ? "contrast" : "primary"} className="h-10 w-full rounded-lg px-3 text-sm font-bold disabled:cursor-wait sm:w-auto sm:min-w-[156px] sm:flex-none" />
                                     )}
                                   </div>
                                 </div>

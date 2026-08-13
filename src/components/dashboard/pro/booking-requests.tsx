@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, MoreHorizontal, Flag } from "lucide-react";
+import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, MoreVertical, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { computeAge } from "@/lib/age";
@@ -442,7 +442,7 @@ export function BookingRequests() {
 
             {/* Frequent actions stay visible; exceptional actions live in the overflow menu. */}
             {!panelOpen && (() => {
-              const primaryActionClass = "min-h-10 w-full rounded-lg px-3 text-sm font-bold";
+              const primaryActionClass = "h-10 w-full rounded-lg px-3 text-sm font-bold";
               return (
                 <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
                   <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
@@ -469,10 +469,10 @@ export function BookingRequests() {
                       onClick={() => setActionsMenuFor((current) => current === booking.id ? null : booking.id)}
                       className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"
                     >
-                      <MoreHorizontal className="h-5 w-5" />
+                      <MoreVertical className="h-5 w-5" />
                     </button>
                     {actionsMenuFor === booking.id && (
-                      <div role="menu" className="absolute right-0 top-[calc(100%+6px)] z-50 w-48 rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
+                      <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] w-48 overflow-y-auto rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
                         {isActive && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); openAction(booking.id, "cancel"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("cancel")}</button>}
                         {booking.status === "cancelled" && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); archiveBooking(booking.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{t("archive")}</button>}
                         <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); setReportFor(booking); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("reportClient")}</button>

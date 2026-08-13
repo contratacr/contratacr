@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, MoreHorizontal, Users } from "lucide-react";
+import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, MoreVertical, Users } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -769,7 +769,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           {(() => {
                             const actions: ReactNode[] = [];
                             const secondaryActions: ReactNode[] = [];
-                            const actionButtonClass = "min-h-10 w-full rounded-lg px-3 text-sm font-bold sm:min-w-[10rem] sm:flex-1";
+                            const actionButtonClass = "h-10 w-full rounded-lg px-3 text-sm font-bold sm:min-w-[10rem] sm:flex-1";
                             if (p.status === "pending") {
                               actions.push(<Button key="edit" size="sm" variant="outline" className={actionButtonClass} onClick={() => startEdit(p)}>{t("editProposal")}</Button>);
                               secondaryActions.push(<button key="withdraw" role="menuitem" type="button" className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50" onClick={() => { setActionsMenuFor(null); setWithdrawTarget(p); }}>{t("withdraw")}</button>);
@@ -791,9 +791,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 {secondaryActions.length > 0 && (
                                   <div className="relative ml-auto shrink-0" data-proposal-actions={p.id}>
                                     <button type="button" aria-label={locale === "en" ? "More options" : "Más opciones"} aria-haspopup="menu" aria-expanded={actionsMenuFor === p.id} onClick={() => setActionsMenuFor((current) => current === p.id ? null : p.id)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]">
-                                      <MoreHorizontal className="h-5 w-5" />
+                                      <MoreVertical className="h-5 w-5" />
                                     </button>
-                                    {actionsMenuFor === p.id && <div role="menu" className="absolute right-0 top-[calc(100%+6px)] z-50 w-48 rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">{secondaryActions}</div>}
+                                    {actionsMenuFor === p.id && <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] w-48 overflow-y-auto rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">{secondaryActions}</div>}
                                   </div>
                                 )}
                               </div>

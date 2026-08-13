@@ -6,6 +6,8 @@ ContrataCR is a Costa Rican services marketplace (clients find and book professi
 
 > **The unified design system (authoritative).** Two values rank above all: **(1) EASE OF USE** — every screen must be effortless for any Costa Rican, tech-savvy or not; **(2) CONSISTENCY** — the same patterns everywhere, so it always feels like ONE app. **The home page (`/`) is the quality bar** — the screen we're happiest with; new/edited screens should feel like they belong next to it (brand: navy `#1a2744`/`#162543`, blue `#009FD9`/`#008ce0`, Poppins-style bold wordmark). The canonical kit every screen composes from: **tokens in §2** (color, type scale, spacing, radius) + the **shared primitives** `Button` · `Input`/`Select` · `Badge` · `Card` · `Avatar` (already conform — reuse, don't re-derive), the **one app-wide `LandingNavbar` + `LandingFooter`** (§"Header, footer"), and the **shared patterns** in §3 (cards, lists, modals, empty/feedback states). **Feedback is inline, not toasts** (there is no toast library by design): inline error/success blocks + the always-visible autosave status line (§"Save feedback"). When a screen looks "off", it's almost always a §2.Radius violation (nested bordered boxes) or a bespoke control that should have been a primitive — fix it toward this standard.
 
+> **Contextual action-menu override (current).** Three-dot action menus use a vertical ellipsis (`MoreVertical`) at every breakpoint inside an exact `h-10 w-10` trigger. Card-footer popovers open upward, remain right-aligned, and use a viewport-bounded maximum height with internal scrolling so neither the card nor the screen edge can clip them. Adjacent primary buttons use the same exact height and equal grid columns.
+
 ---
 
 ## 1. Core principle — simplicity first

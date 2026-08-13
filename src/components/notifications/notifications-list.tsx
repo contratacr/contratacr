@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreVertical } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
@@ -280,7 +280,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             }}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#162543] ring-1 ring-[#dbe7ef] transition-colors hover:bg-[#eef6fb]"
           >
-            <MoreHorizontal className="h-5 w-5" strokeWidth={3} />
+            <MoreVertical className="h-5 w-5" strokeWidth={3} />
           </button>
           {globalMenuOpen && (
             <div role="menu" className="absolute right-0 top-full z-30 mt-2 min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl">
@@ -429,7 +429,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                       }}
                       className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#eef4f8] hover:text-[#162543]"
                     >
-                      <MoreHorizontal className="h-4 w-4" />
+                      <MoreVertical className="h-4 w-4" />
                     </button>
                   </AppTooltip>
                   {itemMenuOpenId === n.id && (
