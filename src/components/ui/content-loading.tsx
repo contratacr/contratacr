@@ -1,6 +1,7 @@
 "use client";
 
 import type { ElementType, ReactNode } from "react";
+import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -13,8 +14,15 @@ export function BrandLoadingMark({ className, children }: { className?: string; 
   const t = useTranslations("loading");
   return (
     <div className={cn("ccr-delayed-loading grid place-items-center", className)} aria-busy="true" role="status">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-mark-transparent.png" alt="" width={60} height={60} className="ccr-brand-loading-mark" />
+      <Image
+        src="/logo-mark-transparent.png"
+        alt=""
+        width={64}
+        height={64}
+        sizes="64px"
+        priority
+        className="ccr-brand-loading-mark"
+      />
       {children ?? <span className="sr-only">{t("generic")}</span>}
     </div>
   );

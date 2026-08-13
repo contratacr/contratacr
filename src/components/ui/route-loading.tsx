@@ -1,7 +1,7 @@
 "use client";
 
 import { Navbar } from "@/components/layout/navbar";
-import { Skeleton } from "@/components/ui/content-loading";
+import { BrandLoadingMark } from "@/components/ui/content-loading";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
@@ -36,6 +36,17 @@ export function DashboardRouteLoading({ title, description }: { title?: string; 
         <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 sm:px-6 lg:px-8">
           <DashboardLoadingNotice title={title} description={description} />
         </div>
+      </main>
+    </div>
+  );
+}
+
+export function PageRouteLoading() {
+  return (
+    <div className="min-h-screen bg-[#f4f7fa] text-[#162543]" aria-busy="true">
+      <Navbar />
+      <main className="mx-auto w-full max-w-[1240px] px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+        <BrandLoadingMark className="min-h-[55vh]" />
       </main>
     </div>
   );

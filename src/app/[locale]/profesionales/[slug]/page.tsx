@@ -41,7 +41,7 @@ import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
-import { BrandLoadingMark } from "@/components/ui/content-loading";
+import { PageRouteLoading } from "@/components/ui/route-loading";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -114,7 +114,6 @@ function initialProfileReturnHref() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const t = useTranslations("profile");
-  const tLoading = useTranslations("loading");
   const locale = useLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
   const routeParams = useParams();
@@ -268,16 +267,7 @@ export default function ProfilePage() {
   }, [professional]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#f4f7fa] text-[#162543]">
-        <Navbar />
-        <main className="mx-auto w-full max-w-[1240px] px-4 pb-12 pt-5 sm:px-6 lg:px-8">
-          <BrandLoadingMark className="min-h-[55vh]">
-            <span className="sr-only">{tLoading("profile")}</span>
-          </BrandLoadingMark>
-        </main>
-      </div>
-    );
+    return <PageRouteLoading />;
   }
 
   if (proNotFound || !professional) {
