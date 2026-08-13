@@ -52,6 +52,14 @@ async function verifyCount(table, filter, minimum, label) {
   assert((count || 0) >= minimum, `${label}: expected at least ${minimum}, found ${count || 0}.`);
 }
 
+async function verifyStatuses(table, actorColumn, actorId, expected, label) {
+  const rows = await must(label, admin.from(table).select("status").eq(actorColumn, actorId));
+  const statuses = new Set(rows.map((row) => row.status));
+  for (const status of expected) {
+    assert(statuses.has(status), `${label}: missing ${status}.`);
+  }
+}
+
 async function main() {
   const contratacr = await actor("ContrataCR", "e2e.client@contratacr.test");
   const sg = await actor("SG Solutions", "e2e.pro@contratacr.test");
@@ -101,7 +109,46 @@ async function main() {
     verifyCount("availability_slots", {}, 2, "availability slots"),
     verifyCount("availability_exceptions", {}, 2, "availability exceptions"),
     verifyCount("blocked_dates", {}, 2, "blocked dates"),
+    verifyStatuses("job_posts", "employer_id", contratacr.professional.id, ["published", "paused", "closed", "draft"], "ContrataCR jobs"),
+    verifyStatuses("job_posts", "employer_id", sg.professional.id, ["published", "paused", "closed", "draft"], "SG Solutions jobs"),
+    verifyStatuses("professional_offers", "professional_id", contratacr.professional.id, ["published", "paused", "expired", "sold_out", "draft"], "ContrataCR offers"),
+    verifyStatuses("professional_offers", "professional_id", sg.professional.id, ["published", "paused", "expired", "sold_out", "draft"], "SG Solutions offers"),
+    verifyStatuses("bookings", "client_id", contratacr.profile.id, ["confirmed", "completed", "cancelled"], "ContrataCR client bookings"),
+    verifyStatuses("bookings", "client_id", sg.profile.id, ["in_progress", "completed", "cancelled"], "SG Solutions client bookings"),
+    verifyStatuses("projects", "client_id", contratacr.profile.id, ["open", "completed", "cancelled"], "ContrataCR projects"),
+    verifyStatuses("projects", "client_id", sg.profile.id, ["in_progress", "completed", "cancelled"], "SG Solutions projects"),
+    verifyStatuses("proposals", "professional_id", contratacr.professional.id, ["accepted", "declined"], "ContrataCR proposals"),
+    verifyStatuses("proposals", "professional_id", sg.professional.id, ["pending", "accepted", "declined"], "SG Solutions proposals"),
+    verifyStatuses("support_tickets", "user_id", contratacr.profile.id, ["open", "in_progress", "resolved"], "ContrataCR support"),
+    verifyStatuses("support_tickets", "user_id", sg.profile.id, ["open", "in_progress", "resolved"], "SG Solutions support"),
   ]);
+
+  for (const owner of [contratacr, sg]) {
+    const [savedProfessionals, savedItems] = await Promise.all([
+      must("saved professional filters", admin.from("saved_professionals").select("id").eq("client_id", owner.profile.id)),
+      must("saved marketplace filters", admin.from("saved_items").select("item_type").eq("user_id", owner.profile.id)),
+    ]);
+    const itemTypes = new Set(savedItems.map((row) => row.item_type));
+    assert(savedProfessionals.length > 0, `${owner.professional.business_name}: missing Professionals favorite.`);
+    assert(itemTypes.has("offer"), `${owner.professional.business_name}: missing Offers favorite.`);
+    assert(itemTypes.has("job"), `${owner.professional.business_name}: missing Jobs favorite.`);
+  }
+
+  const actorApplications = await must(
+    "actor applications",
+    admin.from("job_applications").select("status,resume_url,applicant_id").in("applicant_id", [...allowedProfiles]),
+  );
+  const applicationStatuses = new Set(actorApplications.map((row) => row.status));
+  for (const status of ["submitted", "reviewing", "shortlisted", "rejected", "hired", "withdrawn"]) {
+    assert(applicationStatuses.has(status), `Applications: missing ${status}.`);
+  }
+  const applicationWithCv = actorApplications.find((row) => row.applicant_id === contratacr.profile.id && row.resume_url);
+  assert(applicationWithCv?.resume_url?.startsWith("job-applications/"), "ContrataCR needs a stored CV in My applications.");
+  const { data: cvObject, error: cvError } = await admin.storage
+    .from("direct-message-attachments")
+    .download(applicationWithCv.resume_url);
+  if (cvError) throw new Error(`ContrataCR CV: ${cvError.message}`);
+  assert((cvObject?.size || 0) > 0, "ContrataCR CV object is empty.");
 
   if (anonKey) {
     for (const email of ["e2e.client@contratacr.test", "e2e.pro@contratacr.test"]) {

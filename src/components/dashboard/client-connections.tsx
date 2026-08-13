@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CalendarCheck, ClipboardList, ExternalLink, Search, Users, Wrench } from "lucide-react";
+import { CalendarCheck, CheckCircle2, ClipboardList, ExternalLink, Search, Users, Wrench } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ type Connection = {
   slug: string | null;
   name: string;
   avatarUrl: string | null;
+  isVerified: boolean;
   categoryLabel: string | null;
   lastInteractionAt: string | null;
   source: "booking" | "project" | "both";
@@ -104,7 +105,12 @@ export function ClientConnections() {
             </Avatar>
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <h3 className="min-w-0 truncate text-sm font-extrabold text-[#162543]">{item.name}</h3>
+                <h3 className="flex min-w-0 items-center text-sm font-extrabold text-[#162543]">
+                  <span className="truncate">{item.name}</span>
+                  {item.isVerified && (
+                    <CheckCircle2 aria-label="Verificado" className="ml-1 h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                  )}
+                </h3>
                 <span className="shrink-0 rounded-full bg-[#eef8fd] px-2 py-0.5 text-[10px] font-bold text-[#0089bb]">{statusLabel(item.status)}</span>
               </div>
               <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-[#6b7280]">

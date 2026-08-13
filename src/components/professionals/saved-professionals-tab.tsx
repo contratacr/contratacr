@@ -228,19 +228,10 @@ export function SavedProfessionalsTab() {
   const showOffers = filter === "offers";
   const showJobs = filter === "jobs";
 
-  const availableFilters = useMemo<SavedFilter[]>(() => {
-    const next: SavedFilter[] = [];
-    if (savedPros.length > 0) next.push("professionals");
-    if (offers.length > 0) next.push("offers");
-    if (jobs.length > 0) next.push("jobs");
-    return next;
-  }, [jobs.length, offers.length, savedPros.length]);
-
-  useEffect(() => {
-    if (availableFilters.length > 0 && !availableFilters.includes(filter)) {
-      setFilter(availableFilters[0]);
-    }
-  }, [availableFilters, filter]);
+  // These are the three saveable content types. Keep every filter visible even
+  // when its current count is zero; only the former aggregate “Todos” filter is
+  // intentionally absent.
+  const availableFilters: SavedFilter[] = ["professionals", "offers", "jobs"];
 
   if (!mounted || authLoading) return <PanelListSkeleton rows={3} hasData={total > 0} />;
 

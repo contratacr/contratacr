@@ -749,6 +749,16 @@ export default function DashboardPage() {
   }, [preferMobileMenuDefault]);
 
   useEffect(() => {
+    const closePanelModeSelector = (event: PointerEvent) => {
+      document.querySelectorAll<HTMLDetailsElement>("details[data-panel-mode-selector][open]").forEach((selector) => {
+        if (!selector.contains(event.target as Node)) selector.removeAttribute("open");
+      });
+    };
+    document.addEventListener("pointerdown", closePanelModeSelector);
+    return () => document.removeEventListener("pointerdown", closePanelModeSelector);
+  }, []);
+
+  useEffect(() => {
     if (!legacyVerificationTab) return;
     const params = new URLSearchParams(searchParams.toString());
     if (!isProvider) {
@@ -1572,7 +1582,7 @@ export default function DashboardPage() {
     ];
 
     return (
-      <details className="group relative z-30 w-full">
+      <details data-panel-mode-selector className="group relative z-30 w-full">
         <summary className="flex min-h-[56px] cursor-pointer list-none items-center gap-3 rounded-none bg-white px-4 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd] lg:px-5 lg:text-[14px] lg:font-semibold [&::-webkit-details-marker]:hidden">
           <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef8fc] text-[#009FD9]">
             {mode === "offer" ? <BriefcaseBusiness className="h-4 w-4" /> : <User className="h-4 w-4" />}

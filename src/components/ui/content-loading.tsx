@@ -13,7 +13,7 @@ export function Skeleton({ className }: { className: string }) {
 export function BrandLoadingMark({ className, children }: { className?: string; children?: ReactNode } = {}) {
   const t = useTranslations("loading");
   return (
-    <div className={cn("ccr-delayed-loading grid place-items-center", className)} aria-busy="true" role="status">
+    <div className={cn("grid place-items-center", className)} aria-busy="true" role="status">
       <Image
         src="/logo-mark-transparent.png"
         alt=""

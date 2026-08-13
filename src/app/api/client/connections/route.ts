@@ -12,6 +12,7 @@ type Connection = {
   slug: string | null;
   name: string;
   avatarUrl: string | null;
+  isVerified: boolean;
   categoryLabel: string | null;
   lastInteractionAt: string | null;
   source: "booking" | "project" | "both";
@@ -73,7 +74,7 @@ export async function GET() {
 
   const { data: professionals, error: professionalsError } = await admin
     .from("professionals")
-    .select("id, slug, business_name, category_id, profiles(full_name, avatar_url)")
+    .select("id, slug, business_name, category_id, verification_status, profiles(full_name, avatar_url)")
     .in("id", professionalIds);
   if (professionalsError) {
     console.error("[GET /api/client/connections] professionals:", professionalsError.message);
@@ -96,6 +97,7 @@ export async function GET() {
       slug: pro.slug ? String(pro.slug) : null,
       name: repairVisibleText(String(pro.business_name || profile?.full_name || "Profesional")),
       avatarUrl: profile?.avatar_url ?? null,
+      isVerified: pro.verification_status === "verified",
       categoryLabel: categoryId ? getCategoryLabel(categoryId, "es") : null,
       lastInteractionAt: row.date || null,
       source: row.source,

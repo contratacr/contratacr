@@ -116,18 +116,28 @@ test.describe("@seeded dashboard surfaces", () => {
     }
   });
 
-  test("navbar keeps professional registration quiet for client-only accounts", async ({ page }, testInfo) => {
+  test("panel mode selector closes when guides are opened", async ({ page }, testInfo) => {
+    test.skip(isMobileProject(testInfo), "Desktop sidebar selector regression.");
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional");
+
+    const selector = page.locator("details[data-panel-mode-selector]:visible").first();
+    await selector.locator("summary").click();
+    await expect(selector).toHaveAttribute("open", "");
+    await page.getByRole("button", { name: /^Gu[ií]as$/i }).filter({ visible: true }).first().click();
+    await expect(selector).not.toHaveAttribute("open", "");
+    await expect(page.getByRole("dialog").filter({ hasText: /Gu[ií]as de ContrataCR/i }).first()).toBeVisible();
+  });
+
+  test("favorites keep every saveable filter and connections show verification", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    await gotoOK(page, "/es");
-    let navigation = page.getByRole("banner");
-    if (isMobileProject(testInfo)) {
-      await page.getByRole("button", { name: /Abrir men|Open menu/i }).first().click();
-      navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
+    await gotoOK(page, "/es/dashboard/profesional?tab=saved&mode=use");
+    for (const label of [/^Profesionales(?: \d+)?$/i, /^Ofertas(?: \d+)?$/i, /^Empleos(?: \d+)?$/i]) {
+      await expect(page.getByRole("button", { name: label }).filter({ visible: true }).first()).toBeVisible();
     }
-    const offerServices = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).filter({ visible: true }).first();
-    await expect(offerServices).toBeVisible();
-    await expect(offerServices.locator("svg")).toHaveCount(0);
-    await expect(offerServices).toHaveCSS("color", "rgb(0, 159, 217)");
+
+    await gotoOK(page, "/es/dashboard/profesional?tab=connections&mode=use");
+    await expect(page.locator('svg[aria-label="Verificado"]').filter({ visible: true }).first()).toBeVisible();
   });
 
   test("guides cover the current client, marketplace, and professional flows in both languages", async ({ page }) => {

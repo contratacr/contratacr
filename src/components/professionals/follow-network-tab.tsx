@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { CheckCircle2, Search, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FollowButton, getLocalFollowIds } from "@/components/professionals/follow-button";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,6 +18,7 @@ type NetworkItem = {
   name: string;
   subtitle: string;
   avatarUrl: string | null;
+  isVerified: boolean;
   createdAt: string;
 };
 
@@ -45,12 +46,12 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
     const [followingResult, followerResult] = await Promise.all([
       db
         .from("professional_follows")
-        .select("id, created_at, professionals(id, slug, business_name, professions, profiles(full_name, avatar_url))")
+        .select("id, created_at, professionals(id, slug, business_name, professions, verification_status, profiles(full_name, avatar_url))")
         .eq("follower_id", user.id),
       ownPro
         ? db
             .from("professional_follows")
-            .select("id, created_at, profiles!professional_follows_follower_id_fkey(full_name, avatar_url, professionals(id, slug, business_name, professions))")
+            .select("id, created_at, profiles!professional_follows_follower_id_fkey(full_name, avatar_url, professionals(id, slug, business_name, professions, verification_status))")
             .eq("professional_id", ownPro.id)
         : Promise.resolve({ data: [] }),
     ]);
@@ -66,6 +67,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
         name: pro.business_name || profile?.full_name || (es ? "Profesional" : "Professional"),
         subtitle: profile?.full_name || firstProfession(pro?.professions, es),
         avatarUrl: profile?.avatar_url ?? null,
+        isVerified: pro.verification_status === "verified",
         createdAt: row.created_at,
       }];
     });
@@ -74,7 +76,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
       const ids = getLocalFollowIds(user.id);
       const { data: localPros } = await db
         .from("professionals")
-        .select("id, slug, business_name, professions, profiles(full_name, avatar_url)")
+        .select("id, slug, business_name, professions, verification_status, profiles(full_name, avatar_url)")
         .in("id", ids);
       followed = (localPros ?? []).flatMap((pro: any) => {
         const profile = Array.isArray(pro?.profiles) ? pro.profiles[0] : pro?.profiles;
@@ -86,6 +88,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
           name: pro.business_name || profile?.full_name || (es ? "Profesional" : "Professional"),
           subtitle: profile?.full_name || firstProfession(pro?.professions, es),
           avatarUrl: profile?.avatar_url ?? null,
+          isVerified: pro.verification_status === "verified",
           createdAt: new Date().toISOString(),
         }];
       });
@@ -102,6 +105,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
         name: pro?.business_name || profile.full_name || (es ? "Usuario" : "User"),
         subtitle: pro?.business_name ? profile.full_name : firstProfession(pro?.professions, es),
         avatarUrl: profile.avatar_url ?? null,
+        isVerified: pro?.verification_status === "verified",
         createdAt: row.created_at,
       }];
     });
@@ -199,7 +203,15 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
                       <AvatarFallback className="bg-[#eaf7fc] text-sm font-extrabold text-[#0089bb]">{getInitials(item.name)}</AvatarFallback>
                     </Avatar>
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-bold leading-5 text-[#111827]">{item.name}</span>
+                      <span className="flex min-w-0 items-center text-sm font-bold leading-5 text-[#111827]">
+                        <span className="truncate">{item.name}</span>
+                        {item.isVerified && (
+                          <CheckCircle2
+                            aria-label={es ? "Verificado" : "Verified"}
+                            className="ml-1 h-3.5 w-3.5 shrink-0 text-[#009FD9]"
+                          />
+                        )}
+                      </span>
                       <span className="block truncate text-sm leading-5 text-[#6b7280]">{item.subtitle}</span>
                     </span>
                   </Link>

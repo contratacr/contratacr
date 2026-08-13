@@ -5,6 +5,24 @@ const { createClient } = require("@supabase/supabase-js");
 const TEST_PROJECT_REF = "sodegkfjjrdkbohycqyq";
 const SEED = "production-mirror-regression-pair-v1";
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";
+const PRODUCTION_ORIGIN = "https://www.contratacr.com";
+const REGRESSION_CV_PATH = process.env.REGRESSION_CV_PATH || "C:\\Users\\isaac\\OneDrive\\Documentos\\CV\\Senior\\CV.pdf";
+const PRODUCTION_ACTORS = [
+  {
+    businessName: "ContrataCR",
+    email: "e2e.client@contratacr.test",
+    slug: "isaac-alberto-sanchez-monge-9gjc65t8",
+    profileId: "048f1b3a-23c0-41bc-8728-10f8aed70fdb",
+    professionalId: "ae9caa2b-1fca-4411-9aeb-7736f5bbf42f",
+  },
+  {
+    businessName: "SG Solutions",
+    email: "e2e.pro@contratacr.test",
+    slug: "luis-angel-sanchez-sibaja-977u5iku",
+    profileId: "347f5202-8b3e-4c11-8db8-1060ea5e487d",
+    professionalId: "988428c7-a0b6-4d9e-a9b8-e0209a1ca296",
+  },
+];
 
 if (fs.existsSync(envFile)) {
   for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
@@ -45,7 +63,10 @@ const ids = {
   jobs: ["b8000000-0000-4000-8000-000000000001", "b8000000-0000-4000-8000-000000000002"],
   applications: ["b9000000-0000-4000-8000-000000000001", "b9000000-0000-4000-8000-000000000002"],
   offers: ["ba000000-0000-4000-8000-000000000001", "ba000000-0000-4000-8000-000000000002"],
-  savedItems: ["bb000000-0000-4000-8000-000000000001", "bb000000-0000-4000-8000-000000000002"],
+  savedItems: [
+    "bb000000-0000-4000-8000-000000000001", "bb000000-0000-4000-8000-000000000002",
+    "bb000000-0000-4000-8000-000000000003", "bb000000-0000-4000-8000-000000000004",
+  ],
   tickets: ["bc000000-0000-4000-8000-000000000001", "bc000000-0000-4000-8000-000000000002"],
   ticketMessages: ["bd000000-0000-4000-8000-000000000001", "bd000000-0000-4000-8000-000000000002"],
   reviews: ["be000000-0000-4000-8000-000000000001", "be000000-0000-4000-8000-000000000002"],
@@ -60,6 +81,75 @@ async function must(label, promise) {
   const { data, error } = await promise;
   if (error) throw new Error(`${label}: ${error.message}`);
   return data;
+}
+
+async function restoreProductionActors() {
+  for (const actor of PRODUCTION_ACTORS) {
+    const response = await fetch(`${PRODUCTION_ORIGIN}/api/professionals/${actor.slug}`, {
+      headers: { accept: "application/json" },
+    });
+    if (!response.ok) throw new Error(`Could not read production profile ${actor.slug}: HTTP ${response.status}.`);
+    const source = await response.json();
+    if (source.id !== actor.professionalId || source.profileId !== actor.profileId) {
+      throw new Error(`Production identity mismatch for ${actor.businessName}.`);
+    }
+
+    await must(`restore ${actor.businessName} profile`, supabase.from("profiles").update({
+      full_name: source.fullName,
+      avatar_url: source.avatarUrl,
+      role: "professional",
+      is_provider: true,
+      onboarding_completed: true,
+      is_disabled: false,
+      updated_at: iso(),
+    }).eq("id", actor.profileId));
+
+    await must(`restore ${actor.businessName} auth metadata`, supabase.auth.admin.updateUserById(actor.profileId, {
+      user_metadata: {
+        full_name: source.fullName,
+        onboarding_completed: true,
+        role: "professional",
+        is_provider: true,
+      },
+    }));
+
+    await must(`restore ${actor.businessName} professional`, supabase.from("professionals").upsert({
+      id: actor.professionalId,
+      profile_id: actor.profileId,
+      slug: source.slug,
+      business_name: source.businessName,
+      public_business_name_only: source.publicBusinessNameOnly === true,
+      category_id: source.categoryId,
+      professions: source.professions,
+      pricing: source.pricing,
+      bio: source.bio,
+      whatsapp: source.whatsapp,
+      call_phone: source.callPhone || null,
+      allow_phone_call: source.allowPhoneCall === true,
+      hourly_rate: source.hourlyRate,
+      years_experience: source.yearsExperience,
+      is_verified: source.isVerified === true,
+      verification_status: source.verificationStatus,
+      is_featured: source.isFeatured === true,
+      is_available: source.isAvailable !== false,
+      lat: source.lat,
+      lng: source.lng,
+      service_type: source.serviceType,
+      videoconsulta: source.videoconsulta === true,
+      portfolio_urls: source.portfolioUrls,
+      portfolio_items: source.portfolioItems,
+      coverage_country: source.coverage?.country === true,
+      coverage_provincias: source.coverage?.provincias || [],
+      workplaces: source.workplaces,
+      services: source.services,
+      availability_public: source.availabilityPublic !== false,
+      contact_preference: source.contactPreference,
+      languages: source.languages,
+      insurance_networks: source.insuranceNetworks,
+      certifications: source.certifications,
+      updated_at: iso(),
+    }, { onConflict: "id" }));
+  }
 }
 
 async function findActor(businessName, expectedEmail) {
@@ -146,6 +236,7 @@ async function enrichActor(actor, kind) {
 }
 
 async function main() {
+  await restoreProductionActors();
   const contratacr = await findActor("ContrataCR", "e2e.client@contratacr.test");
   const sg = await findActor("SG Solutions", "e2e.pro@contratacr.test");
   if (contratacr.profile.id === sg.profile.id) throw new Error("Regression actors must be distinct.");
@@ -179,14 +270,14 @@ async function main() {
   ], { onConflict: "id" }));
 
   await must("follows", supabase.from("professional_follows").upsert([
-    { id: ids.follows[0], follower_id: c.profile.id, professional_id: s.professional.id, created_at: iso(-4) },
-    { id: ids.follows[1], follower_id: s.profile.id, professional_id: c.professional.id, created_at: iso(-3) },
-  ], { onConflict: "id" }));
+    { follower_id: c.profile.id, professional_id: s.professional.id, created_at: iso(-4) },
+    { follower_id: s.profile.id, professional_id: c.professional.id, created_at: iso(-3) },
+  ], { onConflict: "follower_id,professional_id" }));
 
   await must("saved professionals", supabase.from("saved_professionals").upsert([
-    { id: ids.saves[0], client_id: c.profile.id, professional_id: s.professional.id, snapshot: { regressionSeed: SEED, name: sName }, created_at: iso(-4) },
-    { id: ids.saves[1], client_id: s.profile.id, professional_id: c.professional.id, snapshot: { regressionSeed: SEED, name: cName }, created_at: iso(-3) },
-  ], { onConflict: "id" }));
+    { client_id: c.profile.id, professional_id: s.professional.id, snapshot: { regressionSeed: SEED, name: sName }, created_at: iso(-4) },
+    { client_id: s.profile.id, professional_id: c.professional.id, snapshot: { regressionSeed: SEED, name: cName }, created_at: iso(-3) },
+  ], { onConflict: "client_id,professional_id" }));
 
   await must("bookings", supabase.from("bookings").upsert([
     {
@@ -289,9 +380,20 @@ async function main() {
   ];
   await must("jobs", supabase.from("job_posts").upsert(jobs, { onConflict: "id" }));
 
+  if (!fs.existsSync(REGRESSION_CV_PATH)) {
+    throw new Error(`Regression CV not found at ${REGRESSION_CV_PATH}.`);
+  }
+  const regressionCvStoragePath = `job-applications/${ids.jobs[1]}/${c.profile.id}/Senior-CV.pdf`;
+  await must("ContrataCR application CV", supabase.storage
+    .from("direct-message-attachments")
+    .upload(regressionCvStoragePath, fs.readFileSync(REGRESSION_CV_PATH), {
+      contentType: "application/pdf",
+      upsert: true,
+    }));
+
   await must("applications", supabase.from("job_applications").upsert([
     { id: ids.applications[0], job_id: ids.jobs[0], applicant_id: s.profile.id, cover_letter: "SG Solutions desea participar para validar el flujo completo de empleos en test.", phone: "+506 7000 0002", applicant_email: "e2e.pro@contratacr.test", status: "reviewing", created_at: iso(-2), updated_at: iso(-1) },
-    { id: ids.applications[1], job_id: ids.jobs[1], applicant_id: c.profile.id, cover_letter: "ContrataCR envía esta postulación para validar el flujo completo entre ambos perfiles.", phone: "+506 7000 0001", applicant_email: "e2e.client@contratacr.test", status: "shortlisted", created_at: iso(-1), updated_at: iso() },
+    { id: ids.applications[1], job_id: ids.jobs[1], applicant_id: c.profile.id, cover_letter: "ContrataCR envía esta postulación para validar el flujo completo entre ambos perfiles.", phone: "+506 7000 0001", applicant_email: "e2e.client@contratacr.test", resume_url: regressionCvStoragePath, status: "shortlisted", created_at: iso(-1), updated_at: iso() },
   ], { onConflict: "id" }));
 
   const offers = [
@@ -317,6 +419,8 @@ async function main() {
   await must("saved marketplace", supabase.from("saved_items").upsert([
     { id: ids.savedItems[0], user_id: c.profile.id, item_type: "offer", item_id: ids.offers[1], snapshot: { regressionSeed: SEED, title: offers[1].title, professional_name: sName }, created_at: iso(-1) },
     { id: ids.savedItems[1], user_id: s.profile.id, item_type: "job", item_id: ids.jobs[0], snapshot: { regressionSeed: SEED, title: jobs[0].title, employer_name: cName }, created_at: iso(-1) },
+    { id: ids.savedItems[2], user_id: c.profile.id, item_type: "job", item_id: ids.jobs[1], snapshot: { regressionSeed: SEED, title: jobs[1].title, employer_name: sName }, created_at: iso(-1) },
+    { id: ids.savedItems[3], user_id: s.profile.id, item_type: "offer", item_id: ids.offers[0], snapshot: { regressionSeed: SEED, title: offers[0].title, professional_name: cName }, created_at: iso(-1) },
   ], { onConflict: "id" }));
 
   await must("support tickets", supabase.from("support_tickets").upsert([

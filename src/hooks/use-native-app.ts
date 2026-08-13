@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-const MOBILE_APP_HOSTS = new Set(["test.contratacr.com", "contratacr-mobile-test.vercel.app"]);
+// A normal web deployment must never become the native shell just because of
+// its hostname. In particular, test.contratacr.com is the regression mirror of
+// production and must render the same navbar, footer and search drawers.
+const MOBILE_APP_HOSTS = new Set(["contratacr-mobile-test.vercel.app"]);
 
 export function isMobileAppHost(hostname?: string): boolean {
   if (typeof window === "undefined" && !hostname) return false;
