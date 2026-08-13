@@ -83,45 +83,118 @@ async function must(label, promise) {
   return data;
 }
 
-async function removeOrphanedActivityNotifications(profileIds, professionalIds) {
-  const notifications = await must(
-    "activity notifications for canonical actors",
-    supabase
-      .from("notifications")
-      .select("id,data")
-      .eq("type", "followed_professional_activity")
-      .in("user_id", profileIds),
-  );
-  const scopedNotifications = notifications.filter((notification) => (
-    professionalIds.includes(notification.data?.professional_id)
-  ));
-  const activityIds = [...new Set(scopedNotifications
-    .map((notification) => notification.data?.activity_id)
-    .filter((id) => typeof id === "string" && id.length > 0))];
-  if (!activityIds.length) return;
+async function allRows(label, query, pageSize = 1000) {
+  const rows = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await must(label, query().range(offset, offset + pageSize - 1));
+    rows.push(...page);
+    if (page.length < pageSize) return rows;
+  }
+}
 
-  const activities = await must(
-    "referenced professional activities",
-    supabase.from("professional_activity").select("id").in("id", activityIds),
-  );
-  const existing = new Set(activities.map((activity) => activity.id));
-  const orphanIds = scopedNotifications
+async function reconcileCanonicalActivityFeed(profileIds, professionalIds) {
+  const [professionals, jobs, offers, activities, notifications] = await Promise.all([
+    must(
+      "canonical activity professionals",
+      supabase.from("professionals").select("id,services,portfolio_items").in("id", professionalIds),
+    ),
+    must(
+      "canonical activity jobs",
+      supabase.from("job_posts").select("id,employer_id").in("employer_id", professionalIds),
+    ),
+    must(
+      "canonical activity offers",
+      supabase.from("professional_offers").select("id,professional_id").in("professional_id", professionalIds),
+    ),
+    allRows(
+      "canonical professional activities",
+      () => supabase.from("professional_activity")
+        .select("id,professional_id,activity_type,content_id")
+        .in("professional_id", professionalIds)
+        .order("id"),
+    ),
+    allRows(
+      "professional activity notifications",
+      () => supabase.from("notifications")
+        .select("id,user_id,data")
+        .eq("type", "followed_professional_activity")
+        .order("id"),
+    ),
+  ]);
+  const contentByProfessional = new Map(professionalIds.map((professionalId) => [professionalId, {
+    jobs: new Set(),
+    offers: new Set(),
+    services: new Set(),
+    successCases: new Set(),
+  }]));
+  for (const job of jobs) contentByProfessional.get(job.employer_id)?.jobs.add(job.id);
+  for (const offer of offers) contentByProfessional.get(offer.professional_id)?.offers.add(offer.id);
+  for (const professional of professionals) {
+    const content = contentByProfessional.get(professional.id);
+    if (!content) continue;
+    for (const service of Array.isArray(professional.services) ? professional.services : []) {
+      const serviceId = service?.id || service?.serviceId;
+      if (!serviceId) {
+        throw new Error(`Refusing activity cleanup: professional ${professional.id} has a service without id/serviceId.`);
+      }
+      content.services.add(serviceId);
+    }
+    for (const item of Array.isArray(professional.portfolio_items) ? professional.portfolio_items : []) {
+      if (!item?.id) {
+        throw new Error(`Refusing activity cleanup: professional ${professional.id} has a success case without id.`);
+      }
+      content.successCases.add(item.id);
+    }
+  }
+  const contentExists = (activity) => {
+    const content = contentByProfessional.get(activity.professional_id);
+    if (!content) return false;
+    if (activity.activity_type === "job") return content.jobs.has(activity.content_id);
+    if (activity.activity_type === "offer") return content.offers.has(activity.content_id);
+    if (activity.activity_type === "service") return content.services.has(activity.content_id);
+    if (activity.activity_type === "success_case") return content.successCases.has(activity.content_id);
+    return false;
+  };
+  const invalidActivities = activities.filter((activity) => !contentExists(activity));
+  const existingActivityIds = new Set(activities.map((activity) => activity.id));
+  for (const activity of invalidActivities) {
+    await must(
+      `notifications for stale activity ${activity.id}`,
+      supabase.from("notifications")
+        .delete()
+        .eq("type", "followed_professional_activity")
+        .contains("data", { activity_id: activity.id }),
+    );
+  }
+  const orphanNotificationIds = notifications
     .filter((notification) => {
       const activityId = notification.data?.activity_id;
-      return typeof activityId === "string" && activityId.length > 0 && !existing.has(activityId);
+      if (typeof activityId !== "string" || !activityId.length) return false;
+      return profileIds.includes(notification.user_id)
+        && professionalIds.includes(notification.data?.professional_id)
+        && !existingActivityIds.has(activityId);
     })
     .map((notification) => notification.id);
-  if (!orphanIds.length) return;
 
-  await must(
-    "orphaned activity notifications",
-    supabase
-      .from("notifications")
-      .delete()
-      .eq("type", "followed_professional_activity")
-      .in("user_id", profileIds)
-      .in("id", orphanIds),
-  );
+  if (orphanNotificationIds.length) {
+    await must(
+      "orphaned canonical activity notifications",
+      supabase.from("notifications")
+        .delete()
+        .eq("type", "followed_professional_activity")
+        .in("user_id", profileIds)
+        .in("id", orphanNotificationIds),
+    );
+  }
+  if (invalidActivities.length) {
+    await must(
+      "stale canonical professional activities",
+      supabase.from("professional_activity")
+        .delete()
+        .in("professional_id", professionalIds)
+        .in("id", invalidActivities.map((activity) => activity.id)),
+    );
+  }
 }
 
 async function restoreProductionActors() {
@@ -600,10 +673,10 @@ async function main() {
     { id: ids.notifications[1], user_id: s.profile.id, type: "direct_message", title: "Mensaje de ContrataCR", message: "Tienes una propuesta sobre tu página de servicios.", data: { regressionSeed: SEED, link: `/mensajes/${ids.conversations[1]}` }, read: false, created_at: iso(-1) },
   ], { onConflict: "id" }));
 
-  // A test run can be interrupted between deleting a temporary activity and
-  // its follower notification. Repair only dangling references owned by the
-  // two canonical regression actors; the verifier rejects any wider scope.
-  await removeOrphanedActivityNotifications(
+  // An interrupted test can leave a temporary publication activity or its
+  // follower notification behind. Reconcile only the two canonical actors
+  // against content that still exists; the verifier rejects any wider scope.
+  await reconcileCanonicalActivityFeed(
     [c.profile.id, s.profile.id],
     [c.professional.id, s.professional.id],
   );

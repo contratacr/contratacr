@@ -135,7 +135,7 @@ async function verifyPrivateActorIsolation(owners) {
     must("private support tickets", admin.from("support_tickets").select("id,user_id,professional_id").limit(5000)),
     must("private legacy support", admin.from("support_messages").select("id,user_id,email").limit(5000)),
     must("private reviews", admin.from("reviews").select("id,client_id,professional_id").limit(5000)),
-    must("private notifications", admin.from("notifications").select("id,user_id,data").limit(5000)),
+    must("private notifications", admin.from("notifications").select("id,user_id,type,data").limit(5000)),
     must("deletion request isolation", admin.from("account_deletion_requests").select("id,user_id,status").limit(5000)),
     must("private reports", admin.from("reports").select("id,professional_id,reported_client_id,reporter_professional_id,reporter_email").limit(5000)),
   ]);
@@ -188,38 +188,52 @@ async function verifyPrivateActorIsolation(owners) {
   assertRows("support ticket messages", ticketMessages, (row) => ticketIds.has(row.ticket_id)
     && (!row.sender_id || profileIds.has(row.sender_id)));
 
-  const notificationActivityIds = [...new Set(notifications
-    .map((row) => row.data?.activity_id)
-    .filter((id) => typeof id === "string" && id.length > 0))];
-  const activities = notificationActivityIds.length
-    ? await must(
-      "notification professional activities",
-      admin.from("professional_activity")
-        .select("id,professional_id,activity_type,content_id")
-        .in("id", notificationActivityIds),
-    )
-    : [];
-  assert(
-    activities.length === notificationActivityIds.length,
-    "A notification references a missing professional activity.",
+  const activities = await must(
+    "canonical professional activities",
+    admin.from("professional_activity")
+      .select("id,professional_id,activity_type,content_id")
+      .in("professional_id", [...professionalIds])
+      .limit(5000),
   );
-  const successCaseIds = new Set(owners.flatMap((owner) => (
-    Array.isArray(owner.professional.portfolio_items)
-      ? owner.professional.portfolio_items.map((item) => item?.id).filter(Boolean)
-      : []
-  )));
-  const serviceIds = new Set(owners.flatMap((owner) => (
-    Array.isArray(owner.professional.services)
-      ? owner.professional.services.map((item) => item?.id).filter(Boolean)
-      : []
-  )));
+  const contentByProfessional = new Map(owners.map((owner) => [owner.professional.id, {
+    jobs: new Set(jobs.filter((job) => job.employer_id === owner.professional.id).map((job) => job.id)),
+    offers: new Set(offers.filter((offer) => offer.professional_id === owner.professional.id).map((offer) => offer.id)),
+    services: new Set((Array.isArray(owner.professional.services) ? owner.professional.services : [])
+      .map((item) => item?.id || item?.serviceId)
+      .filter(Boolean)),
+    successCases: new Set((Array.isArray(owner.professional.portfolio_items) ? owner.professional.portfolio_items : [])
+      .map((item) => item?.id)
+      .filter(Boolean)),
+  }]));
+  for (const owner of owners) {
+    const services = Array.isArray(owner.professional.services) ? owner.professional.services : [];
+    const successCases = Array.isArray(owner.professional.portfolio_items) ? owner.professional.portfolio_items : [];
+    assert(
+      services.every((item) => Boolean(item?.id || item?.serviceId)),
+      `${owner.professional.business_name}: every service needs an id/serviceId for activity verification.`,
+    );
+    assert(
+      successCases.every((item) => Boolean(item?.id)),
+      `${owner.professional.business_name}: every success case needs an id for activity verification.`,
+    );
+  }
   assertRows("notification professional activities", activities, (row) => {
-    if (!professionalIds.has(row.professional_id)) return false;
-    if (row.activity_type === "job") return jobIds.has(row.content_id);
-    if (row.activity_type === "offer") return offerIds.has(row.content_id);
-    if (row.activity_type === "success_case") return successCaseIds.has(row.content_id);
-    if (row.activity_type === "service") return serviceIds.has(row.content_id);
+    const content = contentByProfessional.get(row.professional_id);
+    if (!content) return false;
+    if (row.activity_type === "job") return content.jobs.has(row.content_id);
+    if (row.activity_type === "offer") return content.offers.has(row.content_id);
+    if (row.activity_type === "success_case") return content.successCases.has(row.content_id);
+    if (row.activity_type === "service") return content.services.has(row.content_id);
     return false;
+  });
+  const activitiesById = new Map(activities.map((activity) => [activity.id, activity]));
+  const followedActivityNotifications = notifications.filter((row) => row.type === "followed_professional_activity");
+  assertRows("followed professional activity notifications", followedActivityNotifications, (row) => {
+    const activityId = row.data?.activity_id;
+    const activity = typeof activityId === "string" ? activitiesById.get(activityId) : null;
+    return Boolean(activity)
+      && row.data?.professional_id === activity.professional_id
+      && professionalIds.has(activity.professional_id);
   });
 
   const allowedNotificationIds = new Set([
