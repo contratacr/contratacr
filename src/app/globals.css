@@ -534,8 +534,10 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
 }
 
 .ccr-page-route-loading {
-  height: 100dvh;
-  min-height: 100dvh;
+  /* `svh` is intentionally stable while mobile browser chrome opens/closes;
+     `dvh` would move the centered loading mark during the same transition. */
+  height: 100svh;
+  min-height: 100svh;
   width: 100vw;
 }
 
@@ -643,6 +645,20 @@ textarea:focus-visible,
 select:focus-visible {
   outline: none;
   outline-offset: 0;
+}
+
+/* Keep multiline fields inside their rounded container, including long words
+   and the native vertical scrollbar used by mobile browsers. */
+textarea {
+  max-inline-size: 100%;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  scrollbar-gutter: stable;
+}
+
+textarea::-webkit-scrollbar-track {
+  margin-block: 8px;
 }
 
 .ccr-direct-chat-textarea {

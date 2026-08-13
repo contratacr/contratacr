@@ -15,8 +15,7 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { AlertTriangle, Camera, X, Plus, ChevronDown, ChevronLeft, Lock, Award, Globe, Pencil, Eye, Trash2 } from "lucide-react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { Camera, X, Plus, ChevronDown, ChevronLeft, Lock, Award, Globe, Pencil, Eye, Trash2 } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -189,7 +188,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   // Which collapsible sections are open. Empty = all collapsed (default), so a
   // pro lands on a tidy, scannable list and opens what they want.
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
-  const [pendingSectionToggle, setPendingSectionToggle] = useState<string | null>(null);
   const didMountResetEffect = useRef(false);
   const isMobileProfileLayout = () =>
     typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches;
@@ -218,16 +216,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     const isClosingDirtySection = openSections.has(id) && activeDirtySection === id;
     const isLeavingDirtySection = isMobileProfileLayout() && activeDirtySection && activeDirtySection !== id;
     if (dirty && (isClosingDirtySection || isLeavingDirtySection)) {
-      setPendingSectionToggle(id);
+      const event = new CustomEvent("ccr:confirm-unsaved-action", {
+        cancelable: true,
+        detail: { proceed: () => applySectionToggle(id) },
+      });
+      if (window.dispatchEvent(event)) applySectionToggle(id);
       return;
     }
     applySectionToggle(id);
-  };
-  const discardAndToggleSection = () => {
-    const id = pendingSectionToggle;
-    setPendingSectionToggle(null);
-    cancelChanges();
-    if (id) applySectionToggle(id);
   };
 
   // A "Completa tu perfil" item was clicked -> open its section, then either
@@ -980,14 +976,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         {/* Description */}
         <div data-field="bio">
           <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("description")} <span className="text-red-500">*</span></label>
-          <textarea
-            aria-invalid={dirty && activeDirtySection === "basic" && !bio.trim()}
-            className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:border-transparent transition-all ${dirty && activeDirtySection === "basic" && !bio.trim() ? "border-red-400 focus:ring-red-400" : "border-[#e5e7eb] focus:ring-[#009FD9]"}`}
-            placeholder={t("descPlaceholder")}
-            value={bio}
-            maxLength={PROFILE_BIO_MAX_LENGTH}
-            onChange={(e) => { setBio(limitText(e.target.value, PROFILE_BIO_MAX_LENGTH)); touch("basic"); }}
-          />
+          <div className={`overflow-hidden rounded-xl border bg-white transition-all focus-within:border-transparent focus-within:ring-2 ${dirty && activeDirtySection === "basic" && !bio.trim() ? "border-red-400 focus-within:ring-red-400" : "border-[#e5e7eb] focus-within:ring-[#009FD9]"}`}>
+            <textarea
+              aria-invalid={dirty && activeDirtySection === "basic" && !bio.trim()}
+              className="block min-h-[110px] w-full resize-none overflow-y-auto border-0 bg-transparent px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none"
+              placeholder={t("descPlaceholder")}
+              value={bio}
+              maxLength={PROFILE_BIO_MAX_LENGTH}
+              onChange={(e) => { setBio(limitText(e.target.value, PROFILE_BIO_MAX_LENGTH)); touch("basic"); }}
+            />
+          </div>
           {dirty && activeDirtySection === "basic" && !bio.trim() ? (
             <p className="mt-1 text-xs text-red-500">
               {locale === "en" ? "Description is required." : "La descripción es obligatoria."}
@@ -1275,72 +1273,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         onDiscard={cancelChanges}
         validationError={sectionValidationError(activeDirtySection)}
       />
-      <Dialog.Root open={pendingSectionToggle !== null} onOpenChange={(open) => { if (!open) setPendingSectionToggle(null); }}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-[240] bg-black/55 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[241] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-5 shadow-2xl">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-              </div>
-              <div className="min-w-0">
-                <Dialog.Title className="text-base font-bold text-[#111827]">
-                  {sectionValidationError(activeDirtySection)
-                    ? (locale === "en" ? "Required information is missing" : "Falta información obligatoria")
-                    : (locale === "en" ? "Unsaved changes" : "Cambios sin guardar")}
-                </Dialog.Title>
-                <Dialog.Description className="mt-1 text-sm leading-snug text-[#64748b]">
-                  {sectionValidationError(activeDirtySection)
-                    ? `${sectionValidationError(activeDirtySection)} ${locale === "en" ? "Keep editing or leave without saving." : "Continúa editando o sal sin guardar."}`
-                    : locale === "en"
-                    ? "Save before leaving this section or your changes will be lost."
-                    : "Guarda antes de salir de esta sección o perderás los cambios."}
-                </Dialog.Description>
-              </div>
-            </div>
-            <div className="mt-5 flex flex-col gap-2">
-              {sectionValidationError(activeDirtySection) ? (
-                <button
-                  type="button"
-                  onClick={() => setPendingSectionToggle(null)}
-                  className="h-11 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
-                >
-                  {locale === "en" ? "Keep editing" : "Seguir editando"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void handleSave().then((ok) => { if (ok !== false) { const id = pendingSectionToggle; setPendingSectionToggle(null); if (id) applySectionToggle(id); } })}
-                  disabled={saving || photoUploading}
-                  className="h-11 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:bg-[#cbd5e1]"
-                >
-                  {saving || photoUploading ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={discardAndToggleSection}
-                disabled={saving || photoUploading}
-                className="h-11 rounded-xl border border-[#e5e7eb] px-4 text-sm font-bold text-[#b91c1c] transition-colors hover:bg-red-50 disabled:opacity-50"
-              >
-                {locale === "en" ? "Leave without saving" : "Salir sin guardar"}
-              </button>
-              {!sectionValidationError(activeDirtySection) && (
-                <button
-                  type="button"
-                  onClick={() => setPendingSectionToggle(null)}
-                  disabled={saving || photoUploading}
-                  className="h-10 rounded-xl px-4 text-sm font-semibold text-[#64748b] transition-colors hover:bg-[#f8fafc] disabled:opacity-50"
-                >
-                  {locale === "en" ? "Cancel" : "Cancelar"}
-                </button>
-              )}
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
     </div>
   );
 }
-
-

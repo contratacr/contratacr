@@ -268,9 +268,9 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   })();
 
   const desktopPrice = priceLabel ? (
-    <div className={`relative z-10 ml-auto hidden shrink-0 text-right lg:block ${priceBoxClass}`}>
+    <div className={`relative z-10 ml-auto hidden shrink-0 self-baseline text-right lg:block ${priceBoxClass}`}>
       <span className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-1 gap-y-0.5 leading-[1.1]">
-        <span className="text-[15px] font-bold text-[#009FD9]">{priceAmount}</span>
+        <span className="text-[13px] font-bold text-[#009FD9]">{priceAmount}</span>
         {(priceUnit || priceTaxSuffix) && (
           <span className="whitespace-nowrap text-right leading-none">
             {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]">{priceUnit}</span>}
@@ -339,7 +339,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
                   Verificado, then the personal name = first name + first surname. */}
-              <div className="flex min-w-0 items-start gap-2 pr-8 lg:pr-0">
+              <div className="flex min-w-0 items-start gap-2 pr-8 lg:items-baseline lg:pr-0">
                 <Link href={profileHref} className="relative z-10 min-w-0 flex-1">
                   <h3 title={businessName ? businessName : professional.fullName} className="min-w-0 font-bold text-[#111827] text-[15px] leading-[1.1] hover:text-[#009FD9] transition-colors">
                     <ResponsiveVerifiedName

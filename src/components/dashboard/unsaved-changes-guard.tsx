@@ -16,10 +16,26 @@ function navigationBypassActive() {
   return typeof window !== "undefined" && window.__ccrUnsavedNavigationBypass === true;
 }
 
-function releaseNavigationBypass() {
+function releaseNavigationBypass(delay = 250) {
   window.setTimeout(() => {
     window.__ccrUnsavedNavigationBypass = false;
-  }, 250);
+  }, delay);
+}
+
+// A section-specific confirmation can coexist with this global guard. Keep the
+// guard disabled until React has committed both the restored form and
+// `dirty=false`; otherwise the same exit gesture can briefly open two dialogs.
+export function discardWithoutUnsavedDialog(action: () => void) {
+  if (typeof window === "undefined") {
+    action();
+    return;
+  }
+
+  window.__ccrUnsavedNavigationBypass = true;
+  action();
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => releaseNavigationBypass(250));
+  });
 }
 
 // Custom, designed replacement for the browser's "Changes you may not be saved"
@@ -41,10 +57,13 @@ export function UnsavedChangesGuard({
   const t = useTranslations("unsavedGuard");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [presentedValidationError, setPresentedValidationError] = useState<string | null>(null);
   const pendingAnchor = useRef<HTMLAnchorElement | null>(null);
   const pendingAction = useRef<(() => void) | null>(null);
   const bypass = useRef(false);
   const guardOwner = useRef({});
+  const validationErrorRef = useRef(validationError);
+  validationErrorRef.current = validationError;
 
   function clearPendingDialog() {
     pendingAnchor.current = null;
@@ -84,6 +103,7 @@ export function UnsavedChangesGuard({
       pendingAnchor.current = anchor;
       pendingAction.current = null;
       claimDialog();
+      setPresentedValidationError(validationErrorRef.current ?? null);
       setOpen(true);
     }
 
@@ -98,6 +118,7 @@ export function UnsavedChangesGuard({
       pendingAnchor.current = null;
       pendingAction.current = detail.proceed;
       claimDialog();
+      setPresentedValidationError(validationErrorRef.current ?? null);
       setOpen(true);
     }
 
@@ -160,8 +181,8 @@ export function UnsavedChangesGuard({
     // pending navigation. Otherwise that navigation can immediately hit the
     // generic guard again and show a second dialog.
     bypass.current = true;
-    window.__ccrUnsavedNavigationBypass = true;
-    onDiscard?.();
+    setOpen(false);
+    discardWithoutUnsavedDialog(() => onDiscard?.());
     window.requestAnimationFrame(() => window.requestAnimationFrame(proceed));
   }
 
@@ -186,35 +207,35 @@ export function UnsavedChangesGuard({
               </div>
               <div className="mt-3 min-w-0">
                 <Dialog.Title className="text-base font-bold text-[#111827]">
-                  {validationError ? t("incompleteTitle") : t("title")}
+                  {presentedValidationError ? t("incompleteTitle") : t("title")}
                 </Dialog.Title>
                 <Dialog.Description className="mx-auto mt-1.5 max-w-[18rem] text-sm leading-5 text-[#64748b]">
-                  {validationError ? t("incompleteBody", { error: validationError }) : t("body")}
+                  {presentedValidationError ? t("incompleteBody", { error: presentedValidationError }) : t("body")}
                 </Dialog.Description>
               </div>
             </div>
 
             <div className="mt-5 flex flex-col gap-2">
-              {onSave && !validationError && (
+              {onSave && !presentedValidationError && (
                 <Button onClick={saveAndStay} loading={saving} className="h-11 w-full rounded-xl bg-[#009FD9] text-sm font-bold shadow-sm hover:bg-[#0089bb]">
                   {saving ? t("saving") : <><Save className="h-4 w-4" /> {t("saveChanges")}</>}
                 </Button>
               )}
               <button
                 type="button"
-                onClick={validationError ? keepEditing : leaveWithoutSaving}
+                onClick={presentedValidationError ? keepEditing : leaveWithoutSaving}
                 disabled={saving}
-                className={`h-11 w-full rounded-xl text-sm font-bold transition-colors disabled:opacity-50 ${validationError ? "bg-[#009FD9] text-white shadow-sm hover:bg-[#0089bb]" : "border border-[#dbe7ef] bg-white text-[#162543] hover:bg-[#f5f9fc]"}`}
+                className={`h-11 w-full rounded-xl text-sm font-bold transition-colors disabled:opacity-50 ${presentedValidationError ? "bg-[#009FD9] text-white shadow-sm hover:bg-[#0089bb]" : "border border-[#dbe7ef] bg-white text-[#162543] hover:bg-[#f5f9fc]"}`}
               >
-                {validationError ? t("keepEditing") : t("leaveWithout")}
+                {presentedValidationError ? t("keepEditing") : t("leaveWithout")}
               </button>
               <button
                 type="button"
-                onClick={validationError ? leaveWithoutSaving : keepEditing}
+                onClick={presentedValidationError ? leaveWithoutSaving : keepEditing}
                 disabled={saving}
-                className={`h-10 w-full rounded-xl text-sm font-semibold transition-colors hover:bg-[#f8fafc] disabled:opacity-50 ${validationError ? "text-[#b91c1c]" : "text-[#64748b]"}`}
+                className={`h-10 w-full rounded-xl text-sm font-semibold transition-colors hover:bg-[#f8fafc] disabled:opacity-50 ${presentedValidationError ? "text-[#b91c1c]" : "text-[#64748b]"}`}
               >
-                {validationError ? t("leaveWithout") : t("keepEditing")}
+                {presentedValidationError ? t("leaveWithout") : t("keepEditing")}
               </button>
             </div>
           </div>
