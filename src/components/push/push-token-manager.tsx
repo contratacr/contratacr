@@ -52,25 +52,6 @@ async function safePostToken(payload: PushTokenPayload) {
   return false;
 }
 
-function deactivateRegisteredToken(userId: string) {
-  if (typeof window === "undefined") return;
-  for (const platform of ["android", "ios"] as const) {
-    for (const key of [
-      `ccr:push-token-registered:v2:${userId}:${platform}`,
-      `ccr:push-token:${userId}:${platform}`,
-    ]) {
-      const token = window.localStorage.getItem(key);
-      if (!token) continue;
-      void fetch("/api/push/register", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-        keepalive: true,
-      }).finally(() => window.localStorage.removeItem(key));
-    }
-  }
-}
-
 function normalizePushUrl(rawUrl: unknown) {
   if (typeof rawUrl !== "string" || !rawUrl.startsWith("/")) return null;
   return rawUrl.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
@@ -115,6 +96,7 @@ export function PushTokenManager() {
   const router = useRouter();
   const pathname = usePathname();
   const activeRef = useRef(false);
+  const registeredTokenRef = useRef<string | null>(null);
   const removersRef = useRef<Array<() => Promise<void> | void>>([]);
   const promptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [promptVisible, setPromptVisible] = useState(false);
@@ -168,23 +150,18 @@ export function PushTokenManager() {
     const platform = Capacitor.getPlatform() === "ios" ? "ios" : "android";
 
     const onToken = async (token: Token) => {
-      const key = `ccr:push-token-registered:v2:${user.id}:${platform}`;
-      if (typeof window !== "undefined") {
-        const previous = window.localStorage.getItem(key);
-        if (previous === token.value) return;
-      }
+      registeredTokenRef.current = token.value;
 
       // Capacitor exposes the APNs device token on iOS. The backend currently
       // sends through FCM, so this value must never be mislabeled as FCM.
       if (platform === "ios") return;
 
-      const saved = await safePostToken({
+      await safePostToken({
         token: token.value,
         platform,
         deviceId: Capacitor.getPlatform(),
         appVersion: navigator.userAgent?.slice(0, 64),
       });
-      if (saved && typeof window !== "undefined") window.localStorage.setItem(key, token.value);
     };
 
     const onError = (error: unknown) => {
@@ -306,7 +283,25 @@ export function PushTokenManager() {
 
   useEffect(() => {
     if (!user) return;
-    const deactivate = () => deactivateRegisteredToken(user.id);
+    const deactivate = () => {
+      const token = registeredTokenRef.current;
+      if (token) {
+        void fetch("/api/push/register", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+          keepalive: true,
+        });
+      }
+      registeredTokenRef.current = null;
+      // Remove raw token caches written by older builds. Current builds always
+      // re-register with the backend, so last_seen_at remains authoritative.
+      for (const platform of ["android", "ios"] as const) {
+        window.localStorage.removeItem(`ccr:push-token-registered:v2:${user.id}:${platform}`);
+        window.localStorage.removeItem(`ccr:push-token:${user.id}:${platform}`);
+      }
+      void PushNotifications.unregister().catch(() => undefined);
+    };
     window.addEventListener("contratacr:signing-out", deactivate);
     return () => window.removeEventListener("contratacr:signing-out", deactivate);
   }, [user]);
