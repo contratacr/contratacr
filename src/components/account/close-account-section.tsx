@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 // for an interrupted login request.
 export function CloseAccountSection({ initialDisabled = false }: { initialDisabled?: boolean }) {
   const t = useTranslations("closeAccount");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -71,7 +72,8 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       }
       const supabase = createClient();
       await supabase.auth.signOut();
-      window.location.assign(`/es/eliminar-cuenta?status=${result?.status === "completed" ? "completed" : "pending"}`);
+      const status = result?.status === "completed" ? "completed" : "pending";
+      window.location.assign(`/${locale}?accountDeletion=${status}`);
     } catch {
       setDeleteError(t("connError"));
     } finally {

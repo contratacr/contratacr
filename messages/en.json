@@ -137,6 +137,12 @@
     "myProposals": "My proposals"
   },
   "home": {
+    "accountDeletion": {
+      "completedTitle": "Your account was deleted",
+      "completedBody": "We signed you out and removed the data related to your account.",
+      "pendingTitle": "Your account deletion has started",
+      "pendingBody": "Your account is already hidden and blocked. Any remaining cleanup will finish safely."
+    },
     "hero": {
       "badge": "+500 verified professionals in Costa Rica",
       "title": "Find the service",
