@@ -20,6 +20,7 @@ try { ref = new URL(url).hostname.split(".")[0]; } catch {}
 if (ref !== TEST_PROJECT_REF || !serviceRole) throw new Error("Fixture verification only runs against the test Supabase project.");
 
 const admin = createClient(url, serviceRole, { auth: { persistSession: false } });
+const publicClient = createClient(url, anonKey, { auth: { persistSession: false } });
 
 async function must(label, promise) {
   const { data, error } = await promise;
@@ -59,6 +60,11 @@ async function main() {
 
   const professionals = await must("professionals", admin.from("professionals").select("id,slug,business_name,created_app_environment").limit(5000));
   assert(professionals.length > 2, "The production professional directory was not mirrored.");
+  const { count: publicProfessionalCount, error: publicProfessionalError } = await publicClient
+    .from("professionals")
+    .select("id", { count: "exact", head: true });
+  if (publicProfessionalError) throw new Error(`public professionals: ${publicProfessionalError.message}`);
+  assert((publicProfessionalCount || 0) > 2, "The mirrored directory is not visible through the public test API key.");
   const obsolete = professionals.filter((row) =>
     /^test-/i.test(row.slug || "") || /mobile-test-seed|full-app-regression-v1/i.test(row.created_app_environment || ""),
   );
