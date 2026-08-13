@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import type { AccountSignOutDetail } from "@/lib/auth/sign-out";
 
 function isNativeMobile() {
   if (typeof window === "undefined") return false;
@@ -24,20 +25,33 @@ type PushTokenPayload = {
 
 const TOKEN_POST_RETRY_DELAYS_MS = [0, 750, 2_500] as const;
 
-function waitForRetry(delayMs: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, delayMs));
+function waitForRetry(delayMs: number, signal: AbortSignal) {
+  return new Promise<boolean>((resolve) => {
+    if (signal.aborted) return resolve(false);
+    const cancel = () => {
+      window.clearTimeout(timer);
+      resolve(false);
+    };
+    const timer = window.setTimeout(() => {
+      signal.removeEventListener("abort", cancel);
+      resolve(true);
+    }, delayMs);
+    signal.addEventListener("abort", cancel, { once: true });
+  });
 }
 
-async function safePostToken(payload: PushTokenPayload) {
+async function safePostToken(payload: PushTokenPayload, signal: AbortSignal) {
   for (let attempt = 0; attempt < TOKEN_POST_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (signal.aborted) return false;
     const delay = TOKEN_POST_RETRY_DELAYS_MS[attempt] ?? 0;
-    if (delay > 0) await waitForRetry(delay);
+    if (delay > 0 && !await waitForRetry(delay, signal)) return false;
 
     try {
       const response = await fetch("/api/push/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal,
       });
       if (response.ok) return true;
 
@@ -96,7 +110,10 @@ export function PushTokenManager() {
   const router = useRouter();
   const pathname = usePathname();
   const activeRef = useRef(false);
+  const signingOutRef = useRef(false);
   const registeredTokenRef = useRef<string | null>(null);
+  const registrationAbortRef = useRef<AbortController | null>(null);
+  const registrationTaskRef = useRef<Promise<boolean> | null>(null);
   const removersRef = useRef<Array<() => Promise<void> | void>>([]);
   const promptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [promptVisible, setPromptVisible] = useState(false);
@@ -150,18 +167,26 @@ export function PushTokenManager() {
     const platform = Capacitor.getPlatform() === "ios" ? "ios" : "android";
 
     const onToken = async (token: Token) => {
+      if (signingOutRef.current) return;
       registeredTokenRef.current = token.value;
 
       // Capacitor exposes the APNs device token on iOS. The backend currently
       // sends through FCM, so this value must never be mislabeled as FCM.
       if (platform === "ios") return;
 
-      await safePostToken({
+      registrationAbortRef.current?.abort();
+      const controller = new AbortController();
+      registrationAbortRef.current = controller;
+      const task = safePostToken({
         token: token.value,
         platform,
         deviceId: Capacitor.getPlatform(),
         appVersion: navigator.userAgent?.slice(0, 64),
-      });
+      }, controller.signal);
+      registrationTaskRef.current = task;
+      await task;
+      if (registrationTaskRef.current === task) registrationTaskRef.current = null;
+      if (registrationAbortRef.current === controller) registrationAbortRef.current = null;
     };
 
     const onError = (error: unknown) => {
@@ -283,24 +308,39 @@ export function PushTokenManager() {
 
   useEffect(() => {
     if (!user) return;
-    const deactivate = () => {
+    signingOutRef.current = false;
+    const deactivate = (rawEvent: Event) => {
+      signingOutRef.current = true;
+      registrationAbortRef.current?.abort();
       const token = registeredTokenRef.current;
-      if (token) {
-        void fetch("/api/push/register", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token }),
-          keepalive: true,
-        });
-      }
-      registeredTokenRef.current = null;
-      // Remove raw token caches written by older builds. Current builds always
-      // re-register with the backend, so last_seen_at remains authoritative.
-      for (const platform of ["android", "ios"] as const) {
-        window.localStorage.removeItem(`ccr:push-token-registered:v2:${user.id}:${platform}`);
-        window.localStorage.removeItem(`ccr:push-token:${user.id}:${platform}`);
-      }
-      void PushNotifications.unregister().catch(() => undefined);
+      const work = (async () => {
+        await registrationTaskRef.current?.catch(() => false);
+        let backendRevoked = !token;
+        if (token) {
+          try {
+            const response = await fetch("/api/push/register", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token }),
+              keepalive: true,
+            });
+            backendRevoked = response.ok;
+          } catch {
+            backendRevoked = false;
+          }
+        }
+        await PushNotifications.unregister().catch(() => undefined);
+        if (!backendRevoked) return;
+        registeredTokenRef.current = null;
+        // Preserve legacy token caches if backend revocation failed so a later
+        // authenticated session can retry instead of forgetting an active row.
+        for (const platform of ["android", "ios"] as const) {
+          window.localStorage.removeItem(`ccr:push-token-registered:v2:${user.id}:${platform}`);
+          window.localStorage.removeItem(`ccr:push-token:${user.id}:${platform}`);
+        }
+      })();
+      const event = rawEvent as CustomEvent<AccountSignOutDetail>;
+      event.detail?.waitUntil(work);
     };
     window.addEventListener("contratacr:signing-out", deactivate);
     return () => window.removeEventListener("contratacr:signing-out", deactivate);

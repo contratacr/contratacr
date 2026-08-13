@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { isMissingPushRpc } from "@/lib/push/migration-compat";
 
 const bodySchema = z.object({
   token: z.string().trim().min(10).max(4096),
@@ -36,6 +38,20 @@ export async function POST(req: NextRequest) {
     p_transport: "fcm",
   });
 
+  if (error && isMissingPushRpc(error, "register_user_push_token")) {
+    // Deployment compatibility: Vercel can publish this route moments before
+    // migration 167 creates the RPC. Use migration-140's exact legacy shape
+    // only when PostgREST proves that the RPC is genuinely absent.
+    const { error: legacyError } = await createAdminClient().from("user_push_tokens").upsert({
+      user_id: user.id,
+      token,
+      platform,
+      device_id: deviceId || null,
+      app_version: appVersion || null,
+      is_active: true,
+    }, { onConflict: "user_id, platform, token", ignoreDuplicates: false });
+    if (!legacyError) return NextResponse.json({ ok: true, compatibility: "migration-140" });
+  }
   if (error) return NextResponse.json({ error: "No pudimos registrar las notificaciones" }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
@@ -55,6 +71,15 @@ export async function DELETE(req: NextRequest) {
     p_token: parsed.data.token,
     p_transport: "fcm",
   });
+  if (error && isMissingPushRpc(error, "deactivate_user_push_token")) {
+    const { error: legacyError } = await createAdminClient()
+      .from("user_push_tokens")
+      .update({ is_active: false })
+      .eq("user_id", user.id)
+      .eq("token", parsed.data.token)
+      .eq("is_active", true);
+    if (!legacyError) return NextResponse.json({ ok: true, compatibility: "migration-140" });
+  }
   if (error) return NextResponse.json({ error: "No pudimos desactivar las notificaciones" }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

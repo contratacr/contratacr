@@ -10,6 +10,11 @@ import {
   timingSafeSecretEqual,
 } from "../../src/lib/push/worker-auth";
 import {
+  isMissingPushRpc,
+  isMissingPushTransportColumn,
+} from "../../src/lib/push/migration-compat";
+import { waitForAccountSignOutWork } from "../../src/lib/auth/sign-out";
+import {
   assertPushOutboxFinished,
   chunkPushItems,
   drainPushOutbox,
@@ -92,6 +97,56 @@ test.describe("@contract push outbox safety contracts", () => {
     expect(isPushDeliveryEnabled("false")).toBe(false);
     expect(isPushDeliveryEnabled("OFF")).toBe(false);
     expect(isPushDeliveryEnabled("0")).toBe(false);
+  });
+
+  test("migration compatibility only accepts the exact missing RPC or column", () => {
+    expect(isMissingPushRpc({
+      code: "PGRST202",
+      message: "Could not find the function public.register_user_push_token in the schema cache",
+    }, "register_user_push_token")).toBe(true);
+    expect(isMissingPushRpc({
+      code: "42883",
+      message: "function public.internal_helper does not exist",
+    }, "register_user_push_token")).toBe(false);
+    expect(isMissingPushRpc({
+      code: "42501",
+      message: "permission denied for register_user_push_token",
+    }, "register_user_push_token")).toBe(false);
+    expect(isMissingPushTransportColumn({
+      code: "PGRST204",
+      message: "Could not find the 'transport' column of user_push_tokens in the schema cache",
+    })).toBe(true);
+    expect(isMissingPushTransportColumn({
+      code: "PGRST204",
+      message: "Could not find the 'other_column' column",
+    })).toBe(false);
+    expect(isMissingPushTransportColumn({
+      code: "42501",
+      message: "permission denied for column transport",
+    })).toBe(false);
+  });
+
+  test("account sign-out waits for registered cleanup work and has a hard timeout", async () => {
+    let releaseCleanup: (() => void) | undefined;
+    let completed = false;
+    const cleanup = new Promise<void>((resolve) => {
+      releaseCleanup = resolve;
+    });
+    const waiting = waitForAccountSignOutWork((detail) => {
+      detail.waitUntil(cleanup.then(() => { completed = true; }));
+    }, 100);
+    await Promise.resolve();
+    expect(completed).toBe(false);
+    releaseCleanup?.();
+    await waiting;
+    expect(completed).toBe(true);
+
+    const startedAt = Date.now();
+    await waitForAccountSignOutWork((detail) => {
+      detail.waitUntil(new Promise(() => undefined));
+    }, 20);
+    expect(Date.now() - startedAt).toBeGreaterThanOrEqual(15);
+    expect(Date.now() - startedAt).toBeLessThan(250);
   });
 
   test("multicast chunks never exceed Firebase's 500-token limit", () => {
