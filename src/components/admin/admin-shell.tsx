@@ -76,6 +76,7 @@ export function AdminShell({
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },
     { id: "soporte", label: "Soporte", icon: Headset, href: "/admin/soporte", badge: counts.soporte ?? 0 },
+    { id: "cuentas", label: "Cuentas", icon: Shield, href: "/admin/cuentas", badge: counts.cuentas ?? 0 },
     { id: "analitica", label: "Analítica", icon: BarChart3, href: "/admin/analitica", badge: 0 },
     { id: "actividad", label: "Actividad", icon: Activity, href: "/admin/actividad", badge: 0 },
   ];
@@ -133,7 +134,7 @@ export function AdminShell({
           {[
             { label: "Principal", ids: ["resumen", "usuarios"] },
             { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "resenas", "reportes", "soporte"] },
-            { label: "Gestión", ids: ["categorias", "aseguradoras"] },
+            { label: "Gestión", ids: ["categorias", "aseguradoras", "cuentas"] },
             { label: "Información", ids: ["analitica", "actividad"] },
           ].map((group, index) => (
             <div key={group.label} className={index === 0 ? "" : "mt-4 border-t border-white/10 pt-3"}>

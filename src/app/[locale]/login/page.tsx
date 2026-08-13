@@ -81,7 +81,7 @@ function setPostLoginPrompt(userId = "") {
   }
 }
 
-async function reactivateSignedInAccount(): Promise<void> {
+async function reactivateSignedInAccount(): Promise<"ok" | "deletion-pending"> {
   try {
     const response = await fetch("/api/account/disable", {
       method: "POST",
@@ -89,6 +89,7 @@ async function reactivateSignedInAccount(): Promise<void> {
       body: JSON.stringify({ action: "reactivate" }),
       signal: AbortSignal.timeout(4_000),
     });
+    if (response.status === 409) return "deletion-pending";
     if (!response.ok) {
       console.warn("[account-reactivation] Could not reactivate the signed-in account");
     }
@@ -96,6 +97,7 @@ async function reactivateSignedInAccount(): Promise<void> {
     // Keep login available. The account screen still provides a manual recovery
     // action if this best-effort request is interrupted.
   }
+  return "ok";
 }
 
 export default function LoginPage() {
@@ -139,6 +141,9 @@ export default function LoginPage() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setError(t("blockedUsePassword"));
     }
+    if (params.get("autherror") === "account_deletion_pending") {
+      setError(t("accountDeletionPending"));
+    }
     if (params.get("emailChanged") === "1") {
       setSuccessNotice(t("emailChangedLogin"));
     }
@@ -159,7 +164,13 @@ export default function LoginPage() {
       }
     }
     if (resolvedUser) {
-      await reactivateSignedInAccount();
+      const reactivation = await reactivateSignedInAccount();
+      if (reactivation === "deletion-pending") {
+        await supabase.auth.signOut();
+        setError(t("accountDeletionPending"));
+        setSubmitting(false);
+        return;
+      }
     }
     setPostLoginPrompt(resolvedUser?.id);
     const metadata = resolvedUser?.user_metadata ?? {};

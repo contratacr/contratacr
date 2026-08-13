@@ -64,14 +64,14 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
     setDeleteError(null);
     try {
       const res = await fetch("/api/account/delete", { method: "POST" });
+      const result = await res.json().catch(() => null) as { error?: string; status?: "completed" | "pending" } | null;
       if (!res.ok) {
-        const result = await res.json().catch(() => null) as { error?: string } | null;
         setDeleteError(result?.error || t("deleteError"));
         return;
       }
       const supabase = createClient();
       await supabase.auth.signOut();
-      window.location.assign("/es");
+      window.location.assign(`/es/eliminar-cuenta?status=${result?.status === "completed" ? "completed" : "pending"}`);
     } catch {
       setDeleteError(t("connError"));
     } finally {
