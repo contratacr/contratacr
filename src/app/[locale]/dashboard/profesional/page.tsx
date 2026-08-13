@@ -1793,19 +1793,10 @@ export default function DashboardPage() {
         </span>
       );
     }
-    if (!pro) return null;
-    return (
-      <button
-        type="button"
-        onClick={() => {
-          requestUnsavedAction(() => openProfileVerification());
-        }}
-        title={t("verifyInvite")}
-        className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2 py-1 text-[11px] font-medium leading-none text-[#6b7280] transition-colors hover:bg-[#e5e7eb] sm:px-2.5 sm:py-0.5 sm:text-xs sm:leading-normal"
-      >
-        {t("notVerifiedBadge")}
-      </button>
-    );
+    // The header badge is a positive trust signal only. Pending, rejected and
+    // unverified states belong in the verification section, where there is room
+    // to explain the next step without shortening the account name.
+    return null;
   }
 
   // The proxy normally handles this before the page is served. Keep this
