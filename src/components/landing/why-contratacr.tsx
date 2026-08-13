@@ -94,10 +94,10 @@ export async function WhyContratacr() {
                   <div className="relative" style={{ background: "#04060a", borderRadius: 53, padding: 8 }}>
                     <div className="relative overflow-hidden bg-white" style={{ borderRadius: 46 }}>
                       <Image
-                        src="/landing-professionals-search.png"
+                        src="/landing-professionals-search-current.jpg"
                         alt="Resultados de profesionales en ContrataCR"
-                        width={419}
-                        height={928}
+                        width={588}
+                        height={1280}
                         sizes="(max-width: 640px) 284px, (max-width: 1024px) 304px, 326px"
                         className="block h-auto w-full"
                         priority
@@ -114,4 +114,3 @@ export async function WhyContratacr() {
     </section>
   );
 }
-
