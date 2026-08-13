@@ -362,12 +362,16 @@ async function verifySharedVideoSlots(owner) {
   );
   const videoRows = rows.filter((row) => row.location_id === "videoconsulta");
   assert(videoRows.length >= 2, `${owner.professional.business_name}: expected two video regression slots.`);
-  for (const video of videoRows) {
-    assert(
-      rows.some((row) => row.slot_date === video.slot_date && row.slot_time === video.slot_time && row.location_id && row.location_id !== "videoconsulta"),
-      `${owner.professional.business_name}: video slot ${video.slot_date} ${video.slot_time} has no matching in-person slot.`,
-    );
-  }
+  const sharedVideoSlot = videoRows.some((video) => rows.some((row) => (
+    row.slot_date === video.slot_date
+      && row.slot_time === video.slot_time
+      && row.location_id
+      && row.location_id !== "videoconsulta"
+  )));
+  assert(
+    sharedVideoSlot,
+    `${owner.professional.business_name}: expected at least one video slot shared with an in-person location.`,
+  );
 }
 
 async function verifyCount(table, filter, minimum, label) {

@@ -24,7 +24,7 @@ jobs:
     # The exhaustive desktop + mobile matrix also performs fixture cleanup and
     # post-run verification. Leave enough room for those safety steps even when
     # one browser case needs its bounded retries.
-    timeout-minutes: 150
+    timeout-minutes: 100
     environment: test
     env:
       PLAYWRIGHT_BASE_URL: https://test.contratacr.com

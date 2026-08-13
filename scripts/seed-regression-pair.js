@@ -233,6 +233,60 @@ async function removeStaleReviewNotifications(profileIds, professionalIds) {
   );
 }
 
+async function removeOrphanedEntityNotifications(profileIds) {
+  const references = [
+    ["booking_id", "bookings"],
+    ["project_id", "projects"],
+    ["proposal_id", "proposals"],
+    ["conversation_id", "direct_conversations"],
+    ["message_id", "direct_messages"],
+    ["job_id", "job_posts"],
+    ["application_id", "job_applications"],
+    ["offer_id", "professional_offers"],
+    ["review_id", "reviews"],
+    ["ticket_id", "support_tickets"],
+    ["activity_id", "professional_activity"],
+  ];
+  const notifications = await allRows(
+    "canonical entity notifications",
+    () => supabase.from("notifications")
+      .select("id,user_id,data")
+      .in("user_id", profileIds)
+      .order("id"),
+  );
+  const existingByKey = new Map();
+  for (const [key, table] of references) {
+    const idsForKey = [...new Set(notifications
+      .map((notification) => notification.data?.[key])
+      .filter((id) => typeof id === "string" && id.length))];
+    if (!idsForKey.length) {
+      existingByKey.set(key, new Set());
+      continue;
+    }
+    const rows = await must(
+      `notification ${key} references`,
+      supabase.from(table).select("id").in("id", idsForKey),
+    );
+    existingByKey.set(key, new Set(rows.map((row) => row.id)));
+  }
+  const staleIds = notifications
+    .filter((notification) => references.some(([key]) => {
+      const referencedId = notification.data?.[key];
+      return typeof referencedId === "string"
+        && referencedId.length > 0
+        && !existingByKey.get(key)?.has(referencedId);
+    }))
+    .map((notification) => notification.id);
+  if (!staleIds.length) return;
+  await must(
+    "orphaned canonical entity notifications",
+    supabase.from("notifications")
+      .delete()
+      .in("user_id", profileIds)
+      .in("id", staleIds),
+  );
+}
+
 async function restoreProductionActors() {
   for (const actor of PRODUCTION_ACTORS) {
     const response = await fetch(`${PRODUCTION_ORIGIN}/api/professionals/${actor.slug}`, {
@@ -720,6 +774,7 @@ async function main() {
     [c.profile.id, s.profile.id],
     [c.professional.id, s.professional.id],
   );
+  await removeOrphanedEntityNotifications([c.profile.id, s.profile.id]);
 
   console.log(JSON.stringify({
     seed: SEED,
