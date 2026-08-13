@@ -19,7 +19,9 @@ jobs:
     env:
       PLAYWRIGHT_BASE_URL: https://contratacr-git-test-isanchezm421-6251s-projects.vercel.app
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-      E2E_SEED: "1"
+      # The database mirror workflow owns authenticated fixtures. The legacy
+      # Playwright seeder created fake professionals and must never run here.
+      E2E_SEED: "0"
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -79,7 +81,7 @@ jobs:
       - name: Ensure private env files are not tracked
         run: npm run security:env
 
-      - name: Seed complete regression fixtures
+      - name: Seed ContrataCR and SG Solutions regression fixtures
         run: |
           set -euo pipefail
           for attempt in 1 2 3 4 5 6; do

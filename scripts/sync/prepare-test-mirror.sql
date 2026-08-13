@@ -1,0 +1,36 @@
+\set ON_ERROR_STOP on
+
+create temporary table production_profile_ids (id uuid primary key);
+\copy production_profile_ids (id) from :'profile_ids_file' with (format csv)
+
+-- Never copy production sessions, tokens, MFA factors, identities or passwords.
+truncate table auth.sessions, auth.refresh_tokens cascade;
+\ir truncate-test-data.sql
+
+-- Remove identities belonging to old fixtures and obsolete fake users. Login
+-- is re-enabled only for the two regression actors after the public restore.
+delete from auth.identities;
+delete from auth.users where id not in (select id from production_profile_ids);
+
+set session_replication_role = replica;
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+)
+select
+  '00000000-0000-0000-0000-000000000000'::uuid,
+  source.id,
+  'authenticated',
+  'authenticated',
+  'prod+' || replace(source.id::text, '-', '') || '@mirror.contratacr.test',
+  crypt(gen_random_uuid()::text, gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{}'::jsonb,
+  now(),
+  now()
+from production_profile_ids source
+on conflict (id) do nothing;
+set session_replication_role = origin;
+
+notify pgrst, 'reload schema';

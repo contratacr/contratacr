@@ -1,0 +1,352 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+const fs = require("fs");
+const { createClient } = require("@supabase/supabase-js");
+
+const TEST_PROJECT_REF = "sodegkfjjrdkbohycqyq";
+const SEED = "production-mirror-regression-pair-v1";
+const envFile = process.env.DEMO_ENV_FILE || ".env.test";
+
+if (fs.existsSync(envFile)) {
+  for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match) process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
+  }
+}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+let projectRef = "invalid";
+try {
+  projectRef = new URL(supabaseUrl).hostname.split(".")[0];
+} catch {}
+
+if (projectRef !== TEST_PROJECT_REF) {
+  throw new Error(`Refusing to seed Supabase project ${projectRef}; expected ${TEST_PROJECT_REF}.`);
+}
+if (!serviceRole) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY for the test project.");
+
+const supabase = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false } });
+const DAY = 24 * 60 * 60 * 1000;
+const now = Date.now();
+const iso = (days = 0) => new Date(now + days * DAY).toISOString();
+const date = (days = 0) => iso(days).slice(0, 10);
+
+const ids = {
+  follows: ["b1000000-0000-4000-8000-000000000001", "b1000000-0000-4000-8000-000000000002"],
+  saves: ["b2000000-0000-4000-8000-000000000001", "b2000000-0000-4000-8000-000000000002"],
+  bookings: ["b3000000-0000-4000-8000-000000000001", "b3000000-0000-4000-8000-000000000002"],
+  projects: ["b4000000-0000-4000-8000-000000000001", "b4000000-0000-4000-8000-000000000002"],
+  proposals: ["b5000000-0000-4000-8000-000000000001", "b5000000-0000-4000-8000-000000000002"],
+  conversations: ["b6000000-0000-4000-8000-000000000001", "b6000000-0000-4000-8000-000000000002"],
+  messages: [
+    "b7000000-0000-4000-8000-000000000001", "b7000000-0000-4000-8000-000000000002",
+    "b7000000-0000-4000-8000-000000000003", "b7000000-0000-4000-8000-000000000004",
+  ],
+  jobs: ["b8000000-0000-4000-8000-000000000001", "b8000000-0000-4000-8000-000000000002"],
+  applications: ["b9000000-0000-4000-8000-000000000001", "b9000000-0000-4000-8000-000000000002"],
+  offers: ["ba000000-0000-4000-8000-000000000001", "ba000000-0000-4000-8000-000000000002"],
+  savedItems: ["bb000000-0000-4000-8000-000000000001", "bb000000-0000-4000-8000-000000000002"],
+  tickets: ["bc000000-0000-4000-8000-000000000001", "bc000000-0000-4000-8000-000000000002"],
+  ticketMessages: ["bd000000-0000-4000-8000-000000000001", "bd000000-0000-4000-8000-000000000002"],
+  reviews: ["be000000-0000-4000-8000-000000000001", "be000000-0000-4000-8000-000000000002"],
+  notifications: ["bf000000-0000-4000-8000-000000000001", "bf000000-0000-4000-8000-000000000002"],
+  weekly: ["c1000000-0000-4000-8000-000000000001", "c1000000-0000-4000-8000-000000000002"],
+  slots: ["c2000000-0000-4000-8000-000000000001", "c2000000-0000-4000-8000-000000000002"],
+  exceptions: ["c3000000-0000-4000-8000-000000000001", "c3000000-0000-4000-8000-000000000002"],
+  blocked: ["c4000000-0000-4000-8000-000000000001", "c4000000-0000-4000-8000-000000000002"],
+};
+
+async function must(label, promise) {
+  const { data, error } = await promise;
+  if (error) throw new Error(`${label}: ${error.message}`);
+  return data;
+}
+
+async function findActor(businessName, expectedEmail) {
+  const rows = await must(
+    `find ${businessName}`,
+    supabase
+      .from("professionals")
+      .select("*,profiles(*)")
+      .ilike("business_name", businessName)
+      .limit(20),
+  );
+  const actor = rows.find((row) => row.profiles?.email === expectedEmail) || rows[0];
+  if (!actor?.profiles) throw new Error(`Production mirror does not contain ${businessName}.`);
+  return { professional: actor, profile: actor.profiles };
+}
+
+function missingList(value, fallback) {
+  return Array.isArray(value) && value.length ? value : fallback;
+}
+
+async function enrichActor(actor, kind) {
+  const { professional, profile } = actor;
+  const isContrata = kind === "contratacr";
+  const serviceName = isContrata ? "Desarrollo web" : "Redes e internet";
+  const safeEmail = isContrata ? "e2e.client@contratacr.test" : "e2e.pro@contratacr.test";
+  const safePhone = isContrata ? "+506 7000 0001" : "+506 7000 0002";
+  const fallbackImage = profile.avatar_url || professional.portfolio_urls?.[0] || null;
+  const fallbackPortfolio = fallbackImage
+    ? [{
+        id: `${kind}-regression-case`,
+        profession: professional.category_id,
+        title: isContrata ? "Plataforma digital de servicios" : "Red empresarial y cobertura WiFi",
+        description: "Caso completo para validar todas las secciones del perfil en test.",
+        recipient: "Regresión ContrataCR",
+        date: "2026",
+        photos: [fallbackImage],
+        likes: 1,
+      }]
+    : [];
+
+  await must(`profile ${kind}`, supabase.from("profiles").update({
+    email: safeEmail,
+    onboarding_completed: true,
+    is_provider: true,
+    is_disabled: false,
+    updated_at: iso(),
+  }).eq("id", profile.id));
+
+  await must(`professional ${kind}`, supabase.from("professionals").update({
+    bio: professional.bio || `Perfil de ${professional.business_name} preparado para regresión integral.`,
+    services: missingList(professional.services, [{
+      id: professional.category_id,
+      name: serviceName,
+      active: true,
+      price: "Consultar precio",
+      priceType: "a_convenir",
+      modalities: ["presencial", "videoconsulta"],
+      startedAt: "2020-01",
+      description: `Servicio de ${serviceName.toLowerCase()} para regresión integral.`,
+    }]),
+    professions: missingList(professional.professions, [professional.category_id]),
+    portfolio_items: missingList(professional.portfolio_items, fallbackPortfolio),
+    portfolio_urls: missingList(professional.portfolio_urls, fallbackImage ? [fallbackImage] : []),
+    languages: missingList(professional.languages, ["es", "en"]),
+    certifications: missingList(professional.certifications, [{
+      id: `${kind}-regression-certification`,
+      name: isContrata ? "Desarrollo de productos digitales" : "Redes y cableado estructurado",
+      institution: "ContrataCR Regression",
+      year: 2026,
+      profession: professional.category_id,
+    }]),
+    social_links: professional.social_links && Object.keys(professional.social_links).length
+      ? professional.social_links
+      : { website: "https://contratacr.com" },
+    contact_email: safeEmail,
+    whatsapp: safePhone,
+    call_phone: safePhone,
+    allow_phone_call: true,
+    availability_public: true,
+    is_available: true,
+    videoconsulta: true,
+    updated_at: iso(),
+  }).eq("id", professional.id));
+}
+
+async function main() {
+  const contratacr = await findActor("ContrataCR", "e2e.client@contratacr.test");
+  const sg = await findActor("SG Solutions", "e2e.pro@contratacr.test");
+  if (contratacr.profile.id === sg.profile.id) throw new Error("Regression actors must be distinct.");
+
+  await enrichActor(contratacr, "contratacr");
+  await enrichActor(sg, "sg");
+
+  const c = contratacr;
+  const s = sg;
+  const cName = c.professional.business_name || c.profile.full_name;
+  const sName = s.professional.business_name || s.profile.full_name;
+
+  await must("availability weekly", supabase.from("availability_weekly").upsert([
+    { id: ids.weekly[0], professional_id: c.professional.id, category_id: c.professional.category_id, weekday: 1, start_time: "08:00", end_time: "17:00", slot_minutes: 60 },
+    { id: ids.weekly[1], professional_id: s.professional.id, category_id: s.professional.category_id, weekday: 2, start_time: "09:00", end_time: "18:00", slot_minutes: 60 },
+  ], { onConflict: "id" }));
+
+  await must("availability slots", supabase.from("availability_slots").upsert([
+    { id: ids.slots[0], professional_id: c.professional.id, category_id: c.professional.category_id, slot_date: date(2), slot_time: "10:00" },
+    { id: ids.slots[1], professional_id: s.professional.id, category_id: s.professional.category_id, slot_date: date(3), slot_time: "14:00" },
+  ], { onConflict: "id" }));
+
+  await must("availability exceptions", supabase.from("availability_exceptions").upsert([
+    { id: ids.exceptions[0], professional_id: c.professional.id, category_id: c.professional.category_id, exception_date: date(5), mode: "extra", start_time: "18:00", end_time: "20:00", slot_minutes: 60 },
+    { id: ids.exceptions[1], professional_id: s.professional.id, category_id: s.professional.category_id, exception_date: date(6), mode: "closed", slot_minutes: 60 },
+  ], { onConflict: "id" }));
+
+  await must("blocked dates", supabase.from("blocked_dates").upsert([
+    { id: ids.blocked[0], professional_id: c.professional.id, blocked_date: date(10) },
+    { id: ids.blocked[1], professional_id: s.professional.id, blocked_date: date(11) },
+  ], { onConflict: "id" }));
+
+  await must("follows", supabase.from("professional_follows").upsert([
+    { id: ids.follows[0], follower_id: c.profile.id, professional_id: s.professional.id, created_at: iso(-4) },
+    { id: ids.follows[1], follower_id: s.profile.id, professional_id: c.professional.id, created_at: iso(-3) },
+  ], { onConflict: "id" }));
+
+  await must("saved professionals", supabase.from("saved_professionals").upsert([
+    { id: ids.saves[0], client_id: c.profile.id, professional_id: s.professional.id, snapshot: { regressionSeed: SEED, name: sName }, created_at: iso(-4) },
+    { id: ids.saves[1], client_id: s.profile.id, professional_id: c.professional.id, snapshot: { regressionSeed: SEED, name: cName }, created_at: iso(-3) },
+  ], { onConflict: "id" }));
+
+  await must("bookings", supabase.from("bookings").upsert([
+    {
+      id: ids.bookings[0], professional_id: s.professional.id, client_id: c.profile.id,
+      category_id: s.professional.category_id, service_description: "Instalación y diagnóstico de red para la oficina de ContrataCR.",
+      preferred_date: date(-8), preferred_date_text: "La semana anterior", scheduled_date: date(-7), scheduled_time: "10:00",
+      status: "completed", client_name: cName, client_email: "e2e.client@contratacr.test", client_phone: "+506 7000 0001",
+      notes: "Flujo completo ContrataCR hacia SG Solutions.", work_done_at: iso(-7), completed_at: iso(-6),
+      created_at: iso(-10), updated_at: iso(-6), created_app_environment: SEED, created_source_host: "test.contratacr.com",
+      created_supabase_project_ref: TEST_PROJECT_REF,
+    },
+    {
+      id: ids.bookings[1], professional_id: c.professional.id, client_id: s.profile.id,
+      category_id: c.professional.category_id, service_description: "Mejora del sitio web y formulario de contacto de SG Solutions.",
+      preferred_date: date(4), preferred_date_text: "La próxima semana", scheduled_date: date(4), scheduled_time: "14:00",
+      status: "confirmed", client_name: sName, client_email: "e2e.pro@contratacr.test", client_phone: "+506 7000 0002",
+      notes: "Flujo completo SG Solutions hacia ContrataCR.", created_at: iso(-2), updated_at: iso(-1),
+      created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF,
+    },
+  ], { onConflict: "id" }));
+
+  await must("projects", supabase.from("projects").upsert([
+    {
+      id: ids.projects[0], client_id: c.profile.id, category_id: s.professional.category_id,
+      title: "Actualizar red de oficina", description: "ContrataCR necesita revisar cobertura, cableado y estabilidad de la red de su oficina.",
+      provincia_id: c.professional.provincia_id, canton_id: c.professional.canton_id, budget_min: 100000, budget_max: 250000,
+      timeline: "Este mes", status: "in_progress", accepted_professional_id: s.professional.id,
+      client_name_snapshot: cName, client_email_snapshot: "e2e.client@contratacr.test", client_phone_snapshot: "+506 7000 0001",
+      created_at: iso(-5), updated_at: iso(-2), created_app_environment: SEED, created_source_host: "test.contratacr.com",
+      created_supabase_project_ref: TEST_PROJECT_REF,
+    },
+    {
+      id: ids.projects[1], client_id: s.profile.id, category_id: c.professional.category_id,
+      title: "Nueva página de servicios", description: "SG Solutions necesita una página rápida para presentar servicios y recibir solicitudes comerciales.",
+      provincia_id: s.professional.provincia_id, canton_id: s.professional.canton_id, budget_min: 180000, budget_max: 450000,
+      timeline: "Próximo mes", status: "open", client_name_snapshot: sName,
+      client_email_snapshot: "e2e.pro@contratacr.test", client_phone_snapshot: "+506 7000 0002",
+      created_at: iso(-3), updated_at: iso(-1), created_app_environment: SEED, created_source_host: "test.contratacr.com",
+      created_supabase_project_ref: TEST_PROJECT_REF,
+    },
+  ], { onConflict: "id" }));
+
+  await must("proposals", supabase.from("proposals").upsert([
+    {
+      id: ids.proposals[0], project_id: ids.projects[0], professional_id: s.professional.id, price: 175000,
+      message: "Propuesta de SG Solutions para diagnóstico, instalación y documentación de la red.", status: "accepted",
+      professional_user_id_snapshot: s.profile.id, professional_name_snapshot: sName,
+      professional_email_snapshot: "e2e.pro@contratacr.test", created_at: iso(-4), created_app_environment: SEED,
+      created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF,
+    },
+    {
+      id: ids.proposals[1], project_id: ids.projects[1], professional_id: c.professional.id, price: 295000,
+      message: "Propuesta de ContrataCR para diseño, desarrollo, publicación y acompañamiento inicial.", status: "pending",
+      professional_user_id_snapshot: c.profile.id, professional_name_snapshot: cName,
+      professional_email_snapshot: "e2e.client@contratacr.test", created_at: iso(-2), created_app_environment: SEED,
+      created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF,
+    },
+  ], { onConflict: "id" }));
+
+  await must("conversations", supabase.from("direct_conversations").upsert([
+    {
+      id: ids.conversations[0], client_id: c.profile.id, professional_id: s.professional.id,
+      professional_profile_id: s.profile.id, booking_id: ids.bookings[0], subject: "Red de oficina",
+      status: "open", last_message: "Perfecto, dejamos documentada la instalación.", last_message_at: iso(-1),
+      last_sender_id: s.profile.id, client_unread_count: 1, professional_unread_count: 0, created_at: iso(-7), updated_at: iso(-1),
+    },
+    {
+      id: ids.conversations[1], client_id: s.profile.id, professional_id: c.professional.id,
+      professional_profile_id: c.profile.id, project_id: ids.projects[1], proposal_id: ids.proposals[1], subject: "Página de servicios",
+      status: "open", last_message: "Te compartimos la propuesta para revisión.", last_message_at: iso(-1),
+      last_sender_id: c.profile.id, client_unread_count: 1, professional_unread_count: 0, created_at: iso(-2), updated_at: iso(-1),
+    },
+  ], { onConflict: "id" }));
+
+  await must("messages", supabase.from("direct_messages").upsert([
+    { id: ids.messages[0], conversation_id: ids.conversations[0], sender_id: c.profile.id, body: "Necesitamos mejorar la cobertura de la oficina.", read_at: iso(-6), created_at: iso(-7) },
+    { id: ids.messages[1], conversation_id: ids.conversations[0], sender_id: s.profile.id, body: "Perfecto, dejamos documentada la instalación.", created_at: iso(-1) },
+    { id: ids.messages[2], conversation_id: ids.conversations[1], sender_id: s.profile.id, body: "Queremos mostrar mejor nuestros servicios en celular.", read_at: iso(-1), created_at: iso(-2) },
+    { id: ids.messages[3], conversation_id: ids.conversations[1], sender_id: c.profile.id, body: "Te compartimos la propuesta para revisión.", created_at: iso(-1) },
+  ], { onConflict: "id" }));
+
+  const jobs = [
+    {
+      id: ids.jobs[0], employer_id: c.professional.id, title: "Especialista de soporte digital",
+      description: "ContrataCR busca apoyo para revisar contenido, incidencias y calidad de la experiencia web.",
+      responsibilities: ["Revisar flujos", "Documentar incidencias"], requirements: ["Atención al detalle"], benefits: ["Trabajo remoto"],
+      employment_type: "contract", workplace_type: "remote", location_label: "Todo Costa Rica", salary_min: 450000, salary_max: 650000,
+      salary_period: "monthly", currency: "CRC", show_salary: true, openings: 1, application_deadline: date(30), status: "published",
+      service_category_id: c.professional.category_id, duration_label: "3 meses", experience_level: "one_plus", created_at: iso(-3), updated_at: iso(-1),
+    },
+    {
+      id: ids.jobs[1], employer_id: s.professional.id, title: "Técnico de redes",
+      description: "SG Solutions busca apoyo para instalar, diagnosticar y documentar redes empresariales.",
+      responsibilities: ["Instalar cableado", "Documentar diagnósticos"], requirements: ["Disponibilidad para desplazarse"], benefits: ["Viáticos"],
+      employment_type: "full_time", workplace_type: "onsite", provincia_id: s.professional.provincia_id,
+      canton_id: s.professional.canton_id, location_label: "Atenas, Alajuela", salary_min: 500000, salary_max: 750000,
+      salary_period: "monthly", currency: "CRC", show_salary: true, openings: 2, application_deadline: date(30), status: "published",
+      service_category_id: s.professional.category_id, experience_level: "two_plus", created_at: iso(-2), updated_at: iso(-1),
+    },
+  ];
+  await must("jobs", supabase.from("job_posts").upsert(jobs, { onConflict: "id" }));
+
+  await must("applications", supabase.from("job_applications").upsert([
+    { id: ids.applications[0], job_id: ids.jobs[0], applicant_id: s.profile.id, cover_letter: "SG Solutions desea participar para validar el flujo completo de empleos en test.", phone: "+506 7000 0002", applicant_email: "e2e.pro@contratacr.test", status: "reviewing", created_at: iso(-2), updated_at: iso(-1) },
+    { id: ids.applications[1], job_id: ids.jobs[1], applicant_id: c.profile.id, cover_letter: "ContrataCR envía esta postulación para validar el flujo completo entre ambos perfiles.", phone: "+506 7000 0001", applicant_email: "e2e.client@contratacr.test", status: "shortlisted", created_at: iso(-1), updated_at: iso() },
+  ], { onConflict: "id" }));
+
+  const offers = [
+    {
+      id: ids.offers[0], professional_id: c.professional.id, title: "Sitio web profesional",
+      description: "Diseño y desarrollo responsivo con configuración inicial y acompañamiento de lanzamiento.",
+      offer_type: "service_offer", service_label: "Desarrollo web", image_urls: missingList(c.professional.portfolio_urls, c.profile.avatar_url ? [c.profile.avatar_url] : []).slice(0, 5),
+      price_now: 185000, price_before: 240000, currency: "CRC", price_unit: "project", location_label: "Todo Costa Rica",
+      valid_until: date(30), quantity_available: 5, status: "published", service_category_id: c.professional.category_id,
+      created_at: iso(-2), updated_at: iso(-1),
+    },
+    {
+      id: ids.offers[1], professional_id: s.professional.id, title: "Instalación de red empresarial",
+      description: "Diagnóstico, instalación y configuración inicial para una oficina pequeña o mediana.",
+      offer_type: "service_offer", service_label: "Redes e internet", image_urls: missingList(s.professional.portfolio_urls, s.profile.avatar_url ? [s.profile.avatar_url] : []).slice(0, 5),
+      price_now: 120000, price_before: 150000, currency: "CRC", price_unit: "project", location_label: "Atenas, Alajuela",
+      valid_until: date(30), quantity_available: 5, status: "published", service_category_id: s.professional.category_id,
+      created_at: iso(-2), updated_at: iso(-1),
+    },
+  ];
+  await must("offers", supabase.from("professional_offers").upsert(offers, { onConflict: "id" }));
+
+  await must("saved marketplace", supabase.from("saved_items").upsert([
+    { id: ids.savedItems[0], user_id: c.profile.id, item_type: "offer", item_id: ids.offers[1], snapshot: { regressionSeed: SEED, title: offers[1].title, professional_name: sName }, created_at: iso(-1) },
+    { id: ids.savedItems[1], user_id: s.profile.id, item_type: "job", item_id: ids.jobs[0], snapshot: { regressionSeed: SEED, title: jobs[0].title, employer_name: cName }, created_at: iso(-1) },
+  ], { onConflict: "id" }));
+
+  await must("support tickets", supabase.from("support_tickets").upsert([
+    { id: ids.tickets[0], professional_id: c.professional.id, user_id: c.profile.id, name: cName, email: "e2e.client@contratacr.test", type: "support", topic: "technical", subject: "Validación de soporte ContrataCR", detail: "Ticket completo de regresión.", message: "Necesito validar el flujo de soporte.", status: "in_progress", created_at: iso(-2), last_reply_at: iso(-1), last_reply_role: "admin", created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
+    { id: ids.tickets[1], professional_id: s.professional.id, user_id: s.profile.id, name: sName, email: "e2e.pro@contratacr.test", type: "support", topic: "account", subject: "Validación de soporte SG Solutions", detail: "Ticket resuelto de regresión.", message: "Necesito validar el estado resuelto.", status: "resolved", user_confirmed: false, created_at: iso(-3), last_reply_at: iso(-1), last_reply_role: "admin", created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
+  ], { onConflict: "id" }));
+
+  await must("support messages", supabase.from("support_ticket_messages").upsert([
+    { id: ids.ticketMessages[0], ticket_id: ids.tickets[0], sender_role: "user", sender_id: c.profile.id, sender_name: cName, body: "Necesito validar el flujo de soporte.", created_at: iso(-2) },
+    { id: ids.ticketMessages[1], ticket_id: ids.tickets[1], sender_role: "user", sender_id: s.profile.id, sender_name: sName, body: "Necesito validar el estado resuelto.", created_at: iso(-3) },
+  ], { onConflict: "id" }));
+
+  await must("reviews", supabase.from("reviews").upsert([
+    { id: ids.reviews[0], professional_id: s.professional.id, client_id: c.profile.id, booking_id: ids.bookings[0], rating: 5, comment: "Excelente instalación y documentación de la red.", job_title: "Instalación de red", client_name_snapshot: cName, client_email_snapshot: "e2e.client@contratacr.test", created_at: iso(-5), created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
+    { id: ids.reviews[1], professional_id: c.professional.id, client_id: s.profile.id, project_id: ids.projects[1], rating: 5, comment: "Propuesta clara y excelente atención durante el proceso.", job_title: "Página de servicios", client_name_snapshot: sName, client_email_snapshot: "e2e.pro@contratacr.test", created_at: iso(-1), created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
+  ], { onConflict: "id" }));
+
+  await must("notifications", supabase.from("notifications").upsert([
+    { id: ids.notifications[0], user_id: c.profile.id, type: "direct_message", title: "Mensaje de SG Solutions", message: "Tienes una respuesta sobre la red de oficina.", data: { regressionSeed: SEED, link: `/mensajes/${ids.conversations[0]}` }, read: false, created_at: iso(-1) },
+    { id: ids.notifications[1], user_id: s.profile.id, type: "direct_message", title: "Mensaje de ContrataCR", message: "Tienes una propuesta sobre tu página de servicios.", data: { regressionSeed: SEED, link: `/mensajes/${ids.conversations[1]}` }, read: false, created_at: iso(-1) },
+  ], { onConflict: "id" }));
+
+  console.log(JSON.stringify({
+    seed: SEED,
+    contratacr: { profileId: c.profile.id, professionalId: c.professional.id, avatar: c.profile.avatar_url },
+    sgSolutions: { profileId: s.profile.id, professionalId: s.professional.id, avatar: s.profile.avatar_url },
+  }, null, 2));
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

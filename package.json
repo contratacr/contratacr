@@ -17,8 +17,8 @@
     "padron:check": "node scripts/check-padron.mjs",
     "padron:load": "node scripts/load-padron.mjs",
     "padron:prepare-copy": "node scripts/prepare-padron-copy.mjs",
-    "seed:test:full": "node scripts/seed-mobile-demo.js && node scripts/seed-regression-marketplace.js",
-    "seed:test:verify": "node scripts/verify-test-fixtures.js",
+    "seed:test:full": "node scripts/seed-regression-pair.js",
+    "seed:test:verify": "node scripts/verify-regression-pair.js",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:ui": "playwright test --ui"

@@ -44,6 +44,29 @@ Add this secret to both GitHub Environments:
 
 Recommended passphrase: at least 32 random characters. Save it in a password manager. Without it, the artifact cannot be restored.
 
+Use the same `BACKUP_ENCRYPTION_PASSPHRASE` value in `production` and `test`.
+The **Sync production data to test** workflow transfers its one-day mirror only
+as an AES256-encrypted artifact between those isolated GitHub Environments.
+
+## Production mirror in test
+
+The **Sync production data to test** workflow replaces the test application
+data with the production directory and public marketplace content. It runs
+automatically when its workflow definition changes and can also be started
+manually by entering `SYNC_PRODUCTION_TO_TEST`.
+
+The sync deliberately does not copy production passwords, sessions, tokens,
+MFA factors, private conversations, bookings, projects, applications,
+notifications, support histories or saved items. Real contact and identity
+fields are sanitized. Those private sections are populated only with synthetic
+regression data exchanged between ContrataCR and SG Solutions. Their production
+names and profile-photo URLs are compared after the restore and must match.
+
+The existing test database is backed up on the ephemeral runner before it is
+replaced. A failed restore automatically rolls back during the same run. Mirror
+and rollback files are removed from the runner; the encrypted transfer artifact
+is retained for one day.
+
 ## Schedule
 
 Production backups run daily at **2:10 AM Costa Rica time**.
