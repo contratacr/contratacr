@@ -57,7 +57,9 @@ export function PanelListSkeleton({
 }) {
   const t = useTranslations("loading");
   if (!hasData) {
-    return <PanelSectionLoading className={className} />;
+    // An empty collection has no record shape to preview. Keep the section
+    // stable and let its real empty state appear when the request resolves.
+    return null;
   }
 
   return (

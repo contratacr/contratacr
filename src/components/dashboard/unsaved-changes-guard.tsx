@@ -44,6 +44,17 @@ export function UnsavedChangesGuard({
   const pendingAnchor = useRef<HTMLAnchorElement | null>(null);
   const pendingAction = useRef<(() => void) | null>(null);
   const bypass = useRef(false);
+  const guardOwner = useRef({});
+
+  function clearPendingDialog() {
+    pendingAnchor.current = null;
+    pendingAction.current = null;
+    setOpen(false);
+  }
+
+  function claimDialog() {
+    window.dispatchEvent(new CustomEvent("ccr:unsaved-dialog-claimed", { detail: { owner: guardOwner.current } }));
+  }
 
   useEffect(() => {
     if (!dirty) return;
@@ -72,6 +83,7 @@ export function UnsavedChangesGuard({
       e.stopImmediatePropagation();
       pendingAnchor.current = anchor;
       pendingAction.current = null;
+      claimDialog();
       setOpen(true);
     }
 
@@ -85,15 +97,24 @@ export function UnsavedChangesGuard({
       e.stopImmediatePropagation();
       pendingAnchor.current = null;
       pendingAction.current = detail.proceed;
+      claimDialog();
       setOpen(true);
+    }
+
+    function onDialogClaimed(e: Event) {
+      const owner = (e as CustomEvent<{ owner?: object }>).detail?.owner;
+      if (owner === guardOwner.current) return;
+      clearPendingDialog();
     }
 
     window.addEventListener("beforeunload", onBeforeUnload);
     window.addEventListener("ccr:confirm-unsaved-action", onConfirmUnsavedAction);
+    window.addEventListener("ccr:unsaved-dialog-claimed", onDialogClaimed);
     document.addEventListener("click", onClickCapture, true);
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("ccr:confirm-unsaved-action", onConfirmUnsavedAction);
+      window.removeEventListener("ccr:unsaved-dialog-claimed", onDialogClaimed);
       document.removeEventListener("click", onClickCapture, true);
     };
   }, [dirty]);
@@ -145,9 +166,7 @@ export function UnsavedChangesGuard({
   }
 
   function keepEditing() {
-    pendingAnchor.current = null;
-    pendingAction.current = null;
-    setOpen(false);
+    clearPendingDialog();
   }
 
   return (
