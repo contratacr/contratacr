@@ -207,6 +207,22 @@ async function ensureVideoCategory(admin: AdminClient) {
   if (error) throw error;
 }
 
+async function ensureMobileAppsCategory(admin: AdminClient) {
+  const { data } = await admin.from("categories").select("id").eq("id", "diseno_apps").maybeSingle();
+  if (data?.id) return;
+  const { error } = await admin.from("categories").insert({
+    id: "diseno_apps",
+    name: "Desarrollo de apps móviles",
+    name_en: "Mobile app development",
+    group_id: "tecnologia",
+    is_active: true,
+    is_hidden: false,
+    es_salud: false,
+    supports_videoconsulta: true,
+  });
+  if (error) throw error;
+}
+
 export async function getRegressionSeedState(): Promise<RegressionSeedState | null> {
   if (!canRunSeededRegression()) return null;
   const admin = adminClient();
@@ -259,6 +275,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
 
   await ensureCategory(admin);
   await ensureVideoCategory(admin);
+  await ensureMobileAppsCategory(admin);
 
   const { error: clientProfileError } = await admin.from("profiles").upsert(
     {
@@ -363,6 +380,32 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
       active: true,
       modalities: ["in_person"],
     },
+    {
+      id: "e2e-service-web",
+      name: "Desarrollo web",
+      category: "desarrollo_web",
+      description: "Sitios web y formularios para validar filtros de varias profesiones.",
+      priceAmount: 180000,
+      priceType: "por_proyecto",
+      startedAt: "2020-01",
+      years: 6,
+      months: 0,
+      active: true,
+      modalities: ["in_person", "video"],
+    },
+    {
+      id: "e2e-service-mobile-apps",
+      name: "Desarrollo de apps móviles",
+      category: "diseno_apps",
+      description: "Aplicaciones móviles para validar etiquetas largas sin recortes.",
+      priceAmount: 250000,
+      priceType: "por_proyecto",
+      startedAt: "2021-01",
+      years: 5,
+      months: 0,
+      active: true,
+      modalities: ["video"],
+    },
   ];
 
   const { data: professional, error: proError } = await admin
@@ -371,7 +414,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
       {
         profile_id: proUser.id,
         category_id: "plomeria",
-        professions: ["plomeria"],
+        professions: ["plomeria", "desarrollo_web", "diseno_apps"],
         services,
         bio: "Profesional de prueba para regresión automatizada de ContrataCR.",
         whatsapp: E2E_USERS.professional.phone,

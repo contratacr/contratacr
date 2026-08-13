@@ -597,7 +597,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             <div className="flex flex-col gap-4">
               {/* Filter by the pro's professions — only when they have more than one. */}
               {showProfFilter && (
-                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} mobileLayout="scroll" />
+                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} mobileLayout="wrap" />
               )}
               {(() => {
                 // Hide opportunities already proposed to (they live in "Mis propuestas") and

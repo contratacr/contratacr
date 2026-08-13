@@ -33,8 +33,8 @@ export function StatusFilterTabs({
    *  (e.g. the profession filter), no counts. */
   variant?: "underline" | "pills";
   /** Short status labels can share the available mobile width evenly. Long,
-   * dynamic labels (such as professions) keep their natural width and scroll. */
-  mobileLayout?: "scroll" | "equal";
+   * dynamic labels (such as professions) wrap into complete, visible rows. */
+  mobileLayout?: "scroll" | "wrap" | "equal";
 }) {
   const tr = useTranslations("statusTabs");
   const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
@@ -43,7 +43,7 @@ export function StatusFilterTabs({
   // PILLS — rounded chips, no counts (used for the profession filter). A wrapping row.
   if (variant === "pills") {
     return (
-      <div className="flex flex-wrap gap-2">
+      <div data-status-filter-tabs="" data-filter-layout="pills" className="flex min-w-0 max-w-full flex-wrap gap-2">
         {tabs.map((tab) => {
           const active = value === tab.id;
           return (
@@ -52,7 +52,7 @@ export function StatusFilterTabs({
               type="button"
               onClick={() => onChange(tab.id)}
               className={cn(
-                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-4 py-2 text-[13px] font-semibold transition-colors",
+                "inline-flex max-w-full items-center justify-center gap-1.5 whitespace-normal rounded-lg border px-4 py-2 text-center text-[13px] font-semibold [overflow-wrap:anywhere] transition-colors",
                 active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
               )}
             >
@@ -70,13 +70,15 @@ export function StatusFilterTabs({
   // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
   return (
     <div className={cn(
-      "mx-4 max-w-full items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1 sm:mx-0 sm:w-fit sm:min-w-[22rem]",
+      "w-full max-w-full items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1 sm:w-fit sm:min-w-[22rem]",
       useEqualMobileLayout
-        ? "grid overflow-hidden"
-        : "flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        ? "grid overflow-visible"
+        : mobileLayout === "wrap"
+          ? "flex flex-wrap overflow-visible"
+          : "flex overflow-x-auto scroll-px-1 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
       useEqualMobileLayout && tabs.length === 2 && "grid-cols-2",
       useEqualMobileLayout && tabs.length === 3 && "grid-cols-3",
-    )}>
+    )} data-status-filter-tabs="" data-filter-layout={useEqualMobileLayout ? "equal" : mobileLayout}>
       {tabs.map((tab) => {
         const active = value === tab.id;
         const count = counts?.[tab.id] ?? 0;
@@ -86,8 +88,12 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg py-2 text-[13px] font-semibold transition-all sm:min-w-[6.75rem] sm:text-[14px]",
-              useEqualMobileLayout ? "min-w-0 gap-1 px-1.5 sm:gap-1.5 sm:px-3" : "min-w-max flex-1 gap-1.5 px-3",
+              "group inline-flex min-h-10 max-w-full items-center justify-center rounded-lg py-2 text-center text-[13px] font-semibold transition-all sm:min-w-[6.75rem] sm:text-[14px]",
+              useEqualMobileLayout
+                ? "min-w-0 gap-1 whitespace-normal px-1.5 [overflow-wrap:anywhere] sm:gap-1.5 sm:px-3"
+                : mobileLayout === "wrap"
+                  ? "min-w-0 flex-none gap-1.5 whitespace-normal px-3 [overflow-wrap:anywhere]"
+                  : "min-w-max flex-1 gap-1.5 whitespace-nowrap px-3",
               active
                 ? "bg-white text-[#008fbe] shadow-[0_1px_3px_rgba(15,23,42,0.12)]"
                 : "text-[#5f6f82] hover:bg-white/60 hover:text-[#162543]"

@@ -29,7 +29,7 @@ export function AdminFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group -mb-px inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-[13px] font-semibold transition-colors sm:text-[14px]",
+              "group -mb-px inline-flex max-w-full items-center gap-1.5 whitespace-normal border-b-2 pb-2.5 pt-1 text-left text-[13px] font-semibold [overflow-wrap:anywhere] transition-colors sm:text-[14px]",
               active ? "border-[#009FD9] text-[#009FD9]" : "border-transparent text-[#6b7280] hover:text-[#162543]",
             )}
           >

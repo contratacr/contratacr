@@ -140,6 +140,32 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(page.locator('svg[aria-label="Verificado"]').filter({ visible: true }).first()).toBeVisible();
   });
 
+  test("long dashboard filters remain fully visible on narrow screens", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 720 });
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional?tab=photos");
+
+    const filters = page.locator('[data-status-filter-tabs][data-filter-layout="wrap"]').filter({ visible: true }).first();
+    await expect(filters).toBeVisible();
+    const geometry = await filters.evaluate((container) => ({
+      clientWidth: container.clientWidth,
+      scrollWidth: container.scrollWidth,
+      buttons: Array.from(container.querySelectorAll("button")).map((button) => ({
+        clientWidth: button.clientWidth,
+        scrollWidth: button.scrollWidth,
+        right: button.getBoundingClientRect().right,
+      })),
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+
+    expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
+    expect(geometry.buttons.length).toBeGreaterThan(1);
+    for (const button of geometry.buttons) {
+      expect(button.scrollWidth).toBeLessThanOrEqual(button.clientWidth + 1);
+      expect(button.right).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+    }
+  });
+
   test("guides cover the current client, marketplace, and professional flows in both languages", async ({ page }) => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);

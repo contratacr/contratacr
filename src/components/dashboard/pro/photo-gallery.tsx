@@ -204,7 +204,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           onChange={setActiveProf}
           labelFor={label}
           counts={Object.fromEntries(professions.map((p) => [p, countFor(p)]))}
-          mobileLayout="scroll"
+          mobileLayout="wrap"
         />
       )}
 
@@ -372,5 +372,4 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     </div>
   );
 }
-
 
