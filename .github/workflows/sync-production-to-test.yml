@@ -136,7 +136,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      REGRESSION_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      REGRESSION_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
       EXPECTED_TEST_PROJECT_REF: sodegkfjjrdkbohycqyq
     steps:
       - name: Checkout main
@@ -153,7 +153,7 @@ jobs:
           test -n "$NEXT_PUBLIC_SUPABASE_URL" || { echo "::error::Missing test Supabase URL."; exit 1; }
           test -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" || { echo "::error::Missing test anon/publishable key."; exit 1; }
           test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::Missing test service-role key."; exit 1; }
-          test -n "$REGRESSION_TEST_PASSWORD" || { echo "::error::Missing test E2E_TEST_PASSWORD."; exit 1; }
+          test -n "$REGRESSION_TEST_PASSWORD" || { echo "::error::Missing test REGRESSION_TEST_PASSWORD."; exit 1; }
           node scripts/ci/validate-supabase-target.mjs api NEXT_PUBLIC_SUPABASE_URL "$EXPECTED_TEST_PROJECT_REF"
           node scripts/ci/validate-supabase-target.mjs db TEST_DB_URL "$EXPECTED_TEST_PROJECT_REF"
 

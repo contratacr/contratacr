@@ -30,8 +30,8 @@ jobs:
       # Playwright seeder created fake professionals and must never run here.
       E2E_FIXTURES_READY: "1"
       E2E_LEGACY_SEED: "0"
-      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-      REGRESSION_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      E2E_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
+      REGRESSION_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -56,7 +56,7 @@ jobs:
             exit 1
           fi
           if [ -z "$E2E_TEST_PASSWORD" ]; then
-            echo "::error::Missing E2E_TEST_PASSWORD in the test GitHub Environment."
+            echo "::error::Missing REGRESSION_TEST_PASSWORD in the test GitHub Environment."
             exit 1
           fi
           if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] || [ -z "$SUPABASE_DB_URL" ]; then
