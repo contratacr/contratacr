@@ -127,7 +127,7 @@ test.describe("@seeded offers, jobs and application lifecycle", () => {
       await application.getByPlaceholder(/Briefly explain/i).fill("I am interested in this regression job and meet all stated requirements.");
       await application.getByRole("textbox", { name: /^Phone \*$/i }).fill("88887777");
       await application.getByRole("button", { name: /Submit application/i }).click();
-      await expect(page.getByText(/Application sent/i)).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByRole("dialog").getByRole("heading", { name: "Application sent", exact: true })).toBeVisible({ timeout: 20_000 });
 
       await gotoOK(page, "/en/dashboard/profesional?tab=applications&mode=use");
       const applicationCard = page.locator("article").filter({ hasText: jobTitle }).first();

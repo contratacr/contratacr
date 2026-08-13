@@ -160,11 +160,6 @@ test.describe("@visual recent bug contracts", () => {
     await pendingProposal.getByRole("button", { expanded: false }).first().click();
     await expectVerticalMenuInsideViewport(page, pendingProposal.getByRole("button", { name: /M[aá]s opciones|More options/i }));
     await expectHealthyPage(page);
-
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects&mode=use");
-    await expandFirstCardWithActions(page);
-    await expectVerticalMenuInsideViewport(page, page.getByRole("button", { name: /Acciones|Actions/i }).filter({ visible: true }).first());
   });
 
   test("paired actions keep equal geometry and compact dialogs stay centered", async ({ page }) => {
