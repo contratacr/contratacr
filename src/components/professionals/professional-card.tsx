@@ -148,7 +148,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
-  const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix, isColones: priceIsColones } = splitPricingLabel(priceLabel);
+  const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix } = splitPricingLabel(priceLabel);
   const priceBoxClass = "max-w-[48%]";
   const priceFitsWithService = displayProfessions.length <= 1;
   const isVerified = professional.verificationStatus === "verified";
@@ -268,9 +268,9 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   })();
 
   const desktopPrice = priceLabel ? (
-    <div className={`relative z-10 ml-auto hidden shrink-0 text-right leading-tight lg:block ${priceBoxClass}`}>
-      <span className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-1 gap-y-0.5 leading-none">
-        <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
+    <div className={`relative z-10 ml-auto hidden shrink-0 text-right lg:block ${priceBoxClass}`}>
+      <span className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-1 gap-y-0.5 leading-[1.1]">
+        <span className="text-[15px] font-bold text-[#009FD9]">{priceAmount}</span>
         {(priceUnit || priceTaxSuffix) && (
           <span className="whitespace-nowrap text-right leading-none">
             {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]">{priceUnit}</span>}
