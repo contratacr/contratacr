@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Check, ChevronDown, ImagePlus, Search, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { OFFER_PRICE_UNITS, OFFER_TYPES, sanitizeOfferImages, type ProfessionalOffer } from "@/lib/offers";
 import { SelectMenu, type SelectMenuOption } from "@/components/ui/select-menu";
 import { FutureDatePicker } from "@/components/ui/future-date-picker";
 import { PROVINCES, getCantonById, getCantonsByProvince, getProvinceById } from "@/lib/data/cr-geography";
 import { crTodayISO } from "@/lib/time-cr";
-import { MAX_MONEY_AMOUNT, MAX_OFFER_QUANTITY, formatNumberForMessage, isNumericDatabaseRangeError, isWholeNumberInRange, parseOptionalWholeNumber } from "@/lib/forms/numeric-validation";
+import { MAX_MONEY_AMOUNT, MAX_OFFER_QUANTITY, formatNumberForMessage, isWholeNumberInRange, parseOptionalWholeNumber } from "@/lib/forms/numeric-validation";
 import { marketplaceLocale, offerPriceUnitLabel, offerTypeLabel } from "@/lib/marketplace-copy";
+import { uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 
 type OfferFormProps = {
   professionalId: string;
@@ -187,6 +187,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
   }, [selectedServiceValue, serviceOptions]);
 
   const previews = useMemo(() => files.map((file) => ({ file, url: URL.createObjectURL(file) })), [files]);
+  useEffect(() => () => previews.forEach((preview) => URL.revokeObjectURL(preview.url)), [previews]);
   const locationCantons = getCantonsByProvince(locationProvince);
 
   function addFiles(nextFiles: FileList | null) {
@@ -201,10 +202,9 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
       const body = new FormData();
       body.append("file", file);
       body.append("type", "portfolio");
-      const response = await fetch("/api/upload/photo", { method: "POST", body });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json?.error || copy.uploadFailed);
-      urls.push(String(json.url));
+      const response = await uploadPhotoFormDataWithRetry(body);
+      if (!response.ok || !response.data.url) throw new Error(copy.uploadFailed);
+      urls.push(response.data.url);
     }
     return sanitizeOfferImages(urls);
   }
@@ -252,6 +252,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
     try {
       const imageUrls = sanitizeOfferImages([...existingImageUrls, ...(await uploadImages())]);
       const payload = {
+        id: editing ? initialOffer?.id : null,
         professional_id: professionalId,
         service_category_id: selectedService!.value,
         title,
@@ -268,15 +269,9 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
         quantity_available: quantityAvailable,
         status: editing ? (initialOffer?.status ?? "published") : "published",
       };
-      const request = editing && initialOffer?.id
-        ? createClient().from("professional_offers").update(payload).eq("id", initialOffer.id).eq("professional_id", professionalId).select("id").single()
-        : createClient().from("professional_offers").insert(payload).select("id").single();
-      const { data, error: insertError } = await request;
-      if (insertError) throw new Error(insertError.message.includes("schema cache")
-        ? copy.databaseUnavailable
-        : isNumericDatabaseRangeError(insertError.message)
-          ? copy.numericError
-          : copy.saveError);
+      const response = await fetch("/api/offers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.id) throw new Error(typeof data?.error === "string" ? data.error : copy.saveError);
       if (presentation === "modal") {
         onSaved?.(data.id);
         setSaving(false);
@@ -286,7 +281,8 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
       router.replace(`/ofertas/${data.id}${returnToPanel ? "?from=panel" : ""}`);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : copy.publishError);
+      const message = err instanceof Error ? err.message : "";
+      setError(message === copy.uploadFailed || message.startsWith("No pudimos") || message.startsWith("We could not") ? message : copy.publishError);
       setSaving(false);
     }
   }

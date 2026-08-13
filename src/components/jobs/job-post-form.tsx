@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, BriefcaseBusiness, Plus, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { createClient } from "@/lib/supabase/client";
 import {
   COMMON_JOB_TITLES,
   EMPLOYMENT_TYPES,
@@ -21,7 +20,7 @@ import { SelectMenu } from "@/components/ui/select-menu";
 import { FutureDatePicker } from "@/components/ui/future-date-picker";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { PROVINCES, getCantonById, getCantonsByProvince, getProvinceById } from "@/lib/data/cr-geography";
-import { MAX_MONEY_AMOUNT, formatNumberForMessage, isNumericDatabaseRangeError, isWholeNumberInRange, parseOptionalWholeNumber } from "@/lib/forms/numeric-validation";
+import { MAX_MONEY_AMOUNT, formatNumberForMessage, isWholeNumberInRange, parseOptionalWholeNumber } from "@/lib/forms/numeric-validation";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, salaryPeriodLabel, workplaceTypeLabel } from "@/lib/marketplace-copy";
 
 type FieldErrors = Partial<Record<"title" | "location" | "description" | "responsibilities" | "requirements" | "salary" | "openings" | "deadline", string>>;
@@ -341,6 +340,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
     setSaving(true);
     setError("");
     const payload = {
+      id: editing ? initialJob?.id : null,
       employer_id: professionalId,
       service_category_id: null,
       title,
@@ -362,27 +362,23 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
       application_deadline: /^\d{4}-\d{2}-\d{2}$/.test(deadline) ? deadline : null,
       status: editing ? (initialJob?.status ?? "published") : "published",
     };
-    const request = editing && initialJob?.id
-      ? createClient().from("job_posts").update(payload).eq("id", initialJob.id).eq("employer_id", professionalId).select("id").single()
-      : createClient().from("job_posts").insert(payload).select("id").single();
-    const { data, error: insertError } = await request;
-    if (insertError) {
-      setError(insertError.message.includes("schema cache")
-        ? copy.schemaCache
-        : isNumericDatabaseRangeError(insertError.message)
-          ? copy.numericTooHigh
-          : copy.saveFailed);
+    try {
+      const response = await fetch("/api/jobs/posts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.id) throw new Error(typeof data?.error === "string" ? data.error : copy.saveFailed);
+      if (presentation === "modal") {
+        onSaved?.(data.id);
+        setSaving(false);
+        return;
+      }
+      const returnToPanel = backHref.includes("/dashboard/profesional");
+      router.replace(`/empleos/${data.id}${returnToPanel ? "?from=panel" : ""}`);
+      router.refresh();
+    } catch (submitError) {
+      const message = submitError instanceof Error ? submitError.message : "";
+      setError(message.startsWith("No pudimos") || message.startsWith("We couldn't") ? message : copy.saveFailed);
       setSaving(false);
-      return;
     }
-    if (presentation === "modal") {
-      onSaved?.(data.id);
-      setSaving(false);
-      return;
-    }
-    const returnToPanel = backHref.includes("/dashboard/profesional");
-    router.replace(`/empleos/${data.id}${returnToPanel ? "?from=panel" : ""}`);
-    router.refresh();
   }
 
   return (
@@ -469,4 +465,3 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
     </main>
   );
 }
-
