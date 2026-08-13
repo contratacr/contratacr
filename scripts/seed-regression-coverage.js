@@ -300,6 +300,13 @@ async function main() {
   // constraints cannot retain a stale pairing across reruns.
   await must("reset coverage applications", db.from("job_applications").delete().in("id", ids.applications));
   await must("coverage applications", db.from("job_applications").upsert(applications, { onConflict: "id" }));
+  for (const applicationId of ids.applications) {
+    await must(`remove coverage application notification ${applicationId}`, db
+      .from("notifications")
+      .delete()
+      .eq("type", "job_application")
+      .contains("data", { application_id: applicationId }));
+  }
 
   const offerStatuses = ["published", "paused", "expired", "sold_out", "draft"];
   const offers = [
@@ -353,11 +360,22 @@ async function main() {
       type,
       title: `${owner.name}: notificación ${type}`,
       message: `Notificación enlazada para regresión de ${type}.`,
-      data: { regressionSeed: SEED, link: "/dashboard/profesional?tab=notifications" },
+      data: { regressionSeed: SEED, push_suppressed: true, link: "/dashboard/profesional?tab=notifications" },
       read: index >= 3,
       created_at: iso(-index),
     };
   }), { onConflict: "id" }));
+  await must("suppress coverage notification outbox", db
+    .from("notification_push_outbox")
+    .update({
+      status: "suppressed",
+      completed_at: iso(),
+      locked_at: null,
+      locked_by: null,
+      last_error: null,
+      updated_at: iso(),
+    })
+    .in("notification_id", ids.notifications));
 
   console.log(JSON.stringify({
     seed: SEED,

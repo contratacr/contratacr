@@ -123,7 +123,7 @@ test.describe("@seeded offers, jobs and application lifecycle", () => {
       await gotoOK(page, `/en/empleos/${jobId}?apply=${jobId}`);
       const application = page.getByRole("dialog").locator("form").filter({ has: page.getByRole("button", { name: /Submit application/i }) }).first();
       await expect(application).toBeVisible();
-      await expect(application.getByText(/Recently used resume|CV/i)).toBeVisible({ timeout: 15_000 });
+      await expect(application.getByText("Recently used resume", { exact: true })).toBeVisible({ timeout: 15_000 });
       await application.getByPlaceholder(/Briefly explain/i).fill("I am interested in this regression job and meet all stated requirements.");
       await application.getByRole("button", { name: /Submit application/i }).click();
       await expect(page.getByText(/Application sent/i)).toBeVisible({ timeout: 20_000 });

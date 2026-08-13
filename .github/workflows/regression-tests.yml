@@ -166,6 +166,20 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
+      - name: Run critical regression gates
+        run: >-
+          npx playwright test
+          tests/e2e/account-lifecycle.spec.ts
+          tests/e2e/marketplace-lifecycle.spec.ts
+          tests/e2e/recent-visual-regression.spec.ts
+          tests/e2e/seeded-regression.spec.ts
+          tests/e2e/public-smoke.spec.ts
+          --project=chromium-desktop
+          --grep "permanent deletion|offers, jobs and application lifecycle|every three-dot panel menu|public seeded professional profile|/es/categorias renders|/en/contacto renders"
+
+      - name: Verify fixtures after critical gates
+        run: npm run seed:test:verify
+
       - name: Run regression suite
         run: npm run test:e2e
 

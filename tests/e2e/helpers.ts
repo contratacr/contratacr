@@ -85,13 +85,28 @@ export async function expectNotVercelProtection(page: Page, path = page.url()) {
 
 export async function expectPageShell(page: Page) {
   const body = page.locator("body");
-  const visibleMain = page.locator("main").filter({ visible: true });
   await expect
     .poll(
       async () => {
-        const bodyText = (await body.innerText()).trim();
-        const mainText = (await visibleMain.allInnerTexts()).join(" ").trim();
-        return mainText.length > 20 && /ContrataCR/i.test(bodyText);
+        try {
+          return await page.evaluate(() => {
+            const bodyText = document.body?.innerText.trim() ?? "";
+            const mainText = Array.from(document.querySelectorAll("main"))
+              .filter((main) => {
+                const style = window.getComputedStyle(main);
+                const box = main.getBoundingClientRect();
+                return style.display !== "none" && style.visibility !== "hidden" && box.width > 0 && box.height > 0;
+              })
+              .map((main) => (main as HTMLElement).innerText)
+              .join(" ")
+              .trim();
+            return mainText.length > 20 && /ContrataCR/i.test(bodyText);
+          });
+        } catch {
+          // A streamed redirect can replace the execution context between
+          // polls. Retry the complete, atomic snapshot on the new document.
+          return false;
+        }
       },
       {
         timeout: 8_000,

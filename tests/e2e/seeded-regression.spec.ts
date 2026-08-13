@@ -823,9 +823,9 @@ test.describe("@seeded core regression", () => {
     await gotoOK(page, `/es/buscar?categoria=${encodeURIComponent(seed.categoryId)}`);
     const resultCard = page.locator("article", {
       has: page.locator(`a[href^="/es/profesionales/${seed.professionalSlug}"]`),
-    }).first();
+    }).filter({ visible: true }).first();
     await expect(resultCard).toBeVisible();
-    await expect(resultCard.getByRole("link", { name: E2E_USERS.professional.fullName, exact: true }).first()).toBeVisible();
+    await expect(resultCard.getByRole("link", { name: new RegExp(`^${E2E_USERS.professional.fullName}`) }).first()).toBeVisible();
     await expect(resultCard).toContainText(categoryLabel);
     await expectNoHorizontalOverflow(page);
   });

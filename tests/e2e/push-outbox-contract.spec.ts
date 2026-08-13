@@ -89,6 +89,8 @@ test.describe("@contract push outbox safety contracts", () => {
     });
     expect(isAuthorizedPushWorkerRequest(bearer, "correct horse")).toBe(true);
     expect(isAuthorizedPushWorkerRequest(dedicatedHeader, "correct horse")).toBe(true);
+    expect(isAuthorizedPushWorkerRequest(bearer, ["manual secret", "correct horse"])).toBe(true);
+    expect(isAuthorizedPushWorkerRequest(bearer, ["manual secret", undefined])).toBe(false);
   });
 
   test("delivery kill switch is fail-closed and needs an explicit enable", () => {

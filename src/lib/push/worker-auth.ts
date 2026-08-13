@@ -18,7 +18,12 @@ export function pushWorkerSecretFromRequest(request: Request) {
 
 export function isAuthorizedPushWorkerRequest(
   request: Request,
-  expected = process.env.PUSH_WORKER_SECRET,
+  expected: string | Array<string | undefined> | undefined = [
+    process.env.PUSH_WORKER_SECRET,
+    process.env.CRON_SECRET,
+  ],
 ) {
-  return timingSafeSecretEqual(pushWorkerSecretFromRequest(request), expected);
+  const expectedSecrets = Array.isArray(expected) ? expected : [expected];
+  const candidate = pushWorkerSecretFromRequest(request);
+  return expectedSecrets.some((secret) => timingSafeSecretEqual(candidate, secret));
 }

@@ -11,6 +11,18 @@ async function expandFirstCardWithActions(page: Page) {
   await expandable.click();
 }
 
+async function visibleMoreOptions(page: Page) {
+  return page.getByRole("button", { name: /M[aá]s opciones|More options|M[aá]s|More/i }).filter({ visible: true }).first();
+}
+
+async function resolveMoreOptions(page: Page) {
+  const trigger = await visibleMoreOptions(page);
+  const ready = await expect(trigger).toBeVisible({ timeout: 6_000 }).then(() => true, () => false);
+  if (!ready) await expandFirstCardWithActions(page);
+  await expect(trigger).toBeVisible({ timeout: 12_000 });
+  return trigger;
+}
+
 async function expectVerticalMenuInsideViewport(page: Page, trigger: Locator) {
   await expect(trigger).toBeVisible();
   await trigger.click();
@@ -138,10 +150,7 @@ test.describe("@visual recent bug contracts", () => {
       if (route.includes("tab=proposals")) {
         await page.getByRole("button", { name: /Mis propuestas|My proposals/i }).click();
       }
-      if (!(await page.getByRole("button", { name: /M[aá]s opciones|More options/i }).filter({ visible: true }).count())) {
-        await expandFirstCardWithActions(page);
-      }
-      await expectVerticalMenuInsideViewport(page, page.getByRole("button", { name: /M[aá]s opciones|More options|M[aá]s|More/i }).filter({ visible: true }).first());
+      await expectVerticalMenuInsideViewport(page, await resolveMoreOptions(page));
       await expectHealthyPage(page);
     }
 

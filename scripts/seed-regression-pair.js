@@ -524,6 +524,9 @@ async function main() {
   const cPhysicalLocation = (Array.isArray(c.professional.workplaces)
     ? c.professional.workplaces.find((workplace) => typeof workplace?.id === "string" && workplace.id.trim())?.id
     : null) || "regression-office";
+  const sPhysicalLocation = (Array.isArray(s.professional.workplaces)
+    ? s.professional.workplaces.find((workplace) => typeof workplace?.id === "string" && workplace.id.trim())?.id
+    : null) || "regression-office-sg";
 
   const savedSnapshot = ({ professional, profile }) => ({
     id: professional.id,
@@ -544,8 +547,8 @@ async function main() {
   });
 
   await must("availability weekly", supabase.from("availability_weekly").upsert([
-    { id: ids.weekly[0], professional_id: c.professional.id, category_id: c.professional.category_id, weekday: 1, start_time: "08:00", end_time: "17:00", slot_minutes: 60 },
-    { id: ids.weekly[1], professional_id: s.professional.id, category_id: s.professional.category_id, weekday: 2, start_time: "09:00", end_time: "18:00", slot_minutes: 60 },
+    { id: ids.weekly[0], professional_id: c.professional.id, location_id: cPhysicalLocation, category_id: c.professional.category_id, weekday: 1, start_time: "08:00", end_time: "17:00", slot_minutes: 60 },
+    { id: ids.weekly[1], professional_id: s.professional.id, location_id: sPhysicalLocation, category_id: s.professional.category_id, weekday: 2, start_time: "09:00", end_time: "18:00", slot_minutes: 60 },
   ], { onConflict: "id" }));
 
   // Previous test runs may have restored these deterministic moments with an
@@ -759,9 +762,20 @@ async function main() {
   ], { onConflict: "id" }));
 
   await must("notifications", supabase.from("notifications").upsert([
-    { id: ids.notifications[0], user_id: c.profile.id, type: "direct_message", title: "Mensaje de SG Solutions", message: "Tienes una respuesta sobre la red de oficina.", data: { regressionSeed: SEED, link: `/mensajes/${ids.conversations[0]}` }, read: false, created_at: iso(-1) },
-    { id: ids.notifications[1], user_id: s.profile.id, type: "direct_message", title: "Mensaje de ContrataCR", message: "Tienes una propuesta sobre tu página de servicios.", data: { regressionSeed: SEED, link: `/mensajes/${ids.conversations[1]}` }, read: false, created_at: iso(-1) },
+    { id: ids.notifications[0], user_id: c.profile.id, type: "direct_message", title: "Mensaje de SG Solutions", message: "Tienes una respuesta sobre la red de oficina.", data: { regressionSeed: SEED, push_suppressed: true, link: `/mensajes/${ids.conversations[0]}` }, read: false, created_at: iso(-1) },
+    { id: ids.notifications[1], user_id: s.profile.id, type: "direct_message", title: "Mensaje de ContrataCR", message: "Tienes una propuesta sobre tu página de servicios.", data: { regressionSeed: SEED, push_suppressed: true, link: `/mensajes/${ids.conversations[1]}` }, read: false, created_at: iso(-1) },
   ], { onConflict: "id" }));
+  await must("suppress deterministic notification outbox", supabase
+    .from("notification_push_outbox")
+    .update({
+      status: "suppressed",
+      completed_at: iso(),
+      locked_at: null,
+      locked_by: null,
+      last_error: null,
+      updated_at: iso(),
+    })
+    .in("notification_id", ids.notifications));
 
   // An interrupted test can leave a temporary publication activity or its
   // follower notification behind. Reconcile only the two canonical actors

@@ -135,11 +135,6 @@ test.describe("@account disposable account lifecycle", () => {
       sentinel = await createDisposableAccount({ prefix: "deletion-sentinel", professional: true });
       expect(target.professionalId).toBeTruthy();
       expect(sentinel.professionalId).toBeTruthy();
-      targetDeletionRequestId = await insertId("account_deletion_requests", {
-        user_id: target.id,
-        status: "pending",
-      });
-
       const stamp = Date.now();
       const targetBookingId = await insertId("bookings", {
         professional_id: seed.professionalId,
@@ -472,6 +467,13 @@ test.describe("@account disposable account lifecycle", () => {
 
       await loginAs(page, target.email, target.password);
       await gotoOK(page, "/en/dashboard/profesional?tab=cuenta&mode=use");
+      // Keep the request id deterministic for the isolation assertions, but
+      // only mark deletion as pending after the user has authenticated and the
+      // account page is open. Pending accounts are intentionally denied login.
+      targetDeletionRequestId = await insertId("account_deletion_requests", {
+        user_id: target.id,
+        status: "pending",
+      });
       await page.getByRole("button", { name: /^Delete account$/i }).filter({ visible: true }).click();
       await page.getByRole("button", { name: /^Confirm deletion$/i }).filter({ visible: true }).click();
       await page.waitForURL(/\/en\?accountDeletion=(?:completed|pending)/, { timeout: 45_000 });

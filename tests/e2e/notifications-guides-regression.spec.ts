@@ -84,7 +84,7 @@ async function seedNotifications(userId: string, locale: Locale) {
       type: "professional_follow",
       title: `Follow ${runId}`,
       message: `Follow message ${runId}`,
-      data: { regression_run: runId, follower_name: followerName },
+      data: { regression_run: runId, push_suppressed: true, follower_name: followerName },
       read: false,
     },
     {
@@ -92,7 +92,7 @@ async function seedNotifications(userId: string, locale: Locale) {
       type: "job_application",
       title: `Application ${runId}`,
       message: `Application message ${runId}`,
-      data: { regression_run: runId, applicant_name: applicantName, job_title: jobTitle },
+      data: { regression_run: runId, push_suppressed: true, applicant_name: applicantName, job_title: jobTitle },
       read: false,
     },
     {
@@ -102,6 +102,7 @@ async function seedNotifications(userId: string, locale: Locale) {
       message: `${professionalName} confirmó tu solicitud de '${serviceName}'.`,
       data: {
         regression_run: runId,
+        push_suppressed: true,
         professional_name: professionalName,
         service_description: serviceName,
         booking_status: "confirmed",
