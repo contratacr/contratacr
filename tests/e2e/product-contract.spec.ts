@@ -8,6 +8,13 @@ import { apiJson, resetAuth } from "./helpers";
 const notificationTypes = [...TRANSLATED_NOTIFICATION_TYPES].sort();
 
 test.describe("@contract product safety contracts", () => {
+  test("public account deletion CTA opens Account and security", async ({ page }) => {
+    await resetAuth(page);
+    await page.goto("/es/eliminar-cuenta");
+    const cta = page.getByRole("link", { name: "Ir a Cuenta y seguridad" });
+    await expect(cta).toHaveAttribute("href", "/es/dashboard/profesional?tab=cuenta");
+  });
+
   test("Spanish product copy has no broken encoding placeholders", () => {
     const serialized = JSON.stringify(esMessages);
     expect(serialized).not.toMatch(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]\?[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/);
