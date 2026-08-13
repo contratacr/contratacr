@@ -182,6 +182,7 @@ jobs:
           mirror="$RUNNER_TEMP/contratacr-mirror"
 
           rollback() {
+            original_status=$?
             echo "::warning::Sync failed; restoring test from the ephemeral rollback."
             set +e
             "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
@@ -192,7 +193,10 @@ jobs:
             rollback_status=$?
             "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
               --file=scripts/sync/enable-test-restore-trigger.sql
-            return "$rollback_status"
+            if [ "$rollback_status" -ne 0 ]; then
+              echo "::error::The test rollback also failed."
+            fi
+            return "$original_status"
           }
           trap rollback ERR
 
