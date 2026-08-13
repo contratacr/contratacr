@@ -1065,7 +1065,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       return () => window.removeEventListener("scroll", handler);
     }
     const observer = new IntersectionObserver(
-      ([entry]) => setCompact(!entry.isIntersecting),
+      ([entry]) => {
+        // The sentinel starts below the viewport on shorter screens. That also
+        // means "not intersecting", but the hero search has not been passed yet.
+        // Activate only after the sentinel crosses above the fixed navbar.
+        setCompact(entry.boundingClientRect.top <= 64);
+      },
       { threshold: 0, rootMargin: "-64px 0px 0px 0px" }
     );
     observer.observe(sentinel);
