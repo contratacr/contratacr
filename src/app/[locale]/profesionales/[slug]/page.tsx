@@ -212,8 +212,16 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!professional?.id) return;
     const onFollowChange = (event: Event) => {
-      const detail = (event as CustomEvent<{ professionalId?: string; delta?: number }>).detail;
-      if (detail?.professionalId !== professional.id || !detail.delta) return;
+      const detail = (event as CustomEvent<{ professionalId?: string; delta?: number; count?: number }>).detail;
+      if (detail?.professionalId !== professional.id) return;
+      if (typeof detail.count === "number" && Number.isFinite(detail.count)) {
+        const exactCount = detail.count;
+        setProfessional((current) => current
+          ? { ...current, followerCount: Math.max(0, exactCount) }
+          : current);
+        return;
+      }
+      if (!detail.delta) return;
       setProfessional((current) => current
         ? { ...current, followerCount: Math.max(0, (current.followerCount ?? 0) + detail.delta!) }
         : current);
@@ -392,6 +400,7 @@ export default function ProfilePage() {
     id: professional.id,
     slug: professional.slug,
     fullName: professional.fullName,
+    businessName: professional.businessName,
     avatarUrl: professional.avatarUrl ?? undefined,
     categoryIcon: professional.categoryIcon,
     categoryId: professional.categoryId,
@@ -520,7 +529,7 @@ export default function ProfilePage() {
                 <div className="min-w-0 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Users className="h-4 w-4 text-[#009FD9]" />
-                    <span className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
+                    <span data-follower-count className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
                   </div>
                   <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">
                     {locale === "en"

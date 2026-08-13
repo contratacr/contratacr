@@ -110,10 +110,18 @@ test.describe("@seeded offers, jobs and application lifecycle", () => {
 
       // ContrataCR has a seeded recent CV. Submit it through the real English UI
       // and ensure the application appears with that resume in My applications.
-      await gotoOK(page, `/en/empleos/${jobId}?apply=${jobId}`);
+      await gotoOK(page, `/en/empleos/${jobId}`);
       const apply = page.getByRole("button", { name: /^Apply$/i }).filter({ visible: true });
-      if (await apply.count()) await apply.first().click();
-      const application = page.locator("form").filter({ has: page.getByRole("button", { name: /Submit application/i }) }).first();
+      await expect(apply.first()).toBeVisible();
+      await apply.first().click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog")).toBeHidden();
+
+      // The signed-out Apply action targets this URL after login. Cover the
+      // destination contract independently from the normal visible CTA.
+      await gotoOK(page, `/en/empleos/${jobId}?apply=${jobId}`);
+      const application = page.getByRole("dialog").locator("form").filter({ has: page.getByRole("button", { name: /Submit application/i }) }).first();
       await expect(application).toBeVisible();
       await expect(application.getByText(/Recently used resume|CV/i)).toBeVisible({ timeout: 15_000 });
       await application.getByPlaceholder(/Briefly explain/i).fill("I am interested in this regression job and meet all stated requirements.");

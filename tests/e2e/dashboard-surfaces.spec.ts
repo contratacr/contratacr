@@ -35,8 +35,18 @@ const clientTabs = [
 
 async function exerciseVisibleFilters(page: import("playwright/test").Page) {
   const filters = page.locator("[data-status-filter-tabs]:visible");
+  const visibleFilterEmptyState = page
+    .getByText(
+      /^(?:No hay (?:solicitudes|oportunidades|proyectos|tiquetes) en esta vista\.|No tienes (?:profesionales favoritos|ofertas favoritas|empleos favoritos)\.)$/i,
+      { exact: true },
+    )
+    .filter({ visible: true });
+  // Dashboard sections render their filter groups only after their client-side
+  // profile/list requests resolve. `gotoOK` intentionally waits for the document,
+  // not every section request, so wait for that stable UI marker before measuring
+  // it. Keep the timeout bounded so a filter that truly never renders still fails.
+  await expect(filters.first(), `Expected at least one filter group on ${page.url()}`).toBeVisible();
   const filterCount = await filters.count();
-  expect(filterCount, `Expected at least one filter group on ${page.url()}`).toBeGreaterThan(0);
 
   for (let filterIndex = 0; filterIndex < filterCount; filterIndex += 1) {
     const filter = filters.nth(filterIndex);
@@ -71,6 +81,10 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
         expect(count, `Filter "${await button.innerText()}" must have data on ${page.url()}`).toBeGreaterThan(0);
       }
       await expect(page.locator(".ccr-empty-state:visible")).toHaveCount(0);
+      await expect(
+        visibleFilterEmptyState,
+        `Filter "${await button.innerText()}" rendered an empty result despite its populated fixture (${page.url()})`,
+      ).toHaveCount(0);
     }
   }
 }

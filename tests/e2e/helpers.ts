@@ -84,10 +84,22 @@ export async function expectNotVercelProtection(page: Page, path = page.url()) {
 }
 
 export async function expectPageShell(page: Page) {
-  await expect(page.locator("body")).toContainText(/ContrataCR/i);
-  await expect(page.locator("body")).not.toContainText(/Application error|Internal Server Error/i);
-  const bodyText = (await page.locator("body").innerText()).trim();
-  expect(bodyText.length, "Page should render meaningful content").toBeGreaterThan(20);
+  const body = page.locator("body");
+  const visibleMain = page.locator("main").filter({ visible: true });
+  await expect
+    .poll(
+      async () => {
+        const bodyText = (await body.innerText()).trim();
+        const mainText = (await visibleMain.allInnerTexts()).join(" ").trim();
+        return mainText.length > 20 && /ContrataCR/i.test(bodyText);
+      },
+      {
+        timeout: 8_000,
+        message: "Page should replace the streamed loading fallback with meaningful main content",
+      },
+    )
+    .toBe(true);
+  await expect(body).not.toContainText(/Application error|Internal Server Error/i);
 }
 
 export async function expectHealthyPage(page: Page) {
@@ -220,10 +232,19 @@ export function isMobileProject(testInfo: TestInfo) {
 
 export async function firstProfessionalHref(page: Page) {
   await gotoOK(page, "/es/buscar");
-  const links = page.locator('a[href*="/profesionales/"]');
-  const count = await links.count();
-  if (count === 0) return null;
+  const links = page.locator('a[href*="/profesionales/"]').filter({ visible: true });
 
+  await expect
+    .poll(
+      async () => await links.count(),
+      {
+        timeout: 12_000,
+        message: "The verified production mirror should finish streaming at least one professional result",
+      },
+    )
+    .toBeGreaterThan(0);
+
+  const count = await links.count();
   for (let i = 0; i < count; i += 1) {
     const href = await links.nth(i).getAttribute("href");
     if (href?.includes("/profesionales/") && !href.includes("?tab=")) return href;

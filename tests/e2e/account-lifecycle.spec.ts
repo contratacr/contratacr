@@ -69,7 +69,7 @@ test.describe("@account disposable account lifecycle", () => {
       await page.getByRole("button", { name: /Change password/i }).filter({ visible: true }).click();
       await page.getByPlaceholder(/Current password/i).fill(account.password);
       await page.getByPlaceholder(/^New password/i).fill(nextPassword);
-      await page.getByPlaceholder(/Repeat new password|Confirm password/i).fill(nextPassword);
+      await page.getByPlaceholder(/Repeat (?:the )?new password|Confirm password/i).fill(nextPassword);
       await page.getByRole("button", { name: /Save password/i }).filter({ visible: true }).click();
       await expect(page.getByPlaceholder(/Current password/i)).toBeHidden({ timeout: 15_000 });
 

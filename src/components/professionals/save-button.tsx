@@ -14,6 +14,24 @@ const PENDING_SAVE_KEY = "contratacr:pending-save-pro";
 const SYNCED_PREFIX = "contratacr_saved_pros_synced";
 const syncRequests = new Map<string, Promise<SavedPro[]>>();
 const lastSyncAt = new Map<string, number>();
+const mutationEpochs = new Map<string, number>();
+const activeMutations = new Map<string, number>();
+
+function bumpMutationEpoch(userId: string) {
+  mutationEpochs.set(userId, (mutationEpochs.get(userId) ?? 0) + 1);
+}
+
+function beginMutation(userId: string) {
+  activeMutations.set(userId, (activeMutations.get(userId) ?? 0) + 1);
+  bumpMutationEpoch(userId);
+}
+
+function endMutation(userId: string) {
+  const remaining = Math.max(0, (activeMutations.get(userId) ?? 1) - 1);
+  if (remaining === 0) activeMutations.delete(userId);
+  else activeMutations.set(userId, remaining);
+  bumpMutationEpoch(userId);
+}
 
 // Favorites are scoped to the signed-in user so two accounts on the same browser
 // never see each other's saved pros. We derive the user id synchronously from
@@ -50,6 +68,7 @@ export type SavedPro = {
   id: string;
   slug: string;
   fullName: string;
+  businessName?: string;
   avatarUrl?: string;
   categoryIcon: string;
   categoryId: string;
@@ -104,6 +123,13 @@ async function upsertRemoteSavedPros(userId: string, pros: SavedPro[]) {
 
 /** Remote favorites are canonical after a one-time upload of this browser's old local favorites. */
 export function syncSavedPros(userId: string, force = false): Promise<SavedPro[]> {
+  // The local optimistic value is authoritative until its remote write has
+  // completed. Starting a SELECT during that window can only return an older
+  // snapshot and must not be allowed to overwrite the current button state.
+  if ((activeMutations.get(userId) ?? 0) > 0) {
+    return Promise.resolve(getSavedPros(userId));
+  }
+
   if (!force) {
     const pending = syncRequests.get(userId);
     if (pending) return pending;
@@ -113,6 +139,10 @@ export function syncSavedPros(userId: string, force = false): Promise<SavedPro[]
   }
 
   const request = (async () => {
+    // A profile can be saved immediately after this background refresh starts.
+    // Remember the mutation epoch so an older SELECT can never overwrite that
+    // newer optimistic state when it resolves.
+    const mutationEpoch = mutationEpochs.get(userId) ?? 0;
     const local = getSavedPros(userId);
     const migrationKey = `${SYNCED_PREFIX}_${userId}`;
     const migrated = localStorage.getItem(migrationKey) === "1";
@@ -136,7 +166,7 @@ export function syncSavedPros(userId: string, force = false): Promise<SavedPro[]
     if (remote.length > 0) {
       const { data: currentModes } = await supabase
         .from("professionals")
-        .select("id, videoconsulta, coverage_country")
+        .select("id, business_name, videoconsulta, coverage_country")
         .in("id", remote.map((pro) => pro.id));
       const modesById = new Map((currentModes ?? []).map((row) => [row.id, row]));
       remote = remote.map((pro) => {
@@ -144,11 +174,16 @@ export function syncSavedPros(userId: string, force = false): Promise<SavedPro[]
         if (!current) return pro;
         return {
           ...pro,
+          businessName: current.business_name?.trim() || undefined,
           videoconsulta: Boolean(current.videoconsulta),
           coverage: { ...pro.coverage, country: Boolean(current.coverage_country) },
         };
       });
     }
+    if ((mutationEpochs.get(userId) ?? 0) !== mutationEpoch) {
+      return getSavedPros(userId);
+    }
+
     setSavedPros(remote, userId);
     localStorage.setItem(migrationKey, "1");
     lastSyncAt.set(userId, Date.now());
@@ -164,17 +199,30 @@ export function syncSavedPros(userId: string, force = false): Promise<SavedPro[]
 }
 
 async function saveProRemote(pro: SavedPro, userId: string) {
-  savePro(pro, userId);
-  await upsertRemoteSavedPros(userId, [pro]);
+  // Bump both before and after the write. A sync that started before this
+  // mutation, or while its remote UPSERT was in flight, must discard its
+  // potentially stale snapshot instead of reverting the button visually.
+  beginMutation(userId);
+  try {
+    savePro(pro, userId);
+    await upsertRemoteSavedPros(userId, [pro]);
+  } finally {
+    endMutation(userId);
+  }
 }
 
-async function unsaveProRemote(id: string, userId: string) {
-  unsavePro(id, userId);
-  await createClient()
-    .from("saved_professionals")
-    .delete()
-    .eq("client_id", userId)
-    .eq("professional_id", id);
+export async function unsaveProRemote(id: string, userId: string) {
+  beginMutation(userId);
+  try {
+    unsavePro(id, userId);
+    await createClient()
+      .from("saved_professionals")
+      .delete()
+      .eq("client_id", userId)
+      .eq("professional_id", id);
+  } finally {
+    endMutation(userId);
+  }
 }
 
 function writePendingSave(pro: SavedPro) {

@@ -21,7 +21,10 @@ jobs:
   e2e:
     name: Playwright regression (test)
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # The exhaustive desktop + mobile matrix also performs fixture cleanup and
+    # post-run verification. Leave enough room for those safety steps even when
+    # one browser case needs its bounded retries.
+    timeout-minutes: 150
     environment: test
     env:
       PLAYWRIGHT_BASE_URL: https://test.contratacr.com
@@ -159,6 +162,10 @@ jobs:
 
       - name: Run regression suite
         run: npm run test:e2e
+
+      - name: Verify regression fixtures were restored
+        if: always()
+        run: npm run seed:test:verify
 
       - name: Upload Playwright report
         if: always()

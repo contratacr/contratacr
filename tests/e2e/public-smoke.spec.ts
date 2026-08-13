@@ -140,7 +140,7 @@ test.describe("@smoke public routes", () => {
     }
   });
 
-  test("home near-me search uses proximity params", async ({ page }, testInfo) => {
+  test("home near-me search uses proximity params", async ({ page }) => {
     await page.context().setGeolocation({ latitude: 9.9281, longitude: -84.0907 });
     await gotoOK(page, "/es");
     await waitForInteractivePage(page);
@@ -159,10 +159,10 @@ test.describe("@smoke public routes", () => {
     await expect(nearMe).toBeVisible();
 
     await nearMe.click();
-    if (isMobileProject(testInfo)) {
-      await expect(location).toHaveValue(/Cerca de m[ií]|Near me/i);
-      await page.getByRole("button", { name: /^Buscar$|^Search$/i }).filter({ visible: true }).first().click();
-    }
+    await expect(location).toHaveValue(/Cerca de m[ií]|Near me/i);
+    const homeSearchForm = page.locator("form").filter({ has: location });
+    await expect(homeSearchForm).toHaveCount(1);
+    await homeSearchForm.getByRole("button", { name: /^Buscar$|^Search$/i }).click();
     await expect(page).toHaveURL(/\/es\/buscar/);
     await expect(page).toHaveURL(/lat=9\.92810/);
     await expect(page).toHaveURL(/lng=-84\.09070/);
@@ -225,7 +225,9 @@ test.describe("@smoke public routes", () => {
   test("footer keeps localized resources and safe external destinations", async ({ page }) => {
     for (const locale of ["es", "en"] as const) {
       await gotoOK(page, `/${locale}`);
-      const footer = page.locator("footer");
+      await expectPageShell(page);
+      const footer = page.locator("footer.ccr-app-footer").filter({ visible: true });
+      await expect(footer, "The page should expose exactly one visible application footer").toHaveCount(1);
       await expect(footer).toBeVisible();
 
       const internalRoutes = ["servicios", "como-funciona", "ayuda", "soporte", "privacidad", "terminos"];

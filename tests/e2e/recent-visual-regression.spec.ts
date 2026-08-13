@@ -70,14 +70,22 @@ test.describe("@visual recent bug contracts", () => {
 
   test("professional registration is turquoise text for client-only accounts and hidden for providers", async ({ page }) => {
     let clientOnly: DisposableAccount | undefined;
+    let provider: DisposableAccount | undefined;
     try {
       clientOnly = await createDisposableAccount({ prefix: "client-navbar" });
+      provider = await createDisposableAccount({ prefix: "provider-navbar", professional: true });
       for (const width of [1366, 390]) {
         await page.setViewportSize({ width, height: width > 600 ? 900 : 844 });
         await loginAs(page, clientOnly.email, clientOnly.password);
         await gotoOK(page, "/es");
-        if (width < 600) await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
-        const link = page.getByRole("link", { name: /^Ofrecer mis servicios$/i }).filter({ visible: true }).first();
+        const clientNavigation = width < 600
+          ? page.getByRole("dialog", { name: /Men[uú]|Menu/i })
+          : page.getByRole("banner");
+        if (width < 600) {
+          await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
+          await expect(clientNavigation).toBeVisible();
+        }
+        const link = clientNavigation.getByRole("link", { name: /^Ofrecer mis servicios$/i }).filter({ visible: true }).first();
         await expect(link).toBeVisible();
         await expect(link.locator("svg")).toHaveCount(0);
         const style = await link.evaluate((node) => {
@@ -87,12 +95,30 @@ test.describe("@visual recent bug contracts", () => {
         expect(style.color).toBe("rgb(0, 159, 217)");
         expect(style.background).toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
 
-        await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+        await loginAs(page, provider.email, provider.password);
         await gotoOK(page, "/es");
-        if (width < 600) await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
-        await expect(page.getByRole("link", { name: /^Ofrecer mis servicios$/i }).filter({ visible: true })).toHaveCount(0);
+        const providerNavigation = width < 600
+          ? page.getByRole("dialog", { name: /Men[uú]|Menu/i })
+          : page.getByRole("banner");
+        if (width < 600) {
+          await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
+          await expect(providerNavigation).toBeVisible();
+        }
+        await expect(providerNavigation.getByRole("link", { name: /^Ofrecer mis servicios$/i })).toHaveCount(0);
+        if (width < 600) {
+          await expect(providerNavigation.getByRole("link", { name: /^Mi panel$/i })).toBeVisible();
+        } else {
+          const accountMenu = providerNavigation
+            .getByRole("button", { name: provider.businessName, exact: true })
+            .filter({ visible: true })
+            .first();
+          await expect(accountMenu).toBeVisible();
+          await accountMenu.click();
+          await expect(providerNavigation.getByRole("link", { name: /^Mi panel$/i }).filter({ visible: true })).toBeVisible();
+        }
       }
     } finally {
+      await cleanupDisposableAccount(provider);
       await cleanupDisposableAccount(clientOnly);
     }
   });

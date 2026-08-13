@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -82,81 +82,112 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
   const [following, setFollowing] = useState(false);
   const [followers, setFollowers] = useState(initialFollowers);
   const [busy, setBusy] = useState(false);
+  const [resolvedScope, setResolvedScope] = useState<string | null>(null);
+  const mutationEpoch = useRef(0);
+  const refreshRequestId = useRef(0);
   const es = locale !== "en";
 
   const refresh = useCallback(async () => {
+    const requestId = ++refreshRequestId.current;
+    const refreshEpoch = mutationEpoch.current;
+    const viewerId = user?.id ?? "guest";
+    const viewerScope = `${viewerId}:${professionalId}`;
     const db = createClient();
     const countQuery = db.from("professional_follows").select("id", { count: "exact", head: true }).eq("professional_id", professionalId);
     const stateQuery = user
       ? db.from("professional_follows").select("id").eq("professional_id", professionalId).eq("follower_id", user.id).maybeSingle()
       : Promise.resolve({ data: null });
     const [countResult, stateResult] = await Promise.all([countQuery, stateQuery]);
+    // A refresh started before (or during) a click may contain the old follow
+    // state. Never let that stale response undo the newer local mutation.
+    if (refreshRequestId.current !== requestId || mutationEpoch.current !== refreshEpoch) return;
     const nextFollowers = countResult.count ?? initialFollowers;
     setFollowers(nextFollowers);
     onCountChange?.(nextFollowers);
     setFollowing(Boolean(stateResult.data) || Boolean(user && getLocalFollowIds(user.id).includes(professionalId)));
+    setResolvedScope(viewerScope);
   }, [initialFollowers, onCountChange, professionalId, user]);
 
   useEffect(() => {
-    void refresh();
+    const initialRefresh = window.setTimeout(() => void refresh(), 0);
     const sync = () => void refresh();
     window.addEventListener("professionalFollowsChanged", sync);
-    return () => window.removeEventListener("professionalFollowsChanged", sync);
+    return () => {
+      window.clearTimeout(initialRefresh);
+      window.removeEventListener("professionalFollowsChanged", sync);
+    };
   }, [refresh]);
 
   async function toggle(event: React.MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
-    if (busy || authLoading) return;
+    const viewerId = user?.id ?? "guest";
+    const stateReady = resolvedScope === `${viewerId}:${professionalId}`;
+    if (busy || authLoading || !stateReady) return;
     if (isOwn) {
       onSelfAction?.();
       return;
     }
-    if (!user) {
-      writePendingFollow(professionalId);
-      const redirect = encodeURIComponent("/dashboard/profesional?tab=network&mode=use");
-      window.location.assign(`/${locale}/login?redirect=${redirect}`);
-      return;
-    }
 
+    mutationEpoch.current += 1;
     setBusy(true);
-    const db = createClient();
-    const result = following
-      ? await db.from("professional_follows").delete().eq("follower_id", user.id).eq("professional_id", professionalId)
-      : await db.from("professional_follows").insert({ follower_id: user.id, professional_id: professionalId });
-    if (!result.error) {
-      setFollowing(!following);
-      setFollowers((value) => {
-        const nextFollowers = Math.max(0, value + (following ? -1 : 1));
-        onCountChange?.(nextFollowers);
-        return nextFollowers;
-      });
-      window.dispatchEvent(new CustomEvent("professionalFollowsChanged", { detail: { professionalId, delta: following ? -1 : 1 } }));
-    } else {
+    try {
+      if (!user) {
+        writePendingFollow(professionalId);
+        const redirect = encodeURIComponent("/dashboard/profesional?tab=network&mode=use");
+        window.location.assign(`/${locale}/login?redirect=${redirect}`);
+        return;
+      }
+
+      const db = createClient();
+      const localOnlyFollow = following && getLocalFollowIds(user.id).includes(professionalId);
+      const result = following
+        ? await db.from("professional_follows").delete().eq("follower_id", user.id).eq("professional_id", professionalId)
+        : await db.from("professional_follows").insert({ follower_id: user.id, professional_id: professionalId });
+      if (result.error) {
+        // A duplicate means the canonical backend already has the desired
+        // relationship. Reconcile the label without inventing another follower.
+        if (!following && result.error.code === "23505") {
+          setFollowing(true);
+          queueMicrotask(() => {
+            window.dispatchEvent(new CustomEvent("professionalFollowsChanged", { detail: { professionalId, delta: 0 } }));
+          });
+        }
+        return;
+      }
       if (following) removeLocalFollow(user.id, professionalId);
-      else addLocalFollow(user.id, professionalId);
+      const delta = following ? (localOnlyFollow ? 0 : -1) : 1;
+      const nextFollowers = Math.max(0, followers + delta);
       setFollowing(!following);
-      setFollowers((value) => {
-        const nextFollowers = Math.max(0, value + (following ? -1 : 1));
-        onCountChange?.(nextFollowers);
-        return nextFollowers;
+      setFollowers(nextFollowers);
+      onCountChange?.(nextFollowers);
+      // Defer until `finally` closes the mutation epoch. The event-triggered
+      // refresh is then allowed to reconcile the canonical backend count, and
+      // consumers can use `count` instead of applying `delta` a second time.
+      queueMicrotask(() => {
+        window.dispatchEvent(new CustomEvent("professionalFollowsChanged", {
+          detail: { professionalId, delta, count: nextFollowers },
+        }));
       });
-      window.dispatchEvent(new CustomEvent("professionalFollowsChanged", { detail: { professionalId, delta: following ? -1 : 1 } }));
+    } finally {
+      mutationEpoch.current += 1;
+      setBusy(false);
     }
-    setBusy(false);
   }
 
   const label = labelOverride ?? (following ? (es ? "Siguiendo" : "Following") : (es ? "Seguir" : "Follow"));
   const countLabel = es
     ? `${followers} ${followers === 1 ? "seguidor" : "seguidores"}`
     : `${followers} ${followers === 1 ? "follower" : "followers"}`;
+  const stateReady = resolvedScope === `${user?.id ?? "guest"}:${professionalId}`;
 
   if (compact) {
     return (
       <button
+        data-follow-button
         type="button"
         onClick={toggle}
-        disabled={busy}
+        disabled={busy || authLoading || !stateReady}
         aria-label={`${label}. ${countLabel}`}
         aria-pressed={following}
         className={cn(
@@ -175,9 +206,10 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
   return (
     <div className={cn("inline-flex w-fit flex-wrap items-center gap-2.5", className)}>
       <button
+        data-follow-button
         type="button"
         onClick={toggle}
-        disabled={busy}
+        disabled={busy || authLoading || !stateReady}
         aria-pressed={following}
         className={cn(
           "inline-flex h-7 min-w-[72px] items-center justify-center rounded-full px-2.5 text-center text-[12px] font-extrabold transition-colors disabled:opacity-60 sm:min-w-[78px] sm:px-3",

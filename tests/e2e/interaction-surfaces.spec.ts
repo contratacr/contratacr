@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, expectVisibleText, gotoOK, loginAs } from "./helpers";
+import { apiJson, expectHealthyPage, expectVisibleText, gotoOK, loginAs } from "./helpers";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 
@@ -66,8 +66,16 @@ test.describe("@seeded interaction surfaces", () => {
         return count ?? 0;
       }).toBe(1);
 
-      const follow = page.getByRole("button", { name: /^Follow$/i }).filter({ visible: true }).first();
+      // Keep the locator stable while the accessible action changes from
+      // "Follow. 8 followers" to "Following. 9 followers".
+      const follow = page.locator("[data-follow-button]:visible").first();
+      await expect(follow).toBeEnabled();
       await expect(follow).toHaveAttribute("aria-pressed", "false");
+      const { count: followerCountBefore } = await admin
+        .from("professional_follows")
+        .select("id", { count: "exact", head: true })
+        .eq("professional_id", seed.professionalId);
+      const initialFollowerCount = followerCountBefore ?? 0;
       await follow.click();
       await expect(follow).toHaveAttribute("aria-pressed", "true");
       await expect.poll(async () => {
@@ -75,6 +83,7 @@ test.describe("@seeded interaction surfaces", () => {
           .eq("follower_id", account!.id).eq("professional_id", seed.professionalId);
         return count ?? 0;
       }).toBe(1);
+      await expect(page.locator("[data-follower-count]:visible").first()).toHaveText(String(initialFollowerCount + 1));
 
       await gotoOK(page, "/en/dashboard/profesional?tab=saved&mode=use");
       await expect(page.getByText(/SG Solutions/i).first()).toBeVisible();
@@ -83,7 +92,9 @@ test.describe("@seeded interaction surfaces", () => {
 
       await gotoOK(page, `/en/profesionales/${seed.professionalSlug}`);
       await page.locator("[data-save-button]:visible").first().click();
-      await page.getByRole("button", { name: /^Following$/i }).filter({ visible: true }).first().click();
+      const followedAgain = page.locator("[data-follow-button]:visible").first();
+      await expect(followedAgain).toBeEnabled();
+      await followedAgain.click();
       await expect.poll(async () => {
         const [{ count: favorites }, { count: follows }] = await Promise.all([
           admin.from("saved_professionals").select("id", { count: "exact", head: true }).eq("client_id", account!.id),
@@ -91,6 +102,7 @@ test.describe("@seeded interaction surfaces", () => {
         ]);
         return { favorites: favorites ?? 0, follows: follows ?? 0 };
       }).toEqual({ favorites: 0, follows: 0 });
+      await expect(page.locator("[data-follower-count]:visible").first()).toHaveText(String(initialFollowerCount));
       await expectHealthyPage(page);
     } finally {
       if (account) {
@@ -103,6 +115,102 @@ test.describe("@seeded interaction surfaces", () => {
           .contains("data", { follower_id: account.id });
       }
       await cleanupDisposableAccount(account);
+    }
+  });
+
+  test("a professional removes a follower without creating a reverse follow", async ({ page }) => {
+    const admin = regressionAdminClient();
+    let owner: DisposableAccount | undefined;
+    let follower: DisposableAccount | undefined;
+    try {
+      owner = await createDisposableAccount({ prefix: "remove-follower-owner", professional: true });
+      follower = await createDisposableAccount({ prefix: "remove-follower-source", professional: true });
+      const { data: relation, error: relationError } = await admin
+        .from("professional_follows")
+        .insert({ follower_id: follower.id, professional_id: owner.professionalId! })
+        .select("id")
+        .single();
+      if (relationError || !relation) throw relationError ?? new Error("Could not create disposable follower relation");
+      const { data: foreignRelation, error: foreignRelationError } = await admin
+        .from("professional_follows")
+        .insert({ follower_id: owner.id, professional_id: follower.professionalId! })
+        .select("id")
+        .single();
+      if (foreignRelationError || !foreignRelation) {
+        throw foreignRelationError ?? new Error("Could not create foreign ownership guard relation");
+      }
+
+      await loginAs(page, owner.email, owner.password);
+      const foreignDelete = await apiJson<{ success?: boolean; removed?: boolean }>(page, "/api/professional-followers", {
+        method: "DELETE",
+        body: { followId: foreignRelation.id },
+      });
+      expect(foreignDelete.status).toBe(200);
+      expect(foreignDelete.body).toMatchObject({ success: true, removed: false });
+      const { count: foreignRelationCount } = await admin
+        .from("professional_follows")
+        .select("id", { count: "exact", head: true })
+        .eq("id", foreignRelation.id)
+        .eq("professional_id", follower.professionalId!);
+      expect(foreignRelationCount).toBe(1);
+      const { error: foreignCleanupError } = await admin
+        .from("professional_follows")
+        .delete()
+        .eq("id", foreignRelation.id);
+      if (foreignCleanupError) throw foreignCleanupError;
+
+      await gotoOK(page, "/en/dashboard/profesional?tab=network&mode=offer&network=followers");
+
+      await page.evaluate(() => {
+        window.addEventListener("professionalFollowsChanged", (event) => {
+          window.sessionStorage.setItem(
+            "e2e:last-professional-follow-change",
+            JSON.stringify((event as CustomEvent).detail),
+          );
+        }, { once: true });
+      });
+      const followerRow = page.locator(`[data-follow-relation-id="${relation.id}"]`);
+      await expect(followerRow).toBeVisible();
+      const remove = page.getByRole("button", { name: /^Remove$/i }).filter({ visible: true }).first();
+      await expect(remove).toBeVisible();
+      await expect(remove).toBeEnabled();
+      await remove.click();
+
+      await expect.poll(async () => {
+        const { count } = await admin
+          .from("professional_follows")
+          .select("id", { count: "exact", head: true })
+          .eq("id", relation.id)
+          .eq("professional_id", owner!.professionalId!);
+        return count ?? 0;
+      }).toBe(0);
+      await expect.poll(async () => {
+        const { count } = await admin
+          .from("professional_follows")
+          .select("id", { count: "exact", head: true })
+          .eq("follower_id", owner!.id)
+          .eq("professional_id", follower!.professionalId!);
+        return count ?? 0;
+      }).toBe(0);
+      await expect(followerRow).toHaveCount(0);
+      await expect.poll(async () => page.evaluate(() => {
+        const raw = window.sessionStorage.getItem("e2e:last-professional-follow-change");
+        return raw ? JSON.parse(raw) : null;
+      })).toMatchObject({
+        professionalId: owner.professionalId,
+        delta: -1,
+        count: 0,
+      });
+      await expectHealthyPage(page);
+    } finally {
+      if (owner) {
+        await admin.from("notifications").delete().contains("data", { follower_id: owner.id });
+      }
+      if (follower) {
+        await admin.from("notifications").delete().contains("data", { follower_id: follower.id });
+      }
+      await cleanupDisposableAccount(follower);
+      await cleanupDisposableAccount(owner);
     }
   });
 

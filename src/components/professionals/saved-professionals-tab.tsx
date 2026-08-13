@@ -11,8 +11,9 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { formatServicePrice } from "@/lib/pricing";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsavePro, type SavedPro } from "./save-button";
+import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsaveProRemote, type SavedPro } from "./save-button";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
+import { getProfessionalDisplayName } from "@/lib/display-name";
 
 type SavedFilter = "professionals" | "offers" | "jobs";
 type SavedItemKind = "offer" | "job";
@@ -36,22 +37,23 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
   const isVideoConsult = !physicalLocationLabel && (pro.videoconsulta || pro.coverage?.country);
   const locationLabel = physicalLocationLabel
     || (isVideoConsult ? tSaved("videoConsult") : tSaved("locationUnavailable"));
+  const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName).primaryDesktop;
 
   return (
     <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-3 gap-y-4 p-4 transition-colors hover:bg-[#fafafa] sm:flex sm:items-center sm:gap-4">
       <div className="relative shrink-0">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-[#EBF5FB] text-lg font-bold text-[#009FD9] sm:h-14 sm:w-14">
           {pro.avatarUrl ? (
-            <img src={pro.avatarUrl} alt={pro.fullName} className="h-full w-full object-cover" />
+            <img src={pro.avatarUrl} alt={displayName} className="h-full w-full object-cover" />
           ) : (
-            pro.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2)
+            displayName.split(" ").map((n) => n[0]).join("").slice(0, 2)
           )}
         </div>
       </div>
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-sm font-semibold leading-5 text-[#162543]">{pro.fullName}</span>
+          <span className="text-sm font-semibold leading-5 text-[#162543]">{displayName}</span>
           {pro.isVerified && (
             <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
               {tCard("verifiedShort")}
@@ -200,12 +202,7 @@ export function SavedProfessionalsTab() {
 
   async function handleUnsavePro(id: string) {
     if (user) {
-      unsavePro(id, user.id);
-      await createClient()
-        .from("saved_professionals")
-        .delete()
-        .eq("client_id", user.id)
-        .eq("professional_id", id);
+      await unsaveProRemote(id, user.id);
     }
     setSavedPros((prev) => prev.filter((p) => p.id !== id));
   }

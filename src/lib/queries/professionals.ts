@@ -301,9 +301,12 @@ function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
   return normalized;
 }
 
-export async function searchProfessionals(filters: SearchFilters): Promise<ProfessionalCardData[]> {
+export async function searchProfessionals(
+  filters: SearchFilters,
+  options: { fresh?: boolean } = {},
+): Promise<ProfessionalCardData[]> {
   const normalized = normalizeSearchFilters(filters);
-  if (normalized.bounds || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number")) {
+  if (options.fresh || normalized.bounds || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number")) {
     return searchProfessionalsUncached(normalized);
   }
   return searchProfessionalsCached(normalized);

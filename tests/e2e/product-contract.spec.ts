@@ -115,6 +115,7 @@ test.describe("@contract product safety contracts", () => {
       { name: "add identity", response: apiJson(page, "/api/add-cedula", { method: "POST", body: { cedula: "990000001" } }) },
       { name: "identity appeal", response: apiJson(page, "/api/appeals", { method: "POST", body: { message: "E2E" } }) },
       { name: "support", response: apiJson(page, "/api/support") },
+      { name: "remove follower", response: apiJson(page, "/api/professional-followers", { method: "DELETE", body: { followId: "00000000-0000-4000-8000-000000000001" } }) },
     ];
 
     const results = await Promise.all(checks.map(async ({ name, response }) => ({ name, result: await response })));

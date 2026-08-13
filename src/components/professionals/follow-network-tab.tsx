@@ -37,6 +37,8 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
   const [followers, setFollowers] = useState<NetworkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
+  const [removingFollowerId, setRemovingFollowerId] = useState<string | null>(null);
+  const [removeFollowerError, setRemoveFollowerError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -56,6 +58,9 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
         : Promise.resolve({ data: [] }),
     ]);
 
+    // Supabase's nested relationship payload is not represented by generated DB
+    // types in this project yet; normalize it defensively at this boundary.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let followed = (followingResult.data ?? []).flatMap((row: any) => {
       const pro = Array.isArray(row.professionals) ? row.professionals[0] : row.professionals;
       const profile = Array.isArray(pro?.profiles) ? pro.profiles[0] : pro?.profiles;
@@ -78,6 +83,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
         .from("professionals")
         .select("id, slug, business_name, professions, verification_status, profiles(full_name, avatar_url)")
         .in("id", ids);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       followed = (localPros ?? []).flatMap((pro: any) => {
         const profile = Array.isArray(pro?.profiles) ? pro.profiles[0] : pro?.profiles;
         if (!pro?.id || !pro?.slug) return [];
@@ -94,6 +100,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
       });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const followedBy = (followerResult.data ?? []).flatMap((row: any) => {
       const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
       const pro = Array.isArray(profile?.professionals) ? profile.professionals[0] : profile?.professionals;
@@ -116,24 +123,72 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
   }, [es, user]);
 
   useEffect(() => {
-    void load();
+    const initialLoad = window.setTimeout(() => void load(), 0);
     window.addEventListener("professionalFollowsChanged", load);
-    return () => window.removeEventListener("professionalFollowsChanged", load);
+    return () => {
+      window.clearTimeout(initialLoad);
+      window.removeEventListener("professionalFollowsChanged", load);
+    };
   }, [load]);
 
   useEffect(() => {
+    const resetTimer = window.setTimeout(() => setShowLoadingSkeleton(false), 0);
     if (!loading) {
-      setShowLoadingSkeleton(false);
-      return;
+      return () => window.clearTimeout(resetTimer);
     }
-    setShowLoadingSkeleton(false);
     const timer = window.setTimeout(() => setShowLoadingSkeleton(true), 350);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(resetTimer);
+      window.clearTimeout(timer);
+    };
   }, [loading]);
 
   useEffect(() => {
-    setView(initialView ?? (searchParams.get("network") === "followers" ? "followers" : "following"));
+    const syncView = window.setTimeout(() => {
+      setView(initialView ?? (searchParams.get("network") === "followers" ? "followers" : "following"));
+    }, 0);
+    return () => window.clearTimeout(syncView);
   }, [initialView, searchParams]);
+
+  async function removeFollower(followId: string) {
+    if (removingFollowerId) return;
+    setRemovingFollowerId(followId);
+    setRemoveFollowerError(null);
+    try {
+      const response = await fetch("/api/professional-followers", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ followId }),
+      });
+      const payload = await response.json().catch(() => ({})) as {
+        success?: boolean;
+        removed?: boolean;
+        professionalId?: string;
+        followerCount?: number | null;
+      };
+      if (!response.ok || !payload.success) {
+        throw new Error(es ? "No pudimos quitar este seguidor." : "We could not remove this follower.");
+      }
+      setFollowers((current) => current.filter((item) => item.id !== followId));
+      if (payload.professionalId) {
+        window.dispatchEvent(new CustomEvent("professionalFollowsChanged", {
+          detail: {
+            professionalId: payload.professionalId,
+            delta: payload.removed ? -1 : 0,
+            ...(typeof payload.followerCount === "number" ? { count: payload.followerCount } : {}),
+          },
+        }));
+      }
+    } catch (error) {
+      setRemoveFollowerError(
+        error instanceof Error && error.message
+          ? error.message
+          : es ? "No pudimos quitar este seguidor." : "We could not remove this follower.",
+      );
+    } finally {
+      setRemovingFollowerId(null);
+    }
+  }
 
   const items = useMemo(() => {
     const source = view === "following" ? following : followers;
@@ -174,6 +229,11 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3">
+          {removeFollowerError && (
+            <p role="alert" className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+              {removeFollowerError}
+            </p>
+          )}
           {loading && showLoadingSkeleton && items.length > 0 ? (
             <div className="space-y-3 py-2">
               {[0, 1, 2, 3, 4].map((item) => (
@@ -196,7 +256,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
           ) : (
             <ul className="space-y-1">
               {items.map((item) => (
-                <li key={item.id} className="flex min-h-[58px] items-center gap-3">
+                <li data-follow-relation-id={item.id} key={item.id} className="flex min-h-[58px] items-center gap-3">
                   <Link href={item.slug ? `/profesionales/${item.slug}` : "#"} onClick={item.slug ? onBack : undefined} className="flex min-w-0 flex-1 items-center gap-3">
                     <Avatar className="h-11 w-11 shrink-0">
                       <AvatarImage src={item.avatarUrl ?? undefined} alt="" />
@@ -216,11 +276,22 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
                     </span>
                   </Link>
                   <div className="shrink-0">
-                    {item.professionalId ? (
-                      <FollowButton professionalId={item.professionalId} compact labelOverride={view === "followers" ? (es ? "Quitar" : "Remove") : undefined} />
+                    {view === "followers" ? (
+                      <button
+                        type="button"
+                        onClick={() => void removeFollower(item.id)}
+                        disabled={removingFollowerId !== null}
+                        className="inline-flex h-8 min-w-[96px] items-center justify-center rounded-lg bg-[#f0f2f5] px-4 text-sm font-bold text-[#111827] transition-colors hover:bg-[#e5e9ee] disabled:opacity-60"
+                      >
+                        {removingFollowerId === item.id
+                          ? (es ? "Quitando..." : "Removing...")
+                          : (es ? "Quitar" : "Remove")}
+                      </button>
+                    ) : item.professionalId ? (
+                      <FollowButton professionalId={item.professionalId} compact />
                     ) : (
                       <button type="button" className="h-8 rounded-lg bg-[#eef0f2] px-4 text-sm font-semibold text-[#111827]">
-                        {view === "followers" ? (es ? "Quitar" : "Remove") : (es ? "Siguiendo" : "Following")}
+                        {es ? "Siguiendo" : "Following"}
                       </button>
                     )}
                   </div>

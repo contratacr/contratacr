@@ -1426,12 +1426,12 @@ async function realProfessionalMatches(payload: AssistantPayload, originalMessag
     cantonId: place?.type === "canton" ? place.id : undefined,
     modality: videoIntent ? "video" : place ? "in_person" : "any",
     query: category ? undefined : seed,
-  });
+  }, { fresh: true });
 
   // Keep the assistant useful if a legacy/test row has valid workplaces but its
   // denormalized search arrays have not been refreshed yet.
   if (professionals.length === 0 && category?.id && place) {
-    const serviceProfessionals = await searchProfessionals({ categoryId: category.id });
+    const serviceProfessionals = await searchProfessionals({ categoryId: category.id }, { fresh: true });
     professionals = serviceProfessionals.filter((professional) => {
       if (videoIntent && (professional.videoconsulta || professional.coverage?.country)) return true;
       return (professional.workplaces ?? []).some((workplace) => {
