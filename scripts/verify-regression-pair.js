@@ -60,6 +60,50 @@ async function verifyStatuses(table, actorColumn, actorId, expected, label) {
   }
 }
 
+function proposalBucket(proposalStatus, projectStatus) {
+  if (proposalStatus === "declined") return "canceladas";
+  if (proposalStatus === "pending") return "activas";
+  if (projectStatus === "cancelled") return "canceladas";
+  if (projectStatus === "completed") return "finalizadas";
+  return "activas";
+}
+
+async function verifyProposalFilters(owner) {
+  const rows = await must(
+    `${owner.professional.business_name} proposal filters`,
+    admin.from("proposals").select("status,projects(status)").eq("professional_id", owner.professional.id),
+  );
+  const buckets = new Set(rows.map((row) => proposalBucket(row.status, row.projects?.status)));
+  for (const bucket of ["activas", "finalizadas", "canceladas"]) {
+    assert(buckets.has(bucket), `${owner.professional.business_name}: missing received-project filter ${bucket}.`);
+  }
+}
+
+async function verifyOpportunityFilters(owner) {
+  const categories = [...new Set([
+    ...(Array.isArray(owner.professional.professions) ? owner.professional.professions : []),
+    owner.professional.category_id,
+  ])].filter((id) => id && id !== "otro");
+  const projects = await must(
+    `${owner.professional.business_name} opportunity filters`,
+    admin.from("projects").select("id,category_id").eq("status", "open").neq("client_id", owner.profile.id).in("category_id", categories),
+  );
+  const projectIds = projects.map((row) => row.id);
+  const proposals = projectIds.length
+    ? await must(
+        `${owner.professional.business_name} submitted opportunities`,
+        admin.from("proposals").select("project_id").eq("professional_id", owner.professional.id).in("project_id", projectIds),
+      )
+    : [];
+  const submitted = new Set(proposals.map((row) => row.project_id));
+  for (const categoryId of categories) {
+    assert(
+      projects.some((row) => row.category_id === categoryId && !submitted.has(row.id)),
+      `${owner.professional.business_name}: missing available opportunity for profession filter ${categoryId}.`,
+    );
+  }
+}
+
 async function main() {
   const contratacr = await actor("ContrataCR", "e2e.client@contratacr.test");
   const sg = await actor("SG Solutions", "e2e.pro@contratacr.test");
@@ -125,14 +169,25 @@ async function main() {
 
   for (const owner of [contratacr, sg]) {
     const [savedProfessionals, savedItems] = await Promise.all([
-      must("saved professional filters", admin.from("saved_professionals").select("id").eq("client_id", owner.profile.id)),
+      must("saved professional filters", admin.from("saved_professionals").select("id,snapshot").eq("client_id", owner.profile.id)),
       must("saved marketplace filters", admin.from("saved_items").select("item_type").eq("user_id", owner.profile.id)),
     ]);
     const itemTypes = new Set(savedItems.map((row) => row.item_type));
     assert(savedProfessionals.length > 0, `${owner.professional.business_name}: missing Professionals favorite.`);
+    assert(
+      savedProfessionals.some((row) => row.snapshot?.id && row.snapshot?.slug && row.snapshot?.fullName),
+      `${owner.professional.business_name}: professional favorite snapshot is not renderable.`,
+    );
     assert(itemTypes.has("offer"), `${owner.professional.business_name}: missing Offers favorite.`);
     assert(itemTypes.has("job"), `${owner.professional.business_name}: missing Jobs favorite.`);
   }
+
+  await Promise.all([
+    verifyProposalFilters(contratacr),
+    verifyProposalFilters(sg),
+    verifyOpportunityFilters(contratacr),
+    verifyOpportunityFilters(sg),
+  ]);
 
   const actorApplications = await must(
     "actor applications",
