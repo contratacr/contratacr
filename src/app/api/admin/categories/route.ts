@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendNotificationPush } from "@/lib/push/notify";
 import {
   ALL_CATEGORIES,
   CATEGORY_GROUP_ICON_KEYS,
@@ -603,6 +604,7 @@ async function notifySuggestionDecision(
   });
 
   if (!primary.error) {
+    await sendNotificationPush({ userId: payload.user_id, ...payload });
     return;
   }
 
@@ -631,6 +633,8 @@ async function notifySuggestionDecision(
       notificationType,
       error: fallback.error,
     });
+  } else {
+    await sendNotificationPush({ userId: payload.user_id, ...payload });
   }
 }
 
@@ -703,6 +707,5 @@ async function updateSuggestionRow(
   delete (fallback as { review_reason?: string | null }).review_reason;
   return (await db.from("category_suggestions").update(fallback).eq("id", id)).error;
 }
-
 
 

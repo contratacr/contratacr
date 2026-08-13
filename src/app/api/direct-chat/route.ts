@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { limitTrimmedText } from "@/lib/text-limits";
+import { sendNotificationPush } from "@/lib/push/notify";
 
 type ConversationRow = {
   id: string;
@@ -298,6 +299,24 @@ export async function POST(req: Request) {
   if (msgError) return NextResponse.json({ error: msgError.message }, { status: 500 });
   const msg = Array.isArray(sentMessages) ? sentMessages[0] : sentMessages;
   if (!msg) return NextResponse.json({ error: "No se pudo guardar el mensaje." }, { status: 500 });
+  const recipientId = conversation.client_id === user.id
+    ? conversation.professional_profile_id
+    : conversation.client_id;
+  const pushPreview = messageToSend.length > 120
+    ? `${messageToSend.slice(0, 117)}...`
+    : messageToSend;
+  await sendNotificationPush({
+    userId: recipientId,
+    title: "Nuevo mensaje",
+    message: pushPreview,
+    data: {
+      link: "/es/mensajes",
+      conversation_id: conversation.id,
+      booking_id: conversation.booking_id,
+      project_id: conversation.project_id,
+      proposal_id: conversation.proposal_id,
+    },
+  });
   const [signedMessage] = await signMessageAttachments(db, [msg as DirectMessageRow]);
   return NextResponse.json({ ok: true, conversationId: conversation.id, message: signedMessage, created: conversationCreated });
 }

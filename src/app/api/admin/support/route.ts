@@ -3,6 +3,7 @@ import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyUserOfReply } from "@/lib/support-notify";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { sendNotificationPush } from "@/lib/push/notify";
 
 const STATUSES = ["open", "in_progress", "resolved"];
 
@@ -125,13 +126,15 @@ export async function POST(req: Request) {
     await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody, hasAccount: !!ticket.user_id, panel, ticketId: id });
   }
   if (ticket.user_id) {
-    await db.from("notifications").insert({
+    const notification = {
       user_id: ticket.user_id,
       type: "support_reply",
       title: "Respuesta de soporte",
       message: `Soporte respondió a tu ticket "${ticket.subject}".`,
       data: { link: `/es/dashboard/${panel}?tab=soporte&ticket=${id}`, ticketId: id },
-    });
+    };
+    await db.from("notifications").insert(notification);
+    await sendNotificationPush({ userId: notification.user_id, ...notification });
   }
 
   return NextResponse.json({ ok: true });

@@ -5,6 +5,7 @@ import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { validateReviewText } from "@/lib/moderation/reviews";
+import { sendNotificationPush } from "@/lib/push/notify";
 
 // Authenticated users can review a professional directly from the profile.
 // If the review comes from a real booking/project/WhatsApp follow-up, we keep
@@ -197,7 +198,7 @@ export async function POST(req: NextRequest) {
     const stars = Number(rating).toLocaleString("es-CR", { maximumFractionDigits: 1 });
     const clientName = profile?.full_name?.split(" ")[0] || "Un cliente";
     const admin = createAdminClient();
-    const { error: notificationError } = await admin.from("notifications").insert({
+    const notification = {
       user_id: targetPro.profile_id,
       type: "review_received",
       title: "Nueva reseña recibida",
@@ -207,9 +208,12 @@ export async function POST(req: NextRequest) {
         professional_id: professionalId,
         review_id: insertedReview.id,
       },
-    });
+    };
+    const { error: notificationError } = await admin.from("notifications").insert(notification);
     if (notificationError) {
       console.error("[reviews] failed to notify professional:", notificationError.message);
+    } else {
+      await sendNotificationPush({ userId: notification.user_id, ...notification });
     }
   }
 

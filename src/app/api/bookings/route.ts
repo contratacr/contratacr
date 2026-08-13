@@ -10,6 +10,7 @@ import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrim
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
+import { sendNotificationPush } from "@/lib/push/notify";
 
 // Lazy auto-confirm: a booking the pro marked "trabajo realizado" auto-completes
 // after AUTO_CONFIRM_DAYS if the client never confirmed. Best-effort.
@@ -488,25 +489,29 @@ export async function PATCH(req: NextRequest) {
       in_progress: { title: "Tu solicitud está en progreso", message: "El profesional marcó tu solicitud en progreso." },
     };
     if (isOwnerPro && otherUserId && labelMap[status]) {
-      await admin.from("notifications").insert({
+      const notification = {
         user_id: otherUserId,
         type: "booking_update",
         title: labelMap[status].title,
         message: labelMap[status].message,
         data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: id },
-      });
+      };
+      await admin.from("notifications").insert(notification);
+      await sendNotificationPush({ userId: notification.user_id, ...notification });
     }
     // Client confirmed completion → notify the professional.
     if (isOwnerClient && status === "completed") {
       const { data: pr } = await admin.from("professionals").select("profile_id").eq("id", bookingRow.professional_id).maybeSingle();
       if (pr?.profile_id) {
-        await admin.from("notifications").insert({
+        const notification = {
           user_id: pr.profile_id,
           type: "booking_completed_by_client",
           title: "El cliente confirmó la finalización",
           message: "La solicitud quedó finalizada.",
           data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id },
-        });
+        };
+        await admin.from("notifications").insert(notification);
+        await sendNotificationPush({ userId: notification.user_id, ...notification });
       }
     }
     // Client cancelled their own booking → notify the professional (their slot freed),
@@ -515,13 +520,15 @@ export async function PATCH(req: NextRequest) {
       const { data: pr } = await admin.from("professionals").select("profile_id").eq("id", bookingRow.professional_id).maybeSingle();
       if (pr?.profile_id) {
         const motivo = typeof cancelReason === "string" && cancelReason.trim() ? ` Motivo: ${cancelReason.trim()}` : "";
-        await admin.from("notifications").insert({
+        const notification = {
           user_id: pr.profile_id,
           type: "booking_cancelled_by_client",
           title: "El cliente canceló la solicitud",
           message: `El cliente canceló su solicitud. El horario quedó libre.${motivo}`,
           data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id },
-        });
+        };
+        await admin.from("notifications").insert(notification);
+        await sendNotificationPush({ userId: notification.user_id, ...notification });
       }
     }
   } catch (e) { console.error("[PATCH /api/bookings] notify:", e); }
@@ -540,12 +547,15 @@ export async function PATCH(req: NextRequest) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pro = booking.professionals as any;
         const proName = pro?.profiles?.full_name ?? "el profesional";
-        await admin.from("notifications").insert({
+        const notification = {
           user_id: booking.client_id,
           type: "review_request",
           title: "¿Cómo te fue?",
           message: `Tu servicio con ${proName} se marcó como completado. Deja una reseña para ayudar a otros clientes.`,
-        });
+          data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: id },
+        };
+        await admin.from("notifications").insert(notification);
+        await sendNotificationPush({ userId: notification.user_id, ...notification });
       }
     } catch (err) {
       console.error("[PATCH /api/bookings] review prompt failed:", err);

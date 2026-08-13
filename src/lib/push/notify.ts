@@ -7,6 +7,13 @@ type NotificationPushInput = {
   data?: unknown;
 };
 
+export type StoredNotificationPush = {
+  user_id?: string | null;
+  title?: string | null;
+  message?: string | null;
+  data?: unknown;
+};
+
 function notificationUrl(data: unknown): string {
   if (!data || typeof data !== "object") return "/es/notificaciones";
 
@@ -50,4 +57,15 @@ export async function sendNotificationPush({ userId, title, message, data }: Not
   } catch (error) {
     console.error("[push] notification delivery failed:", error);
   }
+}
+
+export async function sendNotificationPushRows(rows: StoredNotificationPush[]) {
+  await Promise.all(
+    rows.map((row) => sendNotificationPush({
+      userId: row.user_id,
+      title: row.title,
+      message: row.message,
+      data: row.data,
+    })),
+  );
 }

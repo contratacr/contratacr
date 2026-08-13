@@ -8,6 +8,7 @@ import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitTri
 import { anyVideoConsultCategory, getCategoryLabel, OTHER_CATEGORY } from "@/lib/data/categories";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
+import { sendNotificationPushRows } from "@/lib/push/notify";
 
 const INITIAL_OPPORTUNITY_NOTIFICATION_LIMIT = 10;
 
@@ -106,7 +107,11 @@ async function notifyMatchingOpenProjectsForProfessional(
       data: { link: "/es/dashboard/profesional?tab=proposals", project_id: project.id },
   }));
 
-  if (rows.length > 0) await supabase.from("notifications").insert(rows);
+  if (rows.length > 0) {
+    const { error } = await supabase.from("notifications").insert(rows);
+    if (error) throw error;
+    await sendNotificationPushRows(rows);
+  }
   return opportunityCount;
 }
 

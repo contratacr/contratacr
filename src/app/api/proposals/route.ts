@@ -6,7 +6,7 @@ import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
-import { sendNotificationPush } from "@/lib/push/notify";
+import { sendNotificationPush, sendNotificationPushRows } from "@/lib/push/notify";
 
 export async function POST(req: NextRequest) {
   try {
@@ -273,13 +273,15 @@ export async function PATCH(req: NextRequest) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const project = (updated as any)?.projects;
         if (updated?.project_id && project?.client_id) {
-          await admin.from("notifications").insert({
+          const notification = {
             user_id: project.client_id,
             type: "proposal_updated",
             title: "Propuesta actualizada",
             message: `Un profesional actualizó su propuesta para "${project.title ?? "tu solicitud"}".`,
             data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: updated.project_id },
-          });
+          };
+          await admin.from("notifications").insert(notification);
+          await sendNotificationPush({ userId: notification.user_id, ...notification });
         }
       } catch (notifyErr) {
         console.error("[PATCH /api/proposals] notify proposal update failed:", notifyErr);
@@ -342,13 +344,15 @@ export async function PATCH(req: NextRequest) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const title = (prop.projects as any)?.title ?? "tu solicitud";
             if (pro?.profile_id) {
-              await admin.from("notifications").insert({
+              const notification = {
                 user_id: pro.profile_id,
                 type: "project_proposal_declined",
                 title: "Propuesta no seleccionada",
                 message: `El cliente no seleccionó tu propuesta para "${title}".`,
                 data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
-              });
+              };
+              await admin.from("notifications").insert(notification);
+              await sendNotificationPush({ userId: notification.user_id, ...notification });
             }
           }
         }
@@ -400,16 +404,21 @@ export async function PATCH(req: NextRequest) {
               message: `El cliente eligió otra propuesta para "${title}".`,
               data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
             }));
-            if (rows.length > 0) await admin.from("notifications").insert(rows);
+            if (rows.length > 0) {
+              await admin.from("notifications").insert(rows);
+              await sendNotificationPushRows(rows);
+            }
           }
           if (pro?.profile_id) {
-            await admin.from("notifications").insert({
+            const notification = {
               user_id: pro.profile_id,
               type: "project_proposal_accepted",
               title: "¡Tu propuesta fue aceptada!",
               message: `El cliente aceptó tu propuesta para "${title}". Coordina el trabajo y márcalo como realizado al terminar.`,
               data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
-            });
+            };
+            await admin.from("notifications").insert(notification);
+            await sendNotificationPush({ userId: notification.user_id, ...notification });
             await recordServerInteraction(admin, req, {
               type: "proposal_accepted",
               professionalId: prop.professional_id,
@@ -476,13 +485,15 @@ export async function DELETE(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const project = (prop as any).projects;
     if (project?.client_id) {
-      await admin.from("notifications").insert({
+      const notification = {
         user_id: project.client_id,
         type: "proposal_withdrawn",
         title: "Propuesta retirada",
         message: `Un profesional retiró su propuesta para "${project.title ?? "tu solicitud"}".`,
         data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: prop.project_id },
-      });
+      };
+      await admin.from("notifications").insert(notification);
+      await sendNotificationPush({ userId: notification.user_id, ...notification });
     }
   } catch (e) {
     console.error("[DELETE /api/proposals] notify withdrawn failed:", e);

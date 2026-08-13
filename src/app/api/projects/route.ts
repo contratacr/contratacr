@@ -13,7 +13,7 @@ import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
-import { sendNotificationPush } from "@/lib/push/notify";
+import { sendNotificationPush, sendNotificationPushRows } from "@/lib/push/notify";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -598,16 +598,22 @@ async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled
       .from("professionals")
       .select("profile_id")
       .in("id", [...professionalIds]);
-    const recipients = [...new Set((pros ?? []).map((pro: { profile_id?: string | null }) => pro.profile_id).filter(Boolean))];
+    const profileIds: Array<string | null | undefined> = (pros ?? [])
+      .map((pro: { profile_id?: string | null }) => pro.profile_id);
+    const recipients: string[] = [...new Set(
+      profileIds.filter((profileId): profileId is string => typeof profileId === "string" && profileId.length > 0),
+    )];
     if (recipients.length === 0) return;
 
-    await admin.from("notifications").insert(recipients.map((userId) => ({
+    const notifications = recipients.map((userId) => ({
       user_id: userId,
       type: kind === "deleted" ? "project_deleted" : "project_cancelled",
       title: kind === "deleted" ? "Solicitud eliminada" : "Solicitud cancelada",
       message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} la solicitud "${project.title}". Ya no está activa.`,
       data: { link: "/es/dashboard/profesional?tab=proposals", project_id: projectId },
-    })));
+    }));
+    await admin.from("notifications").insert(notifications);
+    await sendNotificationPushRows(notifications);
   } catch (e) {
     console.error("[notifyAssignedPro] failed:", e);
   }
