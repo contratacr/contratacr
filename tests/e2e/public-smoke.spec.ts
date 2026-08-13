@@ -81,6 +81,65 @@ test.describe("@smoke public routes", () => {
     await expectHealthyPage(page);
   });
 
+  test("home navbar search stays hidden until the hero search has been passed", async ({ page }) => {
+    await page.addInitScript(() => {
+      const compactSearchFlashes: Array<{ value: string | null; scrollY: number }> = [];
+      Object.defineProperty(window, "__compactSearchFlashes", {
+        configurable: true,
+        value: compactSearchFlashes,
+      });
+
+      const observeNavbar = () => {
+        const navbar = document.querySelector('[data-testid="landing-navbar"]');
+        if (!navbar) {
+          requestAnimationFrame(observeNavbar);
+          return;
+        }
+
+        const recordUnexpectedVisibleState = () => {
+          const value = navbar.getAttribute("data-compact-search");
+          if (value === "visible" && window.scrollY <= 1) compactSearchFlashes.push({ value, scrollY: window.scrollY });
+        };
+        recordUnexpectedVisibleState();
+        new MutationObserver(recordUnexpectedVisibleState).observe(navbar, {
+          attributes: true,
+          attributeFilter: ["data-compact-search"],
+        });
+      };
+      requestAnimationFrame(observeNavbar);
+    });
+
+    for (const locale of ["es", "en"] as const) {
+      await gotoOK(page, `/${locale}`);
+      await waitForInteractivePage(page);
+      const navbar = page.getByTestId("landing-navbar");
+      const sentinel = page.locator("#hero-search-sentinel");
+
+      await expect(navbar).toHaveAttribute("data-compact-search", "hidden");
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+      await expect.poll(() => sentinel.evaluate((node) => node.getBoundingClientRect().top)).toBeGreaterThan(64);
+      await expect.poll(() => page.evaluate(() => (window as Window & { __compactSearchFlashes?: unknown[] }).__compactSearchFlashes?.length ?? 0)).toBe(0);
+
+      await page.reload();
+      await waitForInteractivePage(page);
+      await expect(navbar).toHaveAttribute("data-compact-search", "hidden");
+      await expect.poll(() => sentinel.evaluate((node) => node.getBoundingClientRect().top)).toBeGreaterThan(64);
+      await expect.poll(() => page.evaluate(() => (window as Window & { __compactSearchFlashes?: unknown[] }).__compactSearchFlashes?.length ?? 0)).toBe(0);
+
+      await sentinel.evaluate((node) => {
+        const top = node.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: Math.max(0, top + 80), behavior: "instant" });
+      });
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      await expect.poll(() => sentinel.evaluate((node) => node.getBoundingClientRect().top)).toBeLessThanOrEqual(0);
+      await expect(navbar).toHaveAttribute("data-compact-search", "visible");
+
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+      await expect(navbar).toHaveAttribute("data-compact-search", "hidden");
+    }
+  });
+
   test("home near-me search uses proximity params", async ({ page }, testInfo) => {
     await page.context().setGeolocation({ latitude: 9.9281, longitude: -84.0907 });
     await gotoOK(page, "/es");
