@@ -416,7 +416,6 @@ function QuickGuidesModal({
     </Modal>
   );
 }
-
 function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslations<"proPanel.guides">> }) {
   if (id === "services") {
     return (
@@ -2345,4 +2344,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

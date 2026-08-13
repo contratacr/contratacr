@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Archive, ArchiveRestore, ArrowLeft, ChevronLeft, Download, FileText, Loader2, MessageSquareMore, MoreHorizontal, Plus, Search, SendHorizontal, Trash2, X } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -46,39 +46,9 @@ const ALLOWED_ATTACHMENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp
 function timeLabel(value?: string | null, locale = "es") {
   if (!value) return "";
   const date = new Date(value);
-  const now = new Date();
-  if (date.toDateString() === now.toDateString()) {
-    return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
-  }
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-  const daysAgo = Math.floor((startOfToday - startOfDate) / 86_400_000);
-  if (daysAgo === 1) return locale === "en" ? "Yesterday" : "Ayer";
-  if (daysAgo >= 1 && daysAgo < 7) {
-    return new Intl.DateTimeFormat(locale, { weekday: "long" }).format(date);
-  }
-  return new Intl.DateTimeFormat(locale, { month: "numeric", day: "numeric", year: "2-digit" }).format(date);
-}
-
-function messageTimeLabel(value?: string | null, locale = "es") {
-  if (!value) return "";
-  return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(new Date(value));
-}
-
-function messageDateKey(value?: string | null) {
-  if (!value) return "";
-  return new Date(value).toDateString();
-}
-
-function messageDateLabel(value?: string | null, locale = "es") {
-  if (!value) return "";
-  const date = new Date(value);
   const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
-  if (date.toDateString() === today.toDateString()) return locale === "en" ? "Today" : "Hoy";
-  if (date.toDateString() === yesterday.toDateString()) return locale === "en" ? "Yesterday" : "Ayer";
-  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: date.getFullYear() === today.getFullYear() ? undefined : "numeric" }).format(date);
+  if (date.toDateString() === today.toDateString()) return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(date);
 }
 
 function ChatActionButton({ label, children, onClick, className }: { label: string; children: ReactNode; onClick: () => void; className?: string }) {
@@ -93,13 +63,10 @@ function ChatActionButton({ label, children, onClick, className }: { label: stri
 
 function resizeMessageTextarea(textarea: HTMLTextAreaElement | null) {
   if (!textarea) return;
-  const maxHeight = 132;
-  const minHeight = 44;
   textarea.style.height = "auto";
-  const nextHeight = Math.max(minHeight, Math.min(textarea.scrollHeight, maxHeight));
+  const nextHeight = Math.min(textarea.scrollHeight, 144);
   textarea.style.height = `${nextHeight}px`;
-  textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
-  textarea.scrollTop = textarea.scrollHeight;
+  textarea.style.overflowY = textarea.scrollHeight > 144 ? "auto" : "hidden";
 }
 
 function attachmentLabel(bytes: number) {
@@ -169,62 +136,8 @@ function findExistingDraftConversation(rows: Conversation[], payload: PendingDra
   }) ?? null;
 }
 
-function demoConversations(userId: string | undefined): Conversation[] {
-  const currentUserId = userId || "__current_user__";
-  const now = Date.now();
-  const demoOffsets = [
-    35 * 60 * 1000,
-    4 * 60 * 60 * 1000,
-    26 * 60 * 60 * 1000,
-    2 * 24 * 60 * 60 * 1000,
-    4 * 24 * 60 * 60 * 1000,
-    6 * 24 * 60 * 60 * 1000,
-    8 * 24 * 60 * 60 * 1000,
-    12 * 24 * 60 * 60 * 1000,
-    18 * 24 * 60 * 60 * 1000,
-    31 * 24 * 60 * 60 * 1000,
-    45 * 24 * 60 * 60 * 1000,
-    75 * 24 * 60 * 60 * 1000,
-  ];
-  const items = [
-    ["demo-chat-electricidad", "Electro Vargas", "Mañana puedo revisar el tablero y enviarle el diagnóstico.", "Electricidad residencial"],
-    ["demo-chat-limpieza", "Limpieza Brisa", "Sí, podemos coordinar una limpieza profunda para esta semana.", "Limpieza profunda"],
-    ["demo-chat-jardineria", "Jardines del Oeste", "Le confirmo disponibilidad para mantenimiento mensual.", "Jardinería"],
-    ["demo-chat-pintura", "Pinturas Solano", "El presupuesto incluye materiales y dos manos de pintura.", "Pintura de casa"],
-    ["demo-chat-transporte", "Mudanzas CR Express", "Tenemos espacio el sábado en la mañana.", "Transporte y mudanza"],
-    ["demo-chat-ac", "Frío Técnico CR", "Podemos hacer mantenimiento preventivo del aire acondicionado.", "Aire acondicionado"],
-    ["demo-chat-fotografia", "Foto Estudio Central", "Le comparto opciones para la sesión corporativa.", "Fotografía profesional"],
-    ["demo-chat-cerrajeria", "Cerrajería Rápida", "Llegamos en unos 40 minutos si confirma la ubicación.", "Cerrajería"],
-    ["demo-chat-contabilidad", "Conta Clara Plus", "Puedo preparar la declaración y revisar facturas pendientes.", "Contabilidad"],
-    ["demo-chat-web", "Pixel Studio CR", "Le propongo una estructura sencilla para la página.", "Desarrollo web"],
-    ["demo-chat-mecanica", "Auto Servicio La Sabana", "La revisión inicial tarda aproximadamente una hora.", "Mecánica automotriz"],
-    ["demo-chat-eventos", "Eventos Nativa", "Tengo disponibles paquetes con mobiliario y decoración.", "Organización de eventos"],
-  ];
-  return items.map(([id, name, message, subject], index) => ({
-    id,
-    client_id: currentUserId,
-    professional_id: id,
-    professional_profile_id: `${id}-profile`,
-    subject,
-    last_message: message,
-    last_message_at: new Date(now - (demoOffsets[index] ?? (index + 3) * 36 * 60 * 1000)).toISOString(),
-    status: "open",
-    client_unread_count: index === 1 || index === 6 ? 1 : 0,
-    professional_unread_count: 0,
-    client_profile: null,
-    professionals: {
-      id,
-      slug: null,
-      business_name: name,
-      profiles: { full_name: name, avatar_url: null },
-    },
-    context: { type: "profile", title: subject, status: "open" },
-  }));
-}
-
 export function DirectChatInbox() {
   const locale = useLocale();
-  const tLoading = useTranslations("loading");
   const isEn = locale === "en";
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -247,9 +160,6 @@ export function DirectChatInbox() {
   const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
   const [imagePreview, setImagePreview] = useState<DirectAttachment | null>(null);
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [threadMenuOpen, setThreadMenuOpen] = useState(false);
-  const threadMenuRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -282,38 +192,13 @@ export function DirectChatInbox() {
     };
   }, [mobileThread]);
 
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-    const updateKeyboardState = () => {
-      const hiddenHeight = window.innerHeight - viewport.height - viewport.offsetTop;
-      setKeyboardOpen(hiddenHeight > 120);
-    };
-    updateKeyboardState();
-    viewport.addEventListener("resize", updateKeyboardState);
-    viewport.addEventListener("scroll", updateKeyboardState);
-    return () => {
-      viewport.removeEventListener("resize", updateKeyboardState);
-      viewport.removeEventListener("scroll", updateKeyboardState);
-    };
-  }, []);
-
   const displayedConversations = useMemo(
-    () => {
-      const base = pendingDraft && !showArchived
-        ? [pendingDraft, ...conversations.filter((item) => item.id !== DRAFT_CONVERSATION_ID)]
-        : conversations;
-      if (showArchived || base.length >= 18) return base;
-      const existingIds = new Set(base.map((item) => item.id));
-      return [
-        ...base,
-        ...demoConversations(user?.id).filter((item) => !existingIds.has(item.id)).slice(0, 18 - base.length),
-      ];
-    },
-    [conversations, pendingDraft, showArchived, user?.id],
+    () => pendingDraft && !showArchived
+      ? [pendingDraft, ...conversations.filter((item) => item.id !== DRAFT_CONVERSATION_ID)]
+      : conversations,
+    [conversations, pendingDraft, showArchived],
   );
   const active = useMemo(() => displayedConversations.find((item) => item.id === activeId) ?? null, [activeId, displayedConversations]);
-  const backConversationCount = displayedConversations.length;
 
   useEffect(() => {
     const next = buildPendingDraft(searchParams, user?.id, isEn);
@@ -342,14 +227,20 @@ export function DirectChatInbox() {
     }, [isEn, user?.id]);
   const contextFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
-    const labels = isEn ? { booking: "Request", project: "Post", proposal: "Proposal", profile: "General chat" } : { booking: "Solicitud", project: "Publicación", proposal: "Propuesta", profile: "Chat general" };
+    const labels = isEn ? { booking: "Request", project: "Project", proposal: "Proposal", profile: "Profile" } : { booking: "Solicitud", project: "Proyecto", proposal: "Propuesta", profile: "Perfil" };
     return { type, label: labels[type], title: item.context?.service_description || item.context?.title || item.subject || (isEn ? "General inquiry" : "Consulta general") };
   }, [isEn]);
   const contextSummaryFor = useCallback((item: Conversation) => {
     const context = contextFor(item);
     if (context.type === "profile") return context.title;
-    return `${context.label}: ${context.title}`;
+    return `${context.label} · ${context.title}`;
   }, [contextFor]);
+  const contextActionFor = useCallback((item: Conversation) => {
+    const type = item.context?.type ?? "profile";
+    const labels = isEn ? { booking: "View request", project: "View project", proposal: "View proposal", profile: "View profile" } : { booking: "Ver solicitud", project: "Ver proyecto", proposal: "Ver propuesta", profile: "Ver perfil" };
+    return labels[type];
+  }, [isEn]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
     if (!needle) return displayedConversations;
@@ -372,8 +263,7 @@ export function DirectChatInbox() {
         setActiveId(existingDraftConversation.id);
         router.replace(`/mensajes?conversation=${existingDraftConversation.id}`, { scroll: false });
       } else {
-        const firstDesktopConversation = window.matchMedia("(min-width: 1024px)").matches ? rows[0]?.id || null : null;
-        setActiveId((current) => current || (pendingDraft ? DRAFT_CONVERSATION_ID : firstDesktopConversation));
+        setActiveId((current) => current || (pendingDraft ? DRAFT_CONVERSATION_ID : rows[0]?.id || null));
       }
       if (showArchived) {
         setArchivedCount(json.conversations?.length ?? 0);
@@ -394,28 +284,6 @@ export function DirectChatInbox() {
       setThreadLoading(false);
       return;
     }
-    if (id.startsWith("demo-chat-")) {
-      const demo = demoConversations(user?.id).find((item) => item.id === id);
-      const professionalId = demo?.professional_profile_id || "__demo_professional__";
-      setMessages([
-        {
-          id: `${id}-incoming`,
-          sender_id: professionalId,
-          body: demo?.last_message || (isEn ? "I can help with that." : "Con gusto puedo ayudarle con eso."),
-          created_at: demo?.last_message_at || new Date().toISOString(),
-          attachment_urls: [],
-        },
-        {
-          id: `${id}-outgoing`,
-          sender_id: user?.id || "__current_user__",
-          body: isEn ? "Great, please send me the details." : "Perfecto, por favor envieme los detalles.",
-          created_at: new Date().toISOString(),
-          attachment_urls: [],
-        },
-      ]);
-      setThreadLoading(false);
-      return;
-    }
     if (!quiet) setThreadLoading(true);
     try {
       const res = await fetch(`/api/direct-chat?id=${encodeURIComponent(id)}`, { cache: "no-store" });
@@ -426,7 +294,7 @@ export function DirectChatInbox() {
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load the conversation." : "No se pudo cargar la conversación.");
     } finally { if (!quiet) setThreadLoading(false); }
-  }, [isEn, user?.id]);
+  }, [isEn]);
 
   useEffect(() => { queueMicrotask(() => void loadConversations()); }, [loadConversations]);
   useEffect(() => { if (activeId) queueMicrotask(() => void loadThread(activeId)); }, [activeId, loadThread]);
@@ -435,30 +303,20 @@ export function DirectChatInbox() {
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight });
   }, [messages, threadLoading, selectedAttachments]);
-  useLayoutEffect(() => {
+  const keepComposerVisible = useCallback(() => {
+    if (!mobileThread) return;
+    window.setTimeout(() => {
+      const scroller = scrollRef.current;
+      if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+      textareaRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }, 120);
+  }, [mobileThread]);
+  useEffect(() => {
     resizeMessageTextarea(textareaRef.current);
   }, [draft]);
   useEffect(() => {
     selectedAttachmentsRef.current = selectedAttachments;
   }, [selectedAttachments]);
-  useEffect(() => {
-    if (!threadMenuOpen) return;
-    function closeOnOutside(event: MouseEvent | TouchEvent) {
-      if (threadMenuRef.current?.contains(event.target as Node)) return;
-      setThreadMenuOpen(false);
-    }
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setThreadMenuOpen(false);
-    }
-    document.addEventListener("mousedown", closeOnOutside);
-    document.addEventListener("touchstart", closeOnOutside);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("mousedown", closeOnOutside);
-      document.removeEventListener("touchstart", closeOnOutside);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [threadMenuOpen]);
   useEffect(() => () => {
     selectedAttachmentsRef.current.forEach((attachment) => {
       if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
@@ -497,30 +355,9 @@ export function DirectChatInbox() {
   }
 
   function selectConversation(id: string) {
-    setActiveId(id); setMobileThread(true); setError(""); setThreadMenuOpen(false);
+    setActiveId(id); setMobileThread(true); setError("");
     if (id === DRAFT_CONVERSATION_ID) return;
-    if (id.startsWith("demo-chat-")) return;
     router.replace(`/mensajes${showArchived ? "?chatStatus=archived&" : "?"}conversation=${id}`, { scroll: false });
-  }
-
-  function closeMobileThread() {
-    setThreadMenuOpen(false);
-    setMobileThread(false);
-    setActiveId(null);
-    setMessages([]);
-
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("conversation");
-    params.delete("draftChat");
-    params.delete("professionalId");
-    params.delete("professionalName");
-    params.delete("bookingId");
-    params.delete("projectId");
-    params.delete("proposalId");
-    params.delete("contextTitle");
-    params.delete("draftMessage");
-    const qs = params.toString();
-    router.replace(`/mensajes${qs ? `?${qs}` : ""}`, { scroll: false });
   }
 
   function addAttachments(files: FileList | null) {
@@ -670,12 +507,17 @@ export function DirectChatInbox() {
     updateArchiveView(true, nextId);
   }
 
+  function contextHref(item: Conversation) {
+    if (item.booking_id) return `/dashboard/profesional?tab=${user?.id === item.client_id ? "sent_bookings" : "bookings"}&booking=${item.booking_id}`;
+    if (item.project_id) return `/dashboard/profesional?tab=${user?.id === item.client_id ? "sent_projects" : "proposals"}&project=${item.project_id}`;
+    const isClientSide = user?.id === item.client_id;
+    return isClientSide && item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null;
+  }
+
   if (loading) return (
-    <div className="ccr-delayed-loading grid h-full min-h-[calc(100dvh-153px)] w-full place-items-center lg:min-h-[520px]" aria-busy="true" role="status">
-      <div className="flex flex-col items-center justify-center gap-2 px-4 text-center">
-        <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
-        <p className="text-sm font-extrabold text-[#162543]">{tLoading("messages")}</p>
-      </div>
+    <div className="ccr-delayed-loading flex min-h-[calc(100dvh-153px)] flex-col items-center justify-center gap-2 px-4 text-center sm:min-h-[520px]" aria-busy="true" role="status">
+      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
+      <p className="text-sm font-extrabold text-[#162543]">{isEn ? "Loading" : "Cargando"}</p>
     </div>
   );
 
@@ -693,15 +535,19 @@ export function DirectChatInbox() {
     />
   );
   const activePerson = active ? personFor(active) : null;
+  const activeContext = active ? contextFor(active) : null;
+  const detailHref = active ? contextHref(active) : null;
   const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
   const deleteLabel = isEn ? "Delete" : "Eliminar";
   const activePersonName = activePerson?.name || "";
+  const activeContextTitle = activeContext?.title || "";
+  const activeContextAction = active ? contextActionFor(active) : "";
   return (
     <div className={cn(
-      "direct-chat-shell grid h-full w-full min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:min-h-0 lg:grid-cols-[310px_minmax(0,1fr)] lg:gap-3 lg:bg-transparent xl:grid-cols-[330px_minmax(0,1fr)] 2xl:grid-cols-[330px_minmax(0,1fr)_300px]",
+      "direct-chat-shell grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
       mobileThread && "direct-chat-shell--thread",
     )}>
-      <aside className={cn("flex min-h-0 flex-col border-r border-[#e3ebf1] bg-[#f8fbfd] lg:overflow-hidden lg:rounded-xl lg:border lg:border-[#dfe8f0] lg:bg-white lg:shadow-sm", mobileThread && "hidden lg:block")}>
+      <aside className={cn("flex min-h-0 flex-col border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>
         <div className="shrink-0 border-b border-[#e3ebf1] p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-extrabold text-[#162543]">{showArchived ? (isEn ? "Archived" : "Archivados") : (isEn ? "Messages" : "Mensajes")}</h2>
@@ -714,7 +560,7 @@ export function DirectChatInbox() {
           </div>
           <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>
         </div>
-        <div className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-scroll overscroll-contain">
+        <div className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
           {!showArchived && archivedCount > 0 && (
             <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e7eef3] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
@@ -724,97 +570,49 @@ export function DirectChatInbox() {
               <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>
             </button>
           )}
-          {filtered.map((item) => { const person = personFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; const highlighted = item.id === activeId; const hasUnread = !!unread; return (
-            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3.5 border-b border-[#e7eef3] bg-white px-4 py-4 text-left transition hover:bg-[#f8fbfd] lg:gap-4 lg:py-5", highlighted && "lg:bg-white lg:shadow-[inset_3px_0_0_#009FD9]")}>
-              <Avatar className="h-12 w-12 lg:h-[54px] lg:w-[54px]"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-base font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
-              <span className="min-w-0 flex-1 pt-0.5"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-[15px] font-extrabold leading-tight text-[#162543] lg:text-base">{person.name}</strong><time className={cn("shrink-0 text-[11px] font-semibold text-[#8492a5]", hasUnread && "font-extrabold text-[#102746]")}>{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-1.5 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-[13px] leading-snug text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#102746] px-1.5 text-[11px] font-extrabold text-white shadow-sm shadow-[#102746]/20">{unread}</span>}</span></span>
+          {filtered.map((item) => { const person = personFor(item); const summary = contextSummaryFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
+            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "lg:bg-white lg:shadow-[inset_3px_0_0_#009FD9]")}>
+              <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block line-clamp-2 text-xs font-bold leading-snug text-[#0090c7]">{summary}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>); })}
           {!filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
         </div>
       </aside>
 
-      <section className={cn("min-h-0 flex-col bg-white lg:overflow-hidden lg:rounded-xl lg:border lg:border-[#dfe8f0] lg:shadow-sm", mobileThread ? "flex" : "hidden lg:flex")}>
-        <header className="ccr-direct-chat-thread-header grid min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)_42px] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)_44px] sm:gap-3 sm:px-5 lg:flex lg:min-h-[65px] lg:justify-between">
-          <button
-            type="button"
-            onClick={closeMobileThread}
-            className={cn(
-              "grid shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden",
-              backConversationCount > 1 ? "h-14 w-14 grid-cols-[19px_auto] gap-0 bg-[#eef9fd] pr-1.5 font-extrabold text-[#102746]" : "h-10 w-10",
-            )}
-            aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}
-          >
-            {backConversationCount > 1 ? <ChevronLeft className="h-7 w-7 translate-x-1" strokeWidth={2.6} /> : <ArrowLeft className="h-5 w-5" />}
-            {backConversationCount > 1 && <span className="text-[19px] leading-none">{backConversationCount}</span>}
+      <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
+        <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e3ebf1] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
+          <button type="button" onClick={() => setMobileThread(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
+          <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
+            <Avatar className="h-9 w-9 sm:h-10 sm:w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
           </button>
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
-              <Avatar className="h-10 w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
-            </button>
-            <div className="min-w-0 flex-1">
-              <div className="flex min-w-0 items-center">
-                {activePerson?.profileHref ? (
-                  <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="min-w-0 max-w-full truncate text-left text-base font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline">
-                    {activePerson.name}
-                  </button>
-                ) : (
-                  <p className="min-w-0 max-w-full truncate text-base font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
-                )}
-              </div>
-            </div>
-          </div>
-          <div ref={threadMenuRef} className="relative">
-            <ChatActionButton
-              label={isEn ? "Chat options" : "Opciones del chat"}
-              onClick={() => setThreadMenuOpen((open) => !open)}
-              className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9] 2xl:hidden"
-            >
-              <MoreHorizontal className="h-5 w-5" />
-            </ChatActionButton>
-            {threadMenuOpen && (
-              <div className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-xl border border-[#dce7ef] bg-white py-1.5 text-sm font-bold text-[#25364d] shadow-xl">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setThreadMenuOpen(false);
-                    void toggleArchiveActive();
-                  }}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left transition hover:bg-[#f3f8fb]"
-                >
-                  {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
-                  <span>{archiveLabel}</span>
-                </button>
-                {showArchived && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setThreadMenuOpen(false);
-                      void deleteArchivedActive();
-                    }}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-red-600 transition hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span>{deleteLabel}</span>
-                  </button>
-                )}
-              </div>
+          <div className="min-w-0 flex-1">
+            {activePerson?.profileHref ? (
+              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full truncate text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline">
+                {activePerson.name}
+              </button>
+            ) : (
+              <p className="truncate text-[15px] font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
+            )}
+            {active && activeContext && activeContext.type !== "profile" && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
+            {activeContextTitle && <p className="mt-0.5 line-clamp-1 text-xs font-semibold leading-snug text-[#63748a] sm:line-clamp-2">{activeContextTitle}</p>}
+            {detailHref && (
+              <button type="button" onClick={() => router.push(detailHref)} className="mt-0.5 block max-w-full truncate text-left text-xs font-extrabold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
+                {activeContextAction}
+              </button>
             )}
           </div>
+          <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
+          {showArchived && (
+            <ChatActionButton label={deleteLabel} onClick={() => void deleteArchivedActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
+              <Trash2 className="h-4 w-4" />
+            </ChatActionButton>
+          )}
         </header>
-        <div ref={scrollRef} className="ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 pb-4 pt-5 sm:px-6">
-          {threadLoading ? <div className="ccr-delayed-loading grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message, index) => {
+        <div ref={scrollRef} className="ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
+          {threadLoading ? <div className="ccr-delayed-loading grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
             const mine = message.sender_id === user?.id;
-            const showDate = messageDateKey(message.created_at) !== messageDateKey(messages[index - 1]?.created_at);
             return (
-              <div key={message.id} className="space-y-2">
-                {showDate && (
-                  <div className="flex justify-center py-1">
-                    <span className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-extrabold text-[#6b7a90] shadow-sm ring-1 ring-[#dce8f0]">
-                      {messageDateLabel(message.created_at, locale)}
-                    </span>
-                  </div>
-                )}
-              <div className={cn("flex items-end gap-2", mine && "justify-end")}>
+              <div key={message.id} className={cn("flex items-end gap-2", mine && "justify-end")}>
                 {!mine && (
                   <Avatar className="h-7 w-7 shrink-0 shadow-sm">
                     <AvatarImage src={activePerson?.avatar ?? undefined} alt={activePersonName} />
@@ -823,12 +621,12 @@ export function DirectChatInbox() {
                     </AvatarFallback>
                   </Avatar>
                 )}
-                  <div className={cn(
-                    "min-w-[86px] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)] break-words [overflow-wrap:anywhere]",
-                    mine
-                      ? "max-w-[86%] rounded-br-md bg-[#009FD9] font-medium text-white sm:max-w-[78%] lg:max-w-[36rem] xl:max-w-[40rem]"
-                      : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d] sm:max-w-[72%] lg:max-w-[36rem] xl:max-w-[40rem]",
-                  )}>
+                <div className={cn(
+                  "min-w-[86px] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)]",
+                  mine
+                    ? "max-w-[86%] rounded-br-md bg-[#009FD9] font-medium text-white sm:max-w-[78%]"
+                    : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d] sm:max-w-[72%]",
+                )}>
                   {message.body && !(message.attachment_urls?.length && (message.body === "Archivo adjunto" || message.body === "Attachment")) && (
                     <p className="whitespace-pre-wrap break-words">{message.body}</p>
                   )}
@@ -882,18 +680,14 @@ export function DirectChatInbox() {
                       })}
                     </div>
                   )}
-                  <time className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/75" : "text-[#8996a8]")}>{messageTimeLabel(message.created_at, locale)}</time>
+                  <time className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/75" : "text-[#8996a8]")}>{timeLabel(message.created_at, locale)}</time>
                 </div>
-              </div>
               </div>
             );
           })}
         </div>
         {(error || attachmentError) && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error || attachmentError}</p>}
-        <form onSubmit={submit} className={cn(
-          "ccr-direct-chat-composer shrink-0 border-t border-[#e3ebf1] bg-white px-3 pt-2 sm:px-4",
-          keyboardOpen ? "pb-2 sm:pb-3" : "pb-[calc(1.75rem+env(safe-area-inset-bottom))] sm:pb-6",
-        )}>
+        <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
           {!!selectedAttachments.length && (
             <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
               {selectedAttachments.map((attachment) => (
@@ -927,7 +721,7 @@ export function DirectChatInbox() {
               ))}
             </div>
           )}
-          <div className="flex items-end gap-2.5">
+          <div className="flex items-end gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -940,10 +734,10 @@ export function DirectChatInbox() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={sending || selectedAttachments.length >= MAX_ATTACHMENTS}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-[#526277] transition hover:bg-[#eef9fd] hover:text-[#009FD9] disabled:opacity-45"
+            className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
             aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
           >
-            <Plus className="h-8 w-8" strokeWidth={1.9} />
+            <Paperclip className="h-5 w-5" />
           </button>
           <textarea
             ref={textareaRef}
@@ -952,7 +746,9 @@ export function DirectChatInbox() {
             onChange={(e) => {
               setDraft(e.target.value.slice(0, 2000));
               resizeMessageTextarea(e.currentTarget);
+              keepComposerVisible();
             }}
+            onFocus={keepComposerVisible}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -960,45 +756,19 @@ export function DirectChatInbox() {
               }
             }}
             placeholder={isEn ? "Write a message" : "Escribe un mensaje"}
-            className="ccr-direct-chat-textarea max-h-[132px] min-h-11 min-w-0 flex-1 resize-none overflow-y-auto overscroll-contain rounded-[22px] border border-[#d8e5ee] bg-white px-4 py-2.5 pr-2 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+            className="max-h-36 min-h-[52px] min-w-0 flex-1 resize-none overflow-hidden rounded-[20px] border border-[#d8e5ee] px-4 py-3 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
           />
           <button
             type="submit"
             disabled={sending || (!draft.trim() && !selectedAttachments.length)}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#cfdde5] disabled:shadow-none"
+            className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#d8e4e9] disabled:shadow-none"
             aria-label={isEn ? "Send" : "Enviar"}
           >
-            {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-[22px] w-[22px]" />}
+            {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </button>
           </div>
         </form>
       </section>
-      <aside className="hidden min-h-0 flex-col overflow-hidden rounded-xl border border-[#dfe8f0] bg-white px-5 py-6 shadow-sm 2xl:flex">
-        <div className="flex flex-col items-center text-center">
-          <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
-            <Avatar className="h-20 w-20"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-xl font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
-          </button>
-          <p className="mt-3 max-w-full truncate text-base font-extrabold text-[#162543]">{activePersonName}</p>
-          {activePerson?.profileHref && (
-            <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="mt-2 rounded-full bg-[#eef8fd] px-4 py-2 text-xs font-extrabold text-[#008fc4] transition hover:bg-[#dff3fb]">
-              {isEn ? "View profile" : "Ver perfil"}
-            </button>
-          )}
-        </div>
-        <div className="mt-8 space-y-3 border-t border-[#e7eef3] pt-5 text-sm font-bold text-[#526277]">
-          <p>{isEn ? "Chat options" : "Opciones del chat"}</p>
-          <button type="button" onClick={() => void toggleArchiveActive()} className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition hover:bg-[#f3f8fb]">
-            <span>{archiveLabel}</span>
-            {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
-          </button>
-          {showArchived && (
-            <button type="button" onClick={() => void deleteArchivedActive()} className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-red-600 transition hover:bg-red-50">
-              <span>{deleteLabel}</span>
-              <Trash2 className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      </aside>
       {imagePreview?.url && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[1000] flex flex-col bg-black/95 text-white" role="dialog" aria-modal="true" aria-label={imagePreview.name}>
           <div className="flex min-h-16 shrink-0 items-center gap-3 px-3 pt-[env(safe-area-inset-top)] sm:px-5">
