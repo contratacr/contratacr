@@ -6,29 +6,31 @@ This version has breaking changes - APIs, conventions, and file structure may al
 
 ## Branch and Worktree Policy
 
-Until Isaac explicitly decides otherwise, production-ready work must happen from the clean `main` worktree:
+This repository has a fixed branch model. Do not create any additional local or remote branch, temporary branch, backup branch, detached task branch, or extra worktree unless Isaac explicitly authorizes that exact exception first.
 
-- `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-main`
-- Branch: `main`
-- Remote: `origin/main`
+The only remote branches are:
 
-Test-environment work must happen from the clean `test` worktree:
+- `main`: production.
+- `test`: regression environment. Its tracked code must remain exactly equal to `main`; regression-only differences belong in test data or external environment configuration, not divergent source commits.
+- `mobile`: the mobile application. It must be based directly on `test` and contain only the native/mobile differences approved by Isaac.
 
-- `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-test`
-- Branch: `test`
-- Remote: `origin/test`
+The only local branches are those three plus:
 
-Do not push, merge into `main`, or merge into `test` from these local-only branches unless Isaac explicitly asks for that specific line of work:
+- `local/pro-suite-no-push`: Pro/subscription, billing, quotes, inventory, and clients suite. It is local-only and must never be pushed or merged into `main`, `test`, or `mobile` without Isaac's explicit authorization.
 
-- `local/capacitor-no-push`: Android/Capacitor mobile app work.
-- `local/direct-messages-no-push`: in-app direct messages/chat work that is parked while WhatsApp remains the active contact flow.
-- `local/pro-suite-no-push`: Pro/facturacion/cotizaciones/inventario/clientes suite work.
+All changes must be made directly in the appropriate existing branch and canonical worktree:
 
-The default repo folder `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr` is currently reserved for `local/capacitor-no-push`. Do not use it for normal production fixes.
+- Production: `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-main` (`main`).
+- Test: `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-test` (`test`).
+- Mobile: `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr\.codex-worktrees\mobile-canonical` (`mobile`).
+- Pro local: `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-test-plus` (`local/pro-suite-no-push`).
+
+Do not use the default repository folder `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr` for implementation work while it is a detached preservation worktree.
 
 Before pushing:
 
-- Run `git status --short --branch` and confirm the branch is `main` or `test`, not a `local/*-no-push` branch.
-- Confirm `supabase/migrations` matches the target remote branch. As of the current production baseline, `origin/main` includes `139_interaction_analytics_saved_actions.sql`.
-- Do not create new migrations on top of stale local migration numbering.
-- Do not include Pro, direct-message, or Capacitor files in normal production/test pushes.
+- Run `git status --short --branch` in the target canonical worktree and confirm the branch is the intended one.
+- Confirm `main` and `test` resolve to the same commit whenever source changes are shared.
+- Confirm `mobile` is based directly on `test` and that its diff contains only mobile-specific files or behavior.
+- Confirm `supabase/migrations` matches the target branch and do not create migrations on top of stale numbering.
+- Never push `local/pro-suite-no-push`.
