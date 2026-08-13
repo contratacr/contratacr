@@ -1207,14 +1207,20 @@ export function AvailabilityEditor({
 
       {/* -- Confirm: hide agenda ------------------------------------------- */}
       {showPrivateConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
+        <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPrivateConfirm(false)} />
-          <div className="relative z-10 w-full rounded-t-2xl bg-white p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] shadow-2xl sm:max-w-sm sm:rounded-2xl sm:pb-6">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="private-agenda-title"
+            aria-describedby="private-agenda-description"
+            className="app-centered-modal relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-2xl"
+          >
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
               <Lock className="h-5 w-5 text-[#b45309]" />
             </div>
-            <h3 className="text-lg font-bold text-[#111827] mb-1">{t("confirmTitle")}</h3>
-            <p className="text-sm text-[#6b7280] mb-5">{t("confirmBody")}</p>
+            <h3 id="private-agenda-title" className="mb-1 text-lg font-bold text-[#111827]">{t("confirmTitle")}</h3>
+            <p id="private-agenda-description" className="mb-5 text-sm text-[#6b7280]">{t("confirmBody")}</p>
             <div className="flex gap-3">
               <Button variant="outline" size="md" className="flex-1" onClick={() => setShowPrivateConfirm(false)} disabled={savingVisibility}>{t("cancel")}</Button>
               <Button size="md" className="flex-1 bg-[#b45309] hover:bg-[#92400e]" onClick={confirmMakePrivate} loading={savingVisibility}>{t("confirmPrivate")}</Button>
@@ -1227,9 +1233,15 @@ export function AvailabilityEditor({
           Blocks a schedule that would have the pro in two places at once (or
           overlapping itself). Sits above the "Cambiar un día" modal (z-[210]). */}
       {conflict && (
-        <div className="fixed inset-0 z-[210] flex items-end justify-center p-0 sm:items-center sm:p-4">
+        <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[210] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConflict(null)} />
-          <div className="relative z-10 w-full rounded-t-2xl bg-white p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-center shadow-2xl sm:max-w-sm sm:rounded-2xl sm:pb-6">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="availability-conflict-title"
+            aria-describedby="availability-conflict-description"
+            className="app-centered-modal relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 text-center shadow-2xl"
+          >
             <div className={cn(
               "mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full",
               conflict.kind === "location" ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#fff7ed] text-[#b45309]",
@@ -1250,8 +1262,8 @@ export function AvailabilityEditor({
                 </span>
               )}
             </div>
-            <h3 className="text-lg font-bold text-[#111827] mb-1.5">{conflict.title}</h3>
-            <p className="text-sm text-[#6b7280] mb-5 leading-relaxed">{conflict.body}</p>
+            <h3 id="availability-conflict-title" className="mb-1.5 text-lg font-bold text-[#111827]">{conflict.title}</h3>
+            <p id="availability-conflict-description" className="mb-5 text-sm leading-relaxed text-[#6b7280]">{conflict.body}</p>
             <Button size="md" className="w-full" onClick={() => setConflict(null)}>{t("conflictOk")}</Button>
           </div>
         </div>
@@ -1537,5 +1549,4 @@ function MonthCalendar({ value, onChange, marked, dateLocale }: { value: string;
     </div>
   );
 }
-
 

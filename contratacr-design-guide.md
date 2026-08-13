@@ -8,6 +8,8 @@ ContrataCR is a Costa Rican services marketplace (clients find and book professi
 
 > **Contextual action-menu override (current).** Three-dot action menus use a vertical ellipsis (`MoreVertical`) at every breakpoint inside an exact `h-10 w-10` trigger. Card-footer popovers open upward, remain right-aligned, and use a viewport-bounded maximum height with internal scrolling so neither the card nor the screen edge can clip them. Adjacent primary buttons use the same exact height and equal grid columns.
 
+> **Responsive compact-dialog override (current).** Short informational messages, warnings, confirmations, and success notices are centered vertically and horizontally at every breakpoint; they are never presented as mobile bottom sheets. Keep at least `1rem` of viewport margin, use a fully rounded card, cap height against the visual viewport, and scroll the dialog body internally when necessary. Reserve bottom sheets/fullscreen presentation for forms, filters, calendars, multi-step flows, and other content that benefits from the extra working area. Compact dialogs must expose `role="dialog"` or `role="alertdialog"`, `aria-modal`, and labelled/described relationships.
+
 ---
 
 ## 1. Core principle — simplicity first

@@ -1841,13 +1841,13 @@ export default function DashboardPage() {
         <FollowNetworkTab initialView={networkModal} onBack={() => setNetworkModal(null)} />
       )}
       {opportunityWelcomeCount !== null && (
-        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#0f172a]/45 p-0 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
+        <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 p-4 backdrop-blur-sm">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="opportunity-welcome-title"
             aria-describedby="opportunity-welcome-body"
-            className="relative w-full rounded-t-2xl bg-white px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:max-w-md sm:rounded-2xl sm:px-6 sm:pb-6"
+            className="app-centered-modal relative max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl bg-white px-5 py-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:px-6"
           >
             <button
               type="button"

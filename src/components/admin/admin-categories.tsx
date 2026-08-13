@@ -121,8 +121,8 @@ function AdminDialog({
 
   const danger = dialog.tone === "danger";
   return (
-    <div className="app-modal-screen fixed inset-0 z-[80] flex items-end justify-center bg-[#0f172a]/40 p-0 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
-      <div role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title" className="app-bottom-sheet max-h-[92vh] w-full overflow-hidden overflow-y-auto rounded-t-2xl border border-[#e5e7eb] bg-white shadow-2xl sm:max-w-md sm:rounded-2xl">
+    <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[80] flex items-center justify-center bg-[#0f172a]/40 p-4 backdrop-blur-sm">
+      <div role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title" className="app-centered-modal max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl border border-[#e5e7eb] bg-white shadow-2xl">
         <div className="p-5">
           <div className="flex items-start justify-between gap-4">
             <div>

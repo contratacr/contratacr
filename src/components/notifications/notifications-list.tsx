@@ -316,12 +316,18 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       </div>
 
       {confirmDelete && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
+        <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConfirmDelete(false)} />
-          <div className="relative z-10 w-full rounded-t-2xl bg-white p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-center shadow-2xl sm:max-w-sm sm:rounded-2xl sm:pb-6">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-notifications-title"
+            aria-describedby="delete-notifications-description"
+            className="app-centered-modal relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 text-center shadow-2xl"
+          >
             <BrandIconBadge icon={AlertTriangle} tone="danger" size={56} className="mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-[#111827] mb-1.5">{t("deleteAllConfirm")}</h3>
-            <p className="text-sm text-[#6b7280] mb-5">{t("deleteAllBody")}</p>
+            <h3 id="delete-notifications-title" className="mb-1.5 text-lg font-bold text-[#111827]">{t("deleteAllConfirm")}</h3>
+            <p id="delete-notifications-description" className="mb-5 text-sm text-[#6b7280]">{t("deleteAllBody")}</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDelete(false)} className="flex-1 rounded-xl border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb] transition-colors">{t("cancel")}</button>
               <button onClick={doDeleteAll} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors">{t("deleteAll")}</button>
