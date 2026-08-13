@@ -3,7 +3,7 @@ import { expect, test, type Page } from "playwright/test";
 import esMessages from "../../messages/es.json";
 import enMessages from "../../messages/en.json";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
-import { expectNoHorizontalOverflow, expectNoRawI18nKeys, gotoOK, isMobileProject, loginAs } from "./helpers";
+import { expectNoHorizontalOverflow, expectNoRawI18nKeys, gotoOK, loginAs } from "./helpers";
 import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient } from "./seed";
 
 type Locale = "es" | "en";
@@ -295,8 +295,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
     }
   });
 
-  test("every guide CTA and representative English links reach the documented destination", async ({ page }, testInfo) => {
-    test.skip(isMobileProject(testInfo), "All expansions run on mobile; exhaustive CTA navigation runs once on desktop.");
+  test("every guide CTA and representative English links reach the documented destination", async ({ page }) => {
     test.setTimeout(360_000);
     await loginAs(page, account.email, account.password);
 

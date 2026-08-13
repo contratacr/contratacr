@@ -1,6 +1,6 @@
 import { expect, test } from "playwright/test";
 import { expectHealthyPage, expectVisibleText, gotoOK, isMobileProject, loginAs } from "./helpers";
-import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 
 const professionalTabs = [
   { tab: "home", marker: /Panel profesional|Professional panel/i },
@@ -93,9 +93,10 @@ test.describe.configure({ mode: "serial" });
 
 test.describe("@seeded dashboard surfaces", () => {
   test.skip(!canRunSeededRegression(), "Set E2E_FIXTURES_READY=1 with the test Supabase secrets to run dashboard regression.");
+  let seed: RegressionSeedState;
 
   test.beforeAll(async () => {
-    await ensureRegressionSeed();
+    seed = await ensureRegressionSeed();
   });
 
   test("professional panel sections render without broken states", async ({ page }) => {
@@ -174,8 +175,7 @@ test.describe("@seeded dashboard surfaces", () => {
     }
   });
 
-  test("panel mode selector closes when guides are opened", async ({ page }, testInfo) => {
-    test.skip(isMobileProject(testInfo), "Desktop sidebar selector regression.");
+  test("panel mode selector closes when guides are opened", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/es/dashboard/profesional");
 
@@ -329,6 +329,33 @@ test.describe("@seeded dashboard surfaces", () => {
       await gotoOK(page, `/en/dashboard/profesional?tab=${section.tab}`);
       await expectVisibleText(page.locator("main"), section.marker);
       await expectHealthyPage(page);
+    }
+  });
+
+  test("every active authenticated page route is reachable in Spanish and English", async ({ page }) => {
+    test.setTimeout(360_000);
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+
+    for (const locale of ["es", "en"] as const) {
+      const routes = [
+        `/${locale}/dashboard/profesional?tab=home`,
+        `/${locale}/dashboard/cliente`,
+        `/${locale}/notificaciones`,
+        `/${locale}/completar-perfil`,
+        `/${locale}/onboarding`,
+        `/${locale}/ofertas/publicar`,
+        `/${locale}/ofertas/mis-ofertas`,
+        `/${locale}/ofertas/${seed.publishedOfferId}/editar`,
+        `/${locale}/empleos/publicar`,
+        `/${locale}/empleos/mis-empleos`,
+        `/${locale}/empleos/${seed.publishedJobId}/editar`,
+      ];
+
+      for (const route of routes) {
+        await gotoOK(page, route);
+        await expect(page).not.toHaveURL(/\/(?:es|en)\/login/);
+        await expectHealthyPage(page);
+      }
     }
   });
 

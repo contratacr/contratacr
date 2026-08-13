@@ -125,6 +125,7 @@ test.describe("@seeded offers, jobs and application lifecycle", () => {
       await expect(application).toBeVisible();
       await expect(application.getByText("Recently used resume", { exact: true })).toBeVisible({ timeout: 15_000 });
       await application.getByPlaceholder(/Briefly explain/i).fill("I am interested in this regression job and meet all stated requirements.");
+      await application.getByRole("textbox", { name: /^Phone \*$/i }).fill("88887777");
       await application.getByRole("button", { name: /Submit application/i }).click();
       await expect(page.getByText(/Application sent/i)).toBeVisible({ timeout: 20_000 });
 

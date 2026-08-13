@@ -142,17 +142,24 @@ test.describe("@visual recent bug contracts", () => {
 
     for (const route of [
       "/es/dashboard/profesional?tab=bookings",
-      "/es/dashboard/profesional?tab=proposals",
       `/es/dashboard/profesional?tab=jobs&job=${seed.publishedJobId}`,
       `/es/dashboard/profesional?tab=offers&offer=${seed.publishedOfferId}`,
     ]) {
       await gotoOK(page, route);
-      if (route.includes("tab=proposals")) {
-        await page.getByRole("button", { name: /Mis propuestas|My proposals/i }).click();
-      }
       await expectVerticalMenuInsideViewport(page, await resolveMoreOptions(page));
       await expectHealthyPage(page);
     }
+
+    // Accepted proposals expose exactly two frequent actions and intentionally
+    // have no overflow menu. A pending proposal has the secondary Withdraw
+    // action, so it is the correct proposal state for the three-dot contract.
+    await gotoOK(page, "/es/dashboard/profesional?tab=proposals");
+    await page.getByRole("button", { name: /Mis propuestas|My proposals/i }).click();
+    const pendingProposal = page.locator('[id^="project-"]').filter({ hasText: "ContrataCR: proyecto open" }).first();
+    await expect(pendingProposal).toBeVisible();
+    await pendingProposal.getByRole("button", { expanded: false }).first().click();
+    await expectVerticalMenuInsideViewport(page, pendingProposal.getByRole("button", { name: /M[aá]s opciones|More options/i }));
+    await expectHealthyPage(page);
 
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects&mode=use");

@@ -183,6 +183,9 @@ jobs:
       - name: Run regression suite
         run: npm run test:e2e
 
+      - name: Require zero failures, flakies and unexpected skips
+        run: npm run test:e2e:verify-results
+
       - name: Verify regression fixtures were restored
         if: always()
         run: npm run seed:test:verify

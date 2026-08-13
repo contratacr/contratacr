@@ -1,6 +1,6 @@
 import { expect, test } from "playwright/test";
 import { expectHealthyPage, expectVisibleText, gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
-import { canRunSeededRegression, ensureRegressionSeed } from "./seed";
+import { canRunSeededRegression, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
 const adminRoutes = [
@@ -10,17 +10,21 @@ const adminRoutes = [
   { path: "/es/admin/reportes", marker: /Reportes/i },
   { path: "/es/admin/aseguradoras", marker: /Aseguradoras/i },
   { path: "/es/admin/servicios", marker: /Servicios/i },
+  { path: "/es/admin/categorias", marker: /Servicios/i },
   { path: "/es/admin/solicitudes", marker: /Solicitudes/i },
   { path: "/es/admin/publicaciones", marker: /Proyectos/i },
   { path: "/es/admin/cuentas", marker: /Cuentas/i },
   { path: "/es/admin/soporte", marker: /Soporte/i },
   { path: "/es/admin/analitica", marker: /Analitica|Anal.tica/i },
   { path: "/es/admin/actividad", marker: /Actividad/i },
+  { path: "/es/admin/resenas", marker: /Rese.nas|Reseñas/i },
 ] as const;
 
 test.describe("@admin surfaces", () => {
+  let seed: RegressionSeedState | null = null;
+
   test.beforeAll(async () => {
-    if (canRunSeededRegression()) await ensureRegressionSeed();
+    if (canRunSeededRegression()) seed = await ensureRegressionSeed();
   });
 
   test("admin entry shows the restricted login when signed out", async ({ page }) => {
@@ -68,6 +72,17 @@ test.describe("@admin surfaces", () => {
         await gotoOK(page, route.path);
         await expectVisibleText(page.locator("body"), route.marker);
         await expectHealthyPage(page);
+      }
+
+      if (seed) {
+        for (const detail of [
+          { path: `/es/admin/usuarios/${seed.clientId}`, marker: /ContrataCR|B.squeda de usuarios/i },
+          { path: `/es/admin/proveedores/${seed.professionalId}`, marker: /SG Solutions|Proveedor/i },
+        ]) {
+          await gotoOK(page, detail.path);
+          await expectVisibleText(page.locator("body"), detail.marker);
+          await expectHealthyPage(page);
+        }
       }
     } finally {
       await cleanupDisposableAccount(account);

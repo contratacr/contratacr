@@ -64,7 +64,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: process.env.CI
-    ? [["github"], ["list"], ["html", { open: "never" }]]
+    ? [["github"], ["list"], ["json", { outputFile: process.env.PLAYWRIGHT_JSON_REPORT ?? "test-results/results.json" }], ["html", { open: "never" }]]
     : "list",
   use: {
     baseURL,
