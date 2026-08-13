@@ -100,8 +100,9 @@ export default async function ComoFuncionaPage() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
+      <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="flex-1">
-        <section className="border-b border-[#e5e7eb] px-4 pb-12 pt-24 sm:pb-14 sm:pt-32">
+        <section className="border-b border-[#e5e7eb] px-4 pb-12 pt-12 sm:pb-14 sm:pt-12">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-xs font-bold uppercase text-[#009fd9]">{t("eyebrow")}</p>
             <h1 className="mt-3 text-3xl font-black leading-tight text-[#162543] sm:text-5xl">{t("title")}</h1>
@@ -182,5 +183,4 @@ export default async function ComoFuncionaPage() {
     </div>
   );
 }
-
 

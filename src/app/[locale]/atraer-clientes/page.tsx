@@ -34,8 +34,9 @@ export default function AtraerClientesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
+      <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="flex-1">
-        <section className="border-b border-[#e5e7eb] px-4 pb-12 pt-24 sm:pb-14 sm:pt-32">
+        <section className="border-b border-[#e5e7eb] px-4 pb-12 pt-12 sm:pb-14 sm:pt-12">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><BriefcaseBusiness className="h-5 w-5" /></div>
             <p className="mt-4 text-xs font-bold uppercase text-[#009fd9]">{t("eyebrow")}</p>

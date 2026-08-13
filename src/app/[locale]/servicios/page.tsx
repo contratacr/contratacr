@@ -114,6 +114,7 @@ export default function ServiciosPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <div className="hidden lg:block">
         <LandingNavbar />
+        <div className="ccr-navbar-spacer h-16" aria-hidden />
       </div>
       <div className="lg:hidden">
         <LandingNavbar mobileSearch={false} drawerOnly />
@@ -248,7 +249,7 @@ export default function ServiciosPage() {
         </section>
 
         <div className="hidden lg:block">
-        <section className="relative z-30 px-4 pb-5 pt-24 sm:pt-28">
+        <section className="relative z-30 px-4 pb-5 pt-12">
           <div className="mx-auto max-w-6xl">
             <div className="max-w-3xl">
               <span className="mb-2.5 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">

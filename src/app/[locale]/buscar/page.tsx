@@ -402,7 +402,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       {/* Mobile keeps the header to logo + search + menu; filters float over the map. */}
       <LandingNavbar forceCompactSearch />
-      <div className="h-16" aria-hidden />
+      <div className="ccr-navbar-spacer h-16" aria-hidden />
 
       {/* Top bar - title + subtitle. Background MATCHES the page/results area (#f4f7fa)
           and is FLUSH with it: no shadow, divider or raised band, so the title reads as

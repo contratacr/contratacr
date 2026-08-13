@@ -30,7 +30,8 @@ export default function SoportePage() {
     return (
       <div className="min-h-screen flex flex-col bg-white">
         <LandingNavbar />
-        <main className="flex-1 flex items-center justify-center px-4 py-20">
+        <div className="ccr-navbar-spacer h-16" aria-hidden />
+        <main className="flex flex-1 items-center justify-center px-4 pb-20 pt-12">
           {/* Confirmation — tight visual hierarchy: prominent title + ONE concise
               reply line (email emphasized), then the actions, then the spam note +
               (guest) follow-tickets hint demoted to small muted footnotes. Avoids the
@@ -102,7 +103,8 @@ export default function SoportePage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <LandingNavbar />
-      <main className="ccr-native-compact-page flex-1 px-4 py-16">
+      <div className="ccr-navbar-spacer h-16" aria-hidden />
+      <main className="ccr-native-compact-page flex-1 px-4 pb-16 pt-12">
         <div className="mx-auto max-w-xl">
           {user && (
             <div className="mb-5">
