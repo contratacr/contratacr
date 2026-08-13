@@ -534,15 +534,12 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
 }
 
 .ccr-page-route-loading {
-  min-height: calc(100dvh - var(--ccr-native-header-height, 64px));
+  height: 100dvh;
+  min-height: 100dvh;
+  width: 100vw;
 }
 
 @media (max-width: 767px) {
-  .ccr-page-route-loading {
-    align-items: start;
-    padding-top: clamp(7.5rem, 16dvh, 9rem);
-  }
-
   .ccr-page-route-loading .ccr-brand-loading-mark {
     height: 72px;
     width: 72px;
