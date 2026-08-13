@@ -10,6 +10,8 @@ ContrataCR is a Costa Rican services marketplace (clients find and book professi
 
 > **Responsive compact-dialog override (current).** Short informational messages, warnings, confirmations, and success notices are centered vertically and horizontally at every breakpoint; they are never presented as mobile bottom sheets. Keep at least `1rem` of viewport margin, use a fully rounded card, cap height against the visual viewport, and scroll the dialog body internally when necessary. Reserve bottom sheets/fullscreen presentation for forms, filters, calendars, multi-step flows, and other content that benefits from the extra working area. Compact dialogs must expose `role="dialog"` or `role="alertdialog"`, `aria-modal`, and labelled/described relationships.
 
+> **Navbar professional-registration override (current).** “Ofrecer mis servicios / Offer my services” is a quiet brand-blue text link with no icon, fill, pill, or shadow for guests and client-only accounts. Hide it completely as soon as an account has a real `professionals` row or provider metadata; the avatar/account control already owns access to the unified panel, so never replace the hidden link with a duplicate panel/profile CTA. While provider capability is resolving for a signed-in account, keep the link hidden to prevent a misleading flash. Filled registration CTAs are reserved for dedicated marketing/campaign content, not the global navbar or mobile drawer.
+
 ---
 
 ## 1. Core principle — simplicity first

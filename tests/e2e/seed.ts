@@ -280,6 +280,15 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   );
   if (clientProfileError) throw clientProfileError;
 
+  // Keep this fixture genuinely client-only. Test databases can retain rows
+  // from older runs, which would correctly make the navbar treat it as a
+  // provider and invalidate role-specific regression coverage.
+  const { error: staleClientProfessionalError } = await admin
+    .from("professionals")
+    .delete()
+    .eq("profile_id", clientUser.id);
+  if (staleClientProfessionalError) throw staleClientProfessionalError;
+
   const { error: proProfileError } = await admin.from("profiles").upsert(
     {
       id: proUser.id,

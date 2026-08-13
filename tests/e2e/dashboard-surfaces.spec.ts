@@ -103,6 +103,33 @@ test.describe("@seeded dashboard surfaces", () => {
     await expectHealthyPage(page);
   });
 
+  test("navbar hides professional registration for providers", async ({ page }, testInfo) => {
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es");
+    if (isMobileProject(testInfo)) {
+      await page.getByRole("button", { name: /Abrir men|Open menu/i }).first().click();
+      const navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
+      await expect(navigation.getByRole("link", { name: /Ofrecer mis servicios/i })).toHaveCount(0);
+    } else {
+      const navigation = page.getByRole("banner");
+      await expect(navigation.getByRole("link", { name: /Ofrecer mis servicios/i })).toHaveCount(0);
+    }
+  });
+
+  test("navbar keeps professional registration quiet for client-only accounts", async ({ page }, testInfo) => {
+    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    await gotoOK(page, "/es");
+    let navigation = page.getByRole("banner");
+    if (isMobileProject(testInfo)) {
+      await page.getByRole("button", { name: /Abrir men|Open menu/i }).first().click();
+      navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
+    }
+    const offerServices = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).filter({ visible: true }).first();
+    await expect(offerServices).toBeVisible();
+    await expect(offerServices.locator("svg")).toHaveCount(0);
+    await expect(offerServices).toHaveCSS("color", "rgb(0, 159, 217)");
+  });
+
   test("guides cover the current client, marketplace, and professional flows in both languages", async ({ page }) => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);

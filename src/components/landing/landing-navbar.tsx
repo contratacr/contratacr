@@ -758,8 +758,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const nativeBottomShell = hydrated && nativeApp;
   const { user, loading: authLoading } = useAuth();
   const nativeBottomNavVisible = nativeBottomShell && !!user;
-  const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
-  const [accountBusinessName, setAccountBusinessName] = useState("");
+  const [accountCapability, setAccountCapability] = useState<{
+    userId: string;
+    role: string | null;
+    hasProfessionalProfile: boolean;
+    capabilityKnown: boolean;
+    businessName: string;
+  } | null>(null);
   // Depending on whether this render comes from an i18n client transition or a
   // hard refresh, usePathname can expose the home route as `/` or with its
   // locale prefix (`/es`, `/en`). Treat all three as home so the compact search
@@ -881,10 +886,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // ?redirect= via the proxy and are still honored by /login.
   const loginHref = "/login";
 
-  // `isPro` = the account can OFFER services (Airbnb "host" capability). It only
-  // controls menu LABELS/grouping now - everyone uses the ONE unified panel.
-  const isPro = canOffer(user);
-  const isAdminUser = user?.user_metadata?.role === "admin" || (!!user && profileRole?.userId === user.id && profileRole.role === "admin");
+  // `isPro` = the account can OFFER services (Airbnb "host" capability). Auth
+  // metadata is the fast path; the canonical professional row repairs stale
+  // metadata so an existing provider never sees the registration CTA again.
+  const hasResolvedAccountCapability = !!user && accountCapability?.userId === user.id;
+  const isPro = canOffer(user) || (hasResolvedAccountCapability && accountCapability.hasProfessionalProfile);
+  const showOfferServicesLink = !isPro && (!user || (hasResolvedAccountCapability && accountCapability.capabilityKnown));
+  const isAdminUser = user?.user_metadata?.role === "admin" || (hasResolvedAccountCapability && accountCapability.role === "admin");
   const { mode } = useMode(isPro);
 
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
@@ -895,52 +903,51 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
   const profilePanelHref = `${panelHref}?mode=${isPro && mode === "offer" ? "offer" : "use"}&tab=profile`;
   const accountDisplayName =
-    accountBusinessName || String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
+    (hasResolvedAccountCapability ? accountCapability.businessName : "") || String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
   const nativePanelHref = user ? primaryPanelHref : loginHref;
   const nativeMessagesHref = "/mensajes";
 
   useEffect(() => {
     let cancelled = false;
-    if (!user) return;
-    if (user.user_metadata?.role === "admin") return;
+    if (!user) {
+      queueMicrotask(() => setAccountCapability(null));
+      return;
+    }
 
-    const loadRole = async () => {
+    const loadAccountCapability = async () => {
       try {
         const supabase = createClient();
-        const { data } = await supabase.rpc("get_my_profile");
-        if (!cancelled) setProfileRole({ userId: user.id, role: (data as { role?: string } | null)?.role ?? null });
+        const [profileResult, professionalResult] = await Promise.all([
+          supabase.rpc("get_my_profile"),
+          supabase.from("professionals").select("id,business_name").eq("profile_id", user.id).maybeSingle(),
+        ]);
+        if (!cancelled) {
+          setAccountCapability({
+            userId: user.id,
+            role: (profileResult.data as { role?: string } | null)?.role ?? null,
+            hasProfessionalProfile: !!professionalResult.data,
+            capabilityKnown: !professionalResult.error,
+            businessName: String(professionalResult.data?.business_name || "").trim(),
+          });
+        }
       } catch {
-        if (!cancelled) setProfileRole({ userId: user.id, role: null });
+        if (!cancelled) {
+          setAccountCapability({
+            userId: user.id,
+            role: null,
+            hasProfessionalProfile: false,
+            capabilityKnown: false,
+            businessName: "",
+          });
+        }
       }
     };
-    void loadRole();
+    void loadAccountCapability();
 
     return () => {
       cancelled = true;
     };
   }, [user]);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!user || !isPro) {
-      queueMicrotask(() => setAccountBusinessName(""));
-      return;
-    }
-
-    const loadBusinessName = async () => {
-      const { data } = await createClient()
-        .from("professionals")
-        .select("business_name")
-        .eq("profile_id", user.id)
-        .maybeSingle();
-      if (!cancelled) setAccountBusinessName(String(data?.business_name || "").trim());
-    };
-    void loadBusinessName();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isPro, user]);
 
   // Warm the two most common destinations after the current page settles. This
   // keeps the initial render light while making the first panel/search transition
@@ -1712,12 +1719,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </div>
                     <div className="w-1" aria-hidden="true" />
 
-                    {!effectiveMarketplaceDesktop && !isPro && (
+                    {!effectiveMarketplaceDesktop && showOfferServicesLink && (
                       <Link
                         href="/registro/profesional"
-                        className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl text-[#009FD9] hover:bg-[#EBF5FB] transition-colors whitespace-nowrap"
+                        className="inline-flex items-center rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap text-[#009FD9] transition-colors hover:bg-[#EBF5FB]"
                       >
-                        <Briefcase className="h-4 w-4" />
                         {t("offerServices")}
                       </Link>
                     )}
@@ -1741,7 +1747,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     {!effectiveMarketplaceDesktop && (
                       <Link
                         href="/registro/profesional"
-                        className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
+                        className="ml-1 inline-flex items-center rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap text-[#009FD9] transition-colors hover:bg-[#EBF5FB]"
                       >
                         {t("registerPro")}
                       </Link>
@@ -1995,9 +2001,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
               </Link>
-              {(!user || !isPro) && (
-                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={user ? mobileDrawerItemClass : mobileDrawerStrongItemClass}>
-                  <DrawerIcon><Briefcase /></DrawerIcon>
+              {showOfferServicesLink && (
+                <Link
+                  href="/registro/profesional"
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(mobileDrawerItemClass, "pl-[52px] text-[#009FD9] hover:bg-[#EBF5FB]")}
+                >
                   <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
                 </Link>
               )}

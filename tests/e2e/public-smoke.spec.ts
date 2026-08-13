@@ -60,15 +60,23 @@ test.describe("@smoke public routes", () => {
 
     if (isMobileProject(testInfo)) {
       await page.getByRole("button", { name: /Abrir menu|Abrir men/i }).first().click();
+      const navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
       await expect(page.getByRole("link", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: /Soporte|Centro de ayuda/i }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      await expect(page.getByRole("link", { name: /Ofrecer mis servicios/i }).first()).toBeVisible();
+      const offerServices = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).first();
+      await expect(offerServices).toBeVisible();
+      await expect(offerServices.locator("svg")).toHaveCount(0);
+      await expect(offerServices).toHaveCSS("color", "rgb(0, 159, 217)");
     } else {
-      await expect(page.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
-      await expect(page.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
-      await expect(page.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      await expect(page.getByRole("link", { name: /Ofrecer mis servicios/i }).first()).toBeVisible();
+      const navigation = page.getByRole("banner");
+      await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
+      await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
+      await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
+      const offerServices = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).first();
+      await expect(offerServices).toBeVisible();
+      await expect(offerServices.locator("svg")).toHaveCount(0);
+      await expect(offerServices).toHaveCSS("color", "rgb(0, 159, 217)");
     }
     await expectHealthyPage(page);
   });
