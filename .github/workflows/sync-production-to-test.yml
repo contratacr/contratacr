@@ -7,13 +7,12 @@ on:
         description: "Type SYNC_PRODUCTION_TO_TEST"
         required: true
         type: string
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/sync-production-to-test.yml
 
 concurrency:
-  group: production-to-test-data-sync
+  # Keep the destructive mirror restore and the regression suite mutually
+  # exclusive so test fixtures cannot change while Playwright is using them.
+  group: contratacr-test-environment
+  queue: max
   cancel-in-progress: false
 
 permissions:
@@ -24,20 +23,41 @@ env:
   PGSSLMODE: require
 
 jobs:
+  validate-request:
+    name: Validate mirror request
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require confirmation and immutable main ref
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          DISPATCH_REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          if [ "$CONFIRMATION" != "SYNC_PRODUCTION_TO_TEST" ]; then
+            echo "::error::The destructive mirror confirmation is incorrect."
+            exit 1
+          fi
+          if [ "$DISPATCH_REF" != "refs/heads/main" ]; then
+            echo "::error::Production-to-test sync must be dispatched from main."
+            exit 1
+          fi
+
   export-production:
     name: Export production mirror
-    if: github.event_name == 'push' || inputs.confirmation == 'SYNC_PRODUCTION_TO_TEST'
+    needs: validate-request
     runs-on: ubuntu-latest
     timeout-minutes: 40
     environment: production
     env:
       SOURCE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       TRANSFER_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+      EXPECTED_SOURCE_PROJECT_REF: kskueodxaksxvjrysouw
     steps:
       - name: Checkout main
         uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Validate production source
         shell: bash
@@ -45,10 +65,7 @@ jobs:
           set -euo pipefail
           test -n "$SOURCE_DB_URL" || { echo "::error::Missing production SUPABASE_DB_URL."; exit 1; }
           test -n "$TRANSFER_PASSPHRASE" || { echo "::error::Missing production BACKUP_ENCRYPTION_PASSPHRASE."; exit 1; }
-          if echo "$SOURCE_DB_URL" | grep -q ':6543/'; then
-            echo "::error::Use a direct/session-mode production URL on port 5432."
-            exit 1
-          fi
+          node scripts/ci/validate-supabase-target.mjs db SOURCE_DB_URL "$EXPECTED_SOURCE_PROJECT_REF"
 
       - name: Install PostgreSQL client
         run: bash scripts/ci/install-postgres-client.sh
@@ -63,12 +80,12 @@ jobs:
           # Public application data is mirrored. Private histories are rebuilt
           # only between the two authorized regression actors in test.
           PRIVATE_TABLES=(
-            ai_chat_sessions beneficiary_dob bookings category_suggestions
+            account_deletion_requests ai_chat_sessions beneficiary_dob bookings category_suggestions
             direct_conversations direct_messages interaction_events job_applications
             notification_deliveries notifications professional_follows projects proposals
             provider_appeals provider_verification_log reports reviews saved_items
             saved_professionals subscription_payments subscriptions support_messages
-            support_ticket_messages support_tickets user_action_audit user_push_tokens
+            support_ticket_messages support_tickets user_action_audit user_media_assets user_push_tokens
             whatsapp_contact_followups
           )
           EXCLUDES=(--exclude-table-data=public.padron --exclude-table-data=public.padron_staging)
@@ -120,11 +137,12 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       REGRESSION_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      EXPECTED_TEST_PROJECT_REF: sodegkfjjrdkbohycqyq
     steps:
       - name: Checkout main
         uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Validate isolated test target
         shell: bash
@@ -133,16 +151,11 @@ jobs:
           test -n "$TEST_DB_URL" || { echo "::error::Missing test SUPABASE_DB_URL."; exit 1; }
           test -n "$TRANSFER_PASSPHRASE" || { echo "::error::Missing test BACKUP_ENCRYPTION_PASSPHRASE."; exit 1; }
           test -n "$NEXT_PUBLIC_SUPABASE_URL" || { echo "::error::Missing test Supabase URL."; exit 1; }
+          test -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" || { echo "::error::Missing test anon/publishable key."; exit 1; }
           test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::Missing test service-role key."; exit 1; }
-          api_host="$(node -e 'process.stdout.write(new URL(process.argv[1]).hostname)' "$NEXT_PUBLIC_SUPABASE_URL")"
-          test "$api_host" = 'sodegkfjjrdkbohycqyq.supabase.co' || {
-            echo "::error::Refusing to replace a Supabase project other than test."
-            exit 1
-          }
-          if echo "$TEST_DB_URL" | grep -q 'kskueodxaksxvjrysouw'; then
-            echo "::error::Refusing to write to production Supabase."
-            exit 1
-          fi
+          test -n "$REGRESSION_TEST_PASSWORD" || { echo "::error::Missing test E2E_TEST_PASSWORD."; exit 1; }
+          node scripts/ci/validate-supabase-target.mjs api NEXT_PUBLIC_SUPABASE_URL "$EXPECTED_TEST_PROJECT_REF"
+          node scripts/ci/validate-supabase-target.mjs db TEST_DB_URL "$EXPECTED_TEST_PROJECT_REF"
 
       - name: Install PostgreSQL client
         run: bash scripts/ci/install-postgres-client.sh
@@ -174,7 +187,15 @@ jobs:
             --format=custom --compress=6 --data-only --schema=public --no-owner --no-acl \
             --exclude-table-data=public.padron \
             --exclude-table-data=public.padron_staging \
-            --file="$RUNNER_TEMP/contratacr-mirror/test-rollback.dump"
+            --file="$RUNNER_TEMP/contratacr-mirror/test-public-rollback.dump"
+          # auth.users is referenced by identities, sessions, refresh tokens and
+          # additional GoTrue tables. Snapshot the complete auth schema so a
+          # rollback cannot leave those dependent records partially deleted.
+          "$PG_BIN/pg_dump" "$TEST_DB_URL" \
+            --format=custom --compress=6 --data-only --schema=auth --no-owner --no-acl \
+            --file="$RUNNER_TEMP/contratacr-mirror/test-auth-rollback.dump"
+          test -s "$RUNNER_TEMP/contratacr-mirror/test-public-rollback.dump"
+          test -s "$RUNNER_TEMP/contratacr-mirror/test-auth-rollback.dump"
 
       - name: Replace test data and seed regression actors
         shell: bash
@@ -185,19 +206,27 @@ jobs:
           rollback() {
             original_status=$?
             echo "::warning::Sync failed; restoring test from the ephemeral rollback."
+            trap - ERR
             set +e
+            rollback_status=0
             "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
-              --file=scripts/sync/truncate-test-data.sql
+              --file=scripts/sync/disable-test-restore-trigger.sql || rollback_status=$?
+            "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
+              --file=scripts/sync/truncate-test-data.sql || rollback_status=$?
+            "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
+              --file=scripts/sync/truncate-test-auth.sql || rollback_status=$?
+            # Restore auth first because public profiles reference auth.users.
             "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
-              --no-owner --no-acl --exit-on-error \
-              "$mirror/test-rollback.dump"
-            rollback_status=$?
+              --no-owner --no-acl --disable-triggers --single-transaction --exit-on-error \
+              "$mirror/test-auth-rollback.dump" || rollback_status=$?
+            "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
+              --no-owner --no-acl --disable-triggers --single-transaction --exit-on-error \
+              "$mirror/test-public-rollback.dump" || rollback_status=$?
             "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
-              --file=scripts/sync/enable-test-restore-trigger.sql
+              --file=scripts/sync/enable-test-restore-trigger.sql || rollback_status=$?
             if [ "$rollback_status" -ne 0 ]; then
               echo "::error::The test rollback also failed."
             fi
-            trap - ERR
             exit "$original_status"
           }
           trap rollback ERR
@@ -219,7 +248,7 @@ jobs:
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
             --file=scripts/sync/enable-test-restore-trigger.sql
 
-          regression_password="${REGRESSION_TEST_PASSWORD:-ContrataCR!2026}"
+          regression_password="$REGRESSION_TEST_PASSWORD"
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
             --file=scripts/sync/enable-regression-logins.sql \
             --set=regression_password="$regression_password"

@@ -2825,10 +2825,43 @@
     "empty": "No tienes favoritos",
     "emptySub": "Agrega profesionales, ofertas y empleos a favoritos para encontrarlos aquí.",
     "searchPros": "Buscar profesionales",
+    "professionalsTab": "Profesionales",
+    "offersTab": "Ofertas",
+    "jobsTab": "Empleos",
+    "favoriteOffer": "Oferta favorita",
+    "favoriteJob": "Empleo favorito",
+    "offerBadge": "Oferta",
+    "jobBadge": "Empleo",
+    "view": "Ver",
+    "emptyProfessionals": "No tienes profesionales favoritos.",
+    "emptyOffers": "No tienes ofertas favoritas.",
+    "emptyJobs": "No tienes empleos favoritos.",
     "count": "{count, plural, one {# profesional favorito} other {# profesionales favoritos}}",
     "noReviews": "Sin reseñas",
     "videoConsult": "Videoconsulta",
     "locationUnavailable": "Ubicación sin especificar"
+  },
+  "clientConnections": {
+    "emptyTitle": "Aún no tienes conexiones",
+    "emptyDescription": "Aquí aparecerán los profesionales con los que hayas tenido una solicitud confirmada o un proyecto aceptado.",
+    "searchProfessionals": "Buscar profesionales",
+    "searchPlaceholder": "Buscar profesional o servicio",
+    "count": "{count, plural, one {# conexión} other {# conexiones}}",
+    "verified": "Verificado",
+    "viewProfile": "Ver perfil",
+    "noResults": "No encontramos conexiones con ese texto.",
+    "source": {
+      "booking": "Solicitud",
+      "project": "Proyecto",
+      "both": "Solicitud y proyecto"
+    },
+    "status": {
+      "completed": "Completado",
+      "awaitingConfirmation": "Por confirmar",
+      "inProgress": "En progreso",
+      "confirmed": "Confirmado",
+      "connected": "Conectado"
+    }
   },
   "registerChoice": {
     "title": "Crear cuenta",
@@ -3106,13 +3139,18 @@
       "project_deleted": "Solicitud eliminada",
       "support_reply": "Respuesta de soporte",
       "verification": "Actualización de verificación",
+      "verification_approved": "Identidad verificada",
+      "verification_pending": "Verificación en revisión",
+      "verification_rejected": "Verificación no aprobada",
+      "verification_reverted": "Verificación actualizada",
       "verification_appeal_received": "Apelación de verificación recibida",
       "suggestion_approved": "Sugerencia aprobada",
       "suggestion_rejected": "Sugerencia rechazada",
       "job_application": "Nueva postulación",
       "job_application_status": "Actualización de postulación",
       "professional_follow": "Nuevo seguidor",
-      "followed_professional_activity": "Nueva publicación"
+      "followed_professional_activity": "Nueva publicación",
+      "direct_message": "Nuevo mensaje"
     },
     "viewAll": "Ver todas"
   },

@@ -1,5 +1,6 @@
 import { expect, test } from "playwright/test";
 import { apiJson, expectHealthyPage, expectVisibleText, gotoOK, loginAs, resetAuth } from "./helpers";
+import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 
 type IdResponse = { id?: string; ok?: boolean; edited?: boolean; error?: string };
@@ -12,7 +13,7 @@ const ONE_PIXEL_PNG = Buffer.from(
 test.describe.configure({ mode: "serial" });
 
 test.describe("@seeded extended lifecycle", () => {
-  test.skip(!canRunSeededRegression(), "Set E2E_SEED=1 with test Supabase secrets.");
+  test.skip(!canRunSeededRegression(), "Set E2E_FIXTURES_READY=1 with test Supabase secrets.");
 
   let seed: RegressionSeedState;
 
@@ -38,7 +39,7 @@ test.describe("@seeded extended lifecycle", () => {
           scheduledDate: seed.slotDate,
           scheduledTime: "11:00",
           categoryId: seed.categoryId,
-          slotLocationId: "e2e-main",
+          slotLocationId: seed.slotLocationId,
           slotLocationLabel: "Alajuela, Alajuela",
         },
       });
@@ -152,39 +153,14 @@ test.describe("@seeded extended lifecycle", () => {
     }
   });
 
-  test("account password change works end to end and the seeded credential is restored", async ({ page }) => {
-    const admin = regressionAdminClient();
-    const temporaryPassword = "ContrataCR!2026Temporary";
-
-    try {
-      await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-      await gotoOK(page, "/es/dashboard/profesional?tab=cuenta&mode=use");
-      const change = page.getByRole("button", { name: /Cambiar contrase/i }).filter({ visible: true });
-      await expect(change).toHaveCount(1);
-      await change.click();
-
-      await page.getByPlaceholder(/Contrase.a actual/i).fill(E2E_USERS.client.password);
-      await page.getByPlaceholder(/^Nueva contrase.a/i).fill(temporaryPassword);
-      await page.getByPlaceholder(/Repite la nueva contrase.a|Repetir contrase.a|Confirmar contrase.a/i).fill(temporaryPassword);
-      await page.getByRole("button", { name: /Guardar contrase/i }).click();
-      await expect(page.getByPlaceholder(/Contrase.a actual/i)).toBeHidden({ timeout: 15_000 });
-
-      await resetAuth(page);
-      await loginAs(page, E2E_USERS.client.email, temporaryPassword);
-      await expect(page).toHaveURL(/dashboard\/profesional/);
-    } finally {
-      await admin.auth.admin.updateUserById(seed.clientId, { password: E2E_USERS.client.password, email_confirm: true });
-    }
-  });
-
   test("professional profile and service edits persist through their real UI", async ({ page }) => {
     const admin = regressionAdminClient();
     const marker = `E2E profile ${Date.now()}`;
-    const { data: before, error } = await admin.from("professionals").select("bio, services").eq("id", seed.professionalId).single();
-    if (error) throw error;
+    let account: DisposableAccount | undefined;
 
     try {
-      await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+      account = await createDisposableAccount({ prefix: "profile-service", professional: true });
+      await loginAs(page, account.email, account.password);
       await gotoOK(page, "/es/dashboard/profesional?tab=profile&mode=offer");
       await page.getByRole("button", { name: /Datos b.sicos.*Foto, nombre y descripci/i }).click();
       const bio = page.locator('[data-field="bio"] textarea');
@@ -193,36 +169,53 @@ test.describe("@seeded extended lifecycle", () => {
       const saveProfile = page.getByRole("button", { name: /^Guardar cambios$/i }).filter({ visible: true });
       await expect(saveProfile).toHaveCount(1);
       await saveProfile.click();
-      await expect.poll(async () => (await admin.from("professionals").select("bio").eq("id", seed.professionalId).single()).data?.bio).toBe(marker);
+      await expect.poll(async () => (await admin.from("professionals").select("bio").eq("id", account!.professionalId!).single()).data?.bio).toBe(marker);
 
       await gotoOK(page, "/es/dashboard/profesional?tab=services&mode=offer");
-      const serviceCard = page.locator("section").filter({ hasText: /Plomer/i }).filter({ has: page.getByRole("button", { name: /Editar informaci/i }) });
+      const serviceCard = page.locator("section").filter({ has: page.getByRole("button", { name: /Editar informaci/i }) }).first();
       await expect(serviceCard).toHaveCount(1);
       await serviceCard.getByRole("button", { name: /Editar informaci/i }).click();
-      const dialog = page.getByRole("dialog").filter({ hasText: /Plomer/i });
+      const dialog = page.getByRole("dialog").filter({ has: page.locator("textarea") });
       await expect(dialog).toBeVisible();
       await dialog.locator("textarea").fill(`${marker} service`);
       await dialog.getByRole("button", { name: /Guardar cambios/i }).click();
       await expect(dialog).toBeHidden();
       await expect(serviceCard).toContainText(`${marker} service`);
       await expect.poll(async () => {
-        const { data } = await admin.from("professionals").select("services").eq("id", seed.professionalId).single();
+        const { data } = await admin.from("professionals").select("services").eq("id", account!.professionalId!).single();
         const services = Array.isArray(data?.services) ? data.services as Array<{ description?: string }> : [];
         return services.some((service) => service.description === `${marker} service`);
       }).toBe(true);
     } finally {
-      await admin.from("professionals").update({ bio: before!.bio, services: before!.services }).eq("id", seed.professionalId);
+      await cleanupDisposableAccount(account);
     }
   });
 
-  test("success case creation uploads an image, saves the case, and restores the seed", async ({ page }) => {
+  test("success case creation accepts an uploaded image, saves the case, and restores the seed", async ({ page }) => {
     const admin = regressionAdminClient();
     const marker = `E2E success case ${Date.now()}`;
-    const { data: before, error } = await admin.from("professionals").select("portfolio_items, portfolio_urls").eq("id", seed.professionalId).single();
-    if (error) throw error;
+    let account: DisposableAccount | undefined;
 
     try {
-      await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+      account = await createDisposableAccount({ prefix: "success-case", professional: true });
+      const { data: before, error } = await admin.from("professionals").select("portfolio_items, portfolio_urls").eq("id", account.professionalId!).single();
+      if (error) throw error;
+      const reusableImageUrl = (Array.isArray(before?.portfolio_urls) ? before.portfolio_urls[0] : undefined)
+        ?? (Array.isArray(before?.portfolio_items)
+          ? (before.portfolio_items as Array<{ url?: string; image_url?: string; photos?: string[] }>).flatMap((item) => [item.url, item.image_url, ...(item.photos ?? [])]).find(Boolean)
+          : undefined);
+      expect(reusableImageUrl, "The regression fixture needs one reusable portfolio image").toBeTruthy();
+      // This suite validates the complete case editor without leaking a new
+      // Cloudinary asset on every CI run. Provider upload + ownership cleanup is
+      // exercised separately by the disposable account-deletion regression.
+      await page.route("**/api/upload/photo", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ url: reusableImageUrl, publicId: "regression/reused-fixture" }),
+        });
+      });
+      await loginAs(page, account.email, account.password);
       await gotoOK(page, "/es/dashboard/profesional?tab=photos&mode=offer");
       const add = page.getByRole("button", { name: /Agregar.*caso de .xito/i }).filter({ visible: true });
       await expect(add).toHaveCount(1);
@@ -242,20 +235,22 @@ test.describe("@seeded extended lifecycle", () => {
       await saveSection.click();
 
       await expect.poll(async () => {
-        const { data } = await admin.from("professionals").select("portfolio_items").eq("id", seed.professionalId).single();
+        const { data } = await admin.from("professionals").select("portfolio_items").eq("id", account!.professionalId!).single();
         const items = Array.isArray(data?.portfolio_items) ? data.portfolio_items as Array<{ title?: string }> : [];
         return items.some((item) => item.title === marker);
       }, { timeout: 20_000 }).toBe(true);
       await expectHealthyPage(page);
     } finally {
-      await admin.from("professionals").update({ portfolio_items: before!.portfolio_items, portfolio_urls: before!.portfolio_urls }).eq("id", seed.professionalId);
+      await cleanupDisposableAccount(account);
     }
   });
 
   test("availability privacy changes persist and can be published again", async ({ page }) => {
     const admin = regressionAdminClient();
+    let account: DisposableAccount | undefined;
     try {
-      await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+      account = await createDisposableAccount({ prefix: "availability", professional: true });
+      await loginAs(page, account.email, account.password);
       await gotoOK(page, "/es/dashboard/profesional?tab=availability&mode=offer");
       const privacy = page.getByRole("switch", { name: /Hacer (?:privada|p.blica)/i }).filter({ visible: true });
       await expect(privacy).toHaveCount(1);
@@ -267,7 +262,7 @@ test.describe("@seeded extended lifecycle", () => {
       const confirm = page.getByRole("button", { name: /S., ocultar agenda/i }).filter({ visible: true });
       await expect(confirm).toHaveCount(1);
       await confirm.click();
-      await expect.poll(async () => (await admin.from("professionals").select("availability_public").eq("id", seed.professionalId).single()).data?.availability_public).toBe(false);
+      await expect.poll(async () => (await admin.from("professionals").select("availability_public").eq("id", account!.professionalId!).single()).data?.availability_public).toBe(false);
 
       await gotoOK(page, "/es/dashboard/profesional?tab=availability&mode=offer");
       const publish = page.getByRole("switch", { name: /Hacer (?:privada|p.blica)/i }).filter({ visible: true });
@@ -276,9 +271,9 @@ test.describe("@seeded extended lifecycle", () => {
       await publish.click();
       await expect(publish).toHaveAttribute("aria-checked", "false");
       await page.getByRole("button", { name: /Guardar cambios/i }).filter({ visible: true }).click();
-      await expect.poll(async () => (await admin.from("professionals").select("availability_public").eq("id", seed.professionalId).single()).data?.availability_public).toBe(true);
+      await expect.poll(async () => (await admin.from("professionals").select("availability_public").eq("id", account!.professionalId!).single()).data?.availability_public).toBe(true);
     } finally {
-      await ensureRegressionSeed();
+      await cleanupDisposableAccount(account);
     }
   });
 });

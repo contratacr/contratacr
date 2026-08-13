@@ -164,7 +164,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
     case "followed_professional_activity":
       if (n.data?.activity_type === "offer" && n.data.content_id) href = `/ofertas/${n.data.content_id}`;
       else if (n.data?.activity_type === "job" && n.data.content_id) href = `/empleos/${n.data.content_id}`;
-      else href = "/dashboard/cliente?tab=network";
+      else href = "/dashboard/profesional?tab=network&mode=use";
       break;
 
     case "support_reply":

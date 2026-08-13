@@ -256,7 +256,9 @@ export async function POST(req: NextRequest) {
       bookingId: data.id,
       clientName: clientName || "Un cliente",
       serviceDescription,
-      whenText: preferredDateText ?? null,
+      scheduledDate: scheduledDate ?? null,
+      scheduledTime: scheduledTime ?? null,
+      preferredDateText: preferredDateText ?? null,
     });
 
     // If email provided and no session, send magic link to create / sign in account
@@ -494,7 +496,12 @@ export async function PATCH(req: NextRequest) {
         type: "booking_update",
         title: labelMap[status].title,
         message: labelMap[status].message,
-        data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: id },
+        data: {
+          link: "/es/dashboard/profesional?tab=sent_bookings",
+          booking_id: id,
+          booking_status: status,
+          auto_confirm_days: AUTO_CONFIRM_DAYS,
+        },
       };
       await admin.from("notifications").insert(notification);
       await sendNotificationPush({ userId: notification.user_id, ...notification });
@@ -508,7 +515,7 @@ export async function PATCH(req: NextRequest) {
           type: "booking_completed_by_client",
           title: "El cliente confirmó la finalización",
           message: "La solicitud quedó finalizada.",
-          data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id },
+          data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id, booking_status: "completed" },
         };
         await admin.from("notifications").insert(notification);
         await sendNotificationPush({ userId: notification.user_id, ...notification });
@@ -525,7 +532,12 @@ export async function PATCH(req: NextRequest) {
           type: "booking_cancelled_by_client",
           title: "El cliente canceló la solicitud",
           message: `El cliente canceló su solicitud. El horario quedó libre.${motivo}`,
-          data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id },
+          data: {
+            link: "/es/dashboard/profesional?tab=bookings",
+            booking_id: id,
+            booking_status: "cancelled",
+            ...(typeof cancelReason === "string" && cancelReason.trim() ? { cancel_reason: cancelReason.trim() } : {}),
+          },
         };
         await admin.from("notifications").insert(notification);
         await sendNotificationPush({ userId: notification.user_id, ...notification });
@@ -552,7 +564,11 @@ export async function PATCH(req: NextRequest) {
           type: "review_request",
           title: "¿Cómo te fue?",
           message: `Tu servicio con ${proName} se marcó como completado. Deja una reseña para ayudar a otros clientes.`,
-          data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: id },
+          data: {
+            link: "/es/dashboard/profesional?tab=sent_bookings",
+            booking_id: id,
+            professional_name: proName,
+          },
         };
         await admin.from("notifications").insert(notification);
         await sendNotificationPush({ userId: notification.user_id, ...notification });

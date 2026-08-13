@@ -31,9 +31,10 @@ const MAP_PEEK = 0.16;
 const CARD_PEEK = 0.5;
 const FULL = 0.92;
 const SHEET_TOP_GAP = 58;
+const SSR_SNAP_POINTS = [MAP_PEEK, CARD_PEEK, 0.82] as const;
 
 function mobileSheetSnapPoints(): readonly number[] {
-  if (typeof window === "undefined") return [MAP_PEEK, CARD_PEEK, 0.82];
+  if (typeof window === "undefined") return SSR_SNAP_POINTS;
   const viewportHeight = window.innerHeight || 1;
   const headerValue = getComputedStyle(document.documentElement)
     .getPropertyValue("--ccr-native-header-height");
@@ -62,7 +63,7 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, hasActiveFilters = false, mapFocusTarget = null, resetKey }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, mapFocusTarget = null, resetKey }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -72,11 +73,14 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   const [dragging, setDragging] = useState(false);
   const [areaSearching, setAreaSearching] = useState(false);
   const [searchAreaVisible, setSearchAreaVisible] = useState(false);
+  // The server and the first client render must use the exact same geometry.
+  // Viewport-derived snap points are applied only after hydration, then kept in
+  // sync when rotation or DevTools changes the available height.
+  const [currentSnapPoints, setCurrentSnapPoints] = useState<readonly number[]>(SSR_SNAP_POINTS);
   const draggingRef = useRef(false);
   const startRef = useRef({ y: 0, h: CARD_PEEK });
   const dragStartedAtRef = useRef(0);
   const curRef = useRef(CARD_PEEK);
-  const currentSnapPoints = mobileSheetSnapPoints();
   const expandedStart = currentSnapPoints[1] ?? CARD_PEEK;
   const expandedEnd = currentSnapPoints[currentSnapPoints.length - 1] ?? FULL;
   const sheetScrollable = heightFr > (expandedStart + expandedEnd) / 2;
@@ -109,10 +113,25 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   }, []);
 
   useEffect(() => {
+    const syncSnapPoints = () => {
+      const points = mobileSheetSnapPoints();
+      setCurrentSnapPoints(points);
+      setHeightFr((height) => points[snapIndex(height, points)] ?? CARD_PEEK);
+    };
+    const frame = window.requestAnimationFrame(syncSnapPoints);
+    window.addEventListener("resize", syncSnapPoints);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", syncSnapPoints);
+    };
+  }, []);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     listRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    setAreaSearching(false);
+    const frame = window.requestAnimationFrame(() => setAreaSearching(false));
+    return () => window.cancelAnimationFrame(frame);
   }, [resetKey]);
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which

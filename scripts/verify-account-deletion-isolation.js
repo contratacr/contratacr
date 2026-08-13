@@ -28,6 +28,7 @@ let targetId = "";
 let sentinelId = "";
 let targetPath = "";
 let sentinelPath = "";
+let deletionRequestId = "";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -58,6 +59,7 @@ async function run() {
 
   const { data: requestId, error: requestError } = await targetClient.rpc("request_my_account_deletion");
   if (requestError || !requestId) throw new Error(requestError?.message || "Deletion request failed");
+  deletionRequestId = requestId;
 
   const { data: owned, error: ownedError } = await admin.rpc("account_deletion_storage_objects", { p_request_id: requestId });
   if (ownedError) throw new Error(ownedError.message);
@@ -83,7 +85,9 @@ async function run() {
   assert(sentinelProfile?.id === sentinelId, "Sentinel profile was affected.");
   assert((sentinelObjects || []).some((item) => item.name === "probe.png"), "Sentinel storage object was affected.");
 
-  await admin.from("account_deletion_requests").delete().eq("id", requestId);
+  const { error: requestCleanupError } = await admin.from("account_deletion_requests").delete().eq("id", requestId);
+  if (requestCleanupError) throw new Error(requestCleanupError.message);
+  deletionRequestId = "";
   console.log("Account deletion isolation verified: target removed; sentinel unchanged.");
 }
 
@@ -94,6 +98,7 @@ run().finally(async () => {
     await admin.from("account_deletion_requests").delete().eq("user_id", targetId);
     await admin.auth.admin.deleteUser(targetId);
   }
+  if (deletionRequestId) await admin.from("account_deletion_requests").delete().eq("id", deletionRequestId);
   if (sentinelId) await admin.auth.admin.deleteUser(sentinelId);
 }).catch((error) => {
   console.error(error);

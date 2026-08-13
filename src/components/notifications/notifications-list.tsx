@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreVertical } from "lucide-react";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter } from "next/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
-import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
+import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
@@ -25,7 +25,7 @@ type Notification = {
   message: string;
   read: boolean;
   created_at: string;
-  data?: {
+  data?: Record<string, unknown> & {
     link?: string;
     project_id?: string | null;
     project_created_at?: string | null;
@@ -48,15 +48,18 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   // Per-mode (Airbnb full switch): the panel tab shows ONLY the active mode's
   // notifications, matching the navbar bell.
   const { mode } = useMode(canOffer(user));
-  const initialCache = readCachedNotifications(user?.id) as Notification[] | null;
-  const [notificationState, setNotificationState] = useState(() => ({
-    userId: user?.id,
-    items: initialCache ?? [],
-  }));
+  // Keep the server render and the first browser render deterministic. Reading
+  // localStorage during render made the server show 0 unread while hydration
+  // immediately showed the cached count, which triggered a full React re-render.
+  // The mounted effect below restores the cache without a hydration mismatch.
+  const [notificationState, setNotificationState] = useState<{
+    userId: string | undefined;
+    items: Notification[];
+  }>({ userId: undefined, items: [] });
   const items = notificationState.userId === user?.id
     ? notificationState.items
-    : (readCachedNotifications(user?.id) as Notification[] | null) ?? [];
-  const [busy, setBusy] = useState(initialCache === null);
+    : [];
+  const [busy, setBusy] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
@@ -157,18 +160,8 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
-  const notificationTitle = (n: Notification) => {
-    const copy = localizedNotificationCopy(n, locale);
-    return n.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? copy.title : t(`types.${n.type}`);
-  };
-  const notificationMessage = (n: Notification) => {
-    const localizedMessage = localizedNotificationCopy(n, locale).message;
-    const fullReason = n.data?.review_reason?.trim();
-    if (!fullReason) return localizedMessage;
-    if (/\bMotivo:/i.test(localizedMessage)) return localizedMessage.replace(/\bMotivo:[\s\S]*$/i, `Motivo: ${fullReason}`);
-    if (/\bReason:/i.test(localizedMessage)) return localizedMessage.replace(/\bReason:[\s\S]*$/i, `Reason: ${fullReason}`);
-    return localizedMessage;
-  };
+  const notificationTitle = (n: Notification) => localizedNotificationCopy(n, locale).title;
+  const notificationMessage = (n: Notification) => localizedNotificationCopy(n, locale).message;
   const notificationTime = (n: Notification) => {
     const projectCreatedAt = getNotificationProjectCreatedAt(n, projectTimes);
     return projectCreatedAt

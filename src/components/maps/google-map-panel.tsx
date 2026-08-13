@@ -2,8 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, MapPin, RefreshCw, Search } from "lucide-react";
-import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
+import { Loader2, MapPin, RefreshCw } from "lucide-react";
+import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/maps/loader";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 
@@ -49,17 +49,6 @@ interface GoogleMapPanelProps {
   /** Active location filter. When present, the map centers here instead of fitting all result pins. */
   focusTarget?: MapFocusTarget | null;
 }
-
-// Province centroids — fallback for professionals who travel (no fixed coords).
-const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
-  "San José": { lat: 9.9281, lng: -84.0907 },
-  Alajuela: { lat: 10.0162, lng: -84.2116 },
-  Cartago: { lat: 9.8644, lng: -83.9194 },
-  Heredia: { lat: 9.9985, lng: -84.1165 },
-  Guanacaste: { lat: 10.6267, lng: -85.4437 },
-  Puntarenas: { lat: 9.9762, lng: -84.8384 },
-  Limón: { lat: 9.9907, lng: -83.0359 },
-};
 
 // Default view: the Greater Metropolitan Area (GAM), ~zoom 11–12. The map OPENS centered on
 // Costa Rica but pans/zooms FREELY — there is NO `restriction` bounds (which used to lock the
@@ -138,14 +127,6 @@ function teardropEl(num: string | number): HTMLDivElement {
   el.className = "ccr-pin";
   el.innerHTML = pinSvg() + (num !== "" ? `<span class="num">${num}</span>` : "");
   return el;
-}
-
-function jitter(seed: string): { dlat: number; dlng: number } {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const a = ((h % 1000) / 1000 - 0.5) * 0.04;
-  const b = (((h >> 10) % 1000) / 1000 - 0.5) * 0.04;
-  return { dlat: a, dlng: b };
 }
 
 function positionFor(pro: MapProfessional): { lat: number; lng: number } | null {
@@ -366,7 +347,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         `</a>` +
       `</div>`;
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
-    popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
+    popupRef.current = createGoogleMarker(g, { map, position: pos, content: wrap, zIndex: 100000 });
     popupContentElRef.current = wrap; // measured by the proximity-hide on mousemove
     neutralizePopup(popupRef.current, wrap); // ← belt-and-suspenders: the popup also can't capture the pointer
   }
@@ -462,10 +443,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     if (mapInstanceRef.current || !mapRef.current) return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
-    if (!g?.marker?.AdvancedMarkerElement) return null;
+    if (!g?.Map) return null;
     const useNativeControls = !window.matchMedia?.("(max-width: 1023px)").matches;
-    const map = new g.Map(mapRef.current, {
-      mapId: MAP_ID,                 // cloud-styled light basemap + enables AdvancedMarkers
+    const map = new g.Map(mapRef.current, withConfiguredMapId({
       center: GAM_CENTER,    // opens centered on Costa Rica…
       zoom: 11,
       minZoom: 4,            // …but pans/zooms FREELY (no CR bounds restriction; zoom out to the region)
@@ -481,7 +461,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       zoomControlOptions: { position: g.ControlPosition.RIGHT_TOP },
       clickableIcons: false,
       gestureHandling: "greedy", // wheel/scroll zooms DIRECTLY over the map (no Ctrl hint); one-finger pan + pinch-zoom on mobile
-    });
+    }));
     mapInstanceRef.current = map;
     map.addListener("click", hidePopup); // tapping the map closes the popup + clears the pin highlight
     map.addListener("idle", markSearchMapReady);
@@ -495,7 +475,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   function renderMarkers() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
-    if (!g?.marker?.AdvancedMarkerElement) return;
+    if (!g?.Map) return;
     const map = mapInstanceRef.current ?? ensureMap();
     if (!map) return;
 
@@ -520,7 +500,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       el.dataset.basez = String(z);
 
       const titleName = getProfessionalDisplayName(pro.fullName, pro.businessName).primaryDesktop || pro.fullName;
-      const marker = new g.marker.AdvancedMarkerElement({ map, position: pos, content: el, zIndex: z, title: titleName });
+      const marker = createGoogleMarker(g, { map, position: pos, content: el, zIndex: z, title: titleName });
       // Keep a back-ref so setPinActive can raise zIndex without a marker lookup.
       (el as unknown as { _marker: unknown })._marker = marker;
       const list = pinsByProRef.current.get(proId) ?? [];

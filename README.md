@@ -6,11 +6,11 @@ Use `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-main` for production-
 
 Use `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-test` for test-environment work on `test`.
 
-These local branches are parked and must not be pushed or merged unless Isaac explicitly decides otherwise:
-
-- `local/capacitor-no-push` - Android/Capacitor mobile app work.
-- `local/direct-messages-no-push` - in-app direct messages/chat work.
-- `local/pro-suite-no-push` - Pro suite work: facturacion, cotizaciones, inventario and clientes.
+The only remote branches are `main`, `test`, and `mobile`. The only local branches are
+`main`, `test`, `mobile`, and the parked `local/pro-suite-no-push`. Do not create
+additional branches. `main` and `test` must resolve to the exact same commit; `mobile`
+contains that shared web baseline plus its explicitly mobile-only shell and messaging
+differences. Never push `local/pro-suite-no-push`.
 
 Before pushing, confirm `git status --short --branch` shows `main` or `test`, and confirm migrations are current. The current production baseline includes `supabase/migrations/139_interaction_analytics_saved_actions.sql`.
 
@@ -36,13 +36,16 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Regression Tests
 
-The Playwright regression workflow runs against the Vercel `test` branch deployment and seeds two isolated `@contratacr.test` accounts in the test Supabase project before running the seeded suite. Configure these secrets in the GitHub `test` environment:
+The Playwright regression workflow runs against the `test` deployment and refreshes the authorized ContrataCR/SG Solutions fixture pair before running the seeded suite. Configure these secrets in the GitHub `test` environment:
 
 - `VERCEL_AUTOMATION_BYPASS_SECRET`
 - `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_DB_URL`
+- `E2E_TEST_PASSWORD`
 
-Seeded tests refuse to run against the production Supabase project. Local runs without `E2E_SEED=1` skip the seeded suite.
+Seeded tests refuse to run against the production Supabase project. Run `npm run seed:test:full`, verify with `npm run seed:test:verify`, and set `E2E_FIXTURES_READY=1` (loaded automatically with the local `.env.test`) before a local seeded run.
 
 ## Learn More
 

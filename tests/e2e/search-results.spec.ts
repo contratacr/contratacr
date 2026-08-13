@@ -27,7 +27,7 @@ test.describe("@seeded search results", () => {
 
   test("search results render professional cards with primary actions", async ({ page }) => {
     const href = await firstProfessionalHref(page);
-    test.skip(!href, "No seeded professionals found in this environment.");
+    expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
 
     const firstCard = page.locator("article:visible").first();
     await expect(firstCard).toBeVisible();
@@ -43,7 +43,7 @@ test.describe("@seeded search results", () => {
 
   test("card keeps favorite visible and avoids layout overflow", async ({ page }) => {
     const href = await firstProfessionalHref(page);
-    test.skip(!href, "No seeded professionals found in this environment.");
+    expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
 
     const favorite = page.getByRole("button", { name: /Guardar profesional|Quitar de favoritos/i }).first();
     await expect(favorite).toBeVisible();
@@ -160,10 +160,11 @@ test.describe("@seeded search results", () => {
   test("nationwide video consultations survive a different physical location filter", async ({ page }) => {
     test.skip(!canRunSeededRegression(), "Seeded video professional is required for video/location regression.");
     const seed = await ensureRegressionSeed();
+    const cacheBust = Date.now();
 
     for (const query of [
-      `/es/buscar?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li`,
-      `/es/buscar?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li&modalidad=video`,
+      `/es/buscar?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li&lat=10.6346&lng=-85.4404&regression=${cacheBust}`,
+      `/es/buscar?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li&modalidad=video&lat=10.6346&lng=-85.4404&regression=${cacheBust}`,
     ]) {
       await gotoOK(page, query);
       await waitForInteractivePage(page);

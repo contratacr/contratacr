@@ -37,7 +37,7 @@ function currentEnvWith(overrides: Record<string, string>) {
 }
 
 const loadedTestEnv = !process.env.CI && loadLocalEnvFile(".env.test");
-if (loadedTestEnv && !process.env.E2E_SEED) process.env.E2E_SEED = "1";
+if (loadedTestEnv && !process.env.E2E_FIXTURES_READY) process.env.E2E_FIXTURES_READY = "1";
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 const localBaseURL = `http://localhost:${port}`;
@@ -68,6 +68,9 @@ export default defineConfig({
     : "list",
   use: {
     baseURL,
+    // All date buckets in ContrataCR are defined in Costa Rica local time.
+    // Pin the browser clock so CI (UTC) and local runs agree at day boundaries.
+    timezoneId: "America/Costa_Rica",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",

@@ -326,14 +326,25 @@ test.describe("@seeded ContrataCR AI", () => {
       expect(professional?.actionLabel).not.toBe("Ver disponibilidad");
       expect(professional?.actionLabel).not.toBe("Enviar mensaje");
     } finally {
-      const { error } = await admin.from("availability_slots").insert({
-        professional_id: seed.professionalId,
-        slot_date: seed.slotDate,
-        slot_time: seed.slotTime,
-        category_id: seed.categoryId,
-        location_id: "e2e-main",
-      });
-      if (error && error.code !== "23505") throw error;
+      const { error } = await admin.from("availability_slots").upsert([
+        {
+          id: "c2000000-0000-4000-8000-000000000005",
+          professional_id: seed.professionalId,
+          slot_date: seed.slotDate,
+          slot_time: seed.slotTime,
+          category_id: seed.categoryId,
+          location_id: seed.slotLocationId,
+        },
+        {
+          id: "c2000000-0000-4000-8000-000000000006",
+          professional_id: seed.professionalId,
+          slot_date: seed.slotDate,
+          slot_time: "11:00",
+          category_id: seed.categoryId,
+          location_id: seed.slotLocationId,
+        },
+      ], { onConflict: "id" });
+      if (error) throw error;
     }
   });
 

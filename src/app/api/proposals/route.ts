@@ -105,7 +105,13 @@ export async function POST(req: NextRequest) {
 
     try {
       if (project?.client_id) {
-        const pushData = { link: "/es/dashboard/profesional?tab=sent_projects", project_id: projectId, proposal_id: data.id };
+        const pushData = {
+          link: "/es/dashboard/profesional?tab=sent_projects",
+          project_id: projectId,
+          proposal_id: data.id,
+          professional_name: profile?.full_name ?? "Un profesional",
+          project_title: project.title ?? "tu solicitud",
+        };
         await sendNotificationPush({
           userId: project.client_id,
           title: "Nueva propuesta recibida",
@@ -278,7 +284,11 @@ export async function PATCH(req: NextRequest) {
             type: "proposal_updated",
             title: "Propuesta actualizada",
             message: `Un profesional actualizó su propuesta para "${project.title ?? "tu solicitud"}".`,
-            data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: updated.project_id },
+            data: {
+              link: "/es/dashboard/profesional?tab=sent_projects",
+              project_id: updated.project_id,
+              project_title: project.title ?? "tu solicitud",
+            },
           };
           await admin.from("notifications").insert(notification);
           await sendNotificationPush({ userId: notification.user_id, ...notification });
@@ -349,7 +359,12 @@ export async function PATCH(req: NextRequest) {
                 type: "project_proposal_declined",
                 title: "Propuesta no seleccionada",
                 message: `El cliente no seleccionó tu propuesta para "${title}".`,
-                data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
+                data: {
+                  link: "/es/dashboard/profesional?tab=proposals",
+                  project_id: prop.project_id,
+                  project_title: title,
+                  proposal_outcome: "not_selected",
+                },
               };
               await admin.from("notifications").insert(notification);
               await sendNotificationPush({ userId: notification.user_id, ...notification });
@@ -402,7 +417,12 @@ export async function PATCH(req: NextRequest) {
               type: "project_proposal_declined",
               title: "Propuesta no seleccionada",
               message: `El cliente eligió otra propuesta para "${title}".`,
-              data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
+              data: {
+                link: "/es/dashboard/profesional?tab=proposals",
+                project_id: prop.project_id,
+                project_title: title,
+                proposal_outcome: "another_selected",
+              },
             }));
             if (rows.length > 0) {
               await admin.from("notifications").insert(rows);
@@ -415,7 +435,11 @@ export async function PATCH(req: NextRequest) {
               type: "project_proposal_accepted",
               title: "¡Tu propuesta fue aceptada!",
               message: `El cliente aceptó tu propuesta para "${title}". Coordina el trabajo y márcalo como realizado al terminar.`,
-              data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
+              data: {
+                link: "/es/dashboard/profesional?tab=proposals",
+                project_id: prop.project_id,
+                project_title: title,
+              },
             };
             await admin.from("notifications").insert(notification);
             await sendNotificationPush({ userId: notification.user_id, ...notification });
@@ -490,7 +514,11 @@ export async function DELETE(req: NextRequest) {
         type: "proposal_withdrawn",
         title: "Propuesta retirada",
         message: `Un profesional retiró su propuesta para "${project.title ?? "tu solicitud"}".`,
-        data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: prop.project_id },
+        data: {
+          link: "/es/dashboard/profesional?tab=sent_projects",
+          project_id: prop.project_id,
+          project_title: project.title ?? "tu solicitud",
+        },
       };
       await admin.from("notifications").insert(notification);
       await sendNotificationPush({ userId: notification.user_id, ...notification });

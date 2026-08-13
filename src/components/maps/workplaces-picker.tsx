@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { MapPin, X, Plus, ChevronDown, Check, Search } from "lucide-react";
-import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
+import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/maps/loader";
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { SelectMenu } from "@/components/ui/select-menu";
@@ -194,7 +194,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       ...(draftPinRef.current ? [{ lat: draftPinRef.current.lat, lng: draftPinRef.current.lng, title: "Nuevo lugar" }] : []),
     ];
     for (const p of pins) {
-      markersRef.current.push(new maps.marker.AdvancedMarkerElement({ position: { lat: p.lat, lng: p.lng }, map, title: p.title }));
+      markersRef.current.push(createGoogleMarker(maps, { position: { lat: p.lat, lng: p.lng }, map, title: p.title }));
       bounds.extend({ lat: p.lat, lng: p.lng });
       count++;
     }
@@ -235,15 +235,14 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     mapsReadyRef.current = true;
 
     const first = value.find((w) => w.lat != null && w.lng != null);
-    const map = new maps.Map(mapRef.current, {
+    const map = new maps.Map(mapRef.current, withConfiguredMapId({
       center: first ? { lat: first.lat, lng: first.lng } : COSTA_RICA_CENTER,
       zoom: first ? 14 : 8,
-      mapId: MAP_ID,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
       gestureHandling: "greedy",
-    });
+    }));
     mapInstanceRef.current = map;
     geocoderRef.current = new maps.Geocoder();
 
@@ -518,4 +517,3 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     </div>
   );
 }
-

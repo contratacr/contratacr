@@ -131,7 +131,11 @@ export async function POST(req: Request) {
       type: "support_reply",
       title: "Respuesta de soporte",
       message: `Soporte respondió a tu ticket "${ticket.subject}".`,
-      data: { link: `/es/dashboard/${panel}?tab=soporte&ticket=${id}`, ticketId: id },
+      data: {
+        link: `/es/dashboard/${panel}?tab=soporte&ticket=${id}`,
+        ticketId: id,
+        ticket_subject: ticket.subject,
+      },
     };
     await db.from("notifications").insert(notification);
     await sendNotificationPush({ userId: notification.user_id, ...notification });

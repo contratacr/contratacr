@@ -252,7 +252,7 @@ export default function LoginPage() {
     // email = one method". The `next` stays URL-ENCODED (an unencoded query
     // previously broke the code exchange = auth=error).
     const next = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect")) ?? "";
-    return window.location.origin + "/auth/callback?flow=oauth" + (next ? `&next=${encodeURIComponent(next)}` : "");
+    return window.location.origin + `/auth/callback?flow=oauth&locale=${locale}` + (next ? `&next=${encodeURIComponent(next)}` : "");
   }
 
   async function handleGoogle() {

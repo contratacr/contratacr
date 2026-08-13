@@ -44,8 +44,8 @@ const ids = {
   projects: Array.from({ length: 6 }, (_, index) => `d2000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   opportunities: Array.from({ length: 40 }, (_, index) => `d2100000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   proposals: Array.from({ length: 6 }, (_, index) => `d3000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
-  jobs: Array.from({ length: 8 }, (_, index) => `d4000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
-  applications: Array.from({ length: 6 }, (_, index) => `d5000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
+  jobs: Array.from({ length: 12 }, (_, index) => `d4000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
+  applications: Array.from({ length: 12 }, (_, index) => `d5000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   offers: Array.from({ length: 10 }, (_, index) => `d6000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   tickets: Array.from({ length: 6 }, (_, index) => `d7000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   ticketMessages: Array.from({ length: 6 }, (_, index) => `d8000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
@@ -268,15 +268,20 @@ async function main() {
   const jobs = [
     ...jobStatuses.map((status, index) => job(ids.jobs[index], actors.contratacr, contrataPro.category_id, status, index)),
     ...jobStatuses.map((status, index) => job(ids.jobs[index + 4], actors.sg, sgPro.category_id, status, index + 4)),
+    job(ids.jobs[8], actors.sg, sgPro.category_id, "published", 8),
+    job(ids.jobs[9], actors.sg, sgPro.category_id, "published", 9),
+    job(ids.jobs[10], actors.contratacr, contrataPro.category_id, "published", 10),
+    job(ids.jobs[11], actors.contratacr, contrataPro.category_id, "published", 11),
   ];
   await must("coverage jobs", db.from("job_posts").upsert(jobs, { onConflict: "id" }));
 
   const applicationStatuses = ["submitted", "reviewing", "shortlisted", "rejected", "hired", "withdrawn"];
-  const applications = applicationStatuses.map((status, index) => {
-    const applicant = index % 2 === 0 ? actors.sg : actors.contratacr;
-    const targetJob = index % 2 === 0
-      ? jobs[Math.floor(index / 2)]
-      : jobs[4 + Math.floor(index / 2)];
+  const applicationTargets = [
+    ...[4, 5, 6, 7, 8, 9].map((jobIndex) => ({ applicant: actors.contratacr, targetJob: jobs[jobIndex] })),
+    ...[0, 1, 2, 3, 10, 11].map((jobIndex) => ({ applicant: actors.sg, targetJob: jobs[jobIndex] })),
+  ];
+  const applications = applicationTargets.map(({ applicant, targetJob }, index) => {
+    const status = applicationStatuses[index % applicationStatuses.length];
     return {
       id: ids.applications[index],
       job_id: targetJob.id,
@@ -290,6 +295,10 @@ async function main() {
       updated_at: iso(-1),
     };
   });
+  // The per-actor matrix replaced an older alternating six-row layout. Clear
+  // only this seed's deterministic UUIDs first so unique(job, applicant)
+  // constraints cannot retain a stale pairing across reruns.
+  await must("reset coverage applications", db.from("job_applications").delete().in("id", ids.applications));
   await must("coverage applications", db.from("job_applications").upsert(applications, { onConflict: "id" }));
 
   const offerStatuses = ["published", "paused", "expired", "sold_out", "draft"];

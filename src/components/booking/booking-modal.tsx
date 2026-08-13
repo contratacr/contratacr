@@ -1109,7 +1109,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             </div>
 
             <div className="mt-5 hidden space-y-2 lg:block">
-              <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="justify-center [&_span]:text-white [&_.text-\[\#9ca3af\]]:text-white/60" />
+              <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="justify-center [&_span]:text-white" />
               {professional.cantonName && (
                 <div className="flex items-center gap-1.5 justify-center text-white/70 text-sm">
                   <MapPin className="h-3.5 w-3.5" />
