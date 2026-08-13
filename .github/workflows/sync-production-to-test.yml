@@ -201,7 +201,7 @@ jobs:
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
             --file="$mirror/prepare-test-mirror.generated.sql"
           "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
-            --disable-triggers --no-owner --no-acl --exit-on-error \
+            --no-owner --no-acl --exit-on-error \
             "$mirror/production-public-data.dump"
 
           regression_password="${REGRESSION_TEST_PASSWORD:-ContrataCR!2026}"
