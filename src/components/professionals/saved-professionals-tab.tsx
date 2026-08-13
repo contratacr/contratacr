@@ -14,7 +14,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsavePro, type SavedPro } from "./save-button";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 
-type SavedFilter = "all" | "professionals" | "offers" | "jobs";
+type SavedFilter = "professionals" | "offers" | "jobs";
 type SavedItemKind = "offer" | "job";
 
 type SavedItem = {
@@ -155,7 +155,7 @@ export function SavedProfessionalsTab() {
   const { user, loading: authLoading } = useAuth();
   const [savedPros, setSavedPros] = useState<SavedPro[]>([]);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
-  const [filter, setFilter] = useState<SavedFilter>("all");
+  const [filter, setFilter] = useState<SavedFilter>("professionals");
   const [mounted, setMounted] = useState(false);
 
   const refreshPros = useCallback(() => {
@@ -224,11 +224,25 @@ export function SavedProfessionalsTab() {
   const offers = useMemo(() => savedItems.filter((item) => item.item_type === "offer"), [savedItems]);
   const jobs = useMemo(() => savedItems.filter((item) => item.item_type === "job"), [savedItems]);
   const total = savedPros.length + offers.length + jobs.length;
-  const showPros = filter === "all" || filter === "professionals";
-  const showOffers = filter === "all" || filter === "offers";
-  const showJobs = filter === "all" || filter === "jobs";
+  const showPros = filter === "professionals";
+  const showOffers = filter === "offers";
+  const showJobs = filter === "jobs";
 
-  if (!mounted || authLoading) return <PanelListSkeleton rows={3} />;
+  const availableFilters = useMemo<SavedFilter[]>(() => {
+    const next: SavedFilter[] = [];
+    if (savedPros.length > 0) next.push("professionals");
+    if (offers.length > 0) next.push("offers");
+    if (jobs.length > 0) next.push("jobs");
+    return next;
+  }, [jobs.length, offers.length, savedPros.length]);
+
+  useEffect(() => {
+    if (availableFilters.length > 0 && !availableFilters.includes(filter)) {
+      setFilter(availableFilters[0]);
+    }
+  }, [availableFilters, filter]);
+
+  if (!mounted || authLoading) return <PanelListSkeleton rows={3} hasData={total > 0} />;
 
   if (total === 0) {
     return (
@@ -241,20 +255,13 @@ export function SavedProfessionalsTab() {
     );
   }
 
-  const tabs = [
-    { id: "all" },
-    { id: "professionals" },
-    { id: "offers" },
-    { id: "jobs" },
-  ] as const;
+  const tabs = availableFilters.map((id) => ({ id }));
   const tabLabels: Record<string, string> = {
-    all: "Todos",
     professionals: "Profesionales",
     offers: "Ofertas",
     jobs: "Empleos",
   };
   const tabCounts = {
-    all: total,
     professionals: savedPros.length,
     offers: offers.length,
     jobs: jobs.length,

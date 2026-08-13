@@ -2025,6 +2025,8 @@
   "unsavedGuard": {
     "title": "You have unsaved changes",
     "body": "If you leave now, the changes you made to your profile will be lost. What would you like to do?",
+    "incompleteTitle": "Required information is missing",
+    "incompleteBody": "{error} You can keep editing or leave without saving these changes.",
     "saving": "Saving...",
     "saveChanges": "Save changes",
     "saveAndLeave": "Save and leave",
@@ -2195,8 +2197,8 @@
     "otherNamePlaceholder": "e.g. Bottle seller",
     "otherHelp": "Write it using the words your clients would search for. That's how you'll show up in search results.",
     "servicesPublished": "{count, plural, =0 {No prices} one {# price} other {# prices}}",
-    "svcActive": "Enabled",
-    "svcInactive": "Disabled",
+    "publishService": "Publish service",
+    "hideService": "Hide service",
     "newServiceShort": "New price",
     "inProfession": "in {profession}",
     "nameField": "Name",
@@ -2450,6 +2452,7 @@
     "certSave": "Save",
     "certAllRequired": "Fill in the name, institution and year (4 digits).",
     "allowCallLabel": "Allow contact by phone call",
+    "allowEmailLabel": "Allow contact by email",
     "allowCallDesc": "If you enable it, clients will see the “Call us” option to your number."
   },
   "verificationPanel": {

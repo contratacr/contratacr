@@ -4,10 +4,9 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
-  MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, CheckCircle2, Languages,
   Share2, Flag, Award, SearchX, Globe, BadgePercent, Users,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
@@ -42,7 +41,7 @@ import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
-import { Skeleton } from "@/components/ui/content-loading";
+import { BrandLoadingMark } from "@/components/ui/content-loading";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -272,58 +271,10 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-[#f4f7fa] text-[#162543]">
         <Navbar />
-        <main className="ccr-delayed-loading mx-auto w-full max-w-[1240px] px-4 pb-12 pt-5 sm:px-6 lg:px-8" aria-busy="true" role="status">
-          <span className="sr-only">{tLoading("profile")}</span>
-          <section className="rounded-2xl border border-[#dfe8f0] bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.65)] sm:p-7">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-center gap-4">
-                <Skeleton className="h-20 w-20 shrink-0 rounded-full sm:h-24 sm:w-24" />
-                <div className="min-w-0 flex-1 space-y-3">
-                  <Skeleton className="h-6 w-52 max-w-full rounded-full" />
-                  <Skeleton className="h-4 w-32 rounded-full" />
-                  <div className="flex gap-2">
-                    <Skeleton className="h-9 w-28 rounded-xl" />
-                    <Skeleton className="h-9 w-32 rounded-xl" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 sm:min-w-[330px]">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="space-y-2 text-center">
-                    <Skeleton className="mx-auto h-5 w-12 rounded-full" />
-                    <Skeleton className="mx-auto h-3 w-20 max-w-full rounded-full" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <section className="overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white">
-              <div className="flex gap-6 overflow-hidden border-b border-[#e4ebf1] px-5 py-4">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Skeleton key={index} className="h-4 w-24 shrink-0 rounded-full" />
-                ))}
-              </div>
-              <div className="space-y-5 p-5 sm:p-6">
-                <Skeleton className="h-6 w-44 rounded-full" />
-                <Skeleton className="aspect-[16/7] w-full rounded-xl" />
-                <Skeleton className="h-5 w-2/5 rounded-full" />
-                <Skeleton className="h-3 w-4/5 rounded-full" />
-                <Skeleton className="h-11 w-full rounded-xl" />
-              </div>
-            </section>
-            <aside className="hidden h-fit space-y-4 rounded-2xl border border-[#dfe8f0] bg-white p-5 lg:block">
-              <Skeleton className="h-6 w-36 rounded-full" />
-              <Skeleton className="h-4 w-24 rounded-full" />
-              <Skeleton className="h-11 w-full rounded-xl" />
-              <Skeleton className="h-11 w-full rounded-xl" />
-              <div className="grid grid-cols-2 gap-2">
-                <Skeleton className="h-10 w-full rounded-xl" />
-                <Skeleton className="h-10 w-full rounded-xl" />
-              </div>
-            </aside>
-          </div>
+        <main className="mx-auto w-full max-w-[1240px] px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+          <BrandLoadingMark className="min-h-[55vh]">
+            <span className="sr-only">{tLoading("profile")}</span>
+          </BrandLoadingMark>
         </main>
       </div>
     );
@@ -518,18 +469,17 @@ export default function ProfilePage() {
                   </Avatar>
                 </ImagePreviewDialog>
                 <div className="min-w-0">
-                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                    <h1 className="min-w-0 truncate text-2xl font-bold leading-tight text-[#111827]">
+                  <div className="min-w-0">
+                    <h1 className="line-clamp-2 min-w-0 text-xl font-bold leading-tight text-[#111827] [overflow-wrap:normal] sm:text-2xl">
                       {displayName.primaryDesktop}
+                      {professional.verificationStatus === "verified" && (
+                        <CheckCircle2
+                          aria-label={t("identityVerified")}
+                          className="ml-1.5 inline-block h-[0.85em] w-[0.85em] align-[-0.05em] text-[#009FD9]"
+                        />
+                      )}
                     </h1>
-                    {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
                   </div>
-                  <p className="mt-1 text-sm text-[#6b7280]">
-                    {(professional.professions && professional.professions.length > 0 ? professional.professions : [professional.categoryId])
-                      .filter(Boolean)
-                      .map((cat) => catLabel(cat))
-                      .join(" · ")}
-                  </p>
                   {locationText && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-sm text-[#6b7280]">
                       <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
@@ -561,28 +511,28 @@ export default function ProfilePage() {
                 "grid w-full shrink-0 gap-2 self-start sm:w-auto sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5",
                 expYears > 0 ? "grid-cols-3 sm:min-w-[18rem]" : "grid-cols-2 sm:min-w-[13rem]",
               )}>
-                <button type="button" onClick={() => setActiveTab("resenas")} className="text-center">
+                <button type="button" onClick={() => setActiveTab("resenas")} className="min-w-0 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
                     <span className="text-[15px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
                   </div>
-                  <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("reviewCountLabel", { count: professional.reviewCount })}</p>
+                  <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">{t("reviewCountLabel", { count: professional.reviewCount })}</p>
                 </button>
                 {expYears > 0 && (
-                  <div className="text-center">
+                  <div className="min-w-0 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Briefcase className="h-4 w-4 text-[#009FD9]" />
                       <span className="text-[15px] font-bold text-[#111827]">{expYears}</span>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statYears")}</p>
+                    <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none tracking-[-0.02em] text-[#8b95a5] sm:text-[11px] sm:tracking-normal">{t("statYears")}</p>
                   </div>
                 )}
-                <div className="text-center">
+                <div className="min-w-0 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Users className="h-4 w-4 text-[#009FD9]" />
                     <span className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
                   </div>
-                  <p className="mt-0.5 text-[11px] text-[#9ca3af]">
+                  <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">
                     {locale === "en"
                       ? ((professional.followerCount ?? 0) === 1 ? "follower" : "followers")
                       : ((professional.followerCount ?? 0) === 1 ? "seguidor" : "seguidores")}
@@ -602,7 +552,6 @@ export default function ProfilePage() {
                     (avatar/name/verificado/rating/location) now lives in the HEADER card
                     above, so it's not repeated here. */}
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("from")}</span>
                   {(() => {
                     const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
                     const { amount, unit, taxSuffix } = splitPricingLabel(label);

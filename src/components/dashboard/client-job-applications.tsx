@@ -65,7 +65,7 @@ export function ClientJobApplications() {
     } finally { setLoading(false); }
   }, []);
   useEffect(() => { queueMicrotask(() => void load()); }, [load]);
-  if (loading) return <PanelListSkeleton rows={3} />;
+  if (loading) return <PanelListSkeleton rows={3} hasData={applications.length > 0} />;
   if (!applications.length) return (
     <PanelEmptyState
       icon={BriefcaseBusiness}

@@ -1,9 +1,9 @@
 "use client";
 
 import { useLocale } from "next-intl";
-import { Check } from "lucide-react";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 import { cn } from "@/lib/utils";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 
 interface Props {
   value: string[];
@@ -29,7 +29,10 @@ export function LanguagesInput({ value, onChange }: Props) {
 
   function toggle(id: string) {
     const next = new Set(selected);
-    if (next.has(id)) next.delete(id);
+    if (next.has(id)) {
+      if (next.size === 1) return;
+      next.delete(id);
+    }
     else next.add(id);
     onChange(Array.from(next));
   }
@@ -39,27 +42,23 @@ export function LanguagesInput({ value, onChange }: Props) {
       {LANGUAGES.map((language) => {
         const checked = selected.has(language.id);
         return (
-          <label
+          <button
+            type="button"
+            role="switch"
+            aria-checked={checked}
+            aria-label={languageLabel(language.id, locale)}
             key={language.id}
+            onClick={() => toggle(language.id)}
             className={cn(
-              "flex cursor-pointer items-center justify-between gap-3 rounded-2xl bg-[#f8fafc] px-4 py-3 text-sm font-semibold text-[#12233f] transition-colors hover:bg-[#f4f8fb]",
-              checked && "bg-[#eef8fc]"
+              "flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm font-semibold text-[#12233f] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30",
+              checked
+                ? "border-[#cce8f3] bg-[#f4fbfe]"
+                : "border-[#e5e7eb] bg-white hover:bg-[#f8fafc]"
             )}
           >
             <span>{languageLabel(language.id, locale)}</span>
-            <span className={cn(
-              "grid h-5 w-5 shrink-0 place-items-center rounded-[4px] border border-[#b8c5d3] bg-white text-white",
-              checked && "border-[#009FD9] bg-[#009FD9]"
-            )}>
-              {checked ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : null}
-            </span>
-            <input
-              type="checkbox"
-              checked={checked}
-              onChange={() => toggle(language.id)}
-              className="sr-only"
-            />
-          </label>
+            <ToggleSwitch checked={checked} />
+          </button>
         );
       })}
     </div>

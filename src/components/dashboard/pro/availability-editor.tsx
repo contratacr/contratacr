@@ -872,7 +872,6 @@ export function AvailabilityEditor({
     >
       {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <AvailabilitySwitch checked={checked} disabled={disabled} />}
       <span>{title}</span>
-      <span className="ml-1 text-xs font-bold text-[#64748b]">{checked ? (locale === "en" ? "Enabled" : "Activado") : (locale === "en" ? "Disabled" : "Desactivado")}</span>
     </button>
   );
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon,
   Briefcase, Compass, Wrench,
   UserRound, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail,
@@ -716,6 +716,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const [nativePendingHref, setNativePendingHref] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchListDominant, setSearchListDominant] = useState(false);
   useCustomCategories();
   // A picked category (so a chosen suggestion filters by id, not free text).
   const [searchCategoryId, setSearchCategoryId] = useState<string | null>(null);
@@ -769,6 +770,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // The global navbar is navigation-only. /buscar explicitly opts into its
   // contextual professional search; every other destination owns its search.
   const showMobileNavbarSearch = mobileSearch && effectiveCompact && !mobileInline;
+  const showSearchViewToggle = showMobileNavbarSearch && pathname === "/buscar";
+  useEffect(() => {
+    const updateSearchView = (event: Event) => {
+      setSearchListDominant(Boolean((event as CustomEvent<{ listDominant?: boolean }>).detail?.listDominant));
+    };
+    window.addEventListener("ccr:search-view-state", updateSearchView as EventListener);
+    return () => window.removeEventListener("ccr:search-view-state", updateSearchView as EventListener);
+  }, []);
   const nativeSearchServices = useMemo(
     () =>
       locale === "en"
@@ -1367,19 +1376,38 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
             {/* -- Default row -- */}
             {showMobileNavbarSearch && (
-              <button
-                type="button"
-                onClick={openNativeSearch}
+              <div
                 className="absolute -left-4 -right-4 top-16 z-10 flex h-[56px] items-start px-4 text-left min-[1200px]:hidden"
-                aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
               >
                 <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">
-                  <Search className="h-5 w-5 shrink-0 text-[#162543]" />
-                  <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
-                    {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={openNativeSearch}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                  >
+                    <Search className="h-5 w-5 shrink-0 text-[#162543]" />
+                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
+                      {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                    </span>
+                  </button>
+                  {showSearchViewToggle && (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        window.dispatchEvent(new CustomEvent("ccr:set-search-view", { detail: { view: searchListDominant ? "map" : "list" } }));
+                      }}
+                      aria-label={searchListDominant
+                        ? (locale === "en" ? "Show map" : "Mostrar mapa")
+                        : (locale === "en" ? "Show results" : "Mostrar resultados")}
+                      className="-mr-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#162543] transition hover:bg-[#eef6fa] active:scale-95"
+                    >
+                      {searchListDominant ? <MapIcon className="h-5 w-5" /> : <List className="h-5 w-5" />}
+                    </button>
+                  )}
                 </div>
-              </button>
+              </div>
             )}
 
             <div className="relative hidden h-16 items-center gap-2 min-[1200px]:flex xl:gap-3">
@@ -1947,15 +1975,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><UserRound /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                 </Link>
-              ) : !user ? (
-                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
-                  <DrawerIcon><Briefcase /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
-                </Link>
               ) : null}
               <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                 <DrawerIcon><Search /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
+              </Link>
+              <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                <DrawerIcon><Wrench /></DrawerIcon>
+                <span className={mobileDrawerTextClass}>{t("categories")}</span>
               </Link>
               <Link href="/empleos" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                 <DrawerIcon><Briefcase /></DrawerIcon>
@@ -1965,6 +1992,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
               </Link>
+              {(!user || !isPro) && (
+                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={user ? mobileDrawerItemClass : mobileDrawerStrongItemClass}>
+                  <DrawerIcon><Briefcase /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
+                </Link>
+              )}
               {user && isAdminUser && (
                 <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><Shield /></DrawerIcon>
@@ -1983,17 +2016,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <span className={mobileDrawerTextClass}>{t("login")}</span>
                 </Link>
               )}
-
-              {user && !isPro && (
-                <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                  <DrawerIcon><Briefcase /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
-                </Link>
-              )}
-              <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                <DrawerIcon><Wrench /></DrawerIcon>
-                <span className={mobileDrawerTextClass}>{t("categories")}</span>
-              </Link>
 
               <div className="mt-1">
                 <button

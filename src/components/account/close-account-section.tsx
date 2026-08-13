@@ -65,7 +65,8 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
     try {
       const res = await fetch("/api/account/delete", { method: "POST" });
       if (!res.ok) {
-        setDeleteError(t("deleteError"));
+        const result = await res.json().catch(() => null) as { error?: string } | null;
+        setDeleteError(result?.error || t("deleteError"));
         return;
       }
       const supabase = createClient();

@@ -108,7 +108,7 @@ export function BasicProfileSection({
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
-  const toggleSection = (id: string) =>
+  const applySectionToggle = (id: string) =>
     setOpenSections((prev) => {
       if (typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches) {
         return prev.has(id) ? new Set() : new Set([id]);
@@ -117,6 +117,23 @@ export function BasicProfileSection({
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  const toggleSection = (id: string) => {
+    const isClosingDirtySection = openSections.has(id) && activeDirtySection === id;
+    const isLeavingDirtySection =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 639px)").matches &&
+      !!activeDirtySection &&
+      activeDirtySection !== id;
+    if (profileDirty && (isClosingDirtySection || isLeavingDirtySection)) {
+      const event = new CustomEvent("ccr:confirm-unsaved-action", {
+        cancelable: true,
+        detail: { proceed: () => applySectionToggle(id) },
+      });
+      if (window.dispatchEvent(event)) applySectionToggle(id);
+      return;
+    }
+    applySectionToggle(id);
+  };
   function touchProfile(sectionId?: string) {
     setProfileSaved(false);
     setProfileDirty(true);
@@ -306,10 +323,13 @@ export function BasicProfileSection({
   }, [activeMobileSectionTitle, mobileSectionFocused]);
 
   useEffect(() => {
-    const close = () => setOpenSections(new Set());
+    const close = () => {
+      const sectionId = Array.from(openSections)[0];
+      if (sectionId) toggleSection(sectionId);
+    };
     window.addEventListener("ccr:profile-mobile-close-section", close);
     return () => window.removeEventListener("ccr:profile-mobile-close-section", close);
-  }, []);
+  }, [openSections, profileDirty, activeDirtySection]);
 
   return (
     <div className="mx-auto flex w-full max-w-none flex-col gap-4">
@@ -344,7 +364,7 @@ export function BasicProfileSection({
               value={profileForm.full_name}
               disabled={cedulaVerified}
               maxLength={NAME_MAX_LENGTH}
-              onChange={(e) => { setProfileForm((f) => ({ ...f, full_name: limitText(e.target.value, NAME_MAX_LENGTH) })); touchProfile(); }}
+              onChange={(e) => { setProfileForm((f) => ({ ...f, full_name: limitText(e.target.value, NAME_MAX_LENGTH) })); touchProfile("basic"); }}
             />
             {cedulaVerified && <Lock className="h-4 w-4 text-[#9ca3af] absolute right-3 top-1/2 -translate-y-1/2" />}
           </div>
@@ -358,7 +378,7 @@ export function BasicProfileSection({
           <PhoneInput
             label={<>{t("phone")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
             value={profileForm.phone}
-            onChange={(digits) => { setProfileForm((f) => ({ ...f, phone: digits })); touchProfile(); }}
+            onChange={(digits) => { setProfileForm((f) => ({ ...f, phone: digits })); touchProfile("basic"); }}
           />
         </div>
 

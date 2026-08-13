@@ -306,11 +306,11 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
             "flex items-center justify-center p-1 transition-colors duration-200",
             saved
               ? "text-[#009FD9]"
-              : "text-[#9ca3af] hover:text-[#374151]",
+              : "text-[#009FD9] hover:text-[#007fae]",
             className
           )}
         >
-          <Bookmark className="h-[18px] w-[18px]" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
+          <Bookmark className="h-[18px] w-[18px] text-[#00a7d8]" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
         </button>
       )}
       <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
@@ -337,7 +337,7 @@ export function SaveableCard({ pro, children, isOwn = false }: CardWrapperProps)
         <SaveButton
           pro={pro}
           isOwn={isOwn}
-          className="p-0 text-[#9ca3af] hover:text-[#162543]"
+          className="p-0 text-[#009FD9] hover:text-[#007fae]"
         />
       </div>
     </div>

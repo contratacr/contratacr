@@ -15,10 +15,12 @@ export function UnsavedChangesGuard({
   dirty,
   onSave,
   onDiscard,
+  validationError,
 }: {
   dirty: boolean;
   onSave?: () => Promise<boolean | void> | boolean | void;
   onDiscard?: () => void;
+  validationError?: string | null;
 }) {
   const t = useTranslations("unsavedGuard");
   const [open, setOpen] = useState(false);
@@ -105,9 +107,7 @@ export function UnsavedChangesGuard({
       setSaving(false);
     }
     if (ok !== false) {
-      pendingAnchor.current = null;
-      pendingAction.current = null;
-      setOpen(false);
+      proceed();
     }
   }
 
@@ -139,35 +139,35 @@ export function UnsavedChangesGuard({
               </div>
               <div className="mt-3 min-w-0">
                 <Dialog.Title className="text-base font-bold text-[#111827]">
-                  {t("title")}
+                  {validationError ? t("incompleteTitle") : t("title")}
                 </Dialog.Title>
                 <Dialog.Description className="mx-auto mt-1.5 max-w-[18rem] text-sm leading-5 text-[#64748b]">
-                  {t("body")}
+                  {validationError ? t("incompleteBody", { error: validationError }) : t("body")}
                 </Dialog.Description>
               </div>
             </div>
 
             <div className="mt-5 flex flex-col gap-2">
-              {onSave && (
+              {onSave && !validationError && (
                 <Button onClick={saveAndStay} loading={saving} className="h-11 w-full rounded-xl bg-[#009FD9] text-sm font-bold shadow-sm hover:bg-[#0089bb]">
                   {saving ? t("saving") : <><Save className="h-4 w-4" /> {t("saveChanges")}</>}
                 </Button>
               )}
               <button
                 type="button"
-                onClick={leaveWithoutSaving}
+                onClick={validationError ? keepEditing : leaveWithoutSaving}
                 disabled={saving}
-                className="h-11 w-full rounded-xl border border-[#dbe7ef] bg-white text-sm font-bold text-[#162543] transition-colors hover:bg-[#f5f9fc] disabled:opacity-50"
+                className={`h-11 w-full rounded-xl text-sm font-bold transition-colors disabled:opacity-50 ${validationError ? "bg-[#009FD9] text-white shadow-sm hover:bg-[#0089bb]" : "border border-[#dbe7ef] bg-white text-[#162543] hover:bg-[#f5f9fc]"}`}
               >
-                {t("leaveWithout")}
+                {validationError ? t("keepEditing") : t("leaveWithout")}
               </button>
               <button
                 type="button"
-                onClick={keepEditing}
+                onClick={validationError ? leaveWithoutSaving : keepEditing}
                 disabled={saving}
-                className="h-10 w-full rounded-xl text-sm font-semibold text-[#64748b] transition-colors hover:bg-[#f8fafc] disabled:opacity-50"
+                className={`h-10 w-full rounded-xl text-sm font-semibold transition-colors hover:bg-[#f8fafc] disabled:opacity-50 ${validationError ? "text-[#b91c1c]" : "text-[#64748b]"}`}
               >
-                {t("keepEditing")}
+                {validationError ? t("leaveWithout") : t("keepEditing")}
               </button>
             </div>
           </div>

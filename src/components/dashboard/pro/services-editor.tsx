@@ -679,11 +679,10 @@ export function ServicesEditor({
                     <button
                       type="button"
                       onClick={() => toggleServiceActive(prof)}
-                      aria-label={isActive ? t("svcActive") : t("svcInactive")}
+                      aria-label={isActive ? t("hideService") : t("publishService")}
                       aria-pressed={isActive}
                       className="inline-flex shrink-0 items-center gap-2 rounded-md px-1 py-0.5 text-xs font-bold text-[#526277] transition-colors hover:text-[#162543] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2"
                     >
-                      <span>{isActive ? t("svcActive") : t("svcInactive")}</span>
                       <ServiceActiveToggle checked={isActive} />
                     </button>
                   </div>
@@ -860,13 +859,14 @@ export function ServicesEditor({
                     value={form.priceAmount}
                     onChange={(v) => setForm((f) => ({ ...f, priceAmount: v }))}
                     suffix={form.aConsultar ? undefined : TAX_INCLUDED_SUFFIX}
+                    className="h-11"
                   />
                 </div>
                 <SelectMenu
                   value={form.priceUnit}
                   onChange={(value) => setForm((current) => ({ ...current, priceUnit: value as PricingType }))}
                   disabled={form.aConsultar}
-                  className="w-40 shrink-0 sm:w-44"
+                  className="w-32 shrink-0 sm:w-40"
                   options={PRICE_UNITS.map((priceType) => ({ value: priceType.value, label: priceType.suffix || priceType.label }))}
                 />
               </div>

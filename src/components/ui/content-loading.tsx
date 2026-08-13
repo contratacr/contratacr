@@ -37,14 +37,21 @@ export function PanelListSkeleton({
   rows = 3,
   withTabs = false,
   withSearch = false,
+  hasData = false,
   className,
 }: {
   rows?: number;
   withTabs?: boolean;
   withSearch?: boolean;
+  /** Only draw record-shaped placeholders when this section already has records. */
+  hasData?: boolean;
   className?: string;
 }) {
   const t = useTranslations("loading");
+  if (!hasData) {
+    return <PanelSectionLoading className={className} />;
+  }
+
   return (
     <div className={cn("ccr-delayed-loading space-y-4", className)} aria-busy="true" role="status">
       <span className="sr-only">{t("generic")}</span>

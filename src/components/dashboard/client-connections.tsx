@@ -68,7 +68,7 @@ export function ClientConnections() {
     item.title,
   ].some((value) => value?.toLocaleLowerCase("es-CR").includes(needle)));
 
-  if (loading) return <PanelListSkeleton rows={3} withSearch />;
+  if (loading) return <PanelListSkeleton rows={3} withSearch hasData={connections.length > 0} />;
 
   if (connections.length === 0) {
     return (

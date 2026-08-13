@@ -575,7 +575,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   if (loading) {
-    return <PanelListSkeleton rows={3} withTabs />;
+    const currentItems = section === "bookings" ? bookings : projects;
+    return <PanelListSkeleton rows={3} withTabs hasData={currentItems.length > 0} />;
   }
 
   const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));

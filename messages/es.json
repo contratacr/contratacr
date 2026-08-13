@@ -2025,6 +2025,8 @@
   "unsavedGuard": {
     "title": "Tienes cambios sin guardar",
     "body": "Si sales ahora, se perderán los cambios que hiciste en tu perfil. ¿Qué quieres hacer?",
+    "incompleteTitle": "Falta información obligatoria",
+    "incompleteBody": "{error} Puedes seguir editando o salir sin guardar estos cambios.",
     "saving": "Guardando...",
     "saveChanges": "Guardar cambios",
     "saveAndLeave": "Guardar y salir",
@@ -2195,8 +2197,8 @@
     "otherNamePlaceholder": "Ej. Vendedor de botellas",
     "otherHelp": "Escríbelo con las palabras que tus clientes buscarían. Así aparecerás en los resultados de búsqueda.",
     "servicesPublished": "{count, plural, =0 {Sin precios} one {# precio} other {# precios}}",
-    "svcActive": "Activado",
-    "svcInactive": "Desactivado",
+    "publishService": "Publicar servicio",
+    "hideService": "Ocultar servicio",
     "newServiceShort": "Nuevo precio",
     "inProfession": "en {profession}",
     "nameField": "Nombre",
@@ -2450,6 +2452,7 @@
     "certSave": "Guardar",
     "certAllRequired": "Completa el nombre, la institución y el año (4 dígitos).",
     "allowCallLabel": "Permitir contacto por llamada",
+    "allowEmailLabel": "Permitir contacto por correo",
     "allowCallDesc": "Si lo activas, los clientes verán la opción “Contáctanos por llamada” a tu número."
   },
   "verificationPanel": {

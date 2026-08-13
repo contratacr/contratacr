@@ -260,7 +260,7 @@ export function BookingRequests() {
   }
 
   if (loading) {
-    return <PanelListSkeleton rows={2} withTabs />;
+    return <PanelListSkeleton rows={2} withTabs hasData={bookings.length > 0} />;
   }
 
   if (bookings.length === 0) {

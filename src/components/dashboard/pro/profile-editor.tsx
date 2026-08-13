@@ -203,6 +203,18 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       return next;
     });
   const toggleSection = (id: string) => {
+    const isClosingEmptyCertification =
+      id === "certs" &&
+      openSections.has(id) &&
+      !!certDraft &&
+      !certDraft.name.trim() &&
+      !certDraft.institution.trim() &&
+      !certDraft.year.trim();
+    if (isClosingEmptyCertification) {
+      cancelCertDraft();
+      applySectionToggle(id);
+      return;
+    }
     const isClosingDirtySection = openSections.has(id) && activeDirtySection === id;
     const isLeavingDirtySection = isMobileProfileLayout() && activeDirtySection && activeDirtySection !== id;
     if (dirty && (isClosingDirtySection || isLeavingDirtySection)) {
@@ -350,6 +362,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   );
   // Draft being added (one at a time, per profession). null = no form open.
   const [certDraft, setCertDraft] = useState<{ profession?: string; name: string; institution: string; year: string } | null>(null);
+  const certDraftOpenedWhileDirtyRef = useRef(false);
   const [certError, setCertError] = useState<string | null>(null);
   const [videoConsult, setVideoConsult] = useState(!!initial.videoconsulta && canOfferVideoConsult);
   const [videoCoverageCountry, setVideoCoverageCountry] = useState(!!initial.videoconsulta && !!initial.coverage_country && canOfferVideoConsult);
@@ -449,8 +462,24 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   }, []);
 
   function openCertForm(profession?: string) {
+    certDraftOpenedWhileDirtyRef.current = dirty;
     setCertError(null);
     setCertDraft({ profession, name: "", institution: "", year: "" });
+  }
+  function updateCertDraft(field: "name" | "institution" | "year", value: string) {
+    setCertDraft((current) => current ? { ...current, [field]: value } : current);
+    setCertError(null);
+    touch("certs");
+  }
+  function cancelCertDraft() {
+    setCertDraft(null);
+    setCertError(null);
+    if (!certDraftOpenedWhileDirtyRef.current) {
+      setDirty(false);
+      dirtyRef.current = false;
+      setActiveDirtySection(null);
+    }
+    certDraftOpenedWhileDirtyRef.current = false;
   }
   // Save the cert being typed — all three fields are REQUIRED, so an incomplete
   // certification can never be added (the button explicitly SAVES this one).
@@ -465,6 +494,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     }
     setCertifications((prev) => [...prev, { id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name, institution, year, profession: certDraft.profession }]);
     setCertDraft(null);
+    certDraftOpenedWhileDirtyRef.current = false;
     setCertError(null);
     touch("certs");
   }
@@ -495,6 +525,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     setInsurers(Array.isArray(initial.insurance_networks) ? initial.insurance_networks : []);
     setCertifications(Array.isArray(initial.certifications) ? initial.certifications : []);
     setCertDraft(null);
+    certDraftOpenedWhileDirtyRef.current = false;
     setCertError(null);
     setVideoConsult(!!initial.videoconsulta && canOfferVideoConsult);
     setVideoCoverageCountry(!!initial.videoconsulta && !!initial.coverage_country && canOfferVideoConsult);
@@ -813,10 +844,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   }, [activeMobileSectionTitle, mobileSectionFocused]);
 
   useEffect(() => {
-    const close = () => setOpenSections(new Set());
+    const close = () => {
+      const sectionId = Array.from(openSections)[0];
+      if (sectionId) toggleSection(sectionId);
+    };
     window.addEventListener("ccr:profile-mobile-close-section", close);
     return () => window.removeEventListener("ccr:profile-mobile-close-section", close);
-  }, []);
+  }, [openSections, dirty, activeDirtySection, certDraft]);
 
   return (
     <div className="mx-auto flex w-full max-w-none flex-col gap-4">
@@ -994,15 +1028,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               {/* Add form (all fields required) OR the add-another action */}
               {draftHere ? (
                 <div className="rounded-xl bg-[#f9fafb] p-3 flex flex-col gap-2">
-                  <input type="text" value={certDraft!.name} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => setCertDraft((d) => d && { ...d, name: limitText(e.target.value, SHORT_TEXT_MAX_LENGTH) })} placeholder={t("certNamePlaceholder")} className={inputCls} autoFocus />
+                  <input type="text" value={certDraft!.name} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => updateCertDraft("name", limitText(e.target.value, SHORT_TEXT_MAX_LENGTH))} placeholder={t("certNamePlaceholder")} className={inputCls} autoFocus />
                   <div className="grid grid-cols-1 sm:grid-cols-[1fr,7rem] gap-2">
-                    <input type="text" value={certDraft!.institution} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => setCertDraft((d) => d && { ...d, institution: limitText(e.target.value, SHORT_TEXT_MAX_LENGTH) })} placeholder={t("certInstitution")} className={inputCls} />
-                    <input type="text" inputMode="numeric" maxLength={4} value={certDraft!.year} onChange={(e) => setCertDraft((d) => d && { ...d, year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={t("certYear")} className={inputCls} />
+                    <input type="text" value={certDraft!.institution} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => updateCertDraft("institution", limitText(e.target.value, SHORT_TEXT_MAX_LENGTH))} placeholder={t("certInstitution")} className={inputCls} />
+                    <input type="text" inputMode="numeric" maxLength={4} value={certDraft!.year} onChange={(e) => updateCertDraft("year", e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder={t("certYear")} className={inputCls} />
                   </div>
                   {certError && <p className="text-xs text-red-600">{certError}</p>}
                   <div className="flex gap-2 pt-0.5">
                     <Button type="button" size="sm" onClick={saveCert}>{t("certSave")}</Button>
-                    <Button type="button" size="sm" variant="ghost" onClick={() => { setCertDraft(null); setCertError(null); }}>{t("cancel")}</Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={cancelCertDraft}>{t("cancel")}</Button>
                   </div>
                 </div>
               ) : (
@@ -1077,16 +1111,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             is used for calls too (so the toggle alone is self-explanatory). */}
         <ProfileCheckRow
           title={t("allowCallLabel")}
-          description={locale === "en"
-            ? "Let clients call you directly. If you don't add another number, we'll use your WhatsApp number."
-            : "Permite que te llamen directamente. Si no agregas otro número, usaremos tu número de WhatsApp."}
           checked={allowPhoneCall}
           onToggle={() => {
-            setAllowPhoneCall((v) => {
-              const nv = !v;
-              if (nv && !callPhone.trim() && whatsapp.trim()) setCallPhone(whatsapp);
-              return nv;
-            });
+            setAllowPhoneCall((v) => !v);
             touch("contact");
           }}
           ariaLabel={t("allowCallLabel")}
@@ -1110,10 +1137,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         {/* Optional public contact email — opt-in via a toggle (consistent with the
             call-number pattern). Off → no email is shown; turning it off clears it. */}
         <ProfileCheckRow
-          title={t("contactEmail")}
-          description={locale === "en"
-            ? "Show a public email in your profile so clients can contact you there too."
-            : "Muestra un correo público en tu perfil para que también puedan contactarte por ahí."}
+          title={t("allowEmailLabel")}
           checked={showContactEmail}
           onToggle={() => {
             setShowContactEmail((v) => {
@@ -1123,7 +1147,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             });
             touch("contact");
           }}
-          ariaLabel={t("contactEmail")}
+          ariaLabel={t("allowEmailLabel")}
         />
 
         {showContactEmail && (
@@ -1245,7 +1269,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
 
       {/* Designed unsaved-changes dialog (replaces the browser default) */}
-      <UnsavedChangesGuard dirty={dirty} onSave={() => handleSave()} onDiscard={cancelChanges} />
+      <UnsavedChangesGuard
+        dirty={dirty}
+        onSave={() => handleSave()}
+        onDiscard={cancelChanges}
+        validationError={sectionValidationError(activeDirtySection)}
+      />
       <Dialog.Root open={pendingSectionToggle !== null} onOpenChange={(open) => { if (!open) setPendingSectionToggle(null); }}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[240] bg-black/55 backdrop-blur-sm" />
@@ -1256,24 +1285,38 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               </div>
               <div className="min-w-0">
                 <Dialog.Title className="text-base font-bold text-[#111827]">
-                  {locale === "en" ? "Unsaved changes" : "Cambios sin guardar"}
+                  {sectionValidationError(activeDirtySection)
+                    ? (locale === "en" ? "Required information is missing" : "Falta información obligatoria")
+                    : (locale === "en" ? "Unsaved changes" : "Cambios sin guardar")}
                 </Dialog.Title>
                 <Dialog.Description className="mt-1 text-sm leading-snug text-[#64748b]">
-                  {locale === "en"
+                  {sectionValidationError(activeDirtySection)
+                    ? `${sectionValidationError(activeDirtySection)} ${locale === "en" ? "Keep editing or leave without saving." : "Continúa editando o sal sin guardar."}`
+                    : locale === "en"
                     ? "Save before leaving this section or your changes will be lost."
                     : "Guarda antes de salir de esta sección o perderás los cambios."}
                 </Dialog.Description>
               </div>
             </div>
             <div className="mt-5 flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => void handleSave().then((ok) => { if (ok !== false) { const id = pendingSectionToggle; setPendingSectionToggle(null); if (id) applySectionToggle(id); } })}
-                disabled={saving || photoUploading}
-                className="h-11 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:bg-[#cbd5e1]"
-              >
-                {saving || photoUploading ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
-              </button>
+              {sectionValidationError(activeDirtySection) ? (
+                <button
+                  type="button"
+                  onClick={() => setPendingSectionToggle(null)}
+                  className="h-11 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+                >
+                  {locale === "en" ? "Keep editing" : "Seguir editando"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void handleSave().then((ok) => { if (ok !== false) { const id = pendingSectionToggle; setPendingSectionToggle(null); if (id) applySectionToggle(id); } })}
+                  disabled={saving || photoUploading}
+                  className="h-11 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:bg-[#cbd5e1]"
+                >
+                  {saving || photoUploading ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={discardAndToggleSection}
@@ -1282,14 +1325,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               >
                 {locale === "en" ? "Leave without saving" : "Salir sin guardar"}
               </button>
-              <button
-                type="button"
-                onClick={() => setPendingSectionToggle(null)}
-                disabled={saving || photoUploading}
-                className="h-10 rounded-xl px-4 text-sm font-semibold text-[#64748b] transition-colors hover:bg-[#f8fafc] disabled:opacity-50"
-              >
-                {locale === "en" ? "Cancel" : "Cancelar"}
-              </button>
+              {!sectionValidationError(activeDirtySection) && (
+                <button
+                  type="button"
+                  onClick={() => setPendingSectionToggle(null)}
+                  disabled={saving || photoUploading}
+                  className="h-10 rounded-xl px-4 text-sm font-semibold text-[#64748b] transition-colors hover:bg-[#f8fafc] disabled:opacity-50"
+                >
+                  {locale === "en" ? "Cancel" : "Cancelar"}
+                </button>
+              )}
             </div>
           </Dialog.Content>
         </Dialog.Portal>

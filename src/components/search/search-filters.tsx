@@ -2,7 +2,8 @@
 
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Search, X, Loader2, MapPin, SlidersHorizontal, ChevronDown, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -79,6 +80,11 @@ type FilterSheetOption = {
   label: string;
 };
 
+function ViewportPortal({ children }: { children: ReactNode }) {
+  if (typeof document === "undefined") return null;
+  return createPortal(children, document.body);
+}
+
 function FilterSheet({
   open,
   title,
@@ -111,6 +117,7 @@ function FilterSheet({
   if (!open) return null;
 
   return (
+    <ViewportPortal>
     <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
       <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
       <section
@@ -153,6 +160,7 @@ function FilterSheet({
         </div>
       </section>
     </div>
+    </ViewportPortal>
   );
 }
 
@@ -208,6 +216,7 @@ function MultiFilterSheetContent({
   }, [onClose]);
 
   return (
+    <ViewportPortal>
     <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
       <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
       <section role="dialog" aria-modal="true" aria-label={title} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
@@ -248,6 +257,7 @@ function MultiFilterSheetContent({
         </div>
       </section>
     </div>
+    </ViewportPortal>
   );
 }
 
@@ -355,7 +365,7 @@ function PriceFilterSheetContent({
   onApply,
 }: Omit<React.ComponentProps<typeof PriceFilterSheet>, "open">) {
   const t = useTranslations("search");
-  const [draftChoice, setDraftChoice] = useState(() => priceChoiceFromFilters(availability, units));
+  const currentChoice = priceChoiceFromFilters(availability, units);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -388,6 +398,7 @@ function PriceFilterSheetContent({
   );
 
   return (
+    <ViewportPortal>
     <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
       <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
       <section role="dialog" aria-modal="true" aria-label={t("filters.price")} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
@@ -402,23 +413,17 @@ function PriceFilterSheetContent({
             {PRICE_CHOICES.map((value) => option(
               value,
               value === ANY_PRICE ? t("filters.anyPrice") : t(`priceFilter.${value}`),
-              draftChoice === value,
-              () => setDraftChoice(value),
+              currentChoice === value,
+              () => {
+                const next = filtersFromPriceChoice(value);
+                onApply(next.availability, next.units);
+              },
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              const next = filtersFromPriceChoice(draftChoice);
-              onApply(next.availability, next.units);
-            }}
-            className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-[8px] bg-[#009FD9] px-5 text-[15px] font-bold text-white"
-          >
-            {t("filters.showResults")}
-          </button>
         </div>
       </section>
     </div>
+    </ViewportPortal>
   );
 }
 
@@ -1049,19 +1054,21 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     const priceText = priceChoice === ANY_PRICE ? t("filters.price") : t(`priceFilter.${priceChoice}`);
     const languageText = language
       ? languageOptions.find((option) => option.value === language)?.label ?? t("filters.language")
-      : t("filters.language");
-    const pill = "ccr-search-filter-chip inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2.5 text-[11px] font-bold text-[#162543] shadow-sm";
+      : locale === "en" ? "Service language" : "Idioma de atención";
+    const pill = "ccr-search-filter-chip inline-flex h-8 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2 text-[9px] font-bold text-[#162543] shadow-sm min-[350px]:px-2.5 min-[350px]:text-[10px] min-[390px]:text-[11px]";
     return (
-      <div className="hide-scrollbar -mx-1 flex max-w-full items-center justify-start gap-1.5 overflow-x-auto overflow-y-visible px-1 pb-0.5">
-        <button type="button" onClick={() => setOpenChip("sort")} className={pill}>
-          <span>{sortLabel}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
-        </button>
-        <button type="button" onClick={() => setOpenChip("price")} className={pill}>
-          <span>{priceText}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
-        </button>
-        <button type="button" onClick={() => setOpenChip("language")} className={pill}>
-          <span>{languageText}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
-        </button>
+      <div className="hide-scrollbar flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
+        <div className="flex w-max min-w-full items-center justify-start gap-1">
+          <button type="button" onClick={() => setOpenChip("sort")} className={pill}>
+            <span className="min-w-0 whitespace-nowrap">{sortLabel}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
+          </button>
+          <button type="button" onClick={() => setOpenChip("price")} className={pill}>
+            <span className="min-w-0 whitespace-nowrap">{priceText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
+          </button>
+          <button type="button" onClick={() => setOpenChip("language")} className={pill}>
+            <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
+          </button>
+        </div>
         {showVideoFilter && <button type="button" onClick={() => setOpenChip("modality")} className={pill}>
           <span>{modalities.length ? `${t("filters.attention")} (${modalities.length})` : t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
         </button>}

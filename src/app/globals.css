@@ -718,10 +718,24 @@ input::-ms-clear {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+* { scrollbar-color: #94a3b8 transparent; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+::-webkit-scrollbar-thumb { min-height: 72px; background: #94a3b8; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* Mobile search results: keep the scrollbar inside the existing right padding.
+   A minimum thumb height stays easy to see even when the result list is long. */
+@media (max-width: 1023px) {
+  .ccr-search-sheet-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .ccr-search-sheet-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 /* Line clamp utilities */
 .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
@@ -879,6 +893,26 @@ input::-ms-clear {
     min-height: 0;
     border-radius: 0;
     overscroll-behavior: none;
+  }
+
+  .contratacr-chat-thread-open .ccr-support-thread {
+    position: fixed;
+    top: var(--app-visual-viewport-top);
+    right: auto;
+    bottom: auto;
+    left: var(--app-visual-viewport-left);
+    z-index: 110;
+    width: var(--app-visual-viewport-width);
+    height: var(--app-visual-viewport-height);
+    min-height: 0;
+    max-height: var(--app-visual-viewport-height);
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: #fff;
+  }
+
+  html[data-keyboard-open] .ccr-support-thread-composer {
+    padding-bottom: 0.5rem !important;
   }
 
   html.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-thread-scroll,
@@ -1158,7 +1192,7 @@ input::-ms-clear {
 .featured-brands-track {
   display: flex;
   width: max-content;
-  animation: featured-brands-scroll 46s linear infinite;
+  animation: featured-brands-scroll 38s linear infinite;
   will-change: transform;
 }
 

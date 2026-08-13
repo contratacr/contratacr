@@ -333,6 +333,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         {busy ? (
           <PanelListSkeleton
             rows={4}
+            hasData={visible.length > 0}
             className={scope === "all" ? "min-h-[calc(100dvh-13rem)] p-4 sm:min-h-[18rem]" : "min-h-[16rem] p-4 sm:min-h-[18rem]"}
           />
         ) : visible.length === 0 ? (

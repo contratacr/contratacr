@@ -95,6 +95,7 @@ export function CaseShowcase({
           onChange={setActive}
           labelFor={profLabel}
           counts={Object.fromEntries(distinctProfs.map((p) => [p, countFor(p)]))}
+          mobileLayout="scroll"
         />
       )}
 

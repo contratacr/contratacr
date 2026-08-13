@@ -15,11 +15,11 @@ export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "followin
   const locale = useLocale();
   const es = locale !== "en";
   const { user } = useAuth();
-  const [counts, setCounts] = useState<Counts>({ following: 0, followers: 0 });
+  const [counts, setCounts] = useState<Counts | null>(null);
 
   const load = useCallback(async () => {
     if (!user) {
-      setCounts({ following: 0, followers: 0 });
+      setCounts(null);
       return;
     }
 
@@ -47,20 +47,30 @@ export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "followin
   if (!user) return null;
 
   return (
-    <div className="inline-flex items-baseline gap-1.5 text-xs font-semibold leading-none text-[#526277] sm:gap-2">
+    <div className="inline-flex items-start gap-3 text-xs font-semibold leading-none text-[#526277] sm:gap-4">
       <button
         type="button"
         onClick={() => onOpen?.("following")}
-        className="whitespace-nowrap rounded-md transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+        className="flex min-w-12 flex-col items-center gap-1 rounded-md text-center transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
       >
-        <strong className="text-[#162543]">{counts.following}</strong> {es ? "seguidos" : "following"}
+        {counts ? (
+          <strong className="text-sm leading-none text-[#162543]">{counts.following}</strong>
+        ) : (
+          <span aria-hidden="true" className="h-3.5 w-5 animate-pulse rounded bg-[#e5edf3]" />
+        )}
+        <span className="whitespace-nowrap">{es ? "seguidos" : "following"}</span>
       </button>
       <button
         type="button"
         onClick={() => onOpen?.("followers")}
-        className="whitespace-nowrap rounded-md transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+        className="flex min-w-12 flex-col items-center gap-1 rounded-md text-center transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
       >
-        <strong className="text-[#162543]">{counts.followers}</strong> {es ? "seguidores" : "followers"}
+        {counts ? (
+          <strong className="text-sm leading-none text-[#162543]">{counts.followers}</strong>
+        ) : (
+          <span aria-hidden="true" className="h-3.5 w-5 animate-pulse rounded bg-[#e5edf3]" />
+        )}
+        <span className="whitespace-nowrap">{es ? "seguidores" : "followers"}</span>
       </button>
     </div>
   );

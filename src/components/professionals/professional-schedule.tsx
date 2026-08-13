@@ -154,9 +154,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const scheduleLoading =
     awaitingProfileAvailability ||
     (canBook && !slotsInitiallyLoaded && liveData?.professionalId !== professional.id);
-  const visualScheduleLoading = syncWithSearchLoading
-    ? searchShellLoading || scheduleLoading
-    : scheduleLoading;
+  // Map hydration must not invent an availability grid for professionals who
+  // have no known slots. Only synchronize a real, already-known schedule with
+  // the search shell; an actual availability request keeps its own loader.
+  const visualScheduleLoading = scheduleLoading
+    || (syncWithSearchLoading && searchShellLoading && hasInitialDisplayableSlots);
 
   useEffect(() => {
     if (!syncWithSearchLoading) {

@@ -1785,12 +1785,13 @@ export default function DashboardPage() {
   function identityBadge() {
     if (clientVerified || pro?.verification_status === "verified") {
       return (
-        <Badge
-          variant="verified"
-          className="shrink-0 whitespace-nowrap px-2 py-1 text-[11px] leading-none sm:px-2.5 sm:py-0.5 sm:text-xs sm:leading-normal"
+        <span
+          aria-label={t("identityVerified")}
+          title={t("identityVerified")}
+          className="inline-flex shrink-0 text-[#009FD9]"
         >
-          {t("identityVerified")}
-        </Badge>
+          <CheckCircle2 aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
+        </span>
       );
     }
     if (!pro) return null;
@@ -1882,8 +1883,8 @@ export default function DashboardPage() {
         )}>
           {/* Header card - identity and status grouped in one surface on desktop. */}
           <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", mobileSectionOpen ? "hidden lg:block" : "block")}>
-            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-[18px] shadow-sm sm:px-6 sm:py-5">
-            <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-5">
+            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-4 py-4 shadow-sm sm:px-6 sm:py-5">
+            <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-5">
               <div ref={headerPhotoMenuRef} className="relative h-[72px] w-[72px] shrink-0 sm:h-20 sm:w-20">
                 <button
                   type="button"
@@ -1950,28 +1951,35 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="min-w-0 self-center">
-                <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-1.5 sm:gap-2">
-                  <h1 className="shrink-0 whitespace-nowrap text-[15px] font-bold leading-tight text-[#162543] sm:min-w-0 sm:shrink sm:truncate sm:text-2xl" title={displayName}>
-                    <span className="sm:hidden">{compactMobileHeaderName}</span>
-                    <span className="hidden sm:inline">{compactHeaderName}</span>
-                  </h1>
-                  <div className="flex shrink-0 items-center">{identityBadge()}</div>
-                </div>
-                <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-x-2.5 gap-y-1 sm:mt-1 sm:gap-x-2">
-                  <div className="flex min-w-0 items-center">
-                    <FollowNetworkSummaryLink onOpen={setNetworkModal} />
+                <div className="flex min-w-0 items-center justify-between gap-2 sm:hidden">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <h1 className="truncate text-[17px] font-bold leading-tight text-[#162543]" title={displayName}>
+                      {compactMobileHeaderName}
+                    </h1>
+                    <div className="flex shrink-0 items-center">{identityBadge()}</div>
                   </div>
                   {publicProfileHref && (
                     <Link
                       href={publicProfileHref}
                       onClick={openInNewTabOnDesktop}
-                      aria-label={locale === "en" ? "View my profile" : "Ver mi perfil"}
-                      className="inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
+                      aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
+                      className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold leading-none text-[#526277] underline-offset-2 transition hover:text-[#009FD9] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
                     >
-                      <ExternalLink className="h-3.5 w-3.5 text-[#162543]" />
-                      <span className="whitespace-nowrap">{locale === "en" ? "View profile" : "Ver mi perfil"}</span>
+                      <span>{locale === "en" ? "View profile" : "Ver perfil"}</span>
+                      <ExternalLink className="h-3 w-3 text-[#162543]" />
                     </Link>
                   )}
+                </div>
+                <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 sm:flex">
+                  <h1 className="min-w-0 shrink truncate whitespace-nowrap text-2xl font-bold leading-tight text-[#162543]" title={displayName}>
+                    {compactHeaderName}
+                  </h1>
+                  <div className="flex shrink-0 items-center">{identityBadge()}</div>
+                </div>
+                <div className="mt-3 flex min-h-[36px] items-center justify-start sm:mt-1 sm:min-h-[22px]">
+                  <div className="flex min-w-0 items-center">
+                    <FollowNetworkSummaryLink onOpen={setNetworkModal} />
+                  </div>
                 </div>
               </div>
               <div className="col-span-2 hidden flex-wrap items-center justify-center gap-2 border-t border-[#eef3f7] pt-3 sm:col-span-1 sm:flex sm:justify-end sm:border-t-0 sm:pt-0">
@@ -1979,10 +1987,11 @@ export default function DashboardPage() {
                   <Link
                     href={publicProfileHref}
                     onClick={openInNewTabOnDesktop}
-                    className="hidden h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb] sm:inline-flex"
+                    aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
+                    className="hidden h-9 items-center gap-1.5 text-sm font-bold text-[#526277] underline-offset-2 transition hover:text-[#0089bb] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:inline-flex"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    {locale === "en" ? "View profile" : "Ver mi perfil"}
+                    {locale === "en" ? "View public profile" : "Ver perfil público"}
                   </Link>
                 )}
                 <button

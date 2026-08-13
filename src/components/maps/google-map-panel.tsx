@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, MapPin, RefreshCw, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { getProfessionalDisplayName } from "@/lib/display-name";
+import { APP_RESUME_EVENT } from "@/lib/app-events";
 
 export interface MapProfessional {
   id: string;
@@ -80,23 +81,33 @@ const MAP_CSS =
   ".ccr-pin .num{position:absolute;top:6px;left:0;right:0;text-align:center;color:#fff;font:700 12px/1 Inter,system-ui,sans-serif;}" +
   ".ccr-pin.is-active{transform:scale(1.15);}" +
   ".ccr-pin.is-active path{fill:" + PIN_HOVER + ";}" +
-  ".ccr-popwrap{transform:translateY(-52px);pointer-events:none;}" +
-  ".ccr-pop{pointer-events:auto;position:relative;width:240px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:12px;font-family:Inter,system-ui,sans-serif;text-decoration:none;display:block;}" +
-  ".ccr-pop-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;background:transparent;color:#9ca3af;font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}" +
+  ".ccr-popwrap{transform:translateY(-54px);pointer-events:none;}" +
+  ".ccr-pop{pointer-events:auto;position:relative;width:var(--ccr-popup-width,286px);background:#fff;border:1px solid #dfe7ee;border-radius:16px;box-shadow:0 16px 40px -12px rgba(15,23,42,.34),0 3px 10px rgba(15,23,42,.10);font-family:Inter,system-ui,sans-serif;overflow:hidden;}" +
+  ".ccr-pop-link{display:block;padding:13px 13px 11px;color:inherit;text-decoration:none;}" +
+  ".ccr-pop-x{position:absolute;z-index:2;top:7px;right:7px;width:26px;height:26px;border:0;background:#fff;color:#7b8798;font-size:18px;line-height:1;cursor:pointer;border-radius:999px;box-shadow:0 1px 5px rgba(15,23,42,.12);}" +
   ".ccr-pop-x:hover{background:#f3f4f6;color:#374151;}" +
   ".ccr-pop-top{display:flex;gap:10px;align-items:flex-start;}" +
-  ".ccr-av{width:42px;height:42px;border-radius:9999px;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}" +
-  ".ccr-pop-name{font-weight:700;color:#111827;font-size:14px;line-height:1.25;padding-right:14px;}" +
-  ".ccr-pop-sub{color:#6b7280;font-size:11px;font-weight:600;line-height:1.25;margin-top:2px;}" +
-  // "Verificado" pill — EXACTLY the /buscar card's badge: solid brand-blue #009FD9
-  // rounded-full pill, white text, font-size 10px / weight 600, padding 2px 8px
-  // (= card `rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white`).
-  // NO green, NO check icon.
-  ".ccr-ver{display:inline-flex;align-items:center;border-radius:9999px;background:#009FD9;color:#fff;font-size:10px;font-weight:600;line-height:1.2;padding:2px 8px;margin-left:5px;white-space:nowrap;vertical-align:middle;}" +
-  ".ccr-pop-prof{color:#6b7280;font-size:12px;margin-top:2px;line-height:1.3;}" +
-  ".ccr-pop-rate{font-size:12px;margin-top:4px;color:#ff9b32;font-weight:700;}" +
-  ".ccr-pop-rate span{color:#9ca3af;font-weight:500;}" +
-  ".ccr-pop-price{font-size:13px;font-weight:700;color:" + PIN_BASE + ";margin-top:6px;}" +
+  ".ccr-av{position:relative;width:48px;height:48px;border-radius:9999px;overflow:hidden;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}" +
+  ".ccr-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}" +
+  ".ccr-pop-main{min-width:0;flex:1;padding-right:20px;}" +
+  ".ccr-pop-name-row{display:flex;min-width:0;align-items:center;gap:4px;}" +
+  ".ccr-pop-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;color:#111827;font-size:14px;line-height:1.25;}" +
+  // Compact verification check shared with the current search cards.
+  ".ccr-ver{display:inline-flex;width:14px;height:14px;flex:0 0 14px;color:#009FD9;vertical-align:middle;}" +
+  ".ccr-ver svg{display:block;width:14px;height:14px;}" +
+  ".ccr-pop-prof{display:flex;align-items:center;gap:4px;min-width:0;color:#6b7280;font-size:11.5px;font-weight:600;margin-top:3px;line-height:1.25;}" +
+  ".ccr-pop-prof-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
+  ".ccr-pop-more{flex-shrink:0;font-size:10px;font-weight:800;color:#526277;}" +
+  ".ccr-pop-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;}" +
+  ".ccr-pop-rate{display:flex;align-items:center;gap:3px;min-width:0;font-size:11.5px;color:#f59e0b;font-weight:800;}" +
+  ".ccr-pop-rate span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6b7280;font-weight:600;}" +
+  ".ccr-pop-price{min-width:0;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:11.5px;font-weight:800;color:" + PIN_BASE + ";}" +
+  ".ccr-pop-location{display:flex;align-items:center;gap:4px;min-width:0;margin-top:9px;padding-top:8px;border-top:1px solid #edf1f5;color:#008fbe;font-size:11.5px;font-weight:700;}" +
+  ".ccr-pop-location svg{width:13px;height:13px;flex-shrink:0;}" +
+  ".ccr-pop-location span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
+  ".ccr-pop-cta{display:flex;align-items:center;justify-content:space-between;margin-top:8px;color:#162543;font-size:11.5px;font-weight:800;}" +
+  ".ccr-pop-cta svg{width:14px;height:14px;color:#009FD9;}" +
+  "@media(max-width:640px){.ccr-pop{width:var(--ccr-popup-width,min(276px,calc(100vw - 28px)));border-radius:15px}.ccr-pop-link{padding:12px}.ccr-av{width:44px;height:44px}.ccr-pop-name{font-size:13.5px}.ccr-pop-location{margin-top:8px}.ccr-pop-cta{margin-top:7px}}" +
   // Cluster preview popup — a compact list of the grouped pros (each row → profile), so a
   // cluster is never a dead marker. (No zoom button — pinch / wheel-zoom separates them.)
   ".ccr-clpop{pointer-events:auto;position:relative;width:250px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:10px;font-family:Inter,system-ui,sans-serif;}" +
@@ -317,26 +328,43 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     closePopup();
     popupKeyRef.current = pro.id;
     const href = `/${locale}/profesionales/${pro.slug}`;
-    const profs = (pro.professions ?? []).filter(Boolean).slice(0, 2).join(" · ") || pro.categoryLabel || "";
+    const professionLabels = (pro.professions ?? []).filter(Boolean);
+    const primaryProfession = professionLabels[0] || pro.categoryLabel || "";
+    const extraProfessions = Math.max(0, professionLabels.length - 1);
     const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName);
     const primaryName = displayName.primaryDesktop;
-    const secondaryName = displayName.secondaryDesktop;
+    const reviewLabel = locale === "en"
+      ? `${pro.reviewCount} ${pro.reviewCount === 1 ? "review" : "reviews"}`
+      : `${pro.reviewCount} ${pro.reviewCount === 1 ? "reseña" : "reseñas"}`;
+    const verifiedLabel = locale === "en" ? "Verified by ContrataCR" : "Verificado por ContrataCR";
+    const verifiedMarkup = pro.verified
+      ? `<span class="ccr-ver" role="img" aria-label="${verifiedLabel}" title="${verifiedLabel}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="m8.3 12.1 2.3 2.3 5.2-5.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+      : "";
+    const avatarMarkup = pro.avatarUrl
+      ? `${esc(initials(primaryName || pro.fullName))}<img src="${esc(pro.avatarUrl)}" alt="" />`
+      : esc(initials(primaryName || pro.fullName));
+    const locationLabel = pro.provinceName || "Costa Rica";
     const wrap = document.createElement("div");
     wrap.className = "ccr-popwrap";
+    const mapWidth = mapRef.current?.clientWidth ?? window.innerWidth;
+    const preferredWidth = window.matchMedia("(max-width: 640px)").matches ? 276 : 286;
+    wrap.style.setProperty("--ccr-popup-width", `${Math.max(176, Math.min(preferredWidth, mapWidth - 16))}px`);
     wrap.innerHTML =
-      `<a class="ccr-pop" href="${href}">` +
+      `<div class="ccr-pop">` +
         `<button class="ccr-pop-x" aria-label="Cerrar">×</button>` +
-        `<div class="ccr-pop-top">` +
-          `<div class="ccr-av">${esc(initials(primaryName || pro.fullName))}</div>` +
-          `<div style="min-width:0;">` +
-            `<div class="ccr-pop-name">${esc(primaryName)}${pro.verified ? `<span class="ccr-ver">${locale === "en" ? "Verified" : "Verificado"}</span>` : ""}</div>` +
-            (secondaryName ? `<div class="ccr-pop-sub">${esc(secondaryName)}</div>` : "") +
-            (profs ? `<div class="ccr-pop-prof">${esc(profs)}</div>` : "") +
-            `<div class="ccr-pop-rate">★ ${pro.ratingAvg.toFixed(1)} <span>(${pro.reviewCount})</span></div>` +
-            (pro.priceLabel ? `<div class="ccr-pop-price">${esc(pro.priceLabel)}</div>` : "") +
+        `<a class="ccr-pop-link" href="${href}">` +
+          `<div class="ccr-pop-top">` +
+            `<div class="ccr-av">${avatarMarkup}</div>` +
+            `<div class="ccr-pop-main">` +
+              `<div class="ccr-pop-name-row"><div class="ccr-pop-name">${esc(primaryName)}</div>${verifiedMarkup}</div>` +
+              (primaryProfession ? `<div class="ccr-pop-prof"><span class="ccr-pop-prof-name">${esc(primaryProfession)}</span>${extraProfessions > 0 ? `<span class="ccr-pop-more">+${extraProfessions}</span>` : ""}</div>` : "") +
+              `<div class="ccr-pop-meta"><div class="ccr-pop-rate">★ ${pro.ratingAvg.toFixed(1)} <span>${esc(reviewLabel)}</span></div>${pro.priceLabel ? `<div class="ccr-pop-price">${esc(pro.priceLabel)}</div>` : ""}</div>` +
+            `</div>` +
           `</div>` +
-        `</div>` +
-      `</a>`;
+          `<div class="ccr-pop-location"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2"/></svg><span>${esc(locationLabel)}</span></div>` +
+          `<div class="ccr-pop-cta"><span>${locale === "en" ? "View profile" : "Ver perfil"}</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>` +
+        `</a>` +
+      `</div>`;
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
     popupContentElRef.current = wrap; // measured by the proximity-hide on mousemove
@@ -571,16 +599,22 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // Relayout + re-fit when the container becomes visible / resizes.
   useEffect(() => {
     const el = mapRef.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => {
+    if (!el) return;
+    const relayout = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const g = (window as any).google?.maps;
       const map = mapInstanceRef.current;
       if (!g || !map || el.offsetWidth === 0) return;
+      g.event.trigger(map, "resize");
       if (boundsRef.current && markerCountRef.current > 0) fitToMarkers(map, g, boundsRef.current, markerCountRef.current);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
+    };
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(relayout);
+    ro?.observe(el);
+    window.addEventListener(APP_RESUME_EVENT, relayout);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener(APP_RESUME_EVENT, relayout);
+    };
   }, []);
 
   // Google Maps keeps the controls it received at construction time. Keep them

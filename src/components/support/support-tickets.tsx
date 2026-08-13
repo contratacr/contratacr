@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, SendHorizontal, User, Shield, Plus, Clock3 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,6 +12,7 @@ import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
 type Ticket = {
   id: string;
@@ -124,6 +125,43 @@ export function SupportTickets({
   // ticket appears inline.
   const [showModal, setShowModal] = useState(false);
   const [showNewTicketPage, setShowNewTicketPage] = useState(false);
+  const messagesRef = useRef<HTMLDivElement>(null);
+
+  const keepLatestMessageVisible = useCallback((behavior: ScrollBehavior = "auto") => {
+    const container = messagesRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!openId || !window.matchMedia("(max-width: 1023px)").matches) return;
+    const root = document.documentElement;
+    root.classList.add("contratacr-chat-thread-open");
+    const releaseBodyScroll = lockBodyScroll();
+    return () => {
+      root.classList.remove("contratacr-chat-thread-open");
+      releaseBodyScroll();
+    };
+  }, [openId]);
+
+  useEffect(() => {
+    if (!openId) return;
+    const frame = window.requestAnimationFrame(() => keepLatestMessageVisible());
+    return () => window.cancelAnimationFrame(frame);
+  }, [openId, messages, keepLatestMessageVisible]);
+
+  useEffect(() => {
+    if (!openId) return;
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const handleViewportChange = () => window.requestAnimationFrame(() => keepLatestMessageVisible());
+    viewport.addEventListener("resize", handleViewportChange);
+    viewport.addEventListener("scroll", handleViewportChange);
+    return () => {
+      viewport.removeEventListener("resize", handleViewportChange);
+      viewport.removeEventListener("scroll", handleViewportChange);
+    };
+  }, [openId, keepLatestMessageVisible]);
 
   useEffect(() => {
     onUnreadChange?.(unread.size);
@@ -313,10 +351,10 @@ export function SupportTickets({
       <>
       <div className="ccr-support-thread flex min-h-0 flex-1 flex-col">
         {threadLoading || !ticket ? (
-          <PanelListSkeleton rows={2} />
+          <PanelListSkeleton rows={2} hasData={!!ticket} />
         ) : (
           <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-            <header className="hidden min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5 lg:grid">
+            <header className="grid min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5">
               <button onClick={closeThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
                 <ArrowLeft className="h-5 w-5" />
               </button>
@@ -334,7 +372,7 @@ export function SupportTickets({
               </div>
             </header>
 
-            <div className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain bg-[#f3f7fa] p-4 sm:p-5">
+            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain bg-[#f3f7fa] p-4 sm:p-5">
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)] sm:max-w-[78%] ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] font-medium text-white" : "rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d]"}`}>
@@ -373,6 +411,7 @@ export function SupportTickets({
                 <textarea
                   value={reply}
                   onChange={(e) => setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH))}
+                  onFocus={() => window.requestAnimationFrame(() => keepLatestMessageVisible())}
                   maxLength={LONG_TEXT_MAX_LENGTH}
                   rows={1}
                   placeholder={t("messagePlaceholder")}
@@ -418,12 +457,13 @@ export function SupportTickets({
             onChange={setFilter}
             counts={statusCounts}
             labelFor={filterLabel}
+            mobileLayout="equal"
           />
         </div>
       )}
 
       {loading ? (
-        <PanelListSkeleton rows={3} withTabs />
+        <PanelListSkeleton rows={3} withTabs hasData={items.length > 0} />
       ) : loadError ? (
         <div className="rounded-2xl border border-[#e5e7eb] bg-white px-5 py-10 text-center">
           <Headset className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />

@@ -33,7 +33,8 @@ const HOME_CATEGORIES = [
 
 // Time-based (px per MILLISECOND) so the speed is identical on 60/90/120 Hz
 // screens and dropped frames don't slow it down (it advances by elapsed time).
-const AUTO_SPEED = 0.019;     // px/ms (~19px/s) — slow, relaxed glide.
+const DESKTOP_AUTO_SPEED = 0.058; // px/ms (~58px/s) — dynamic desktop glide.
+const MOBILE_AUTO_SPEED = 0.046;  // px/ms (~46px/s) — quick, with interaction pause.
 const NUDGE_MS = 480;         // arrow-tween duration.
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -83,9 +84,8 @@ export function CategoryCarousel() {
   const pos = useRef(0);        // float translateX (px, ≤ 0 as it drifts left).
   const half = useRef(0);       // width of ONE set = scrollWidth / 2.
   const paused = useRef(false);
-  // On mobile we never auto-scroll — the user swipes the single flat row by
-  // hand (arrows are hidden on mobile too). Desktop keeps the auto glide.
   const autoEnabled = useRef(true);
+  const autoSpeed = useRef(DESKTOP_AUTO_SPEED);
   const tween = useRef<{ from: number; to: number; start: number } | null>(null);
   const drag = useRef({ active: false, startX: 0, startPos: 0, moved: false });
 
@@ -100,11 +100,17 @@ export function CategoryCarousel() {
     ro.observe(tr);
     window.addEventListener("resize", measure);
 
-    // Auto-scroll on desktop only; mobile is swipe-driven (no auto-move).
-    const mq = window.matchMedia("(min-width: 640px)");
-    const syncAuto = () => { autoEnabled.current = mq.matches; };
+    // Keep the showcase moving on every viewport, but more gently on mobile.
+    // Users who request reduced motion retain full manual swipe/arrow control.
+    const desktopMq = window.matchMedia("(min-width: 640px)");
+    const reducedMotionMq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncAuto = () => {
+      autoEnabled.current = !reducedMotionMq.matches;
+      autoSpeed.current = desktopMq.matches ? DESKTOP_AUTO_SPEED : MOBILE_AUTO_SPEED;
+    };
     syncAuto();
-    mq.addEventListener("change", syncAuto);
+    desktopMq.addEventListener("change", syncAuto);
+    reducedMotionMq.addEventListener("change", syncAuto);
 
     const wrap = (p: number) => {
       const h = half.current;
@@ -131,9 +137,7 @@ export function CategoryCarousel() {
           pos.current = from + (to - from) * easeInOut(t);
           if (t >= 1) tween.current = null;
         } else if (autoEnabled.current && !paused.current && !drag.current.active) {
-          // Desktop auto glide (reduced-motion intentionally ignored). On mobile
-          // autoEnabled is false → the track only moves when the user swipes.
-          pos.current -= AUTO_SPEED * dt;
+          pos.current -= autoSpeed.current * dt;
         }
         pos.current = wrap(pos.current);
         tr.style.transform = `translate3d(${pos.current}px,0,0)`;
@@ -146,7 +150,8 @@ export function CategoryCarousel() {
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("resize", measure);
-      mq.removeEventListener("change", syncAuto);
+      desktopMq.removeEventListener("change", syncAuto);
+      reducedMotionMq.removeEventListener("change", syncAuto);
     };
   }, []);
 

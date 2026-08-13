@@ -566,7 +566,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   }
 
   if (loading) {
-    return <PanelListSkeleton rows={3} withTabs />;
+    const hasLoadedItems = view === "browse" ? openProjects.length > 0 : myProposals.length > 0;
+    return <PanelListSkeleton rows={3} withTabs hasData={hasLoadedItems} />;
   }
 
   return (
@@ -596,7 +597,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             <div className="flex flex-col gap-4">
               {/* Filter by the pro's professions — only when they have more than one. */}
               {showProfFilter && (
-                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} />
+                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} mobileLayout="scroll" />
               )}
               {(() => {
                 // Hide opportunities already proposed to (they live in "Mis propuestas") and

@@ -17,6 +17,7 @@ export function StatusFilterTabs({
   labelFor,
   dotFor,
   variant = "underline",
+  mobileLayout = "equal",
 }: {
   tabs: readonly FilterTab[];
   value: string;
@@ -31,9 +32,13 @@ export function StatusFilterTabs({
   /** "underline" (default) = status tabs with count badges; "pills" = filter chips
    *  (e.g. the profession filter), no counts. */
   variant?: "underline" | "pills";
+  /** Short status labels can share the available mobile width evenly. Long,
+   * dynamic labels (such as professions) keep their natural width and scroll. */
+  mobileLayout?: "scroll" | "equal";
 }) {
   const tr = useTranslations("statusTabs");
   const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
+  const useEqualMobileLayout = mobileLayout === "equal" && tabs.length >= 2 && tabs.length <= 3;
 
   // PILLS — rounded chips, no counts (used for the profession filter). A wrapping row.
   if (variant === "pills") {
@@ -63,16 +68,14 @@ export function StatusFilterTabs({
   // UNDERLINE — status tabs with a clean count badge after each label (owner image):
   // active = brand-blue underline + blue text + a filled blue count pill; inactive = grey
   // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
-  const compactTabSet = tabs.length <= 3;
-
   return (
     <div className={cn(
-      "mx-4 max-w-full items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1 sm:mx-0",
-      compactTabSet
-        ? "grid overflow-hidden sm:w-fit sm:min-w-[22rem]"
-        : "flex overflow-x-auto sm:w-fit",
-      tabs.length === 2 && "grid-cols-2",
-      tabs.length === 3 && "grid-cols-3",
+      "mx-4 max-w-full items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1 sm:mx-0 sm:w-fit sm:min-w-[22rem]",
+      useEqualMobileLayout
+        ? "grid overflow-hidden"
+        : "flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+      useEqualMobileLayout && tabs.length === 2 && "grid-cols-2",
+      useEqualMobileLayout && tabs.length === 3 && "grid-cols-3",
     )}>
       {tabs.map((tab) => {
         const active = value === tab.id;
@@ -83,10 +86,8 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg py-2 text-[13px] font-semibold transition-all sm:text-[14px]",
-              compactTabSet
-                ? "min-w-0 px-2"
-                : "min-w-fit flex-1 px-3 sm:min-w-[6.75rem] sm:flex-none",
+              "group inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg py-2 text-[13px] font-semibold transition-all sm:min-w-[6.75rem] sm:text-[14px]",
+              useEqualMobileLayout ? "min-w-0 gap-1 px-1.5 sm:gap-1.5 sm:px-3" : "min-w-max flex-1 gap-1.5 px-3",
               active
                 ? "bg-white text-[#008fbe] shadow-[0_1px_3px_rgba(15,23,42,0.12)]"
                 : "text-[#5f6f82] hover:bg-white/60 hover:text-[#162543]"
