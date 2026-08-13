@@ -6,6 +6,22 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { AlertTriangle, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+declare global {
+  interface Window {
+    __ccrUnsavedNavigationBypass?: boolean;
+  }
+}
+
+function navigationBypassActive() {
+  return typeof window !== "undefined" && window.__ccrUnsavedNavigationBypass === true;
+}
+
+function releaseNavigationBypass() {
+  window.setTimeout(() => {
+    window.__ccrUnsavedNavigationBypass = false;
+  }, 250);
+}
+
 // Custom, designed replacement for the browser's "Changes you may not be saved"
 // prompt. Intercepts in-app link navigations while there are unsaved edits and
 // shows a Spanish dialog with "Guardar cambios" / "Salir sin guardar" / "Seguir
@@ -38,7 +54,7 @@ export function UnsavedChangesGuard({
     }
 
     function onClickCapture(e: MouseEvent) {
-      if (bypass.current) return;
+      if (bypass.current || navigationBypassActive()) return;
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const anchor = (e.target as HTMLElement)?.closest?.("a[href]") as HTMLAnchorElement | null;
       if (!anchor) return;
@@ -53,17 +69,20 @@ export function UnsavedChangesGuard({
       // Hold the navigation and ask with our dialog instead.
       e.preventDefault();
       e.stopPropagation();
+      e.stopImmediatePropagation();
       pendingAnchor.current = anchor;
       pendingAction.current = null;
       setOpen(true);
     }
 
     function onConfirmUnsavedAction(e: Event) {
-      if (bypass.current) return;
-      const detail = (e as CustomEvent<{ proceed?: () => void }>).detail;
-      if (typeof detail?.proceed !== "function") return;
+      if (bypass.current || navigationBypassActive()) return;
+      const detail = (e as CustomEvent<{ proceed?: () => void; handled?: boolean }>).detail;
+      if (detail?.handled || typeof detail?.proceed !== "function") return;
+      detail.handled = true;
       e.preventDefault();
       e.stopPropagation();
+      e.stopImmediatePropagation();
       pendingAnchor.current = null;
       pendingAction.current = detail.proceed;
       setOpen(true);
@@ -87,13 +106,17 @@ export function UnsavedChangesGuard({
     setOpen(false);
     if (action) {
       bypass.current = true;
+      window.__ccrUnsavedNavigationBypass = true;
       action();
-      setTimeout(() => { bypass.current = false; }, 150);
+      setTimeout(() => { bypass.current = false; }, 250);
+      releaseNavigationBypass();
     } else if (anchor) {
       // Re-dispatch the original click; the capture handler lets it through.
       bypass.current = true;
+      window.__ccrUnsavedNavigationBypass = true;
       anchor.click();
-      setTimeout(() => { bypass.current = false; }, 150);
+      setTimeout(() => { bypass.current = false; }, 250);
+      releaseNavigationBypass();
     }
   }
 
@@ -112,8 +135,13 @@ export function UnsavedChangesGuard({
   }
 
   function leaveWithoutSaving() {
+    // Let React commit the restored form and `dirty=false` before replaying the
+    // pending navigation. Otherwise that navigation can immediately hit the
+    // generic guard again and show a second dialog.
+    bypass.current = true;
+    window.__ccrUnsavedNavigationBypass = true;
     onDiscard?.();
-    proceed();
+    window.requestAnimationFrame(() => window.requestAnimationFrame(proceed));
   }
 
   function keepEditing() {

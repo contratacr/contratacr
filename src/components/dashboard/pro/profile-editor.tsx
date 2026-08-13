@@ -1278,7 +1278,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       <Dialog.Root open={pendingSectionToggle !== null} onOpenChange={(open) => { if (!open) setPendingSectionToggle(null); }}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[240] bg-black/55 backdrop-blur-sm" />
-          <Dialog.Content className="fixed inset-x-4 bottom-4 z-[241] rounded-2xl bg-white p-5 shadow-2xl sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:w-[92vw] sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-[241] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-5 shadow-2xl">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -1342,6 +1342,5 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     </div>
   );
 }
-
 
 
