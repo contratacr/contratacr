@@ -197,6 +197,42 @@ async function reconcileCanonicalActivityFeed(profileIds, professionalIds) {
   }
 }
 
+async function removeStaleReviewNotifications(profileIds, professionalIds) {
+  const [reviews, notifications] = await Promise.all([
+    allRows(
+      "canonical reviews",
+      () => supabase.from("reviews")
+        .select("id,professional_id")
+        .in("professional_id", professionalIds)
+        .order("id"),
+    ),
+    allRows(
+      "canonical review notifications",
+      () => supabase.from("notifications")
+        .select("id,user_id,data")
+        .eq("type", "review_received")
+        .in("user_id", profileIds)
+        .order("id"),
+    ),
+  ]);
+  const reviewIds = new Set(reviews.map((review) => review.id));
+  const staleIds = notifications
+    .filter((notification) => (
+      professionalIds.includes(notification.data?.professional_id)
+      && (typeof notification.data?.review_id !== "string" || !reviewIds.has(notification.data.review_id))
+    ))
+    .map((notification) => notification.id);
+  if (!staleIds.length) return;
+  await must(
+    "stale canonical review notifications",
+    supabase.from("notifications")
+      .delete()
+      .eq("type", "review_received")
+      .in("user_id", profileIds)
+      .in("id", staleIds),
+  );
+}
+
 async function restoreProductionActors() {
   for (const actor of PRODUCTION_ACTORS) {
     const response = await fetch(`${PRODUCTION_ORIGIN}/api/professionals/${actor.slug}`, {
@@ -677,6 +713,10 @@ async function main() {
   // follower notification behind. Reconcile only the two canonical actors
   // against content that still exists; the verifier rejects any wider scope.
   await reconcileCanonicalActivityFeed(
+    [c.profile.id, s.profile.id],
+    [c.professional.id, s.professional.id],
+  );
+  await removeStaleReviewNotifications(
     [c.profile.id, s.profile.id],
     [c.professional.id, s.professional.id],
   );

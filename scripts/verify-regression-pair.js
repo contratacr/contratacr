@@ -15,10 +15,13 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
 const password = process.env.REGRESSION_TEST_PASSWORD || process.env.E2E_TEST_PASSWORD || "";
+const dataOnly = process.argv.includes("--data-only");
 let ref = "invalid";
 try { ref = new URL(url).hostname.split(".")[0]; } catch {}
 if (ref !== TEST_PROJECT_REF || !serviceRole) throw new Error("Fixture verification only runs against the test Supabase project.");
-if (!anonKey || !password) throw new Error("Fixture verification requires the test anon key and E2E_TEST_PASSWORD.");
+if (!anonKey || (!password && !dataOnly)) {
+  throw new Error("Fixture verification requires the test anon key and E2E_TEST_PASSWORD unless --data-only is explicit.");
+}
 
 const admin = createClient(url, serviceRole, { auth: { persistSession: false } });
 const publicClient = createClient(url, anonKey, { auth: { persistSession: false } });
@@ -536,7 +539,7 @@ async function main() {
   assert(!obsolete.length, `Obsolete fake professionals remain: ${obsolete.map((row) => row.slug || row.business_name).join(", ")}`);
   await verifyNoRetiredAuthUsers();
 
-  if (anonKey) {
+  if (!dataOnly) {
     for (const email of ["e2e.client@contratacr.test", "e2e.pro@contratacr.test"]) {
       const client = createClient(url, anonKey, { auth: { persistSession: false } });
       const { error } = await client.auth.signInWithPassword({ email, password });
@@ -547,6 +550,7 @@ async function main() {
 
   console.log(JSON.stringify({
     verified: true,
+    authVerified: !dataOnly,
     professionals: professionals.length,
     actors: [contratacr.professional.business_name, sg.professional.business_name],
     privateCommunicationActors: [...allowedProfiles],

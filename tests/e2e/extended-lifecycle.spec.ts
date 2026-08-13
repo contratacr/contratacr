@@ -25,6 +25,7 @@ test.describe("@seeded extended lifecycle", () => {
     const admin = regressionAdminClient();
     const marker = `E2E review ${Date.now()}`;
     let bookingId = "";
+    let reviewId = "";
 
     try {
       await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
@@ -59,6 +60,12 @@ test.describe("@seeded extended lifecycle", () => {
       });
       expect(first.status).toBe(200);
       expect(first.body.edited).toBe(false);
+      const { data: createdReview, error: createdReviewError } = await admin.from("reviews")
+        .select("id")
+        .eq("booking_id", bookingId)
+        .single();
+      if (createdReviewError) throw createdReviewError;
+      reviewId = createdReview.id;
 
       const edited = await apiJson<IdResponse>(page, "/api/reviews", {
         method: "POST",
@@ -77,9 +84,18 @@ test.describe("@seeded extended lifecycle", () => {
       expect(rows?.[0]).toEqual(expect.objectContaining({ rating: 5, comment: `${marker} edited` }));
     } finally {
       if (bookingId) {
-        await admin.from("reviews").delete().eq("booking_id", bookingId);
-        await admin.from("notifications").delete().contains("data", { booking_id: bookingId });
-        await admin.from("bookings").delete().eq("id", bookingId);
+        if (reviewId) {
+          const { error: reviewNotificationError } = await admin.from("notifications").delete()
+            .eq("type", "review_received")
+            .contains("data", { review_id: reviewId });
+          expect(reviewNotificationError, "review notification cleanup").toBeNull();
+        }
+        const { error: reviewError } = await admin.from("reviews").delete().eq("booking_id", bookingId);
+        expect(reviewError, "review lifecycle cleanup").toBeNull();
+        const { error: bookingNotificationError } = await admin.from("notifications").delete().contains("data", { booking_id: bookingId });
+        expect(bookingNotificationError, "review booking notification cleanup").toBeNull();
+        const { error: bookingError } = await admin.from("bookings").delete().eq("id", bookingId);
+        expect(bookingError, "review booking cleanup").toBeNull();
       }
     }
   });
