@@ -107,6 +107,10 @@ async function run() {
     jobs: await must("legacy jobs", admin.from("job_posts").select("id").in("id", legacyJobIds)),
     offers: await must("legacy offers", admin.from("professional_offers").select("id").in("id", legacyOfferIds)),
     applications: await must("legacy applications", admin.from("job_applications").select("id").in("id", legacyApplicationIds)),
+    savedItems: await must(
+      "legacy saved marketplace items",
+      admin.from("saved_items").select("id,item_type,item_id").in("item_id", [...legacyJobIds, ...legacyOfferIds]),
+    ),
   };
   console.log(JSON.stringify({ mode: apply ? "apply" : "dry-run", actors: actorPlan, rows: rowPlan }, null, 2));
   if (!apply) {
@@ -121,6 +125,10 @@ async function run() {
     await must(`legacy content notifications ${id}`, admin.from("notifications").delete().contains("data", { content_id: id }));
     await must(`legacy activity ${id}`, admin.from("professional_activity").delete().eq("content_id", id));
   }
+  await must(
+    "legacy saved marketplace items",
+    admin.from("saved_items").delete().in("item_id", [...legacyJobIds, ...legacyOfferIds]),
+  );
   await must("legacy applications", admin.from("job_applications").delete().in("id", legacyApplicationIds));
   await must("legacy jobs", admin.from("job_posts").delete().in("id", legacyJobIds));
   await must("legacy offers", admin.from("professional_offers").delete().in("id", legacyOfferIds));

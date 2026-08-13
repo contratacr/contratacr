@@ -188,6 +188,40 @@ async function verifyPrivateActorIsolation(owners) {
   assertRows("support ticket messages", ticketMessages, (row) => ticketIds.has(row.ticket_id)
     && (!row.sender_id || profileIds.has(row.sender_id)));
 
+  const notificationActivityIds = [...new Set(notifications
+    .map((row) => row.data?.activity_id)
+    .filter((id) => typeof id === "string" && id.length > 0))];
+  const activities = notificationActivityIds.length
+    ? await must(
+      "notification professional activities",
+      admin.from("professional_activity")
+        .select("id,professional_id,activity_type,content_id")
+        .in("id", notificationActivityIds),
+    )
+    : [];
+  assert(
+    activities.length === notificationActivityIds.length,
+    "A notification references a missing professional activity.",
+  );
+  const successCaseIds = new Set(owners.flatMap((owner) => (
+    Array.isArray(owner.professional.portfolio_items)
+      ? owner.professional.portfolio_items.map((item) => item?.id).filter(Boolean)
+      : []
+  )));
+  const serviceIds = new Set(owners.flatMap((owner) => (
+    Array.isArray(owner.professional.services)
+      ? owner.professional.services.map((item) => item?.id).filter(Boolean)
+      : []
+  )));
+  assertRows("notification professional activities", activities, (row) => {
+    if (!professionalIds.has(row.professional_id)) return false;
+    if (row.activity_type === "job") return jobIds.has(row.content_id);
+    if (row.activity_type === "offer") return offerIds.has(row.content_id);
+    if (row.activity_type === "success_case") return successCaseIds.has(row.content_id);
+    if (row.activity_type === "service") return serviceIds.has(row.content_id);
+    return false;
+  });
+
   const allowedNotificationIds = new Set([
     ...profileIds,
     ...professionalIds,
@@ -204,6 +238,7 @@ async function verifyPrivateActorIsolation(owners) {
     ...follows.map((row) => row.id),
     ...savedProfessionals.map((row) => row.id),
     ...savedItems.map((row) => row.id),
+    ...activities.map((row) => row.id),
   ]);
   const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gi;
   assertRows("notification references", notifications, (row) => {
