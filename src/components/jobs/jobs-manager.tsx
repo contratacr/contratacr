@@ -74,11 +74,14 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
 
   useEffect(() => {
     const jobId = searchParams.get("job");
-    if (jobId) setOpenId(jobId);
+    if (!jobId) return;
+    const frame = requestAnimationFrame(() => setOpenId(jobId));
+    return () => cancelAnimationFrame(frame);
   }, [searchParams]);
 
   useEffect(() => {
-    setJobs(initialJobs);
+    const frame = requestAnimationFrame(() => setJobs(initialJobs));
+    return () => cancelAnimationFrame(frame);
   }, [initialJobs]);
 
   useEffect(() => {
@@ -86,8 +89,15 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
     const close = (event: PointerEvent) => {
       if (!actionsRef.current?.contains(event.target as Node)) setActionsOpen(null);
     };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActionsOpen(null);
+    };
     document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
   }, [actionsOpen]);
 
   async function updateJobStatus(id: string, status: JobPost["status"]) {

@@ -12,6 +12,7 @@ const professionalTabs = [
   { tab: "proposals", marker: /Proyectos|Projects/i },
   { tab: "jobs", marker: /Empleos|Jobs/i },
   { tab: "offers", marker: /Ofertas|Offers/i },
+  { tab: "network", marker: /Seguidos|Following|Seguidores|Followers/i },
   { tab: "verificacion", marker: /Verificacion|Verificaci.n|Verification/i },
   { tab: "notifications", marker: /Notificaciones|Notifications/i },
   { tab: "soporte", marker: /Soporte|Support/i },
@@ -26,15 +27,58 @@ const clientTabs = [
   { tab: "applications", marker: /Mis postulaciones|My applications/i },
   { tab: "connections", marker: /Conexiones|Connections/i },
   { tab: "saved", marker: /Favoritos|Favorites/i },
+  { tab: "network&mode=use", marker: /Seguidos|Following|Seguidores|Followers/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
   { tab: "soporte&mode=use", marker: /Soporte|Support/i },
   { tab: "cuenta&mode=use", marker: /Cuenta y seguridad|Account (?:and|&) security/i },
 ] as const;
 
+async function exerciseVisibleFilters(page: import("playwright/test").Page) {
+  const filters = page.locator("[data-status-filter-tabs]:visible");
+  const filterCount = await filters.count();
+  expect(filterCount, `Expected at least one filter group on ${page.url()}`).toBeGreaterThan(0);
+
+  for (let filterIndex = 0; filterIndex < filterCount; filterIndex += 1) {
+    const filter = filters.nth(filterIndex);
+    const layout = await filter.getAttribute("data-filter-layout");
+    const geometry = await filter.evaluate((container) => ({
+      clientWidth: container.clientWidth,
+      scrollWidth: container.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+      buttons: Array.from(container.querySelectorAll("button")).map((button) => {
+        const box = button.getBoundingClientRect();
+        return { clientWidth: button.clientWidth, scrollWidth: button.scrollWidth, left: box.left, right: box.right };
+      }),
+    }));
+    expect(geometry.scrollWidth, `Filter group should not be clipped (${page.url()})`).toBeLessThanOrEqual(geometry.clientWidth + 2);
+    for (const button of geometry.buttons) {
+      expect(button.scrollWidth).toBeLessThanOrEqual(button.clientWidth + 2);
+      expect(button.left).toBeGreaterThanOrEqual(-1);
+      expect(button.right).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+    }
+
+    const buttons = filter.getByRole("button");
+    const buttonCount = await buttons.count();
+    expect(buttonCount).toBeGreaterThan(1);
+    for (let buttonIndex = 0; buttonIndex < buttonCount; buttonIndex += 1) {
+      const button = buttons.nth(buttonIndex);
+      await button.click();
+      await expect(button).toHaveAttribute("aria-pressed", "true");
+      // Every deterministic regression filter is intentionally populated. This
+      // catches a valid-looking tab whose query/mapping silently returns zero.
+      if (layout !== "pills") {
+        const count = Number((await button.innerText()).match(/\b(\d+)\b/)?.[1] ?? 0);
+        expect(count, `Filter "${await button.innerText()}" must have data on ${page.url()}`).toBeGreaterThan(0);
+      }
+      await expect(page.locator(".ccr-empty-state:visible")).toHaveCount(0);
+    }
+  }
+}
+
 test.describe.configure({ mode: "serial" });
 
 test.describe("@seeded dashboard surfaces", () => {
-  test.skip(!canRunSeededRegression(), "Set E2E_SEED=1 with the test Supabase secrets to run dashboard regression.");
+  test.skip(!canRunSeededRegression(), "Set E2E_FIXTURES_READY=1 with the test Supabase secrets to run dashboard regression.");
 
   test.beforeAll(async () => {
     await ensureRegressionSeed();
@@ -140,29 +184,30 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(page.locator('svg[aria-label="Verificado"]').filter({ visible: true }).first()).toBeVisible();
   });
 
-  test("long dashboard filters remain fully visible on narrow screens", async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 720 });
-    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=photos");
+  test("every populated dashboard filter works without clipping at 320, 390 and desktop widths", async ({ page }) => {
+    test.slow();
+    const professionalSections = ["photos", "bookings", "soporte"];
+    const clientSections = ["sent_bookings&mode=use", "sent_projects&mode=use", "saved&mode=use", "soporte&mode=use"];
 
-    const filters = page.locator('[data-status-filter-tabs][data-filter-layout="wrap"]').filter({ visible: true }).first();
-    await expect(filters).toBeVisible();
-    const geometry = await filters.evaluate((container) => ({
-      clientWidth: container.clientWidth,
-      scrollWidth: container.scrollWidth,
-      buttons: Array.from(container.querySelectorAll("button")).map((button) => ({
-        clientWidth: button.clientWidth,
-        scrollWidth: button.scrollWidth,
-        right: button.getBoundingClientRect().right,
-      })),
-      viewportWidth: document.documentElement.clientWidth,
-    }));
+    for (const width of [320, 390, 1366]) {
+      await page.setViewportSize({ width, height: width >= 1000 ? 900 : 844 });
+      await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+      for (const section of professionalSections) {
+        await gotoOK(page, `/es/dashboard/profesional?tab=${section}`);
+        await exerciseVisibleFilters(page);
+      }
 
-    expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
-    expect(geometry.buttons.length).toBeGreaterThan(1);
-    for (const button of geometry.buttons) {
-      expect(button.scrollWidth).toBeLessThanOrEqual(button.clientWidth + 1);
-      expect(button.right).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+      await gotoOK(page, "/es/dashboard/profesional?tab=proposals");
+      await exerciseVisibleFilters(page);
+      await page.getByRole("button", { name: /Mis propuestas|My proposals/i }).filter({ visible: true }).click();
+      await exerciseVisibleFilters(page);
+
+      await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+      for (const section of clientSections) {
+        await gotoOK(page, `/es/dashboard/profesional?tab=${section}`);
+        await exerciseVisibleFilters(page);
+      }
+      await expectHealthyPage(page);
     }
   });
 
@@ -271,5 +316,32 @@ test.describe("@seeded dashboard surfaces", () => {
       await expectVisibleText(page.locator("main"), section.marker);
       await expectHealthyPage(page);
     }
+  });
+
+  test("English favorites, connections, following and followers expose no Spanish controls", async ({ page }) => {
+    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+
+    await gotoOK(page, "/en/dashboard/profesional?tab=saved&mode=use");
+    for (const label of [/^Professionals(?: \d+)?$/i, /^Offers(?: \d+)?$/i, /^Jobs(?: \d+)?$/i]) {
+      await expect(page.getByRole("button", { name: label }).filter({ visible: true }).first()).toBeVisible();
+    }
+    await expect(page.getByRole("button", { name: /^(?:Profesionales|Ofertas|Empleos)/i })).toHaveCount(0);
+
+    await gotoOK(page, "/en/dashboard/profesional?tab=connections&mode=use");
+    await expect(page.getByPlaceholder(/Search by professional or service/i)).toBeVisible();
+    await expect(page.locator('svg[aria-label="Verified"]:visible').first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /View profile/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /Ver perfil/i })).toHaveCount(0);
+
+    await gotoOK(page, "/en/dashboard/profesional?tab=network&mode=use");
+    await expect(page.getByRole("heading", { name: /^Following$/i })).toBeVisible();
+    await expect(page.getByPlaceholder(/^Search$/i)).toBeVisible();
+    await expect(page.locator("[role=dialog] li, section li").filter({ visible: true }).first()).toBeVisible();
+
+    await gotoOK(page, "/en/dashboard/profesional?tab=network&mode=use&network=followers");
+    await expect(page.getByRole("heading", { name: /^Followers$/i })).toBeVisible();
+    await expect(page.getByPlaceholder(/^Search$/i)).toBeVisible();
+    await expect(page.locator("[role=dialog] li, section li").filter({ visible: true }).first()).toBeVisible();
+    await expectHealthyPage(page);
   });
 });

@@ -1,0 +1,186 @@
+import { expect, test, type Locator, type Page } from "playwright/test";
+import { expectHealthyPage, gotoOK, loginAs } from "./helpers";
+import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
+
+test.describe.configure({ mode: "serial" });
+
+async function expandFirstCardWithActions(page: Page) {
+  const expandable = page.locator('article button[aria-expanded="false"], [id^="booking-"] button[aria-expanded="false"], [id^="project-"] button[aria-expanded="false"]').filter({ visible: true }).first();
+  await expect(expandable).toBeVisible();
+  await expandable.click();
+}
+
+async function expectVerticalMenuInsideViewport(page: Page, trigger: Locator) {
+  await expect(trigger).toBeVisible();
+  await trigger.click();
+  const menu = page.getByRole("menu").filter({ visible: true }).first();
+  await expect(menu).toBeVisible();
+  const geometry = await menu.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const items = Array.from(node.querySelectorAll('[role="menuitem"]')).map((item) => item.getBoundingClientRect());
+    return {
+      box: { left: box.left, top: box.top, right: box.right, bottom: box.bottom },
+      viewport: { width: document.documentElement.clientWidth, height: window.visualViewport?.height ?? window.innerHeight },
+      items: items.map((item) => ({ left: item.left, top: item.top, right: item.right, bottom: item.bottom })),
+    };
+  });
+  expect(geometry.box.left).toBeGreaterThanOrEqual(0);
+  expect(geometry.box.top).toBeGreaterThanOrEqual(0);
+  expect(geometry.box.right).toBeLessThanOrEqual(geometry.viewport.width + 1);
+  expect(geometry.box.bottom).toBeLessThanOrEqual(geometry.viewport.height + 1);
+  expect(geometry.items.length).toBeGreaterThan(0);
+  for (let index = 1; index < geometry.items.length; index += 1) {
+    expect(geometry.items[index].top).toBeGreaterThanOrEqual(geometry.items[index - 1].bottom - 1);
+  }
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+  await trigger.click();
+  await expect(menu).toBeVisible();
+  await page.locator("main").click({ position: { x: 4, y: 4 } });
+  await expect(menu).toBeHidden();
+}
+
+test.describe("@visual recent bug contracts", () => {
+  test.skip(!canRunSeededRegression(), "Requires prepared ContrataCR/SG test fixtures.");
+  let seed: RegressionSeedState;
+
+  test.beforeAll(async () => {
+    seed = await ensureRegressionSeed();
+  });
+
+  test("web test keeps the production navbar, WhatsApp flow and footer at both viewports", async ({ page }) => {
+    for (const viewport of [{ width: 1366, height: 900 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport);
+      await gotoOK(page, "/es");
+      if (viewport.width < 600) {
+        await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
+      }
+      await expect(page.getByText(/^Asistente$|^Assistant$/i).filter({ visible: true })).toHaveCount(0);
+      await expect(page.getByRole("contentinfo")).toBeVisible();
+      await expect(page.locator("[data-mobile-bottom-navigation]:visible, nav.fixed.bottom-0:visible")).toHaveCount(0);
+      await expect(page.getByText(/^Mensajes$|^Messages$/i).filter({ visible: true })).toHaveCount(0);
+      await expectHealthyPage(page);
+
+      await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+      await expect(page.getByRole("button", { name: /WhatsApp/i }).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: /Enviar mensaje|Send message/i }).filter({ visible: true })).toHaveCount(0);
+    }
+  });
+
+  test("professional registration is turquoise text for client-only accounts and hidden for providers", async ({ page }) => {
+    let clientOnly: DisposableAccount | undefined;
+    try {
+      clientOnly = await createDisposableAccount({ prefix: "client-navbar" });
+      for (const width of [1366, 390]) {
+        await page.setViewportSize({ width, height: width > 600 ? 900 : 844 });
+        await loginAs(page, clientOnly.email, clientOnly.password);
+        await gotoOK(page, "/es");
+        if (width < 600) await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
+        const link = page.getByRole("link", { name: /^Ofrecer mis servicios$/i }).filter({ visible: true }).first();
+        await expect(link).toBeVisible();
+        await expect(link.locator("svg")).toHaveCount(0);
+        const style = await link.evaluate((node) => {
+          const computed = getComputedStyle(node);
+          return { color: computed.color, background: computed.backgroundColor };
+        });
+        expect(style.color).toBe("rgb(0, 159, 217)");
+        expect(style.background).toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
+
+        await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+        await gotoOK(page, "/es");
+        if (width < 600) await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
+        await expect(page.getByRole("link", { name: /^Ofrecer mis servicios$/i }).filter({ visible: true })).toHaveCount(0);
+      }
+    } finally {
+      await cleanupDisposableAccount(clientOnly);
+    }
+  });
+
+  test("every three-dot panel menu is vertical, visible and closes by Escape/outside click", async ({ page }) => {
+    test.slow();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+
+    for (const route of [
+      "/es/dashboard/profesional?tab=bookings",
+      "/es/dashboard/profesional?tab=proposals",
+      `/es/dashboard/profesional?tab=jobs&job=${seed.publishedJobId}`,
+      `/es/dashboard/profesional?tab=offers&offer=${seed.publishedOfferId}`,
+    ]) {
+      await gotoOK(page, route);
+      if (route.includes("tab=proposals")) {
+        await page.getByRole("button", { name: /Mis propuestas|My proposals/i }).click();
+      }
+      if (!(await page.getByRole("button", { name: /M[aá]s opciones|More options/i }).filter({ visible: true }).count())) {
+        await expandFirstCardWithActions(page);
+      }
+      await expectVerticalMenuInsideViewport(page, page.getByRole("button", { name: /M[aá]s opciones|More options|M[aá]s|More/i }).filter({ visible: true }).first());
+      await expectHealthyPage(page);
+    }
+
+    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects&mode=use");
+    await expandFirstCardWithActions(page);
+    await expectVerticalMenuInsideViewport(page, page.getByRole("button", { name: /Acciones|Actions/i }).filter({ visible: true }).first());
+  });
+
+  test("paired actions keep equal geometry and compact dialogs stay centered", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional?tab=bookings");
+    const booking = page.locator('[id^="booking-"]').filter({ has: page.getByText(/Enviar mensaje|WhatsApp|Marcar completado/i) }).first();
+    await expect(booking).toBeVisible();
+    const actions = booking.locator("button, a").filter({ hasText: /Enviar mensaje|WhatsApp|Marcar completado/i });
+    await expect(actions).toHaveCount(2);
+    const boxes = await actions.evaluateAll((nodes) => nodes.map((node) => {
+      const box = node.getBoundingClientRect();
+      return { width: box.width, height: box.height };
+    }));
+    expect(Math.abs(boxes[0].height - boxes[1].height)).toBeLessThanOrEqual(1);
+    expect(Math.abs(boxes[0].width - boxes[1].width)).toBeLessThanOrEqual(2);
+
+    // Use the professional's own public profile: the blocked self-action is the
+    // compact informational dialog from the recent responsive bug report.
+    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    await page.getByRole("button", { name: /Solicitar|Reservar|Request|Book/i }).filter({ visible: true }).first().click();
+    const dialog = page.getByRole("dialog").filter({ visible: true }).first();
+    await expect(dialog).toBeVisible();
+    const centered = await dialog.evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      return {
+        horizontalDelta: Math.abs((box.left + box.width / 2) - window.innerWidth / 2),
+        verticalDelta: Math.abs((box.top + box.height / 2) - viewportHeight / 2),
+        top: box.top,
+        bottom: box.bottom,
+        viewportHeight,
+      };
+    });
+    expect(centered.horizontalDelta).toBeLessThanOrEqual(2);
+    expect(centered.verticalDelta).toBeLessThanOrEqual(4);
+    expect(centered.top).toBeGreaterThanOrEqual(0);
+    expect(centered.bottom).toBeLessThanOrEqual(centered.viewportHeight + 1);
+  });
+
+  test("brand loading mark uses the breathing animation without remount flicker", async ({ page }) => {
+    await gotoOK(page, "/es/buscar");
+    const contract = await page.evaluate(async () => {
+      const mark = document.createElement("img");
+      mark.className = "ccr-brand-loading-mark";
+      document.body.appendChild(mark);
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const style = getComputedStyle(mark);
+      const result = {
+        animationName: style.animationName,
+        animationDuration: style.animationDuration,
+        opacity: Number(style.opacity),
+      };
+      mark.remove();
+      return result;
+    });
+    expect(contract.animationName).toMatch(/breathe/i);
+    expect(contract.animationDuration).not.toBe("0s");
+    expect(contract.opacity).toBeGreaterThan(0);
+  });
+});

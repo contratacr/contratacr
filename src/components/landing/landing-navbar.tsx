@@ -77,8 +77,8 @@ function useSlidingWords(words: string[], active: boolean) {
 
   useEffect(() => {
     if (!active || words.length <= 1) {
-      setSliding(false);
-      return;
+      const frame = window.requestAnimationFrame(() => setSliding(false));
+      return () => window.cancelAnimationFrame(frame);
     }
     let settleTimer: number | null = null;
     const id = window.setInterval(() => {
@@ -769,7 +769,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // hard refresh, usePathname can expose the home route as `/` or with its
   // locale prefix (`/es`, `/en`). Treat all three as home so the compact search
   // is controlled only by the hero sentinel, never by the URL representation.
-  const isHomePage = pathname === "/" || /^\/(?:es|en)\/?$/.test(pathname);
+  // next-intl mirrors Next's runtime behavior and can briefly return null while
+  // the client pathname settles. Default that unknown state to the safest home
+  // behavior so the compact search never flashes during hydration/refresh.
+  const isHomePage = !pathname || pathname === "/" || /^\/(?:es|en)\/?$/.test(pathname);
   const isMarketplaceEditor = /\/(?:empleos|ofertas)\/(?:publicar|[^/]+\/editar)\/?$/.test(pathname);
   const isMarketplaceRoute = /\/(?:empleos|ofertas)(?:\/|$)/.test(pathname);
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
@@ -815,19 +818,27 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }, []);
 
   useEffect(() => {
+    let active = true;
+    let frame: number | null = null;
     try {
       const raw = window.localStorage.getItem(CURRENT_LOCATION_STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as { latitude?: number; longitude?: number } | null;
       if (typeof parsed?.latitude !== "number" || typeof parsed?.longitude !== "number") return;
       const coords = { latitude: parsed.latitude, longitude: parsed.longitude };
-      setCurrentLocationSuggestions(nearbyLocationSuggestions(coords));
+      frame = window.requestAnimationFrame(() => {
+        if (active) setCurrentLocationSuggestions(nearbyLocationSuggestions(coords));
+      });
       void currentLocationSuggestionsFromCoords(coords).then((suggestions) => {
-        if (suggestions.length > 0) setCurrentLocationSuggestions(suggestions);
+        if (active && suggestions.length > 0) setCurrentLocationSuggestions(suggestions);
       });
     } catch {
       window.localStorage.removeItem(CURRENT_LOCATION_STORAGE_KEY);
     }
+    return () => {
+      active = false;
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   useEffect(() => {
@@ -1068,25 +1079,30 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       const timeout = window.setTimeout(() => setCompact(false), 0);
       return () => window.clearTimeout(timeout);
     }
-    const sentinel = document.getElementById("hero-search-sentinel");
-    if (!sentinel) {
-      const handler = () => setCompact(window.scrollY > 300);
-      handler();
-      window.addEventListener("scroll", handler, { passive: true });
-      return () => window.removeEventListener("scroll", handler);
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // The sentinel starts below the viewport on shorter screens. That also
-        // means "not intersecting", but the hero search has not been passed yet.
-        // Activate only after the sentinel crosses above the fixed navbar.
-        setCompact(entry.boundingClientRect.top <= 64);
-      },
-      { threshold: 0, rootMargin: "-64px 0px 0px 0px" }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [compactEnabled]);
+    if (!isHomePage) return;
+
+    let frame: number | null = null;
+    const update = () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        const sentinel = document.getElementById("hero-search-sentinel");
+        // The compact search appears only after the primary hero search has
+        // crossed above the fixed 64px navbar. A scroll measurement is more
+        // reliable than observing the zero-height sentinel across refreshes.
+        setCompact(window.scrollY > 0 && (sentinel ? sentinel.getBoundingClientRect().top <= 64 : window.scrollY > 300));
+      });
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, [compactEnabled, isHomePage]);
 
   useEffect(() => {
     if (openMenu !== "categorias" && openMenu !== "explorar" && openMenu !== "recursos") return;
@@ -1338,6 +1354,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   return (
     <>
       <header
+        data-testid="landing-navbar"
+        data-compact-search={effectiveCompact ? "visible" : "hidden"}
         className={cn(
           "ccr-app-header fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80",
           drawerOnly && "hidden",
@@ -1521,7 +1539,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <>
                   {/* Desktop compact search lives in the navbar flow, so it never covers links/actions. */}
                   <div
-                    className="mr-3 hidden min-w-0 flex-1 items-center transition-opacity duration-200 lg:flex xl:mr-4"
+                    className={cn(
+                      "mr-3 hidden min-w-0 flex-1 items-center transition-opacity duration-200 lg:flex xl:mr-4",
+                      !showDesktopCompactSearch && "invisible",
+                    )}
+                    aria-hidden={!showDesktopCompactSearch}
                     style={{ opacity: showDesktopCompactSearch ? 1 : 0, pointerEvents: showDesktopCompactSearch ? "auto" : "none" }}
                   >
                     <form onSubmit={handleCompactSearch} className="flex min-w-0 flex-1">

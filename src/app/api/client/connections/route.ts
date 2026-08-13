@@ -13,6 +13,7 @@ type Connection = {
   name: string;
   avatarUrl: string | null;
   isVerified: boolean;
+  categoryId: string | null;
   categoryLabel: string | null;
   lastInteractionAt: string | null;
   source: "booking" | "project" | "both";
@@ -98,6 +99,7 @@ export async function GET() {
       name: repairVisibleText(String(pro.business_name || profile?.full_name || "Profesional")),
       avatarUrl: profile?.avatar_url ?? null,
       isVerified: pro.verification_status === "verified",
+      categoryId,
       categoryLabel: categoryId ? getCategoryLabel(categoryId, "es") : null,
       lastInteractionAt: row.date || null,
       source: row.source,
@@ -108,6 +110,7 @@ export async function GET() {
 
     connection.count += 1;
     connection.source = connection.source === row.source ? connection.source : "both";
+    if (!connection.categoryId && categoryId) connection.categoryId = categoryId;
     if (!connection.categoryLabel && categoryId) connection.categoryLabel = getCategoryLabel(categoryId, "es");
     if (currentTime >= previousTime) {
       connection.lastInteractionAt = row.date || connection.lastInteractionAt;

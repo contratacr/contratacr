@@ -56,13 +56,46 @@ async function expectNotification(
 test.describe.configure({ mode: "serial" });
 
 test.describe("@seeded core regression", () => {
-  test.skip(!canRunSeededRegression(), "Set E2E_SEED=1 with the test Supabase secrets to run seeded regression.");
+  test.skip(!canRunSeededRegression(), "Set E2E_FIXTURES_READY=1 with the test Supabase secrets to run seeded regression.");
 
   let seed: RegressionSeedState;
 
   test.beforeAll(async () => {
     seed = await ensureRegressionSeed();
   });
+
+  async function cleanupGeneratedRows() {
+    const admin = regressionAdminClient();
+    const actorIds = [seed.clientId, seed.professionalUserId];
+    const { data: bookings } = await admin
+      .from("bookings")
+      .select("id")
+      .in("client_id", actorIds)
+      .ilike("service_description", "E2E Regression%");
+    for (const booking of bookings ?? []) {
+      await admin.from("notifications").delete().contains("data", { booking_id: booking.id });
+    }
+    if (bookings?.length) {
+      await admin.from("bookings").delete().in("id", bookings.map((booking) => booking.id));
+    }
+
+    const { data: projects } = await admin
+      .from("projects")
+      .select("id")
+      .in("client_id", actorIds)
+      .ilike("title", "E2E Regression%");
+    if (projects?.length) {
+      const projectIds = projects.map((project) => project.id);
+      for (const projectId of projectIds) {
+        await admin.from("notifications").delete().contains("data", { project_id: projectId });
+      }
+      await admin.from("proposals").delete().in("project_id", projectIds);
+      await admin.from("projects").delete().in("id", projectIds);
+    }
+  }
+
+  test.beforeEach(cleanupGeneratedRows);
+  test.afterEach(cleanupGeneratedRows);
 
   test("email-change states render cleanly without stacking duplicate messages", async ({ page }) => {
     await gotoOK(page, "/es/login?emailChanged=1");
@@ -239,7 +272,7 @@ test.describe("@seeded core regression", () => {
         scheduledDate: seed.slotDate,
         scheduledTime: seed.slotTime,
         categoryId: seed.categoryId,
-        slotLocationId: "e2e-main",
+        slotLocationId: seed.slotLocationId,
         slotLocationLabel: "Alajuela, Alajuela",
       },
     });
@@ -290,14 +323,14 @@ test.describe("@seeded core regression", () => {
   test("video consultation and in-person slots can share schedule but one booking blocks both", async ({ page }) => {
     const marker = `E2E Regression video shared availability ${Date.now()}`;
 
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     const videoBooking = await apiJson<IdResponse>(page, "/api/bookings", {
       method: "POST",
       body: {
         professionalId: seed.videoProfessionalId,
-        clientName: E2E_USERS.client.fullName,
-        clientEmail: E2E_USERS.client.email,
-        clientPhone: E2E_USERS.client.phone,
+        clientName: E2E_USERS.professional.fullName,
+        clientEmail: E2E_USERS.professional.email,
+        clientPhone: E2E_USERS.professional.phone,
         serviceDescription: marker,
         scheduledDate: seed.videoSlotDate,
         scheduledTime: seed.videoSharedSlotTime,
@@ -319,7 +352,7 @@ test.describe("@seeded core regression", () => {
       (availability.body.allSlots ?? []).filter(
         (slot) => slot.date === seed.videoSlotDate && slot.time === seed.videoSharedSlotTime,
       ).map((slot) => slot.locationId).sort(),
-    ).toEqual(["e2e-video-office", "videoconsulta"]);
+    ).toEqual([seed.videoPhysicalLocationId, "videoconsulta"].sort());
     expect(
       (availability.body.slots ?? []).filter(
         (slot) => slot.date === seed.videoSlotDate && slot.time === seed.videoSharedSlotTime,
@@ -335,14 +368,14 @@ test.describe("@seeded core regression", () => {
       method: "POST",
       body: {
         professionalId: seed.videoProfessionalId,
-        clientName: E2E_USERS.client.fullName,
-        clientEmail: E2E_USERS.client.email,
-        clientPhone: E2E_USERS.client.phone,
+        clientName: E2E_USERS.professional.fullName,
+        clientEmail: E2E_USERS.professional.email,
+        clientPhone: E2E_USERS.professional.phone,
         serviceDescription: `${marker} duplicate physical`,
         scheduledDate: seed.videoSlotDate,
         scheduledTime: seed.videoSharedSlotTime,
         categoryId: seed.videoCategoryId,
-        slotLocationId: "e2e-video-office",
+        slotLocationId: seed.videoPhysicalLocationId,
         slotLocationLabel: "Atenas, Alajuela",
       },
     });
@@ -511,7 +544,7 @@ test.describe("@seeded core regression", () => {
         scheduledDate: seed.slotDate,
         scheduledTime: "11:00",
         categoryId: seed.categoryId,
-        slotLocationId: "e2e-main",
+        slotLocationId: seed.slotLocationId,
         slotLocationLabel: "Alajuela, Alajuela",
       },
     });

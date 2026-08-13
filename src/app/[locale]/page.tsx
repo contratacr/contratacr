@@ -60,8 +60,9 @@ export default async function HomePage({
         {/* A continuous showcase of businesses present on ContrataCR. */}
         <FeaturedBrands />
 
-        <LandingFooter />
       </main>
+
+      <LandingFooter />
     </div>
   );
 }

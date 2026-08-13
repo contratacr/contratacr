@@ -80,17 +80,27 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
     const close = (event: PointerEvent) => {
       if (!actionsRef.current?.contains(event.target as Node)) setActionsOpen(null);
     };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActionsOpen(null);
+    };
     document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
   }, [actionsOpen]);
 
   useEffect(() => {
-    setOffers(initialOffers);
+    const frame = requestAnimationFrame(() => setOffers(initialOffers));
+    return () => cancelAnimationFrame(frame);
   }, [initialOffers]);
 
   useEffect(() => {
     const offerId = searchParams.get("offer");
-    if (offerId) setOpenId(offerId);
+    if (!offerId) return;
+    const frame = requestAnimationFrame(() => setOpenId(offerId));
+    return () => cancelAnimationFrame(frame);
   }, [searchParams]);
 
   async function updateStatus(id: string, status: ProfessionalOffer["status"]) {

@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isLocalRequest, isProductionSupabaseTarget } from "@/lib/security/write-guard";
 import { isUnsafeProductionSupabaseRuntime } from "@/lib/security/supabase-target";
+import { resolveAuthCallbackLocale } from "@/lib/auth/callback-locale";
 
 function withPostLoginActivity(path: string): string {
   const normalized = path.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
@@ -54,10 +55,11 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type");
   const next = searchParams.get("next");
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const callbackLocale = resolveAuthCallbackLocale(searchParams.get("locale"), safeNext);
 
   if (code || tokenHash) {
     if (isUnsafeProductionSupabaseRuntime() || (isLocalRequest(request) && isProductionSupabaseTarget())) {
-      return NextResponse.redirect(`${origin}/es?auth=unsafe_prod_env_blocked`);
+      return NextResponse.redirect(`${origin}/${callbackLocale}?auth=unsafe_prod_env_blocked`);
     }
 
     const cookieStore = await cookies();
@@ -130,7 +132,7 @@ export async function GET(request: NextRequest) {
       }
       // No session in THIS browser (token consumed AND logged out here) → the change is
       // already applied, so route to login to sign in with the new email (not main).
-      return NextResponse.redirect(`${origin}/es/login`);
+      return NextResponse.redirect(`${origin}/${callbackLocale}/login`);
     }
 
     if (!error && data.user) {
@@ -148,13 +150,13 @@ export async function GET(request: NextRequest) {
         const hasPassword = (data.user.identities ?? []).some((i) => i.provider === "email");
         if (hasPassword) {
           await supabase.auth.signOut();
-          return NextResponse.redirect(`${origin}/es/login?autherror=use_password`);
+          return NextResponse.redirect(`${origin}/${callbackLocale}/login?autherror=use_password`);
         }
       }
 
       if (await reactivateAccount(data.user.id) === "deletion-pending") {
         await supabase.auth.signOut();
-        return NextResponse.redirect(`${origin}/es/login?autherror=account_deletion_pending`);
+        return NextResponse.redirect(`${origin}/${callbackLocale}/login?autherror=account_deletion_pending`);
       }
 
       // Guest→account linking: attach prior GUEST tickets with this (now
@@ -178,7 +180,7 @@ export async function GET(request: NextRequest) {
       // role-aware resolution below.
       if (safeNext) {
         if (professionalSignupIncomplete && /^\/(?:es|en)\/dashboard\/profesional(?:[/?]|$)/.test(safeNext)) {
-          return NextResponse.redirect(`${origin}/es/registro/profesional`);
+          return NextResponse.redirect(`${origin}/${callbackLocale}/registro/profesional`);
         }
         return NextResponse.redirect(`${origin}${withPostLoginActivity(safeNext)}`);
       }
@@ -201,11 +203,11 @@ export async function GET(request: NextRequest) {
 
       if (!onboardingDone) {
         // Genuinely new OAuth user, no role chosen yet → onboarding.
-        return NextResponse.redirect(`${origin}/es/onboarding`);
+        return NextResponse.redirect(`${origin}/${callbackLocale}/onboarding`);
       }
 
       if (professionalSignupIncomplete) {
-        return NextResponse.redirect(`${origin}/es/registro/profesional`);
+        return NextResponse.redirect(`${origin}/${callbackLocale}/registro/profesional`);
       }
 
       // The "Publicar proyecto" CTA carries ?next=projects → land on "Solicitudes
@@ -214,8 +216,8 @@ export async function GET(request: NextRequest) {
       // "sent_projects" is a use-mode tab, so it works for any account.
       const wantProjects = next === "projects";
       const destPath = wantProjects
-        ? "/es/dashboard/profesional?tab=sent_projects"
-        : "/es/dashboard/profesional";
+        ? `/${callbackLocale}/dashboard/profesional?tab=sent_projects`
+        : `/${callbackLocale}/dashboard/profesional`;
 
       // Cédula is NOT required up-front for clients — it is requested later, at
       // the moment they book/request a service (see the booking flow). So we no
@@ -233,5 +235,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}${safeNext}`);
   }
 
-  return NextResponse.redirect(`${origin}/es?auth=error`);
+  return NextResponse.redirect(`${origin}/${callbackLocale}?auth=error`);
 }

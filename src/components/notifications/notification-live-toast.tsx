@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, X } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { notificationActionHref, notificationInMode, notificationsCenterHref } from "@/lib/notification-link";
-import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
+import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { prefetchDashboardDataForNotification } from "@/lib/dashboard-notification-prefetch";
 
@@ -52,7 +52,6 @@ function rememberLastActiveAt(userId: string, value = new Date().toISOString()) 
 export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationScope }) {
   const { user } = useAuth();
   const router = useRouter();
-  const t = useTranslations("notifications");
   const locale = useLocale();
   const [toast, setToast] = useState<ToastState | null>(null);
   const [postLoginUnreadCount, setPostLoginUnreadCount] = useState<number | null>(null);
@@ -313,9 +312,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     ? locale === "en"
       ? `${toast.count} new notifications`
       : `${toast.count} notificaciones nuevas`
-    : latest.type === "support_reply" || !TRANSLATED_NOTIFICATION_TYPES.has(latest.type)
-      ? latestCopy.title
-      : t(`types.${latest.type}`);
+    : latestCopy.title;
   const detailLabel = grouped
     ? locale === "en" ? "View notifications" : "Ver notificaciones"
     : toastTargetHref

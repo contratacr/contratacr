@@ -1,6 +1,7 @@
 import { expect, test } from "playwright/test";
 import { expectHealthyPage, expectVisibleText, gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
-import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
+import { canRunSeededRegression, ensureRegressionSeed } from "./seed";
+import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
 const adminRoutes = [
   { path: "/es/admin", marker: /Resumen|Panel de administracion|Panel de administraci.n/i },
@@ -50,25 +51,26 @@ test.describe("@admin surfaces", () => {
     }
   });
 
-  test("admin panel sections render when admin credentials are configured", async ({ page }) => {
-    const seeded = canRunSeededRegression();
-    const email = seeded ? E2E_USERS.admin.email : (process.env.E2E_ADMIN_EMAIL || "");
-    const password = seeded ? E2E_USERS.admin.password : (process.env.E2E_ADMIN_PASSWORD || "");
-    test.skip(!email || !password, "Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD to run authenticated admin regression.");
+  test("admin panel sections render with an isolated disposable administrator", async ({ page }) => {
+    let account: DisposableAccount | undefined;
+    try {
+      account = await createDisposableAccount({ prefix: "admin-cycle", admin: true });
+      await resetAuth(page);
+      await gotoOK(page, "/es/admin");
+      await waitForInteractivePage(page);
+      await page.getByPlaceholder(/Correo de administrador/i).fill(account.email);
+      await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(account.password);
+      await page.getByRole("button", { name: /Ingresar/i }).click();
+      await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeHidden({ timeout: 20_000 });
+      await expectVisibleText(page.locator("body"), adminRoutes[0].marker);
 
-    await resetAuth(page);
-    await gotoOK(page, "/es/admin");
-    await waitForInteractivePage(page);
-    await page.getByPlaceholder(/Correo de administrador/i).fill(email!);
-    await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(password!);
-    await page.getByRole("button", { name: /Ingresar/i }).click();
-    await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeHidden({ timeout: 20_000 });
-    await expectVisibleText(page.locator("body"), adminRoutes[0].marker);
-
-    for (const route of adminRoutes) {
-      await gotoOK(page, route.path);
-      await expectVisibleText(page.locator("body"), route.marker);
-      await expectHealthyPage(page);
+      for (const route of adminRoutes) {
+        await gotoOK(page, route.path);
+        await expectVisibleText(page.locator("body"), route.marker);
+        await expectHealthyPage(page);
+      }
+    } finally {
+      await cleanupDisposableAccount(account);
     }
   });
 });

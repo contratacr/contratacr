@@ -7,67 +7,96 @@ on:
       - test
 
 concurrency:
-  group: regression-test
-  cancel-in-progress: true
+  # The production mirror and regression suite both mutate the isolated test
+  # database. A shared repository-wide group prevents either workflow from
+  # replacing fixtures while the other one is using them.
+  group: contratacr-test-environment
+  queue: max
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   e2e:
     name: Playwright regression (test)
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     environment: test
     env:
-      PLAYWRIGHT_BASE_URL: https://contratacr-git-test-isanchezm421-6251s-projects.vercel.app
+      PLAYWRIGHT_BASE_URL: https://test.contratacr.com
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       # The database mirror workflow owns authenticated fixtures. The legacy
       # Playwright seeder created fake professionals and must never run here.
-      E2E_SEED: "0"
+      E2E_FIXTURES_READY: "1"
+      E2E_LEGACY_SEED: "0"
+      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      REGRESSION_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      EXPECTED_SUPABASE_PROJECT_REF: sodegkfjjrdkbohycqyq
       CI: true
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          ref: test
+          ref: ${{ github.sha }}
 
       - name: Validate test target
         run: |
           set -euo pipefail
+          expected_test_sha="$(git rev-parse HEAD)"
+          echo "EXPECTED_TEST_SHA=$expected_test_sha" >> "$GITHUB_ENV"
           echo "Checked out test branch for regression."
           echo "Running regression against $PLAYWRIGHT_BASE_URL"
-          if [ -z "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
-            echo "::error::Missing VERCEL_AUTOMATION_BYPASS_SECRET in the test GitHub Environment. Vercel preview deployments are protected, so Playwright will see the Vercel login page instead of ContrataCR."
+          if [ "${{ github.ref }}" != "refs/heads/test" ]; then
+            echo "::error::Regression must be dispatched from the test branch."
             exit 1
           fi
-          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in the test GitHub Environment. These are required to seed regression accounts in the test Supabase project."
+          if [ -z "$E2E_TEST_PASSWORD" ]; then
+            echo "::error::Missing E2E_TEST_PASSWORD in the test GitHub Environment."
+            exit 1
+          fi
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] || [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Missing NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY or SUPABASE_DB_URL in the test GitHub Environment."
             exit 1
           fi
           if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
             echo "::error::Missing NEXT_PUBLIC_SUPABASE_ANON_KEY in the test GitHub Environment. The app and browser auth require the test anon/publishable key."
             exit 1
           fi
-          if echo "$NEXT_PUBLIC_SUPABASE_URL" | grep -q "kskueodxaksxvjrysouw"; then
-            echo "::error::Refusing to run seeded regression against production Supabase."
-            exit 1
-          fi
+          node scripts/ci/validate-supabase-target.mjs api NEXT_PUBLIC_SUPABASE_URL "$EXPECTED_SUPABASE_PROJECT_REF"
+          node scripts/ci/validate-supabase-target.mjs db SUPABASE_DB_URL "$EXPECTED_SUPABASE_PROJECT_REF"
 
-      - name: Verify Vercel bypass opens ContrataCR
+      - name: Wait for the exact canonical test deployment
         run: |
           set -euo pipefail
-          html="$(curl -sSL \
-            -H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" \
-            "$PLAYWRIGHT_BASE_URL/es")"
-          if echo "$html" | grep -qi "Log in to Vercel"; then
-            echo "::error::Vercel protection still intercepted the test URL. The bypass secret is present in GitHub, but this deployment did not accept it. Rotate/check the Vercel Automation Bypass secret, update the GitHub test Environment secret, then redeploy the test branch before rerunning."
-            exit 1
+          headers=(-H "Cache-Control: no-cache")
+          if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            headers+=(-H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET")
           fi
-          if ! echo "$html" | grep -qi "ContrataCR"; then
-            echo "::error::The test URL did not look like ContrataCR after bypass. Check PLAYWRIGHT_BASE_URL and the latest test deployment."
-            exit 1
-          fi
+
+          for attempt in $(seq 1 60); do
+            health="$(curl --silent --show-error --location --fail \
+              "${headers[@]}" \
+              "$PLAYWRIGHT_BASE_URL/api/health?expected=$EXPECTED_TEST_SHA&attempt=$attempt" \
+              2>/dev/null || true)"
+            deployed_sha="$(jq -er '.commitSha // empty' <<<"$health" 2>/dev/null || true)"
+
+            if [ "$deployed_sha" = "$EXPECTED_TEST_SHA" ]; then
+              echo "Canonical test deployment is ready at the expected commit."
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 60 ]; then
+              echo "::error::test.contratacr.com did not reach the checked-out test commit within 10 minutes."
+              exit 1
+            fi
+            echo "Waiting for the canonical test deployment ($attempt/60)."
+            sleep 10
+          done
 
       - name: Setup Node
         uses: actions/setup-node@v5
@@ -80,6 +109,23 @@ jobs:
 
       - name: Ensure private env files are not tracked
         run: npm run security:env
+
+      - name: Apply pending test migrations before regression
+        run: |
+          set -euo pipefail
+          pending="$(npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run)"
+          echo "$pending"
+          if echo "$pending" | grep -q "001_initial_schema.sql"; then
+            echo "::error::Migration history is stale; refusing to replay the initial schema."
+            exit 1
+          fi
+          historical="$(printf '%s\n' "$pending" | grep -Eo '[0-9]{3}_[A-Za-z0-9._-]+\.sql' | awk -F_ '($1 + 0) < 165' | sort -u || true)"
+          if [ -n "$historical" ]; then
+            echo "::error::Historical migrations below 165 are missing; refusing an implicit repair."
+            printf '%s\n' "$historical"
+            exit 1
+          fi
+          npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --yes
 
       - name: Seed ContrataCR and SG Solutions regression fixtures
         run: |
@@ -98,6 +144,9 @@ jobs:
 
       - name: Verify complete regression fixtures
         run: npm run seed:test:verify
+
+      - name: Verify isolated account deletion
+        run: npm run test:account-deletion
 
       - name: Typecheck regression and application contracts
         run: npx tsc --noEmit

@@ -207,6 +207,8 @@ export async function POST(req: NextRequest) {
         link: `/es/profesionales/${targetPro.slug}?tab=resenas#resenas`,
         professional_id: professionalId,
         review_id: insertedReview.id,
+        client_name: clientName,
+        rating: Number(rating),
       },
     };
     const { error: notificationError } = await admin.from("notifications").insert(notification);

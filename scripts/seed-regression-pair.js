@@ -6,7 +6,7 @@ const TEST_PROJECT_REF = "sodegkfjjrdkbohycqyq";
 const SEED = "production-mirror-regression-pair-v1";
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";
 const PRODUCTION_ORIGIN = "https://www.contratacr.com";
-const REGRESSION_CV_PATH = process.env.REGRESSION_CV_PATH || "C:\\Users\\isaac\\OneDrive\\Documentos\\CV\\Senior\\CV.pdf";
+const REGRESSION_CV_PATH = process.env.REGRESSION_CV_PATH || "";
 const PRODUCTION_ACTORS = [
   {
     businessName: "ContrataCR",
@@ -72,8 +72,8 @@ const ids = {
   reviews: ["be000000-0000-4000-8000-000000000001", "be000000-0000-4000-8000-000000000002"],
   notifications: ["bf000000-0000-4000-8000-000000000001", "bf000000-0000-4000-8000-000000000002"],
   weekly: ["c1000000-0000-4000-8000-000000000001", "c1000000-0000-4000-8000-000000000002"],
-  slots: ["c2000000-0000-4000-8000-000000000001", "c2000000-0000-4000-8000-000000000002"],
-  exceptions: ["c3000000-0000-4000-8000-000000000001", "c3000000-0000-4000-8000-000000000002"],
+  slots: Array.from({ length: 6 }, (_, index) => `c2000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
+  exceptions: Array.from({ length: 6 }, (_, index) => `c3000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   blocked: ["c4000000-0000-4000-8000-000000000001", "c4000000-0000-4000-8000-000000000002"],
 };
 
@@ -152,17 +152,22 @@ async function restoreProductionActors() {
   }
 }
 
-async function findActor(businessName, expectedEmail) {
-  const rows = await must(
-    `find ${businessName}`,
+async function findActor(expected) {
+  const actor = await must(
+    `find canonical ${expected.businessName}`,
     supabase
       .from("professionals")
       .select("*,profiles(*)")
-      .ilike("business_name", businessName)
-      .limit(20),
+      .eq("id", expected.professionalId)
+      .eq("profile_id", expected.profileId)
+      .single(),
   );
-  const actor = rows.find((row) => row.profiles?.email === expectedEmail) || rows[0];
-  if (!actor?.profiles) throw new Error(`Production mirror does not contain ${businessName}.`);
+  if (!actor?.profiles || actor.profiles.id !== expected.profileId) {
+    throw new Error(`Production mirror does not contain canonical ${expected.businessName}.`);
+  }
+  if ((actor.business_name || "").trim().toLowerCase() !== expected.businessName.toLowerCase()) {
+    throw new Error(`Canonical ${expected.businessName} identity has an unexpected business name.`);
+  }
   return { professional: actor, profile: actor.profiles };
 }
 
@@ -190,6 +195,70 @@ async function enrichActor(actor, kind) {
       }]
     : [];
 
+  const professionIds = [...new Set([
+    ...(Array.isArray(professional.professions) ? professional.professions : []),
+    professional.category_id,
+  ])].filter((id) => id && id !== "otro");
+  const portfolioItems = Array.isArray(professional.portfolio_items)
+    ? [...professional.portfolio_items]
+    : [...fallbackPortfolio];
+  const certifications = Array.isArray(professional.certifications)
+    ? [...professional.certifications]
+    : [];
+  const services = Array.isArray(professional.services) ? [...professional.services] : [];
+
+  for (const profession of professionIds) {
+    if (!services.some((item) => (item?.category || professionIds[0]) === profession)) {
+      services.push({
+        id: `${kind}-regression-service-${profession}`,
+        category: profession,
+        name: `Regression service ${profession}`,
+        active: true,
+        price: "Consultar precio",
+        priceType: "a_convenir",
+        modalities: ["in_person", "video"],
+        startedAt: "2020-01",
+        description: `Service fixture for ${profession}.`,
+      });
+    }
+    if (!portfolioItems.some((item) => item?.profession === profession)) {
+      portfolioItems.push({
+        id: `${kind}-regression-case-${profession}`,
+        profession,
+        title: `${isContrata ? "ContrataCR" : "SG Solutions"}: caso ${profession}`,
+        description: "Caso completo para validar cada filtro profesional del perfil en test.",
+        recipient: "Regression ContrataCR",
+        date: "2026",
+        photos: fallbackImage ? [fallbackImage] : [],
+        likes: 1,
+      });
+    }
+    if (!certifications.some((item) => item?.profession === profession)) {
+      certifications.push({
+        id: `${kind}-regression-certification-${profession}`,
+        name: `Regression certification ${profession}`,
+        institution: "ContrataCR Regression",
+        year: "2026",
+        profession,
+      });
+    }
+  }
+
+  if (!services.some((item) => typeof item?.priceAmount === "number" && item.priceAmount > 0) && services[0]) {
+    services[0] = {
+      ...services[0],
+      priceAmount: isContrata ? 185000 : 120000,
+      priceType: "por_proyecto",
+    };
+  }
+
+  // The update below preserves production content and only fills missing
+  // profession-specific regression coverage.
+  professional.professions = professionIds;
+  professional.services = services;
+  professional.portfolio_items = portfolioItems;
+  professional.certifications = certifications;
+
   await must(`profile ${kind}`, supabase.from("profiles").update({
     email: safeEmail,
     onboarding_completed: true,
@@ -206,7 +275,7 @@ async function enrichActor(actor, kind) {
       active: true,
       price: "Consultar precio",
       priceType: "a_convenir",
-      modalities: ["presencial", "videoconsulta"],
+      modalities: ["in_person", "video"],
       startedAt: "2020-01",
       description: `Servicio de ${serviceName.toLowerCase()} para regresión integral.`,
     }]),
@@ -237,8 +306,8 @@ async function enrichActor(actor, kind) {
 
 async function main() {
   await restoreProductionActors();
-  const contratacr = await findActor("ContrataCR", "e2e.client@contratacr.test");
-  const sg = await findActor("SG Solutions", "e2e.pro@contratacr.test");
+  const contratacr = await findActor(PRODUCTION_ACTORS[0]);
+  const sg = await findActor(PRODUCTION_ACTORS[1]);
   if (contratacr.profile.id === sg.profile.id) throw new Error("Regression actors must be distinct.");
 
   await enrichActor(contratacr, "contratacr");
@@ -248,6 +317,9 @@ async function main() {
   const s = sg;
   const cName = c.professional.business_name || c.profile.full_name;
   const sName = s.professional.business_name || s.profile.full_name;
+  const cPhysicalLocation = (Array.isArray(c.professional.workplaces)
+    ? c.professional.workplaces.find((workplace) => typeof workplace?.id === "string" && workplace.id.trim())?.id
+    : null) || "regression-office";
 
   const savedSnapshot = ({ professional, profile }) => ({
     id: professional.id,
@@ -272,14 +344,32 @@ async function main() {
     { id: ids.weekly[1], professional_id: s.professional.id, category_id: s.professional.category_id, weekday: 2, start_time: "09:00", end_time: "18:00", slot_minutes: 60 },
   ], { onConflict: "id" }));
 
+  // Previous test runs may have restored these deterministic moments with an
+  // auto-generated id. Clear only the pair's future regression moments so this
+  // seed remains idempotent without touching the rest of either calendar.
+  await must("reset ContrataCR regression slots", supabase.from("availability_slots")
+    .delete().eq("professional_id", c.professional.id).eq("slot_date", date(2))
+    .in("slot_time", ["10:00", "11:00"]));
+  await must("reset SG Solutions regression slots", supabase.from("availability_slots")
+    .delete().eq("professional_id", s.professional.id).eq("slot_date", date(3))
+    .in("slot_time", ["11:00", "14:00"]));
+
   await must("availability slots", supabase.from("availability_slots").upsert([
-    { id: ids.slots[0], professional_id: c.professional.id, category_id: c.professional.category_id, slot_date: date(2), slot_time: "10:00" },
-    { id: ids.slots[1], professional_id: s.professional.id, category_id: s.professional.category_id, slot_date: date(3), slot_time: "14:00" },
+    { id: ids.slots[0], professional_id: c.professional.id, category_id: c.professional.category_id, slot_date: date(2), slot_time: "10:00", location_id: "videoconsulta" },
+    { id: ids.slots[1], professional_id: c.professional.id, category_id: c.professional.category_id, slot_date: date(2), slot_time: "10:00", location_id: cPhysicalLocation },
+    { id: ids.slots[2], professional_id: c.professional.id, category_id: c.professional.category_id, slot_date: date(2), slot_time: "11:00", location_id: "videoconsulta" },
+    { id: ids.slots[3], professional_id: c.professional.id, category_id: c.professional.category_id, slot_date: date(2), slot_time: "11:00", location_id: cPhysicalLocation },
+    { id: ids.slots[4], professional_id: s.professional.id, category_id: s.professional.category_id, slot_date: date(3), slot_time: "14:00", location_id: "regression-office-sg" },
+    { id: ids.slots[5], professional_id: s.professional.id, category_id: s.professional.category_id, slot_date: date(3), slot_time: "11:00", location_id: "regression-office-sg" },
   ], { onConflict: "id" }));
 
   await must("availability exceptions", supabase.from("availability_exceptions").upsert([
     { id: ids.exceptions[0], professional_id: c.professional.id, category_id: c.professional.category_id, exception_date: date(5), mode: "extra", start_time: "18:00", end_time: "20:00", slot_minutes: 60 },
-    { id: ids.exceptions[1], professional_id: s.professional.id, category_id: s.professional.category_id, exception_date: date(6), mode: "closed", slot_minutes: 60 },
+    { id: ids.exceptions[1], professional_id: c.professional.id, category_id: c.professional.category_id, exception_date: date(6), mode: "custom", start_time: "09:00", end_time: "12:00", slot_minutes: 60 },
+    { id: ids.exceptions[2], professional_id: c.professional.id, category_id: c.professional.category_id, exception_date: date(7), mode: "closed", slot_minutes: 60 },
+    { id: ids.exceptions[3], professional_id: s.professional.id, category_id: s.professional.category_id, exception_date: date(8), mode: "extra", start_time: "18:00", end_time: "20:00", slot_minutes: 60 },
+    { id: ids.exceptions[4], professional_id: s.professional.id, category_id: s.professional.category_id, exception_date: date(9), mode: "custom", start_time: "09:00", end_time: "12:00", slot_minutes: 60 },
+    { id: ids.exceptions[5], professional_id: s.professional.id, category_id: s.professional.category_id, exception_date: date(10), mode: "closed", slot_minutes: 60 },
   ], { onConflict: "id" }));
 
   await must("blocked dates", supabase.from("blocked_dates").upsert([
@@ -398,13 +488,21 @@ async function main() {
   ];
   await must("jobs", supabase.from("job_posts").upsert(jobs, { onConflict: "id" }));
 
-  if (!fs.existsSync(REGRESSION_CV_PATH)) {
-    throw new Error(`Regression CV not found at ${REGRESSION_CV_PATH}.`);
-  }
+  // Local regression uses Isaac's requested CV when available. CI runners do
+  // not have access to that private Windows path, so use a tiny valid synthetic
+  // PDF there. This keeps My applications covered without committing personal
+  // information to the repository.
+  const fallbackCv = Buffer.from(
+    "JVBERi0xLjQKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNjEyIDc5Ml0vQ29udGVudHMgNCAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSPj4+Pj4+ZW5kb2JqCjQgMCBvYmo8PC9MZW5ndGggNzQ+PnN0cmVhbQpCVAovRjEgMTIgVGYKNzIgNzIwIFRkCihDb250cmF0YUNSIFJlZ3Jlc3Npb24gVGVzdCBDVikgVGoKRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqPDwvVHlwZS9Gb250L1N1YnR5cGUvVHlwZTEvQmFzZUZvbnQvSGVsdmV0aWNhPj5lbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQxIDAwMDAwIG4gCjAwMDAwMDAzNjQgMDAwMDAgbiAKdHJhaWxlcjw8L1NpemUgNi9Sb290IDEgMCBSPj4Kc3RhcnR4cmVmCjQzNAolJUVPRgo=",
+    "base64",
+  );
+  const regressionCv = REGRESSION_CV_PATH && fs.existsSync(REGRESSION_CV_PATH)
+    ? fs.readFileSync(REGRESSION_CV_PATH)
+    : fallbackCv;
   const regressionCvStoragePath = `job-applications/${ids.jobs[1]}/${c.profile.id}/Senior-CV.pdf`;
   await must("ContrataCR application CV", supabase.storage
     .from("direct-message-attachments")
-    .upload(regressionCvStoragePath, fs.readFileSync(REGRESSION_CV_PATH), {
+    .upload(regressionCvStoragePath, regressionCv, {
       contentType: "application/pdf",
       upsert: true,
     }));

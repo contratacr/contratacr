@@ -1,7 +1,73 @@
 import { expect, type Locator, type Page, type TestInfo } from "playwright/test";
 
+const runtimeIssues = new WeakMap<Page, string[]>();
+const guardedPages = new WeakSet<Page>();
+
+function isLoopbackPage(page: Page) {
+  try {
+    const hostname = new URL(page.url()).hostname;
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  } catch {
+    return false;
+  }
+}
+
+function isLocalGoogleMapsKeyRestriction(page: Page, diagnostic: string) {
+  if (!isLoopbackPage(page)) return false;
+  return /maps\.googleapis\.com\/(?:maps\/api\/mapsjs\/gen_204|\$rpc\/google\.internal\.maps\.mapsjs\.v1\.MapsJsInternalService\/GetViewportInfo)/i.test(diagnostic)
+    || /Google Maps JavaScript API error:\s*RefererNotAllowedMapError/i.test(diagnostic);
+}
+
+function isLocalDevServerNoise(page: Page, diagnostic: string) {
+  return isLoopbackPage(page)
+    && /WebSocket connection to ['"]ws:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\/_next\/webpack-hmr[^'"]*['"] failed:/i.test(diagnostic);
+}
+
+/**
+ * Keep render checks honest: a page can look fine while React, an API request,
+ * or a server component failed in the background. The guard is installed on
+ * the first navigation and `expectHealthyPage` reports everything collected.
+ */
+export function installRuntimeGuards(page: Page) {
+  if (guardedPages.has(page)) return;
+  guardedPages.add(page);
+  const issues: string[] = [];
+  runtimeIssues.set(page, issues);
+
+  page.on("pageerror", (error) => issues.push(`pageerror: ${error.message}`));
+  page.on("console", (message) => {
+    if (message.type() !== "error") return;
+    const value = message.text();
+    // Browser extensions and cancelled navigations are outside the app.
+    if (/chrome-extension:|ResizeObserver loop limit exceeded/i.test(value)) return;
+    if (isLocalDevServerNoise(page, value)) return;
+    // The shared test key is intentionally restricted to deployed domains.
+    // Ignore only its two known Google probes on loopback; the same failure on
+    // test.contratacr.com remains a regression failure.
+    if (isLocalGoogleMapsKeyRestriction(page, `${value} ${message.location().url}`)) return;
+    issues.push(`console.error: ${value}`);
+  });
+  page.on("response", (response) => {
+    if (response.status() < 500) return;
+    issues.push(`HTTP ${response.status()}: ${response.url()}`);
+  });
+  page.on("requestfailed", (request) => {
+    const failure = request.failure()?.errorText ?? "request failed";
+    if (/ERR_ABORTED|NS_BINDING_ABORTED/i.test(failure)) return;
+    if (isLocalGoogleMapsKeyRestriction(page, request.url())) return;
+    issues.push(`requestfailed: ${request.method()} ${request.url()} (${failure})`);
+  });
+}
+
 export async function gotoOK(page: Page, path: string) {
-  const response = await page.goto(path, { waitUntil: "domcontentloaded" });
+  installRuntimeGuards(page);
+  // A full navigation aborts requests from the document being replaced. Reset
+  // at the new document's commit so those expected aborts cannot contaminate
+  // the health contract for the page we are actually asserting.
+  runtimeIssues.set(page, []);
+  const response = await page.goto(path, { waitUntil: "commit" });
+  runtimeIssues.set(page, []);
+  await page.waitForLoadState("domcontentloaded");
   expect(response, `Expected a response for ${path}`).not.toBeNull();
   expect(response!.status(), `Expected ${path} to return < 400`).toBeLessThan(400);
   await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
@@ -29,6 +95,8 @@ export async function expectHealthyPage(page: Page) {
   await expect(page.locator("body")).not.toContainText(/Application error|Internal Server Error|Log in to Vercel/i);
   await expectNoRawI18nKeys(page);
   await expectNoHorizontalOverflow(page);
+  const issues = runtimeIssues.get(page) ?? [];
+  expect(issues, `The page reported silent runtime failures:\n${issues.join("\n")}`).toEqual([]);
 }
 
 export async function expectNoRawI18nKeys(page: Page) {
