@@ -21,6 +21,8 @@ import { AppResumeRecovery } from "@/components/util/app-resume-recovery";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 import { AppIntlProvider } from "@/components/app-intl-provider";
 import { GlobalActionLoading } from "@/components/global-action-loading";
+import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
+import { withPromiseTimeout } from "@/lib/promise-timeout";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -119,30 +121,37 @@ export default async function LocaleLayout({
   let initialAvatarUrl: string | null | undefined;
   const initialNotificationUnread = { offer: 0, use: 0, neutral: 0 };
   if (initialUser) {
-    const [{ data }, { data: unreadNotifications }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("avatar_url")
-        .eq("id", initialUser.id)
-        .maybeSingle(),
-      supabase
-        .from("notifications")
-        .select("type")
-        .eq("user_id", initialUser.id)
-        .eq("read", false),
-    ]);
-    initialAvatarUrl = (data?.avatar_url as string | null | undefined) ?? null;
-    for (const notification of unreadNotifications ?? []) {
-      const context = notificationContext(notification.type as string);
-      if (context === "professional") initialNotificationUnread.offer++;
-      else if (context === "client") initialNotificationUnread.use++;
-      else initialNotificationUnread.neutral++;
+    try {
+      const [{ data }, { data: unreadNotifications }] = await withPromiseTimeout(Promise.all([
+        supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", initialUser.id)
+          .maybeSingle(),
+        supabase
+          .from("notifications")
+          .select("type")
+          .eq("user_id", initialUser.id)
+          .eq("read", false),
+      ]), 6_000, "layout-account-bootstrap-timeout");
+      initialAvatarUrl = (data?.avatar_url as string | null | undefined) ?? null;
+      for (const notification of unreadNotifications ?? []) {
+        const context = notificationContext(notification.type as string);
+        if (context === "professional") initialNotificationUnread.offer++;
+        else if (context === "client") initialNotificationUnread.use++;
+        else initialNotificationUnread.neutral++;
+      }
+    } catch (error) {
+      // Rendering the destination is more important than optional navbar seed
+      // data. The client provider reconciles avatar and counters afterwards.
+      console.error("[locale-layout] account bootstrap timed out or failed", error);
     }
   }
 
   return (
     <AppIntlProvider messages={messages} locale={locale}>
       <GlobalActionLoading />
+      <GlobalDataRefresh />
       <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialNotificationUnread={initialNotificationUnread}>
         <DocumentLocale locale={locale} />
         <EmojiBlocker />

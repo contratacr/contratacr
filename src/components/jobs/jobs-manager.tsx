@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, CalendarDays, ChevronDown, FileText, Mail, MoreVertical, Phone, Plus, UserRound, Users } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { invalidateAppData } from "@/lib/app-data-invalidation";
 import type { JobPost } from "@/lib/jobs";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { Modal } from "@/components/ui/modal";
@@ -90,13 +91,19 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
   }, [actionsOpen]);
 
   async function updateJobStatus(id: string, status: JobPost["status"]) {
-    const { error } = await createClient().from("job_posts").update({ status }).eq("id", id);
-    if (!error) setJobs((current) => current.map((job) => job.id === id ? { ...job, status } : job));
+    const response = await fetch("/api/jobs/posts", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
+    if (response.ok) {
+      setJobs((current) => current.map((job) => job.id === id ? { ...job, status } : job));
+      invalidateAppData("jobs");
+    }
   }
 
   async function updateApplication(jobId: string, applicationId: string, status: string) {
     const { error } = await createClient().from("job_applications").update({ status }).eq("id", applicationId);
-    if (!error) setJobs((current) => current.map((job) => job.id === jobId ? { ...job, applications: job.applications.map((item) => item.id === applicationId ? { ...item, status } : item) } : job));
+    if (!error) {
+      setJobs((current) => current.map((job) => job.id === jobId ? { ...job, applications: job.applications.map((item) => item.id === applicationId ? { ...item, status } : item) } : job));
+      invalidateAppData("jobs");
+    }
   }
 
   return (

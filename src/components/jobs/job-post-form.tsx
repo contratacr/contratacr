@@ -22,6 +22,7 @@ import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { PROVINCES, getCantonById, getCantonsByProvince, getProvinceById } from "@/lib/data/cr-geography";
 import { MAX_MONEY_AMOUNT, formatNumberForMessage, isWholeNumberInRange, parseOptionalWholeNumber } from "@/lib/forms/numeric-validation";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, salaryPeriodLabel, workplaceTypeLabel } from "@/lib/marketplace-copy";
+import { invalidateAppData } from "@/lib/app-data-invalidation";
 
 type FieldErrors = Partial<Record<"title" | "location" | "description" | "responsibilities" | "requirements" | "salary" | "openings" | "deadline", string>>;
 
@@ -366,6 +367,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
       const response = await fetch("/api/jobs/posts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data?.id) throw new Error(typeof data?.error === "string" ? data.error : copy.saveFailed);
+      invalidateAppData("jobs");
       if (presentation === "modal") {
         onSaved?.(data.id);
         setSaving(false);

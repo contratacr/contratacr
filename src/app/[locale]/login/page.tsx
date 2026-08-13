@@ -16,6 +16,8 @@ import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { OtpVerification } from "@/components/auth/otp-verification";
+import type { User } from "@supabase/supabase-js";
+import { withPromiseTimeout } from "@/lib/promise-timeout";
 
 type FormData = { email: string; password: string };
 
@@ -85,6 +87,7 @@ async function reactivateSignedInAccount(): Promise<void> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "reactivate" }),
+      signal: AbortSignal.timeout(4_000),
     });
     if (!response.ok) {
       console.warn("[account-reactivation] Could not reactivate the signed-in account");
@@ -141,16 +144,25 @@ export default function LoginPage() {
     }
   }, [t]);
 
-  async function finishPasswordLogin(supabase: ReturnType<typeof createClient>) {
+  async function finishPasswordLogin(supabase: ReturnType<typeof createClient>, signedInUser?: User | null) {
     const redirect = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect"));
     await waitForAuthCookie();
 
-    const { data: userData } = await supabase.auth.getUser();
-    if (userData.user) {
+    let resolvedUser = signedInUser ?? null;
+    if (!resolvedUser) {
+      try {
+        const { data } = await withPromiseTimeout(supabase.auth.getUser(), 5_000, "post-login-user-timeout");
+        resolvedUser = data.user ?? null;
+      } catch {
+        // The successful sign-in already wrote the session. Navigation must not
+        // remain blocked just because this optional confirmation timed out.
+      }
+    }
+    if (resolvedUser) {
       await reactivateSignedInAccount();
     }
-    setPostLoginPrompt(userData.user?.id);
-    const metadata = userData.user?.user_metadata ?? {};
+    setPostLoginPrompt(resolvedUser?.id);
+    const metadata = resolvedUser?.user_metadata ?? {};
     if (metadata.professional_signup_started === true && metadata.is_provider !== true) {
       window.location.assign(`/${locale}/registro/profesional`);
       return;
@@ -175,12 +187,20 @@ export default function LoginPage() {
     setSocialHint(null);
     setOtpEmail(null);
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    });
-    setSubmitting(false);
+    let authResult;
+    try {
+      authResult = await withPromiseTimeout(supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      }), 15_000, "password-login-timeout");
+    } catch {
+      setSubmitting(false);
+      setError(t("loginError"));
+      return;
+    }
+    const { data: authData, error: authError } = authResult;
     if (authError) {
+      setSubmitting(false);
       const code = (authError as { code?: string }).code ?? "";
       const message = authError.message.toLowerCase();
       if (code === "email_not_confirmed" || message.includes("email not confirmed") || message.includes("not confirmed")) {
@@ -203,7 +223,9 @@ export default function LoginPage() {
       setError(t("loginError"));
       return;
     }
-    await finishPasswordLogin(supabase);
+    await finishPasswordLogin(supabase, authData.user);
+    // Keep the button busy during the hard navigation so a second login cannot
+    // start while the destination request is being resolved.
   }
 
   // Carry the post-login destination through the OAuth round-trip via the callback's

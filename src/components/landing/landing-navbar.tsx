@@ -760,7 +760,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const nativeBottomNavVisible = nativeBottomShell && !!user;
   const [profileRole, setProfileRole] = useState<{ userId: string; role: string | null } | null>(null);
   const [accountBusinessName, setAccountBusinessName] = useState("");
-  const isHomePage = pathname === "/";
+  // Depending on whether this render comes from an i18n client transition or a
+  // hard refresh, usePathname can expose the home route as `/` or with its
+  // locale prefix (`/es`, `/en`). Treat all three as home so the compact search
+  // is controlled only by the hero sentinel, never by the URL representation.
+  const isHomePage = pathname === "/" || /^\/(?:es|en)\/?$/.test(pathname);
   const isMarketplaceEditor = /\/(?:empleos|ofertas)\/(?:publicar|[^/]+\/editar)\/?$/.test(pathname);
   const isMarketplaceRoute = /\/(?:empleos|ofertas)(?:\/|$)/.test(pathname);
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);

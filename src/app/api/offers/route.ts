@@ -3,10 +3,20 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_MONEY_AMOUNT, MAX_OFFER_QUANTITY } from "@/lib/forms/numeric-validation";
 import { OFFER_PRICE_UNITS, OFFER_TYPES, sanitizeOfferImages } from "@/lib/offers";
 import { crTodayISO } from "@/lib/time-cr";
+import { revalidatePath } from "next/cache";
 
 const STATUSES = new Set(["draft", "published", "paused", "expired", "sold_out"]);
 const CURRENCIES = new Set(["CRC", "USD"]);
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
+
+function revalidateOfferViews(id?: string | null) {
+  for (const locale of ["es", "en"]) {
+    revalidatePath(`/${locale}/ofertas`);
+    revalidatePath(`/${locale}/dashboard/profesional`);
+    revalidatePath(`/${locale}/profesionales/[slug]`, "page");
+    if (id) revalidatePath(`/${locale}/ofertas/${id}`);
+  }
+}
 
 function integer(value: unknown, minimum: number, maximum: number, nullable = false) {
   if (nullable && (value === null || value === "" || value === undefined)) return null;
@@ -66,9 +76,32 @@ export async function POST(req: NextRequest) {
       console.error("[POST /api/offers] save failed", error);
       return NextResponse.json({ error: "No pudimos guardar la oferta. Inténtalo nuevamente." }, { status: 500 });
     }
+    revalidateOfferViews(data.id);
     return NextResponse.json({ id: data.id });
   } catch (error) {
     console.error("[POST /api/offers] unexpected failure", error);
     return NextResponse.json({ error: "No pudimos publicar la oferta. Inténtalo nuevamente." }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const id = typeof body.id === "string" ? body.id : "";
+    const status = typeof body.status === "string" ? body.status : "";
+    if (!id || !STATUSES.has(status)) return NextResponse.json({ error: "Estado de oferta no válido." }, { status: 400 });
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    const { data: offer } = await supabase.from("professional_offers").select("professional_id, professionals!inner(profile_id)").eq("id", id).maybeSingle();
+    const owner = offer?.professionals as unknown as { profile_id?: string } | null;
+    if (!offer || owner?.profile_id !== user.id) return NextResponse.json({ error: "No tienes permiso para modificar esta oferta." }, { status: 403 });
+    const { error } = await supabase.from("professional_offers").update({ status }).eq("id", id).eq("professional_id", offer.professional_id);
+    if (error) throw error;
+    revalidateOfferViews(id);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[PATCH /api/offers] status update failed", error);
+    return NextResponse.json({ error: "No pudimos actualizar la oferta." }, { status: 500 });
   }
 }

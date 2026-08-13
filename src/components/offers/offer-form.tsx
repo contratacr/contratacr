@@ -11,7 +11,13 @@ import { PROVINCES, getCantonById, getCantonsByProvince, getProvinceById } from 
 import { crTodayISO } from "@/lib/time-cr";
 import { MAX_MONEY_AMOUNT, MAX_OFFER_QUANTITY, formatNumberForMessage, isWholeNumberInRange, parseOptionalWholeNumber } from "@/lib/forms/numeric-validation";
 import { marketplaceLocale, offerPriceUnitLabel, offerTypeLabel } from "@/lib/marketplace-copy";
-import { uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import {
+  getImageUploadPreparationErrorCode,
+  prepareImageForUpload,
+  uploadPhotoFormDataWithRetry,
+} from "@/lib/client-image-upload";
+import { IMAGE_ACCEPT } from "@/lib/upload-validation";
+import { invalidateAppData } from "@/lib/app-data-invalidation";
 
 type OfferFormProps = {
   professionalId: string;
@@ -68,6 +74,8 @@ const OFFER_FORM_COPY = {
     save: "Guardar cambios",
     publish: "Publicar oferta",
     uploadFailed: "No pudimos subir una imagen.",
+    uploadTooLarge: "La imagen es demasiado grande y no pudimos optimizarla. Prueba con otra foto.",
+    uploadUnsupported: "Ese formato de imagen no es compatible. Usa JPG, PNG, WEBP, HEIC, HEIF o GIF.",
     titleError: "Escribe un título de al menos 3 caracteres.",
     serviceError: "Selecciona un servicio de ContrataCR de las sugerencias.",
     descriptionError: "Describe la oferta con al menos 20 caracteres.",
@@ -123,6 +131,8 @@ const OFFER_FORM_COPY = {
     save: "Save changes",
     publish: "Post offer",
     uploadFailed: "We could not upload an image.",
+    uploadTooLarge: "The image is too large and could not be optimized. Try another photo.",
+    uploadUnsupported: "That image format is not supported. Use JPG, PNG, WEBP, HEIC, HEIF, or GIF.",
     titleError: "Enter a title with at least 3 characters.",
     serviceError: "Select a ContrataCR service from the suggestions.",
     descriptionError: "Describe the offer with at least 20 characters.",
@@ -198,14 +208,40 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
 
   async function uploadImages() {
     const urls: string[] = [];
+    const uploadedFiles = new Set<File>();
+    const preserveCompletedUploads = () => {
+      if (!urls.length) return;
+      setExistingImageUrls((current) => sanitizeOfferImages([...current, ...urls]));
+      setFiles((current) => current.filter((file) => !uploadedFiles.has(file)));
+    };
     for (const file of files) {
-      const body = new FormData();
-      body.append("file", file);
-      body.append("type", "portfolio");
-      const response = await uploadPhotoFormDataWithRetry(body);
-      if (!response.ok || !response.data.url) throw new Error(copy.uploadFailed);
-      urls.push(response.data.url);
+      try {
+        // Mobile camera photos commonly exceed the request-body limit. Resize and
+        // normalize them before the request, matching the profile/gallery flow.
+        const preparedFile = await prepareImageForUpload(file, { maxDimension: 1600 });
+        const body = new FormData();
+        body.append("file", preparedFile);
+        body.append("type", "portfolio");
+        const response = await uploadPhotoFormDataWithRetry(body);
+        if (!response.ok || !response.data.url) {
+          const serverMessage = response.data.error ?? "";
+          if (/supera el límite|too large/i.test(serverMessage)) throw new Error(copy.uploadTooLarge);
+          if (/formato no permitido|not supported/i.test(serverMessage)) throw new Error(copy.uploadUnsupported);
+          throw new Error(copy.uploadFailed);
+        }
+        urls.push(response.data.url);
+        uploadedFiles.add(file);
+      } catch (uploadError) {
+        // Do not upload successful files again when a later image fails or the
+        // user retries publishing; that also prevents avoidable rate limiting.
+        preserveCompletedUploads();
+        const code = getImageUploadPreparationErrorCode(uploadError);
+        if (code === "too_large") throw new Error(copy.uploadTooLarge);
+        if (code === "unsupported") throw new Error(copy.uploadUnsupported);
+        throw uploadError instanceof Error ? uploadError : new Error(copy.uploadFailed);
+      }
     }
+    preserveCompletedUploads();
     return sanitizeOfferImages(urls);
   }
 
@@ -272,6 +308,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
       const response = await fetch("/api/offers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data?.id) throw new Error(typeof data?.error === "string" ? data.error : copy.saveError);
+      invalidateAppData("offers");
       if (presentation === "modal") {
         onSaved?.(data.id);
         setSaving(false);
@@ -282,7 +319,8 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
-      setError(message === copy.uploadFailed || message.startsWith("No pudimos") || message.startsWith("We could not") ? message : copy.publishError);
+      const knownUploadError = [copy.uploadFailed, copy.uploadTooLarge, copy.uploadUnsupported].some((known) => known === message);
+      setError(knownUploadError || message.startsWith("No pudimos") || message.startsWith("We could not") ? message : copy.publishError);
       setSaving(false);
     }
   }
@@ -415,7 +453,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
                   <button type="button" onClick={() => setFiles((current) => current.filter((item) => item !== file))} className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full bg-white/95 text-[#162543] shadow"><X className="h-4 w-4" /></button>
                 </div>
               ))}
-              {existingImageUrls.length + files.length < 5 && <label className="grid aspect-square cursor-pointer place-items-center rounded-lg border border-dashed border-[#9bdcf2] bg-[#f2fbfe] text-center text-xs font-bold text-[#008fc3]"><span><ImagePlus className="mx-auto mb-1 h-6 w-6" />{copy.addPhoto}</span><input type="file" accept="image/*" multiple className="sr-only" onChange={(event) => addFiles(event.target.files)} /></label>}
+              {existingImageUrls.length + files.length < 5 && <label className="grid aspect-square cursor-pointer place-items-center rounded-lg border border-dashed border-[#9bdcf2] bg-[#f2fbfe] text-center text-xs font-bold text-[#008fc3]"><span><ImagePlus className="mx-auto mb-1 h-6 w-6" />{copy.addPhoto}</span><input type="file" accept={IMAGE_ACCEPT} multiple className="sr-only" onChange={(event) => { addFiles(event.target.files); event.currentTarget.value = ""; }} /></label>}
             </div>
             <FieldError>{fieldErrors.images}</FieldError>
           </section>

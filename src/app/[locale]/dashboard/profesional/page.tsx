@@ -55,6 +55,7 @@ import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { DashboardRouteLoading } from "@/components/ui/route-loading";
+import { withPromiseTimeout } from "@/lib/promise-timeout";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import {
   dashboardBootstrapKey,
@@ -865,11 +866,23 @@ export default function DashboardPage() {
     const requestSequence = ++proFetchSequenceRef.current;
     const supabase = createClient();
     setProLoadError(false);
-    const { data, error } = await supabase
-      .from("professionals")
-      .select("*")
-      .eq("profile_id", user.id)
-      .maybeSingle();
+    let result;
+    try {
+      result = await withPromiseTimeout(
+        supabase.from("professionals").select("*").eq("profile_id", user.id).maybeSingle(),
+        8_000,
+        "dashboard-professional-timeout",
+      );
+    } catch (error) {
+      if (requestSequence !== proFetchSequenceRef.current) return null;
+      console.error("[dashboard] professional load timed out or failed", error);
+      if (!silent) {
+        setProLoadError(true);
+        setLoading(false);
+      }
+      return null;
+    }
+    const { data, error } = result;
 
     // A slower request started before a save must never overwrite the freshly
     // saved professional data when it finishes later.
@@ -897,7 +910,12 @@ export default function DashboardPage() {
   const fetchProfile = useCallback(async () => {
     if (!user) return null;
     const supabase = createClient();
-    const { data } = await supabase.rpc("get_my_profile");
+    let data = null;
+    try {
+      ({ data } = await withPromiseTimeout(supabase.rpc("get_my_profile"), 8_000, "dashboard-profile-timeout"));
+    } catch (error) {
+      console.error("[dashboard] profile load timed out or failed", error);
+    }
     if (data) {
       setProfile((current) => JSON.stringify(current) === JSON.stringify(data) ? current : data);
       cacheDashboardBootstrap({ profile: data });

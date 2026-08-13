@@ -5,7 +5,6 @@ import { ArrowLeft, BadgePercent, ChevronDown, MoreVertical, Plus } from "lucide
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { effectiveOfferStatus, formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
 import { Modal } from "@/components/ui/modal";
 import { OfferForm } from "@/components/offers/offer-form";
@@ -14,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { crTodayISO } from "@/lib/time-cr";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { marketplaceLocale, offerTypeLabel } from "@/lib/marketplace-copy";
+import { invalidateAppData } from "@/lib/app-data-invalidation";
 
 const OFFERS_MANAGER_COPY = {
   es: {
@@ -94,8 +94,11 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
   }, [searchParams]);
 
   async function updateStatus(id: string, status: ProfessionalOffer["status"]) {
-    const { error } = await createClient().from("professional_offers").update({ status }).eq("id", id);
-    if (!error) setOffers((current) => current.map((offer) => offer.id === id ? { ...offer, status } : offer));
+    const response = await fetch("/api/offers", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
+    if (response.ok) {
+      setOffers((current) => current.map((offer) => offer.id === id ? { ...offer, status } : offer));
+      invalidateAppData("offers");
+    }
   }
 
   return (

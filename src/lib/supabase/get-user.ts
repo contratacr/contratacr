@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { User } from "@supabase/supabase-js";
+import { withPromiseTimeout } from "@/lib/promise-timeout";
 
 /**
  * getUser() that NEVER throws on a stale/expired/invalid session.
@@ -12,7 +13,7 @@ import type { User } from "@supabase/supabase-js";
  */
 export async function safeGetUser(supabase: SupabaseClient): Promise<User | null> {
   try {
-    const { data, error } = await supabase.auth.getUser();
+    const { data, error } = await withPromiseTimeout(supabase.auth.getUser(), 6_000, "server-auth-timeout");
     if (error) return null;
     return data.user ?? null;
   } catch {

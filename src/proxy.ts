@@ -3,6 +3,7 @@ import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
 import { isUnsafeLocalProductionWrite, unsafeLocalProductionWriteResponse } from "./lib/security/write-guard";
+import { PromiseTimeoutError, withPromiseTimeout } from "./lib/promise-timeout";
 
 const handleI18n = createIntlMiddleware(routing);
 
@@ -108,9 +109,14 @@ export async function proxy(request: NextRequest) {
 
   let user = null;
   try {
-    const { data, error } = await supabase.auth.getUser();
+    const { data, error } = await withPromiseTimeout(supabase.auth.getUser(), 6_000, "proxy-auth-timeout");
     if (!error) user = data.user ?? null;
-  } catch {
+  } catch (error) {
+    // A temporary Supabase/network stall must not leave the previous page behind
+    // an endless route loader or erase a potentially valid session. Let the page
+    // render; its browser auth guard will reconcile the cookie once connectivity
+    // returns. Definite invalid-session responses still follow the cleanup below.
+    if (error instanceof PromiseTimeoutError) return response;
     user = null;
   }
 
