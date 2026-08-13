@@ -83,6 +83,47 @@ async function must(label, promise) {
   return data;
 }
 
+async function removeOrphanedActivityNotifications(profileIds, professionalIds) {
+  const notifications = await must(
+    "activity notifications for canonical actors",
+    supabase
+      .from("notifications")
+      .select("id,data")
+      .eq("type", "followed_professional_activity")
+      .in("user_id", profileIds),
+  );
+  const scopedNotifications = notifications.filter((notification) => (
+    professionalIds.includes(notification.data?.professional_id)
+  ));
+  const activityIds = [...new Set(scopedNotifications
+    .map((notification) => notification.data?.activity_id)
+    .filter((id) => typeof id === "string" && id.length > 0))];
+  if (!activityIds.length) return;
+
+  const activities = await must(
+    "referenced professional activities",
+    supabase.from("professional_activity").select("id").in("id", activityIds),
+  );
+  const existing = new Set(activities.map((activity) => activity.id));
+  const orphanIds = scopedNotifications
+    .filter((notification) => {
+      const activityId = notification.data?.activity_id;
+      return typeof activityId === "string" && activityId.length > 0 && !existing.has(activityId);
+    })
+    .map((notification) => notification.id);
+  if (!orphanIds.length) return;
+
+  await must(
+    "orphaned activity notifications",
+    supabase
+      .from("notifications")
+      .delete()
+      .eq("type", "followed_professional_activity")
+      .in("user_id", profileIds)
+      .in("id", orphanIds),
+  );
+}
+
 async function restoreProductionActors() {
   for (const actor of PRODUCTION_ACTORS) {
     const response = await fetch(`${PRODUCTION_ORIGIN}/api/professionals/${actor.slug}`, {
@@ -558,6 +599,14 @@ async function main() {
     { id: ids.notifications[0], user_id: c.profile.id, type: "direct_message", title: "Mensaje de SG Solutions", message: "Tienes una respuesta sobre la red de oficina.", data: { regressionSeed: SEED, link: `/mensajes/${ids.conversations[0]}` }, read: false, created_at: iso(-1) },
     { id: ids.notifications[1], user_id: s.profile.id, type: "direct_message", title: "Mensaje de ContrataCR", message: "Tienes una propuesta sobre tu página de servicios.", data: { regressionSeed: SEED, link: `/mensajes/${ids.conversations[1]}` }, read: false, created_at: iso(-1) },
   ], { onConflict: "id" }));
+
+  // A test run can be interrupted between deleting a temporary activity and
+  // its follower notification. Repair only dangling references owned by the
+  // two canonical regression actors; the verifier rejects any wider scope.
+  await removeOrphanedActivityNotifications(
+    [c.profile.id, s.profile.id],
+    [c.professional.id, s.professional.id],
+  );
 
   console.log(JSON.stringify({
     seed: SEED,

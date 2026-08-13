@@ -155,14 +155,28 @@ test.describe("@seeded offers, jobs and application lifecycle", () => {
       await expectHealthyPage(page);
     } finally {
       if (jobId) {
-        await admin.from("notifications").delete().contains("data", { job_id: jobId });
-        await admin.from("professional_activity").delete().eq("activity_type", "job").eq("content_id", jobId);
-        await admin.from("job_posts").delete().eq("id", jobId).eq("employer_id", seed.professionalId);
+        const { error: jobNotificationError } = await admin.from("notifications").delete().contains("data", { job_id: jobId });
+        expect(jobNotificationError, "job lifecycle notification cleanup").toBeNull();
+        const { error: jobActivityNotificationError } = await admin.from("notifications").delete().contains("data", { content_id: jobId });
+        expect(jobActivityNotificationError, "job activity notification cleanup").toBeNull();
+        const { error: jobActivityError } = await admin.from("professional_activity").delete()
+          .eq("professional_id", seed.professionalId)
+          .eq("activity_type", "job")
+          .eq("content_id", jobId);
+        expect(jobActivityError, "job activity cleanup").toBeNull();
+        const { error: jobError } = await admin.from("job_posts").delete().eq("id", jobId).eq("employer_id", seed.professionalId);
+        expect(jobError, "job lifecycle cleanup").toBeNull();
       }
       if (offerId) {
-        await admin.from("notifications").delete().contains("data", { content_id: offerId });
-        await admin.from("professional_activity").delete().eq("activity_type", "offer").eq("content_id", offerId);
-        await admin.from("professional_offers").delete().eq("id", offerId).eq("professional_id", seed.professionalId);
+        const { error: offerNotificationError } = await admin.from("notifications").delete().contains("data", { content_id: offerId });
+        expect(offerNotificationError, "offer activity notification cleanup").toBeNull();
+        const { error: offerActivityError } = await admin.from("professional_activity").delete()
+          .eq("professional_id", seed.professionalId)
+          .eq("activity_type", "offer")
+          .eq("content_id", offerId);
+        expect(offerActivityError, "offer activity cleanup").toBeNull();
+        const { error: offerError } = await admin.from("professional_offers").delete().eq("id", offerId).eq("professional_id", seed.professionalId);
+        expect(offerError, "offer lifecycle cleanup").toBeNull();
       }
     }
   });
