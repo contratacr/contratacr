@@ -42,6 +42,7 @@ const actors = {
 const ids = {
   bookings: Array.from({ length: 6 }, (_, index) => `d1000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   projects: Array.from({ length: 6 }, (_, index) => `d2000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
+  opportunities: Array.from({ length: 40 }, (_, index) => `d2100000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   proposals: Array.from({ length: 6 }, (_, index) => `d3000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   jobs: Array.from({ length: 8 }, (_, index) => `d4000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   applications: Array.from({ length: 6 }, (_, index) => `d5000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
@@ -63,8 +64,13 @@ async function must(label, promise) {
 }
 
 async function professional(id, label) {
-  const row = await must(label, db.from("professionals").select("id,profile_id,category_id,provincia_id,canton_id,portfolio_urls").eq("id", id).single());
+  const row = await must(label, db.from("professionals").select("id,profile_id,category_id,professions,provincia_id,canton_id,portfolio_urls").eq("id", id).single());
   return row;
+}
+
+function professionIds(pro) {
+  return [...new Set([...(Array.isArray(pro.professions) ? pro.professions : []), pro.category_id])]
+    .filter((id) => id && id !== "otro");
 }
 
 function booking(id, client, pro, status, offset, suffix) {
@@ -115,6 +121,31 @@ function project(id, client, targetPro, status, index) {
     client_phone_snapshot: client.phone,
     created_at: iso(-12 + index),
     updated_at: iso(-index),
+    created_app_environment: SEED,
+    created_source_host: "test.contratacr.com",
+    created_supabase_project_ref: TEST_PROJECT_REF,
+  };
+}
+
+function opportunity(id, client, targetPro, categoryId, index) {
+  return {
+    id,
+    client_id: client.profileId,
+    category_id: categoryId,
+    title: `${client.name}: oportunidad ${index + 1}`,
+    description: `Oportunidad abierta sin propuesta previa para validar el filtro profesional ${categoryId}.`,
+    provincia_id: targetPro.provincia_id,
+    canton_id: targetPro.canton_id,
+    budget_min: 125000 + index * 10000,
+    budget_max: 275000 + index * 15000,
+    timeline: "Durante este mes",
+    status: "open",
+    accepted_professional_id: null,
+    client_name_snapshot: client.name,
+    client_email_snapshot: client.email,
+    client_phone_snapshot: client.phone,
+    created_at: iso(-1 - index / 100),
+    updated_at: iso(-index / 100),
     created_app_environment: SEED,
     created_source_host: "test.contratacr.com",
     created_supabase_project_ref: TEST_PROJECT_REF,
@@ -196,6 +227,20 @@ async function main() {
     project(ids.projects[5], actors.sg, contrataPro, "cancelled", 5),
   ];
   await must("coverage projects", db.from("projects").upsert(projects, { onConflict: "id" }));
+
+  const opportunityTargets = [
+    { client: actors.sg, pro: contrataPro },
+    { client: actors.contratacr, pro: sgPro },
+  ];
+  const opportunities = opportunityTargets.flatMap(({ client, pro }) =>
+    professionIds(pro).map((categoryId) => ({ client, pro, categoryId })),
+  ).map(({ client, pro, categoryId }, index) =>
+    opportunity(ids.opportunities[index], client, pro, categoryId, index),
+  );
+  if (opportunities.length > ids.opportunities.length) {
+    throw new Error(`Opportunity seed needs ${opportunities.length} deterministic ids.`);
+  }
+  await must("coverage open opportunities", db.from("projects").upsert(opportunities, { onConflict: "id" }));
 
   const proposalStatuses = ["pending", "accepted", "declined", "accepted", "accepted", "declined"];
   const proposals = projects.map((item, index) => {
@@ -309,6 +354,7 @@ async function main() {
     seed: SEED,
     bookings: bookings.length,
     projects: projects.length,
+    opportunities: opportunities.length,
     proposals: proposals.length,
     jobs: jobs.length,
     applications: applications.length,

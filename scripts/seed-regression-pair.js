@@ -249,6 +249,24 @@ async function main() {
   const cName = c.professional.business_name || c.profile.full_name;
   const sName = s.professional.business_name || s.profile.full_name;
 
+  const savedSnapshot = ({ professional, profile }) => ({
+    id: professional.id,
+    slug: professional.slug,
+    fullName: professional.business_name || profile.full_name,
+    avatarUrl: profile.avatar_url || undefined,
+    categoryIcon: "",
+    categoryId: professional.category_id || "",
+    provinceName: "",
+    cantonName: "",
+    ratingAvg: Number(professional.rating_avg) || 0,
+    reviewCount: Number(professional.review_count) || 0,
+    hourlyRate: professional.hourly_rate || undefined,
+    isVerified: professional.is_verified === true,
+    videoconsulta: professional.videoconsulta === true,
+    coverage: { country: professional.coverage_country === true },
+    regressionSeed: SEED,
+  });
+
   await must("availability weekly", supabase.from("availability_weekly").upsert([
     { id: ids.weekly[0], professional_id: c.professional.id, category_id: c.professional.category_id, weekday: 1, start_time: "08:00", end_time: "17:00", slot_minutes: 60 },
     { id: ids.weekly[1], professional_id: s.professional.id, category_id: s.professional.category_id, weekday: 2, start_time: "09:00", end_time: "18:00", slot_minutes: 60 },
@@ -275,8 +293,8 @@ async function main() {
   ], { onConflict: "follower_id,professional_id" }));
 
   await must("saved professionals", supabase.from("saved_professionals").upsert([
-    { client_id: c.profile.id, professional_id: s.professional.id, snapshot: { regressionSeed: SEED, name: sName }, created_at: iso(-4) },
-    { client_id: s.profile.id, professional_id: c.professional.id, snapshot: { regressionSeed: SEED, name: cName }, created_at: iso(-3) },
+    { client_id: c.profile.id, professional_id: s.professional.id, snapshot: savedSnapshot(s), created_at: iso(-4) },
+    { client_id: s.profile.id, professional_id: c.professional.id, snapshot: savedSnapshot(c), created_at: iso(-3) },
   ], { onConflict: "client_id,professional_id" }));
 
   await must("bookings", supabase.from("bookings").upsert([
