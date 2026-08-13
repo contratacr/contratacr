@@ -33,6 +33,10 @@ begin
   set email = 'prod+' || replace(id::text, '-', '') || '@mirror.contratacr.test',
       encrypted_password = crypt(gen_random_uuid()::text, gen_salt('bf')),
       email_confirmed_at = now(),
+      confirmation_token = '',
+      recovery_token = '',
+      email_change_token_new = '',
+      email_change = '',
       raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
       raw_user_meta_data = '{}'::jsonb,
       updated_at = now();
@@ -53,6 +57,10 @@ begin
   set email = 'e2e.client@contratacr.test',
       encrypted_password = crypt(regression_password, gen_salt('bf')),
       email_confirmed_at = now(),
+      confirmation_token = '',
+      recovery_token = '',
+      email_change_token_new = '',
+      email_change = '',
       raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
       raw_user_meta_data = jsonb_build_object('regressionActor', 'ContrataCR'),
       updated_at = now()
@@ -62,6 +70,10 @@ begin
   set email = 'e2e.pro@contratacr.test',
       encrypted_password = crypt(regression_password, gen_salt('bf')),
       email_confirmed_at = now(),
+      confirmation_token = '',
+      recovery_token = '',
+      email_change_token_new = '',
+      email_change = '',
       raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
       raw_user_meta_data = jsonb_build_object('regressionActor', 'SG Solutions'),
       updated_at = now()

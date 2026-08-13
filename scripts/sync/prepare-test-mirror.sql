@@ -29,6 +29,7 @@ delete from auth.users where id not in (select id from production_profile_ids);
 set session_replication_role = replica;
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 )
 select
@@ -39,6 +40,10 @@ select
   'prod+' || replace(source.id::text, '-', '') || '@mirror.contratacr.test',
   crypt(gen_random_uuid()::text, gen_salt('bf')),
   now(),
+  '',
+  '',
+  '',
+  '',
   '{"provider":"email","providers":["email"]}'::jsonb,
   '{}'::jsonb,
   now(),

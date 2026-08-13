@@ -197,7 +197,8 @@ jobs:
             if [ "$rollback_status" -ne 0 ]; then
               echo "::error::The test rollback also failed."
             fi
-            return "$original_status"
+            trap - ERR
+            exit "$original_status"
           }
           trap rollback ERR
 
