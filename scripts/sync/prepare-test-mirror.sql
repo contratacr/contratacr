@@ -1,7 +1,7 @@
 \set ON_ERROR_STOP on
 
-create temporary table production_profile_ids (id uuid primary key);
-\copy production_profile_ids (id) from :'profile_ids_file' with (format csv)
+-- The workflow creates and fills the session-local production_profile_ids
+-- table immediately before including this file in the same psql session.
 
 -- Never copy production sessions, tokens, MFA factors, identities or passwords.
 truncate table auth.sessions, auth.refresh_tokens cascade;
