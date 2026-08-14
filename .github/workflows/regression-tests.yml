@@ -27,8 +27,12 @@ jobs:
     timeout-minutes: 100
     environment: test
     env:
-      PLAYWRIGHT_BASE_URL: https://test.contratacr.com
-      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      # The exhaustive suite runs against a production Next.js server inside
+      # this runner. It must not generate Vercel function/observability usage.
+      PLAYWRIGHT_LOCAL_PRODUCTION: "1"
+      PLAYWRIGHT_PORT: "3000"
+      VERCEL_GIT_COMMIT_SHA: ${{ github.sha }}
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
       # The database mirror workflow owns authenticated fixtures. The legacy
       # Playwright seeder created fake professionals and must never run here.
       E2E_FIXTURES_READY: "1"
@@ -54,7 +58,7 @@ jobs:
           expected_test_sha="$(git rev-parse HEAD)"
           echo "EXPECTED_TEST_SHA=$expected_test_sha" >> "$GITHUB_ENV"
           echo "Checked out test branch for regression."
-          echo "Running regression against $PLAYWRIGHT_BASE_URL"
+          echo "Running regression against a local production Next.js server."
           if [ "${{ github.ref }}" != "refs/heads/test" ]; then
             echo "::error::Regression must be dispatched from the test branch."
             exit 1
@@ -74,34 +78,6 @@ jobs:
           node scripts/ci/validate-supabase-target.mjs api NEXT_PUBLIC_SUPABASE_URL "$EXPECTED_SUPABASE_PROJECT_REF"
           node scripts/ci/validate-supabase-target.mjs db SUPABASE_DB_URL "$EXPECTED_SUPABASE_PROJECT_REF"
 
-      - name: Wait for the exact canonical test deployment
-        run: |
-          set -euo pipefail
-          headers=(-H "Cache-Control: no-cache")
-          if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
-            headers+=(-H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET")
-          fi
-
-          for attempt in $(seq 1 60); do
-            health="$(curl --silent --show-error --location --fail \
-              "${headers[@]}" \
-              "$PLAYWRIGHT_BASE_URL/api/health?expected=$EXPECTED_TEST_SHA&attempt=$attempt" \
-              2>/dev/null || true)"
-            deployed_sha="$(jq -er '.commitSha // empty' <<<"$health" 2>/dev/null || true)"
-
-            if [ "$deployed_sha" = "$EXPECTED_TEST_SHA" ]; then
-              echo "Canonical test deployment is ready at the expected commit."
-              exit 0
-            fi
-
-            if [ "$attempt" -eq 60 ]; then
-              echo "::error::test.contratacr.com did not reach the checked-out test commit within 10 minutes."
-              exit 1
-            fi
-            echo "Waiting for the canonical test deployment ($attempt/60)."
-            sleep 10
-          done
-
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
@@ -113,6 +89,15 @@ jobs:
 
       - name: Ensure private env files are not tracked
         run: npm run security:env
+
+      - name: Typecheck regression and application contracts
+        run: npx tsc --noEmit
+
+      - name: Lint regression contracts
+        run: npx eslint tests/e2e playwright.config.ts
+
+      - name: Build the production application in GitHub Actions
+        run: npm run build
 
       - name: Apply pending test migrations before regression
         run: |
@@ -157,12 +142,6 @@ jobs:
 
       - name: Verify isolated account deletion
         run: npm run test:account-deletion
-
-      - name: Typecheck regression and application contracts
-        run: npx tsc --noEmit
-
-      - name: Lint regression contracts
-        run: npx eslint tests/e2e playwright.config.ts
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium

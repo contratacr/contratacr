@@ -36,14 +36,17 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Regression Tests
 
-The Playwright regression workflow runs against the `test` deployment and refreshes the authorized ContrataCR/SG Solutions fixture pair before running the seeded suite. Configure these secrets in the GitHub `test` environment:
+The exhaustive Playwright workflow builds the checked-out `test` commit in GitHub
+Actions and runs it with `next start` inside the runner. It uses the isolated test
+database, but it does not send the full suite through the hosting provider. Configure
+these secrets in the GitHub `test` environment:
 
-- `VERCEL_AUTOMATION_BYPASS_SECRET`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_DB_URL`
-- `E2E_TEST_PASSWORD`
+- `REGRESSION_TEST_PASSWORD`
+- `ADVERTISING_TEST_PASSWORD`
 
 Seeded tests refuse to run against the production Supabase project. Run `npm run seed:test:full`, verify with `npm run seed:test:verify`, and set `E2E_FIXTURES_READY=1` (loaded automatically with the local `.env.test`) before a local seeded run.
 

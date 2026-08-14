@@ -43,7 +43,12 @@ const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 const localBaseURL = `http://localhost:${port}`;
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || localBaseURL;
 const useLocalServer = !process.env.PLAYWRIGHT_BASE_URL;
-const webServerEnv = loadedTestEnv ? currentEnvWith({ NODE_ENV: "test" }) : undefined;
+const useProductionServer = process.env.PLAYWRIGHT_LOCAL_PRODUCTION === "1";
+const webServerEnv = useProductionServer
+  ? currentEnvWith({ NODE_ENV: "production" })
+  : loadedTestEnv
+    ? currentEnvWith({ NODE_ENV: "test" })
+    : undefined;
 const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const vercelBypassHeaders = vercelBypassSecret
   ? {
@@ -73,7 +78,7 @@ export default defineConfig({
     // All date buckets in ContrataCR are defined in Costa Rica local time.
     // Pin the browser clock so CI (UTC) and local runs agree at day boundaries.
     timezoneId: "America/Costa_Rica",
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     navigationTimeout: 30_000,
@@ -82,7 +87,9 @@ export default defineConfig({
   },
   webServer: useLocalServer
     ? {
-        command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
+        command: useProductionServer
+          ? `npm run start -- --hostname 127.0.0.1 --port ${port}`
+          : `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
         url: localBaseURL,
         env: webServerEnv,
         reuseExistingServer: true,
