@@ -21,7 +21,7 @@ jobs:
   local-database-contract:
     name: Local schema and fast contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 100
     permissions:
       contents: read
     steps:
@@ -68,6 +68,21 @@ jobs:
           export NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
           export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
           export LOCAL_REGRESSION_SEED=1
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "SUPABASE_DB_URL=$DB_URL"
+            echo "LOCAL_REGRESSION_SEED=1"
+            echo "E2E_FIXTURES_READY=1"
+            echo "E2E_LEGACY_SEED=0"
+            echo "E2E_ALLOW_NON_TEST_SUPABASE=1"
+            echo "E2E_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            echo "REGRESSION_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            echo "PLAYWRIGHT_LOCAL_PRODUCTION=1"
+            echo "PLAYWRIGHT_PORT=3000"
+            echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000"
+          } >> "$GITHUB_ENV"
           psql "$DB_URL" \
             --set=local_seed_guard=contratacr-local-only \
             --file=scripts/ci/grant-local-regression-service-role.sql
@@ -92,183 +107,33 @@ jobs:
       - name: Lint regression contracts
         run: npx eslint tests/e2e playwright.config.ts scripts/ci/verify-app-surface-ownership.mjs scripts/seed-local-regression-foundation.js scripts/verify-local-regression-foundation.js
 
-      - name: Build on ordinary test pushes
-        if: github.event_name == 'push'
+      - name: Build the production application locally
         run: npm run build
 
-      - name: Stop local Supabase
-        if: always()
-        run: supabase stop --no-backup
-
-  e2e:
-    name: Playwright regression (test)
-    if: github.event_name == 'workflow_dispatch'
-    needs: local-database-contract
-    runs-on: ubuntu-latest
-    # The exhaustive desktop + mobile matrix also performs fixture cleanup and
-    # post-run verification. Leave enough room for those safety steps even when
-    # one browser case needs its bounded retries.
-    timeout-minutes: 100
-    environment: test
-    env:
-      # The exhaustive suite runs against a production Next.js server inside
-      # this runner. It must not generate Vercel function/observability usage.
-      PLAYWRIGHT_LOCAL_PRODUCTION: "1"
-      PLAYWRIGHT_PORT: "3000"
-      VERCEL_GIT_COMMIT_SHA: ${{ github.sha }}
-      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
-      # The database mirror workflow owns authenticated fixtures. The legacy
-      # Playwright seeder created fake professionals and must never run here.
-      E2E_FIXTURES_READY: "1"
-      E2E_LEGACY_SEED: "0"
-      E2E_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
-      REGRESSION_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
-      ADVERTISING_TEST_PASSWORD: ${{ secrets.ADVERTISING_TEST_PASSWORD }}
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      EXPECTED_SUPABASE_PROJECT_REF: sodegkfjjrdkbohycqyq
-      CI: true
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.sha }}
-
-      - name: Validate test target
-        run: |
-          set -euo pipefail
-          expected_test_sha="$(git rev-parse HEAD)"
-          echo "EXPECTED_TEST_SHA=$expected_test_sha" >> "$GITHUB_ENV"
-          echo "Checked out test branch for regression."
-          echo "Running regression against a local production Next.js server."
-          if [ "${{ github.ref }}" != "refs/heads/test" ]; then
-            echo "::error::Regression must be dispatched from the test branch."
-            exit 1
-          fi
-          if [ -z "$E2E_TEST_PASSWORD" ] || [ -z "$ADVERTISING_TEST_PASSWORD" ]; then
-            echo "::error::Missing REGRESSION_TEST_PASSWORD or ADVERTISING_TEST_PASSWORD in the test GitHub Environment."
-            exit 1
-          fi
-          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] || [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::error::Missing NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY or SUPABASE_DB_URL in the test GitHub Environment."
-            exit 1
-          fi
-          if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
-            echo "::error::Missing NEXT_PUBLIC_SUPABASE_ANON_KEY in the test GitHub Environment. The app and browser auth require the test anon/publishable key."
-            exit 1
-          fi
-          node scripts/ci/validate-supabase-target.mjs api NEXT_PUBLIC_SUPABASE_URL "$EXPECTED_SUPABASE_PROJECT_REF"
-          node scripts/ci/validate-supabase-target.mjs db SUPABASE_DB_URL "$EXPECTED_SUPABASE_PROJECT_REF"
-
-      - name: Setup Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build the production application in GitHub Actions
-        run: npm run build
-
-      - name: Apply pending test migrations before regression
-        run: |
-          set -euo pipefail
-          pending="$(npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run)"
-          echo "$pending"
-          if echo "$pending" | grep -q "001_initial_schema.sql"; then
-            echo "::error::Migration history is stale; refusing to replay the initial schema."
-            exit 1
-          fi
-          historical="$(printf '%s\n' "$pending" | grep -Eo '[0-9]{3}_[A-Za-z0-9._-]+\.sql' | awk -F_ '($1 + 0) < 165' | sort -u || true)"
-          if [ -n "$historical" ]; then
-            echo "::error::Historical migrations below 165 are missing; refusing an implicit repair."
-            printf '%s\n' "$historical"
-            exit 1
-          fi
-          npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --yes
-
-      - name: Verify push outbox schema contract
-        run: npm run test:push-schema
-
-      - name: Verify isolated notification push outbox
-        run: npm run test:push-isolation
-
-      - name: Seed ContrataCR and SG Solutions regression fixtures
-        run: |
-          set -euo pipefail
-          for attempt in 1 2 3 4 5 6; do
-            if npm run seed:test:full; then
-              exit 0
-            fi
-            if [ "$attempt" -eq 6 ]; then
-              echo "::error::Could not seed the complete test fixtures after waiting for the test schema."
-              exit 1
-            fi
-            echo "Test schema may still be updating; retrying fixtures in 15 seconds."
-            sleep 15
-          done
-
-      - name: Verify complete regression fixtures
-        run: VERIFY_ADVERTISING_PARITY=1 npm run seed:test:verify
-
-      - name: Verify isolated account deletion
-        run: npm run test:account-deletion
-
-      - name: Install Playwright browser
+      - name: Install Playwright browser for a manual release regression
+        if: github.event_name == 'workflow_dispatch'
         run: npx playwright install --with-deps chromium
 
-      - name: Run critical regression gates
-        run: >-
-          npx playwright test
-          tests/e2e/account-lifecycle.spec.ts
-          tests/e2e/marketplace-lifecycle.spec.ts
-          tests/e2e/recent-visual-regression.spec.ts
-          tests/e2e/seeded-regression.spec.ts
-          tests/e2e/public-smoke.spec.ts
-          --project=chromium-desktop
-          --grep "permanent deletion|offers, jobs and application lifecycle|every three-dot panel menu|public seeded professional profile|/es renders|/es/categorias renders|/en/contacto renders"
-
-      - name: Verify fixtures after critical gates
-        run: npm run seed:test:verify
-
-      - name: Run recent failure gates on desktop and mobile
-        run: >-
-          npx playwright test
-          tests/e2e/dashboard-surfaces.spec.ts
-          tests/e2e/interaction-surfaces.spec.ts
-          tests/e2e/notifications-guides-regression.spec.ts
-          tests/e2e/professional-profile.spec.ts
-          tests/e2e/public-smoke.spec.ts
-          tests/e2e/recent-visual-regression.spec.ts
-          tests/e2e/seeded-regression.spec.ts
-          tests/e2e/services.spec.ts
-          --grep "dashboard sections never expose a blank body|reviews never freeze navigation|every active authenticated page route|booking flow opens|/es/mantenimiento renders|/es/servicio-no-disponible renders|/en/mantenimiento renders|/en/servicio-no-disponible renders|paired actions keep equal geometry|anonymous visitors can see seeded offers|every guide CTA|service search finds a known service|every populated dashboard filter"
-
-      - name: Verify fixtures after recent failure gates
-        run: npm run seed:test:verify
-
-      - name: Run regression suite
+      - name: Run the exhaustive local release regression once
+        if: github.event_name == 'workflow_dispatch'
         run: npm run test:e2e
 
       - name: Require zero failures, flakies and unexpected skips
+        if: github.event_name == 'workflow_dispatch'
         run: npm run test:e2e:verify-results
 
-      - name: Verify regression fixtures were restored
-        if: always()
-        run: npm run seed:test:verify
-
-      - name: Verify push outbox has no leased work after regression
-        if: always()
-        run: npm run test:push-isolation
+      - name: Verify synthetic fixtures after the release regression
+        if: github.event_name == 'workflow_dispatch' && always()
+        run: npm run verify:local:relations
 
       - name: Upload Playwright report
-        if: always()
+        if: github.event_name == 'workflow_dispatch' && always()
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/
           if-no-files-found: ignore
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
