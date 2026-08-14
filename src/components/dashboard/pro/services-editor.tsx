@@ -770,7 +770,8 @@ export function ServicesEditor({
                 onClick={handleFormSave}
                 loading={saving}
                 disabled={saving || imageUploading}
-                className="min-w-0 flex-1 select-none sm:flex-none"
+                data-testid="service-edit-save"
+                className="min-w-0 flex-1 select-none sm:min-w-[10.5rem] sm:flex-none"
               >
                 {saving
                   ? t("saving")

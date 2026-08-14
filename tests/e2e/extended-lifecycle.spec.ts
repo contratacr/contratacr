@@ -173,9 +173,18 @@ test.describe("@seeded extended lifecycle", () => {
     const admin = regressionAdminClient();
     const marker = `E2E profile ${Date.now()}`;
     let account: DisposableAccount | undefined;
+    let releaseServiceSave: (() => void) | undefined;
 
     try {
       account = await createDisposableAccount({ prefix: "profile-service", professional: true });
+      const { data: serviceFixture, error: serviceFixtureError } = await admin
+        .from("professionals")
+        .select("portfolio_urls")
+        .eq("id", account.professionalId!)
+        .single();
+      if (serviceFixtureError) throw serviceFixtureError;
+      const reusableImageUrl = Array.isArray(serviceFixture.portfolio_urls) ? serviceFixture.portfolio_urls[0] : null;
+      expect(reusableImageUrl, "The disposable service editor needs one reusable image").toBeTruthy();
       await loginAs(page, account.email, account.password);
       await gotoOK(page, "/es/dashboard/profesional?tab=profile&mode=offer");
       await page.getByRole("button", { name: /Datos b.sicos.*Foto, nombre y descripci/i }).click();
@@ -194,7 +203,64 @@ test.describe("@seeded extended lifecycle", () => {
       const dialog = page.getByRole("dialog").filter({ has: page.locator("textarea") });
       await expect(dialog).toBeVisible();
       await dialog.locator("textarea").fill(`${marker} service`);
-      await dialog.getByRole("button", { name: /Guardar cambios/i }).click();
+
+      const month = dialog.getByRole("button", { name: /Enero|January/i }).filter({ visible: true });
+      const year = dialog.getByRole("button", { name: /^2020$/i }).filter({ visible: true });
+      await expect(month).toHaveCount(1);
+      await expect(year).toHaveCount(1);
+      await year.click();
+      await expect(page.locator("[data-selectmenu-popup]")).toHaveCount(1);
+      await page.getByRole("option", { name: "2024", exact: true }).click();
+      await month.click();
+      const monthPopup = page.locator("[data-selectmenu-popup]");
+      await expect(monthPopup).toHaveCount(1);
+      const popupBox = await monthPopup.boundingBox();
+      expect(popupBox, "The month popup needs visible geometry").not.toBeNull();
+      expect(popupBox!.x).toBeGreaterThanOrEqual(0);
+      expect(popupBox!.x + popupBox!.width).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
+      expect(popupBox!.y).toBeGreaterThanOrEqual(0);
+      expect(popupBox!.y + popupBox!.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1);
+      await page.getByRole("option", { name: /Febrero|February/i }).click();
+
+      await page.route("**/api/upload/photo", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ url: reusableImageUrl, publicId: "regression/reused-service-fixture" }),
+        });
+      });
+      await dialog.locator('input[type="file"]').setInputFiles({
+        name: "e2e-service.png",
+        mimeType: "image/png",
+        buffer: ONE_PIXEL_PNG,
+      });
+      const preview = dialog.locator("img").first();
+      await expect(preview).toBeVisible();
+      await expect(preview).toHaveAttribute("src", reusableImageUrl!);
+      const [dialogBox, previewBox] = await Promise.all([dialog.boundingBox(), preview.boundingBox()]);
+      expect(dialogBox, "The service dialog needs visible geometry").not.toBeNull();
+      expect(previewBox, "The service image needs visible geometry").not.toBeNull();
+      expect(previewBox!.x).toBeGreaterThanOrEqual(dialogBox!.x);
+      expect(previewBox!.x + previewBox!.width).toBeLessThanOrEqual(dialogBox!.x + dialogBox!.width + 1);
+
+      const save = dialog.getByTestId("service-edit-save");
+      const idleBox = await save.boundingBox();
+      expect(idleBox, "The service save action needs visible geometry").not.toBeNull();
+      const saveGate = new Promise<void>((resolve) => { releaseServiceSave = resolve; });
+      await page.route("**/rest/v1/professionals*", async (route) => {
+        if (route.request().method() === "PATCH" && route.request().postData()?.includes(`${marker} service`)) {
+          await saveGate;
+        }
+        await route.continue();
+      });
+      await save.click();
+      await expect(save).toContainText(/Guardando|Saving/i);
+      const loadingBox = await save.boundingBox();
+      expect(loadingBox, "The loading save action needs visible geometry").not.toBeNull();
+      expect(Math.abs(loadingBox!.width - idleBox!.width)).toBeLessThanOrEqual(1);
+      expect(Math.abs(loadingBox!.height - idleBox!.height)).toBeLessThanOrEqual(1);
+      releaseServiceSave!();
+      releaseServiceSave = undefined;
       await expect(dialog).toBeHidden();
       await expect(serviceCard).toContainText(`${marker} service`);
       await expect.poll(async () => {
@@ -203,6 +269,7 @@ test.describe("@seeded extended lifecycle", () => {
         return services.some((service) => service.description === `${marker} service`);
       }).toBe(true);
     } finally {
+      releaseServiceSave?.();
       await cleanupDisposableAccount(account);
     }
   });
