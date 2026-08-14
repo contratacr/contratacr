@@ -16,9 +16,16 @@ if (fs.existsSync(envFile)) {
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 let projectRef = "invalid";
-try { projectRef = new URL(url).hostname.split(".")[0]; } catch {}
-if (projectRef !== TEST_PROJECT_REF || !serviceRole) {
-  throw new Error("Regression coverage seed only runs against the test Supabase project.");
+let parsedSupabaseUrl = null;
+try {
+  parsedSupabaseUrl = new URL(url);
+  projectRef = parsedSupabaseUrl.hostname.split(".")[0];
+} catch {}
+const localRegression = process.env.LOCAL_REGRESSION_SEED === "1"
+  && parsedSupabaseUrl
+  && ["127.0.0.1", "localhost"].includes(parsedSupabaseUrl.hostname);
+if ((projectRef !== TEST_PROJECT_REF && !localRegression) || !serviceRole) {
+  throw new Error("Regression coverage seed only runs against test or explicit loopback regression.");
 }
 
 const db = createClient(url, serviceRole, { auth: { persistSession: false } });

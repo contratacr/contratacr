@@ -34,12 +34,17 @@ if (fs.existsSync(envFile)) {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 let projectRef = "invalid";
+let parsedSupabaseUrl = null;
 try {
-  projectRef = new URL(supabaseUrl).hostname.split(".")[0];
+  parsedSupabaseUrl = new URL(supabaseUrl);
+  projectRef = parsedSupabaseUrl.hostname.split(".")[0];
 } catch {}
+const localRegression = process.env.LOCAL_REGRESSION_SEED === "1"
+  && parsedSupabaseUrl
+  && ["127.0.0.1", "localhost"].includes(parsedSupabaseUrl.hostname);
 
-if (projectRef !== TEST_PROJECT_REF) {
-  throw new Error(`Refusing to seed Supabase project ${projectRef}; expected ${TEST_PROJECT_REF}.`);
+if (projectRef !== TEST_PROJECT_REF && !localRegression) {
+  throw new Error(`Refusing to seed Supabase project ${projectRef}; expected test or explicit loopback regression.`);
 }
 if (!serviceRole) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY for the test project.");
 
@@ -510,7 +515,7 @@ async function enrichActor(actor, kind) {
 }
 
 async function main() {
-  await restoreProductionActors();
+  if (!localRegression) await restoreProductionActors();
   const contratacr = await findActor(PRODUCTION_ACTORS[0]);
   const sg = await findActor(PRODUCTION_ACTORS[1]);
   if (contratacr.profile.id === sg.profile.id) throw new Error("Regression actors must be distinct.");

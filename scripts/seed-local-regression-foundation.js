@@ -62,16 +62,7 @@ async function must(label, promise) {
 }
 
 async function main() {
-  const categories = await must(
-    "local categories",
-    db.from("categories").select("id").in("id", [...new Set(actors.flatMap((actor) => actor.professionIds))]),
-  );
-  const categoryIds = new Set(categories.map((category) => category.id));
   for (const actor of actors) {
-    if (!categoryIds.has(actor.categoryId)) {
-      throw new Error(`Required local category ${actor.categoryId} is missing after migrations.`);
-    }
-
     await must(`local profile ${actor.fullName}`, db.from("profiles").upsert({
       id: actor.profileId,
       email: actor.email,

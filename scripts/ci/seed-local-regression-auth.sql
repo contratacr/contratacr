@@ -7,6 +7,16 @@ begin
   if current_setting('app.local_seed_guard') <> 'contratacr-local-only' then
     raise exception 'Refusing to seed Auth without the local-only guard';
   end if;
+  if exists (
+    select 1
+    from auth.users
+    where id not in (
+      '048f1b3a-23c0-41bc-8728-10f8aed70fdb',
+      '347f5202-8b3e-4c11-8db8-1060ea5e487d'
+    )
+  ) then
+    raise exception 'Refusing to seed a database that is not an isolated local regression stack';
+  end if;
 end $$;
 
 do $$
@@ -14,8 +24,12 @@ begin
   if not exists (select 1 from public.provincias where id = 'sj')
     or not exists (select 1 from public.provincias where id = 'al')
     or not exists (select 1 from public.cantones where id = 'sj-sj' and provincia_id = 'sj')
-    or not exists (select 1 from public.cantones where id = 'al-at' and provincia_id = 'al') then
-    raise exception 'Required local geography fixtures are missing after migrations';
+    or not exists (select 1 from public.cantones where id = 'al-at' and provincia_id = 'al')
+    or not exists (select 1 from public.categories where id = 'desarrollo_web')
+    or not exists (select 1 from public.categories where id = 'diseno_apps')
+    or not exists (select 1 from public.categories where id = 'redes_internet')
+    or not exists (select 1 from public.categories where id = 'soporte_tecnico') then
+    raise exception 'Required local catalog fixtures are missing after migrations';
   end if;
 end $$;
 

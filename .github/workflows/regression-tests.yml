@@ -70,10 +70,15 @@ jobs:
           export LOCAL_REGRESSION_SEED=1
           psql "$DB_URL" \
             --set=local_seed_guard=contratacr-local-only \
+            --file=scripts/ci/grant-local-regression-service-role.sql
+          psql "$DB_URL" \
+            --set=local_seed_guard=contratacr-local-only \
             --set=regression_password="$LOCAL_REGRESSION_PASSWORD" \
             --file=scripts/ci/seed-local-regression-auth.sql
           npm run seed:local:regression
           npm run verify:local:regression
+          npm run seed:local:relations
+          npm run verify:local:relations
 
       - name: Ensure private env files are not tracked
         run: npm run security:env

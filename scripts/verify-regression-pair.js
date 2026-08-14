@@ -17,8 +17,17 @@ const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PU
 const password = process.env.REGRESSION_TEST_PASSWORD || process.env.E2E_TEST_PASSWORD || "";
 const dataOnly = process.argv.includes("--data-only");
 let ref = "invalid";
-try { ref = new URL(url).hostname.split(".")[0]; } catch {}
-if (ref !== TEST_PROJECT_REF || !serviceRole) throw new Error("Fixture verification only runs against the test Supabase project.");
+let parsedSupabaseUrl = null;
+try {
+  parsedSupabaseUrl = new URL(url);
+  ref = parsedSupabaseUrl.hostname.split(".")[0];
+} catch {}
+const localRegression = process.env.LOCAL_REGRESSION_SEED === "1"
+  && parsedSupabaseUrl
+  && ["127.0.0.1", "localhost"].includes(parsedSupabaseUrl.hostname);
+if ((ref !== TEST_PROJECT_REF && !localRegression) || !serviceRole) {
+  throw new Error("Fixture verification only runs against test or explicit loopback regression.");
+}
 if (!anonKey || (!password && !dataOnly)) {
   throw new Error("Fixture verification requires the test anon key and E2E_TEST_PASSWORD unless --data-only is explicit.");
 }
@@ -589,46 +598,60 @@ async function main() {
   const allowedProfiles = new Set([contratacr.profile.id, sg.profile.id]);
 
   const professionals = await must("professionals", admin.from("professionals").select("id,slug,business_name,created_app_environment").limit(5000));
-  assert(professionals.length > 2, "The production professional directory was not mirrored.");
+  assert(
+    localRegression ? professionals.length === 2 : professionals.length > 2,
+    localRegression
+      ? "Local regression must contain exactly the two canonical synthetic professionals."
+      : "The production professional directory was not mirrored.",
+  );
   const { count: publicProfessionalCount, error: publicProfessionalError } = await publicClient
     .from("professionals")
     .select("id", { count: "exact", head: true });
   if (publicProfessionalError) throw new Error(`public professionals: ${publicProfessionalError.message}`);
-  assert((publicProfessionalCount || 0) > 2, "The mirrored directory is not visible through the public test API key.");
+  assert(
+    localRegression ? publicProfessionalCount === 2 : (publicProfessionalCount || 0) > 2,
+    localRegression
+      ? "The two canonical local professionals are not visible through the public API key."
+      : "The mirrored directory is not visible through the public test API key.",
+  );
   const obsolete = professionals.filter((row) =>
     row.slug === "e2e-video-contratacr"
       || /mobile-test-seed|full-app-regression-v1/i.test(row.created_app_environment || ""),
   );
 
-  const advertisingProfiles = await must(
-    "advertising test profile",
-    admin.from("profiles").select("*").eq("email", ADVERTISING_EMAIL),
-  );
-  assert(advertisingProfiles.length === 1, "The isolated advertising test account must exist exactly once.");
-  const advertisingProfile = advertisingProfiles[0];
-  assert(advertisingProfile.role === "professional", "The advertising test account must match the ContrataCR professional panel.");
-  assert(advertisingProfile.onboarding_completed === true, "The advertising test account must be ready for login.");
-  assert(advertisingProfile.is_provider === true, "The advertising test account must include professional data.");
-  assert(advertisingProfile.is_disabled === false, "The advertising test account cannot be disabled.");
-  const advertisingProfessionals = await must(
-    "advertising provider isolation",
-    admin.from("professionals").select("*,profiles(*)").eq("profile_id", advertisingProfile.id),
-  );
-  assert(advertisingProfessionals.length === 1, "The advertising account must have exactly one professional profile.");
-  assert(
-    advertisingProfessionals.every((row) => row.is_available === false && row.is_banned === true),
-    "The advertising professional must stay hidden from public discovery.",
-  );
-  const advertising = { professional: advertisingProfessionals[0], profile: advertisingProfile };
-  assert(Array.isArray(advertising.professional.services) && advertising.professional.services.length, "Advertising needs ContrataCR services.");
-  assert(Array.isArray(advertising.professional.portfolio_items) && advertising.professional.portfolio_items.length, "Advertising needs ContrataCR success cases.");
-  assert(Array.isArray(advertising.professional.certifications) && advertising.professional.certifications.length, "Advertising needs ContrataCR certifications.");
-  assert(Array.isArray(advertising.professional.languages) && advertising.professional.languages.length, "Advertising needs ContrataCR languages.");
+  let advertisingProfile = null;
+  let advertising = null;
+  if (!localRegression) {
+    const advertisingProfiles = await must(
+      "advertising test profile",
+      admin.from("profiles").select("*").eq("email", ADVERTISING_EMAIL),
+    );
+    assert(advertisingProfiles.length === 1, "The isolated advertising test account must exist exactly once.");
+    advertisingProfile = advertisingProfiles[0];
+    assert(advertisingProfile.role === "professional", "The advertising test account must match the ContrataCR professional panel.");
+    assert(advertisingProfile.onboarding_completed === true, "The advertising test account must be ready for login.");
+    assert(advertisingProfile.is_provider === true, "The advertising test account must include professional data.");
+    assert(advertisingProfile.is_disabled === false, "The advertising test account cannot be disabled.");
+    const advertisingProfessionals = await must(
+      "advertising provider isolation",
+      admin.from("professionals").select("*,profiles(*)").eq("profile_id", advertisingProfile.id),
+    );
+    assert(advertisingProfessionals.length === 1, "The advertising account must have exactly one professional profile.");
+    assert(
+      advertisingProfessionals.every((row) => row.is_available === false && row.is_banned === true),
+      "The advertising professional must stay hidden from public discovery.",
+    );
+    advertising = { professional: advertisingProfessionals[0], profile: advertisingProfile };
+    assert(Array.isArray(advertising.professional.services) && advertising.professional.services.length, "Advertising needs ContrataCR services.");
+    assert(Array.isArray(advertising.professional.portfolio_items) && advertising.professional.portfolio_items.length, "Advertising needs ContrataCR success cases.");
+    assert(Array.isArray(advertising.professional.certifications) && advertising.professional.certifications.length, "Advertising needs ContrataCR certifications.");
+    assert(Array.isArray(advertising.professional.languages) && advertising.professional.languages.length, "Advertising needs ContrataCR languages.");
 
-  if (process.env.VERIFY_ADVERTISING_PARITY === "1") {
-    await verifyAdvertisingDataParity(contratacr, advertising);
+    if (process.env.VERIFY_ADVERTISING_PARITY === "1") {
+      await verifyAdvertisingDataParity(contratacr, advertising);
+    }
   }
-  await verifyPrivateActorIsolation([contratacr, sg], [advertising]);
+  await verifyPrivateActorIsolation([contratacr, sg], advertising ? [advertising] : []);
 
   await Promise.all(Object.entries(REQUIRED_FIXTURE_IDS).map(([label, ids]) => {
     const tableByLabel = {
@@ -740,15 +763,17 @@ async function main() {
       if (error) throw new Error(`Regression login failed for ${email}: ${error.message}`);
       await client.auth.signOut();
     }
-    const advertisingPassword = process.env.ADVERTISING_TEST_PASSWORD || "";
-    assert(advertisingPassword.length >= 16, "ADVERTISING_TEST_PASSWORD is required for the manual test account.");
-    const advertisingClient = createClient(url, anonKey, { auth: { persistSession: false } });
-    const { error: advertisingLoginError } = await advertisingClient.auth.signInWithPassword({
-      email: ADVERTISING_EMAIL,
-      password: advertisingPassword,
-    });
-    if (advertisingLoginError) throw new Error(`Advertising login failed: ${advertisingLoginError.message}`);
-    await advertisingClient.auth.signOut();
+    if (!localRegression) {
+      const advertisingPassword = process.env.ADVERTISING_TEST_PASSWORD || "";
+      assert(advertisingPassword.length >= 16, "ADVERTISING_TEST_PASSWORD is required for the manual test account.");
+      const advertisingClient = createClient(url, anonKey, { auth: { persistSession: false } });
+      const { error: advertisingLoginError } = await advertisingClient.auth.signInWithPassword({
+        email: ADVERTISING_EMAIL,
+        password: advertisingPassword,
+      });
+      if (advertisingLoginError) throw new Error(`Advertising login failed: ${advertisingLoginError.message}`);
+      await advertisingClient.auth.signOut();
+    }
   }
 
   console.log(JSON.stringify({
@@ -756,8 +781,8 @@ async function main() {
     authVerified: !dataOnly,
     professionals: professionals.length,
     actors: [contratacr.professional.business_name, sg.professional.business_name],
-    privateCommunicationActors: [...allowedProfiles, advertisingProfile.id],
-    manualTestAccounts: [ADVERTISING_EMAIL],
+    privateCommunicationActors: [...allowedProfiles, ...(advertisingProfile ? [advertisingProfile.id] : [])],
+    manualTestAccounts: localRegression ? [] : [ADVERTISING_EMAIL],
   }, null, 2));
 }
 
