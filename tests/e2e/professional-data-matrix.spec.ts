@@ -15,7 +15,7 @@ type ProfessionalShape = {
   availability_public: boolean | null;
   is_available: boolean | null;
   is_banned: boolean | null;
-  profiles: { full_name?: string; avatar_url?: string | null; is_disabled?: boolean } | Array<{ full_name?: string; avatar_url?: string | null; is_disabled?: boolean }> | null;
+  profiles: { full_name?: string; email?: string; avatar_url?: string | null; is_disabled?: boolean } | Array<{ full_name?: string; email?: string; avatar_url?: string | null; is_disabled?: boolean }> | null;
 };
 
 function profileOf(row: ProfessionalShape) {
@@ -58,14 +58,21 @@ test.describe("@seeded production-mirror professional data shapes", () => {
     test.slow();
     const { data, error } = await regressionAdminClient()
       .from("professionals")
-      .select("id,slug,business_name,professions,services,portfolio_items,verification_status,videoconsulta,coverage_country,availability_public,is_available,is_banned,profiles(full_name,avatar_url,is_disabled)")
+      .select("id,slug,business_name,professions,services,portfolio_items,verification_status,videoconsulta,coverage_country,availability_public,is_available,is_banned,profiles(full_name,email,avatar_url,is_disabled)")
       .order("created_at", { ascending: true });
     if (error) throw error;
     const all = ((data ?? []) as unknown as ProfessionalShape[])
       .filter((row) => row.slug && !row.is_banned && !profileOf(row)?.is_disabled)
       .sort((left, right) => left.slug.localeCompare(right.slug));
     expect(all.length, "The production mirror should expose professional profiles").toBeGreaterThan(1);
-    expect(all.some((row) => /^e2e-|^test-/i.test(row.slug))).toBe(false);
+    expect(
+      all.some((row) => {
+        const email = profileOf(row)?.email ?? "";
+        return /^e2e-|^regression-disposable-/i.test(row.slug)
+          || (email.endsWith("@contratacr.test") && !["e2e.client@contratacr.test", "e2e.pro@contratacr.test"].includes(email));
+      }),
+      "Only the two protected regression actors may differ from the production profile mirror",
+    ).toBe(false);
 
     const matrix = representativeMatrix(all);
     expect(matrix.length, "The mirror should cover several materially different profile shapes").toBeGreaterThanOrEqual(5);

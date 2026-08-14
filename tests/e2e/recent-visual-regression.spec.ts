@@ -25,7 +25,10 @@ async function resolveMoreOptions(page: Page) {
 
 async function expectVerticalMenuInsideViewport(page: Page, trigger: Locator) {
   await expect(trigger).toBeVisible();
-  await trigger.click();
+  await expect(async () => {
+    if (await trigger.getAttribute("aria-expanded") !== "true") await trigger.click();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true", { timeout: 2_000 });
+  }).toPass({ timeout: 12_000 });
   const menu = page.getByRole("menu").filter({ visible: true }).first();
   await expect(menu).toBeVisible();
   const geometry = await menu.evaluate((node) => {

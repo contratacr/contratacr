@@ -850,12 +850,12 @@ test.describe("@seeded core regression", () => {
     await resetAuth(page);
     await gotoOK(page, "/es/empleos");
 
-    await expect(page.getByText("E2E Asistente de operaciones").first()).toBeVisible();
-    await expect(page.getByText("E2E Desarrollador web remoto").first()).toBeVisible();
+    await expect(page.getByText(seed.publishedJobTitle, { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(seed.secondaryJobTitle, { exact: true }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, `/es/empleos/${seed.publishedJobId}`);
-    await expect(page.getByRole("heading", { name: "E2E Asistente de operaciones" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: seed.publishedJobTitle, exact: true }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Responsabilidades" })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
@@ -884,11 +884,11 @@ test.describe("@seeded core regression", () => {
     await gotoOK(page, "/en/empleos");
 
     await expect(page.getByRole("heading", { name: "Jobs" })).toBeVisible();
-    await expect(page.getByText("E2E Asistente de operaciones").first()).toBeVisible();
+    await expect(page.getByText(seed.publishedJobTitle, { exact: true }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, `/en/empleos/${seed.publishedJobId}`);
-    await expect(page.getByRole("heading", { name: "E2E Asistente de operaciones" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: seed.publishedJobTitle, exact: true }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Responsibilities" })).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/(?:jobs?\.|search\.filters\.|proPanel\.|verificationPanel\.)/);
     await expectNoHorizontalOverflow(page);

@@ -435,14 +435,17 @@ test.describe("@account disposable account lifecycle", () => {
           });
         if (error) throw error;
       }
-      // Deliberately nonexistent provider IDs keep regression non-destructive.
-      // This exercises ownership/registry isolation, not a real Cloudinary delete.
-      const targetMediaPublicId = `contratacr/regression/missing-target-${stamp}`;
+      // Keep provider cleanup out of the deterministic browser suite: a fake
+      // Cloudinary id still makes the deployed route call an external provider.
+      // The sentinel row proves scoped registry isolation without introducing
+      // a network dependency or risking a real asset.
       const sentinelMediaPublicId = `contratacr/regression/missing-sentinel-${stamp}`;
-      const { error: mediaInsertError } = await admin.from("user_media_assets").insert([
-        { user_id: target.id, provider: "cloudinary", public_id: targetMediaPublicId, resource_type: "image" },
-        { user_id: sentinel.id, provider: "cloudinary", public_id: sentinelMediaPublicId, resource_type: "image" },
-      ]);
+      const { error: mediaInsertError } = await admin.from("user_media_assets").insert({
+        user_id: sentinel.id,
+        provider: "cloudinary",
+        public_id: sentinelMediaPublicId,
+        resource_type: "image",
+      });
       expect(mediaInsertError).toBeNull();
 
       // Explicit cross-account alerts exercise rows that do not have a foreign

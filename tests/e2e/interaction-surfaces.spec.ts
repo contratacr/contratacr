@@ -18,7 +18,7 @@ test.describe("@seeded interaction surfaces", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
 
-    const action = page.getByRole("button", { name: seed.slotTime }).first();
+    const action = page.getByRole("button", { name: /Ver disponibilidad|View availability/i }).first();
     await expect(action).toBeVisible();
     await action.click();
 

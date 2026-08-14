@@ -60,7 +60,9 @@ export type RegressionSeedState = {
   videoSecondSlotTime: string;
   videoPhysicalLocationId: string;
   publishedJobId: string;
+  publishedJobTitle: string;
   secondaryJobId: string;
+  secondaryJobTitle: string;
   pausedJobId: string;
   closedJobId: string;
   publishedOfferId: string;
@@ -134,6 +136,11 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
     .select("id,profile_id,slug,category_id,workplaces")
     .eq("profile_id", client?.id ?? "00000000-0000-0000-0000-000000000000")
     .maybeSingle();
+  const { data: seededJobs } = await admin
+    .from("job_posts")
+    .select("id,title")
+    .in("id", [REGRESSION_IDS.publishedJob, REGRESSION_IDS.secondaryJob]);
+  const seededJobTitles = new Map((seededJobs ?? []).map((job) => [job.id, job.title]));
 
   if (
     !client?.id ||
@@ -142,7 +149,9 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
     !professional.category_id ||
     !videoProfessional?.id ||
     !videoProfessional.profile_id ||
-    !videoProfessional.category_id
+    !videoProfessional.category_id ||
+    !seededJobTitles.get(REGRESSION_IDS.publishedJob) ||
+    !seededJobTitles.get(REGRESSION_IDS.secondaryJob)
   ) {
     return null;
   }
@@ -178,7 +187,9 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
     videoSecondSlotTime: "11:00",
     videoPhysicalLocationId: typeof videoPhysicalLocation === "string" ? videoPhysicalLocation : "regression-office",
     publishedJobId: REGRESSION_IDS.publishedJob,
+    publishedJobTitle: seededJobTitles.get(REGRESSION_IDS.publishedJob)!,
     secondaryJobId: REGRESSION_IDS.secondaryJob,
+    secondaryJobTitle: seededJobTitles.get(REGRESSION_IDS.secondaryJob)!,
     pausedJobId: REGRESSION_IDS.pausedJob,
     closedJobId: REGRESSION_IDS.closedJob,
     publishedOfferId: REGRESSION_IDS.publishedOffer,
