@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,7 @@ interface SelectMenuProps {
 // the trigger. Use it wherever a native <select> would otherwise be (provincia, cantón, …).
 export function SelectMenu({ value, onChange, options, placeholder, label, error, id, className, disabled }: SelectMenuProps) {
   const [open, setOpen] = useState(false);
+  const instanceId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -46,6 +47,17 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
   // 320px shows short lists (e.g. Todas + 7 provincias) without a scrollbar, while
   // longer lists (cantones, DOB years) still scroll inside the popover.
   const pos = useAnchoredPosition(triggerRef, open, 320);
+
+  // iOS does not reliably synthesize the mouse event that used to close a
+  // neighboring portaled select. Coordinate every instance explicitly so the
+  // month and year lists can never remain stacked on top of each other.
+  useEffect(() => {
+    const closeOtherSelects = (event: Event) => {
+      if ((event as CustomEvent<string>).detail !== instanceId) setOpen(false);
+    };
+    window.addEventListener("contratacr:select-menu-open", closeOtherSelects);
+    return () => window.removeEventListener("contratacr:select-menu-open", closeOtherSelects);
+  }, [instanceId]);
 
   // Close on outside click / Escape. The list is portaled (outside rootRef), so it must be
   // checked too — otherwise a click on an option would register as "outside" and close
@@ -58,9 +70,9 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
       setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+    return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
   }, [open]);
 
   // Scroll the selected option into view once per open. The portaled list also triggers
@@ -123,7 +135,14 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
         id={id}
         type="button"
         disabled={disabled}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+            return;
+          }
+          window.dispatchEvent(new CustomEvent("contratacr:select-menu-open", { detail: instanceId }));
+          setOpen(true);
+        }}
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
@@ -157,6 +176,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
             pointerEvents: "auto",
           }}
           className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-xl"
+          data-selectmenu-popup=""
         >
           <div
             ref={listRef}

@@ -751,9 +751,27 @@ export function ServicesEditor({
           closeLabel={t("cancel")}
           footer={
             <>
-              <Button type="button" variant="outline" onClick={cancelForm}>{t("cancel")}</Button>
-              <Button type="button" onClick={handleFormSave} loading={saving || imageUploading} disabled={saving || imageUploading}>
-                {t("saveChanges")}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={cancelForm}
+                disabled={saving || imageUploading}
+                className="min-w-0 flex-1 select-none sm:flex-none"
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleFormSave}
+                loading={saving}
+                disabled={saving || imageUploading}
+                className="min-w-0 flex-1 select-none sm:flex-none"
+              >
+                {saving
+                  ? t("saving")
+                  : imageUploading
+                    ? (locale === "en" ? "Uploading image…" : "Subiendo imagen…")
+                    : t("saveChanges")}
               </Button>
             </>
           }
