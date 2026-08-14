@@ -16,11 +16,17 @@ const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const expectedTestRef = "sodegkfjjrdkbohycqyq";
 let projectRef = "invalid";
-try { projectRef = new URL(url).hostname.split(".")[0]; } catch {}
-if (projectRef !== expectedTestRef) {
-  throw new Error(`Refusing destructive push verification on ${projectRef}; expected test.`);
+let isLoopback = false;
+try {
+  const parsedUrl = new URL(url);
+  projectRef = parsedUrl.hostname.split(".")[0];
+  isLoopback = ["127.0.0.1", "localhost", "::1"].includes(parsedUrl.hostname);
+} catch {}
+const allowEphemeralLocal = process.env.LOCAL_REGRESSION_SEED === "1" && isLoopback;
+if (projectRef !== expectedTestRef && !allowEphemeralLocal) {
+  throw new Error(`Refusing destructive push verification on ${projectRef}; expected test or explicit loopback regression.`);
 }
-if (process.env.EXPECTED_SUPABASE_PROJECT_REF && process.env.EXPECTED_SUPABASE_PROJECT_REF !== expectedTestRef) {
+if (!allowEphemeralLocal && process.env.EXPECTED_SUPABASE_PROJECT_REF && process.env.EXPECTED_SUPABASE_PROJECT_REF !== expectedTestRef) {
   throw new Error("EXPECTED_SUPABASE_PROJECT_REF does not identify the hard-coded test project.");
 }
 if (!anonKey || !serviceRole) throw new Error("Missing test Supabase credentials.");

@@ -95,6 +95,15 @@ jobs:
           npm run seed:local:relations
           npm run verify:local:relations
 
+      - name: Verify account deletion isolation locally
+        run: npm run test:account-deletion
+
+      - name: Verify durable push isolation locally
+        run: npm run test:push-isolation
+
+      - name: Reverify canonical fixtures after isolation contracts
+        run: npm run verify:local:relations
+
       - name: Ensure private env files are not tracked
         run: npm run security:env
 
