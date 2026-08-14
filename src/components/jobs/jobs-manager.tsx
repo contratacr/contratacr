@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, CalendarDays, ChevronDown, FileText, Mail, MoreVertical, Phone, Plus, UserRound, Users } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -70,7 +70,6 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
   const [publishOpen, setPublishOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<ManagedJob | null>(null);
   const [actionsOpen, setActionsOpen] = useState<string | null>(null);
-  const actionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const jobId = searchParams.get("job");
@@ -87,7 +86,8 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
   useEffect(() => {
     if (!actionsOpen) return;
     const close = (event: PointerEvent) => {
-      if (!actionsRef.current?.contains(event.target as Node)) setActionsOpen(null);
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target?.closest(`[data-job-actions="${actionsOpen}"]`)) setActionsOpen(null);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setActionsOpen(null);
@@ -158,7 +158,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                 {isOpen && (
                   <div className="border-t border-[#e6edf3] px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
                     {job.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{job.description}</p>}
-                    <div ref={actionsRef} className="relative mb-5 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
+                    <div data-job-actions={job.id} className="relative mb-5 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
                       <Link href={`/empleos/${job.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-lg bg-[#009fd9] px-3 text-xs font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#009fd9] px-3 text-xs font-bold text-white transition hover:bg-[#008fc3] lg:hidden">{copy.edit}</Link>

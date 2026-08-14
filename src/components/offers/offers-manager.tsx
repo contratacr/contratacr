@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, BadgePercent, ChevronDown, MoreVertical, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -73,12 +73,12 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
   const [publishOpen, setPublishOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<ProfessionalOffer | null>(null);
   const [actionsOpen, setActionsOpen] = useState<string | null>(null);
-  const actionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!actionsOpen) return;
     const close = (event: PointerEvent) => {
-      if (!actionsRef.current?.contains(event.target as Node)) setActionsOpen(null);
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target?.closest(`[data-offer-actions="${actionsOpen}"]`)) setActionsOpen(null);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setActionsOpen(null);
@@ -164,7 +164,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                 {isOpen && (
                   <div className="border-t border-[#e6edf3] px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
                     {offer.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{offer.description}</p>}
-                    <div ref={actionsRef} className="relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
+                    <div data-offer-actions={offer.id} className="relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
                       <Link href={`/ofertas/${offer.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-lg bg-[#009fd9] px-3 text-xs font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#009fd9] px-3 text-xs font-bold text-white transition hover:bg-[#008fc3] lg:hidden">{copy.edit}</Link>
