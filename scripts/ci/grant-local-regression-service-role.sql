@@ -20,4 +20,7 @@ end $$;
 grant usage on schema public to anon, authenticated, service_role;
 grant all privileges on all tables in schema public to anon, authenticated, service_role;
 grant all privileges on all sequences in schema public to anon, authenticated, service_role;
-grant execute on all functions in schema public to anon, authenticated, service_role;
+-- PostgreSQL grants EXECUTE on newly-created functions to PUBLIC by default,
+-- and the migrations explicitly revoke sensitive RPCs such as padron_lookup.
+-- Do not blanket regrant functions to browser roles after those revocations.
+grant execute on all functions in schema public to service_role;
