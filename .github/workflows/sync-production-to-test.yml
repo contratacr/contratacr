@@ -258,7 +258,7 @@ jobs:
 
           npm ci
           npm run seed:test:full
-          npm run seed:test:verify
+          VERIFY_ADVERTISING_PARITY=1 npm run seed:test:verify
 
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --csv -Atc \
             "select lower(trim(p.business_name)), coalesce(pr.avatar_url, '') from public.professionals p join public.profiles pr on pr.id=p.profile_id where lower(trim(p.business_name)) in ('contratacr','sg solutions') order by 1" \

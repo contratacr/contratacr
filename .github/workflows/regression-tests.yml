@@ -153,7 +153,7 @@ jobs:
           done
 
       - name: Verify complete regression fixtures
-        run: npm run seed:test:verify
+        run: VERIFY_ADVERTISING_PARITY=1 npm run seed:test:verify
 
       - name: Verify isolated account deletion
         run: npm run test:account-deletion

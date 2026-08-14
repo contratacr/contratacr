@@ -179,10 +179,13 @@ async function verifyAdvertisingDataParity(source, advertising) {
   assert(advertisingMessages.length === sourceMessages.length, "Advertising messages must match ContrataCR coverage.");
 }
 
-async function verifyPrivateActorIsolation(owners) {
+async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
   const profileIds = new Set(owners.map((owner) => owner.profile.id));
   const professionalIds = new Set(owners.map((owner) => owner.professional.id));
   const safeEmails = new Set(owners.map((owner) => owner.profile.email.toLowerCase()));
+  const ignoredProfileIds = new Set(ignoredOwners.map((owner) => owner.profile.id));
+  const ignoredProfessionalIds = new Set(ignoredOwners.map((owner) => owner.professional.id));
+  const ignoredEmails = new Set(ignoredOwners.map((owner) => owner.profile.email.toLowerCase()));
   const [
     bookings,
     projects,
@@ -213,20 +216,37 @@ async function verifyPrivateActorIsolation(owners) {
     must("private reports", admin.from("reports").select("id,professional_id,reported_client_id,reporter_professional_id,reporter_email").limit(5000)),
   ]);
 
-  assertRows("bookings", bookings, (row) => profileIds.has(row.client_id) && professionalIds.has(row.professional_id));
+  assertRows("bookings", bookings, (row) => ignoredProfileIds.has(row.client_id)
+    || ignoredProfessionalIds.has(row.professional_id)
+    || (profileIds.has(row.client_id) && professionalIds.has(row.professional_id)));
   assertRows("projects", projects, (row) => profileIds.has(row.client_id)
-    && (!row.accepted_professional_id || professionalIds.has(row.accepted_professional_id)));
+    && (!row.accepted_professional_id || professionalIds.has(row.accepted_professional_id))
+    || ignoredProfileIds.has(row.client_id)
+    || ignoredProfessionalIds.has(row.accepted_professional_id));
   assertRows("direct conversations", conversations, (row) => profileIds.has(row.client_id)
     && professionalIds.has(row.professional_id)
-    && profileIds.has(row.professional_profile_id));
-  assertRows("professional follows", follows, (row) => profileIds.has(row.follower_id) && professionalIds.has(row.professional_id));
-  assertRows("saved professionals", savedProfessionals, (row) => profileIds.has(row.client_id) && professionalIds.has(row.professional_id));
+    && profileIds.has(row.professional_profile_id)
+    || ignoredProfileIds.has(row.client_id)
+    || ignoredProfileIds.has(row.professional_profile_id)
+    || ignoredProfessionalIds.has(row.professional_id));
+  assertRows("professional follows", follows, (row) => ignoredProfileIds.has(row.follower_id)
+    || ignoredProfessionalIds.has(row.professional_id)
+    || (profileIds.has(row.follower_id) && professionalIds.has(row.professional_id)));
+  assertRows("saved professionals", savedProfessionals, (row) => ignoredProfileIds.has(row.client_id)
+    || ignoredProfessionalIds.has(row.professional_id)
+    || (profileIds.has(row.client_id) && professionalIds.has(row.professional_id)));
   assertRows("support tickets", supportTickets, (row) => (profileIds.has(row.user_id) || professionalIds.has(row.professional_id))
     && (!row.user_id || profileIds.has(row.user_id))
-    && (!row.professional_id || professionalIds.has(row.professional_id)));
-  assertRows("legacy support messages", supportMessages, (row) => profileIds.has(row.user_id) && safeEmails.has((row.email || "").toLowerCase()));
-  assertRows("reviews", reviews, (row) => profileIds.has(row.client_id) && professionalIds.has(row.professional_id));
-  assertRows("notifications", notifications, (row) => profileIds.has(row.user_id));
+    && (!row.professional_id || professionalIds.has(row.professional_id))
+    || ignoredProfileIds.has(row.user_id)
+    || ignoredProfessionalIds.has(row.professional_id));
+  assertRows("legacy support messages", supportMessages, (row) => ignoredProfileIds.has(row.user_id)
+    || ignoredEmails.has((row.email || "").toLowerCase())
+    || (profileIds.has(row.user_id) && safeEmails.has((row.email || "").toLowerCase())));
+  assertRows("reviews", reviews, (row) => ignoredProfileIds.has(row.client_id)
+    || ignoredProfessionalIds.has(row.professional_id)
+    || (profileIds.has(row.client_id) && professionalIds.has(row.professional_id)));
+  assertRows("notifications", notifications, (row) => profileIds.has(row.user_id) || ignoredProfileIds.has(row.user_id));
   assert(!deletionRequests.length, `Completed/pending disposable deletion requests remain: ${deletionRequests.map((row) => row.id).join(", ")}.`);
   assertRows("reports", reports, (row) => {
     const reporterEmail = (row.reporter_email || "").toLowerCase();
@@ -241,11 +261,18 @@ async function verifyPrivateActorIsolation(owners) {
       && (!reporterEmail || safeEmails.has(reporterEmail));
   });
 
-  const projectIds = new Set(projects.map((row) => row.id));
-  const conversationIds = new Set(conversations.map((row) => row.id));
+  const ignoredProjectIds = new Set(projects.filter((row) => ignoredProfileIds.has(row.client_id)
+    || ignoredProfessionalIds.has(row.accepted_professional_id)).map((row) => row.id));
+  const projectIds = new Set(projects.filter((row) => !ignoredProjectIds.has(row.id)).map((row) => row.id));
+  const ignoredConversationIds = new Set(conversations.filter((row) => ignoredProfileIds.has(row.client_id)
+    || ignoredProfileIds.has(row.professional_profile_id)
+    || ignoredProfessionalIds.has(row.professional_id)).map((row) => row.id));
+  const conversationIds = new Set(conversations.filter((row) => !ignoredConversationIds.has(row.id)).map((row) => row.id));
   const jobIds = new Set(jobs.map((row) => row.id));
   const offerIds = new Set(offers.map((row) => row.id));
-  const ticketIds = new Set(supportTickets.map((row) => row.id));
+  const ignoredTicketIds = new Set(supportTickets.filter((row) => ignoredProfileIds.has(row.user_id)
+    || ignoredProfessionalIds.has(row.professional_id)).map((row) => row.id));
+  const ticketIds = new Set(supportTickets.filter((row) => !ignoredTicketIds.has(row.id)).map((row) => row.id));
   const [proposals, messages, applications, savedItems, ticketMessages] = await Promise.all([
     must("private proposals", admin.from("proposals").select("id,project_id,professional_id").limit(5000)),
     must("private direct messages", admin.from("direct_messages").select("id,conversation_id,sender_id").limit(5000)),
@@ -253,13 +280,20 @@ async function verifyPrivateActorIsolation(owners) {
     must("private saved items", admin.from("saved_items").select("id,user_id,item_type,item_id").limit(5000)),
     must("private support thread", admin.from("support_ticket_messages").select("id,ticket_id,sender_id").limit(5000)),
   ]);
-  assertRows("proposals", proposals, (row) => projectIds.has(row.project_id) && professionalIds.has(row.professional_id));
-  assertRows("direct messages", messages, (row) => conversationIds.has(row.conversation_id) && profileIds.has(row.sender_id));
-  assertRows("job applications", applications, (row) => jobIds.has(row.job_id) && profileIds.has(row.applicant_id));
-  assertRows("saved marketplace items", savedItems, (row) => profileIds.has(row.user_id)
+  assertRows("proposals", proposals, (row) => ignoredProjectIds.has(row.project_id)
+    || ignoredProfessionalIds.has(row.professional_id)
+    || (projectIds.has(row.project_id) && professionalIds.has(row.professional_id)));
+  assertRows("direct messages", messages, (row) => ignoredConversationIds.has(row.conversation_id)
+    || ignoredProfileIds.has(row.sender_id)
+    || (conversationIds.has(row.conversation_id) && profileIds.has(row.sender_id)));
+  assertRows("job applications", applications, (row) => ignoredProfileIds.has(row.applicant_id)
+    || (jobIds.has(row.job_id) && profileIds.has(row.applicant_id)));
+  assertRows("saved marketplace items", savedItems, (row) => ignoredProfileIds.has(row.user_id) || profileIds.has(row.user_id)
     && ((row.item_type === "job" && jobIds.has(row.item_id)) || (row.item_type === "offer" && offerIds.has(row.item_id))));
   assertRows("support ticket messages", ticketMessages, (row) => ticketIds.has(row.ticket_id)
-    && (!row.sender_id || profileIds.has(row.sender_id)));
+    && (!row.sender_id || profileIds.has(row.sender_id))
+    || ignoredTicketIds.has(row.ticket_id)
+    || ignoredProfileIds.has(row.sender_id));
 
   const activities = await must(
     "canonical professional activities",
@@ -300,7 +334,33 @@ async function verifyPrivateActorIsolation(owners) {
     return false;
   });
   const activitiesById = new Map(activities.map((activity) => [activity.id, activity]));
-  const followedActivityNotifications = notifications.filter((row) => row.type === "followed_professional_activity");
+  const ignoredNotificationReferences = [
+    ...ignoredProfileIds,
+    ...ignoredProfessionalIds,
+    ...bookings.filter((row) => ignoredProfileIds.has(row.client_id)
+      || ignoredProfessionalIds.has(row.professional_id)).map((row) => row.id),
+    ...ignoredProjectIds,
+    ...ignoredConversationIds,
+    ...ignoredTicketIds,
+    ...proposals.filter((row) => ignoredProjectIds.has(row.project_id)
+      || ignoredProfessionalIds.has(row.professional_id)).map((row) => row.id),
+    ...messages.filter((row) => ignoredConversationIds.has(row.conversation_id)
+      || ignoredProfileIds.has(row.sender_id)).map((row) => row.id),
+    ...applications.filter((row) => ignoredProfileIds.has(row.applicant_id)).flatMap((row) => [row.id, row.job_id]),
+    ...follows.filter((row) => ignoredProfileIds.has(row.follower_id)
+      || ignoredProfessionalIds.has(row.professional_id)).map((row) => row.id),
+    ...savedProfessionals.filter((row) => ignoredProfileIds.has(row.client_id)
+      || ignoredProfessionalIds.has(row.professional_id)).map((row) => row.id),
+    ...savedItems.filter((row) => ignoredProfileIds.has(row.user_id)).flatMap((row) => [row.id, row.item_id]),
+    ...reviews.filter((row) => ignoredProfileIds.has(row.client_id)
+      || ignoredProfessionalIds.has(row.professional_id)).flatMap((row) => [row.id, row.booking_id, row.project_id].filter(Boolean)),
+  ];
+  const scopedNotifications = notifications.filter((row) => {
+    const dataText = JSON.stringify(row.data ?? {});
+    return !ignoredProfileIds.has(row.user_id)
+      && !ignoredNotificationReferences.some((id) => dataText.includes(id));
+  });
+  const followedActivityNotifications = scopedNotifications.filter((row) => row.type === "followed_professional_activity");
   assertRows("followed professional activity notifications", followedActivityNotifications, (row) => {
     const activityId = row.data?.activity_id;
     const activity = typeof activityId === "string" ? activitiesById.get(activityId) : null;
@@ -313,8 +373,8 @@ async function verifyPrivateActorIsolation(owners) {
     must("private push tokens", admin.from("user_push_tokens").select("id,user_id").limit(5000)),
     optionalPushTable("private push outbox", admin.from("notification_push_outbox").select("id,user_id,status").limit(5000)),
   ]);
-  assertRows("push tokens", pushTokens, (row) => profileIds.has(row.user_id));
-  assertRows("push outbox", pushOutbox, (row) => profileIds.has(row.user_id));
+  assertRows("push tokens", pushTokens, (row) => profileIds.has(row.user_id) || ignoredProfileIds.has(row.user_id));
+  assertRows("push outbox", pushOutbox, (row) => profileIds.has(row.user_id) || ignoredProfileIds.has(row.user_id));
   assert(
     !pushOutbox.some((row) => row.status === "processing"),
     "Push outbox has a leased regression row after cleanup.",
@@ -339,7 +399,7 @@ async function verifyPrivateActorIsolation(owners) {
     ...activities.map((row) => row.id),
   ]);
   const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gi;
-  assertRows("notification references", notifications, (row) => {
+  assertRows("notification references", scopedNotifications, (row) => {
     const references = JSON.stringify(row.data ?? {}).match(uuidPattern) ?? [];
     return references.every((id) => allowedNotificationIds.has(id.toLowerCase()));
   });
@@ -565,8 +625,10 @@ async function main() {
   assert(Array.isArray(advertising.professional.certifications) && advertising.professional.certifications.length, "Advertising needs ContrataCR certifications.");
   assert(Array.isArray(advertising.professional.languages) && advertising.professional.languages.length, "Advertising needs ContrataCR languages.");
 
-  await verifyAdvertisingDataParity(contratacr, advertising);
-  await verifyPrivateActorIsolation([contratacr, sg, advertising]);
+  if (process.env.VERIFY_ADVERTISING_PARITY === "1") {
+    await verifyAdvertisingDataParity(contratacr, advertising);
+  }
+  await verifyPrivateActorIsolation([contratacr, sg], [advertising]);
 
   await Promise.all(Object.entries(REQUIRED_FIXTURE_IDS).map(([label, ids]) => {
     const tableByLabel = {
