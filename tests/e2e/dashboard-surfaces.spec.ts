@@ -68,8 +68,12 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
     }
 
     const buttons = filter.getByRole("button");
+    await expect
+      .poll(() => buttons.count(), {
+        message: `Expected at least two populated filter buttons on ${page.url()}`,
+      })
+      .toBeGreaterThan(1);
     const buttonCount = await buttons.count();
-    expect(buttonCount).toBeGreaterThan(1);
     for (let buttonIndex = 0; buttonIndex < buttonCount; buttonIndex += 1) {
       const button = buttons.nth(buttonIndex);
       await button.click();

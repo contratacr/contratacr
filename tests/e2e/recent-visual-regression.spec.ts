@@ -190,19 +190,21 @@ test.describe("@visual recent bug contracts", () => {
     await expect(dialog).toBeVisible();
     const centered = await dialog.evaluate((node) => {
       const box = node.getBoundingClientRect();
-      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const screen = node.parentElement?.getBoundingClientRect();
+      if (!screen) throw new Error("Centered dialog screen is missing");
       return {
-        horizontalDelta: Math.abs((box.left + box.width / 2) - window.innerWidth / 2),
-        verticalDelta: Math.abs((box.top + box.height / 2) - viewportHeight / 2),
+        horizontalDelta: Math.abs((box.left + box.width / 2) - (screen.left + screen.width / 2)),
+        verticalDelta: Math.abs((box.top + box.height / 2) - (screen.top + screen.height / 2)),
         top: box.top,
         bottom: box.bottom,
-        viewportHeight,
+        screenTop: screen.top,
+        screenBottom: screen.bottom,
       };
     });
     expect(centered.horizontalDelta).toBeLessThanOrEqual(2);
-    expect(centered.verticalDelta).toBeLessThanOrEqual(4);
-    expect(centered.top).toBeGreaterThanOrEqual(0);
-    expect(centered.bottom).toBeLessThanOrEqual(centered.viewportHeight + 1);
+    expect(centered.verticalDelta).toBeLessThanOrEqual(2);
+    expect(centered.top).toBeGreaterThanOrEqual(centered.screenTop - 1);
+    expect(centered.bottom).toBeLessThanOrEqual(centered.screenBottom + 1);
   });
 
   test("brand loading mark uses the breathing animation without remount flicker", async ({ page }) => {
