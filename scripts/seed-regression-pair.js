@@ -48,6 +48,7 @@ const DAY = 24 * 60 * 60 * 1000;
 const now = Date.now();
 const iso = (days = 0) => new Date(now + days * DAY).toISOString();
 const date = (days = 0) => iso(days).slice(0, 10);
+const weekday = (days = 0) => new Date(`${date(days)}T12:00:00Z`).getUTCDay();
 
 const ids = {
   follows: ["b1000000-0000-4000-8000-000000000001", "b1000000-0000-4000-8000-000000000002"],
@@ -547,8 +548,8 @@ async function main() {
   });
 
   await must("availability weekly", supabase.from("availability_weekly").upsert([
-    { id: ids.weekly[0], professional_id: c.professional.id, location_id: cPhysicalLocation, category_id: c.professional.category_id, weekday: 1, start_time: "08:00", end_time: "17:00", slot_minutes: 60 },
-    { id: ids.weekly[1], professional_id: s.professional.id, location_id: sPhysicalLocation, category_id: s.professional.category_id, weekday: 2, start_time: "09:00", end_time: "18:00", slot_minutes: 60 },
+    { id: ids.weekly[0], professional_id: c.professional.id, location_id: cPhysicalLocation, category_id: c.professional.category_id, weekday: weekday(2), start_time: "10:00", end_time: "12:00", slot_minutes: 60 },
+    { id: ids.weekly[1], professional_id: s.professional.id, location_id: sPhysicalLocation, category_id: s.professional.category_id, weekday: weekday(3), start_time: "11:00", end_time: "15:00", slot_minutes: 60 },
   ], { onConflict: "id" }));
 
   // Previous test runs may have restored these deterministic moments with an
@@ -566,8 +567,8 @@ async function main() {
     { id: ids.slots[1], professional_id: c.professional.id, category_id: c.professional.category_id, slot_date: date(2), slot_time: "10:00", location_id: cPhysicalLocation },
     { id: ids.slots[2], professional_id: c.professional.id, category_id: c.professional.category_id, slot_date: date(2), slot_time: "11:00", location_id: "videoconsulta" },
     { id: ids.slots[3], professional_id: c.professional.id, category_id: c.professional.category_id, slot_date: date(2), slot_time: "11:00", location_id: cPhysicalLocation },
-    { id: ids.slots[4], professional_id: s.professional.id, category_id: s.professional.category_id, slot_date: date(3), slot_time: "14:00", location_id: "regression-office-sg" },
-    { id: ids.slots[5], professional_id: s.professional.id, category_id: s.professional.category_id, slot_date: date(3), slot_time: "11:00", location_id: "regression-office-sg" },
+    { id: ids.slots[4], professional_id: s.professional.id, category_id: s.professional.category_id, slot_date: date(3), slot_time: "14:00", location_id: sPhysicalLocation },
+    { id: ids.slots[5], professional_id: s.professional.id, category_id: s.professional.category_id, slot_date: date(3), slot_time: "11:00", location_id: sPhysicalLocation },
   ], { onConflict: "id" }));
 
   await must("availability exceptions", supabase.from("availability_exceptions").upsert([

@@ -180,6 +180,21 @@ jobs:
       - name: Verify fixtures after critical gates
         run: npm run seed:test:verify
 
+      - name: Run recent failure gates on desktop and mobile
+        run: >-
+          npx playwright test
+          tests/e2e/dashboard-surfaces.spec.ts
+          tests/e2e/interaction-surfaces.spec.ts
+          tests/e2e/notifications-guides-regression.spec.ts
+          tests/e2e/public-smoke.spec.ts
+          tests/e2e/recent-visual-regression.spec.ts
+          tests/e2e/seeded-regression.spec.ts
+          tests/e2e/services.spec.ts
+          --grep "every active authenticated page route|booking flow opens|/es/mantenimiento renders|/es/servicio-no-disponible renders|/en/mantenimiento renders|/en/servicio-no-disponible renders|paired actions keep equal geometry|anonymous visitors can see seeded offers|every guide CTA|service search finds a known service|every populated dashboard filter"
+
+      - name: Verify fixtures after recent failure gates
+        run: npm run seed:test:verify
+
       - name: Run regression suite
         run: npm run test:e2e
 

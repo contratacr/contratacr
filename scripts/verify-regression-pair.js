@@ -51,7 +51,6 @@ const REQUIRED_FIXTURE_IDS = {
   pairReviews: deterministicIds("be000000-0000-4000-8000-", 2),
   pairNotifications: deterministicIds("bf000000-0000-4000-8000-", 2),
   weekly: deterministicIds("c1000000-0000-4000-8000-", 2),
-  slots: deterministicIds("c2000000-0000-4000-8000-", 6),
   blocked: deterministicIds("c4000000-0000-4000-8000-", 2),
   coverageBookings: deterministicIds("d1000000-0000-4000-8000-", 6),
   coverageProjects: deterministicIds("d2000000-0000-4000-8000-", 6),
@@ -374,6 +373,26 @@ async function verifySharedVideoSlots(owner) {
   );
 }
 
+function futureDate(days) {
+  const value = new Date();
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+async function verifySlotMoments(owner, daysAhead, expectedTimes, label) {
+  const rows = await must(
+    label,
+    admin.from("availability_slots")
+      .select("slot_time")
+      .eq("professional_id", owner.professional.id)
+      .eq("slot_date", futureDate(daysAhead)),
+  );
+  const times = new Set(rows.map((row) => String(row.slot_time).slice(0, 5)));
+  for (const expectedTime of expectedTimes) {
+    assert(times.has(expectedTime), `${label}: missing ${expectedTime}.`);
+  }
+}
+
 async function verifyCount(table, filter, minimum, label) {
   let query = admin.from(table).select("id", { count: "exact", head: true });
   for (const [column, value] of Object.entries(filter)) query = query.eq(column, value);
@@ -468,7 +487,6 @@ async function main() {
       pairReviews: "reviews",
       pairNotifications: "notifications",
       weekly: "availability_weekly",
-      slots: "availability_slots",
       blocked: "blocked_dates",
       coverageBookings: "bookings",
       coverageProjects: "projects",
@@ -502,6 +520,7 @@ async function main() {
     verifyCount("availability_weekly", { professional_id: sg.professional.id }, 1, "SG Solutions weekly availability"),
     verifyCount("availability_slots", { professional_id: contratacr.professional.id }, 4, "ContrataCR availability slots"),
     verifyCount("availability_slots", { professional_id: sg.professional.id }, 2, "SG Solutions availability slots"),
+    verifySlotMoments(sg, 3, ["11:00", "14:00"], "SG Solutions booking moments"),
     verifyCount("blocked_dates", { professional_id: contratacr.professional.id }, 1, "ContrataCR blocked dates"),
     verifyCount("blocked_dates", { professional_id: sg.professional.id }, 1, "SG Solutions blocked dates"),
     verifyStatuses("job_posts", "employer_id", contratacr.professional.id, ["published", "paused", "closed", "draft"], "ContrataCR jobs"),

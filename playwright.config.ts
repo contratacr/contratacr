@@ -61,7 +61,9 @@ export default defineConfig({
   expect: { timeout: 12_000 },
   forbidOnly: Boolean(process.env.CI),
   fullyParallel: true,
-  retries: process.env.CI ? 2 : 0,
+  // Certification requires every case to pass on its first attempt. Retrying a
+  // failure only burns CI time and would be rejected as flaky by the result gate.
+  retries: 0,
   workers: 1,
   reporter: process.env.CI
     ? [["github"], ["list"], ["json", { outputFile: process.env.PLAYWRIGHT_JSON_REPORT ?? "test-results/results.json" }], ["html", { open: "never" }]]

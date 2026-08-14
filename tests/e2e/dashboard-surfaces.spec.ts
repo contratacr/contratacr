@@ -352,9 +352,18 @@ test.describe("@seeded dashboard surfaces", () => {
       ];
 
       for (const route of routes) {
-        await gotoOK(page, route);
-        await expect(page).not.toHaveURL(/\/(?:es|en)\/login/);
-        await expectHealthyPage(page);
+        // Onboarding and completion routes may finish a delayed client-side
+        // redirect after their document is already interactive. Isolate each
+        // route in a fresh page so that redirect cannot abort the next route's
+        // navigation while preserving the authenticated browser context.
+        const routePage = await page.context().newPage();
+        try {
+          await gotoOK(routePage, route);
+          await expect(routePage).not.toHaveURL(/\/(?:es|en)\/login/);
+          await expectHealthyPage(routePage);
+        } finally {
+          await routePage.close();
+        }
       }
     }
   });

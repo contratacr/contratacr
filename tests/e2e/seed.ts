@@ -126,7 +126,7 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
     .maybeSingle();
   const { data: professional } = await admin
     .from("professionals")
-    .select("id,profile_id,slug,category_id")
+    .select("id,profile_id,slug,category_id,workplaces")
     .eq("slug", E2E_USERS.professional.slug)
     .maybeSingle();
   const { data: videoProfessional } = await admin
@@ -147,10 +147,16 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
     return null;
   }
 
-  const workplaces = Array.isArray(videoProfessional.workplaces)
+  const professionalWorkplaces = Array.isArray(professional.workplaces)
+    ? professional.workplaces as Array<{ id?: unknown }>
+    : [];
+  const professionalPhysicalLocation = professionalWorkplaces.find(
+    (workplace) => typeof workplace?.id === "string" && workplace.id.trim(),
+  )?.id;
+  const videoWorkplaces = Array.isArray(videoProfessional.workplaces)
     ? videoProfessional.workplaces as Array<{ id?: unknown }>
     : [];
-  const physicalLocation = workplaces.find(
+  const videoPhysicalLocation = videoWorkplaces.find(
     (workplace) => typeof workplace?.id === "string" && workplace.id.trim(),
   )?.id;
 
@@ -166,11 +172,11 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
     videoCategoryId: videoProfessional.category_id,
     slotDate: futureDate(3),
     slotTime: "14:00",
-    slotLocationId: "regression-office-sg",
+    slotLocationId: typeof professionalPhysicalLocation === "string" ? professionalPhysicalLocation : "regression-office-sg",
     videoSlotDate: futureDate(2),
     videoSharedSlotTime: "10:00",
     videoSecondSlotTime: "11:00",
-    videoPhysicalLocationId: typeof physicalLocation === "string" ? physicalLocation : "regression-office",
+    videoPhysicalLocationId: typeof videoPhysicalLocation === "string" ? videoPhysicalLocation : "regression-office",
     publishedJobId: REGRESSION_IDS.publishedJob,
     secondaryJobId: REGRESSION_IDS.secondaryJob,
     pausedJobId: REGRESSION_IDS.pausedJob,
