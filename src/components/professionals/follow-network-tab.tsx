@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
+import { PanelSectionLoading } from "@/components/ui/content-loading";
 
 type NetworkItem = {
   id: string;
@@ -248,7 +249,7 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
               ))}
             </div>
           ) : loading ? (
-            <div className="h-full min-h-[230px]" aria-busy="true" aria-label={tLoading("profile")} />
+            <PanelSectionLoading title={tLoading("profile")} className="h-full min-h-[230px] sm:min-h-[230px]" />
           ) : items.length === 0 ? (
             <div className="grid h-full min-h-[230px] place-items-center text-center text-sm font-medium text-[#6b7280]">
               {query ? (es ? "No encontramos resultados." : "No results found.") : (es ? "Todavía no hay perfiles aquí." : "No profiles here yet.")}

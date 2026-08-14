@@ -114,6 +114,56 @@ test.describe("@seeded dashboard surfaces", () => {
     }
   });
 
+  test("dashboard sections never expose a blank body while their first request is pending", async ({ page }) => {
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+
+    let releaseProjects!: () => void;
+    let releaseProposals!: () => void;
+    const projectsGate = new Promise<void>((resolve) => { releaseProjects = resolve; });
+    const proposalsGate = new Promise<void>((resolve) => { releaseProposals = resolve; });
+    let projectsStarted!: () => void;
+    let proposalsStarted!: () => void;
+    const projectsRequest = new Promise<void>((resolve) => { projectsStarted = resolve; });
+    const proposalsRequest = new Promise<void>((resolve) => { proposalsStarted = resolve; });
+
+    await page.route("**/api/projects?**", async (route) => {
+      projectsStarted();
+      await projectsGate;
+      await route.continue();
+    });
+    await page.route("**/api/proposals?mine=true", async (route) => {
+      proposalsStarted();
+      await proposalsGate;
+      await route.continue();
+    });
+
+    try {
+      await gotoOK(page, "/es/dashboard/profesional?tab=proposals");
+      await Promise.all([projectsRequest, proposalsRequest]);
+
+      const sectionCard = page.locator(".dashboard-section-card:visible").first();
+      await expect(sectionCard).toBeVisible();
+      await expect(sectionCard.locator("[data-panel-loading]")).toBeVisible();
+      await expect(sectionCard.locator("[data-panel-loading]")).toHaveAttribute("aria-busy", "true");
+
+      const geometry = await sectionCard.evaluate((card) => {
+        const loading = card.querySelector<HTMLElement>("[data-panel-loading]");
+        return {
+          cardHeight: card.getBoundingClientRect().height,
+          loadingHeight: loading?.getBoundingClientRect().height ?? 0,
+        };
+      });
+      expect(geometry.loadingHeight, "Pending sections must reserve visible body space").toBeGreaterThanOrEqual(200);
+      expect(geometry.cardHeight, "The section card must not collapse to its header").toBeGreaterThan(geometry.loadingHeight);
+    } finally {
+      releaseProjects();
+      releaseProposals();
+    }
+
+    await expect(page.locator("[data-panel-loading]")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Oportunidades|Opportunities/i }).filter({ visible: true })).toBeVisible();
+  });
+
   test("panel tabs navigate without reloading the document", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/es/dashboard/profesional?tab=bookings");

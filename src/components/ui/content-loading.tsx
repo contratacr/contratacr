@@ -31,7 +31,7 @@ export function BrandLoadingMark({ className, children }: { className?: string; 
 export function PanelSectionLoading({ title, description, className }: { rows?: number; title?: ReactNode; description?: ReactNode; className?: string } = {}) {
   const t = useTranslations("loading");
   return (
-    <div className={cn("ccr-delayed-loading ccr-panel-section-loading flex min-h-[14rem] flex-col items-center justify-center gap-2 px-4 py-8 text-center sm:min-h-[16rem]", className)} aria-busy="true" role="status">
+    <div data-panel-loading="" className={cn("ccr-delayed-loading ccr-panel-section-loading flex min-h-[14rem] flex-col items-center justify-center gap-2 px-4 py-8 text-center sm:min-h-[16rem]", className)} aria-busy="true" role="status">
       <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
       <div>
         <p className="text-sm font-extrabold text-[#162543]">{title ?? t("generic")}</p>
@@ -57,13 +57,15 @@ export function PanelListSkeleton({
 }) {
   const t = useTranslations("loading");
   if (!hasData) {
-    // An empty collection has no record shape to preview. Keep the section
-    // stable and let its real empty state appear when the request resolves.
-    return null;
+    // The first request cannot know whether this collection is empty yet. Keep
+    // a visible, stable loading surface in the panel instead of returning null:
+    // returning null leaves the section header above a blank card until the
+    // network request resolves (and can last several seconds on a cold load).
+    return <PanelSectionLoading className={className} />;
   }
 
   return (
-    <div className={cn("ccr-delayed-loading space-y-4", className)} aria-busy="true" role="status">
+    <div data-panel-loading="" className={cn("ccr-delayed-loading space-y-4", className)} aria-busy="true" role="status">
       <span className="sr-only">{t("generic")}</span>
       {withSearch && (
         <div className="rounded-2xl border border-[#e5edf4] bg-white p-3 shadow-sm">
