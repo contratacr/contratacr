@@ -171,7 +171,13 @@ export async function POST(req: NextRequest) {
       client_identity_provider: identityProvider,
     }, { onConflict: "id", ignoreDuplicates: false });
 
-    await syncProfessionalVerificationFromAccount(admin, uid, clientIdentityStatus, identityProvider);
+    // Creating a project without submitting a new identity document must not
+    // demote a separately verified professional profile on a dual-role account.
+    // Synchronize the professional badge only when this request actually
+    // revalidated (or rejected) a supplied account identity.
+    if (cedula) {
+      await syncProfessionalVerificationFromAccount(admin, uid, clientIdentityStatus, identityProvider);
+    }
 
     if (officialName) {
       try {

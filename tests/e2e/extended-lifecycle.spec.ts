@@ -194,7 +194,12 @@ test.describe("@seeded extended lifecycle", () => {
       const saveProfile = page.getByRole("button", { name: /^Guardar cambios$/i }).filter({ visible: true });
       await expect(saveProfile).toHaveCount(1);
       await saveProfile.click();
+      await expect(saveProfile).toContainText(/Guardando|Saving/i);
       await expect.poll(async () => (await admin.from("professionals").select("bio").eq("id", account!.professionalId!).single()).data?.bio).toBe(marker);
+      // The bio is the first write in the profile save pipeline. Wait for the
+      // complete pipeline before navigating so the browser cannot abort the
+      // remaining location/contact/auth synchronization requests.
+      await expect(saveProfile).toBeHidden();
 
       await gotoOK(page, "/es/dashboard/profesional?tab=services&mode=offer");
       const serviceCard = page.locator("section").filter({ has: page.getByRole("button", { name: /Editar informaci/i }) }).first();

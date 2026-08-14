@@ -621,6 +621,16 @@ test.describe("@seeded core regression", () => {
     });
     expect(project.status).toBe(200);
     expect(project.body.id).toBeTruthy();
+    const { data: clientProfessional, error: clientProfessionalError } = await regressionAdminClient()
+      .from("professionals")
+      .select("verification_status")
+      .eq("id", seed.videoProfessionalId)
+      .single();
+    if (clientProfessionalError) throw clientProfessionalError;
+    expect(
+      clientProfessional.verification_status,
+      "Using a dual-role account as a client must not demote its professional verification",
+    ).toBe("verified");
     await expectNotification(seed.professionalUserId, "new_project", { project_id: project.body.id });
 
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
