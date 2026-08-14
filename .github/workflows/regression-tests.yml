@@ -176,7 +176,7 @@ jobs:
           tests/e2e/seeded-regression.spec.ts
           tests/e2e/public-smoke.spec.ts
           --project=chromium-desktop
-          --grep "permanent deletion|offers, jobs and application lifecycle|every three-dot panel menu|public seeded professional profile|/es/categorias renders|/en/contacto renders"
+          --grep "permanent deletion|offers, jobs and application lifecycle|every three-dot panel menu|public seeded professional profile|/es renders|/es/categorias renders|/en/contacto renders"
 
       - name: Verify fixtures after critical gates
         run: npm run seed:test:verify
@@ -187,11 +187,12 @@ jobs:
           tests/e2e/dashboard-surfaces.spec.ts
           tests/e2e/interaction-surfaces.spec.ts
           tests/e2e/notifications-guides-regression.spec.ts
+          tests/e2e/professional-profile.spec.ts
           tests/e2e/public-smoke.spec.ts
           tests/e2e/recent-visual-regression.spec.ts
           tests/e2e/seeded-regression.spec.ts
           tests/e2e/services.spec.ts
-          --grep "every active authenticated page route|booking flow opens|/es/mantenimiento renders|/es/servicio-no-disponible renders|/en/mantenimiento renders|/en/servicio-no-disponible renders|paired actions keep equal geometry|anonymous visitors can see seeded offers|every guide CTA|service search finds a known service|every populated dashboard filter"
+          --grep "dashboard sections never expose a blank body|reviews never freeze navigation|every active authenticated page route|booking flow opens|/es/mantenimiento renders|/es/servicio-no-disponible renders|/en/mantenimiento renders|/en/servicio-no-disponible renders|paired actions keep equal geometry|anonymous visitors can see seeded offers|every guide CTA|service search finds a known service|every populated dashboard filter"
 
       - name: Verify fixtures after recent failure gates
         run: npm run seed:test:verify

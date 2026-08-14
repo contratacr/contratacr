@@ -5,6 +5,7 @@ import { deriveDisplayPricing, type PricingType } from "@/lib/pricing";
 import { getCategoryLabel, getMatchingCategoryIds, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { getProvinceById, PROVINCES, haversineKm } from "@/lib/data/cr-geography";
 import { languageSearchValues } from "@/lib/data/languages";
+import { withPromiseTimeout } from "@/lib/promise-timeout";
 
 // Build the real travel-coverage summary for "me desplazo" pros (item 16):
 // whole country, specific provinces, and/or specific cantones (display names).
@@ -729,9 +730,17 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
           `provincia_id, canton_id${modern ? ", search_provincias, search_cantones, coverage_provincias, coverage_country, is_banned" : ""}, verification_status, profiles(is_disabled)`
         );
 
-    let res = await select(true).eq("is_banned", false).neq("verification_status", "rejected");
+    let res = await withPromiseTimeout(
+      select(true).eq("is_banned", false).neq("verification_status", "rejected"),
+      4_000,
+      "home-zone-coverage-timeout",
+    );
     if (res.error && /is_banned|search_|coverage_|column/i.test(res.error.message)) {
-      res = await select(false).neq("verification_status", "rejected");
+      res = await withPromiseTimeout(
+        select(false).neq("verification_status", "rejected"),
+        4_000,
+        "home-zone-coverage-fallback-timeout",
+      );
     }
     if (res.error || !res.data) return empty;
 

@@ -59,19 +59,18 @@ export function ReviewSection({
   useEffect(() => {
     let active = true;
     if (locale !== "en" || commentsToTranslate.length === 0) {
-      setTranslatedComments({});
+      // Do not clear state here. The old synchronous `setState({})` created an
+      // endless effect -> render loop in Spanish and starved App Router
+      // transitions. Rendering below ignores translations outside English.
       return;
     }
 
     async function translateComments() {
-      const missing = commentsToTranslate.filter((review) => !translatedComments[review.id]);
-      if (missing.length === 0) return;
-
       const res = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          texts: missing.map((review) => review.comment),
+          texts: commentsToTranslate.map((review) => review.comment),
           source: "es",
           target: "en",
         }),
@@ -82,9 +81,9 @@ export function ReviewSection({
       const translations = Array.isArray(data?.translations) ? data.translations : [];
       if (!active) return;
 
-      setTranslatedComments((prev) => {
-        const next = { ...prev };
-        missing.forEach((review, index) => {
+      setTranslatedComments(() => {
+        const next: Record<string, string> = {};
+        commentsToTranslate.forEach((review, index) => {
           const translated = typeof translations[index] === "string" ? translations[index].trim() : "";
           if (translated) next[review.id] = translated;
         });
@@ -94,7 +93,7 @@ export function ReviewSection({
 
     translateComments();
     return () => { active = false; };
-  }, [commentsToTranslate, locale, translatedComments]);
+  }, [commentsToTranslate, locale]);
 
   function openReviewModal() {
     if (!isAuthenticated) {
@@ -146,7 +145,9 @@ export function ReviewSection({
                 {jobTitle && (
                   <p className="text-xs text-[#9ca3af] mt-0.5">{t("reviewOf", { title: jobTitle })}</p>
                 )}
-                <p className="text-sm text-[#374151] leading-relaxed mt-1">{translatedComments[review.id] ?? review.comment}</p>
+                <p className="text-sm text-[#374151] leading-relaxed mt-1">
+                  {locale === "en" ? translatedComments[review.id] ?? review.comment : review.comment}
+                </p>
               </div>
             </div>
           );

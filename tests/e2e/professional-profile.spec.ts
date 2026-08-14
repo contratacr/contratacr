@@ -27,4 +27,22 @@ test.describe("@seeded professional profile", () => {
     expect(response.headers()["content-type"]).toContain("image/png");
     expect((await response.body()).byteLength).toBeGreaterThan(10_000);
   });
+
+  test("reviews never freeze navigation back to results or home", async ({ page }) => {
+    const href = await firstProfessionalHref(page);
+    expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
+
+    const profile = new URL(href!, page.url());
+    const reviewsHref = `${profile.pathname}?tab=resenas&from=${encodeURIComponent("/buscar?categoria=enfermeria")}#resenas`;
+
+    await gotoOK(page, reviewsHref);
+    await expect(page.getByRole("heading", { name: /Reseñas|Reviews/i }).first()).toBeVisible();
+    await page.getByRole("link", { name: /Volver a resultados|Back to results/i }).click();
+    await expect(page).toHaveURL(/\/es\/buscar\?categoria=enfermeria$/);
+
+    await gotoOK(page, reviewsHref);
+    await expect(page.getByRole("heading", { name: /Reseñas|Reviews/i }).first()).toBeVisible();
+    await page.getByRole("banner").getByRole("link", { name: /ContrataCR inicio/i }).click();
+    await expect(page).toHaveURL(/\/es\/?$/);
+  });
 });
