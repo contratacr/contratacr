@@ -72,10 +72,10 @@ export async function gotoOK(page: Page, path: string) {
   expect(response!.status(), `Expected ${path} to return < 400`).toBeLessThan(400);
   await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
   await expectNotVercelProtection(page, path);
-  // Next.js can commit a streamed document before its visible route shell has
-  // replaced the fallback. Waiting for a merely visible <body> lets tests race
-  // a completely blank frame (and mirrors the white panel users reported).
-  await expectPageShell(page);
+  // Next.js can commit a streamed document before its route is ready. Require
+  // either meaningful content or the intentional full-page loading mark; a
+  // merely visible <body> can still be a completely white frame.
+  await expectVisibleRouteShell(page, path);
 }
 
 export async function expectNotVercelProtection(page: Page, path = page.url()) {
@@ -87,25 +87,61 @@ export async function expectNotVercelProtection(page: Page, path = page.url()) {
   ).toBe(false);
 }
 
-export async function expectPageShell(page: Page) {
+async function pageShellState(page: Page) {
+  return page.evaluate(() => {
+    const bodyText = document.body?.innerText.trim() ?? "";
+    const mainText = Array.from(document.querySelectorAll("main"))
+      .filter((main) => {
+        const style = window.getComputedStyle(main);
+        const box = main.getBoundingClientRect();
+        return style.display !== "none" && style.visibility !== "hidden" && box.width > 0 && box.height > 0;
+      })
+      .map((main) => (main as HTMLElement).innerText)
+      .join(" ")
+      .trim();
+    const routeLoading = Array.from(document.querySelectorAll<HTMLElement>(".ccr-page-route-loading[aria-busy='true']"))
+      .some((node) => {
+        const style = window.getComputedStyle(node);
+        const box = node.getBoundingClientRect();
+        return style.display !== "none" && style.visibility !== "hidden" && box.width > 0 && box.height > 0;
+      });
+
+    return {
+      ready: mainText.length > 20 && /ContrataCR/i.test(bodyText),
+      loading: routeLoading,
+    };
+  });
+}
+
+async function expectVisibleRouteShell(page: Page, path: string) {
+  await expect
+    .poll(
+      async () => {
+        try {
+          const state = await pageShellState(page);
+          return state.ready || state.loading;
+        } catch {
+          return false;
+        }
+      },
+      {
+        timeout: 5_000,
+        message: `${path} should render content or a visible loading state instead of a blank page`,
+      },
+    )
+    .toBe(true);
+}
+
+export async function expectPageShell(
+  page: Page,
+  { timeout = 8_000, label = page.url() }: { timeout?: number; label?: string } = {},
+) {
   const body = page.locator("body");
   await expect
     .poll(
       async () => {
         try {
-          return await page.evaluate(() => {
-            const bodyText = document.body?.innerText.trim() ?? "";
-            const mainText = Array.from(document.querySelectorAll("main"))
-              .filter((main) => {
-                const style = window.getComputedStyle(main);
-                const box = main.getBoundingClientRect();
-                return style.display !== "none" && style.visibility !== "hidden" && box.width > 0 && box.height > 0;
-              })
-              .map((main) => (main as HTMLElement).innerText)
-              .join(" ")
-              .trim();
-            return mainText.length > 20 && /ContrataCR/i.test(bodyText);
-          });
+          return (await pageShellState(page)).ready;
         } catch {
           // A streamed redirect can replace the execution context between
           // polls. Retry the complete, atomic snapshot on the new document.
@@ -113,8 +149,8 @@ export async function expectPageShell(page: Page) {
         }
       },
       {
-        timeout: 8_000,
-        message: "Page should replace the streamed loading fallback with meaningful main content",
+        timeout,
+        message: `${label} should replace the visible loading state with meaningful main content`,
       },
     )
     .toBe(true);

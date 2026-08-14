@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, expectVisibleText, gotoOK, isMobileProject, loginAs } from "./helpers";
+import { expectHealthyPage, expectPageShell, expectVisibleText, gotoOK, isMobileProject, loginAs } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 
 const professionalTabs = [
@@ -420,6 +420,7 @@ test.describe("@seeded dashboard surfaces", () => {
         const routePage = await page.context().newPage();
         try {
           await gotoOK(routePage, route);
+          await expectPageShell(routePage, { timeout: 30_000, label: route });
           await expect(routePage).not.toHaveURL(/\/(?:es|en)\/login/);
           await expectHealthyPage(routePage);
         } finally {
