@@ -396,6 +396,11 @@ test.describe("@seeded dashboard surfaces", () => {
   test("every active authenticated page route is reachable in Spanish and English", async ({ page }) => {
     test.setTimeout(360_000);
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    const context = page.context();
+    // A second live Supabase tab can contend for the shared auth lock while the
+    // first tab is still subscribing to realtime. Keep each route isolated, but
+    // never leave two authenticated pages open at once.
+    await page.close();
 
     for (const locale of ["es", "en"] as const) {
       const routes = [
@@ -417,7 +422,7 @@ test.describe("@seeded dashboard surfaces", () => {
         // redirect after their document is already interactive. Isolate each
         // route in a fresh page so that redirect cannot abort the next route's
         // navigation while preserving the authenticated browser context.
-        const routePage = await page.context().newPage();
+        const routePage = await context.newPage();
         try {
           await gotoOK(routePage, route);
           await expectPageShell(routePage, { timeout: 30_000, label: route });

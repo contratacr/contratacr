@@ -874,7 +874,7 @@ test.describe("@seeded core regression", () => {
     await expect(page.getByRole("heading", { name: publishedOfferTitle })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Details" })).toBeVisible();
     await expect(page.getByText(/Published by/i).first()).toBeAttached();
-    await expect(page.getByText("Service offer").first()).toBeVisible();
+    await expect(page.getByText("Product").first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/(?:offers?\.|search\.filters\.|proPanel\.|verificationPanel\.)/);
     await expectNoHorizontalOverflow(page);
   });

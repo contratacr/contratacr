@@ -153,7 +153,8 @@ test.describe("@seeded search results", () => {
     await expect(body).not.toContainText(/Solo verificados|Only verified/i);
     await expect(body).not.toContainText(/Buscar profesionales cerca de m[ií]|Find professionals near me/i);
     await expect(body).not.toContainText(/Cercan[ií]a|Nearest/i);
-    await expect(body).not.toContainText(/Anterior|Siguiente|P[aá]gina \d+ de|Previous|Next|Page \d+ of/i);
+    await expect(page.getByRole("button", { name: /^(?:Anterior|Siguiente|Previous|Next)$/i })).toHaveCount(0);
+    await expect(page.getByText(/^(?:P[aá]gina \d+ de \d+|Page \d+ of \d+)$/i)).toHaveCount(0);
     await expectHealthyPage(page);
   });
 

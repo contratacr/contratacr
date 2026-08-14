@@ -95,7 +95,7 @@ async function main() {
       description: "Caso sintético para validar filtros y presentación visual.",
       recipient: "Regresión local",
       date: "2026",
-      photos: ["http://127.0.0.1:3000/og-image.png"],
+      photos: ["https://res.cloudinary.com/demo/image/upload/sample.jpg"],
       likes: 1,
     }));
 
@@ -122,7 +122,7 @@ async function main() {
       videoconsulta: true,
       coverage_country: true,
       availability_public: true,
-      portfolio_urls: ["http://127.0.0.1:3000/og-image.png"],
+      portfolio_urls: ["https://res.cloudinary.com/demo/image/upload/sample.jpg"],
       portfolio_items: portfolioItems,
       services,
       languages: ["es", "en"],

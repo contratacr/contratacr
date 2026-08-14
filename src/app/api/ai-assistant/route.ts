@@ -1090,7 +1090,14 @@ function normalizePayload(
     };
   }
   if (includesAny(normalized, ["ver oportunidades", "donde veo oportunidades", "donde reviso oportunidades", "donde reviso las oportunidades", "mis oportunidades", "ver propuestas", "mis propuestas", "view opportunities", "my opportunities", "my proposals"])) {
-    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos" };
+    return {
+      ...payload,
+      action: "open_dashboard",
+      answer: locale === "en"
+        ? "Open Received projects in your professional dashboard to review opportunities related to your services and manage your proposals."
+        : "Abra Proyectos recibidos en su panel profesional para revisar oportunidades relacionadas con sus servicios y administrar sus propuestas.",
+      ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos",
+    };
   }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {
     return { ...payload, action: "support", ctaLabel: locale === "en" ? "Open support" : "Ir a soporte" };

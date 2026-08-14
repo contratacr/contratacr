@@ -308,7 +308,18 @@ export async function searchProfessionals(
 ): Promise<ProfessionalCardData[]> {
   const normalized = normalizeSearchFilters(filters);
   if (options.fresh || normalized.bounds || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number")) {
-    return searchProfessionalsUncached(normalized);
+    const results = await searchProfessionalsUncached(normalized);
+    const shouldRetryNationwideVideoRead =
+      results.length === 0
+      && normalized.modalities?.[0] !== "in_person"
+      && !!normalized.categoryId
+      && normalized.categoryId !== "todas"
+      && supportsVideoConsultCategory(normalized.categoryId)
+      && (normalized.bounds != null || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number"));
+    // A transient local/PostgREST read failure must not turn a valid nationwide
+    // video provider into a false empty state. One fresh retry is bounded and is
+    // only used for the location-filtered video path.
+    return shouldRetryNationwideVideoRead ? searchProfessionalsUncached(normalized) : results;
   }
   return searchProfessionalsCached(normalized);
 }
