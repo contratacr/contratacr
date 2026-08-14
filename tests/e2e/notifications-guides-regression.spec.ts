@@ -15,7 +15,7 @@ type GuideExpectation = {
 };
 
 const GUIDE_EXPECTATIONS: GuideExpectation[] = [
-  { id: "clientPanel", stepCount: 5, target: { kind: "tab", value: "home" } },
+  { id: "clientPanel", stepCount: 5, target: { kind: "tab", value: "sent_bookings" } },
   { id: "clientRequests", stepCount: 3, target: { kind: "tab", value: "sent_bookings" } },
   { id: "clientProjects", stepCount: 3, target: { kind: "tab", value: "sent_projects" } },
   { id: "clientApplications", stepCount: 4, target: { kind: "tab", value: "applications" } },
@@ -30,7 +30,7 @@ const GUIDE_EXPECTATIONS: GuideExpectation[] = [
   { id: "reviewsGuide", stepCount: 4, target: { kind: "path", value: "/buscar" } },
   { id: "supportGuide", stepCount: 3, target: { kind: "tab", value: "soporte" } },
   { id: "accountSecurityGuide", stepCount: 4, target: { kind: "tab", value: "cuenta" } },
-  { id: "professionalPanel", stepCount: 4, target: { kind: "tab", value: "home" } },
+  { id: "professionalPanel", stepCount: 4, target: { kind: "tab", value: "bookings" } },
   { id: "completionGuide", stepCount: 4, target: { kind: "tab", value: "completion" } },
   { id: "requests", stepCount: 3, target: { kind: "tab", value: "bookings" } },
   { id: "opportunities", stepCount: 3, target: { kind: "tab", value: "proposals" } },
@@ -322,11 +322,17 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         await dialog.getByRole("button", { name: guideButtonName(copy.title) }).first().click();
         await dialog.getByRole("button", { name: copy.cta, exact: true }).click();
 
-        if (guide.target.kind === "path") {
-          await page.waitForURL((url) => url.pathname === `/${locale}${guide.target.value}`);
-        } else {
-          await page.waitForURL((url) => url.pathname === `/${locale}/dashboard/profesional` && url.searchParams.get("tab") === guide.target.value);
-        }
+        await expect
+          .poll(() => {
+            const url = new URL(page.url());
+            return guide.target.kind === "path"
+              ? url.pathname === `/${locale}${guide.target.value}`
+              : url.pathname === `/${locale}/dashboard/profesional` && url.searchParams.get("tab") === guide.target.value;
+          }, {
+            message: `Guide "${guide.id}" should open its documented ${locale} destination`,
+            timeout: 30_000,
+          })
+          .toBe(true);
         await expect(page.getByRole("dialog").filter({ hasText: messages.modalTitle })).toHaveCount(0);
       }
 

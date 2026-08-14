@@ -157,7 +157,7 @@ type GuideItem = {
 };
 
 const GUIDE_ITEMS: GuideItem[] = [
-  { id: "clientPanel", section: "client", actionTab: "home", targetMode: "use", stepCount: 5 },
+  { id: "clientPanel", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 5 },
   { id: "clientRequests", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 3 },
   { id: "clientProjects", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 3 },
   { id: "clientApplications", section: "client", actionTab: "applications", targetMode: "use", stepCount: 4 },
@@ -172,7 +172,7 @@ const GUIDE_ITEMS: GuideItem[] = [
   { id: "reviewsGuide", section: "shared", href: "/buscar", stepCount: 4 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
   { id: "accountSecurityGuide", section: "shared", actionTab: "cuenta", stepCount: 4 },
-  { id: "professionalPanel", section: "professional", actionTab: "home", targetMode: "offer", stepCount: 4 },
+  { id: "professionalPanel", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 4 },
   { id: "completionGuide", section: "professional", actionTab: "completion", targetMode: "offer", stepCount: 4 },
   { id: "requests", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 3 },
   { id: "opportunities", section: "professional", actionTab: "proposals", targetMode: "offer", stepCount: 3 },
