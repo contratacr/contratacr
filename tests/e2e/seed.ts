@@ -72,6 +72,17 @@ export type RegressionSeedState = {
 };
 
 type AdminClient = SupabaseClient;
+type RegressionProfessionalRow = {
+  id: string;
+  profile_id: string;
+  slug: string | null;
+  category_id: string | null;
+  workplaces: unknown;
+};
+
+const SEED_QUERY_TIMEOUT_MS = 12_000;
+const SEED_QUERY_ATTEMPTS = 3;
+let regressionSeedPromise: Promise<RegressionSeedState | null> | null = null;
 
 function envUrl() {
   return process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -118,28 +129,57 @@ function futureDate(daysAhead: number) {
   return value.toISOString().slice(0, 10);
 }
 
-export async function getRegressionSeedState(): Promise<RegressionSeedState | null> {
+async function readRegressionSeedState(): Promise<RegressionSeedState | null> {
   if (!canRunSeededRegression()) return null;
   const admin = adminClient();
-  const { data: client } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("email", E2E_USERS.client.email)
-    .maybeSingle();
-  const { data: professional } = await admin
-    .from("professionals")
-    .select("id,profile_id,slug,category_id,workplaces")
-    .eq("slug", E2E_USERS.professional.slug)
-    .maybeSingle();
-  const { data: videoProfessional } = await admin
-    .from("professionals")
-    .select("id,profile_id,slug,category_id,workplaces")
-    .eq("profile_id", client?.id ?? "00000000-0000-0000-0000-000000000000")
-    .maybeSingle();
-  const { data: seededJobs } = await admin
-    .from("job_posts")
-    .select("id,title")
-    .in("id", [REGRESSION_IDS.publishedJob, REGRESSION_IDS.secondaryJob]);
+  const abortController = new AbortController();
+  const timeout = setTimeout(() => abortController.abort(), SEED_QUERY_TIMEOUT_MS);
+  let client: { id: string } | null = null;
+  let professional: RegressionProfessionalRow | null = null;
+  let videoProfessional: RegressionProfessionalRow | null = null;
+  let seededJobs: Array<{ id: string; title: string }> = [];
+
+  try {
+    const [clientResult, professionalResult, jobsResult] = await Promise.all([
+      admin
+        .from("profiles")
+        .select("id")
+        .eq("email", E2E_USERS.client.email)
+        .abortSignal(abortController.signal)
+        .maybeSingle(),
+      admin
+        .from("professionals")
+        .select("id,profile_id,slug,category_id,workplaces")
+        .eq("slug", E2E_USERS.professional.slug)
+        .abortSignal(abortController.signal)
+        .maybeSingle(),
+      admin
+        .from("job_posts")
+        .select("id,title")
+        .in("id", [REGRESSION_IDS.publishedJob, REGRESSION_IDS.secondaryJob])
+        .abortSignal(abortController.signal),
+    ]);
+    if (clientResult.error) throw clientResult.error;
+    if (professionalResult.error) throw professionalResult.error;
+    if (jobsResult.error) throw jobsResult.error;
+
+    client = clientResult.data;
+    professional = professionalResult.data;
+    seededJobs = jobsResult.data ?? [];
+
+    if (client?.id) {
+      const videoResult = await admin
+        .from("professionals")
+        .select("id,profile_id,slug,category_id,workplaces")
+        .eq("profile_id", client.id)
+        .abortSignal(abortController.signal)
+        .maybeSingle();
+      if (videoResult.error) throw videoResult.error;
+      videoProfessional = videoResult.data;
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
   const seededJobTitles = new Map((seededJobs ?? []).map((job) => [job.id, job.title]));
 
   if (
@@ -199,6 +239,21 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
   };
 }
 
+export async function getRegressionSeedState(): Promise<RegressionSeedState | null> {
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= SEED_QUERY_ATTEMPTS; attempt += 1) {
+    try {
+      return await readRegressionSeedState();
+    } catch (error) {
+      lastError = error;
+      if (attempt < SEED_QUERY_ATTEMPTS) {
+        await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Timed out while reading regression fixtures.");
+}
+
 export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   if (process.env.E2E_FIXTURES_READY !== "1") {
     throw new Error("Run seed:test:full and set E2E_FIXTURES_READY=1 before seeded regression.");
@@ -206,7 +261,13 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   if (!regressionPassword) {
     throw new Error("E2E_TEST_PASSWORD is required for the protected regression actors.");
   }
-  const state = await getRegressionSeedState();
+  regressionSeedPromise ??= getRegressionSeedState().catch((error) => {
+    // A failed read must not poison the worker for every later spec. The next
+    // caller gets a fresh bounded attempt instead of reusing a rejected promise.
+    regressionSeedPromise = null;
+    throw error;
+  });
+  const state = await regressionSeedPromise;
   if (!state) {
     throw new Error("ContrataCR/SG Solutions regression fixtures are missing. Run seed:test:full first.");
   }
