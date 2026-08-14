@@ -19,36 +19,7 @@ permissions:
 
 jobs:
   local-database-contract:
-    name: Rebuild local Supabase schema
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.sha }}
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v3
-        with:
-          version: 2.109.0
-
-      - name: Start the minimal local Supabase stack
-        run: >-
-          supabase start
-          --exclude realtime,imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
-
-      - name: Rebuild every migration from an empty database
-        run: supabase db reset --local --no-seed
-
-      - name: Stop local Supabase
-        if: always()
-        run: supabase stop --no-backup
-
-  fast-contracts:
-    name: Fast application contracts
+    name: Local schema and fast contracts
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -68,6 +39,42 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.109.0
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Start the minimal local Supabase stack
+        run: >-
+          supabase start
+          --exclude realtime,imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
+
+      - name: Rebuild every migration from an empty database
+        run: supabase db reset --local --no-seed
+
+      - name: Seed and verify the synthetic local regression foundation
+        env:
+          LOCAL_REGRESSION_PASSWORD: LocalRegression!2026
+        run: |
+          set -euo pipefail
+          supabase status -o env > /tmp/contratacr-local-supabase.env
+          set -a
+          source /tmp/contratacr-local-supabase.env
+          set +a
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          export LOCAL_REGRESSION_SEED=1
+          psql "$DB_URL" \
+            --set=local_seed_guard=contratacr-local-only \
+            --set=regression_password="$LOCAL_REGRESSION_PASSWORD" \
+            --file=scripts/ci/seed-local-regression-auth.sql
+          npm run seed:local:regression
+          npm run verify:local:regression
+
       - name: Ensure private env files are not tracked
         run: npm run security:env
 
@@ -78,18 +85,20 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Lint regression contracts
-        run: npx eslint tests/e2e playwright.config.ts scripts/ci/verify-app-surface-ownership.mjs
+        run: npx eslint tests/e2e playwright.config.ts scripts/ci/verify-app-surface-ownership.mjs scripts/seed-local-regression-foundation.js scripts/verify-local-regression-foundation.js
 
       - name: Build on ordinary test pushes
         if: github.event_name == 'push'
         run: npm run build
 
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
+
   e2e:
     name: Playwright regression (test)
     if: github.event_name == 'workflow_dispatch'
-    needs:
-      - local-database-contract
-      - fast-contracts
+    needs: local-database-contract
     runs-on: ubuntu-latest
     # The exhaustive desktop + mobile matrix also performs fixture cleanup and
     # post-run verification. Leave enough room for those safety steps even when
