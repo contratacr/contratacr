@@ -38,6 +38,10 @@ const legacyOfferIds = [
 ];
 const legacyApplicationIds = ["00000000-0000-4000-8000-00000000e401"];
 
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 async function must(label, promise) {
   const { data, error } = await promise;
   if (error) throw new Error(`${label}: ${error.message}`);
@@ -99,10 +103,53 @@ async function cleanupActor(actor, users) {
   return { email: actor.email, present: true, removed: true, userId: profile.id };
 }
 
+async function interruptedDeletionActors() {
+  const profiles = await must(
+    "interrupted account-deletion profiles",
+    admin.from("profiles").select("id,email,full_name").ilike("email", "deletion-%@contratacr.test"),
+  );
+  const emailPattern = /^deletion-(?:target|sentinel)-(\d+-[0-9a-f]{8})@contratacr\.test$/i;
+  return profiles.flatMap((profile) => {
+    const match = (profile.email || "").match(emailPattern);
+    if (!match || profile.full_name !== `Cuenta desechable ${match[1]}`) return [];
+    return [{
+      email: profile.email.toLowerCase(),
+      name: new RegExp(`^Cuenta desechable ${escapeRegex(match[1])}$`),
+      slug: `regression-disposable-${match[1]}`,
+    }];
+  });
+}
+
+async function interruptedDeletionBookings() {
+  const candidates = await must(
+    "interrupted account-deletion bookings",
+    admin
+      .from("bookings")
+      .select("id,client_id,client_name,client_email,service_description")
+      .ilike("client_email", "%@contratacr.test")
+      .or("service_description.ilike.Deletion target booking %,service_description.ilike.Deletion sentinel booking %"),
+  );
+  const clientIds = [...new Set(candidates.map((row) => row.client_id).filter(Boolean))];
+  const profiles = clientIds.length
+    ? await must("account-deletion booking profiles", admin.from("profiles").select("id").in("id", clientIds))
+    : [];
+  const existingProfiles = new Set(profiles.map((profile) => profile.id));
+  const disposableEmail = /^deletion-(?:target|sentinel)-\d+-[0-9a-f]{8}@contratacr\.test$/i;
+  const disposableName = /^Deletion (?:target|sentinel)$/;
+  const disposableDescription = /^Deletion (?:target|sentinel) booking \d+$/;
+  return candidates.filter((row) =>
+    row.client_id
+    && !existingProfiles.has(row.client_id)
+    && disposableEmail.test(row.client_email || "")
+    && disposableName.test(row.client_name || "")
+    && disposableDescription.test(row.service_description || ""));
+}
+
 async function run() {
   const users = await allUsers();
+  const cleanupActors = [...legacyActors, ...await interruptedDeletionActors()];
   const actorPlan = [];
-  for (const actor of legacyActors) actorPlan.push(await cleanupActor(actor, users));
+  for (const actor of cleanupActors) actorPlan.push(await cleanupActor(actor, users));
   const rowPlan = {
     jobs: await must("legacy jobs", admin.from("job_posts").select("id").in("id", legacyJobIds)),
     offers: await must("legacy offers", admin.from("professional_offers").select("id").in("id", legacyOfferIds)),
@@ -111,6 +158,7 @@ async function run() {
       "legacy saved marketplace items",
       admin.from("saved_items").select("id,item_type,item_id").in("item_id", [...legacyJobIds, ...legacyOfferIds]),
     ),
+    interruptedDeletionBookings: await interruptedDeletionBookings(),
   };
   console.log(JSON.stringify({ mode: apply ? "apply" : "dry-run", actors: actorPlan, rows: rowPlan }, null, 2));
   if (!apply) {
@@ -132,11 +180,25 @@ async function run() {
   await must("legacy applications", admin.from("job_applications").delete().in("id", legacyApplicationIds));
   await must("legacy jobs", admin.from("job_posts").delete().in("id", legacyJobIds));
   await must("legacy offers", admin.from("professional_offers").delete().in("id", legacyOfferIds));
+  for (const booking of rowPlan.interruptedDeletionBookings) {
+    await must(
+      `interrupted account-deletion booking notification ${booking.id}`,
+      admin.from("notifications").delete().contains("data", { booking_id: booking.id }),
+    );
+  }
+  if (rowPlan.interruptedDeletionBookings.length) {
+    await must(
+      "interrupted account-deletion bookings",
+      admin.from("bookings").delete().in("id", rowPlan.interruptedDeletionBookings.map((booking) => booking.id)),
+    );
+  }
 
   const remainingUsers = await allUsers();
-  for (const actor of legacyActors) {
+  for (const actor of cleanupActors) {
     if (remainingUsers.some((user) => user.email?.toLowerCase() === actor.email)) throw new Error(`${actor.email} still exists after cleanup.`);
   }
+  const remainingInterruptedBookings = await interruptedDeletionBookings();
+  if (remainingInterruptedBookings.length) throw new Error("Interrupted account-deletion bookings remain after cleanup.");
   console.log("Legacy regression actors and deterministic rows removed from the test project.");
 }
 
