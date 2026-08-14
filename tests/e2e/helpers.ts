@@ -72,6 +72,10 @@ export async function gotoOK(page: Page, path: string) {
   expect(response!.status(), `Expected ${path} to return < 400`).toBeLessThan(400);
   await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
   await expectNotVercelProtection(page, path);
+  // Next.js can commit a streamed document before its visible route shell has
+  // replaced the fallback. Waiting for a merely visible <body> lets tests race
+  // a completely blank frame (and mirrors the white panel users reported).
+  await expectPageShell(page);
 }
 
 export async function expectNotVercelProtection(page: Page, path = page.url()) {

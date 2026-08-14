@@ -257,9 +257,13 @@ test.describe("@seeded dashboard surfaces", () => {
     const professionalSections = ["photos", "bookings", "soporte"];
     const clientSections = ["sent_bookings&mode=use", "sent_projects&mode=use", "saved&mode=use", "soporte&mode=use"];
 
+    // Keep one stable authenticated document per actor. Repeatedly clearing
+    // cookies and logging in while also changing the viewport made the same
+    // page alternate between server redirects and a streamed client shell,
+    // which could leave a transient all-white document unrelated to filters.
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     for (const width of [320, 390, 1366]) {
       await page.setViewportSize({ width, height: width >= 1000 ? 900 : 844 });
-      await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
       for (const section of professionalSections) {
         await gotoOK(page, `/es/dashboard/profesional?tab=${section}`);
         await exerciseVisibleFilters(page);
@@ -269,8 +273,11 @@ test.describe("@seeded dashboard surfaces", () => {
       await exerciseVisibleFilters(page);
       await page.getByRole("button", { name: /Mis propuestas|My proposals/i }).filter({ visible: true }).click();
       await exerciseVisibleFilters(page);
+    }
 
-      await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    for (const width of [320, 390, 1366]) {
+      await page.setViewportSize({ width, height: width >= 1000 ? 900 : 844 });
       for (const section of clientSections) {
         await gotoOK(page, `/es/dashboard/profesional?tab=${section}`);
         await exerciseVisibleFilters(page);
