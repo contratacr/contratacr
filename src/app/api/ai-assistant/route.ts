@@ -75,7 +75,7 @@ function localeKey(value: unknown): Locale {
 }
 
 function normalizeText(value: string) {
-  return value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
 function includesAny(text: string, words: string[]) {
@@ -992,9 +992,22 @@ function normalizePayload(
     };
   }
   if (includesAny(normalized, ["cambiar mi contrasena", "cambio mi contrasena", "cambiar la contrasena de mi cuenta", "cambiar mi correo", "cambio mi correo", "cerrar mi cuenta", "change my password", "change my email", "close my account"])) {
+    const passwordIntent = includesAny(normalized, ["contrasena", "password"]);
+    const emailIntent = includesAny(normalized, ["correo", "email"]);
     return {
       ...payload,
       action: "open_dashboard",
+      answer: locale === "en"
+        ? passwordIntent
+          ? "Open Account & security in your dashboard to change your password securely."
+          : emailIntent
+            ? "Open Account & security in your dashboard to change your account email."
+            : "Open Account & security in your dashboard to disable or permanently delete your account."
+        : passwordIntent
+          ? "Abra Cuenta y seguridad en su panel para cambiar su contraseña de forma segura."
+          : emailIntent
+            ? "Abra Cuenta y seguridad en su panel para cambiar el correo de su cuenta."
+            : "Abra Cuenta y seguridad en su panel para deshabilitar o eliminar permanentemente su cuenta.",
       ctaLabel: locale === "en" ? "Open account settings" : "Ir a cuenta y seguridad",
     };
   }

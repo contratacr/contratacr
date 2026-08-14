@@ -78,8 +78,14 @@ test.describe("@seeded production-mirror professional data shapes", () => {
       "Only the protected regression actors and hidden advertising account may differ from the production profile mirror",
     ).toBe(false);
 
-    const matrix = representativeMatrix(all);
-    expect(matrix.length, "The mirror should cover several materially different profile shapes").toBeGreaterThanOrEqual(5);
+    const localSyntheticRegression = process.env.LOCAL_REGRESSION_SEED === "1";
+    const matrix = localSyntheticRegression ? all : representativeMatrix(all);
+    expect(
+      matrix.length,
+      localSyntheticRegression
+        ? "The local regression must render both canonical synthetic professionals"
+        : "The mirror should cover several materially different profile shapes",
+    ).toBeGreaterThanOrEqual(localSyntheticRegression ? 2 : 5);
     for (const professional of matrix) {
       for (const locale of ["es", "en"] as const) {
         await gotoOK(page, `/${locale}/profesionales/${professional.slug}`);

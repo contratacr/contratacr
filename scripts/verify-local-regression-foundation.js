@@ -72,6 +72,30 @@ async function main() {
       anonymous.from("professionals").select("id,business_name").eq("id", actor.professionalId).single(),
     );
     assert(publicRow.business_name === actor.businessName, `${actor.businessName} is not visible through public RLS.`);
+
+    const authenticated = createClient(url, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const login = await authenticated.auth.signInWithPassword({
+      email: actor.email,
+      password: process.env.LOCAL_REGRESSION_PASSWORD,
+    });
+    if (login.error) throw new Error(`Login ${actor.businessName}: ${login.error.message}`);
+    assert(login.data.user?.id === actor.profileId, `${actor.businessName} login returned the wrong account.`);
+    const ownProfessional = await must(
+      `authenticated professional ${actor.businessName}`,
+      authenticated.from("professionals")
+        .select("id,profile_id,business_name")
+        .eq("profile_id", actor.profileId)
+        .single(),
+    );
+    assert(ownProfessional.id === actor.professionalId, `${actor.businessName} cannot read its own professional row.`);
+    await must(
+      `authenticated notifications ${actor.businessName}`,
+      authenticated.from("notifications").select("id").eq("user_id", actor.profileId).limit(1),
+    );
+    const logout = await authenticated.auth.signOut();
+    if (logout.error) throw new Error(`Logout ${actor.businessName}: ${logout.error.message}`);
   }
 
   const padron = await must("service-role padrón lookup", admin.rpc("padron_lookup", { p_cedula: "100000001" }));

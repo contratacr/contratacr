@@ -14,8 +14,10 @@ end $$;
 
 -- Hosted Supabase projects bootstrap these privileges outside application
 -- migrations. A database rebuilt only from migrations does not, so reproduce
--- the service-role contract locally without changing production grants.
-grant usage on schema public to service_role;
-grant all privileges on all tables in schema public to service_role;
-grant all privileges on all sequences in schema public to service_role;
-grant execute on all functions in schema public to service_role;
+-- the standard API-role contract locally without changing production grants.
+-- RLS remains the authorization boundary for anon/authenticated; without the
+-- table grants PostgREST returns empty/error states before policies can run.
+grant usage on schema public to anon, authenticated, service_role;
+grant all privileges on all tables in schema public to anon, authenticated, service_role;
+grant all privileges on all sequences in schema public to anon, authenticated, service_role;
+grant execute on all functions in schema public to anon, authenticated, service_role;

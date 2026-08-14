@@ -56,7 +56,7 @@ export function AdminLogin() {
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-10 pr-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0f172a] px-4">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-[#0f172a] px-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
         <div className="flex flex-col items-center mb-6">
           <ContrataCRLogo />
@@ -93,6 +93,6 @@ export function AdminLogin() {
           </button>
         </form>
       </div>
-    </div>
+    </main>
   );
 }
