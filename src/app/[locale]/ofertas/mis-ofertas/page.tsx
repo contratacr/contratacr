@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { OffersManager } from "@/components/offers/offers-manager";
+import { PageRouteLoading } from "@/components/ui/route-loading";
 import { type ProfessionalOffer } from "@/lib/offers";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { createClient } from "@/lib/supabase/server";
@@ -8,7 +10,15 @@ import { repairVisibleText } from "@/lib/text/repair-visible-text";
 
 export const dynamic = "force-dynamic";
 
-export default async function MyOffersPage() {
+export default function MyOffersPage() {
+  return (
+    <Suspense fallback={<PageRouteLoading />}>
+      <MyOffersContent />
+    </Suspense>
+  );
+}
+
+async function MyOffersContent() {
   const locale = await getLocale();
   const supabase = await createClient();
   const user = await safeGetUser(supabase);

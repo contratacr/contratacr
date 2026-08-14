@@ -173,6 +173,7 @@ test.describe("@seeded extended lifecycle", () => {
     const admin = regressionAdminClient();
     const marker = `E2E profile ${Date.now()}`;
     let account: DisposableAccount | undefined;
+    let releaseProfileSave: (() => void) | undefined;
     let releaseServiceSave: (() => void) | undefined;
 
     try {
@@ -191,10 +192,19 @@ test.describe("@seeded extended lifecycle", () => {
       const bio = page.locator('[data-field="bio"] textarea');
       await expect(bio).toBeVisible();
       await bio.fill(marker);
-      const saveProfile = page.getByRole("button", { name: /^Guardar cambios$/i }).filter({ visible: true });
+      const profileSaveGate = new Promise<void>((resolve) => { releaseProfileSave = resolve; });
+      await page.route("**/rest/v1/professionals*", async (route) => {
+        if (route.request().method() === "PATCH" && route.request().postData()?.includes(marker)) {
+          await profileSaveGate;
+        }
+        await route.continue();
+      });
+      const saveProfile = page.getByTestId("profile-save-basic");
       await expect(saveProfile).toHaveCount(1);
       await saveProfile.click();
       await expect(saveProfile).toContainText(/Guardando|Saving/i);
+      releaseProfileSave!();
+      releaseProfileSave = undefined;
       await expect.poll(async () => (await admin.from("professionals").select("bio").eq("id", account!.professionalId!).single()).data?.bio).toBe(marker);
       // The bio is the first write in the profile save pipeline. Wait for the
       // complete pipeline before navigating so the browser cannot abort the
@@ -274,6 +284,7 @@ test.describe("@seeded extended lifecycle", () => {
         return services.some((service) => service.description === `${marker} service`);
       }).toBe(true);
     } finally {
+      releaseProfileSave?.();
       releaseServiceSave?.();
       await cleanupDisposableAccount(account);
     }
