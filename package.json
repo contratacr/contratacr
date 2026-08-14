@@ -18,7 +18,7 @@
     "padron:load": "node scripts/load-padron.mjs",
     "padron:prepare-copy": "node scripts/prepare-padron-copy.mjs",
     "seed:test:cleanup": "node scripts/cleanup-legacy-regression-fixtures.js --apply",
-    "seed:test:full": "npm run seed:test:cleanup && node scripts/seed-regression-pair.js && node scripts/seed-regression-coverage.js",
+    "seed:test:full": "npm run seed:test:cleanup && node scripts/seed-regression-pair.js && node scripts/seed-regression-coverage.js && node scripts/ensure-advertising-test-account.js",
     "seed:test:verify": "node scripts/verify-regression-pair.js",
     "test:account-deletion": "node scripts/verify-account-deletion-isolation.js",
     "test:push-isolation": "node scripts/verify-notification-push-isolation.js",

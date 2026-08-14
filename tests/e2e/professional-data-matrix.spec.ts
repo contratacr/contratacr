@@ -69,9 +69,13 @@ test.describe("@seeded production-mirror professional data shapes", () => {
       all.some((row) => {
         const email = profileOf(row)?.email ?? "";
         return /^e2e-|^regression-disposable-/i.test(row.slug)
-          || (email.endsWith("@contratacr.test") && !["e2e.client@contratacr.test", "e2e.pro@contratacr.test"].includes(email));
+          || (email.endsWith("@contratacr.test") && ![
+            "e2e.client@contratacr.test",
+            "e2e.pro@contratacr.test",
+            "publicidad@contratacr.test",
+          ].includes(email));
       }),
-      "Only the two protected regression actors may differ from the production profile mirror",
+      "Only the protected regression actors and hidden advertising account may differ from the production profile mirror",
     ).toBe(false);
 
     const matrix = representativeMatrix(all);

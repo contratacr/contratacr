@@ -25,6 +25,7 @@ if (!anonKey || (!password && !dataOnly)) {
 
 const admin = createClient(url, serviceRole, { auth: { persistSession: false } });
 const publicClient = createClient(url, anonKey, { auth: { persistSession: false } });
+const ADVERTISING_EMAIL = "publicidad@contratacr.test";
 const CANONICAL_ACTORS = {
   contratacr: {
     businessName: "ContrataCR",
@@ -114,8 +115,68 @@ function assertRows(label, rows, predicate) {
   const unexpected = rows.filter((row) => !predicate(row));
   assert(
     !unexpected.length,
-    `${label}: private rows outside ContrataCR/SG remain: ${unexpected.slice(0, 10).map((row) => row.id).join(", ")}.`,
+    `${label}: private rows outside the approved test accounts remain: ${unexpected.slice(0, 10).map((row) => row.id).join(", ")}.`,
   );
+}
+
+async function verifyAdvertisingDataParity(source, advertising) {
+  const specifications = [
+    ["bookings", `client_id.eq.${source.profile.id},professional_id.eq.${source.professional.id}`, `client_id.eq.${advertising.profile.id},professional_id.eq.${advertising.professional.id}`, "status"],
+    ["projects", `client_id.eq.${source.profile.id}`, `client_id.eq.${advertising.profile.id}`, "status"],
+    ["proposals", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, "status"],
+    ["job_posts", `employer_id.eq.${source.professional.id}`, `employer_id.eq.${advertising.professional.id}`, "status"],
+    ["job_applications", `applicant_id.eq.${source.profile.id}`, `applicant_id.eq.${advertising.profile.id}`, "status"],
+    ["professional_offers", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, "status"],
+    ["support_tickets", `user_id.eq.${source.profile.id}`, `user_id.eq.${advertising.profile.id}`, "status"],
+    ["direct_conversations", `client_id.eq.${source.profile.id},professional_id.eq.${source.professional.id}`, `client_id.eq.${advertising.profile.id},professional_id.eq.${advertising.professional.id}`, "status"],
+    ["saved_professionals", `client_id.eq.${source.profile.id}`, `client_id.eq.${advertising.profile.id}`, null],
+    ["saved_items", `user_id.eq.${source.profile.id}`, `user_id.eq.${advertising.profile.id}`, "item_type"],
+    ["professional_follows", `follower_id.eq.${source.profile.id},professional_id.eq.${source.professional.id}`, `follower_id.eq.${advertising.profile.id},professional_id.eq.${advertising.professional.id}`, null],
+    ["reviews", `client_id.eq.${source.profile.id},professional_id.eq.${source.professional.id}`, `client_id.eq.${advertising.profile.id},professional_id.eq.${advertising.professional.id}`, null],
+    ["notifications", `user_id.eq.${source.profile.id}`, `user_id.eq.${advertising.profile.id}`, "type"],
+    ["availability_weekly", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, "weekday"],
+    ["availability_slots", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, null],
+    ["availability_exceptions", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, "mode"],
+    ["blocked_dates", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, null],
+  ];
+
+  for (const [table, sourceFilter, advertisingFilter, discriminator] of specifications) {
+    const select = discriminator ? `id,${discriminator}` : "id";
+    const [sourceRows, advertisingRows] = await Promise.all([
+      must(`${table} ContrataCR parity`, admin.from(table).select(select).or(sourceFilter).limit(5000)),
+      must(`${table} advertising parity`, admin.from(table).select(select).or(advertisingFilter).limit(5000)),
+    ]);
+    assert(
+      advertisingRows.length === sourceRows.length,
+      `Advertising ${table}: expected ${sourceRows.length} rows like ContrataCR, found ${advertisingRows.length}.`,
+    );
+    if (discriminator) {
+      const expected = [...new Set(sourceRows.map((row) => String(row[discriminator])))].sort();
+      const actual = [...new Set(advertisingRows.map((row) => String(row[discriminator])))].sort();
+      assert(
+        JSON.stringify(actual) === JSON.stringify(expected),
+        `Advertising ${table}: ${discriminator} coverage differs from ContrataCR.`,
+      );
+    }
+  }
+
+  const advertisingConversations = await must(
+    "advertising conversations",
+    admin.from("direct_conversations").select("id").or(`client_id.eq.${advertising.profile.id},professional_id.eq.${advertising.professional.id}`),
+  );
+  const sourceConversations = await must(
+    "ContrataCR conversations",
+    admin.from("direct_conversations").select("id").or(`client_id.eq.${source.profile.id},professional_id.eq.${source.professional.id}`),
+  );
+  const [advertisingMessages, sourceMessages] = await Promise.all([
+    advertisingConversations.length
+      ? must("advertising messages", admin.from("direct_messages").select("id").in("conversation_id", advertisingConversations.map((row) => row.id)))
+      : [],
+    sourceConversations.length
+      ? must("ContrataCR messages", admin.from("direct_messages").select("id").in("conversation_id", sourceConversations.map((row) => row.id)))
+      : [],
+  ]);
+  assert(advertisingMessages.length === sourceMessages.length, "Advertising messages must match ContrataCR coverage.");
 }
 
 async function verifyPrivateActorIsolation(owners) {
@@ -313,7 +374,7 @@ function verifyProfessionCoverage(owner) {
 }
 
 async function verifyNoRetiredAuthUsers() {
-  const allowed = new Set(["e2e.client@contratacr.test", "e2e.pro@contratacr.test"]);
+  const allowed = new Set(["e2e.client@contratacr.test", "e2e.pro@contratacr.test", ADVERTISING_EMAIL]);
   const unexpectedProfiles = await must(
     "unexpected test profiles",
     admin.from("profiles").select("email").ilike("email", "%@contratacr.test"),
@@ -475,10 +536,37 @@ async function main() {
   if (publicProfessionalError) throw new Error(`public professionals: ${publicProfessionalError.message}`);
   assert((publicProfessionalCount || 0) > 2, "The mirrored directory is not visible through the public test API key.");
   const obsolete = professionals.filter((row) =>
-    /^test-/i.test(row.slug || "") || /^e2e-/i.test(row.slug || "") || /mobile-test-seed|full-app-regression-v1/i.test(row.created_app_environment || ""),
+    row.slug === "e2e-video-contratacr"
+      || /mobile-test-seed|full-app-regression-v1/i.test(row.created_app_environment || ""),
   );
 
-  await verifyPrivateActorIsolation([contratacr, sg]);
+  const advertisingProfiles = await must(
+    "advertising test profile",
+    admin.from("profiles").select("*").eq("email", ADVERTISING_EMAIL),
+  );
+  assert(advertisingProfiles.length === 1, "The isolated advertising test account must exist exactly once.");
+  const advertisingProfile = advertisingProfiles[0];
+  assert(advertisingProfile.role === "professional", "The advertising test account must match the ContrataCR professional panel.");
+  assert(advertisingProfile.onboarding_completed === true, "The advertising test account must be ready for login.");
+  assert(advertisingProfile.is_provider === true, "The advertising test account must include professional data.");
+  assert(advertisingProfile.is_disabled === false, "The advertising test account cannot be disabled.");
+  const advertisingProfessionals = await must(
+    "advertising provider isolation",
+    admin.from("professionals").select("*,profiles(*)").eq("profile_id", advertisingProfile.id),
+  );
+  assert(advertisingProfessionals.length === 1, "The advertising account must have exactly one professional profile.");
+  assert(
+    advertisingProfessionals.every((row) => row.is_available === false && row.is_banned === true),
+    "The advertising professional must stay hidden from public discovery.",
+  );
+  const advertising = { professional: advertisingProfessionals[0], profile: advertisingProfile };
+  assert(Array.isArray(advertising.professional.services) && advertising.professional.services.length, "Advertising needs ContrataCR services.");
+  assert(Array.isArray(advertising.professional.portfolio_items) && advertising.professional.portfolio_items.length, "Advertising needs ContrataCR success cases.");
+  assert(Array.isArray(advertising.professional.certifications) && advertising.professional.certifications.length, "Advertising needs ContrataCR certifications.");
+  assert(Array.isArray(advertising.professional.languages) && advertising.professional.languages.length, "Advertising needs ContrataCR languages.");
+
+  await verifyAdvertisingDataParity(contratacr, advertising);
+  await verifyPrivateActorIsolation([contratacr, sg, advertising]);
 
   await Promise.all(Object.entries(REQUIRED_FIXTURE_IDS).map(([label, ids]) => {
     const tableByLabel = {
@@ -590,6 +678,15 @@ async function main() {
       if (error) throw new Error(`Regression login failed for ${email}: ${error.message}`);
       await client.auth.signOut();
     }
+    const advertisingPassword = process.env.ADVERTISING_TEST_PASSWORD || "";
+    assert(advertisingPassword.length >= 16, "ADVERTISING_TEST_PASSWORD is required for the manual test account.");
+    const advertisingClient = createClient(url, anonKey, { auth: { persistSession: false } });
+    const { error: advertisingLoginError } = await advertisingClient.auth.signInWithPassword({
+      email: ADVERTISING_EMAIL,
+      password: advertisingPassword,
+    });
+    if (advertisingLoginError) throw new Error(`Advertising login failed: ${advertisingLoginError.message}`);
+    await advertisingClient.auth.signOut();
   }
 
   console.log(JSON.stringify({
@@ -597,7 +694,8 @@ async function main() {
     authVerified: !dataOnly,
     professionals: professionals.length,
     actors: [contratacr.professional.business_name, sg.professional.business_name],
-    privateCommunicationActors: [...allowedProfiles],
+    privateCommunicationActors: [...allowedProfiles, advertisingProfile.id],
+    manualTestAccounts: [ADVERTISING_EMAIL],
   }, null, 2));
 }
 
