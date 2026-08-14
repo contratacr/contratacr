@@ -18,8 +18,38 @@ permissions:
   contents: read
 
 jobs:
+  local-database-contract:
+    name: Rebuild local Supabase schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.109.0
+
+      - name: Start the minimal local Supabase stack
+        run: >-
+          supabase start
+          --exclude realtime,imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
+
+      - name: Rebuild every migration from an empty database
+        run: supabase db reset --local --no-seed
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
+
   e2e:
     name: Playwright regression (test)
+    needs: local-database-contract
     runs-on: ubuntu-latest
     # The exhaustive desktop + mobile matrix also performs fixture cleanup and
     # post-run verification. Leave enough room for those safety steps even when

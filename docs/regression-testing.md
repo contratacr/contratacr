@@ -1,5 +1,17 @@
 # Regression testing
 
+## Local database gate
+
+Every regression run first starts a disposable Supabase stack inside GitHub
+Actions and rebuilds the database from `supabase/migrations`. It includes
+Postgres, Auth, PostgREST and Storage, but omits Studio, analytics and other
+services that the schema contract does not need. This gate uses no hosted
+Supabase credentials and cannot modify test or production.
+
+For now, the exhaustive browser suite still uses the isolated hosted test data.
+The next migration phase replaces that dependency with synthetic local fixtures;
+until parity is proven, the hosted verifier remains the source of truth.
+
 This suite is designed to use the **test data environment** while the application
 itself runs as an optimized production build inside GitHub Actions. Production should
 receive the same certified code after the local production server passes. A small
