@@ -62,15 +62,6 @@ async function must(label, promise) {
 }
 
 async function main() {
-  await must("local reference provinces", db.from("provincias").upsert([
-    { id: "sj", name: "San José" },
-    { id: "al", name: "Alajuela" },
-  ], { onConflict: "id" }));
-  await must("local reference cantons", db.from("cantones").upsert([
-    { id: "sj-sj", name: "San José", provincia_id: "sj" },
-    { id: "al-at", name: "Atenas", provincia_id: "al" },
-  ], { onConflict: "id" }));
-
   const categories = await must(
     "local categories",
     db.from("categories").select("id").in("id", [...new Set(actors.flatMap((actor) => actor.professionIds))]),

@@ -1,12 +1,21 @@
 \set ON_ERROR_STOP on
 
 select set_config('app.local_seed_guard', :'local_seed_guard', false);
-select set_config('app.local_regression_password', :'regression_password', false);
 
 do $$
 begin
   if current_setting('app.local_seed_guard') <> 'contratacr-local-only' then
     raise exception 'Refusing to seed Auth without the local-only guard';
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from public.provincias where id = 'sj')
+    or not exists (select 1 from public.provincias where id = 'al')
+    or not exists (select 1 from public.cantones where id = 'sj-sj' and provincia_id = 'sj')
+    or not exists (select 1 from public.cantones where id = 'al-at' and provincia_id = 'al') then
+    raise exception 'Required local geography fixtures are missing after migrations';
   end if;
 end $$;
 
@@ -34,7 +43,7 @@ values
     'authenticated',
     'authenticated',
     'e2e.client@contratacr.test',
-    crypt(current_setting('app.local_regression_password'), gen_salt('bf')),
+    crypt(:'regression_password', gen_salt('bf')),
     now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"full_name":"ContrataCR","role":"professional","is_provider":true,"onboarding_completed":true,"localRegression":true}'::jsonb,
@@ -51,7 +60,7 @@ values
     'authenticated',
     'authenticated',
     'e2e.pro@contratacr.test',
-    crypt(current_setting('app.local_regression_password'), gen_salt('bf')),
+    crypt(:'regression_password', gen_salt('bf')),
     now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"full_name":"SG Solutions","role":"professional","is_provider":true,"onboarding_completed":true,"localRegression":true}'::jsonb,
