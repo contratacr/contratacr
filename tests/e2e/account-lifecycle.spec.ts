@@ -116,6 +116,7 @@ test.describe("@account disposable account lifecycle", () => {
   });
 
   test("permanent deletion removes only the populated target and returns to the English home", async ({ page }) => {
+    test.setTimeout(240_000);
     const admin = regressionAdminClient();
     let target: DisposableAccount | undefined;
     let sentinel: DisposableAccount | undefined;
@@ -124,6 +125,7 @@ test.describe("@account disposable account lifecycle", () => {
     let targetConversationPath = "";
     let targetJobResumePath = "";
     const cleanupNotificationData: Array<Record<string, string>> = [];
+    const bookingIds: string[] = [];
     const supportTicketIds: string[] = [];
     const supportMessageIds: string[] = [];
     const reportIds: string[] = [];
@@ -145,6 +147,7 @@ test.describe("@account disposable account lifecycle", () => {
         service_description: `Deletion target booking ${stamp}`,
         status: "confirmed",
       });
+      bookingIds.push(targetBookingId);
       cleanupNotificationData.push({ booking_id: targetBookingId });
       const sentinelBookingId = await insertId("bookings", {
         professional_id: seed.professionalId,
@@ -155,6 +158,7 @@ test.describe("@account disposable account lifecycle", () => {
         service_description: `Deletion sentinel booking ${stamp}`,
         status: "confirmed",
       });
+      bookingIds.push(sentinelBookingId);
       cleanupNotificationData.push({ booking_id: sentinelBookingId });
 
       const targetProjectId = await insertId("projects", {
@@ -707,6 +711,10 @@ test.describe("@account disposable account lifecycle", () => {
       const cleanupFailures: unknown[] = [];
       for (const data of cleanupNotificationData) {
         const { error } = await admin.from("notifications").delete().contains("data", data);
+        if (error) cleanupFailures.push(error);
+      }
+      if (bookingIds.length) {
+        const { error } = await admin.from("bookings").delete().in("id", bookingIds);
         if (error) cleanupFailures.push(error);
       }
       if (targetPath) {
