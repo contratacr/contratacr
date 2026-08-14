@@ -181,7 +181,11 @@ test.describe("@visual recent bug contracts", () => {
     // Use the professional's own public profile: the blocked self-action is the
     // compact informational dialog from the recent responsive bug report.
     await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
-    await page.getByRole("button", { name: /Solicitar|Reservar|Request|Book/i }).filter({ visible: true }).first().click();
+    const serviceRequest = page.locator("article").filter({
+      has: page.getByRole("button", { name: /Ver disponibilidad|View availability/i }),
+    }).first().getByRole("button", { name: /Ver disponibilidad|View availability/i });
+    await expect(serviceRequest).toBeVisible();
+    await serviceRequest.click();
     const dialog = page.getByRole("dialog").filter({ visible: true }).first();
     await expect(dialog).toBeVisible();
     const centered = await dialog.evaluate((node) => {

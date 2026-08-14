@@ -314,11 +314,9 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
             "professionalProfile",
           ].includes(guide.id));
       for (const guide of guides) {
-        // The compact notifications view intentionally hides the dashboard
-        // navigation (including Guides). Start home-bound guides from Profile so
-        // the CTA still proves a real tab transition on desktop and mobile.
-        const initialTab = guide.target.kind === "tab" && guide.target.value === "home" ? "profile" : "home";
-        await gotoOK(page, `/${locale}/dashboard/profesional?tab=${initialTab}`);
+        // On compact layouts Guides is intentionally available from the panel
+        // home, while focused sections render only their own back navigation.
+        await gotoOK(page, `/${locale}/dashboard/profesional?tab=home`);
         const dialog = await openGuides(page, locale);
         const copy = messages.items[guide.id];
         await dialog.getByRole("button", { name: guideButtonName(copy.title) }).first().click();

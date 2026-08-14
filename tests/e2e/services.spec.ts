@@ -19,7 +19,7 @@ test.describe("@smoke services catalog", () => {
     await expect(result).toHaveAttribute("href", /\/es\/buscar\?categoria=plomeria/);
 
     await search.fill("");
-    await search.press("Enter");
+    await expect(search).toHaveValue("");
     await expect(page).toHaveURL(/\/es\/servicios\/?\??$/);
     await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
     await expectHealthyPage(page);
