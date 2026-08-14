@@ -1,6 +1,9 @@
 "use client";
 
+import { IMAGE_KINDS, sniffFileType } from "@/lib/upload-validation";
+
 const SAFE_UPLOAD_BYTES = 3.8 * 1024 * 1024;
+const UPLOAD_TIMEOUT_MS = 30_000;
 
 export type ImageUploadPreparationErrorCode = "too_large" | "unsupported";
 
@@ -114,10 +117,14 @@ function jpegName(name: string) {
  */
 export async function prepareImageForUpload(file: File, options: PrepareImageOptions = {}) {
   const targetBytes = options.targetBytes ?? SAFE_UPLOAD_BYTES;
+  const header = new Uint8Array(await file.slice(0, 32).arrayBuffer());
+  const detectedKind = sniffFileType(header);
+  if (!detectedKind || !IMAGE_KINDS.includes(detectedKind)) {
+    throw new ImageUploadPreparationError("unsupported");
+  }
   if (file.size <= targetBytes) return file;
 
-  const normalizedType = file.type.toLowerCase();
-  if (normalizedType === "image/gif") {
+  if (detectedKind === "gif") {
     throw new ImageUploadPreparationError("too_large");
   }
 
@@ -145,7 +152,11 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
     }
   } catch (error) {
     if (file.size <= targetBytes) return file;
-    if (error instanceof ImageUploadPreparationError) throw error;
+    if (error instanceof ImageUploadPreparationError) {
+      // The type is supported, but this browser could not decode a large source
+      // (notably HEIC on some iOS versions) enough to fit the hosting body limit.
+      throw new ImageUploadPreparationError("too_large");
+    }
     throw new ImageUploadPreparationError("unsupported");
   } finally {
     decoded?.cleanup();
@@ -157,8 +168,10 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
 export async function uploadPhotoFormDataWithRetry(formData: FormData, attempts = 2): Promise<UploadPhotoResult> {
   let lastError: unknown;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
     try {
-      const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
+      const res = await fetch("/api/upload/photo", { method: "POST", body: formData, signal: controller.signal });
       const data = await res.json().catch(() => ({}));
       if (res.ok || (res.status >= 400 && res.status < 500 && res.status !== 429)) {
         return { ok: res.ok, status: res.status, data };
@@ -166,6 +179,8 @@ export async function uploadPhotoFormDataWithRetry(formData: FormData, attempts 
       lastError = new Error(data?.error || `upload failed with ${res.status}`);
     } catch (error) {
       lastError = error;
+    } finally {
+      window.clearTimeout(timeout);
     }
 
     if (attempt < attempts - 1) await wait(650 * (attempt + 1));

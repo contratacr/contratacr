@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 
 // The support ticket form — SINGLE SOURCE OF TRUTH for the fields, validation and
 // submit. Rendered on the public /soporte page (the in-dashboard Soporte section uses
@@ -17,6 +19,7 @@ import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText
 
 const MAX_FILES = 3;
 const MAX_FILE_MB = 4;
+const MAX_REQUEST_FILE_BYTES = 3.7 * 1024 * 1024;
 const SUBJECT_IDS = [0, 1, 2, 3, 4, 5] as const;
 
 type AttachedFile = { file: File; preview?: string };
@@ -27,12 +30,24 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentsRef = useRef<AttachedFile[]>([]);
   const prefillAppliedRef = useRef(false);
 
   const [form, setForm] = useState({ name: "", email: "", topic: "", subject: "", message: "" });
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
+
+  useEffect(() => () => {
+    attachmentsRef.current.forEach(({ preview }) => {
+      if (preview) URL.revokeObjectURL(preview);
+    });
+  }, []);
 
   useEffect(() => {
     if (prefillAppliedRef.current) return;
@@ -98,34 +113,44 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
     update("subject", topic ? t(topic) : "");
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files ?? []);
     const remaining = MAX_FILES - attachments.length;
-    // Allowed: safe images + PDF. Reject by MIME on the client for a localized message;
-    // the server re-validates by magic bytes (the real gate). No SVG.
-    const allowedMime = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "application/pdf"];
-    const badType = selected.filter((f) => !allowedMime.includes(f.type));
-    const okType = selected.filter((f) => allowedMime.includes(f.type));
-    const toAdd = okType.slice(0, remaining).filter((f) => f.size <= MAX_FILE_MB * 1024 * 1024);
-    const oversized = okType.filter((f) => f.size > MAX_FILE_MB * 1024 * 1024);
-
-    if (badType.length > 0) {
-      setError(t("errFormat"));
-    } else if (oversized.length > 0) {
-      setError(t("errOversized", { mb: MAX_FILE_MB }));
-    }
-
-    const withPreviews: AttachedFile[] = toAdd.map((file) => {
-      let preview: string | undefined;
-      if (file.type.startsWith("image/")) {
-        preview = URL.createObjectURL(file);
+    const candidates = selected.slice(0, Math.max(0, remaining));
+    if (!candidates.length) return;
+    setPreparingAttachments(true);
+    setError(null);
+    const prepared: AttachedFile[] = [];
+    try {
+      let availableBytes = MAX_REQUEST_FILE_BYTES - attachments.reduce((sum, item) => sum + item.file.size, 0);
+      for (let index = 0; index < candidates.length; index += 1) {
+        const file = candidates[index];
+        const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+        const remainingCandidates = candidates.length - index;
+        const targetBytes = Math.min(MAX_FILE_MB * 1024 * 1024, Math.floor(availableBytes / remainingCandidates));
+        if (targetBytes <= 0) throw new Error("total-size");
+        const ready = isPdf ? file : await prepareImageForUpload(file, { maxDimension: 1600, targetBytes });
+        if (ready.size > targetBytes || ready.size > availableBytes) throw new Error("total-size");
+        prepared.push({ file: ready, preview: !isPdf ? URL.createObjectURL(ready) : undefined });
+        availableBytes -= ready.size;
       }
-      return { file, preview };
-    });
-
-    setAttachments((prev) => [...prev, ...withPreviews]);
-    // Reset input so the same file can be re-added after removal
-    if (fileInputRef.current) fileInputRef.current.value = "";
+      setAttachments((prev) => [...prev, ...prepared]);
+    } catch (attachmentError) {
+      prepared.forEach(({ preview }) => {
+        if (preview) URL.revokeObjectURL(preview);
+      });
+      const code = getImageUploadPreparationErrorCode(attachmentError);
+      setError(code === "unsupported"
+        ? t("errFormat")
+        : code === "too_large"
+          ? t("errOversized", { mb: MAX_FILE_MB })
+          : locale === "en"
+            ? "The combined attachments are too large. Use fewer or lighter files."
+            : "Los archivos juntos son muy pesados. Usa menos archivos o archivos más livianos.");
+    } finally {
+      setPreparingAttachments(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   function removeAttachment(index: number) {
@@ -253,19 +278,21 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
+            disabled={preparingAttachments || submitting}
             className="flex items-center gap-2 text-sm text-[#009FD9] border border-dashed border-[#009FD9]/40 rounded-xl px-4 py-2.5 hover:bg-[#EBF5FB] transition-colors w-full justify-center"
           >
             <Paperclip className="h-4 w-4" />
-            {attachments.length === 0 ? t("attachBtn") : t("addAnother")}
+            {preparingAttachments ? (locale === "en" ? "Preparing files…" : "Preparando archivos…") : attachments.length === 0 ? t("attachBtn") : t("addAnother")}
           </button>
         )}
         <input
           ref={fileInputRef}
           type="file"
           className="hidden"
-          accept="image/jpeg,image/png,image/webp,application/pdf"
+          accept={IMAGE_DOC_ACCEPT}
+          disabled={preparingAttachments || submitting}
           multiple
-          onChange={handleFileChange}
+          onChange={(event) => { void handleFileChange(event); }}
         />
         <p className="text-xs text-[#9ca3af] mt-1.5">
           {t("formats")}

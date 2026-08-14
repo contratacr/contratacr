@@ -6,11 +6,11 @@
 // signature, so `sniffFileType` returns null for it and it's rejected everywhere.
 // The same goes for HTML, scripts and executables — none match a safe signature.
 
-export type FileKind = "jpeg" | "png" | "webp" | "gif" | "heic" | "heif" | "pdf";
+export type FileKind = "jpeg" | "png" | "webp" | "avif" | "gif" | "heic" | "heif" | "pdf";
 
 // Safe RASTER image formats (no SVG). HEIC is the iPhone default; Cloudinary
 // converts it. GIF is a safe raster.
-export const IMAGE_KINDS: FileKind[] = ["jpeg", "png", "webp", "gif", "heic", "heif"];
+export const IMAGE_KINDS: FileKind[] = ["jpeg", "png", "webp", "avif", "gif", "heic", "heif"];
 export const DOC_KINDS: FileKind[] = ["pdf"];
 
 // Real MIME for a detected kind — used to build a correct Cloudinary data URI
@@ -19,6 +19,7 @@ export const MIME_FOR: Record<FileKind, string> = {
   jpeg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
+  avif: "image/avif",
   gif: "image/gif",
   heic: "image/heic",
   heif: "image/heif",
@@ -27,8 +28,8 @@ export const MIME_FOR: Record<FileKind, string> = {
 
 // `accept` strings for the file pickers (kept in sync with the kinds above; NO
 // `image/*`, which would let SVG through).
-export const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif";
-export const IMAGE_DOC_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf";
+export const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif,image/gif";
+export const IMAGE_DOC_ACCEPT = `${IMAGE_ACCEPT},application/pdf`;
 
 /**
  * Detect the file type from its leading bytes. Returns null for anything not on the
@@ -54,6 +55,7 @@ export function sniffFileType(buf: Uint8Array): FileKind | null {
       return "heic";
     }
     if (["heif", "mif1", "msf1"].includes(brand)) return "heif";
+    if (["avif", "avis"].includes(brand)) return "avif";
   }
   return null;
 }

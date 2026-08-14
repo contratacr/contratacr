@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const check = validateUpload(buffer, {
       allow: IMAGE_KINDS,
       maxBytes: 4 * 1024 * 1024,
-      allowLabel: "JPG, PNG, WEBP, HEIC/HEIF o GIF",
+      allowLabel: "JPG, PNG, WEBP, AVIF, HEIC/HEIF o GIF",
     });
     if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
 

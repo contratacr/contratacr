@@ -13,7 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { cldThumb } from "@/lib/cloudinary";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { CASE_PHOTOS_PER_CASE, casoProfession, type ServiceLike } from "@/lib/services";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -113,19 +113,31 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   async function persist(next: SuccessCase[]) {
     setCases(next);
     setSaving(true);
-    const supabase = createClient();
-    // portfolio_urls (capped at 5) keeps the legacy DB CHECK + search thumbnails happy.
-    const urls = next.flatMap((c) => c.photos).slice(0, 5);
-    let { error } = await supabase.from("professionals").update({ portfolio_items: next, portfolio_urls: urls }).eq("id", professionalId);
-    if (error && /portfolio_items|column|schema cache|PGRST204|could not find/i.test(error.message)) {
-      ({ error } = await supabase.from("professionals").update({ portfolio_urls: urls }).eq("id", professionalId));
+    try {
+      const supabase = createClient();
+      // portfolio_urls (capped at 5) keeps the legacy DB CHECK + search thumbnails happy.
+      const urls = next.flatMap((c) => c.photos).slice(0, 5);
+      let { error } = await supabase.from("professionals").update({ portfolio_items: next, portfolio_urls: urls }).eq("id", professionalId);
+      if (error && /portfolio_items|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+        ({ error } = await supabase.from("professionals").update({ portfolio_urls: urls }).eq("id", professionalId));
+      }
+      if (error) throw error;
+      setJustSaved(true);
+      setDirty(false);
+      initialCasesRef.current = next;
+      setTimeout(() => setJustSaved(false), 2500);
+      onSaved?.();
+      return true;
+    } catch {
+      void showMessage({
+        title: errorTitle,
+        description: locale === "en" ? "We couldn't save your success stories. Try again." : "No pudimos guardar tus casos de éxito. Intenta de nuevo.",
+        tone: "danger",
+      });
+      return false;
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setJustSaved(true);
-    setDirty(false);
-    initialCasesRef.current = next;
-    setTimeout(() => setJustSaved(false), 2500);
-    onSaved?.();
   }
 
   function openAdd() {
@@ -149,9 +161,9 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         try {
           const preparedFile = await prepareImageForUpload(file, { maxDimension: 1600 });
           const fd = new FormData(); fd.append("file", preparedFile); fd.append("type", "portfolio");
-          const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
-          const data = await res.json();
-          if (data.url) urls.push(data.url); else void showMessage({ title: errorTitle, description: data.error ?? t("uploadError"), tone: "danger" });
+          const upload = await uploadPhotoFormDataWithRetry(fd);
+          if (upload.ok && upload.data.url) urls.push(upload.data.url);
+          else void showMessage({ title: errorTitle, description: upload.data.error ?? t("uploadError"), tone: "danger" });
         } catch (error) {
           const code = getImageUploadPreparationErrorCode(error);
           void showMessage({ title: errorTitle, description: code === "too_large" ? t("uploadTooLarge") : code === "unsupported" ? t("uploadUnsupported") : t("uploadError"), tone: "danger" });
@@ -372,4 +384,3 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     </div>
   );
 }
-

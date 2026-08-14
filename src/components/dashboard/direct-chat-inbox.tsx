@@ -14,6 +14,8 @@ import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { PanelEmptyState } from "@/components/ui/content-loading";
+import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
@@ -40,8 +42,7 @@ type PendingDraft = {
 
 const DRAFT_CONVERSATION_ID = "__draft__";
 const MAX_ATTACHMENTS = 3;
-const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
-const ALLOWED_ATTACHMENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+const MAX_ATTACHMENT_BYTES = 4 * 1024 * 1024;
 
 function timeLabel(value?: string | null, locale = "es") {
   if (!value) return "";
@@ -75,7 +76,7 @@ function attachmentLabel(bytes: number) {
 }
 
 function isImageAttachment(attachment: Pick<DirectAttachment, "type" | "name">) {
-  return attachment.type.startsWith("image/") || /\.(jpe?g|png|webp)$/i.test(attachment.name);
+  return attachment.type.startsWith("image/") || /\.(jpe?g|png|webp|avif|gif|heic|heif)$/i.test(attachment.name);
 }
 
 function buildPendingDraft(searchParams: URLSearchParams, userId: string | undefined, isEn: boolean): { conversation: Conversation | null; payload: PendingDraft | null } {
@@ -155,6 +156,7 @@ export function DirectChatInbox() {
   const [loading, setLoading] = useState(true);
   const [threadLoading, setThreadLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [error, setError] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
   const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
@@ -360,35 +362,47 @@ export function DirectChatInbox() {
     router.replace(`/mensajes${showArchived ? "?chatStatus=archived&" : "?"}conversation=${id}`, { scroll: false });
   }
 
-  function addAttachments(files: FileList | null) {
+  async function addAttachments(files: FileList | null) {
     setAttachmentError("");
     if (!files?.length) return;
     if (activeId === DRAFT_CONVERSATION_ID) {
       setAttachmentError(isEn ? "Send the first message before attaching files." : "Envia el primer mensaje antes de adjuntar archivos.");
       return;
     }
+    setPreparingAttachments(true);
     const next = [...selectedAttachments];
-    for (const file of Array.from(files)) {
-      if (next.length >= MAX_ATTACHMENTS) {
-        setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puedes adjuntar hasta 3 archivos por mensaje.");
-        break;
+    try {
+      for (const file of Array.from(files)) {
+        if (next.length >= MAX_ATTACHMENTS) {
+          setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puedes adjuntar hasta 3 archivos por mensaje.");
+          break;
+        }
+        const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+        try {
+          const ready = isPdf
+            ? file
+            : await prepareImageForUpload(file, { maxDimension: 1600, targetBytes: 3.8 * 1024 * 1024 });
+          if (ready.size > MAX_ATTACHMENT_BYTES) {
+            setAttachmentError(isEn ? "Each file must be 4 MB or less." : "Cada archivo debe pesar 4 MB o menos.");
+            continue;
+          }
+          next.push({
+            id: `${Date.now()}-${crypto.randomUUID()}`,
+            file: ready,
+            previewUrl: !isPdf ? URL.createObjectURL(ready) : undefined,
+          });
+        } catch (attachmentError) {
+          const code = getImageUploadPreparationErrorCode(attachmentError);
+          setAttachmentError(code === "too_large"
+            ? (isEn ? "That image is too large. Choose a lighter image." : "La imagen es muy pesada. Elige una imagen más liviana.")
+            : (isEn ? "Attach JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF, or PDF files only." : "Adjunta solo archivos JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF o PDF."));
+        }
       }
-      if (!ALLOWED_ATTACHMENT_TYPES.has(file.type)) {
-        setAttachmentError(isEn ? "Attach JPG, PNG, WEBP images or PDF files only." : "Adjunta solo imagenes JPG, PNG, WEBP o PDF.");
-        continue;
-      }
-      if (file.size > MAX_ATTACHMENT_BYTES) {
-        setAttachmentError(isEn ? "Each file must be 5 MB or less." : "Cada archivo debe pesar 5 MB o menos.");
-        continue;
-      }
-      next.push({
-        id: `${Date.now()}-${crypto.randomUUID()}`,
-        file,
-        previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
-      });
+      setSelectedAttachments(next);
+    } finally {
+      setPreparingAttachments(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-    setSelectedAttachments(next);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function removeAttachment(id: string) {
@@ -725,15 +739,16 @@ export function DirectChatInbox() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf"
+            accept={IMAGE_DOC_ACCEPT}
             multiple
+            disabled={sending || preparingAttachments}
             className="hidden"
-            onChange={(event) => addAttachments(event.currentTarget.files)}
+            onChange={(event) => { void addAttachments(event.currentTarget.files); }}
           />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={sending || selectedAttachments.length >= MAX_ATTACHMENTS}
+            disabled={sending || preparingAttachments || selectedAttachments.length >= MAX_ATTACHMENTS}
             className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
             aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
           >

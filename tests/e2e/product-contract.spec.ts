@@ -4,11 +4,42 @@ import enMessages from "../../messages/en.json";
 import { notificationContext, notificationHref } from "../../src/lib/notification-link";
 import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "../../src/lib/localized-notification";
 import { resolveAuthCallbackLocale } from "../../src/lib/auth/callback-locale";
+import { IMAGE_ACCEPT, IMAGE_DOC_ACCEPT, IMAGE_KINDS, sniffFileType, validateUpload } from "../../src/lib/upload-validation";
 import { apiJson, resetAuth } from "./helpers";
 
 const notificationTypes = [...TRANSLATED_NOTIFICATION_TYPES].sort();
 
 test.describe("@contract product safety contracts", () => {
+  test("image upload formats are synchronized and validated by real bytes", () => {
+    const bytes = (prefix: number[], ascii = "") => new Uint8Array([
+      ...prefix,
+      ...Array.from(ascii).map((character) => character.charCodeAt(0)),
+      ...new Array(Math.max(0, 16 - prefix.length - ascii.length)).fill(0),
+    ]);
+    const samples: Array<[string, Uint8Array]> = [
+      ["jpeg", bytes([0xff, 0xd8, 0xff])],
+      ["png", bytes([0x89, 0x50, 0x4e, 0x47])],
+      ["gif", bytes([], "GIF89a")],
+      ["webp", bytes([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0], "WEBP")],
+      ["heic", bytes([0, 0, 0, 0], "ftypheic")],
+      ["heif", bytes([0, 0, 0, 0], "ftypheif")],
+      ["avif", bytes([0, 0, 0, 0], "ftypavif")],
+      ["pdf", bytes([], "%PDF-1.7")],
+    ];
+    for (const [kind, sample] of samples) expect(sniffFileType(sample)).toBe(kind);
+    expect(validateUpload(new TextEncoder().encode("<svg><script>alert(1)</script></svg>"), {
+      allow: IMAGE_KINDS,
+      maxBytes: 4 * 1024 * 1024,
+      allowLabel: "safe images",
+    }).ok).toBe(false);
+    for (const mime of ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/heif", "image/gif"]) {
+      expect(IMAGE_ACCEPT).toContain(mime);
+      expect(IMAGE_DOC_ACCEPT).toContain(mime);
+    }
+    expect(IMAGE_DOC_ACCEPT).toContain("application/pdf");
+    expect(IMAGE_ACCEPT).not.toContain("image/svg+xml");
+  });
+
   test("public account deletion CTA opens Account and security", async ({ page }) => {
     await resetAuth(page);
     await page.goto("/es/eliminar-cuenta");

@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { DOC_KINDS, IMAGE_KINDS, MIME_FOR, validateUpload } from "@/lib/upload-validation";
 
 export const runtime = "nodejs";
 
 const BUCKET = "direct-message-attachments";
-const MAX_BYTES = 5 * 1024 * 1024;
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+const MAX_BYTES = 4 * 1024 * 1024;
 
 type ConversationRow = {
   id: string;
@@ -31,14 +31,6 @@ function safeFileName(name: string) {
   return cleaned || fallback;
 }
 
-function sniffMime(buffer: Buffer) {
-  if (buffer.length >= 4 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return "image/jpeg";
-  if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "image/png";
-  if (buffer.length >= 12 && buffer.subarray(0, 4).toString("ascii") === "RIFF" && buffer.subarray(8, 12).toString("ascii") === "WEBP") return "image/webp";
-  if (buffer.length >= 5 && buffer.subarray(0, 5).toString("ascii") === "%PDF-") return "application/pdf";
-  return null;
-}
-
 export async function POST(req: Request) {
   const rl = enforceRateLimit(req, "direct-chat-attachment", 18, 60_000);
   if (rl) return rl;
@@ -53,7 +45,7 @@ export async function POST(req: Request) {
   if (!conversationId) return NextResponse.json({ error: "Conversacion requerida." }, { status: 400 });
   if (!file) return NextResponse.json({ error: "No se recibio ningun archivo." }, { status: 400 });
   if (file.size <= 0) return NextResponse.json({ error: "El archivo esta vacio." }, { status: 400 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: "El archivo debe pesar 5 MB o menos." }, { status: 400 });
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: "El archivo debe pesar 4 MB o menos." }, { status: 400 });
 
   const db = createAdminClient();
   const { data: conversation, error: conversationError } = await db
@@ -70,10 +62,13 @@ export async function POST(req: Request) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const mime = sniffMime(buffer);
-  if (!mime || !ALLOWED_TYPES.has(mime)) {
-    return NextResponse.json({ error: "Adjunta solo imagenes JPG, PNG, WEBP o PDF." }, { status: 400 });
-  }
+  const check = validateUpload(buffer, {
+    allow: [...IMAGE_KINDS, ...DOC_KINDS],
+    maxBytes: MAX_BYTES,
+    allowLabel: "JPG, PNG, WEBP, AVIF, HEIC/HEIF, GIF o PDF",
+  });
+  if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+  const mime = MIME_FOR[check.kind];
 
   const name = safeFileName(file.name);
   const path = `${conversationId}/${user.id}/${Date.now()}-${crypto.randomUUID()}-${name}`;

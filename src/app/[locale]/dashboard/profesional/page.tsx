@@ -63,6 +63,7 @@ import {
   type DashboardProfileData,
 } from "@/lib/dashboard-bootstrap-cache";
 import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
@@ -1952,7 +1953,7 @@ export default function DashboardPage() {
                 <input
                   ref={headerPhotoInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  accept={IMAGE_ACCEPT}
                   className="hidden"
                   onChange={(event) => {
                     const file = event.target.files?.[0];

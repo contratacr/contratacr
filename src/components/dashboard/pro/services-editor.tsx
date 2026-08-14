@@ -20,7 +20,7 @@ import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guar
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { professionalCredentialSuggestion, serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
 
 export type ProService = {
@@ -481,7 +481,12 @@ export function ServicesEditor({
       setForm((current) => ({ ...current, imageUrl: uploadedUrl }));
     } catch (error) {
       console.error("[services-editor] service image upload failed", error);
-      setFormError(locale === "en" ? "Could not upload the service image. Try again." : "No se pudo subir la imagen del servicio. Intenta de nuevo.");
+      const code = getImageUploadPreparationErrorCode(error);
+      setFormError(code === "too_large"
+        ? (locale === "en" ? "That photo is too large. Choose a lighter photo or take a new one." : "La foto es muy pesada. Elige una foto más liviana o toma una nueva.")
+        : code === "unsupported"
+          ? (locale === "en" ? "Use a JPG, PNG, WEBP, AVIF, HEIC, HEIF, or GIF image." : "Usa una imagen JPG, PNG, WEBP, AVIF, HEIC, HEIF o GIF.")
+          : (locale === "en" ? "Could not upload the service image. Try again." : "No se pudo subir la imagen del servicio. Intenta de nuevo."));
     } finally {
       setImageUploading(false);
     }

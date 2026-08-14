@@ -202,7 +202,10 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
 
   function addFiles(nextFiles: FileList | null) {
     if (!nextFiles) return;
-    setFiles((current) => [...current, ...Array.from(nextFiles)].slice(0, 5));
+    setFiles((current) => {
+      const remaining = Math.max(0, 5 - existingImageUrls.length - current.length);
+      return [...current, ...Array.from(nextFiles).slice(0, remaining)];
+    });
     setFieldErrors((current) => ({ ...current, images: undefined }));
   }
 

@@ -227,13 +227,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
 
+    const totalAttachmentBytes = fileAttachments.reduce((total, file) => total + file.content.length, 0);
+    if (totalAttachmentBytes > 3.7 * 1024 * 1024) {
+      return NextResponse.json({ ok: false, error: "Los archivos juntos son muy pesados. Usa menos archivos o archivos más livianos." }, { status: 400 });
+    }
+
     // Validate EVERY attachment by magic bytes — safe images OR PDF only (no SVG /
     // scripts / executables), 4 MB each — before saving or emailing anything.
     for (const f of fileAttachments) {
       const check = validateUpload(f.content, {
         allow: [...IMAGE_KINDS, ...DOC_KINDS],
         maxBytes: 4 * 1024 * 1024,
-        allowLabel: "JPG, PNG, WEBP o PDF",
+        allowLabel: "JPG, PNG, WEBP, AVIF, HEIC/HEIF, GIF o PDF",
       });
       if (!check.ok) {
         return NextResponse.json({ ok: false, error: check.error }, { status: 400 });

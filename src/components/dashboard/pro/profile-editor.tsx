@@ -267,6 +267,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   }, [resetKey]);
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const avatarObjectUrlRef = useRef<string | null>(null);
 
   const [bio, setBio] = useState<string>(initial.bio ?? "");
   const [whatsapp, setWhatsapp] = useState<string>(initial.whatsapp ?? "");
@@ -455,6 +456,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
   useEffect(() => () => {
     if (savedTimer.current) clearTimeout(savedTimer.current);
+    if (avatarObjectUrlRef.current) URL.revokeObjectURL(avatarObjectUrlRef.current);
   }, []);
 
   function openCertForm(profession?: string) {
@@ -501,6 +503,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
   function cancelChanges() {
     if (savedTimer.current) clearTimeout(savedTimer.current);
+    if (avatarObjectUrlRef.current) URL.revokeObjectURL(avatarObjectUrlRef.current);
+    avatarObjectUrlRef.current = null;
     setBio(initial.bio ?? "");
     setWhatsapp(initial.whatsapp ?? "");
     setCallPhone(initial.call_phone ?? "");
@@ -552,6 +556,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         if (upErr) throw new Error(t("photoError"));
         const { error: authErr } = await supabase.auth.updateUser({ data: { avatar_url: url } });
         if (authErr) throw new Error(t("photoError"));
+        if (avatarObjectUrlRef.current) URL.revokeObjectURL(avatarObjectUrlRef.current);
+        avatarObjectUrlRef.current = null;
         setAvatarPreview(url);
         setPendingAvatarFile(null);
       } finally {
@@ -574,13 +580,18 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
   function handlePhotoSelect(file: File) {
     setError(null);
-    setAvatarPreview(URL.createObjectURL(file));
+    if (avatarObjectUrlRef.current) URL.revokeObjectURL(avatarObjectUrlRef.current);
+    const previewUrl = URL.createObjectURL(file);
+    avatarObjectUrlRef.current = previewUrl;
+    setAvatarPreview(previewUrl);
     setPendingAvatarFile(file);
     touch("basic");
   }
 
   function handlePhotoRemove() {
     setError(null);
+    if (avatarObjectUrlRef.current) URL.revokeObjectURL(avatarObjectUrlRef.current);
+    avatarObjectUrlRef.current = null;
     setAvatarPreview(null);
     setPendingAvatarFile(null);
     touch("basic");
