@@ -47,9 +47,49 @@ jobs:
         if: always()
         run: supabase stop --no-backup
 
+  fast-contracts:
+    name: Fast application contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure private env files are not tracked
+        run: npm run security:env
+
+      - name: Verify every application surface has a regression owner
+        run: npm run test:surface-ownership
+
+      - name: Typecheck application and regression contracts
+        run: npx tsc --noEmit
+
+      - name: Lint regression contracts
+        run: npx eslint tests/e2e playwright.config.ts scripts/ci/verify-app-surface-ownership.mjs
+
+      - name: Build on ordinary test pushes
+        if: github.event_name == 'push'
+        run: npm run build
+
   e2e:
     name: Playwright regression (test)
-    needs: local-database-contract
+    if: github.event_name == 'workflow_dispatch'
+    needs:
+      - local-database-contract
+      - fast-contracts
     runs-on: ubuntu-latest
     # The exhaustive desktop + mobile matrix also performs fixture cleanup and
     # post-run verification. Leave enough room for those safety steps even when
@@ -116,15 +156,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Ensure private env files are not tracked
-        run: npm run security:env
-
-      - name: Typecheck regression and application contracts
-        run: npx tsc --noEmit
-
-      - name: Lint regression contracts
-        run: npx eslint tests/e2e playwright.config.ts
 
       - name: Build the production application in GitHub Actions
         run: npm run build
