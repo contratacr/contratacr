@@ -831,16 +831,18 @@ test.describe("@seeded core regression", () => {
   });
 
   test("anonymous visitors can see seeded offers and open an offer detail", async ({ page }) => {
+    const publishedOfferTitle = `${E2E_USERS.professional.fullName}: oferta published`;
+    const secondaryOfferTitle = `${E2E_USERS.client.fullName}: oferta published`;
     await resetAuth(page);
     await gotoOK(page, "/es/ofertas");
 
-    await expect(page.getByText("E2E Mantenimiento residencial").first()).toBeVisible();
-    await expect(page.getByText("E2E Sitio web para pyme").first()).toBeVisible();
+    await expect(page.getByText(publishedOfferTitle).first()).toBeVisible();
+    await expect(page.getByText(secondaryOfferTitle).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, `/es/ofertas/${seed.publishedOfferId}`);
-    await expect(page.getByRole("heading", { name: "E2E Mantenimiento residencial" })).toBeVisible();
-    await expect(page.getByText("Alajuela, Alajuela").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: publishedOfferTitle })).toBeVisible();
+    await expect(page.getByText("Atenas, Alajuela").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 
@@ -864,11 +866,12 @@ test.describe("@seeded core regression", () => {
 
     await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
     await expect(page.getByText("Promotions from professionals").first()).toBeAttached();
-    await expect(page.getByText("E2E Mantenimiento residencial").first()).toBeVisible();
+    const publishedOfferTitle = `${E2E_USERS.professional.fullName}: oferta published`;
+    await expect(page.getByText(publishedOfferTitle).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, `/en/ofertas/${seed.publishedOfferId}`);
-    await expect(page.getByRole("heading", { name: "E2E Mantenimiento residencial" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: publishedOfferTitle })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Details" })).toBeVisible();
     await expect(page.getByText(/Published by/i).first()).toBeAttached();
     await expect(page.getByText("Service offer").first()).toBeVisible();

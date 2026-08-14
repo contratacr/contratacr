@@ -166,8 +166,9 @@ test.describe("@visual recent bug contracts", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/es/dashboard/profesional?tab=bookings");
-    const booking = page.locator('[id^="booking-"]').filter({ has: page.getByText(/Enviar mensaje|WhatsApp|Marcar completado/i) }).first();
+    const booking = page.locator('[id^="booking-"]').first();
     await expect(booking).toBeVisible();
+    await booking.locator(":scope > button[aria-expanded='false']").click();
     const actions = booking.locator("button, a").filter({ hasText: /Enviar mensaje|WhatsApp|Marcar completado/i });
     await expect(actions).toHaveCount(2);
     const boxes = await actions.evaluateAll((nodes) => nodes.map((node) => {
