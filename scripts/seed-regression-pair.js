@@ -577,12 +577,12 @@ async function main() {
   ], { onConflict: "id" }));
 
   await must("availability exceptions", supabase.from("availability_exceptions").upsert([
-    { id: ids.exceptions[0], professional_id: c.professional.id, category_id: c.professional.category_id, exception_date: date(5), mode: "extra", start_time: "18:00", end_time: "20:00", slot_minutes: 60 },
-    { id: ids.exceptions[1], professional_id: c.professional.id, category_id: c.professional.category_id, exception_date: date(6), mode: "custom", start_time: "09:00", end_time: "12:00", slot_minutes: 60 },
-    { id: ids.exceptions[2], professional_id: c.professional.id, category_id: c.professional.category_id, exception_date: date(7), mode: "closed", slot_minutes: 60 },
-    { id: ids.exceptions[3], professional_id: s.professional.id, category_id: s.professional.category_id, exception_date: date(8), mode: "extra", start_time: "18:00", end_time: "20:00", slot_minutes: 60 },
-    { id: ids.exceptions[4], professional_id: s.professional.id, category_id: s.professional.category_id, exception_date: date(9), mode: "custom", start_time: "09:00", end_time: "12:00", slot_minutes: 60 },
-    { id: ids.exceptions[5], professional_id: s.professional.id, category_id: s.professional.category_id, exception_date: date(10), mode: "closed", slot_minutes: 60 },
+    { id: ids.exceptions[0], professional_id: c.professional.id, location_id: cPhysicalLocation, category_id: c.professional.category_id, exception_date: date(5), mode: "extra", start_time: "18:00", end_time: "20:00", slot_minutes: 60 },
+    { id: ids.exceptions[1], professional_id: c.professional.id, location_id: cPhysicalLocation, category_id: c.professional.category_id, exception_date: date(6), mode: "custom", start_time: "09:00", end_time: "12:00", slot_minutes: 60 },
+    { id: ids.exceptions[2], professional_id: c.professional.id, location_id: cPhysicalLocation, category_id: c.professional.category_id, exception_date: date(7), mode: "closed", slot_minutes: 60 },
+    { id: ids.exceptions[3], professional_id: s.professional.id, location_id: sPhysicalLocation, category_id: s.professional.category_id, exception_date: date(8), mode: "extra", start_time: "18:00", end_time: "20:00", slot_minutes: 60 },
+    { id: ids.exceptions[4], professional_id: s.professional.id, location_id: sPhysicalLocation, category_id: s.professional.category_id, exception_date: date(9), mode: "custom", start_time: "09:00", end_time: "12:00", slot_minutes: 60 },
+    { id: ids.exceptions[5], professional_id: s.professional.id, location_id: sPhysicalLocation, category_id: s.professional.category_id, exception_date: date(10), mode: "closed", slot_minutes: 60 },
   ], { onConflict: "id" }));
 
   await must("blocked dates", supabase.from("blocked_dates").upsert([

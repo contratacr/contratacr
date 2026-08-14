@@ -935,13 +935,19 @@ export default function DashboardPage() {
   }, [cacheDashboardBootstrap, setProfile, user]);
 
   useEffect(() => {
-    if (!user) return;
-    const firstLoadForUser = bootstrapHydratedForRef.current !== user.id;
+    if (!user) {
+      bootstrapHydratedForRef.current = null;
+      return;
+    }
+    // Supabase can emit a refreshed user object for the same authenticated
+    // account while the first professional request is still in flight. Starting
+    // a second silent fetch here invalidates the visible request sequence, but a
+    // silent fetch never clears the route loader. Bootstrap exactly once per
+    // user id; explicit refresh events below remain responsible for later syncs.
+    if (bootstrapHydratedForRef.current === user.id) return;
     bootstrapHydratedForRef.current = user.id;
-    const cached = firstLoadForUser
-      ? getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id))
-      : null;
-    if (cached && firstLoadForUser) {
+    const cached = getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id));
+    if (cached) {
       queueMicrotask(() => {
         setPro(cached.pro as ProData | null);
         setProfile(cached.profile);
@@ -950,7 +956,7 @@ export default function DashboardPage() {
       });
       return;
     }
-    queueMicrotask(() => fetchPro({ silent: !firstLoadForUser }));
+    queueMicrotask(() => fetchPro());
   }, [user, refreshKey, fetchPro]);
 
   // Base profile (name/avatar) for the header, works for seekers with no pro row.

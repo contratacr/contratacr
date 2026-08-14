@@ -41,6 +41,7 @@ const CANONICAL_ACTORS = {
     email: "e2e.client@contratacr.test",
     profileId: "048f1b3a-23c0-41bc-8728-10f8aed70fdb",
     professionalId: "ae9caa2b-1fca-4411-9aeb-7736f5bbf42f",
+    requiresNationwideVideo: true,
   },
   sg: {
     businessName: "SG Solutions",
@@ -110,6 +111,15 @@ async function actor(expected) {
   assert(Array.isArray(row.portfolio_items) && row.portfolio_items.length, `${expected.businessName} needs success cases.`);
   assert(Array.isArray(row.certifications) && row.certifications.length, `${expected.businessName} needs training/certifications.`);
   assert(Array.isArray(row.languages) && row.languages.length, `${expected.businessName} needs languages.`);
+  assert(row.profiles.is_disabled === false, `${expected.businessName} profile must remain enabled.`);
+  assert(row.is_banned === false, `${expected.businessName} must remain visible to public search.`);
+  assert(row.is_available === true, `${expected.businessName} must remain available.`);
+  assert(row.availability_public === true, `${expected.businessName} availability must remain public.`);
+  assert(row.verification_status !== "rejected", `${expected.businessName} cannot be rejected from public search.`);
+  if (expected.requiresNationwideVideo) {
+    assert(row.videoconsulta === true, `${expected.businessName} must remain available by video consultation.`);
+    assert(row.coverage_country === true, `${expected.businessName} must retain nationwide coverage.`);
+  }
   return { professional: row, profile: row.profiles };
 }
 
