@@ -72,6 +72,12 @@ async function main() {
       anonymous.from("professionals").select("id,business_name").eq("id", actor.professionalId).single(),
     );
     assert(publicRow.business_name === actor.businessName, `${actor.businessName} is not visible through public RLS.`);
+    const hiddenModeration = await anonymous
+      .from("professionals")
+      .select("banned_reason")
+      .eq("id", actor.professionalId)
+      .limit(1);
+    assert(Boolean(hiddenModeration.error), "Anonymous callers must not read professional moderation fields.");
 
     const authenticated = createClient(url, anonKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -90,6 +96,12 @@ async function main() {
         .single(),
     );
     assert(ownProfessional.id === actor.professionalId, `${actor.businessName} cannot read its own professional row.`);
+    const hiddenIdentity = await authenticated
+      .from("profiles")
+      .select("cedula")
+      .eq("id", actor.profileId)
+      .limit(1);
+    assert(Boolean(hiddenIdentity.error), "Authenticated callers must use get_my_profile for private identity fields.");
     await must(
       `authenticated notifications ${actor.businessName}`,
       authenticated.from("notifications").select("id").eq("user_id", actor.profileId).limit(1),
@@ -103,6 +115,11 @@ async function main() {
 
   const deniedPadron = await anonymous.rpc("padron_lookup", { p_cedula: "100000001" });
   assert(Boolean(deniedPadron.error), "Anonymous callers must not execute padrón lookup.");
+
+  for (const table of ["padron", "padron_staging"]) {
+    const directPadron = await anonymous.from(table).select("cedula").limit(1);
+    assert(Boolean(directPadron.error), `Anonymous callers must not read ${table} directly.`);
+  }
 
   const buckets = await must("local storage buckets", admin.storage.listBuckets());
   assert(buckets.some((bucket) => bucket.name === "direct-message-attachments"), "Private local storage bucket is missing.");
