@@ -374,6 +374,7 @@
   "reviewModal": {
     "titleEdit": "Editar tu reseña",
     "titleNew": "Dejar una reseña",
+    "embeddedPrompt": "¿Ya trabajaste con este profesional?",
     "thanks": "¡Gracias por tu reseña!",
     "thanksSub": "Tu opinión ayuda a otros clientes a elegir mejor.",
     "ratingLabel": "Calificación",

@@ -1,7 +1,15 @@
 import { expect, test } from "playwright/test";
-import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK } from "./helpers";
+import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, loginAs } from "./helpers";
+import { canRunSeededRegression, ensureRegressionSeed, type RegressionSeedState } from "./seed";
+import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
 test.describe("@seeded professional profile", () => {
+  let seed: RegressionSeedState | null = null;
+
+  test.beforeAll(async () => {
+    if (canRunSeededRegression()) seed = await ensureRegressionSeed();
+  });
+
   test("first search result opens a complete public profile", async ({ page }) => {
     const href = await firstProfessionalHref(page);
     expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
@@ -28,6 +36,32 @@ test.describe("@seeded professional profile", () => {
     expect((await response.body()).byteLength).toBeGreaterThan(10_000);
   });
 
+  test("long professional names remain readable on responsive profile headers", async ({ page }) => {
+    const href = await firstProfessionalHref(page);
+    expect(href).toBeTruthy();
+    await gotoOK(page, href!);
+    const name = page.getByTestId("professional-profile-name");
+    await expect(name).toBeVisible();
+
+    if ((page.viewportSize()?.width ?? 1280) < 640) {
+      await name.evaluate((element) => {
+        element.textContent = "Constructora de Costa Rica instalación de proyectos especializados";
+      });
+      const layout = await name.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          fontSize: Number.parseFloat(style.fontSize),
+          lineHeight: Number.parseFloat(style.lineHeight),
+          height: element.getBoundingClientRect().height,
+        };
+      });
+      expect(layout.fontSize).toBeLessThanOrEqual(18);
+      expect(layout.height).toBeGreaterThan(layout.lineHeight * 1.5);
+      expect(layout.height).toBeLessThanOrEqual(layout.lineHeight * 3.1);
+    }
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("reviews never freeze navigation back to results or home", async ({ page }) => {
     const href = await firstProfessionalHref(page);
     expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
@@ -44,5 +78,26 @@ test.describe("@seeded professional profile", () => {
     await expect(page.getByRole("heading", { name: /Reseñas|Reviews/i }).first()).toBeVisible();
     await page.getByRole("banner").getByRole("link", { name: /ContrataCR inicio/i }).click();
     await expect(page).toHaveURL(/\/es\/?$/);
+  });
+
+  test("profile reviews use a compact inline form instead of an isolated modal", async ({ page }) => {
+    test.skip(!seed, "Requires protected regression actors.");
+    let account: DisposableAccount | undefined;
+    try {
+      account = await createDisposableAccount({ prefix: "profile-review-inline" });
+      await loginAs(page, account.email, account.password);
+      await gotoOK(page, `/es/profesionales/${seed!.professionalSlug}?tab=resenas#resenas`);
+
+      await expect(page.getByText("¿Ya trabajaste con este profesional?")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Escribir reseña" })).toHaveCount(0);
+      await expect(page.getByPlaceholder(/Cuéntanos sobre tu experiencia/i)).toHaveCount(0);
+      await page.getByRole("button", { name: "5 estrellas", exact: true }).click();
+      await expect(page.getByPlaceholder(/Cuéntanos sobre tu experiencia/i)).toBeVisible();
+      await expect(page.getByRole("button", { name: /Enviar reseña|Actualizar reseña/i })).toBeVisible();
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+    } finally {
+      await cleanupDisposableAccount(account);
+    }
   });
 });

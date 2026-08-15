@@ -104,6 +104,12 @@ export async function POST(req: NextRequest) {
   if (reviewContactId) existingQuery = existingQuery.eq("whatsapp_contact_id", reviewContactId);
   else if (reviewBookingId) existingQuery = existingQuery.eq("booking_id", reviewBookingId);
   else if (reviewProjectId) existingQuery = existingQuery.eq("project_id", reviewProjectId);
+  else {
+    existingQuery = existingQuery
+      .is("whatsapp_contact_id", null)
+      .is("booking_id", null)
+      .is("project_id", null);
+  }
 
   const { data: existing } = await existingQuery.limit(1).maybeSingle();
 

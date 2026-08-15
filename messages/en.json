@@ -374,6 +374,7 @@
   "reviewModal": {
     "titleEdit": "Edit your review",
     "titleNew": "Leave a review",
+    "embeddedPrompt": "Have you worked with this professional?",
     "thanks": "Thanks for your review!",
     "thanksSub": "Your feedback helps other clients choose better.",
     "ratingLabel": "Rating",

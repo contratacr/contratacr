@@ -104,7 +104,7 @@ test.describe("@visual recent bug contracts", () => {
         }
         const link = clientNavigation.getByRole("link", { name: /^Ofrecer mis servicios$/i }).filter({ visible: true }).first();
         await expect(link).toBeVisible();
-        await expect(link.locator("svg")).toHaveCount(0);
+        await expect(link.locator("svg")).toHaveCount(width < 600 ? 1 : 0);
         const style = await link.evaluate((node) => {
           const computed = getComputedStyle(node);
           return { color: computed.color, background: computed.backgroundColor };

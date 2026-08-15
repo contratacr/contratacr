@@ -271,6 +271,7 @@ export type Review = {
   createdAt: string;
   /** The job (solicitud/proyecto) this review belongs to - shown for context. */
   jobTitle?: string | null;
+  source: "verified" | "contact" | "direct";
 };
 
 // ---------------------------------------------------------------------------
@@ -937,16 +938,32 @@ export async function getProfessionalBySlug(
       // Job-title snapshot per review (best-effort; column from migration 036) so
       // each review shows which job it belongs to. (Edited timestamps are NOT
       // surfaced publicly - only the author sees that, item 4.)
-      const titleMap: Record<string, string | null> = {};
+      const reviewContextMap: Record<string, { title: string | null; source: Review["source"] }> = {};
+      let visibleReviewIds: Set<string> | null = null;
       try {
-        const { data: rj } = await supabase.from("reviews").select("id, job_title").eq("professional_id", proRow.id);
-        for (const r of (rj ?? []) as { id: string; job_title?: string | null }[]) titleMap[r.id] = r.job_title ?? null;
+        const { data: rj, error: reviewContextError } = await supabase
+          .from("reviews")
+          .select("id, job_title, booking_id, project_id, whatsapp_contact_id, moderation_status")
+          .eq("professional_id", proRow.id);
+        if (reviewContextError) throw reviewContextError;
+        visibleReviewIds = new Set<string>();
+        for (const r of (rj ?? []) as { id: string; job_title?: string | null; booking_id?: string | null; project_id?: string | null; whatsapp_contact_id?: string | null; moderation_status?: string | null }[]) {
+          if (r.moderation_status !== "published") continue;
+          visibleReviewIds.add(r.id);
+          reviewContextMap[r.id] = {
+            title: r.job_title ?? null,
+            source: r.booking_id || r.project_id ? "verified" : r.whatsapp_contact_id ? "contact" : "direct",
+          };
+        }
       } catch { /* column not migrated yet */ }
 
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      const reviews: Review[] = ((proRow.reviews as any[]) ?? []).map((r: any) => ({
+      const reviews: Review[] = ((proRow.reviews as any[]) ?? [])
+        .filter((r: any) => !visibleReviewIds || visibleReviewIds.has(r.id))
+        .map((r: any) => ({
         id: r.id,
-        jobTitle: titleMap[r.id] ?? null,
+        jobTitle: reviewContextMap[r.id]?.title ?? null,
+        source: reviewContextMap[r.id]?.source ?? "direct",
         clientName: r.profiles?.full_name ?? "Cliente",
         clientAvatarUrl: r.profiles?.avatar_url,
         rating: r.rating,

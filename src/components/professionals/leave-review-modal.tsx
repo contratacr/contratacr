@@ -121,7 +121,7 @@ export function LeaveReviewModal({
       {embedded && (
         <div className="min-w-0">
           <p className="truncate text-sm font-extrabold text-[#162543]">
-            {isEditing ? t("titleEdit") : "¿Ya trabajaste con este profesional?"}
+            {isEditing ? t("titleEdit") : t("embeddedPrompt")}
           </p>
         </div>
       )}
@@ -149,7 +149,7 @@ export function LeaveReviewModal({
           {displayRating > 0 && <span className="text-sm font-semibold tabular-nums text-[#374151]">{displayRating.toFixed(1)}</span>}
         </div>
       </div>
-      <div>
+      {(!embedded || rating > 0 || isEditing) && <div>
         <div className={`flex items-center ${embedded ? "mb-1.5 justify-end" : "mb-1.5 justify-between"}`}>
           {!embedded && <p className="text-sm font-medium text-[#374151]">{t("commentLabel")}</p>}
           <span className="text-xs tabular-nums text-[#9ca3af]">{comment.length}/300</span>
@@ -162,21 +162,21 @@ export function LeaveReviewModal({
           placeholder={t("commentPlaceholder")}
           className={`w-full resize-none border border-[#dbe5ed] bg-white text-sm text-[#111827] placeholder:text-[#9ca3af] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 ${embedded ? "rounded-xl px-3.5 py-3" : "rounded-xl px-3.5 py-3"}`}
         />
-      </div>
-      {error && (
+      </div>}
+      {(!embedded || rating > 0 || isEditing) && error && (
         <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-600">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
       )}
-      <button type="submit" disabled={loading} className={`bg-[#009FD9] text-sm font-semibold text-white transition hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#009FD9]/40 ${embedded ? "ml-auto min-w-[146px] rounded-xl px-5 py-2.5" : "w-full rounded-xl px-4 py-3"}`}>
+      {(!embedded || rating > 0 || isEditing) && <button type="submit" disabled={loading} className={`bg-[#009FD9] text-sm font-semibold text-white transition hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#009FD9]/40 ${embedded ? "ml-auto min-w-[146px] rounded-xl px-5 py-2.5" : "w-full rounded-xl px-4 py-3"}`}>
         {loading ? (
           <span className="flex items-center justify-center gap-2">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
             {t("sending")}
           </span>
         ) : isEditing ? t("submitUpdate") : t("submitNew")}
-      </button>
+      </button>}
       {!embedded && <button type="button" onClick={onClose} className="text-sm font-medium text-[#6b7280] transition hover:text-[#111827]">{t("skip")}</button>}
     </form>
   );

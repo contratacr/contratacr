@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateReviewText } from "@/lib/moderation/reviews";
+import { auditUserAction } from "@/lib/audit/user-action";
 
 type ReviewRow = {
   id: string;
@@ -17,6 +18,9 @@ type ReviewRow = {
   edited_at?: string | null;
   client_name_snapshot?: string | null;
   client_email_snapshot?: string | null;
+  moderation_status?: "published" | "hidden";
+  moderation_reason?: string | null;
+  moderated_at?: string | null;
 };
 
 export async function GET(req: Request) {
@@ -31,7 +35,7 @@ export async function GET(req: Request) {
   const db = createAdminClient();
   const full = await db
     .from("reviews")
-    .select("id, professional_id, client_id, rating, comment, job_title, booking_id, project_id, whatsapp_contact_id, created_at, edited_at, client_name_snapshot, client_email_snapshot")
+    .select("id, professional_id, client_id, rating, comment, job_title, booking_id, project_id, whatsapp_contact_id, created_at, edited_at, client_name_snapshot, client_email_snapshot, moderation_status, moderation_reason, moderated_at")
     .order("created_at", { ascending: false })
     .limit(500);
 
@@ -88,6 +92,9 @@ export async function GET(req: Request) {
       editedAt: row.edited_at ?? null,
       source,
       needsReview: !moderation.ok,
+      moderationStatus: row.moderation_status ?? "published",
+      moderationReason: row.moderation_reason ?? null,
+      moderatedAt: row.moderated_at ?? null,
       professional: {
         id: row.professional_id,
         name: professional?.business_name || professional?.name || "Profesional",
@@ -119,6 +126,7 @@ export async function GET(req: Request) {
       total,
       needsReview: filtered.filter((row) => row.needsReview).length,
       profile: filtered.filter((row) => row.source === "Perfil").length,
+      hidden: filtered.filter((row) => row.moderationStatus === "hidden").length,
     },
     pagination: {
       page,
@@ -127,4 +135,81 @@ export async function GET(req: Request) {
       pages: Math.max(1, Math.ceil(total / pageSize)),
     },
   });
+}
+
+async function parseModerationRequest(req: Request) {
+  const body = await req.json().catch(() => null) as { id?: unknown; action?: unknown; reason?: unknown } | null;
+  const id = typeof body?.id === "string" ? body.id.trim() : "";
+  const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
+  return { id, action: body?.action, reason };
+}
+
+export async function PATCH(req: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+
+  const { id, action, reason } = await parseModerationRequest(req);
+  if (!id || (action !== "hide" && action !== "restore") || reason.length < 3) {
+    return NextResponse.json({ error: "Indica la reseña, la acción y un motivo." }, { status: 400 });
+  }
+
+  const db = createAdminClient();
+  const { data: before, error: readError } = await db
+    .from("reviews")
+    .select("id, client_id, professional_id, moderation_status, moderation_reason")
+    .eq("id", id)
+    .maybeSingle();
+  if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
+  if (!before) return NextResponse.json({ error: "Reseña no encontrada." }, { status: 404 });
+
+  const after = {
+    moderation_status: action === "hide" ? "hidden" : "published",
+    moderation_reason: reason,
+    moderated_at: new Date().toISOString(),
+    moderated_by: admin.id,
+  };
+  const { error } = await db.from("reviews").update(after).eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await auditUserAction(db, req, {
+    actorUserId: admin.id,
+    actorRole: "admin",
+    action: action === "hide" ? "review.hide" : "review.restore",
+    entityTable: "reviews",
+    entityId: id,
+    entityOwnerUserId: before.client_id,
+    beforeData: before,
+    afterData: after,
+  });
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(req: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+
+  const { id, reason } = await parseModerationRequest(req);
+  if (!id || reason.length < 3) {
+    return NextResponse.json({ error: "Indica la reseña y el motivo de eliminación." }, { status: 400 });
+  }
+
+  const db = createAdminClient();
+  const { data: before, error: readError } = await db.from("reviews").select("*").eq("id", id).maybeSingle();
+  if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
+  if (!before) return NextResponse.json({ error: "Reseña no encontrada." }, { status: 404 });
+
+  const { error } = await db.from("reviews").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await auditUserAction(db, req, {
+    actorUserId: admin.id,
+    actorRole: "admin",
+    action: "review.delete",
+    entityTable: "reviews",
+    entityId: id,
+    entityOwnerUserId: before.client_id,
+    beforeData: before,
+    afterData: { deletion_reason: reason },
+  });
+  return NextResponse.json({ ok: true });
 }

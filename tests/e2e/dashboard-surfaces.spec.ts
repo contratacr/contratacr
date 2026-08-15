@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, expectPageShell, expectVisibleText, gotoOK, isMobileProject, loginAs } from "./helpers";
+import { expectHealthyPage, expectNoHorizontalOverflow, expectPageShell, expectVisibleText, gotoOK, isMobileProject, loginAs } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 
 const professionalTabs = [
@@ -112,6 +112,30 @@ test.describe("@seeded dashboard surfaces", () => {
       await expectVisibleText(page.locator("main"), section.marker);
       await expectHealthyPage(page);
     }
+  });
+
+  test("responsive identity keeps a two-line name and aligns profile access with network counts", async ({ page }) => {
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional");
+    if ((page.viewportSize()?.width ?? 1280) >= 640) return;
+
+    const name = page.getByTestId("dashboard-identity-name");
+    const actions = page.getByTestId("dashboard-identity-actions");
+    const profileLink = page.getByTestId("dashboard-mobile-view-profile");
+    await name.evaluate((element) => {
+      element.textContent = "Constructora de Costa Rica instalación de proyectos especializados";
+    });
+    await expect(profileLink).toBeVisible();
+    const geometry = await Promise.all([
+      name.boundingBox(),
+      actions.boundingBox(),
+      profileLink.boundingBox(),
+    ]);
+    expect(geometry.every(Boolean)).toBe(true);
+    expect(geometry[0]!.height).toBeGreaterThan(20);
+    expect(geometry[0]!.height).toBeLessThanOrEqual(40);
+    expect(Math.abs((geometry[2]!.y + geometry[2]!.height) - (geometry[1]!.y + geometry[1]!.height))).toBeLessThanOrEqual(3);
+    await expectNoHorizontalOverflow(page);
   });
 
   test("dashboard sections never expose a blank body while their first request is pending", async ({ page }) => {

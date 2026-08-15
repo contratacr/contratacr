@@ -47,11 +47,19 @@ test.describe("@admin surfaces", () => {
       "/api/admin/accounts",
       "/api/admin/insurers",
       "/api/admin/pending-counts",
+      "/api/admin/reviews",
     ];
 
     for (const route of routes) {
       const response = await request.get(route);
       expect([401, 403], `${route} must reject unauthenticated access`).toContain(response.status());
+    }
+
+    for (const method of ["patch", "delete"] as const) {
+      const response = await request[method]("/api/admin/reviews", {
+        data: { id: "00000000-0000-4000-8000-000000000000", action: "hide", reason: "E2E guard" },
+      });
+      expect([401, 403], `admin reviews ${method} must reject unauthenticated access`).toContain(response.status());
     }
   });
 
@@ -88,4 +96,5 @@ test.describe("@admin surfaces", () => {
       await cleanupDisposableAccount(account);
     }
   });
+
 });

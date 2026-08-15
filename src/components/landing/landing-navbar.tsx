@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } fro
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon,
   Briefcase, Compass, Wrench,
-  UserRound, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
+  UserRound, UserRoundPlus, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -2075,8 +2075,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Link
                   href="/registro/profesional"
                   onClick={() => setMobileOpen(false)}
-                  className={cn(mobileDrawerItemClass, "pl-[52px] text-[#009FD9] hover:bg-[#EBF5FB]")}
+                  className={cn(mobileDrawerItemClass, "text-[#009FD9] hover:bg-[#EBF5FB]")}
                 >
+                  <DrawerIcon><UserRoundPlus /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
                 </Link>
               )}

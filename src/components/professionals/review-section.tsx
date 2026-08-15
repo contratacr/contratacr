@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Star } from "lucide-react";
+import { LogIn, Star } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,7 +49,6 @@ export function ReviewSection({
   const t = useTranslations("profile");
   const locale = useLocale();
   const router = useRouter();
-  const [reviewOpen, setReviewOpen] = useState(false);
   const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
   const commentsToTranslate = useMemo(
     () => reviews.filter((review) => review.comment.trim()).map((review) => ({ id: review.id, comment: review.comment.trim() })),
@@ -95,18 +94,14 @@ export function ReviewSection({
     return () => { active = false; };
   }, [commentsToTranslate, locale]);
 
-  function openReviewModal() {
-    if (!isAuthenticated) {
-      const redirect = `${window.location.pathname}?tab=resenas#resenas`;
-      window.location.assign(`/${locale}/login?redirect=${encodeURIComponent(redirect)}`);
-      return;
-    }
-    setReviewOpen(true);
+  function goToReviewLogin() {
+    const redirect = `${window.location.pathname}?tab=resenas#resenas`;
+    window.location.assign(`/${locale}/login?redirect=${encodeURIComponent(redirect)}`);
   }
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
+      <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[#111827]">
             {t("reviewsHeading", { count: reviewCount })}
@@ -116,13 +111,36 @@ export function ReviewSection({
             <span className="font-bold text-[#111827]">{ratingAvg.toFixed(1)}</span>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={openReviewModal}
-          className="rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#008fc3]"
-        >
-          {t("writeReview")}
-        </button>
+      </div>
+
+      <div className="mb-6">
+        {isAuthenticated ? (
+          <LeaveReviewModal
+            professionalId={professionalId}
+            professionalName={professionalName}
+            embedded
+            onClose={() => undefined}
+            onSuccess={() => router.refresh()}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={goToReviewLogin}
+            className="flex w-full items-center gap-3 rounded-2xl border border-[#dbe7ef] bg-[#f8fcfe] px-4 py-3 text-left transition hover:border-[#9fd9ee] hover:bg-[#eef9fd]"
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[#009FD9] shadow-sm">
+              <LogIn className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-[#162543]">
+                {locale === "en" ? "Share your experience" : "Comparte tu experiencia"}
+              </span>
+              <span className="block text-xs text-[#64748b]">
+                {locale === "en" ? "Sign in to rate this professional." : "Ingresa para calificar a este profesional."}
+              </span>
+            </span>
+          </button>
+        )}
       </div>
 
       <div className="flex flex-col gap-5">
@@ -145,6 +163,19 @@ export function ReviewSection({
                 {jobTitle && (
                   <p className="text-xs text-[#9ca3af] mt-0.5">{t("reviewOf", { title: jobTitle })}</p>
                 )}
+                <span className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  review.source === "verified"
+                    ? "bg-[#e9f8ef] text-[#16794a]"
+                    : review.source === "contact"
+                      ? "bg-[#eef9ff] text-[#0369a1]"
+                      : "bg-[#f1f5f9] text-[#64748b]"
+                }`}>
+                  {review.source === "verified"
+                    ? (locale === "en" ? "Verified booking" : "Contratación verificada")
+                    : review.source === "contact"
+                      ? (locale === "en" ? "Confirmed contact" : "Contacto confirmado")
+                      : (locale === "en" ? "Unverified experience" : "Experiencia no verificada")}
+                </span>
                 <p className="text-sm text-[#374151] leading-relaxed mt-1">
                   {locale === "en" ? translatedComments[review.id] ?? review.comment : review.comment}
                 </p>
@@ -159,14 +190,6 @@ export function ReviewSection({
           </p>
         )}
       </div>
-      {reviewOpen && (
-        <LeaveReviewModal
-          professionalId={professionalId}
-          professionalName={professionalName}
-          onClose={() => setReviewOpen(false)}
-          onSuccess={() => router.refresh()}
-        />
-      )}
     </>
   );
 }
