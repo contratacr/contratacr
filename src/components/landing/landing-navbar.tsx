@@ -808,10 +808,45 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       : currentSearchParams.get("q")?.trim() || "";
   const headerServiceLabel =
     explicitHeaderService || mobileSlidingService.current || nativeSearchServices[0] || (locale === "en" ? "electrician" : "electricista");
+  const headerCantonId = currentSearchParams.get("canton");
+  const headerProvinceId = currentSearchParams.get("provincia");
+  const headerLocationSuggestion = headerCantonId
+    ? allLocationSuggestions().find((location) => location.type === "canton" && location.id === headerCantonId) ?? null
+    : headerProvinceId
+      ? allLocationSuggestions().find((location) => location.type === "province" && location.id === headerProvinceId) ?? null
+      : null;
+  const explicitHeaderLocation = currentSearchParams.get("ubicacion")?.trim() ||
+    (headerLocationSuggestion?.type === "canton"
+      ? `${headerLocationSuggestion.label}, ${headerLocationSuggestion.sublabel}`
+      : headerLocationSuggestion?.label ?? "");
+  const headerLocationLabel = explicitHeaderLocation || "Costa Rica";
+  const headerLatitude = Number(currentSearchParams.get("lat"));
+  const headerLongitude = Number(currentSearchParams.get("lng"));
+  const headerCoordinates = useMemo(
+    () => Number.isFinite(headerLatitude) && Number.isFinite(headerLongitude)
+      ? { latitude: headerLatitude, longitude: headerLongitude }
+      : null,
+    [headerLatitude, headerLongitude],
+  );
+  const searchRouteHasContext = pathname === "/buscar" && Boolean(explicitHeaderService || explicitHeaderLocation);
   const headerNextServiceLabel = mobileSlidingService.next || headerServiceLabel;
   const headerServiceShouldSlide = !explicitHeaderService && showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim() && nativeSearchServices.length > 1;
   const hasSearchService = searchQuery.trim().length > 0 || !!searchCategoryId;
   const hasSearchLocation = navLocation.trim().length > 0 || !!navLocationSel || !!navCurrentCoords;
+
+  useEffect(() => {
+    if (pathname !== "/buscar") return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      setSearchQuery(explicitHeaderService);
+      setSearchCategoryId(headerCategoryId && headerCategoryId !== "todas" ? headerCategoryId : null);
+      setNavLocation(explicitHeaderLocation);
+      setNavLocationSel(headerLocationSuggestion);
+      setNavCurrentCoords(headerCoordinates);
+    });
+    return () => { active = false; };
+  }, [explicitHeaderLocation, explicitHeaderService, headerCategoryId, headerCoordinates, headerLocationSuggestion, pathname]);
 
   useEffect(() => {
     queueMicrotask(() => setHydrated(true));
@@ -1149,7 +1184,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           : resolveLocation(navLocation);
     if (loc) {
       if (loc.type === "province") params.set("provincia", loc.id);
-      else params.set("canton", loc.id);
+      else {
+        params.set("provincia", loc.provinceId);
+        params.set("canton", loc.id);
+      }
     }
     if (activeCurrentCoords) {
       params.set("lat", activeCurrentCoords.latitude.toFixed(5));
@@ -1355,6 +1393,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     <>
       <header
         data-testid="landing-navbar"
+        data-hydrated={hydrated ? "true" : "false"}
         data-compact-search={effectiveCompact ? "visible" : "hidden"}
         className={cn(
           "ccr-app-header fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80",
@@ -1421,9 +1460,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
                   >
                     <Search className="h-5 w-5 shrink-0 text-[#162543]" />
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
-                      {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
-                    </span>
+                    {searchRouteHasContext ? (
+                      <span data-testid="search-context-summary" className="flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden whitespace-nowrap text-[15px]">
+                        <span className="truncate font-extrabold text-[#162543]">
+                          {explicitHeaderService || (locale === "en" ? "Professionals" : "Profesionales")}
+                        </span>
+                        <span className="truncate font-medium text-[#8f9aaa]">{headerLocationLabel}</span>
+                      </span>
+                    ) : (
+                      <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
+                        {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                      </span>
+                    )}
                   </button>
                   {showSearchViewToggle && (
                     <button

@@ -92,6 +92,7 @@ export async function createDisposableAccount(options: {
           is_available: Boolean(options.publicDiscoverable),
           is_banned: !options.publicDiscoverable,
           is_verified: false,
+          verification_status: "pending",
           business_name: businessName,
           professions: [reference.category_id],
           services: [{

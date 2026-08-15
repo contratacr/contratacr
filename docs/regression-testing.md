@@ -19,10 +19,46 @@ post-deployment smoke is the only browser layer that should target a paid host.
 
 ## Commands
 
+### Development loop: keep the batch local
+
+Do not push after every fix. During an active bug-fix batch:
+
+1. Reproduce the bug locally and add a focused Playwright case beside the
+   affected surface. Every real bug must become a permanent regression case.
+2. Run only that spec or case against the local Next.js server. For example:
+
+   ```bash
+   npm run test:e2e:focal -- tests/e2e/search-results.spec.ts --grep "whole-province coverage"
+   ```
+
+3. Inspect the affected screen manually in both desktop and mobile sizes. Check
+   loading, empty, populated, error, disabled, saving and success states; long
+   Spanish and English copy; keyboard focus; scroll; overlays; and viewport
+   clipping. Automation protects the contract, while this exploration finds the
+   next contract that should be automated.
+4. Keep all related fixes uncommitted and unpushed until the complete batch is
+   locally coherent. Run TypeScript, focused ESLint and every affected spec.
+5. Create one release-candidate commit, advance `main` and `test` atomically to
+   that same commit, let the fast gates pass, and dispatch exactly one exhaustive
+   regression run. Do not use retries to hide a flaky first attempt.
+
+Local Playwright starts the app on loopback; it does not navigate through Vercel
+unless `PLAYWRIGHT_BASE_URL` is explicitly provided. Seeded cases still require
+the isolated test credentials. If those credentials are unavailable, the local
+gate must stop instead of silently using production.
+
 Run against the local app:
 
 ```bash
 npm run test:e2e
+```
+
+On Windows/OneDrive, redirect artifacts if its sync client locks
+`test-results/.last-run.json`:
+
+```powershell
+$env:PLAYWRIGHT_OUTPUT_DIR = Join-Path $env:TEMP "contratacr-playwright"
+npm run test:e2e:focal -- tests/e2e/search-results.spec.ts
 ```
 
 Run explicitly against a deployed host only for a bounded smoke or diagnosis:

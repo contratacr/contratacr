@@ -202,7 +202,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const renderActions = () => (
     <div className={canPost ? "grid w-full grid-cols-2 gap-2 sm:w-[296px] [&>*]:w-full" : "flex w-full sm:w-auto"}>
       {canPost && (
-        <Link href="/dashboard/profesional?mode=offer&tab=jobs&returnTo=%2Fempleos" className="inline-flex h-[42px] items-center justify-center rounded-lg border border-[#cddae6] bg-white px-4 text-sm font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb]">
+        <Link href="/dashboard/profesional?mode=offer&tab=jobs&returnTo=%2Fempleos" className="inline-flex h-9 items-center justify-center rounded-lg border border-[#cddae6] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb] lg:h-[42px] lg:px-4 lg:text-sm">
           {copy.myJobs}
         </Link>
       )}
@@ -211,12 +211,12 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-[42px] items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
             {copy.publishJob}
           </button>
-          <Link href="/empleos/publicar" className="inline-flex h-[42px] items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
+          <Link href="/empleos/publicar" className="inline-flex h-9 items-center justify-center rounded-lg bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
             {copy.publishJob}
           </Link>
         </>
       ) : (
-        <Link href="/login?redirect=/empleos/publicar" className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:flex-none">
+        <Link href="/login?redirect=/empleos/publicar" className="inline-flex h-9 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm">
           {copy.publishJob}
         </Link>
       )}
@@ -227,7 +227,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
 
-  return <main className="min-h-[calc(100vh-72px)] overflow-x-hidden bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
+  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
     {showingMobileDetail && selected && (
       <section className="lg:hidden">
         <header className="sticky top-0 z-20 flex h-14 items-center justify-center border-b border-[#dfe6ec] bg-white px-14">
@@ -261,6 +261,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         </div>
         <div className="px-4 pb-3">{renderSearch()}</div>
         <div className="scrollbar-none flex gap-1.5 overflow-x-auto px-4 pb-4">{renderFilters()}</div>
+        <div className="px-4 pb-3" data-testid="jobs-mobile-sticky-actions">{renderActions()}</div>
       </div>
     </section>
     <MarketplaceNavbarPortal>
@@ -268,7 +269,6 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         <div className="flex h-full w-full items-center py-2"><div className="w-full">{renderSearch()}</div></div>
       </section>
     </MarketplaceNavbarPortal>
-    <div className={`${showingMobileDetail ? "hidden " : ""}mx-auto max-w-7xl justify-end px-4 py-3 sm:px-6 lg:hidden flex`}>{renderActions()}</div>
     {!detailOnly && <div className="mx-auto hidden max-w-7xl items-end justify-between gap-4 px-6 pt-3 lg:flex">
       <div>
         <h1 className="text-2xl font-extrabold">{copy.jobs}</h1>

@@ -661,6 +661,9 @@ async function searchProfessionalsUncached(
 
       if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
         const { nearLat, nearLng } = filters;
+        const administrativeAreaActive =
+          (!!filters.provinceId && filters.provinceId !== "todas") ||
+          (!!filters.cantonId && filters.cantonId !== "todos");
         const includeVideoNationwideForNear =
           !inPersonOnly &&
           (videoOnly ||
@@ -674,11 +677,17 @@ async function searchProfessionalsUncached(
           }
           return distances.length ? Math.min(...distances) : Number.POSITIVE_INFINITY;
         };
-        mapped = mapped.filter((p) => {
-          const distance = distOfExactPin(p);
-          if (distance <= NEAR_ME_RADIUS_KM) return true;
-          return includeVideoNationwideForNear && (p.videoconsulta || !!p.coverage?.country);
-        });
+        // Coordinates attached to a resolved address are a map/ranking hint. The
+        // authoritative province/canton filter above must keep professionals who
+        // cover the whole administrative area even when they do not publish an
+        // exact pin. Only a true coordinate-only "near me" search is radius-bound.
+        if (!administrativeAreaActive) {
+          mapped = mapped.filter((p) => {
+            const distance = distOfExactPin(p);
+            if (distance <= NEAR_ME_RADIUS_KM) return true;
+            return includeVideoNationwideForNear && (p.videoconsulta || !!p.coverage?.country);
+          });
+        }
         mapped.sort((a, b) => {
           const da = distOfExactPin(a);
           const db = distOfExactPin(b);

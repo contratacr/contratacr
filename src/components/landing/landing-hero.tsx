@@ -467,7 +467,10 @@ export function LandingHero() {
     if (locationOverride?.kind === "taxonomy") {
       const loc = locationOverride.sug;
       if (loc.type === "province") params.set("provincia", loc.id);
-      else params.set("canton", loc.id);
+      else {
+        params.set("provincia", loc.provinceId);
+        params.set("canton", loc.id);
+      }
     } else if (locationOverride?.kind === "address") {
       if (locationOverride.provinceId) {
         params.set("provincia", locationOverride.provinceId);

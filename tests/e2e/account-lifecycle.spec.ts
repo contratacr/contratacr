@@ -130,6 +130,7 @@ test.describe("@account disposable account lifecycle", () => {
     const supportMessageIds: string[] = [];
     const reportIds: string[] = [];
     const auditIds: string[] = [];
+    const contactFollowupIds: string[] = [];
     let targetDeletionRequestId = "";
 
     try {
@@ -464,6 +465,27 @@ test.describe("@account disposable account lifecycle", () => {
         message: "Must remain after target deletion.",
         data: { sentinel_id: sentinel.id },
       });
+
+      // Regression for the production deletion failure caused by the old
+      // client_id ON DELETE SET NULL action conflicting with the table CHECK.
+      const targetContactFollowupId = await insertId("whatsapp_contact_followups", {
+        professional_id: sentinel.professionalId,
+        client_id: target.id,
+        professional_name: sentinel.businessName,
+        service_name: "Deletion target contact",
+        status: "contacted",
+        contact_method: "whatsapp",
+      });
+      contactFollowupIds.push(targetContactFollowupId);
+      const sentinelContactFollowupId = await insertId("whatsapp_contact_followups", {
+        professional_id: sentinel.professionalId,
+        client_id: sentinel.id,
+        professional_name: sentinel.businessName,
+        service_name: "Deletion sentinel contact",
+        status: "contacted",
+        contact_method: "whatsapp",
+      });
+      contactFollowupIds.push(sentinelContactFollowupId);
       const literalEmailIsolationNotificationId = await insertId("notifications", {
         user_id: sentinel.id,
         type: "booking_received",
@@ -515,6 +537,7 @@ test.describe("@account disposable account lifecycle", () => {
         ["saved_items", targetSavedId],
         ["professional_follows", targetFollowId],
         ["notifications", targetCrossNotificationId],
+        ["whatsapp_contact_followups", targetContactFollowupId],
       ] as const) {
         expect(await countById(table, id), `${table}:${id} should be removed`).toBe(0);
       }
@@ -710,6 +733,7 @@ test.describe("@account disposable account lifecycle", () => {
       expect(sentinelStorage ?? []).toEqual(expect.arrayContaining([expect.objectContaining({ name: "sentinel.png" })]));
       expect(await countById("profiles", seed.clientId)).toBe(1);
       expect(await countById("profiles", seed.professionalUserId)).toBe(1);
+      expect(await countById("whatsapp_contact_followups", sentinelContactFollowupId)).toBe(1);
     } finally {
       const cleanupFailures: unknown[] = [];
       for (const data of cleanupNotificationData) {
@@ -748,6 +772,10 @@ test.describe("@account disposable account lifecycle", () => {
       }
       if (auditIds.length) {
         const { error } = await admin.from("user_action_audit").delete().in("id", auditIds);
+        if (error) cleanupFailures.push(error);
+      }
+      if (contactFollowupIds.length) {
+        const { error } = await admin.from("whatsapp_contact_followups").delete().in("id", contactFollowupIds);
         if (error) cleanupFailures.push(error);
       }
       if (targetDeletionRequestId) {

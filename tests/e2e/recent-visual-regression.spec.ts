@@ -97,7 +97,9 @@ test.describe("@visual recent bug contracts", () => {
           ? page.getByRole("dialog", { name: /Men[uú]|Menu/i })
           : page.getByRole("banner");
         if (width < 600) {
-          await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
+          const navbar = page.getByTestId("landing-navbar").filter({ visible: true });
+          await expect(navbar).toHaveAttribute("data-hydrated", "true");
+          await navbar.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).click();
           await expect(clientNavigation).toBeVisible();
         }
         const link = clientNavigation.getByRole("link", { name: /^Ofrecer mis servicios$/i }).filter({ visible: true }).first();
@@ -116,7 +118,9 @@ test.describe("@visual recent bug contracts", () => {
           ? page.getByRole("dialog", { name: /Men[uú]|Menu/i })
           : page.getByRole("banner");
         if (width < 600) {
-          await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
+          const navbar = page.getByTestId("landing-navbar").filter({ visible: true });
+          await expect(navbar).toHaveAttribute("data-hydrated", "true");
+          await navbar.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).click();
           await expect(providerNavigation).toBeVisible();
         }
         await expect(providerNavigation.getByRole("link", { name: /^Ofrecer mis servicios$/i })).toHaveCount(0);

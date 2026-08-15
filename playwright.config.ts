@@ -59,6 +59,10 @@ const vercelBypassHeaders = vercelBypassSecret
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // OneDrive can transiently lock Playwright's default test-results directory.
+  // Local focal runs may redirect artifacts to a disposable directory without
+  // changing CI's canonical report paths.
+  outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ?? "test-results",
   // Direct messages remain parked while WhatsApp is the production contact flow.
   testIgnore: ["**/direct-chat.spec.ts"],
   globalSetup: "./tests/e2e/global-setup.ts",

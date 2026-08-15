@@ -57,6 +57,50 @@ test.describe("@seeded search results", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("mobile cards keep service, price and price detail on aligned rows", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoOK(page, "/es/buscar");
+
+    const card = page.locator("[data-pro-id]").first();
+    await expect(card).toBeVisible();
+    const service = card.getByTestId("professional-card-mobile-service");
+    const primaryPrice = card.getByTestId("professional-card-mobile-price-primary");
+    await expect(service).toBeVisible();
+    await expect(primaryPrice).toBeVisible();
+    await expect(primaryPrice).toHaveAttribute("aria-label", /.+/);
+
+    const detail = card.getByTestId("professional-card-mobile-price-secondary");
+    if (await detail.count()) {
+      await expect(detail).toBeVisible();
+      await expect(detail).toContainText(/A consultar|On request|\/\S+|I\.V\.A\.I\./i);
+    }
+
+    const layout = await card.evaluate((node) => {
+      const cardBox = node.getBoundingClientRect();
+      const rect = (selector: string) => {
+        const element = node.querySelector<HTMLElement>(selector);
+        if (!element) return null;
+        const box = element.getBoundingClientRect();
+        return { left: box.left, right: box.right, top: box.top };
+      };
+      return {
+        card: { left: cardBox.left, right: cardBox.right, top: cardBox.top },
+        service: rect('[data-testid="professional-card-mobile-service"]'),
+        primary: rect('[data-testid="professional-card-mobile-price-primary"]'),
+        detail: rect('[data-testid="professional-card-mobile-price-secondary"]'),
+      };
+    });
+    expect(layout.card).not.toBeNull();
+    expect(layout.service).not.toBeNull();
+    expect(layout.primary).not.toBeNull();
+    expect(Math.abs(layout.service!.top - layout.primary!.top)).toBeLessThan(8);
+    expect(layout.primary!.right).toBeLessThanOrEqual(layout.card!.right + 1);
+    if (layout.detail) {
+      expect(layout.detail.top).toBeGreaterThan(layout.primary!.top);
+      expect(layout.detail.right).toBeLessThanOrEqual(layout.card!.right + 1);
+    }
+  });
+
   test("long mobile service labels stay readable instead of showing two truncated chips", async ({ page }, testInfo) => {
     if (!isMobileProject(testInfo)) return;
     await firstProfessionalHref(page);
@@ -128,6 +172,7 @@ test.describe("@seeded search results", () => {
     }
 
     await expect(page).toHaveURL(/canton=gu-li/);
+    await expect(page).toHaveURL(/provincia=gu/);
     await expectHealthyPage(page);
   });
 
@@ -138,14 +183,13 @@ test.describe("@seeded search results", () => {
 
     const body = page.locator("body");
     if (isMobileProject(testInfo)) {
-      await page
-        .getByRole("button", { name: /Idioma de atenci[oó]n|Service language/i })
-        .filter({ visible: true })
-        .first()
-        .click();
+      const languageChip = page.getByTestId("mobile-language-filter").filter({ visible: true }).first();
+      await expect(languageChip).toHaveText(/Idioma|Language/i);
+      await expect(languageChip).not.toHaveText(/Espa[nñ]ol|Spanish/i);
+      await languageChip.click();
       const languageDialog = page.getByRole("dialog", { name: /Idioma de atenci[oó]n|Service language/i });
       await expect(languageDialog).toBeVisible();
-      await expect(languageDialog.getByRole("button", { name: /Cualquier idioma|Any language/i })).toBeVisible();
+      await expect(languageDialog.getByRole("button", { name: /Todos los idiomas|All languages/i })).toBeVisible();
     } else {
       await expect(page.getByText(/Idioma de atenci[oó]n|Service language/i).filter({ visible: true }).first()).toBeVisible();
       await expect(page.getByRole("combobox", { name: /Idioma de atenci[oó]n|Service language/i }).filter({ visible: true }).first()).toContainText(/Cualquier idioma|Any language/i);
@@ -156,6 +200,18 @@ test.describe("@seeded search results", () => {
     await expect(page.getByRole("button", { name: /^(?:Anterior|Siguiente|Previous|Next)$/i })).toHaveCount(0);
     await expect(page.getByText(/^(?:P[aá]gina \d+ de \d+|Page \d+ of \d+)$/i)).toHaveCount(0);
     await expectHealthyPage(page);
+  });
+
+  test("completed searches keep the selected service and location in the mobile search header", async ({ page }, testInfo) => {
+    if (!isMobileProject(testInfo)) return;
+    await gotoOK(page, "/es/buscar?categoria=aire_acondicionado&provincia=al&canton=al-al");
+    await waitForInteractivePage(page);
+
+    const summary = page.getByTestId("search-context-summary");
+    await expect(summary).toBeVisible();
+    await expect(summary).toContainText(/Aire acondicionado/i);
+    await expect(summary).toContainText(/Alajuela/i);
+    await expect(summary).not.toContainText(/Qué servicio estás buscando/i);
   });
 
   test("nationwide video consultations survive a different physical location filter", async ({ page }) => {
@@ -176,6 +232,25 @@ test.describe("@seeded search results", () => {
       await expect(card).toContainText(/I\.V\.A\.I\.|VAT included/i);
       await expect(card).not.toContainText(/Atenas|Alajuela/i);
       await expect(card.locator('a[href*="/profesionales/"]').first()).toBeVisible();
+      await expectHealthyPage(page);
+    }
+  });
+
+  test("whole-province coverage survives canton and resolved-address searches", async ({ page }) => {
+    test.skip(!canRunSeededRegression(), "The mirrored Tecnoclimacr profile is required for location hierarchy regression.");
+    const cacheBust = Date.now();
+
+    for (const query of [
+      `/es/buscar?categoria=aire_acondicionado&provincia=al&regression=${cacheBust}`,
+      `/es/buscar?categoria=aire_acondicionado&provincia=al&canton=al-al&regression=${cacheBust}`,
+      `/es/buscar?categoria=aire_acondicionado&provincia=al&canton=al-al&lat=10.01625&lng=-84.21163&regression=${cacheBust}`,
+    ]) {
+      await gotoOK(page, query);
+      await waitForInteractivePage(page);
+
+      const card = page.locator("article").filter({ hasText: /Tecnoclimacr/i }).first();
+      await expect(card).toBeVisible();
+      await expect(card).toContainText(/Toda la provincia de Alajuela/i);
       await expectHealthyPage(page);
     }
   });

@@ -870,6 +870,45 @@ test.describe("@seeded core regression", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("mobile offers and jobs keep compact owner actions above the scrolling cards", async ({ page }) => {
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    for (const surface of [
+      {
+        path: "/es/ofertas",
+        testId: "offers-mobile-sticky-actions",
+        actions: [/^Mis ofertas$/i, /^Publicar oferta$/i],
+      },
+      {
+        path: "/es/empleos",
+        testId: "jobs-mobile-sticky-actions",
+        actions: [/^Mis empleos$/i, /^Publicar empleo$/i],
+      },
+    ]) {
+      await gotoOK(page, surface.path);
+      const actions = page.getByTestId(surface.testId);
+      await expect(actions).toBeVisible();
+      for (const name of surface.actions) {
+        const action = actions.getByRole("link", { name });
+        await expect(action).toBeVisible();
+        const box = await action.boundingBox();
+        expect(box, `${surface.path} action needs visible geometry`).not.toBeNull();
+        expect(box!.height, `${surface.path} actions should stay compact on mobile`).toBeLessThanOrEqual(38);
+      }
+
+      const stickyHeader = actions.locator("xpath=ancestor::section[1]");
+      await expect(stickyHeader).toHaveCSS("position", "sticky");
+      await page.evaluate(() => window.scrollTo(0, 700));
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      const scrolledTop = (await stickyHeader.boundingBox())?.y;
+      expect(scrolledTop).toBeDefined();
+      expect(Math.abs(scrolledTop!)).toBeLessThanOrEqual(1);
+      await expect(actions).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    }
+  });
+
   test("English offer listings and details render localized copy without leaking translation keys", async ({ page }) => {
     await resetAuth(page);
     await gotoOK(page, "/en/ofertas");

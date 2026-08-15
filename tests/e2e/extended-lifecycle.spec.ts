@@ -186,12 +186,23 @@ test.describe("@seeded extended lifecycle", () => {
       if (serviceFixtureError) throw serviceFixtureError;
       const reusableImageUrl = Array.isArray(serviceFixture.portfolio_urls) ? serviceFixture.portfolio_urls[0] : null;
       expect(reusableImageUrl, "The disposable service editor needs one reusable image").toBeTruthy();
+      await page.route("**/api/upload/photo", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ url: reusableImageUrl, publicId: "regression/reused-profile-service-fixture" }),
+        });
+      });
       await loginAs(page, account.email, account.password);
       await gotoOK(page, "/es/dashboard/profesional?tab=profile&mode=offer");
       await page.getByRole("button", { name: /Datos b.sicos.*Foto, nombre y descripci/i }).click();
       const bio = page.locator('[data-field="bio"] textarea');
       await expect(bio).toBeVisible();
       await bio.fill(marker);
+      const profilePhotoField = page.locator('[data-field="photo"]');
+      const profilePhoto = profilePhotoField.locator('input[type="file"]');
+      await profilePhoto.setInputFiles({ name: "e2e-profile.png", mimeType: "image/png", buffer: ONE_PIXEL_PNG });
+      await expect(profilePhotoField.locator('img[src^="blob:"]')).toBeVisible();
       const profileSaveGate = new Promise<void>((resolve) => { releaseProfileSave = resolve; });
       await page.route("**/rest/v1/professionals*", async (route) => {
         if (route.request().method() === "PATCH" && route.request().postData()?.includes(marker)) {
@@ -206,6 +217,7 @@ test.describe("@seeded extended lifecycle", () => {
       releaseProfileSave!();
       releaseProfileSave = undefined;
       await expect.poll(async () => (await admin.from("professionals").select("bio").eq("id", account!.professionalId!).single()).data?.bio).toBe(marker);
+      await expect.poll(async () => (await admin.from("profiles").select("avatar_url").eq("id", account!.id).single()).data?.avatar_url).toBe(reusableImageUrl);
       // The bio is the first write in the profile save pipeline. Wait for the
       // complete pipeline before navigating so the browser cannot abort the
       // remaining location/contact/auth synchronization requests.
@@ -237,13 +249,6 @@ test.describe("@seeded extended lifecycle", () => {
       expect(popupBox!.y + popupBox!.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1);
       await page.getByRole("option", { name: /Febrero|February/i }).click();
 
-      await page.route("**/api/upload/photo", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({ url: reusableImageUrl, publicId: "regression/reused-service-fixture" }),
-        });
-      });
       await dialog.locator('input[type="file"]').setInputFiles({
         name: "e2e-service.png",
         mimeType: "image/png",
