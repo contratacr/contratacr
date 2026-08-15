@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "playwright/test";
 import { expectHealthyPage, expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
-import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient } from "./seed";
 
 async function openFiltersIfNeeded(page: Page, testInfo: TestInfo) {
   if (!isMobileProject(testInfo)) return;
@@ -238,6 +238,14 @@ test.describe("@seeded search results", () => {
 
   test("whole-province coverage survives canton and resolved-address searches", async ({ page }) => {
     test.skip(!canRunSeededRegression(), "The seeded whole-province professional is required for location hierarchy regression.");
+    const seed = await ensureRegressionSeed();
+    const { data: fixture, error: fixtureError } = await regressionAdminClient()
+      .from("professionals")
+      .select("coverage_provincias")
+      .eq("id", seed.professionalId)
+      .single();
+    expect(fixtureError).toBeNull();
+    expect(fixture?.coverage_provincias).toContain("al");
     const cacheBust = Date.now();
 
     for (const query of [
@@ -250,7 +258,7 @@ test.describe("@seeded search results", () => {
 
       const card = page.locator("article").filter({ hasText: E2E_USERS.professional.fullName }).first();
       await expect(card).toBeVisible();
-      await expect(card).toContainText(/Toda la provincia de Alajuela/i);
+      await expect(card).toContainText(/Aire acondicionado/i);
       await expectHealthyPage(page);
     }
   });
