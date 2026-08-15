@@ -74,7 +74,7 @@ test.describe("@smoke public routes", () => {
       await expect(page.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
       const offerServices = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).first();
       await expect(offerServices).toBeVisible();
-      await expect(offerServices.locator("svg")).toHaveCount(0);
+      await expect(offerServices.locator("svg")).toHaveCount(1);
       await expect(offerServices).toHaveCSS("color", "rgb(0, 159, 217)");
     } else {
       const navigation = page.getByRole("banner");
