@@ -237,7 +237,7 @@ test.describe("@seeded search results", () => {
   });
 
   test("whole-province coverage survives canton and resolved-address searches", async ({ page }) => {
-    test.skip(!canRunSeededRegression(), "The mirrored Tecnoclimacr profile is required for location hierarchy regression.");
+    test.skip(!canRunSeededRegression(), "The seeded whole-province professional is required for location hierarchy regression.");
     const cacheBust = Date.now();
 
     for (const query of [
@@ -248,7 +248,7 @@ test.describe("@seeded search results", () => {
       await gotoOK(page, query);
       await waitForInteractivePage(page);
 
-      const card = page.locator("article").filter({ hasText: /Tecnoclimacr/i }).first();
+      const card = page.locator("article").filter({ hasText: E2E_USERS.professional.fullName }).first();
       await expect(card).toBeVisible();
       await expect(card).toContainText(/Toda la provincia de Alajuela/i);
       await expectHealthyPage(page);

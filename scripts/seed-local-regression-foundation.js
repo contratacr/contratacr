@@ -47,9 +47,10 @@ const actors = [
     fullName: "SG Solutions",
     slug: "luis-angel-sanchez-sibaja-977u5iku",
     categoryId: "redes_internet",
-    professionIds: ["redes_internet", "soporte_tecnico"],
+    professionIds: ["redes_internet", "soporte_tecnico", "aire_acondicionado"],
     provinceId: "al",
     cantonId: "al-at",
+    wholeProvince: true,
     phone: "+50670000002",
     hourlyRate: 120000,
   },
@@ -80,7 +81,11 @@ async function main() {
     const services = actor.professionIds.map((profession, index) => ({
       id: `${actor.slug}-service-${index + 1}`,
       category: profession,
-      name: profession === "redes_internet" ? "Redes e internet" : "Desarrollo web",
+      name: profession === "redes_internet"
+        ? "Redes e internet"
+        : profession === "aire_acondicionado"
+          ? "Aire acondicionado"
+          : "Desarrollo web",
       active: true,
       priceAmount: actor.hourlyRate,
       priceType: "por_proyecto",
@@ -121,6 +126,7 @@ async function main() {
       is_available: true,
       videoconsulta: true,
       coverage_country: true,
+      coverage_provincias: actor.wholeProvince ? [actor.provinceId] : [],
       availability_public: true,
       portfolio_urls: ["https://res.cloudinary.com/demo/image/upload/sample.jpg"],
       portfolio_items: portfolioItems,
