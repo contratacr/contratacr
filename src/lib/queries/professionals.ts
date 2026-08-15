@@ -839,13 +839,16 @@ export async function getProfessionalBySlug(
 
       // Use LEFT joins (not !inner) so missing categories/provincias/cantones
       // rows don't silently drop the professional from results.
+      // reviews has two foreign keys to profiles (client_id and moderated_by).
+      // Keep the author relationship explicit or PostgREST rejects the whole
+      // professional query as ambiguous and the UI falls back to "not found".
       const detailSelect = (withBusinessNameOnly: boolean) => `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
            category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name${withBusinessNameOnly ? ", public_business_name_only" : ""}, workplaces, verification_status, insurance_networks, lat, lng, service_type, videoconsulta,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
-           reviews(id, rating, comment, created_at, profiles(full_name, avatar_url))`;
+           reviews(id, rating, comment, created_at, profiles!reviews_client_id_fkey(full_name, avatar_url))`;
 
       async function fetchBySlug(select: string) {
         let { data, error } = await supabase
