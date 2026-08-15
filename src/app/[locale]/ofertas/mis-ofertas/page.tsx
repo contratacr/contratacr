@@ -32,5 +32,9 @@ async function MyOffersContent() {
     description: repairVisibleText(String(row.description ?? "")),
     image_urls: Array.isArray(row.image_urls) ? row.image_urls : [],
   })) as ProfessionalOffer[];
-  return <OffersManager initialOffers={offers} />;
+  return (
+    <main data-route-content="offers-manager">
+      <OffersManager initialOffers={offers} />
+    </main>
+  );
 }

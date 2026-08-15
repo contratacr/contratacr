@@ -826,6 +826,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         </button>
         <button
           type="button"
+          data-testid={`profile-save-${sectionId}`}
           onClick={() => void handleSave()}
           disabled={!sectionActive || sectionInvalid || saving || photoUploading}
           className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
