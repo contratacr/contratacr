@@ -163,19 +163,6 @@ export function ReviewSection({
                 {jobTitle && (
                   <p className="text-xs text-[#9ca3af] mt-0.5">{t("reviewOf", { title: jobTitle })}</p>
                 )}
-                <span className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  review.source === "verified"
-                    ? "bg-[#e9f8ef] text-[#16794a]"
-                    : review.source === "contact"
-                      ? "bg-[#eef9ff] text-[#0369a1]"
-                      : "bg-[#f1f5f9] text-[#64748b]"
-                }`}>
-                  {review.source === "verified"
-                    ? (locale === "en" ? "Verified booking" : "Contratación verificada")
-                    : review.source === "contact"
-                      ? (locale === "en" ? "Confirmed contact" : "Contacto confirmado")
-                      : (locale === "en" ? "Unverified experience" : "Experiencia no verificada")}
-                </span>
                 <p className="text-sm text-[#374151] leading-relaxed mt-1">
                   {locale === "en" ? translatedComments[review.id] ?? review.comment : review.comment}
                 </p>

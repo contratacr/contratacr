@@ -100,4 +100,17 @@ test.describe("@seeded professional profile", () => {
       await cleanupDisposableAccount(account);
     }
   });
+
+  test("reviews are the second profile section and do not label review provenance", async ({ page }) => {
+    const href = await firstProfessionalHref(page);
+    expect(href).toBeTruthy();
+    await gotoOK(page, href!);
+
+    const tabs = page.getByRole("tablist", { name: /Secciones del perfil|Profile sections/i }).getByRole("tab");
+    await expect(tabs.nth(0)).toHaveText(/Servicios|Services/i);
+    await expect(tabs.nth(1)).toHaveText(/Reseñas|Reviews/i);
+
+    await tabs.nth(1).click();
+    await expect(page.getByText(/Contratación verificada|Contacto confirmado|Experiencia no verificada|Verified booking|Confirmed contact|Unverified experience/i)).toHaveCount(0);
+  });
 });

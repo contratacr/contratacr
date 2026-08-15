@@ -416,11 +416,11 @@ export default function ProfilePage() {
   const displayName = getProfessionalDisplayName(professional.fullName, professional.businessName);
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
+    { id: "resenas",        label: t("tabs.resenas") },
     ...(publicOffers.length > 0 ? [{ id: "ofertas" as Tab, label: locale === "en" ? "Offers" : "Ofertas" }] : []),
     ...(publicJobs.length > 0 ? [{ id: "empleos" as Tab, label: locale === "en" ? "Jobs" : "Empleos" }] : []),
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     ...(hasCerts ? [{ id: "certificaciones" as Tab, label: t("tabs.certificaciones") }] : []),
-    { id: "resenas",        label: t("tabs.resenas") },
     { id: "sobre",          label: t("tabs.sobre") },
   ];
 
@@ -658,10 +658,16 @@ export default function ProfilePage() {
               <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] overflow-hidden">
 
                 {/* Tab bar */}
-                <div className="flex border-b border-[#e5e7eb] overflow-x-auto">
+                <div
+                  role="tablist"
+                  aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
+                  className="flex border-b border-[#e5e7eb] overflow-x-auto"
+                >
                   {TABS.map(tab => (
                     <button
                       key={tab.id}
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className="relative shrink-0 px-5 py-4 text-sm font-semibold transition-colors"
                       style={{ color: activeTab === tab.id ? "#009FD9" : "#6b7280" }}
