@@ -71,7 +71,7 @@ jobs:
           {
             echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            printf '%s=%s\n' "SUPABASE_SERVICE_ROLE_KEY" "$SERVICE_ROLE_KEY"
             echo "SUPABASE_DB_URL=$DB_URL"
             echo "LOCAL_REGRESSION_SEED=1"
             echo "E2E_FIXTURES_READY=1"
