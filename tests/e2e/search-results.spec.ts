@@ -41,19 +41,36 @@ test.describe("@seeded search results", () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test("card keeps favorite visible and avoids layout overflow", async ({ page }) => {
+  test("card keeps favorite at the outer edge without colliding with price", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
     const href = await firstProfessionalHref(page);
     expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
 
-    const favorite = page.getByRole("button", { name: /Guardar profesional|Quitar de favoritos/i }).first();
-    await expect(favorite).toBeVisible();
+    const cards = page.locator("[data-pro-id]");
+    const count = Math.min(await cards.count(), 6);
+    expect(count).toBeGreaterThan(0);
+    for (let index = 0; index < count; index += 1) {
+      const card = cards.nth(index);
+      const favorite = card.getByRole("button", { name: /Guardar profesional|Quitar de favoritos/i });
+      const price = card.getByTestId("professional-card-mobile-price-primary");
+      await expect(favorite).toBeVisible();
+      await expect(price).toBeVisible();
 
-    const box = await favorite.boundingBox();
-    const viewport = page.viewportSize();
-    expect(box, "Favorite button should have a bounding box").not.toBeNull();
-    expect(viewport, "Viewport should be available").not.toBeNull();
-    expect(box!.x).toBeGreaterThanOrEqual(0);
-    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 1);
+      const [cardBox, favoriteBox, priceBox] = await Promise.all([
+        card.boundingBox(),
+        favorite.boundingBox(),
+        price.boundingBox(),
+      ]);
+      expect(cardBox).not.toBeNull();
+      expect(favoriteBox).not.toBeNull();
+      expect(priceBox).not.toBeNull();
+      const favoriteRight = favoriteBox!.x + favoriteBox!.width;
+      const priceRight = priceBox!.x + priceBox!.width;
+      expect(cardBox!.x + cardBox!.width - favoriteRight).toBeGreaterThanOrEqual(8);
+      expect(cardBox!.x + cardBox!.width - favoriteRight).toBeLessThanOrEqual(20);
+      expect(favoriteRight).toBeGreaterThanOrEqual(priceRight);
+      expect(favoriteRight - priceRight).toBeLessThanOrEqual(32);
+    }
     await expectNoHorizontalOverflow(page);
   });
 
@@ -124,7 +141,9 @@ test.describe("@seeded search results", () => {
         const [chipBox, moreBox] = await Promise.all([lastService.boundingBox(), more.boundingBox()]);
         expect(chipBox).not.toBeNull();
         expect(moreBox).not.toBeNull();
-        expect(Math.abs(chipBox!.y - moreBox!.y)).toBeLessThanOrEqual(2);
+        const chipBaseline = chipBox!.y + chipBox!.height;
+        const moreBaseline = moreBox!.y + moreBox!.height;
+        expect(Math.abs(chipBaseline - moreBaseline)).toBeLessThanOrEqual(2);
         expect(moreBox!.x - (chipBox!.x + chipBox!.width)).toBeLessThanOrEqual(10);
       }
     }
