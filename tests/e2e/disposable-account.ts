@@ -149,6 +149,8 @@ export async function cleanupDisposableAccount(account: DisposableAccount | unde
     .select("id")
     .eq("user_id", account.id);
   if (deletionLookupError) failures.push(deletionLookupError);
+  const { error: notificationsError } = await admin.from("notifications").delete().eq("user_id", account.id);
+  if (notificationsError) failures.push(notificationsError);
   const { error: mediaError } = await admin.from("user_media_assets").delete().eq("user_id", account.id);
   if (mediaError) failures.push(mediaError);
   const { error: requestError } = await admin.from("account_deletion_requests").delete().eq("user_id", account.id);

@@ -44,10 +44,16 @@ const LOCALES: LocaleContract[] = [
 
 function enableNativeRuntime(page: Page) {
   return page.addInitScript(() => {
+    const nativeRuntime: Record<string, unknown> = {
+      isNativePlatform: () => true,
+    };
     Object.defineProperty(window, "Capacitor", {
       configurable: true,
-      writable: true,
-      value: { isNativePlatform: () => true },
+      get: () => nativeRuntime,
+      set: (value) => {
+        if (value && typeof value === "object") Object.assign(nativeRuntime, value);
+        nativeRuntime.isNativePlatform = () => true;
+      },
     });
   });
 }
