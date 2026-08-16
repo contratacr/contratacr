@@ -100,9 +100,12 @@ const ES_SECTIONS: LegalSection[] = [
     id: "resenas",
     h: "10. Reseñas, reportes y moderación",
     body: [
+      { k: "p", text: "ContrataCR mantiene **tolerancia cero frente a contenido ofensivo y usuarios abusivos**." },
       { k: "ul", items: [
         "Las reseñas deben describir experiencias reales y expresarse de forma respetuosa.",
-        "Los Usuarios pueden reportar perfiles, clientes, mensajes, reseñas o conductas.",
+        "Los Usuarios pueden reportar perfiles, clientes, mensajes, reseñas o conductas y bloquear inmediatamente a la otra persona desde las superficies compatibles.",
+        "El contenido reportado puede ocultarse inmediatamente mientras se revisa.",
+        "ContrataCR procura revisar y actuar sobre reportes de seguridad o abuso en un plazo máximo de 24 horas.",
         "ContrataCR puede investigar, limitar visibilidad, retirar contenido, advertir, suspender o cancelar cuentas cuando exista incumplimiento, riesgo, fraude, orden legal o necesidad de proteger a la comunidad.",
         "Cuando sea razonablemente posible, el Usuario podrá contactar soporte para solicitar revisión de una medida.",
       ] },
@@ -195,7 +198,8 @@ const EN_SECTIONS: LegalSection[] = [
     { k: "p", text: "Users represent that they have the required rights. ContrataCR's brand, logo, design, original text, and software belong to ContrataCR or its licensors." },
   ] },
   { id: "moderation", h: "10. Reviews, reports, and moderation", body: [
-    { k: "ul", items: ["Reviews must describe genuine experiences respectfully.", "Users may report profiles, messages, reviews, or conduct.", "ContrataCR may investigate, limit visibility, remove content, warn, suspend, or terminate accounts for breach, risk, fraud, legal orders, or community protection.", "Where reasonably possible, Users may contact support to request review of an action."] },
+    { k: "p", text: "ContrataCR has **zero tolerance for objectionable content and abusive users**." },
+    { k: "ul", items: ["Reviews must describe genuine experiences respectfully.", "Users may report profiles, messages, reviews, or conduct and immediately block the other person from supported surfaces.", "Reported content may be hidden immediately while it is reviewed.", "ContrataCR seeks to review and act on safety or abuse reports within 24 hours.", "ContrataCR may investigate, limit visibility, remove content, warn, suspend, or terminate accounts for breach, risk, fraud, legal orders, or community protection.", "Where reasonably possible, Users may contact support to request review of an action."] },
   ] },
   { id: "account", h: "11. Account, suspension, and deletion", body: [
     { k: "p", text: "Keep contact information accurate and credentials secure. You can **disable your account** from Account & security. When disabled, your profile is hidden and your session is signed out." },

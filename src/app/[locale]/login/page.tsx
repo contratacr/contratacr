@@ -110,10 +110,11 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
   // When a manual login fails because the email is a Google-only account, highlight
   // the provider button and show a specific message.
-  const [socialHint, setSocialHint] = useState<"google" | null>(null);
+  const [socialHint, setSocialHint] = useState<"google" | "apple" | null>(null);
   const registerRedirect = searchParams.get("redirect");
   const registerHref = registerRedirect ? `/registro?redirect=${encodeURIComponent(registerRedirect)}` : "/registro";
 
@@ -195,6 +196,10 @@ export default function LoginPage() {
   }
 
   async function onSubmit(data: FormData) {
+    if (!termsAccepted) {
+      setError(locale === "en" ? "Accept the Terms, Privacy Policy and zero-tolerance rules to sign in." : "Acepta los Términos, la Política de Privacidad y las reglas de tolerancia cero para ingresar.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     setSocialHint(null);
@@ -229,7 +234,7 @@ export default function LoginPage() {
           setError(t("facebookUnavailable"));
           return;
         }
-        setSocialHint("google");
+        setSocialHint(provider === "apple" ? "apple" : "google");
         setError(t("socialOnly", { provider: providerLabel(provider) }));
         return;
       }
@@ -257,16 +262,28 @@ export default function LoginPage() {
     return window.location.origin + `/auth/callback?flow=oauth&locale=${locale}` + (next ? `&next=${encodeURIComponent(next)}` : "");
   }
 
-  async function handleGoogle() {
-    setGoogleLoading(true);
+  const [appleLoading, setAppleLoading] = useState(false);
+
+  async function handleSocial(provider: "google" | "apple") {
+    if (!termsAccepted) {
+      setError(locale === "en" ? "Accept the Terms, Privacy Policy and zero-tolerance rules to sign in." : "Acepta los Términos, la Política de Privacidad y las reglas de tolerancia cero para ingresar.");
+      return;
+    }
+    if (provider === "google") setGoogleLoading(true);
+    else setAppleLoading(true);
     setError(null);
     const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider,
       options: { redirectTo: oauthCallbackUrl() },
     });
-    setGoogleLoading(false);
+    if (oauthError) setError(oauthError.message);
+    if (provider === "google") setGoogleLoading(false);
+    else setAppleLoading(false);
   }
+
+  async function handleGoogle() { await handleSocial("google"); }
+  async function handleApple() { await handleSocial("apple"); }
 
   if (otpEmail) {
     return (
@@ -322,6 +339,11 @@ export default function LoginPage() {
             </div>
           )}
 
+          <label className="mb-4 flex items-start gap-3 rounded-xl border border-[#dce8f0] bg-[#f8fbfd] p-3 text-xs leading-5 text-[#526277]">
+            <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#009FD9]" />
+            <span>{locale === "en" ? "I accept the " : "Acepto los "}<Link href="/terminos" className="font-semibold text-[#009FD9] underline">{locale === "en" ? "Terms" : "Términos"}</Link>{locale === "en" ? ", Privacy Policy and zero-tolerance policy for objectionable content and abusive users." : ", la Política de Privacidad y la política de tolerancia cero contra contenido ofensivo y usuarios abusivos."}</span>
+          </label>
+
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Input
               label={t("email")}
@@ -344,7 +366,7 @@ export default function LoginPage() {
                 </Link>
               </div>
             </div>
-            <Button type="submit" size="lg" loading={submitting} className="mt-2">
+            <Button type="submit" size="lg" loading={submitting} disabled={!termsAccepted || submitting} className="mt-2">
               {submitting ? t("submitting") : (
                 <>
                   {t("submit")} <ArrowRight className="h-4 w-4" />
@@ -363,11 +385,20 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={handleApple}
+              disabled={!termsAccepted || appleLoading || googleLoading}
+              className={`w-full flex items-center justify-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${socialHint === "apple" ? "border-[#009FD9] bg-black text-white ring-2 ring-[#009FD9]/30" : "border-black bg-black text-white hover:bg-[#202020]"}`}
+            >
+              <svg aria-hidden="true" className="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M17.05 12.54c-.03-3.01 2.46-4.48 2.57-4.55a5.5 5.5 0 0 0-4.33-2.34c-1.82-.19-3.58 1.09-4.5 1.09-.94 0-2.36-1.07-3.9-1.04A5.73 5.73 0 0 0 2.08 8.6c-2.09 3.62-.53 8.95 1.47 11.88 1 1.43 2.17 3.03 3.71 2.97 1.51-.06 2.08-.95 3.91-.95 1.81 0 2.35.95 3.92.91 1.62-.02 2.64-1.44 3.6-2.88a11.78 11.78 0 0 0 1.65-3.36 5.2 5.2 0 0 1-3.29-4.63ZM14.1 3.72A5.28 5.28 0 0 0 15.3 0a5.35 5.35 0 0 0-3.46 1.77 5.02 5.02 0 0 0-1.23 3.58 4.4 4.4 0 0 0 3.49-1.63Z" /></svg>
+              {appleLoading ? t("redirecting") : locale === "en" ? "Continue with Apple" : "Continuar con Apple"}
+            </button>
             {/* Google */}
             <button
               type="button"
               onClick={handleGoogle}
-              disabled={googleLoading}
+              disabled={!termsAccepted || googleLoading || appleLoading}
               className={`w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${socialHint === "google" ? "border-[#009FD9] ring-2 ring-[#009FD9]/30" : "border-[#e5e7eb]"}`}
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">

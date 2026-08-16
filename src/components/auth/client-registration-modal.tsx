@@ -211,6 +211,7 @@ export function ClientRegistrationModal({
   const [noCedula, setNoCedula] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Login state
   const [loginPassword, setLoginPassword] = useState("");
@@ -231,6 +232,7 @@ export function ClientRegistrationModal({
     setNoCedula(false);
     setPassword("");
     setConfirmPassword("");
+    setTermsAccepted(false);
     setLoginPassword("");
     setError(null);
     setDuplicateEmailDetected(false);
@@ -268,6 +270,10 @@ export function ClientRegistrationModal({
   // ── SignUp ─────────────────────────────────────────────────────────────────
 
   async function handleSignUp() {
+    if (!termsAccepted) {
+      setError(locale === "en" ? "Accept the Terms, Privacy Policy and zero-tolerance rules to continue." : "Acepta los Términos, la Política de Privacidad y las reglas de tolerancia cero para continuar.");
+      return;
+    }
     if (!isPasswordValid()) return;
     if (password !== confirmPassword) {
       setError(tRp("passwordsDontMatch"));
@@ -631,7 +637,7 @@ export function ClientRegistrationModal({
                     disabled={
                       (step === "identity" && !identityReady) ||
                       (step === "email" && !email.includes("@")) ||
-                      (step === "password" && (!isPasswordValid() || !confirmPassword))
+                      (step === "password" && (!isPasswordValid() || !confirmPassword || !termsAccepted))
                     }
                     onClick={() => {
                       setError(null);
@@ -647,12 +653,16 @@ export function ClientRegistrationModal({
                 </div>
               ) : null}
               {view === "register" && step === "password" && (
-                <p className="text-center text-xs text-[#9ca3af] mt-3">
+                <label className="mt-3 flex items-start gap-3 rounded-xl border border-[#dce8f0] bg-[#f8fbfd] p-3 text-xs leading-5 text-[#526277]">
+                  <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#009FD9]" />
+                  <span>
                   {t.rich("terms", {
                     terms: (c) => <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
                     privacy: (c) => <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
                   })}
-                </p>
+                  {locale === "en" ? " Zero tolerance applies to objectionable content and abusive users." : " Se aplica tolerancia cero al contenido ofensivo y a usuarios abusivos."}
+                  </span>
+                </label>
               )}
               {view === "login" && (
                 <div className="flex gap-3">

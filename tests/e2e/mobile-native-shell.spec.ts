@@ -129,6 +129,13 @@ test.describe("@mobile native shell contracts", () => {
     expect(geometry!.mainTop).toBeGreaterThanOrEqual(geometry!.headerBottom - 1);
     expect(geometry!.reservedHeaderHeight).toBe("124px");
 
+    const terms = page.getByRole("checkbox");
+    const apple = page.getByRole("button", { name: /continuar con apple/i });
+    await expect(terms).not.toBeChecked();
+    await expect(apple).toBeDisabled();
+    await terms.check();
+    await expect(apple).toBeEnabled();
+
     await page.getByRole("button", { name: /abrir men[uú]/i }).click();
     const offerServices = page.getByRole("link", { name: "Ofrecer mis servicios" });
     await expect(offerServices).toBeVisible();

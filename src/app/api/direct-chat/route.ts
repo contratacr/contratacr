@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { limitTrimmedText } from "@/lib/text-limits";
+import { validateDirectMessage } from "@/lib/moderation/messages";
 import { sendNotificationPush } from "@/lib/push/notify";
 
 type ConversationRow = {
@@ -185,6 +186,8 @@ export async function POST(req: Request) {
   const proposalId = String(body.proposalId ?? "");
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
   const message = limitTrimmedText(body.message, 2000);
+  const moderation = validateDirectMessage(message);
+  if (!moderation.ok) return NextResponse.json({ error: moderation.error }, { status: 422 });
   const initialMessage = limitTrimmedText(body.initialMessage, 2000);
   const openConversation = body.openConversation === true;
   const hasRawAttachments = Array.isArray(body.attachmentUrls) && body.attachmentUrls.length > 0;
@@ -326,6 +329,30 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const conversationId = String(body.conversationId ?? "");
+  const action = body.action === "block_and_report" ? "block_and_report" : null;
+  const reportReason = limitTrimmedText(body.reason, 1000);
+  if (conversationId && action) {
+    const db = createAdminClient();
+    const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
+    const conversation = data as ConversationRow | null;
+    if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
+    if (reportReason.length < 3) return NextResponse.json({ error: "Explica brevemente el motivo del reporte." }, { status: 400 });
+
+    const reportingAsClient = conversation.client_id === user.id;
+    const { error: reportError } = await db.from("reports").insert({
+      professional_id: reportingAsClient ? conversation.professional_id ?? null : null,
+      reported_client_id: reportingAsClient ? null : conversation.client_id,
+      reporter_professional_id: reportingAsClient ? null : conversation.professional_id ?? null,
+      reporter_email: user.email ?? null,
+      reason: `[Mensaje directo] ${reportReason}`,
+      status: "open",
+    });
+    if (reportError) return NextResponse.json({ error: reportError.message }, { status: 500 });
+    const now = new Date().toISOString();
+    const { error: blockError } = await db.from("direct_conversations").update({ status: "blocked", updated_at: now }).eq("id", conversationId);
+    if (blockError) return NextResponse.json({ error: blockError.message }, { status: 500 });
+    return NextResponse.json({ ok: true, blocked: true });
+  }
   const archived = body.status === "archived" ? true : body.status === "open" ? false : null;
   if (!conversationId || archived === null) return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
   const db = createAdminClient();

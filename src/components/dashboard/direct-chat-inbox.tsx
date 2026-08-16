@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Flag, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -161,6 +161,9 @@ export function DirectChatInbox() {
   const [attachmentError, setAttachmentError] = useState("");
   const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
   const [imagePreview, setImagePreview] = useState<DirectAttachment | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportBusy, setReportBusy] = useState(false);
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -405,6 +408,31 @@ export function DirectChatInbox() {
     }
   }
 
+  async function reportAndBlockActive() {
+    if (!active || active.id === DRAFT_CONVERSATION_ID) return;
+    if (reportReason.trim().length < 3) return;
+    setReportBusy(true);
+    setError("");
+    const response = await fetch("/api/direct-chat", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversationId: active.id, action: "block_and_report", reason: reportReason }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(result.error || (isEn ? "Could not report this user." : "No se pudo reportar al usuario."));
+      setReportBusy(false);
+      return;
+    }
+    setReportBusy(false);
+    setReportOpen(false);
+    setReportReason("");
+    setMessages([]);
+    setActiveId(null);
+    setMobileThread(false);
+    await loadConversations();
+  }
+
   function removeAttachment(id: string) {
     setSelectedAttachments((current) => {
       const attachment = current.find((item) => item.id === id);
@@ -615,6 +643,7 @@ export function DirectChatInbox() {
               </button>
             )}
           </div>
+          <ChatActionButton label={isEn ? "Report and block" : "Reportar y bloquear"} onClick={() => setReportOpen(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Flag className="h-4 w-4" /></ChatActionButton>
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
           {showArchived && (
             <ChatActionButton label={deleteLabel} onClick={() => void deleteArchivedActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
@@ -784,6 +813,20 @@ export function DirectChatInbox() {
           </div>
         </form>
       </section>
+      {reportOpen && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[1000] grid place-items-center bg-[#0f172a]/55 p-4" role="dialog" aria-modal="true" aria-labelledby="chat-report-title">
+          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div><h2 id="chat-report-title" className="text-lg font-extrabold text-[#162543]">{isEn ? "Report and block" : "Reportar y bloquear"}</h2><p className="mt-1 text-sm leading-5 text-[#64748b]">{isEn ? "The conversation is blocked immediately and ContrataCR receives the report for review within 24 hours." : "La conversación se bloquea inmediatamente y ContrataCR recibe el reporte para revisarlo en un máximo de 24 horas."}</p></div>
+              <button type="button" onClick={() => setReportOpen(false)} aria-label={isEn ? "Close" : "Cerrar"} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#64748b] hover:bg-[#f1f5f9]"><X className="h-5 w-5" /></button>
+            </div>
+            <label className="mt-5 block text-sm font-bold text-[#334155]" htmlFor="chat-report-reason">{isEn ? "What happened?" : "¿Qué ocurrió?"}</label>
+            <textarea id="chat-report-reason" value={reportReason} onChange={(event) => setReportReason(event.target.value.slice(0, 1000))} rows={4} autoFocus className="mt-2 w-full resize-none rounded-2xl border border-[#d8e5ee] p-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10" placeholder={isEn ? "Describe the abusive content or conduct" : "Describe el contenido o la conducta abusiva"} />
+            <div className="mt-5 flex gap-3"><button type="button" onClick={() => setReportOpen(false)} className="flex-1 rounded-xl border border-[#d8e5ee] px-4 py-3 text-sm font-bold text-[#526277]">{isEn ? "Cancel" : "Cancelar"}</button><button type="button" disabled={reportBusy || reportReason.trim().length < 3} onClick={() => void reportAndBlockActive()} className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{reportBusy ? (isEn ? "Sending..." : "Enviando...") : (isEn ? "Report and block" : "Reportar y bloquear")}</button></div>
+          </div>
+        </div>,
+        document.body,
+      )}
       {imagePreview?.url && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[1000] flex flex-col bg-black/95 text-white" role="dialog" aria-modal="true" aria-label={imagePreview.name}>
           <div className="flex min-h-16 shrink-0 items-center gap-3 px-3 pt-[env(safe-area-inset-top)] sm:px-5">

@@ -448,6 +448,7 @@ export default function RegisterProfessionalPage() {
   const [videoCoverageCountry, setVideoCoverageCountry] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => () => {
     if (photoPreviewObjectUrlRef.current) URL.revokeObjectURL(photoPreviewObjectUrlRef.current);
@@ -646,6 +647,10 @@ export default function RegisterProfessionalPage() {
   // }
 
   async function onStep1(data: Step1Data) {
+    if (!currentUser && !termsAccepted) {
+      setError(locale === "en" ? "Accept the Terms, Privacy Policy and zero-tolerance rules to continue." : "Acepta los Términos, la Política de Privacidad y las reglas de tolerancia cero para continuar.");
+      return;
+    }
     if (emailCheck.taken) {
       // If the existing account is social-only, guide to that provider specifically.
       const provider = await detectSocialOnly(data.email);
@@ -1107,7 +1112,11 @@ export default function RegisterProfessionalPage() {
                 {...form1.register("confirmPassword")}
               />
 
-              <Button type="submit" size="lg" className="mt-2" loading={submitting} disabled={submitting}>
+              <label className="flex items-start gap-3 rounded-xl border border-[#dce8f0] bg-[#f8fbfd] p-3 text-xs leading-5 text-[#526277]">
+                <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#009FD9]" />
+                <span>{locale === "en" ? "I accept the Terms, Privacy Policy, and the zero-tolerance policy for objectionable content and abusive users." : "Acepto los Términos, la Política de Privacidad y la política de tolerancia cero contra contenido ofensivo y usuarios abusivos."}</span>
+              </label>
+              <Button type="submit" size="lg" className="mt-2" loading={submitting} disabled={submitting || !termsAccepted}>
                 {t("continue")} <ArrowRight className="h-4 w-4" />
               </Button>
               <p className="text-center text-xs text-[#9ca3af]">

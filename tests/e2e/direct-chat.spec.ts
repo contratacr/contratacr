@@ -22,6 +22,7 @@ test.describe("@seeded contextual direct chat", () => {
   test.skip(!canRunSeededRegression(), "Requires the isolated test Supabase seed.");
   let seed: RegressionSeedState;
   const conversationIds: string[] = [];
+  const reportIds: string[] = [];
   let bookingId = "";
   let projectId = "";
   let proposalId = "";
@@ -60,6 +61,7 @@ test.describe("@seeded contextual direct chat", () => {
     if (bookingId) await admin.from("bookings").delete().eq("id", bookingId);
     if (proposalId) await admin.from("proposals").delete().eq("id", proposalId);
     if (projectId) await admin.from("projects").delete().eq("id", projectId);
+    if (reportIds.length) await admin.from("reports").delete().in("id", reportIds);
   });
 
   test("profile messages deduplicate and both participants can reply", async ({ page }) => {
@@ -218,6 +220,11 @@ test.describe("@seeded contextual direct chat", () => {
       body: { professionalId: seed.videoProfessionalId, message: "   " },
     });
     expect(empty.status).toBe(400);
+    const offensive = await apiJson<ChatResponse>(page, "/api/direct-chat", {
+      method: "POST",
+      body: { professionalId: seed.videoProfessionalId, message: "Eres un imbécil" },
+    });
+    expect(offensive.status).toBe(422);
 
     const created = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
@@ -240,7 +247,21 @@ test.describe("@seeded contextual direct chat", () => {
     if (realtimeError) throw realtimeError;
     await expect(page.getByText(realtimeBody).last()).toBeVisible({ timeout: 15_000 });
 
-    await admin.from("direct_conversations").update({ status: "blocked" }).eq("id", created.body.conversationId);
+    const reportAndBlock = await apiJson<ChatResponse>(page, "/api/direct-chat", {
+      method: "PATCH",
+      body: { conversationId: created.body.conversationId, action: "block_and_report", reason: "E2E conducta abusiva" },
+    });
+    expect(reportAndBlock.status).toBe(200);
+    const { data: report } = await admin.from("reports")
+      .select("id,reason,status")
+      .eq("reported_client_id", seed.professionalUserId)
+      .ilike("reason", "%E2E conducta abusiva%")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    expect(report?.status).toBe("open");
+    expect(report?.reason).toContain("[Mensaje directo]");
+    if (report?.id) reportIds.push(report.id);
     const blocked = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
       body: { conversationId: created.body.conversationId, message: "E2E no debe guardarse" },
