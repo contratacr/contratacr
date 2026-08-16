@@ -132,12 +132,16 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 }
 
 @media (max-width: 1023px) {
-  body.ccr-mobile-navbar-search-visible:not(.ccr-native-app) .ccr-navbar-spacer {
+  body.ccr-mobile-navbar-search-visible .ccr-navbar-spacer {
     height: 124px;
   }
 
-  body.ccr-mobile-navbar-search-visible:not(.ccr-native-app) main {
+  body.ccr-mobile-navbar-search-visible main {
     scroll-padding-top: 124px;
+  }
+
+  body.ccr-native-app.ccr-mobile-navbar-search-visible {
+    --ccr-native-header-height: 124px;
   }
 }
 

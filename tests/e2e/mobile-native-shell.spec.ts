@@ -104,6 +104,37 @@ test.describe("@mobile native shell contracts", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
   });
 
+  test("signed-out public pages reserve the complete native header and keep the offer-services icon", async ({ page }) => {
+    await resetAuth(page);
+    await gotoOK(page, "/es/login");
+
+    const header = page.locator("header.ccr-app-header");
+    const main = page.locator("main");
+    await expect(header).toBeVisible();
+    await expect(main).toBeVisible();
+
+    const geometry = await page.evaluate(() => {
+      const headerElement = document.querySelector<HTMLElement>("header.ccr-app-header");
+      const mainElement = document.querySelector<HTMLElement>("main");
+      if (!headerElement || !mainElement) return null;
+      const headerRect = headerElement.getBoundingClientRect();
+      const mainRect = mainElement.getBoundingClientRect();
+      return {
+        headerBottom: headerRect.bottom,
+        mainTop: mainRect.top,
+        reservedHeaderHeight: getComputedStyle(document.body).getPropertyValue("--ccr-native-header-height").trim(),
+      };
+    });
+    expect(geometry).not.toBeNull();
+    expect(geometry!.mainTop).toBeGreaterThanOrEqual(geometry!.headerBottom - 1);
+    expect(geometry!.reservedHeaderHeight).toBe("124px");
+
+    await page.getByRole("button", { name: /abrir men[uú]/i }).click();
+    const offerServices = page.getByRole("link", { name: "Ofrecer mis servicios" });
+    await expect(offerServices).toBeVisible();
+    await expect(offerServices.locator("svg")).toHaveCount(1);
+  });
+
   for (const contract of LOCALES) {
     test(`${contract.locale.toUpperCase()} keeps native navigation, messages and assistant chat isolated from web`, async ({ page }) => {
       const conversationId = "00000000-0000-4000-8000-00000000cafe";
