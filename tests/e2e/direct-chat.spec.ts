@@ -31,8 +31,29 @@ test.describe("@seeded contextual direct chat", () => {
     const admin = regressionAdminClient();
     if (conversationIds.length) {
       await admin.from("direct_messages").delete().in("conversation_id", conversationIds);
-      for (const conversationId of conversationIds) {
-        await admin.from("notifications").delete().eq("type", "direct_message").contains("data", { conversation_id: conversationId });
+      const disposableReferences = [
+        ...conversationIds,
+        bookingId,
+        projectId,
+        proposalId,
+      ].filter(Boolean);
+      const { data: generatedNotifications, error: notificationLookupError } = await admin
+        .from("notifications")
+        .select("id,data")
+        .limit(5000);
+      if (notificationLookupError) throw notificationLookupError;
+      const generatedNotificationIds = (generatedNotifications ?? [])
+        .filter((notification) => {
+          const data = JSON.stringify(notification.data ?? {});
+          return disposableReferences.some((reference) => data.includes(reference));
+        })
+        .map((notification) => notification.id);
+      if (generatedNotificationIds.length) {
+        const { error: notificationCleanupError } = await admin
+          .from("notifications")
+          .delete()
+          .in("id", generatedNotificationIds);
+        if (notificationCleanupError) throw notificationCleanupError;
       }
       await admin.from("direct_conversations").delete().in("id", conversationIds);
     }
