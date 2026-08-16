@@ -214,6 +214,7 @@ test.describe("@seeded contextual direct chat", () => {
       p_conversation_id: created.body.conversationId,
       p_sender_id: seed.professionalUserId,
       p_body: realtimeBody,
+      p_attachment_urls: [],
     });
     if (realtimeError) throw realtimeError;
     await expect(page.getByText(realtimeBody).last()).toBeVisible({ timeout: 15_000 });

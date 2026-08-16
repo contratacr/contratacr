@@ -46,6 +46,7 @@ function enableNativeRuntime(page: Page) {
   return page.addInitScript(() => {
     Object.defineProperty(window, "Capacitor", {
       configurable: true,
+      writable: true,
       value: { isNativePlatform: () => true },
     });
   });
