@@ -17,11 +17,9 @@ concurrency:
 
 jobs:
   contracts:
-    name: Mobile contracts and public environment
+    name: Mobile contracts and local build
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    env:
-      MOBILE_BASE_URL: https://contratacr-mobile-test.vercel.app
     steps:
       - uses: actions/checkout@v5
         with:
@@ -44,31 +42,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run security:env
-      - run: npm run mobile:validate -- --remote
+      - run: npm run mobile:validate
       - run: npx tsc --noEmit --pretty false
-      - name: Wait for the exact canonical mobile deployment
-        shell: bash
-        run: |
-          set -euo pipefail
-          for attempt in $(seq 1 60); do
-            health="$(curl --silent --show-error --location --fail \
-              -H "Cache-Control: no-cache" \
-              "$MOBILE_BASE_URL/api/health?expected=$EXPECTED_MOBILE_SHA&attempt=$attempt" \
-              2>/dev/null || true)"
-            deployed_sha="$(jq -er '.commitSha // empty' <<<"$health" 2>/dev/null || true)"
-
-            if [ "$deployed_sha" = "$EXPECTED_MOBILE_SHA" ]; then
-              echo "Canonical mobile deployment is ready at $EXPECTED_MOBILE_SHA."
-              exit 0
-            fi
-
-            if [ "$attempt" -eq 60 ]; then
-              echo "::error::$MOBILE_BASE_URL did not reach $EXPECTED_MOBILE_SHA within 10 minutes (reported ${deployed_sha:-no SHA})."
-              exit 1
-            fi
-            echo "Waiting for the canonical mobile deployment ($attempt/60; reported ${deployed_sha:-no SHA})."
-            sleep 10
-          done
 
   mobile-webview:
     name: Native webview shell and direct chat
@@ -80,7 +55,7 @@ jobs:
       group: contratacr-test-environment
       cancel-in-progress: false
     env:
-      PLAYWRIGHT_BASE_URL: https://contratacr-mobile-test.vercel.app
+      PLAYWRIGHT_LOCAL_PRODUCTION: "1"
       E2E_FIXTURES_READY: "1"
       E2E_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
@@ -107,6 +82,8 @@ jobs:
           node scripts/ci/validate-supabase-target.mjs api NEXT_PUBLIC_SUPABASE_URL "$EXPECTED_SUPABASE_PROJECT_REF"
       - run: npm ci
       - run: npm run security:env
+      - name: Build the exact mobile commit locally
+        run: npm run build
       - name: Verify canonical test fixtures without reseeding web regression
         run: npm run seed:test:verify
       - run: npx playwright install --with-deps chromium
