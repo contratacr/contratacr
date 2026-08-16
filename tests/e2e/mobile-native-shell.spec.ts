@@ -44,6 +44,7 @@ const LOCALES: LocaleContract[] = [
 
 function enableNativeRuntime(page: Page) {
   return page.addInitScript(() => {
+    window.localStorage.setItem("ccr:native-first-run-onboarding:v1", "1");
     const nativeRuntime: Record<string, unknown> = {
       isNativePlatform: () => true,
     };
@@ -140,6 +141,23 @@ test.describe("@mobile native shell contracts", () => {
     const offerServices = page.getByRole("link", { name: "Ofrecer mis servicios" });
     await expect(offerServices).toBeVisible();
     await expect(offerServices.locator("svg")).toHaveCount(1);
+  });
+
+  test("first installation explains notifications and lets people choose or skip a role", async ({ page }) => {
+    await resetAuth(page);
+    await page.evaluate(() => window.localStorage.removeItem("ccr:native-first-run-onboarding:v1"));
+    await gotoOK(page, "/es");
+
+    const onboarding = page.getByTestId("native-first-run-onboarding");
+    await expect(onboarding).toBeVisible();
+    await expect(onboarding.getByText("No te pierdas ninguna oportunidad")).toBeVisible();
+    await onboarding.getByRole("button", { name: "Ahora no" }).click();
+    await expect(onboarding.getByText("¿Qué quieres hacer?")).toBeVisible();
+    await expect(onboarding.getByRole("button", { name: /Buscar servicios/i })).toBeVisible();
+    await expect(onboarding.getByRole("button", { name: /Ofrecer servicios/i })).toBeVisible();
+    await onboarding.getByRole("button", { name: "Omitir por ahora" }).click();
+    await expect(onboarding).toBeHidden();
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v1"))).toBe("1");
   });
 
   for (const contract of LOCALES) {

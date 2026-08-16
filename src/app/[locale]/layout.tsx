@@ -19,6 +19,7 @@ import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-fol
 import { PushTokenManager } from "@/components/push/push-token-manager";
 import { AppResumeRecovery } from "@/components/util/app-resume-recovery";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
+import { NativeFirstRunOnboarding } from "@/components/mobile/native-first-run-onboarding";
 import { AppIntlProvider } from "@/components/app-intl-provider";
 import { GlobalActionLoading } from "@/components/global-action-loading";
 import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
@@ -159,6 +160,7 @@ export default async function LocaleLayout({
         <ViewportEnvironment />
         <AppResumeRecovery />
         <MobileAppBridge />
+        <NativeFirstRunOnboarding />
         <CustomCategoriesLoader />
         <NotificationLiveToast scope="all" />
         <OperationalStatusBanner locale={locale} status={operationalStatus} />
