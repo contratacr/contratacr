@@ -364,6 +364,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           locale,
           pagePath: pathname,
           authenticated: !!user,
+          platform: nativeApp ? "native" : "web",
           history: previous.slice(-8).map((message) => ({
             role: message.role,
             content: `${message.body}${message.professionals?.length ? `\nResultados mostrados: ${message.professionals.map((result, index) => `${index + 1}. ${result.name}`).join("; ")}` : ""}`,

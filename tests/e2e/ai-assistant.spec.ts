@@ -491,6 +491,22 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(english.body.answer).not.toMatch(/in-app chat|direct chat/i);
   });
 
+  test("uses internal messaging copy and actions for the native app", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const response = await ask(page, "¿Cómo contacto a un profesional?", { platform: "native" });
+    expect(response.status, JSON.stringify(response.body)).toBe(200);
+    expect(response.body.answer).toMatch(/mensaje/i);
+    expect(response.body.answer).not.toMatch(/WhatsApp/i);
+
+    const search = await ask(page, "Necesito un plomero en Atenas, Alajuela", { platform: "native" });
+    expect(search.status, JSON.stringify(search.body)).toBe(200);
+    for (const professional of search.body.professionals ?? []) {
+      if (professional.actionKind !== "message") continue;
+      expect(professional.actionLabel).toBe("Enviar mensaje");
+      expect(professional.actionLabel).not.toMatch(/WhatsApp/i);
+    }
+  });
+
   test("searches real professionals through a trustworthy filtered-results link", async ({ page }) => {
     await gotoOK(page, "/es");
     const search = await ask(page, "Necesito un plomero en Atenas, Alajuela");

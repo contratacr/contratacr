@@ -1399,6 +1399,7 @@ function assistantProfessionalResult(
   locale: Locale,
   serviceId?: string | null,
   hasPublicAvailability = false,
+  nativeApp = false,
 ): AssistantProfessionalResult {
   const service =
     serviceId ? getCategoryLabel(serviceId, locale) :
@@ -1427,7 +1428,9 @@ function assistantProfessionalResult(
     actionHref: profileHref,
     actionLabel: actionKind === "availability"
       ? locale === "en" ? "View availability" : "Ver disponibilidad"
-      : locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
+      : nativeApp
+        ? locale === "en" ? "Send message" : "Enviar mensaje"
+        : locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
     actionKind,
   };
 }
@@ -1475,6 +1478,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
     const locale = localeKey(body.locale);
+    const nativeApp = body.platform === "native";
     const rawMessage = limitTrimmedText(body.message, Math.min(LONG_TEXT_MAX_LENGTH, 1200));
     const pagePath = limitTrimmedText(body.pagePath, 240) || `/${locale}`;
     const supabase = await createClient();
@@ -1601,12 +1605,12 @@ export async function POST(req: Request) {
       ? await assistantAvailabilityByProfessional(shownProfessionals)
       : new Map<string, boolean>();
     const assistantProfessionals = shownProfessionals.map((professional) =>
-      assistantProfessionalResult(professional, locale, payload.serviceId, availabilityByProfessional.get(professional.id) === true)
+      assistantProfessionalResult(professional, locale, payload.serviceId, availabilityByProfessional.get(professional.id) === true, nativeApp)
     );
     const singleProfessionalHref = resultCount === 1 ? assistantProfessionals[0]?.profileHref ?? null : null;
     const servicePhrase = requestedServiceLabel || (locale === "en" ? "that service" : "ese servicio");
     const placePhrase = requestedPlaceLabel || "Costa Rica";
-    const assistantAnswer = noResults
+    const rawAssistantAnswer = noResults
       ? locale === "en"
         ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can create a project so related professionals are notified.`
         : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puede crear un proyecto para notificar a profesionales relacionados.`
@@ -1623,6 +1627,14 @@ export async function POST(req: Request) {
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
             : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
           : payload.answer;
+    const assistantAnswer = nativeApp
+      ? rawAssistantAnswer
+          .replace(/contact(?:ar)?(?:lo)? por WhatsApp/gi, "enviar un mensaje")
+          .replace(/(?:a trav[eé]s de|por) WhatsApp/gi, "por mensaje")
+          .replace(/WhatsApp contact button/gi, "message button")
+          .replace(/through WhatsApp/gi, "by message")
+          .replace(/WhatsApp/gi, locale === "en" ? "internal messaging" : "mensajería interna")
+      : rawAssistantAnswer;
 
     return NextResponse.json({
       answer: assistantAnswer,

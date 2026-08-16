@@ -46,13 +46,15 @@ async function waitForAuthCookie(maxMs = 2000): Promise<void> {
 // PUBLIC target (home `/`, `/buscar`, a profile — e.g. the navbar "Ingresar"
 // current-path) returns null, so it can NEVER override the role-based DASHBOARD
 // redirect (that was the "login lands on the main page" regression). Returns
-// "projects", a (possibly locale-prefixed) /dashboard path, or null.
+// "projects", a (possibly locale-prefixed) /dashboard or /mensajes path, or null.
 function meaningfulRedirect(raw: string | null): string | null {
   if (!raw) return null;
   if (raw === "projects") return "projects";
   if (!raw.startsWith("/") || raw.startsWith("//")) return null;
   const path = raw.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
-  return path.startsWith("/dashboard") ? raw : null;
+  return path.startsWith("/dashboard") || path === "/mensajes" || path.startsWith("/mensajes?")
+    ? raw
+    : null;
 }
 
 function withPostLoginActivity(path: string): string {

@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { useLocale } from "next-intl";
+import { useNativeApp } from "@/hooks/use-native-app";
 import {
   MarketplaceFilterChip,
   MarketplaceNavbarPortal,
@@ -572,6 +573,7 @@ export function OfferContactActions({
   compact?: boolean;
 }) {
   const locale = marketplaceLocale(useLocale());
+  const nativeApp = useNativeApp();
   const copy = OFFERS_COPY[locale];
   const whatsapp = offer.professional_whatsapp?.trim();
   const callPhone = (
@@ -583,6 +585,7 @@ export function OfferContactActions({
   const showCall =
     !!offer.professional_allow_phone_call && callPhone.length >= 8;
   const showEmail = !!email;
+  const showPrimaryContact = nativeApp || !!whatsapp;
   if (isOwner) return null;
 
   function requireAuth() {
@@ -615,8 +618,8 @@ export function OfferContactActions({
     : "inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border border-[#d7e1ea] bg-white px-3 text-sm font-bold text-[#162543] transition hover:border-[#b9d9e8] hover:bg-[#f8fbfd]";
   return (
     <div className="relative z-[2] mt-3 space-y-2">
-      <div className={`grid gap-2 ${whatsapp && offer.professional_slug ? "grid-cols-2" : "grid-cols-1"}`}>
-        {whatsapp && (
+      <div className={`grid gap-2 ${showPrimaryContact && offer.professional_slug ? "grid-cols-2" : "grid-cols-1"}`}>
+        {showPrimaryContact && (
           <DirectChatLauncher
             professionalId={offer.professional_id}
             professionalName={offer.professional_name || copy.professional}
