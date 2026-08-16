@@ -84,8 +84,8 @@ jobs:
       - run: npm run security:env
       - name: Build the exact mobile commit locally
         run: npm run build
-      - name: Verify canonical test fixtures without reseeding web regression
-        run: npm run seed:test:verify
+      - name: Prepare isolated canonical test fixtures
+        run: npm run seed:test:full
       - run: npx playwright install --with-deps chromium
       - name: Run native-only shell and direct-chat regression
         run: npm run test:e2e:mobile
