@@ -26,6 +26,12 @@ const config: CapacitorConfig = {
     contentInset: "never",
   },
   plugins: {
+    PushNotifications: {
+      // Show incoming pushes while the app is open. `banner` and `list`
+      // replace the deprecated iOS `alert` option and map to alert behavior
+      // on Android.
+      presentationOptions: ["badge", "sound", "banner", "list"],
+    },
     SplashScreen: {
       launchAutoHide: false,
       backgroundColor: "#F4F7FA",

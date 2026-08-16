@@ -70,6 +70,59 @@ jobs:
             sleep 10
           done
 
+  mobile-webview:
+    name: Native webview shell and direct chat
+    needs: contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: test
+    concurrency:
+      group: contratacr-test-environment
+      cancel-in-progress: false
+    env:
+      PLAYWRIGHT_BASE_URL: https://contratacr-mobile-test.vercel.app
+      E2E_FIXTURES_READY: "1"
+      E2E_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      EXPECTED_SUPABASE_PROJECT_REF: sodegkfjjrdkbohycqyq
+      CI: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.mobile_ref }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Validate isolated mobile regression target
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$E2E_TEST_PASSWORD" ] || [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::The test environment is missing mobile regression credentials."
+            exit 1
+          fi
+          node scripts/ci/validate-supabase-target.mjs api NEXT_PUBLIC_SUPABASE_URL "$EXPECTED_SUPABASE_PROJECT_REF"
+      - run: npm ci
+      - run: npm run security:env
+      - name: Verify canonical test fixtures without reseeding web regression
+        run: npm run seed:test:verify
+      - run: npx playwright install --with-deps chromium
+      - name: Run native-only shell and direct-chat regression
+        run: npm run test:e2e:mobile
+      - name: Verify canonical fixtures after mobile regression
+        if: always()
+        run: npm run seed:test:verify
+      - name: Upload mobile Playwright report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: mobile-webview-playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+
   android:
     name: Android lint, unit and emulator regression
     needs: contracts

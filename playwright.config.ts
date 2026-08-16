@@ -64,7 +64,7 @@ export default defineConfig({
   // changing CI's canonical report paths.
   outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ?? "test-results",
   // Direct messages remain parked while WhatsApp is the production contact flow.
-  testIgnore: ["**/direct-chat.spec.ts"],
+  testIgnore: ["**/direct-chat.spec.ts", "**/mobile-native-shell.spec.ts"],
   globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 60_000,
   expect: { timeout: 12_000 },

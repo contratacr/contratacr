@@ -23,6 +23,7 @@ import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { cn, getInitials } from "@/lib/utils";
+import { MessageLauncher } from "@/components/professionals/message-launcher";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type ResultCard = {
@@ -167,10 +168,12 @@ function localizedDestination(href: string, lang: "es" | "en") {
   return `/${lang}${unlocalized === "/" ? "" : unlocalized}`;
 }
 
-function ProfessionalResult({ result, copy, onNavigate }: {
+function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
   result: ResultCard;
   copy: typeof COPY.es | typeof COPY.en;
   onNavigate: (href: string) => void;
+  nativeApp: boolean;
+  lang: "es" | "en";
 }) {
   return (
     <article className="overflow-hidden rounded-xl border border-[#dce8ef] bg-white shadow-[0_4px_16px_-12px_rgba(15,35,60,0.35)]">
@@ -195,7 +198,17 @@ function ProfessionalResult({ result, copy, onNavigate }: {
       </button>
       <div className="grid grid-cols-2 border-t border-[#edf2f5]">
         <button type="button" onClick={() => onNavigate(result.profileHref)} className="h-10 text-xs font-bold text-[#526277] hover:bg-[#f7fafc]">{copy.viewProfile}</button>
-        <button type="button" onClick={() => onNavigate(result.actionHref)} className="h-10 border-l border-[#edf2f5] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{result.actionLabel}</button>
+        {nativeApp && result.actionKind === "message" ? (
+          <MessageLauncher
+            professionalId={result.id}
+            professionalName={result.name}
+            contextTitle={result.service}
+            buttonLabel={lang === "en" ? "Message" : "Mensaje"}
+            className="h-10 w-full rounded-none border-l border-[#edf2f5] px-2 text-xs font-extrabold"
+          />
+        ) : (
+          <button type="button" onClick={() => onNavigate(result.actionHref)} className="h-10 border-l border-[#edf2f5] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{result.actionLabel}</button>
+        )}
       </div>
     </article>
   );
@@ -526,7 +539,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                 </div>
 
                 {message.professionals?.map((result) => (
-                  <ProfessionalResult key={result.id} result={result} copy={copy} onNavigate={navigate} />
+                  <ProfessionalResult key={result.id} result={result} copy={copy} onNavigate={navigate} nativeApp={nativeApp} lang={lang} />
                 ))}
 
                 {message.action && (
