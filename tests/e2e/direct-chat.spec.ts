@@ -1,6 +1,7 @@
 import { expect, test } from "playwright/test";
 import { apiJson, gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
+import { cleanupDisposableAccount, createDisposableAccount } from "./disposable-account";
 
 type ChatResponse = { conversationId?: string; error?: string };
 type ConversationListResponse = {
@@ -125,10 +126,15 @@ test.describe("@seeded contextual direct chat", () => {
     await expect(page.getByText("E2E reparación contextual").last()).toBeVisible();
     await expect(page.getByRole("button", { name: /Ver solicitud|View request/i })).toBeVisible();
 
-    await resetAuth(page);
-    await loginAs(page, E2E_USERS.videoProfessional.email, E2E_USERS.videoProfessional.password);
-    const denied = await apiJson(page, `/api/direct-chat?id=${created.body.conversationId}`);
-    expect(denied.status).toBe(404);
+    const outsider = await createDisposableAccount({ prefix: "direct-chat-outsider" });
+    try {
+      await resetAuth(page);
+      await loginAs(page, outsider.email, outsider.password);
+      const denied = await apiJson(page, `/api/direct-chat?id=${created.body.conversationId}`);
+      expect(denied.status).toBe(404);
+    } finally {
+      await cleanupDisposableAccount(outsider);
+    }
   });
 
   test("proposal chat remains linked to the publication and persists for both sides", async ({ page }) => {
