@@ -151,6 +151,21 @@ export async function cleanupDisposableAccount(account: DisposableAccount | unde
   if (deletionLookupError) failures.push(deletionLookupError);
   const { error: notificationsError } = await admin.from("notifications").delete().eq("user_id", account.id);
   if (notificationsError) failures.push(notificationsError);
+  const { data: referencedNotifications, error: notificationLookupError } = await admin
+    .from("notifications")
+    .select("id,data")
+    .limit(5000);
+  if (notificationLookupError) failures.push(notificationLookupError);
+  const referencedNotificationIds = (referencedNotifications ?? [])
+    .filter((notification) => JSON.stringify(notification.data ?? {}).includes(account.id))
+    .map((notification) => notification.id);
+  if (referencedNotificationIds.length) {
+    const { error: referencedNotificationsError } = await admin
+      .from("notifications")
+      .delete()
+      .in("id", referencedNotificationIds);
+    if (referencedNotificationsError) failures.push(referencedNotificationsError);
+  }
   const { error: mediaError } = await admin.from("user_media_assets").delete().eq("user_id", account.id);
   if (mediaError) failures.push(mediaError);
   const { error: requestError } = await admin.from("account_deletion_requests").delete().eq("user_id", account.id);
