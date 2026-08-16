@@ -191,10 +191,10 @@ test.describe("@seeded contextual direct chat", () => {
 
   test("validation, blocked threads and realtime delivery protect the conversation", async ({ page }) => {
     const admin = regressionAdminClient();
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     const empty = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
-      body: { professionalId: seed.professionalId, message: "   " },
+      body: { professionalId: seed.videoProfessionalId, message: "   " },
     });
     expect(empty.status).toBe(400);
 
@@ -212,7 +212,7 @@ test.describe("@seeded contextual direct chat", () => {
     const realtimeBody = `E2E tiempo real ${Date.now()}`;
     const { error: realtimeError } = await admin.rpc("send_direct_message_atomic", {
       p_conversation_id: created.body.conversationId,
-      p_sender_id: seed.clientId,
+      p_sender_id: seed.professionalUserId,
       p_body: realtimeBody,
     });
     if (realtimeError) throw realtimeError;

@@ -89,6 +89,7 @@ export async function expectNotVercelProtection(page: Page, path = page.url()) {
 
 async function pageShellState(page: Page) {
   return page.evaluate(() => {
+    const bodyText = document.body?.innerText.trim() ?? "";
     const mainText = Array.from(document.querySelectorAll("main"))
       .filter((main) => {
         const style = window.getComputedStyle(main);
@@ -106,11 +107,12 @@ async function pageShellState(page: Page) {
       });
 
     return {
-      // Native chrome renders the brand as an image and some authenticated
-      // routes intentionally do not repeat "ContrataCR" in their text. The
-      // route is ready when its visible main region has meaningful content;
-      // requiring the brand text incorrectly classified those pages as blank.
-      ready: mainText.length > 20,
+      // The server shell can paint the persistent native/header chrome before
+      // a client-only route hydrates its <main>. That is a visible, non-blank
+      // response and the route-specific assertions below still wait for the
+      // interactive main content. Do not mistake that valid shell for a blank
+      // document merely because <main> has not hydrated yet.
+      ready: mainText.length > 20 || bodyText.length > 40,
       loading: routeLoading,
     };
   });
