@@ -80,7 +80,7 @@ test.describe("@seeded search results", () => {
 
     const card = page.locator("[data-pro-id]").first();
     await expect(card).toBeVisible();
-    const service = card.getByTestId("professional-card-mobile-service");
+    const service = card.getByTestId("professional-card-mobile-service").first();
     const primaryPrice = card.getByTestId("professional-card-mobile-price-primary");
     await expect(service).toBeVisible();
     await expect(primaryPrice).toBeVisible();
@@ -98,22 +98,28 @@ test.describe("@seeded search results", () => {
         const element = node.querySelector<HTMLElement>(selector);
         if (!element) return null;
         const box = element.getBoundingClientRect();
-        return { left: box.left, right: box.right, top: box.top };
+        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
       };
       return {
         card: { left: cardBox.left, right: cardBox.right, top: cardBox.top },
+        meta: rect('[data-testid="professional-card-mobile-meta-row"]'),
+        serviceRow: rect('[data-testid="professional-card-service-summary"]'),
         service: rect('[data-testid="professional-card-mobile-service"]'),
         primary: rect('[data-testid="professional-card-mobile-price-primary"]'),
         detail: rect('[data-testid="professional-card-mobile-price-secondary"]'),
       };
     });
     expect(layout.card).not.toBeNull();
+    expect(layout.meta).not.toBeNull();
+    expect(layout.serviceRow).not.toBeNull();
     expect(layout.service).not.toBeNull();
     expect(layout.primary).not.toBeNull();
-    expect(Math.abs(layout.service!.top - layout.primary!.top)).toBeLessThan(8);
+    expect(layout.primary!.top).toBeGreaterThanOrEqual(layout.meta!.top - 1);
     expect(layout.primary!.right).toBeLessThanOrEqual(layout.card!.right + 1);
+    expect(layout.serviceRow!.top).toBeGreaterThan(layout.meta!.top);
+    expect(layout.service!.top).toBeGreaterThan(layout.primary!.top);
     if (layout.detail) {
-      expect(layout.detail.top).toBeGreaterThan(layout.primary!.top);
+      expect(layout.detail.top).toBeGreaterThanOrEqual(layout.primary!.top);
       expect(layout.detail.right).toBeLessThanOrEqual(layout.card!.right + 1);
     }
   });
@@ -122,21 +128,19 @@ test.describe("@seeded search results", () => {
     if (!isMobileProject(testInfo)) return;
     await firstProfessionalHref(page);
 
-    const completeLabels = page.locator('[data-testid="professional-card-mobile-service"][data-full-label="true"]');
-    const count = await completeLabels.count();
+    const rows = page.locator('[data-testid="professional-card-service-summary"]');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
     for (let index = 0; index < count; index += 1) {
-      const chip = completeLabels.nth(index);
-      await expect(chip).toBeVisible();
-      const title = await chip.getAttribute("title");
-      expect((await chip.innerText()).trim()).toContain(title?.trim());
-      const row = chip.locator('xpath=ancestor::*[@data-testid="professional-card-service-summary"][1]');
+      const row = rows.nth(index);
+      await expect(row).toBeVisible();
       const visibleServices = await row.locator('[data-testid="professional-card-mobile-service"]').count();
       expect(visibleServices).toBeGreaterThanOrEqual(1);
       expect(visibleServices).toBeLessThanOrEqual(3);
-      const extraCount = Number(await chip.getAttribute("data-extra-count"));
-      if (extraCount > 0) {
+      const hiddenCount = Number(await row.getAttribute("data-hidden-count"));
+      if (hiddenCount > 0) {
         const more = row.getByTestId("professional-card-more-services");
-        await expect(more).toHaveText(`+${extraCount}`);
+        await expect(more).toHaveText(`+${hiddenCount}`);
         const lastService = row.locator('[data-testid="professional-card-mobile-service"]').last();
         const [chipBox, moreBox] = await Promise.all([lastService.boundingBox(), more.boundingBox()]);
         expect(chipBox).not.toBeNull();

@@ -330,55 +330,11 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                 </Link>
                 {desktopPrice}
               </div>
-              {(displayProfessions.length > 0 || professional.isFeatured) && (
-                <div
-                  className="mt-1 flex w-full min-w-0 max-w-full items-baseline justify-between gap-2 overflow-hidden lg:hidden"
-                  data-testid="professional-card-service-summary"
-                  data-service-summary-version="mobile-under-verified-v1"
-                >
-                  <div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
-                    {mobileProfessionList.map((cat, index) => (
-                      <div key={`mobile-service-row-${cat}`} className="flex min-w-0 items-baseline gap-0.5">
-                        <span
-                          data-testid="professional-card-mobile-service"
-                          data-full-label="true"
-                          data-extra-count={mobileExtraProfessions}
-                          className={`${mobileServiceChipClass} min-w-0 truncate`}
-                          title={catLabel(cat)}
-                        >
-                          {catLabel(cat)}
-                        </span>
-                        {index === mobileProfessionList.length - 1 && mobileExtraProfessions > 0 && (
-                          <Link
-                            href={profileHref}
-                            title={tCard("moreProfessions")}
-                            aria-label={tCard("moreProfessions")}
-                            data-testid="professional-card-more-services"
-                            className={moreProfessionsClass}
-                          >
-                            +{mobileExtraProfessions}
-                          </Link>
-                        )}
-                        {index === mobileProfessionList.length - 1 && professional.isFeatured && (
-                          <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                            {tCard("featured")}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                    {mobileProfessionList.length === 0 && professional.isFeatured && (
-                      <span className="inline-flex w-fit shrink-0 items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                        {tCard("featured")}
-                      </span>
-                    )}
-                  </div>
-                  {mobilePrice}
-                </div>
-              )}
-              {(professional.reviewCount > 0 || mobilePriceDetail) && (
+
+              {(professional.reviewCount > 0 || mobilePrice || mobilePriceDetail) && (
                 <div
                   data-testid="professional-card-mobile-meta-row"
-                  className="mt-1.5 flex min-w-0 items-center justify-between gap-2 lg:hidden"
+                  className="mt-1.5 flex min-w-0 items-start justify-between gap-2 lg:hidden"
                 >
                   {professional.reviewCount > 0 ? (
                     <Link
@@ -391,10 +347,30 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                       <span>{ratingLabel}</span>
                     </Link>
                   ) : (
-                    <div />
+                    <span className="min-w-0" />
                   )}
-                  {mobilePriceDetail}
+                  {(mobilePrice || mobilePriceDetail) && (
+                    <span className="ml-auto flex shrink-0 flex-col items-end gap-0.5 text-right">
+                      {mobilePrice}
+                      {mobilePriceDetail}
+                    </span>
+                  )}
                 </div>
+              )}
+              {(displayProfessions.length > 0 || professional.isFeatured) && (
+                <ResponsiveServiceSummary
+                  labels={mobileDisplayProfessions.map((cat) => catLabel(cat))}
+                  totalCount={allProfessions.length}
+                  profileHref={profileHref}
+                  moreTitle={tCard("moreProfessions")}
+                  featuredLabel={professional.isFeatured ? tCard("featured") : undefined}
+                  testId="professional-card-service-summary"
+                  className="mt-1 flex w-full min-w-0 max-w-full items-baseline gap-1 overflow-hidden lg:hidden"
+                  itemClassName="inline-flex max-w-full shrink-0 items-baseline whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]"
+                  itemTestId="professional-card-mobile-service"
+                  moreTestId="professional-card-more-services"
+                  moreClassName={moreProfessionsClass}
+                />
               )}
             </div>
           </div>

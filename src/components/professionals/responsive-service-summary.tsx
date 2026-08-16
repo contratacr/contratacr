@@ -9,6 +9,12 @@ type ResponsiveServiceSummaryProps = {
   profileHref: string;
   moreTitle: string;
   featuredLabel?: string;
+  testId?: string;
+  className?: string;
+  itemClassName?: string;
+  moreClassName?: string;
+  itemTestId?: string;
+  moreTestId?: string;
 };
 
 export function ResponsiveServiceSummary({
@@ -17,6 +23,12 @@ export function ResponsiveServiceSummary({
   profileHref,
   moreTitle,
   featuredLabel,
+  testId = "professional-card-desktop-service-summary",
+  className = "relative flex w-full min-w-0 items-center gap-2 overflow-hidden",
+  itemClassName = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[11px] font-semibold leading-snug text-[#6b7280]",
+  moreClassName = "relative z-10 inline-flex shrink-0 text-[10px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]",
+  itemTestId,
+  moreTestId,
 }: ResponsiveServiceSummaryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -61,13 +73,13 @@ export function ResponsiveServiceSummary({
   return (
     <div
       ref={containerRef}
-      data-testid="professional-card-desktop-service-summary"
+      data-testid={testId}
       data-visible-count={shown.length}
       data-hidden-count={hiddenCount}
-      className="relative flex w-full min-w-0 items-center gap-2 overflow-hidden"
+      className={className}
     >
       {shown.map((label) => (
-        <span key={label} className="inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[11px] font-semibold leading-snug text-[#6b7280]" title={label}>
+        <span key={label} data-testid={itemTestId} className={itemClassName} title={label}>
           {label}
         </span>
       ))}
@@ -76,7 +88,8 @@ export function ResponsiveServiceSummary({
           href={profileHref}
           title={moreTitle}
           aria-label={moreTitle}
-          className="relative z-10 inline-flex shrink-0 text-[10px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]"
+          data-testid={moreTestId}
+          className={moreClassName}
         >
           +{hiddenCount}
         </Link>
