@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFirebaseMessaging } from "@/lib/push/firebase-admin";
+import { isMissingPushTransportColumn } from "@/lib/push/migration-compat";
 
 type SendUserPushOptions = {
   userId: string;
@@ -21,11 +22,22 @@ function compactPushText(value: string, maxLength = 112) {
 
 export async function sendUserPush({ userId, title, body, url = "/es/notificaciones" }: SendUserPushOptions) {
   const db = createAdminClient();
-  const { data, error } = await db
+  let { data, error } = await db
     .from("user_push_tokens")
     .select("id, token")
     .eq("user_id", userId)
+    .eq("transport", "fcm")
     .eq("is_active", true);
+
+  if (isMissingPushTransportColumn(error)) {
+    // Migration 140 compatibility during the short code-before-schema deploy
+    // window. Never fall back on timeouts or permission/provider failures.
+    ({ data, error } = await db
+      .from("user_push_tokens")
+      .select("id, token")
+      .eq("user_id", userId)
+      .eq("is_active", true));
+  }
 
   if (error) {
     const detail = /user_push_tokens/i.test(error.message)

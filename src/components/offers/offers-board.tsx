@@ -316,7 +316,7 @@ export function OffersBoard({
       {canPost && (
         <Link
           href="/dashboard/profesional?mode=offer&tab=offers&returnTo=%2Fofertas"
-          className="inline-flex h-[42px] items-center justify-center rounded-lg border border-[#cddae6] bg-white px-4 text-sm font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb]"
+          className="inline-flex h-9 items-center justify-center rounded-lg border border-[#cddae6] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb] lg:h-[42px] lg:px-4 lg:text-sm"
         >
           {copy.myOffers}
         </Link>
@@ -332,7 +332,7 @@ export function OffersBoard({
           </button>
           <Link
             href="/ofertas/publicar"
-            className="inline-flex h-[42px] items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
           >
             {copy.publishOffer}
           </Link>
@@ -340,7 +340,7 @@ export function OffersBoard({
       ) : (
         <Link
           href="/login?redirect=/ofertas/publicar"
-          className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:flex-none"
+          className="inline-flex h-9 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm"
         >
           {copy.publishOffer}
         </Link>
@@ -349,7 +349,7 @@ export function OffersBoard({
   );
 
   return (
-    <main className="min-h-[calc(100vh-72px)] overflow-x-hidden bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
+    <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
       <section className="sticky top-0 z-20 border-b border-[#d5d8dc] bg-white lg:hidden">
         <div className="px-0">
           <div className="relative flex min-h-[56px] items-center justify-center px-14">
@@ -371,6 +371,9 @@ export function OffersBoard({
           <div className="scrollbar-none flex gap-1.5 overflow-x-auto px-4 pb-4">
             {renderFilters()}
           </div>
+          <div className="px-4 pb-3" data-testid="offers-mobile-sticky-actions">
+            {renderActions()}
+          </div>
         </div>
       </section>
       <MarketplaceNavbarPortal>
@@ -380,10 +383,6 @@ export function OffersBoard({
           </div>
         </section>
       </MarketplaceNavbarPortal>
-      <div className="mx-auto flex max-w-7xl justify-end px-4 py-3 sm:px-6 lg:hidden">
-        {renderActions()}
-      </div>
-
       <div className="mx-auto hidden max-w-7xl items-end justify-between gap-4 px-6 pt-3 lg:flex">
         <div>
           <h1 className="text-2xl font-extrabold">{copy.offers}</h1>

@@ -111,6 +111,7 @@ export function BookingRequests() {
   const [filter, setFilter] = useState("activas");
   const bookingsSnapshotRef = useRef("");
   const refreshTimerRef = useRef<number | null>(null);
+  const mountedRef = useRef(true);
   const lastSilentRefreshRef = useRef(0);
   // Accordion: at most one card expanded at a time (essentials collapsed by default).
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -139,24 +140,42 @@ export function BookingRequests() {
       const target = event.target as Element | null;
       if (!target?.closest(`[data-booking-actions="${actionsMenuFor}"]`)) setActionsMenuFor(null);
     };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActionsMenuFor(null);
+    };
     document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
   }, [actionsMenuFor]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const loadBookings = useCallback(async (silent = false) => {
     try {
-      if (!silent) setLoading(true);
+      if (!silent && mountedRef.current) setLoading(true);
       const res = await fetch("/api/bookings?role=professional", { cache: "no-store" });
+      if (!res.ok) throw new Error(`Bookings request failed with HTTP ${res.status}`);
       const { bookings: rows } = await res.json();
+      if (!mountedRef.current) return;
       const next = rows ?? [];
       const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
       if (silent && bookingsSnapshotRef.current === snapshot) return;
       bookingsSnapshotRef.current = snapshot;
       setBookings(next);
     } catch (error) {
-      console.error("[booking-requests] load failed:", error);
+      // A route transition can dispose this panel while its request is still
+      // in flight. That is an expected cancellation, not an application error.
+      if (mountedRef.current) console.error("[booking-requests] load failed:", error);
     } finally {
-      if (!silent) setLoading(false);
+      if (!silent && mountedRef.current) setLoading(false);
     }
   }, []);
 

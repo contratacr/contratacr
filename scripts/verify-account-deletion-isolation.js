@@ -16,8 +16,16 @@ const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const expectedTestRef = "sodegkfjjrdkbohycqyq";
 let projectRef = "invalid";
-try { projectRef = new URL(url).hostname.split(".")[0]; } catch {}
-if (projectRef !== expectedTestRef) throw new Error(`Refusing destructive verification on ${projectRef}; expected test.`);
+let isLoopback = false;
+try {
+  const parsedUrl = new URL(url);
+  projectRef = parsedUrl.hostname.split(".")[0];
+  isLoopback = ["127.0.0.1", "localhost", "::1"].includes(parsedUrl.hostname);
+} catch {}
+const allowEphemeralLocal = process.env.LOCAL_REGRESSION_SEED === "1" && isLoopback;
+if (projectRef !== expectedTestRef && !allowEphemeralLocal) {
+  throw new Error(`Refusing destructive verification on ${projectRef}; expected test or explicit loopback regression.`);
+}
 if (!anonKey || !serviceRole) throw new Error("Missing test Supabase credentials.");
 
 const admin = createClient(url, serviceRole, { auth: { persistSession: false } });
@@ -28,6 +36,7 @@ let targetId = "";
 let sentinelId = "";
 let targetPath = "";
 let sentinelPath = "";
+let deletionRequestId = "";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -58,6 +67,7 @@ async function run() {
 
   const { data: requestId, error: requestError } = await targetClient.rpc("request_my_account_deletion");
   if (requestError || !requestId) throw new Error(requestError?.message || "Deletion request failed");
+  deletionRequestId = requestId;
 
   const { data: owned, error: ownedError } = await admin.rpc("account_deletion_storage_objects", { p_request_id: requestId });
   if (ownedError) throw new Error(ownedError.message);
@@ -83,7 +93,9 @@ async function run() {
   assert(sentinelProfile?.id === sentinelId, "Sentinel profile was affected.");
   assert((sentinelObjects || []).some((item) => item.name === "probe.png"), "Sentinel storage object was affected.");
 
-  await admin.from("account_deletion_requests").delete().eq("id", requestId);
+  const { error: requestCleanupError } = await admin.from("account_deletion_requests").delete().eq("id", requestId);
+  if (requestCleanupError) throw new Error(requestCleanupError.message);
+  deletionRequestId = "";
   console.log("Account deletion isolation verified: target removed; sentinel unchanged.");
 }
 
@@ -94,6 +106,7 @@ run().finally(async () => {
     await admin.from("account_deletion_requests").delete().eq("user_id", targetId);
     await admin.auth.admin.deleteUser(targetId);
   }
+  if (deletionRequestId) await admin.from("account_deletion_requests").delete().eq("id", deletionRequestId);
   if (sentinelId) await admin.auth.admin.deleteUser(sentinelId);
 }).catch((error) => {
   console.error(error);

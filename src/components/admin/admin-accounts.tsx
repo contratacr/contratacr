@@ -51,7 +51,7 @@ export function AdminAccounts() {
     <div>
       <div className="mb-5 flex items-center gap-2">
         <UserX className="h-5 w-5 text-[#009FD9]" />
-        <h1 className="text-xl font-bold text-[#111827]">Cuentas deshabilitadas</h1>
+        <h1 className="text-xl font-bold text-[#111827]">Cuentas deshabilitadas y eliminaciones</h1>
         {!loading && items.length > 0 && <span className="text-sm text-[#9ca3af]">({items.length})</span>}
       </div>
 

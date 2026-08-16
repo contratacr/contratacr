@@ -7,67 +7,28 @@ on:
       - test
 
 concurrency:
-  group: regression-test
-  cancel-in-progress: true
+  # The production mirror and regression suite both mutate the isolated test
+  # database. A shared repository-wide group prevents either workflow from
+  # replacing fixtures while the other one is using them.
+  group: contratacr-test-environment
+  queue: max
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
-  e2e:
-    name: Playwright regression (test)
+  local-database-contract:
+    name: Local schema and fast contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    environment: test
-    env:
-      PLAYWRIGHT_BASE_URL: https://contratacr-git-test-isanchezm421-6251s-projects.vercel.app
-      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-      # The database mirror workflow owns authenticated fixtures. The legacy
-      # Playwright seeder created fake professionals and must never run here.
-      E2E_SEED: "0"
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      CI: true
+    timeout-minutes: 100
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          ref: test
-
-      - name: Validate test target
-        run: |
-          set -euo pipefail
-          echo "Checked out test branch for regression."
-          echo "Running regression against $PLAYWRIGHT_BASE_URL"
-          if [ -z "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
-            echo "::error::Missing VERCEL_AUTOMATION_BYPASS_SECRET in the test GitHub Environment. Vercel preview deployments are protected, so Playwright will see the Vercel login page instead of ContrataCR."
-            exit 1
-          fi
-          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in the test GitHub Environment. These are required to seed regression accounts in the test Supabase project."
-            exit 1
-          fi
-          if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
-            echo "::error::Missing NEXT_PUBLIC_SUPABASE_ANON_KEY in the test GitHub Environment. The app and browser auth require the test anon/publishable key."
-            exit 1
-          fi
-          if echo "$NEXT_PUBLIC_SUPABASE_URL" | grep -q "kskueodxaksxvjrysouw"; then
-            echo "::error::Refusing to run seeded regression against production Supabase."
-            exit 1
-          fi
-
-      - name: Verify Vercel bypass opens ContrataCR
-        run: |
-          set -euo pipefail
-          html="$(curl -sSL \
-            -H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" \
-            "$PLAYWRIGHT_BASE_URL/es")"
-          if echo "$html" | grep -qi "Log in to Vercel"; then
-            echo "::error::Vercel protection still intercepted the test URL. The bypass secret is present in GitHub, but this deployment did not accept it. Rotate/check the Vercel Automation Bypass secret, update the GitHub test Environment secret, then redeploy the test branch before rerunning."
-            exit 1
-          fi
-          if ! echo "$html" | grep -qi "ContrataCR"; then
-            echo "::error::The test URL did not look like ContrataCR after bypass. Check PLAYWRIGHT_BASE_URL and the latest test deployment."
-            exit 1
-          fi
+          ref: ${{ github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v5
@@ -78,43 +39,110 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.109.0
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Start the minimal local Supabase stack
+        run: >-
+          supabase start
+          --exclude realtime,imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
+
+      - name: Rebuild every migration from an empty database
+        run: supabase db reset --local --no-seed
+
+      - name: Seed and verify the synthetic local regression foundation
+        env:
+          LOCAL_REGRESSION_PASSWORD: LocalRegression!2026
+        run: |
+          set -euo pipefail
+          supabase status -o env > /tmp/contratacr-local-supabase.env
+          set -a
+          source /tmp/contratacr-local-supabase.env
+          set +a
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          export LOCAL_REGRESSION_SEED=1
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            printf '%s=%s\n' "SUPABASE_SERVICE_ROLE_KEY" "$SERVICE_ROLE_KEY"
+            echo "SUPABASE_DB_URL=$DB_URL"
+            echo "LOCAL_REGRESSION_SEED=1"
+            echo "E2E_FIXTURES_READY=1"
+            echo "E2E_LEGACY_SEED=0"
+            echo "E2E_ALLOW_NON_TEST_SUPABASE=1"
+            echo "E2E_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            echo "REGRESSION_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            echo "PLAYWRIGHT_LOCAL_PRODUCTION=1"
+            echo "PLAYWRIGHT_PORT=3000"
+            echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000"
+          } >> "$GITHUB_ENV"
+          psql "$DB_URL" \
+            --set=local_seed_guard=contratacr-local-only \
+            --file=scripts/ci/grant-local-regression-service-role.sql
+          psql "$DB_URL" \
+            --set=local_seed_guard=contratacr-local-only \
+            --set=regression_password="$LOCAL_REGRESSION_PASSWORD" \
+            --file=scripts/ci/seed-local-regression-auth.sql
+          npm run seed:local:regression
+          npm run verify:local:regression
+          npm run seed:local:relations
+          npm run verify:local:relations
+
+      - name: Verify account deletion isolation locally
+        run: npm run test:account-deletion
+
+      - name: Verify durable push isolation locally
+        run: npm run test:push-isolation
+
+      - name: Reverify canonical fixtures after isolation contracts
+        run: npm run verify:local:relations
+
       - name: Ensure private env files are not tracked
         run: npm run security:env
 
-      - name: Seed ContrataCR and SG Solutions regression fixtures
-        run: |
-          set -euo pipefail
-          for attempt in 1 2 3 4 5 6; do
-            if npm run seed:test:full; then
-              exit 0
-            fi
-            if [ "$attempt" -eq 6 ]; then
-              echo "::error::Could not seed the complete test fixtures after waiting for the test schema."
-              exit 1
-            fi
-            echo "Test schema may still be updating; retrying fixtures in 15 seconds."
-            sleep 15
-          done
+      - name: Verify every application surface has a regression owner
+        run: npm run test:surface-ownership
 
-      - name: Verify complete regression fixtures
-        run: npm run seed:test:verify
-
-      - name: Typecheck regression and application contracts
+      - name: Typecheck application and regression contracts
         run: npx tsc --noEmit
 
       - name: Lint regression contracts
-        run: npx eslint tests/e2e playwright.config.ts
+        run: npx eslint tests/e2e playwright.config.ts scripts/ci/verify-app-surface-ownership.mjs scripts/seed-local-regression-foundation.js scripts/verify-local-regression-foundation.js
 
-      - name: Install Playwright browser
+      - name: Build the production application locally
+        run: npm run build
+
+      - name: Install Playwright browser for a manual release regression
+        if: github.event_name == 'workflow_dispatch'
         run: npx playwright install --with-deps chromium
 
-      - name: Run regression suite
+      - name: Run the exhaustive local release regression once
+        if: github.event_name == 'workflow_dispatch'
         run: npm run test:e2e
 
+      - name: Require zero failures, flakies and unexpected skips
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run test:e2e:verify-results
+
+      - name: Verify synthetic fixtures after the release regression
+        if: github.event_name == 'workflow_dispatch' && always()
+        run: npm run verify:local:relations
+
       - name: Upload Playwright report
-        if: always()
+        if: github.event_name == 'workflow_dispatch' && always()
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/
           if-no-files-found: ignore
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup

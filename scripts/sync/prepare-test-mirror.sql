@@ -21,10 +21,17 @@ begin
   end if;
 end $$;
 
--- Remove identities belonging to old fixtures and obsolete fake users. Login
--- is re-enabled only for the two regression actors after the public restore.
-delete from auth.identities;
-delete from auth.users where id not in (select id from production_profile_ids);
+-- Remove identities belonging to old fixtures and obsolete fake users. Keep
+-- the single manual advertising login; its public profile is rebuilt after the
+-- mirror with isolated test-only data. Regression actor logins are re-enabled
+-- separately after the public restore.
+delete from auth.identities
+where user_id not in (
+  select id from auth.users where lower(email) = 'publicidad@contratacr.test'
+);
+delete from auth.users
+where id not in (select id from production_profile_ids)
+  and lower(email) <> 'publicidad@contratacr.test';
 
 set session_replication_role = replica;
 insert into auth.users (

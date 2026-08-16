@@ -1043,7 +1043,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   if (variant === "chips") {
     const sortOptions = selectableSortOptions.map((option) => ({ value: option, label: t(`sort.${option}`) }));
     const languageOptions = [
-      { value: ANY_LANGUAGE, label: t("filters.anyLanguage") },
+      { value: ANY_LANGUAGE, label: t("filters.allLanguages") },
       ...LANGUAGES.map((item) => ({ value: item.id, label: languageLabel(item.id, locale) })),
     ];
     const modalityOptions = [
@@ -1054,7 +1054,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     const priceText = priceChoice === ANY_PRICE ? t("filters.price") : t(`priceFilter.${priceChoice}`);
     const languageText = language
       ? languageOptions.find((option) => option.value === language)?.label ?? t("filters.language")
-      : locale === "en" ? "Service language" : "Idioma de atención";
+      : locale === "en" ? "Language" : "Idioma";
     const pill = "ccr-search-filter-chip inline-flex h-8 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2 text-[9px] font-bold text-[#162543] shadow-sm min-[350px]:px-2.5 min-[350px]:text-[10px] min-[390px]:text-[11px]";
     return (
       <div className="hide-scrollbar flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
@@ -1065,7 +1065,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <button type="button" onClick={() => setOpenChip("price")} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{priceText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
-          <button type="button" onClick={() => setOpenChip("language")} className={pill}>
+          <button data-testid="mobile-language-filter" type="button" onClick={() => setOpenChip("language")} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
         </div>

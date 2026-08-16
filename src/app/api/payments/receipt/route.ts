@@ -33,11 +33,12 @@ export async function POST(req: Request) {
     if (!file || file.size === 0) return NextResponse.json({ error: "No se recibió el comprobante" }, { status: 400 });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    // Magic-byte validation: safe images OR PDF only (no SVG / scripts). 10 MB cap.
+    // Keep the route below the hosting request-body ceiling. The manual payment UI
+    // is currently disabled, but this endpoint must still enforce a usable limit.
     const check = validateUpload(buffer, {
       allow: [...IMAGE_KINDS, ...DOC_KINDS],
-      maxBytes: 10 * 1024 * 1024,
-      allowLabel: "JPG, PNG, WEBP o PDF",
+      maxBytes: 4 * 1024 * 1024,
+      allowLabel: "JPG, PNG, WEBP, AVIF, HEIC/HEIF, GIF o PDF",
     });
     if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
 

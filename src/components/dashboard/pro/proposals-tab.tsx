@@ -332,8 +332,15 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       const target = event.target as Element | null;
       if (!target?.closest(`[data-proposal-actions="${actionsMenuFor}"]`)) setActionsMenuFor(null);
     };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActionsMenuFor(null);
+    };
     document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
   }, [actionsMenuFor]);
 
   function startEdit(p: MyProposal) {

@@ -1,6 +1,7 @@
 import { expect, test } from "playwright/test";
 import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, isMobileProject, loginAs, resetAuth } from "./helpers";
-import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
+import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient } from "./seed";
 import { CONTRATACR_PRODUCT_KNOWLEDGE } from "../../src/lib/ai/product-knowledge";
 import {
   CATEGORY_LABELS_EN,
@@ -250,91 +251,85 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
 
 test.describe("@seeded ContrataCR AI", () => {
   test.skip(!canRunSeededRegression(), "Requires the isolated test Supabase seed.");
-  let seed: RegressionSeedState;
-  let professionalSnapshot: Record<string, unknown> | null = null;
+  let aiProfessional: DisposableAccount | undefined;
 
   test.beforeAll(async () => {
-    seed = await ensureRegressionSeed();
-    const admin = regressionAdminClient();
-    const { data, error } = await admin.from("professionals")
-      .select("professions, services, workplaces, search_provincias, search_cantones")
-      .eq("id", seed.professionalId)
-      .single();
-    if (error) throw error;
-    professionalSnapshot = data;
-    const services = Array.isArray(data.services) ? [...data.services] : [];
-    const serviceIndex = services.findIndex((item) => item?.category === seed.categoryId);
-    const plumbingService = {
-      id: "e2e-ai-plomeria-atenas",
-      name: "Plomería",
-      category: seed.categoryId,
-      description: "Servicio de plomería en Atenas para regresión de ContrataCR AI.",
-      active: true,
-    };
-    if (serviceIndex >= 0) services[serviceIndex] = { ...services[serviceIndex], ...plumbingService };
-    else services.push(plumbingService);
-    const networksService = {
-      id: "e2e-ai-redes-atenas",
-      name: "Redes e internet",
-      category: "redes_internet",
-      description: "Redes e internet en Atenas para regresión de contexto conversacional.",
-      active: true,
-    };
-    const networksIndex = services.findIndex((item) => item?.category === "redes_internet");
-    if (networksIndex >= 0) services[networksIndex] = { ...services[networksIndex], ...networksService };
-    else services.push(networksService);
-    const workplaces = Array.isArray(data.workplaces) ? [...data.workplaces] : [];
-    workplaces.push({
-      id: "e2e-ai-atenas",
-      name: "Atenas, Alajuela",
-      address: "Atenas centro, Alajuela, Costa Rica",
-      provinciaId: "al",
-      cantonId: "al-at",
-      lat: 9.97856,
-      lng: -84.37856,
-    });
-    const unique = (values: unknown[]) => [...new Set(values.filter(Boolean))];
-    const { error: updateError } = await admin.from("professionals").update({
-      professions: unique([...(data.professions ?? []), seed.categoryId, "redes_internet"]),
-      services,
-      workplaces,
-      search_provincias: unique([...(data.search_provincias ?? []), "al"]),
-      search_cantones: unique([...(data.search_cantones ?? []), "al-at"]),
-      is_available: true,
-    }).eq("id", seed.professionalId);
-    if (updateError) throw updateError;
+    await ensureRegressionSeed();
+    try {
+      aiProfessional = await createDisposableAccount({
+        prefix: "ai-search",
+        professional: true,
+        publicDiscoverable: true,
+      });
+      if (!aiProfessional.professionalId) throw new Error("Disposable AI professional was not created");
+
+      const admin = regressionAdminClient();
+      const { error: updateError } = await admin.from("professionals").update({
+        category_id: "plomeria",
+        provincia_id: "al",
+        canton_id: "al-at",
+        professions: ["plomeria", "redes_internet"],
+        services: [
+          {
+            id: "e2e-ai-plomeria-atenas",
+            name: "Plomería",
+            category: "plomeria",
+            description: "Servicio de plomería en Atenas para regresión de ContrataCR AI.",
+            active: true,
+          },
+          {
+            id: "e2e-ai-redes-atenas",
+            name: "Redes e internet",
+            category: "redes_internet",
+            description: "Redes e internet en Atenas para regresión de contexto conversacional.",
+            active: true,
+          },
+        ],
+        workplaces: [{
+          id: "e2e-ai-atenas",
+          name: "Atenas, Alajuela",
+          address: "Atenas centro, Alajuela, Costa Rica",
+          provinciaId: "al",
+          cantonId: "al-at",
+          lat: 9.97856,
+          lng: -84.37856,
+        }],
+        search_provincias: ["al"],
+        search_cantones: ["al-at"],
+        is_available: true,
+        availability_public: true,
+        is_banned: false,
+        is_verified: true,
+        is_featured: true,
+        verification_status: "verified",
+        rating_avg: 5,
+        review_count: 100_000,
+      }).eq("id", aiProfessional.professionalId);
+      if (updateError) throw updateError;
+    } catch (error) {
+      await cleanupDisposableAccount(aiProfessional);
+      aiProfessional = undefined;
+      throw error;
+    }
   });
 
   test.afterAll(async () => {
-    if (!professionalSnapshot || !seed?.professionalId) return;
-    await regressionAdminClient().from("professionals").update(professionalSnapshot).eq("id", seed.professionalId);
+    await cleanupDisposableAccount(aiProfessional);
   });
 
   test("does not promise availability when a matched professional has no public slots", async ({ page }) => {
-    const admin = regressionAdminClient();
-    await admin.from("availability_slots").delete().eq("professional_id", seed.professionalId);
-
-    try {
-      await gotoOK(page, "/es");
-      const response = await ask(page, "Necesito un plomero en Atenas, Alajuela");
-      expect(response.status, JSON.stringify(response.body)).toBe(200);
-      expect(response.body.action).toBe("search_professionals");
-      const professional = response.body.professionals?.find((item) => item.id === seed.professionalId);
-      expect(professional, JSON.stringify(response.body.professionals)).toBeTruthy();
-      expect(professional?.actionKind).toBe("message");
-      expect(professional?.actionLabel).toBe("Contactar por WhatsApp");
-      expect(professional?.actionLabel).not.toBe("Ver disponibilidad");
-      expect(professional?.actionLabel).not.toBe("Enviar mensaje");
-    } finally {
-      const { error } = await admin.from("availability_slots").insert({
-        professional_id: seed.professionalId,
-        slot_date: seed.slotDate,
-        slot_time: seed.slotTime,
-        category_id: seed.categoryId,
-        location_id: "e2e-main",
-      });
-      if (error && error.code !== "23505") throw error;
-    }
+    expect(aiProfessional?.professionalId).toBeTruthy();
+    await gotoOK(page, "/es");
+    const response = await ask(page, "Necesito un plomero en Atenas, Alajuela");
+    expect(response.status, JSON.stringify(response.body)).toBe(200);
+    expect(response.body.action).toBe("search_professionals");
+    expect(response.body.serviceId).toBe("plomeria");
+    const professional = response.body.professionals?.find((item) => item.id === aiProfessional!.professionalId);
+    expect(professional, JSON.stringify(response.body.professionals)).toBeTruthy();
+    expect(professional?.actionKind).toBe("message");
+    expect(professional?.actionLabel).toBe("Contactar por WhatsApp");
+    expect(professional?.actionLabel).not.toBe("Ver disponibilidad");
+    expect(professional?.actionLabel).not.toBe("Enviar mensaje");
   });
 
   test("answers product questions with stable, actionable destinations", async ({ page }) => {

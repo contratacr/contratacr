@@ -63,6 +63,7 @@ import {
   type DashboardProfileData,
 } from "@/lib/dashboard-bootstrap-cache";
 import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
@@ -157,7 +158,7 @@ type GuideItem = {
 };
 
 const GUIDE_ITEMS: GuideItem[] = [
-  { id: "clientPanel", section: "client", actionTab: "home", targetMode: "use", stepCount: 5 },
+  { id: "clientPanel", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 5 },
   { id: "clientRequests", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 3 },
   { id: "clientProjects", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 3 },
   { id: "clientApplications", section: "client", actionTab: "applications", targetMode: "use", stepCount: 4 },
@@ -172,7 +173,7 @@ const GUIDE_ITEMS: GuideItem[] = [
   { id: "reviewsGuide", section: "shared", href: "/buscar", stepCount: 4 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
   { id: "accountSecurityGuide", section: "shared", actionTab: "cuenta", stepCount: 4 },
-  { id: "professionalPanel", section: "professional", actionTab: "home", targetMode: "offer", stepCount: 4 },
+  { id: "professionalPanel", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 4 },
   { id: "completionGuide", section: "professional", actionTab: "completion", targetMode: "offer", stepCount: 4 },
   { id: "requests", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 3 },
   { id: "opportunities", section: "professional", actionTab: "proposals", targetMode: "offer", stepCount: 3 },
@@ -243,19 +244,6 @@ function compactDisplayName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (name.length <= 29 || parts.length < 4) return name;
   return [parts[0], ...parts.slice(-2)].join(" ");
-}
-
-function compactMobileDisplayName(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length >= 4) return [parts[0], ...parts.slice(-2)].join(" ");
-  return name;
-}
-
-function compactClientMobileDisplayName(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length <= 2) return name;
-  const firstSurnameIndex = parts.length >= 4 ? parts.length - 2 : 1;
-  return `${parts[0]} ${parts[firstSurnameIndex]}`;
 }
 
 type OpportunityProjectSummary = { id?: string | null };
@@ -670,8 +658,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (activeTab !== "soporte" && supportThreadTitle) {
-      setSupportThreadTitle(null);
-      setSupportThreadRef(null);
+      const frame = requestAnimationFrame(() => {
+        setSupportThreadTitle(null);
+        setSupportThreadRef(null);
+      });
+      return () => cancelAnimationFrame(frame);
     }
   }, [activeTab, supportThreadTitle]);
 
@@ -697,29 +688,34 @@ export default function DashboardPage() {
   }, [headerPhotoMenuOpen]);
 
   useEffect(() => {
-    if (activeTab !== "profile") setMobileProfileSectionTitle(null);
+    if (activeTab !== "profile") {
+      const frame = requestAnimationFrame(() => setMobileProfileSectionTitle(null));
+      return () => cancelAnimationFrame(frame);
+    }
   }, [activeTab]);
 
   useEffect(() => {
     if (!pendingProfileFocusField || activeTab !== "profile") return;
     const field = pendingProfileFocusField;
-    setPendingProfileFocusField(null);
-    requestAnimationFrame(() => {
+    const frame = requestAnimationFrame(() => {
+      setPendingProfileFocusField(null);
       requestAnimationFrame(() => {
         setProfileFocus({ field, key: nextFocusKey() });
       });
     });
+    return () => cancelAnimationFrame(frame);
   }, [activeTab, nextFocusKey, pendingProfileFocusField]);
 
   useEffect(() => {
     if (!pendingServiceFocusField || activeTab !== "services") return;
     const field = pendingServiceFocusField;
-    setPendingServiceFocusField(null);
-    requestAnimationFrame(() => {
+    const frame = requestAnimationFrame(() => {
+      setPendingServiceFocusField(null);
       requestAnimationFrame(() => {
         setServiceFocus({ field, key: nextFocusKey() });
       });
     });
+    return () => cancelAnimationFrame(frame);
   }, [activeTab, nextFocusKey, pendingServiceFocusField]);
 
   useEffect(() => {
@@ -934,13 +930,19 @@ export default function DashboardPage() {
   }, [cacheDashboardBootstrap, setProfile, user]);
 
   useEffect(() => {
-    if (!user) return;
-    const firstLoadForUser = bootstrapHydratedForRef.current !== user.id;
+    if (!user) {
+      bootstrapHydratedForRef.current = null;
+      return;
+    }
+    // Supabase can emit a refreshed user object for the same authenticated
+    // account while the first professional request is still in flight. Starting
+    // a second silent fetch here invalidates the visible request sequence, but a
+    // silent fetch never clears the route loader. Bootstrap exactly once per
+    // user id; explicit refresh events below remain responsible for later syncs.
+    if (bootstrapHydratedForRef.current === user.id) return;
     bootstrapHydratedForRef.current = user.id;
-    const cached = firstLoadForUser
-      ? getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id))
-      : null;
-    if (cached && firstLoadForUser) {
+    const cached = getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id));
+    if (cached) {
       queueMicrotask(() => {
         setPro(cached.pro as ProData | null);
         setProfile(cached.profile);
@@ -949,7 +951,7 @@ export default function DashboardPage() {
       });
       return;
     }
-    queueMicrotask(() => fetchPro({ silent: !firstLoadForUser }));
+    queueMicrotask(() => fetchPro());
   }, [user, refreshKey, fetchPro]);
 
   // Base profile (name/avatar) for the header, works for seekers with no pro row.
@@ -1480,11 +1482,6 @@ export default function DashboardPage() {
   const professionalDisplayName = businessName || personalDisplayName;
   const displayName = mode === "offer" ? professionalDisplayName : personalDisplayName;
   const compactHeaderName = compactDisplayName(displayName);
-  const compactMobileHeaderName = mode === "use"
-    ? compactClientMobileDisplayName(personalDisplayName)
-    : businessName
-      ? compactMobileDisplayName(businessName)
-      : compactClientMobileDisplayName(personalDisplayName);
   const headerAvatar = profile?.avatar_url || proProfile?.avatar_url || null;
   const proForCompletion = pro && headerAvatar && !proProfile?.avatar_url
     ? { ...pro, profiles: { ...(proProfile ?? {}), avatar_url: headerAvatar } }
@@ -1952,7 +1949,7 @@ export default function DashboardPage() {
                 <input
                   ref={headerPhotoInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  accept={IMAGE_ACCEPT}
                   className="hidden"
                   onChange={(event) => {
                     const file = event.target.files?.[0];
@@ -1969,24 +1966,13 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="min-w-0 self-center">
-                <div className="flex min-w-0 items-center justify-between gap-2 sm:hidden">
+                <div className="flex min-w-0 items-start gap-1.5 sm:hidden">
                   <div className="flex min-w-0 items-center gap-1.5">
-                    <h1 className="truncate text-[17px] font-bold leading-tight text-[#162543]" title={displayName}>
-                      {compactMobileHeaderName}
+                    <h1 data-testid="dashboard-identity-name" className="line-clamp-2 min-w-0 text-[16px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere]" title={displayName}>
+                      {displayName}
                     </h1>
                     <div className="flex shrink-0 items-center">{identityBadge()}</div>
                   </div>
-                  {publicProfileHref && (
-                    <Link
-                      href={publicProfileHref}
-                      onClick={openInNewTabOnDesktop}
-                      aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
-                      className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold leading-none text-[#526277] underline-offset-2 transition hover:text-[#009FD9] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
-                    >
-                      <span>{locale === "en" ? "View profile" : "Ver perfil"}</span>
-                      <ExternalLink className="h-3 w-3 text-[#162543]" />
-                    </Link>
-                  )}
                 </div>
                 <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 sm:flex">
                   <h1 className="min-w-0 shrink truncate whitespace-nowrap text-2xl font-bold leading-tight text-[#162543]" title={displayName}>
@@ -1994,10 +1980,22 @@ export default function DashboardPage() {
                   </h1>
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
                 </div>
-                <div className="mt-3 flex min-h-[36px] items-center justify-start sm:mt-1 sm:min-h-[22px]">
+                <div data-testid="dashboard-identity-actions" className="mt-2 flex min-h-[36px] items-end justify-between gap-3 sm:mt-1 sm:min-h-[22px] sm:justify-start">
                   <div className="flex min-w-0 items-center">
                     <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                   </div>
+                  {publicProfileHref && (
+                    <Link
+                      href={publicProfileHref}
+                      onClick={openInNewTabOnDesktop}
+                      aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
+                      data-testid="dashboard-mobile-view-profile"
+                      className="inline-flex shrink-0 items-center gap-1 pb-0.5 text-xs font-semibold leading-normal text-[#526277] underline-offset-2 transition hover:text-[#009FD9] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
+                    >
+                      <span>{locale === "en" ? "View profile" : "Ver perfil"}</span>
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0 self-center text-[#162543]" />
+                    </Link>
+                  )}
                 </div>
               </div>
               <div className="col-span-2 hidden flex-wrap items-center justify-center gap-2 border-t border-[#eef3f7] pt-3 sm:col-span-1 sm:flex sm:justify-end sm:border-t-0 sm:pt-0">

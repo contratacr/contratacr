@@ -36,6 +36,8 @@ interface SearchPageProps {
     e?: string;
     w?: string;
     page?: string;
+    /** Regression-only cache bypass; ignored unless isolated fixtures are enabled. */
+    regression?: string;
   }>;
 }
 
@@ -97,6 +99,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const videoOnly = modalities.length === 1 && modalities[0] === "video";
   const inPersonOnly = modalities.length === 1 && modalities[0] === "in_person";
   const selectedCategory = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
+  const selectedCantonId = params.canton && params.canton !== "todos" ? params.canton : undefined;
+  const selectedProvinceId = params.provincia && params.provincia !== "todas"
+    ? params.provincia
+    : selectedCantonId
+      ? PROVINCES.find((province) => province.cantons.some((canton) => canton.id === selectedCantonId))?.id
+      : undefined;
   const effectiveQuery = selectedCategory ? undefined : params.q;
   const parsedNearLat = params.lat ? Number(params.lat) : undefined;
   const parsedNearLng = params.lng ? Number(params.lng) : undefined;
@@ -130,8 +138,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     viewerPromise,
     searchProfessionals({
       categoryId: selectedCategory,
-      provinceId: params.provincia,
-      cantonId: params.canton,
+      provinceId: selectedProvinceId,
+      cantonId: selectedCantonId,
       sortBy,
       query: effectiveQuery,
       insurerIds,
@@ -142,6 +150,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       nearLat,
       nearLng,
       bounds: mapBounds,
+    }, {
+      fresh: process.env.E2E_FIXTURES_READY === "1" && Boolean(params.regression),
     }),
   ]);
   const viewerProfileId = viewer?.id;
@@ -235,8 +245,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   results.forEach((pro, index) => { numbering[pro.id] = index + 1; });
 
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
-  const activeProvince = params.provincia && params.provincia !== "todas"
-    ? PROVINCES.find((p) => p.id === params.provincia)
+  const activeProvince = selectedProvinceId
+    ? PROVINCES.find((p) => p.id === selectedProvinceId)
     : undefined;
   const activeCanton = activeProvince && params.canton && params.canton !== "todos"
     ? activeProvince.cantons.find((c) => c.id === params.canton)
@@ -298,8 +308,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const filterInitialValues = {
     q: params.q,
     categoria: params.categoria,
-    provincia: params.provincia,
-    canton: params.canton,
+    provincia: selectedProvinceId,
+    canton: selectedCantonId,
     sortBy: params.sortBy,
     modalidad: params.modalidad,
     aseguradora: params.aseguradora,

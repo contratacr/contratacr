@@ -14,7 +14,7 @@ import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 
 // Mandatory profile completion for OAuth (Facebook/Google) users who never
 // provided a cédula. Required before they can book.
@@ -35,6 +35,11 @@ export default function CompleteProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const photoPreviewObjectUrlRef = useRef<string | null>(null);
+
+  useEffect(() => () => {
+    if (photoPreviewObjectUrlRef.current) URL.revokeObjectURL(photoPreviewObjectUrlRef.current);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user && !isSigningOut()) router.push("/login");
@@ -76,24 +81,30 @@ export default function CompleteProfilePage() {
     if (!user) return;
     const previousAvatarUrl = avatarUrl;
     setError(null);
-    setAvatarUrl(URL.createObjectURL(file));
+    if (photoPreviewObjectUrlRef.current) URL.revokeObjectURL(photoPreviewObjectUrlRef.current);
+    const previewUrl = URL.createObjectURL(file);
+    photoPreviewObjectUrlRef.current = previewUrl;
+    setAvatarUrl(previewUrl);
     setPhotoUploading(true);
     try {
       const preparedFile = await prepareImageForUpload(file, { maxDimension: 1200 });
       const fd = new FormData();
       fd.append("file", preparedFile);
       fd.append("type", "avatar");
-      const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || t("photoError"));
-      }
-      const { url } = await res.json();
+      const upload = await uploadPhotoFormDataWithRetry(fd);
+      if (!upload.ok || !upload.data.url) throw new Error(upload.data.error || t("photoError"));
+      const { url } = upload.data;
       const supabase = createClient();
-      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
-      await supabase.auth.updateUser({ data: { avatar_url: url } });
+      const { error: profileError } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      if (profileError) throw profileError;
+      const { error: authError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+      if (authError) throw authError;
+      URL.revokeObjectURL(previewUrl);
+      if (photoPreviewObjectUrlRef.current === previewUrl) photoPreviewObjectUrlRef.current = null;
       setAvatarUrl(url);
     } catch (error) {
+      URL.revokeObjectURL(previewUrl);
+      if (photoPreviewObjectUrlRef.current === previewUrl) photoPreviewObjectUrlRef.current = null;
       const code = getImageUploadPreparationErrorCode(error);
       setAvatarUrl(previousAvatarUrl);
       setError(code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : error instanceof Error && error.message ? error.message : t("photoError"));

@@ -1,6 +1,7 @@
 import { expect, test } from "playwright/test";
 import { expectHealthyPage, expectVisibleText, gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
-import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
+import { canRunSeededRegression, ensureRegressionSeed, type RegressionSeedState } from "./seed";
+import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
 const adminRoutes = [
   { path: "/es/admin", marker: /Resumen|Panel de administracion|Panel de administraci.n/i },
@@ -9,17 +10,21 @@ const adminRoutes = [
   { path: "/es/admin/reportes", marker: /Reportes/i },
   { path: "/es/admin/aseguradoras", marker: /Aseguradoras/i },
   { path: "/es/admin/servicios", marker: /Servicios/i },
+  { path: "/es/admin/categorias", marker: /Servicios/i },
   { path: "/es/admin/solicitudes", marker: /Solicitudes/i },
   { path: "/es/admin/publicaciones", marker: /Proyectos/i },
   { path: "/es/admin/cuentas", marker: /Cuentas/i },
   { path: "/es/admin/soporte", marker: /Soporte/i },
   { path: "/es/admin/analitica", marker: /Analitica|Anal.tica/i },
   { path: "/es/admin/actividad", marker: /Actividad/i },
+  { path: "/es/admin/resenas", marker: /Rese.nas|Reseñas/i },
 ] as const;
 
 test.describe("@admin surfaces", () => {
+  let seed: RegressionSeedState | null = null;
+
   test.beforeAll(async () => {
-    if (canRunSeededRegression()) await ensureRegressionSeed();
+    if (canRunSeededRegression()) seed = await ensureRegressionSeed();
   });
 
   test("admin entry shows the restricted login when signed out", async ({ page }) => {
@@ -42,33 +47,54 @@ test.describe("@admin surfaces", () => {
       "/api/admin/accounts",
       "/api/admin/insurers",
       "/api/admin/pending-counts",
+      "/api/admin/reviews",
     ];
 
     for (const route of routes) {
       const response = await request.get(route);
       expect([401, 403], `${route} must reject unauthenticated access`).toContain(response.status());
     }
-  });
 
-  test("admin panel sections render when admin credentials are configured", async ({ page }) => {
-    const seeded = canRunSeededRegression();
-    const email = seeded ? E2E_USERS.admin.email : (process.env.E2E_ADMIN_EMAIL || "");
-    const password = seeded ? E2E_USERS.admin.password : (process.env.E2E_ADMIN_PASSWORD || "");
-    test.skip(!email || !password, "Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD to run authenticated admin regression.");
-
-    await resetAuth(page);
-    await gotoOK(page, "/es/admin");
-    await waitForInteractivePage(page);
-    await page.getByPlaceholder(/Correo de administrador/i).fill(email!);
-    await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(password!);
-    await page.getByRole("button", { name: /Ingresar/i }).click();
-    await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeHidden({ timeout: 20_000 });
-    await expectVisibleText(page.locator("body"), adminRoutes[0].marker);
-
-    for (const route of adminRoutes) {
-      await gotoOK(page, route.path);
-      await expectVisibleText(page.locator("body"), route.marker);
-      await expectHealthyPage(page);
+    for (const method of ["patch", "delete"] as const) {
+      const response = await request[method]("/api/admin/reviews", {
+        data: { id: "00000000-0000-4000-8000-000000000000", action: "hide", reason: "E2E guard" },
+      });
+      expect([401, 403], `admin reviews ${method} must reject unauthenticated access`).toContain(response.status());
     }
   });
+
+  test("admin panel sections render with an isolated disposable administrator", async ({ page }) => {
+    let account: DisposableAccount | undefined;
+    try {
+      account = await createDisposableAccount({ prefix: "admin-cycle", admin: true });
+      await resetAuth(page);
+      await gotoOK(page, "/es/admin");
+      await waitForInteractivePage(page);
+      await page.getByPlaceholder(/Correo de administrador/i).fill(account.email);
+      await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(account.password);
+      await page.getByRole("button", { name: /Ingresar/i }).click();
+      await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeHidden({ timeout: 20_000 });
+      await expectVisibleText(page.locator("body"), adminRoutes[0].marker);
+
+      for (const route of adminRoutes) {
+        await gotoOK(page, route.path);
+        await expectVisibleText(page.locator("body"), route.marker);
+        await expectHealthyPage(page);
+      }
+
+      if (seed) {
+        for (const detail of [
+          { path: `/es/admin/usuarios/${seed.clientId}`, marker: /ContrataCR|B.squeda de usuarios/i },
+          { path: `/es/admin/proveedores/${seed.professionalId}`, marker: /SG Solutions|Proveedor/i },
+        ]) {
+          await gotoOK(page, detail.path);
+          await expectVisibleText(page.locator("body"), detail.marker);
+          await expectHealthyPage(page);
+        }
+      }
+    } finally {
+      await cleanupDisposableAccount(account);
+    }
+  });
+
 });

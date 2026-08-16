@@ -702,6 +702,12 @@ html[data-self-action-modal-open="true"] [data-save-button] {
     padding-bottom: 0;
   }
 
+  /* Compact dialogs use equal inset spacing so flex centering is not shifted
+     downward by the bottom-sheet padding override above. */
+  .app-modal-screen.app-centered-modal-screen {
+    padding-bottom: 1rem;
+  }
+
   html[data-keyboard-open] .app-modal-screen.app-modal-screen,
   html[data-keyboard-open] [data-ai-concierge-dialog] {
     top: var(--app-visual-viewport-top) !important;

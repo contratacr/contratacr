@@ -81,7 +81,11 @@ export function useCustomCategories() {
 }
 
 export function useCategoryCatalogReady() {
-  const [ready, setReady] = useState(() => typeof window !== "undefined" && lastRefreshAt > 0);
+  // The server and the browser must render the same first frame. Module state
+  // can already be warm after a client navigation, but it does not exist in
+  // the server render and previously caused /servicios to hydrate into a
+  // different tree (skeleton on the server, catalog in the browser).
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;

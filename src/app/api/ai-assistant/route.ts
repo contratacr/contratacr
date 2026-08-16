@@ -75,7 +75,7 @@ function localeKey(value: unknown): Locale {
 }
 
 function normalizeText(value: string) {
-  return value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
 function includesAny(text: string, words: string[]) {
@@ -992,9 +992,22 @@ function normalizePayload(
     };
   }
   if (includesAny(normalized, ["cambiar mi contrasena", "cambio mi contrasena", "cambiar la contrasena de mi cuenta", "cambiar mi correo", "cambio mi correo", "cerrar mi cuenta", "change my password", "change my email", "close my account"])) {
+    const passwordIntent = includesAny(normalized, ["contrasena", "password"]);
+    const emailIntent = includesAny(normalized, ["correo", "email"]);
     return {
       ...payload,
       action: "open_dashboard",
+      answer: locale === "en"
+        ? passwordIntent
+          ? "Open Account & security in your dashboard to change your password securely."
+          : emailIntent
+            ? "Open Account & security in your dashboard to change your account email."
+            : "Open Account & security in your dashboard to disable or permanently delete your account."
+        : passwordIntent
+          ? "Abra Cuenta y seguridad en su panel para cambiar su contraseña de forma segura."
+          : emailIntent
+            ? "Abra Cuenta y seguridad en su panel para cambiar el correo de su cuenta."
+            : "Abra Cuenta y seguridad en su panel para deshabilitar o eliminar permanentemente su cuenta.",
       ctaLabel: locale === "en" ? "Open account settings" : "Ir a cuenta y seguridad",
     };
   }
@@ -1077,7 +1090,14 @@ function normalizePayload(
     };
   }
   if (includesAny(normalized, ["ver oportunidades", "donde veo oportunidades", "donde reviso oportunidades", "donde reviso las oportunidades", "mis oportunidades", "ver propuestas", "mis propuestas", "view opportunities", "my opportunities", "my proposals"])) {
-    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos" };
+    return {
+      ...payload,
+      action: "open_dashboard",
+      answer: locale === "en"
+        ? "Open Received projects in your professional dashboard to review opportunities related to your services and manage your proposals."
+        : "Abra Proyectos recibidos en su panel profesional para revisar oportunidades relacionadas con sus servicios y administrar sus propuestas.",
+      ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos",
+    };
   }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {
     return { ...payload, action: "support", ctaLabel: locale === "en" ? "Open support" : "Ir a soporte" };
@@ -1426,12 +1446,12 @@ async function realProfessionalMatches(payload: AssistantPayload, originalMessag
     cantonId: place?.type === "canton" ? place.id : undefined,
     modality: videoIntent ? "video" : place ? "in_person" : "any",
     query: category ? undefined : seed,
-  });
+  }, { fresh: true });
 
   // Keep the assistant useful if a legacy/test row has valid workplaces but its
   // denormalized search arrays have not been refreshed yet.
   if (professionals.length === 0 && category?.id && place) {
-    const serviceProfessionals = await searchProfessionals({ categoryId: category.id });
+    const serviceProfessionals = await searchProfessionals({ categoryId: category.id }, { fresh: true });
     professionals = serviceProfessionals.filter((professional) => {
       if (videoIntent && (professional.videoconsulta || professional.coverage?.country)) return true;
       return (professional.workplaces ?? []).some((workplace) => {

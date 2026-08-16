@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { CalendarCheck, CheckCircle2, ClipboardList, ExternalLink, Search, Users, Wrench } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 import { getInitials, formatRelativeOrDate } from "@/lib/utils";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
+import { getCategoryLabel } from "@/lib/data/categories";
 
 type Connection = {
   professionalId: string;
@@ -15,6 +17,7 @@ type Connection = {
   name: string;
   avatarUrl: string | null;
   isVerified: boolean;
+  categoryId: string | null;
   categoryLabel: string | null;
   lastInteractionAt: string | null;
   source: "booking" | "project" | "both";
@@ -23,26 +26,14 @@ type Connection = {
   count: number;
 };
 
-function sourceLabel(source: Connection["source"]) {
-  if (source === "booking") return "Solicitud";
-  if (source === "project") return "Proyecto";
-  return "Solicitud y proyecto";
-}
-
 function SourceIcon({ source }: { source: Connection["source"] }) {
   if (source === "project") return <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
   return <CalendarCheck className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
 }
 
-function statusLabel(status: string) {
-  if (status === "completed") return "Completado";
-  if (status === "awaiting_confirmation") return "Por confirmar";
-  if (status === "in_progress") return "En progreso";
-  if (status === "confirmed") return "Confirmado";
-  return "Conectado";
-}
-
 export function ClientConnections() {
+  const locale = useLocale();
+  const t = useTranslations("clientConnections");
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -62,12 +53,17 @@ export function ClientConnections() {
     queueMicrotask(() => void load());
   }, [load]);
 
-  const needle = query.trim().toLocaleLowerCase("es-CR");
-  const filtered = connections.filter((item) => !needle || [
+  const localeCode = locale === "en" ? "en-US" : "es-CR";
+  const needle = query.trim().toLocaleLowerCase(localeCode);
+  const localizedConnections = connections.map((item) => ({
+    ...item,
+    categoryLabel: item.categoryId ? getCategoryLabel(item.categoryId, locale) : item.categoryLabel,
+  }));
+  const filtered = localizedConnections.filter((item) => !needle || [
     item.name,
     item.categoryLabel,
     item.title,
-  ].some((value) => value?.toLocaleLowerCase("es-CR").includes(needle)));
+  ].some((value) => value?.toLocaleLowerCase(localeCode).includes(needle)));
 
   if (loading) return <PanelListSkeleton rows={3} withSearch hasData={connections.length > 0} />;
 
@@ -75,9 +71,9 @@ export function ClientConnections() {
     return (
       <PanelEmptyState
         icon={Users}
-        title="Aún no tienes conexiones"
-        description="Aquí aparecerán los profesionales con los que hayas tenido una solicitud confirmada o un proyecto aceptado."
-        action={<Button asChild><Link href="/buscar">Buscar profesionales</Link></Button>}
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
+        action={<Button asChild><Link href="/buscar">{t("searchProfessionals")}</Link></Button>}
       />
     );
   }
@@ -89,12 +85,12 @@ export function ClientConnections() {
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar profesional o servicio"
+          placeholder={t("searchPlaceholder")}
           className="h-11 w-full rounded-2xl border border-[#dfe8f0] bg-white pl-11 pr-4 text-sm font-semibold text-[#162543] outline-none focus:border-[#009FD9]"
         />
       </div>
       <p className="mb-3 text-sm font-semibold text-[#6b7280]">
-        {filtered.length} {filtered.length === 1 ? "conexión" : "conexiones"}
+        {t("count", { count: filtered.length })}
       </p>
       <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white divide-y divide-[#f3f4f6]">
         {filtered.map((item) => (
@@ -108,10 +104,20 @@ export function ClientConnections() {
                 <h3 className="flex min-w-0 items-center text-sm font-extrabold text-[#162543]">
                   <span className="truncate">{item.name}</span>
                   {item.isVerified && (
-                    <CheckCircle2 aria-label="Verificado" className="ml-1 h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                    <CheckCircle2 aria-label={t("verified")} className="ml-1 h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
                   )}
                 </h3>
-                <span className="shrink-0 rounded-full bg-[#eef8fd] px-2 py-0.5 text-[10px] font-bold text-[#0089bb]">{statusLabel(item.status)}</span>
+                <span className="shrink-0 rounded-full bg-[#eef8fd] px-2 py-0.5 text-[10px] font-bold text-[#0089bb]">
+                  {item.status === "completed"
+                    ? t("status.completed")
+                    : item.status === "awaiting_confirmation"
+                      ? t("status.awaitingConfirmation")
+                      : item.status === "in_progress"
+                        ? t("status.inProgress")
+                        : item.status === "confirmed"
+                          ? t("status.confirmed")
+                          : t("status.connected")}
+                </span>
               </div>
               <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-[#6b7280]">
                 {item.categoryLabel && (
@@ -122,18 +128,22 @@ export function ClientConnections() {
                 )}
                 <span className="inline-flex items-center gap-1">
                   <SourceIcon source={item.source} />
-                  {sourceLabel(item.source)}
+                  {item.source === "booking"
+                    ? t("source.booking")
+                    : item.source === "project"
+                      ? t("source.project")
+                      : t("source.both")}
                 </span>
               </div>
               {item.title && <p className="mt-1 truncate text-xs text-[#6b7280]">{item.title}</p>}
-              {item.lastInteractionAt && <p className="mt-1 text-[11px] font-medium text-[#9ca3af]">{formatRelativeOrDate(item.lastInteractionAt, "es")}</p>}
+              {item.lastInteractionAt && <p className="mt-1 text-[11px] font-medium text-[#9ca3af]">{formatRelativeOrDate(item.lastInteractionAt, locale)}</p>}
             </div>
             <div className="col-span-2 flex gap-2 sm:col-span-1 sm:shrink-0">
               {item.slug ? (
                 <Button variant="outline" size="sm" className="min-w-0 flex-1 rounded-xl sm:flex-none" asChild>
                   <Link href={`/profesionales/${item.slug}?from=${encodeURIComponent("/dashboard/cliente?tab=connections")}`} onClick={openInNewTabOnDesktop}>
                     <ExternalLink className="h-3.5 w-3.5" />
-                    Ver perfil
+                    {t("viewProfile")}
                   </Link>
                 </Button>
               ) : null}
@@ -141,7 +151,7 @@ export function ClientConnections() {
           </article>
         ))}
       </div>
-      {filtered.length === 0 && <p className="py-8 text-center text-sm font-semibold text-[#6b7280]">No encontramos conexiones con ese texto.</p>}
+      {filtered.length === 0 && <p className="py-8 text-center text-sm font-semibold text-[#6b7280]">{t("noResults")}</p>}
     </div>
   );
 }

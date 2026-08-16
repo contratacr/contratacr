@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       mobile_ref:
-        description: Branch or commit to test
+        description: The mobile branch or an exact deployed mobile commit SHA
         required: true
-        default: mobile/ios-capacitor
+        default: mobile
 
 permissions:
   contents: read
@@ -19,22 +19,60 @@ jobs:
   contracts:
     name: Mobile contracts and public environment
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    env:
+      MOBILE_BASE_URL: https://contratacr-mobile-test.vercel.app
     steps:
       - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.mobile_ref }}
+      - name: Validate mobile ref
+        shell: bash
+        env:
+          REQUESTED_MOBILE_REF: ${{ github.event.inputs.mobile_ref }}
+        run: |
+          set -euo pipefail
+          requested_ref="$REQUESTED_MOBILE_REF"
+          if [[ "$requested_ref" != "mobile" && ! "$requested_ref" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Mobile regression accepts only the mobile branch or an exact 40-character commit SHA."
+            exit 1
+          fi
+          echo "EXPECTED_MOBILE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run security:env
-      - run: npm run test:mobile:remote
-      - run: npx tsc --noEmit
+      - run: npm run mobile:validate -- --remote
+      - run: npx tsc --noEmit --pretty false
+      - name: Wait for the exact canonical mobile deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            health="$(curl --silent --show-error --location --fail \
+              -H "Cache-Control: no-cache" \
+              "$MOBILE_BASE_URL/api/health?expected=$EXPECTED_MOBILE_SHA&attempt=$attempt" \
+              2>/dev/null || true)"
+            deployed_sha="$(jq -er '.commitSha // empty' <<<"$health" 2>/dev/null || true)"
+
+            if [ "$deployed_sha" = "$EXPECTED_MOBILE_SHA" ]; then
+              echo "Canonical mobile deployment is ready at $EXPECTED_MOBILE_SHA."
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 60 ]; then
+              echo "::error::$MOBILE_BASE_URL did not reach $EXPECTED_MOBILE_SHA within 10 minutes (reported ${deployed_sha:-no SHA})."
+              exit 1
+            fi
+            echo "Waiting for the canonical mobile deployment ($attempt/60; reported ${deployed_sha:-no SHA})."
+            sleep 10
+          done
 
   android:
     name: Android lint, unit and emulator regression
+    needs: contracts
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -72,7 +110,7 @@ jobs:
           profile: pixel_4
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash scripts/run-android-native-regression.sh
+          script: cd android && ./gradlew connectedDebugAndroidTest
       - name: Upload Android reports and APK
         if: always()
         uses: actions/upload-artifact@v5
@@ -82,11 +120,11 @@ jobs:
             android/app/build/reports/
             android/app/build/outputs/apk/debug/
             android/app/build/outputs/androidTest-results/
-            build/android-device/
           if-no-files-found: ignore
 
   ios:
     name: iOS simulator build and launch regression
+    needs: contracts
     runs-on: macos-15
     timeout-minutes: 35
     steps:

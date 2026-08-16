@@ -43,7 +43,7 @@ export function ErrorScreen({
   children?: ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4 py-12 text-center">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-white px-4 py-12 text-center">
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a href="/" aria-label="ContrataCR inicio" className="mb-8 sm:mb-10">
         <BrandLogo />
@@ -67,6 +67,6 @@ export function ErrorScreen({
           {children}
         </div>
       )}
-    </div>
+    </main>
   );
 }

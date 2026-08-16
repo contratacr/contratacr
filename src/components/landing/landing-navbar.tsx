@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon,
-  Bot, Briefcase, Compass, Wrench,
-  UserRound, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
+  Briefcase, Compass, Wrench,
+  UserRound, UserRoundPlus, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -30,7 +30,6 @@ import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
-import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 
 /* --- Brand mark (the square "CR" icon) --- */
 export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
@@ -78,8 +77,8 @@ function useSlidingWords(words: string[], active: boolean) {
 
   useEffect(() => {
     if (!active || words.length <= 1) {
-      setSliding(false);
-      return;
+      const frame = window.requestAnimationFrame(() => setSliding(false));
+      return () => window.cancelAnimationFrame(frame);
     }
     let settleTimer: number | null = null;
     const id = window.setInterval(() => {
@@ -680,21 +679,14 @@ function PanelIconLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-function HeaderMessagesLink({ unreadCount, label }: { unreadCount: number; label: string }) {
+function HeaderIconLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
   return (
     <Link
-      href="/mensajes"
+      href={href}
       aria-label={label}
-      className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+      className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
     >
-      <span className="relative inline-flex">
-        <MessageSquareText className="h-5 w-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </span>
+      {children}
     </Link>
   );
 }
@@ -761,7 +753,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const pathname = usePathname();
   const currentSearchParams = useSearchParams();
   const nativeApp = useNativeApp();
-  const nativeMessageUnread = useDirectMessageUnread(nativeApp);
   const [hydrated, setHydrated] = useState(false);
   const nativeHeaderShell = hydrated && nativeApp;
   const nativeBottomShell = hydrated && nativeApp;
@@ -778,7 +769,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // hard refresh, usePathname can expose the home route as `/` or with its
   // locale prefix (`/es`, `/en`). Treat all three as home so the compact search
   // is controlled only by the hero sentinel, never by the URL representation.
-  const isHomePage = pathname === "/" || /^\/(?:es|en)\/?$/.test(pathname);
+  // next-intl mirrors Next's runtime behavior and can briefly return null while
+  // the client pathname settles. Default that unknown state to the safest home
+  // behavior so the compact search never flashes during hydration/refresh.
+  const isHomePage = !pathname || pathname === "/" || /^\/(?:es|en)\/?$/.test(pathname);
   const isMarketplaceEditor = /\/(?:empleos|ofertas)\/(?:publicar|[^/]+\/editar)\/?$/.test(pathname);
   const isMarketplaceRoute = /\/(?:empleos|ofertas)(?:\/|$)/.test(pathname);
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
@@ -814,29 +808,72 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       : currentSearchParams.get("q")?.trim() || "";
   const headerServiceLabel =
     explicitHeaderService || mobileSlidingService.current || nativeSearchServices[0] || (locale === "en" ? "electrician" : "electricista");
+  const headerCantonId = currentSearchParams.get("canton");
+  const headerProvinceId = currentSearchParams.get("provincia");
+  const headerLocationSuggestion = headerCantonId
+    ? allLocationSuggestions().find((location) => location.type === "canton" && location.id === headerCantonId) ?? null
+    : headerProvinceId
+      ? allLocationSuggestions().find((location) => location.type === "province" && location.id === headerProvinceId) ?? null
+      : null;
+  const explicitHeaderLocation = currentSearchParams.get("ubicacion")?.trim() ||
+    (headerLocationSuggestion?.type === "canton"
+      ? `${headerLocationSuggestion.label}, ${headerLocationSuggestion.sublabel}`
+      : headerLocationSuggestion?.label ?? "");
+  const headerLocationLabel = explicitHeaderLocation || "Costa Rica";
+  const headerLatitude = Number(currentSearchParams.get("lat"));
+  const headerLongitude = Number(currentSearchParams.get("lng"));
+  const headerCoordinates = useMemo(
+    () => Number.isFinite(headerLatitude) && Number.isFinite(headerLongitude)
+      ? { latitude: headerLatitude, longitude: headerLongitude }
+      : null,
+    [headerLatitude, headerLongitude],
+  );
+  const searchRouteHasContext = pathname === "/buscar" && Boolean(explicitHeaderService || explicitHeaderLocation);
   const headerNextServiceLabel = mobileSlidingService.next || headerServiceLabel;
   const headerServiceShouldSlide = !explicitHeaderService && showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim() && nativeSearchServices.length > 1;
   const hasSearchService = searchQuery.trim().length > 0 || !!searchCategoryId;
   const hasSearchLocation = navLocation.trim().length > 0 || !!navLocationSel || !!navCurrentCoords;
 
   useEffect(() => {
+    if (pathname !== "/buscar") return;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      setSearchQuery(explicitHeaderService);
+      setSearchCategoryId(headerCategoryId && headerCategoryId !== "todas" ? headerCategoryId : null);
+      setNavLocation(explicitHeaderLocation);
+      setNavLocationSel(headerLocationSuggestion);
+      setNavCurrentCoords(headerCoordinates);
+    });
+    return () => { active = false; };
+  }, [explicitHeaderLocation, explicitHeaderService, headerCategoryId, headerCoordinates, headerLocationSuggestion, pathname]);
+
+  useEffect(() => {
     queueMicrotask(() => setHydrated(true));
   }, []);
 
   useEffect(() => {
+    let active = true;
+    let frame: number | null = null;
     try {
       const raw = window.localStorage.getItem(CURRENT_LOCATION_STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as { latitude?: number; longitude?: number } | null;
       if (typeof parsed?.latitude !== "number" || typeof parsed?.longitude !== "number") return;
       const coords = { latitude: parsed.latitude, longitude: parsed.longitude };
-      setCurrentLocationSuggestions(nearbyLocationSuggestions(coords));
+      frame = window.requestAnimationFrame(() => {
+        if (active) setCurrentLocationSuggestions(nearbyLocationSuggestions(coords));
+      });
       void currentLocationSuggestionsFromCoords(coords).then((suggestions) => {
-        if (suggestions.length > 0) setCurrentLocationSuggestions(suggestions);
+        if (active && suggestions.length > 0) setCurrentLocationSuggestions(suggestions);
       });
     } catch {
       window.localStorage.removeItem(CURRENT_LOCATION_STORAGE_KEY);
     }
+    return () => {
+      active = false;
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   useEffect(() => {
@@ -914,6 +951,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const accountDisplayName =
     (hasResolvedAccountCapability ? accountCapability.businessName : "") || String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
   const nativePanelHref = user ? primaryPanelHref : loginHref;
+  const nativeMessagesHref = "/mensajes";
+
   useEffect(() => {
     let cancelled = false;
     if (!user) {
@@ -1075,25 +1114,30 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       const timeout = window.setTimeout(() => setCompact(false), 0);
       return () => window.clearTimeout(timeout);
     }
-    const sentinel = document.getElementById("hero-search-sentinel");
-    if (!sentinel) {
-      const handler = () => setCompact(window.scrollY > 300);
-      handler();
-      window.addEventListener("scroll", handler, { passive: true });
-      return () => window.removeEventListener("scroll", handler);
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // The sentinel starts below the viewport on shorter screens. That also
-        // means "not intersecting", but the hero search has not been passed yet.
-        // Activate only after the sentinel crosses above the fixed navbar.
-        setCompact(entry.boundingClientRect.top <= 64);
-      },
-      { threshold: 0, rootMargin: "-64px 0px 0px 0px" }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [compactEnabled]);
+    if (!isHomePage) return;
+
+    let frame: number | null = null;
+    const update = () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        const sentinel = document.getElementById("hero-search-sentinel");
+        // The compact search appears only after the primary hero search has
+        // crossed above the fixed 64px navbar. A scroll measurement is more
+        // reliable than observing the zero-height sentinel across refreshes.
+        setCompact(window.scrollY > 0 && (sentinel ? sentinel.getBoundingClientRect().top <= 64 : window.scrollY > 300));
+      });
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, [compactEnabled, isHomePage]);
 
   useEffect(() => {
     if (openMenu !== "categorias" && openMenu !== "explorar" && openMenu !== "recursos") return;
@@ -1140,7 +1184,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           : resolveLocation(navLocation);
     if (loc) {
       if (loc.type === "province") params.set("provincia", loc.id);
-      else params.set("canton", loc.id);
+      else {
+        params.set("provincia", loc.provinceId);
+        params.set("canton", loc.id);
+      }
     }
     if (activeCurrentCoords) {
       params.set("lat", activeCurrentCoords.latitude.toFixed(5));
@@ -1345,6 +1392,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   return (
     <>
       <header
+        data-testid="landing-navbar"
+        data-hydrated={hydrated ? "true" : "false"}
+        data-compact-search={effectiveCompact ? "visible" : "hidden"}
         className={cn(
           "ccr-app-header fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80",
           drawerOnly && "hidden",
@@ -1358,7 +1408,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             <div className={cn(
               "absolute left-0 right-0 top-0 h-16 min-[1200px]:hidden",
               nativeHeaderShell
-                ? "grid grid-cols-[96px_minmax(0,1fr)_96px] items-center gap-0"
+                ? "grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-0"
                 : "flex items-center gap-2",
             )}>
               <button
@@ -1383,8 +1433,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
               {nativeHeaderShell ? (
                 user ? (
-                  <div className="flex h-10 w-[88px] justify-self-end items-center justify-end gap-1">
-                    <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
+                  <div className="grid h-10 w-10 justify-self-end place-items-center">
                     <NotificationBell scope="all" />
                   </div>
                 ) : (
@@ -1411,9 +1460,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
                   >
                     <Search className="h-5 w-5 shrink-0 text-[#162543]" />
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
-                      {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
-                    </span>
+                    {searchRouteHasContext ? (
+                      <span data-testid="search-context-summary" className="flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden whitespace-nowrap text-[15px]">
+                        <span className="truncate font-extrabold text-[#162543]">
+                          {explicitHeaderService || (locale === "en" ? "Professionals" : "Profesionales")}
+                        </span>
+                        <span className="truncate font-medium text-[#8f9aaa]">{headerLocationLabel}</span>
+                      </span>
+                    ) : (
+                      <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
+                        {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                      </span>
+                    )}
                   </button>
                   {showSearchViewToggle && (
                     <button
@@ -1529,7 +1587,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <>
                   {/* Desktop compact search lives in the navbar flow, so it never covers links/actions. */}
                   <div
-                    className="mr-3 hidden min-w-0 flex-1 items-center transition-opacity duration-200 lg:flex xl:mr-4"
+                    className={cn(
+                      "mr-3 hidden min-w-0 flex-1 items-center transition-opacity duration-200 lg:flex xl:mr-4",
+                      !showDesktopCompactSearch && "invisible",
+                    )}
+                    aria-hidden={!showDesktopCompactSearch}
                     style={{ opacity: showDesktopCompactSearch ? 1 : 0, pointerEvents: showDesktopCompactSearch ? "auto" : "none" }}
                   >
                     <form onSubmit={handleCompactSearch} className="flex min-w-0 flex-1">
@@ -1736,7 +1798,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </Link>
                     )}
                     {nativeApp && (
-                      <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
+                      <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
+                        <MessageSquareText className="h-5 w-5" />
+                      </HeaderIconLink>
                     )}
                     <NotificationBell scope="all" />
                     <AccountMenu
@@ -2011,8 +2075,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Link
                   href="/registro/profesional"
                   onClick={() => setMobileOpen(false)}
-                  className={cn(mobileDrawerItemClass, "pl-[52px] text-[#009FD9] hover:bg-[#EBF5FB]")}
+                  className={cn(mobileDrawerItemClass, "text-[#009FD9] hover:bg-[#EBF5FB]")}
                 >
+                  <DrawerIcon><UserRoundPlus /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
                 </Link>
               )}
@@ -2130,34 +2195,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
             className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-1.5 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] min-[360px]:px-2"
           >
-            <div className="mx-auto grid w-full max-w-[520px] grid-cols-[repeat(5,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
+            <div className="mx-auto grid w-full max-w-[430px] grid-cols-[repeat(3,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
+              <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
+                <UserRound className="h-5 w-5" />
+                <span className="max-w-full truncate">Panel</span>
+              </Link>
               <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
                 <Search className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
-              <Link href="/ofertas" onPointerDown={() => prepareNativeNavigation("/ofertas")} className={nativeBottomNavClass("/ofertas")}>
-                <OfferTagPercentIcon className="h-5 w-5" />
-                <span className="max-w-full truncate">{locale === "en" ? "Deals" : "Ofertas"}</span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setNativePendingHref("assistant");
-                  window.dispatchEvent(new Event("contratacr:open-ai"));
-                }}
-                className={nativeBottomNavClass("assistant")}
-                aria-label={locale === "en" ? "Open assistant" : "Abrir asistente"}
-              >
-                <Bot className="h-5 w-5" />
-                <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>
-              </button>
-              <Link href="/empleos" onPointerDown={() => prepareNativeNavigation("/empleos")} className={nativeBottomNavClass("/empleos")}>
-                <Briefcase className="h-5 w-5" />
-                <span className="max-w-full truncate">{locale === "en" ? "Jobs" : "Empleos"}</span>
-              </Link>
-              <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
-                <UserRound className="h-5 w-5" />
-                <span className="max-w-full truncate">Panel</span>
+              <Link href={nativeMessagesHref} onPointerDown={() => prepareNativeNavigation(nativeMessagesHref)} className={nativeBottomNavClass(nativeMessagesHref)}>
+                <MessageSquareText className="h-5 w-5" />
+                <span className="max-w-full truncate">{locale === "en" ? "Messages" : "Mensajes"}</span>
               </Link>
             </div>
           </nav>

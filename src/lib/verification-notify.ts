@@ -117,7 +117,11 @@ export async function notifyVerificationDecision({
       type,
       title,
       message,
-      data: { link: PRO_LINK },
+      data: {
+        link: PRO_LINK,
+        verification_decision: kind,
+        ...(reason?.trim() ? { review_reason: reason.trim() } : {}),
+      },
     };
     await admin.from("notifications").insert(notification);
     await sendNotificationPush({
@@ -158,7 +162,11 @@ export async function notifyAppealReceived(
       type: "verification_appeal_received",
       title: "Nueva apelación de verificación",
       message: `${providerName} apeló su revisión: "${appealMessage.slice(0, 120)}"`,
-      data: { link: `/es/admin/proveedores/${professionalId}` },
+      data: {
+        link: `/es/admin/proveedores/${professionalId}`,
+        provider_name: providerName,
+        appeal_message: appealMessage.slice(0, 120),
+      },
     }));
     if (rows.length > 0) {
       await admin.from("notifications").insert(rows);

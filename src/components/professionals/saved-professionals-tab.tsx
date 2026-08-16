@@ -5,14 +5,15 @@ import { Bookmark, BriefcaseBusiness, ExternalLink, MapPin, Star, Tag, Trash2, V
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { PanelListSkeleton } from "@/components/ui/content-loading";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { formatServicePrice } from "@/lib/pricing";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsavePro, type SavedPro } from "./save-button";
+import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsaveProRemote, type SavedPro } from "./save-button";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
+import { getProfessionalDisplayName } from "@/lib/display-name";
 
 type SavedFilter = "professionals" | "offers" | "jobs";
 type SavedItemKind = "offer" | "job";
@@ -36,22 +37,23 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
   const isVideoConsult = !physicalLocationLabel && (pro.videoconsulta || pro.coverage?.country);
   const locationLabel = physicalLocationLabel
     || (isVideoConsult ? tSaved("videoConsult") : tSaved("locationUnavailable"));
+  const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName).primaryDesktop;
 
   return (
     <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-3 gap-y-4 p-4 transition-colors hover:bg-[#fafafa] sm:flex sm:items-center sm:gap-4">
       <div className="relative shrink-0">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-[#EBF5FB] text-lg font-bold text-[#009FD9] sm:h-14 sm:w-14">
           {pro.avatarUrl ? (
-            <img src={pro.avatarUrl} alt={pro.fullName} className="h-full w-full object-cover" />
+            <img src={pro.avatarUrl} alt={displayName} className="h-full w-full object-cover" />
           ) : (
-            pro.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2)
+            displayName.split(" ").map((n) => n[0]).join("").slice(0, 2)
           )}
         </div>
       </div>
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-sm font-semibold leading-5 text-[#162543]">{pro.fullName}</span>
+          <span className="text-sm font-semibold leading-5 text-[#162543]">{displayName}</span>
           {pro.isVerified && (
             <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
               {tCard("verifiedShort")}
@@ -104,9 +106,10 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
 }
 
 function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item: SavedItem) => void }) {
+  const t = useTranslations("savedPros");
   const snapshot = item.snapshot ?? {};
   const isJob = item.item_type === "job";
-  const title = text(snapshot.title, isJob ? "Empleo favorito" : "Oferta favorita");
+  const title = text(snapshot.title, isJob ? t("favoriteJob") : t("favoriteOffer"));
   const owner = text(snapshot.employer_name ?? snapshot.professional_name, "ContrataCR");
   const image = text(snapshot.image_url ?? snapshot.employer_avatar_url);
   const meta = isJob
@@ -123,7 +126,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-[#eef7fb] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#007fae]">
-            {isJob ? "Empleo" : "Oferta"}
+            {isJob ? t("jobBadge") : t("offerBadge")}
           </span>
         </div>
         <h3 className="mt-1 truncate text-sm font-extrabold text-[#162543]">{title}</h3>
@@ -134,13 +137,13 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
         <Button variant="outline" size="sm" className="min-w-0 flex-1 sm:flex-none" asChild>
           <Link href={href}>
             <ExternalLink className="h-3.5 w-3.5" />
-            Ver
+            {t("view")}
           </Link>
         </Button>
         <button
           type="button"
           onClick={() => onRemove(item)}
-          aria-label="Quitar de favoritos"
+          aria-label={t("unsave")}
           className="rounded-xl p-2 text-[#8fa1b6] transition-colors hover:bg-red-50 hover:text-red-500"
         >
           <Trash2 className="h-4 w-4" />
@@ -199,12 +202,7 @@ export function SavedProfessionalsTab() {
 
   async function handleUnsavePro(id: string) {
     if (user) {
-      unsavePro(id, user.id);
-      await createClient()
-        .from("saved_professionals")
-        .delete()
-        .eq("client_id", user.id)
-        .eq("professional_id", id);
+      await unsaveProRemote(id, user.id);
     }
     setSavedPros((prev) => prev.filter((p) => p.id !== id));
   }
@@ -235,28 +233,23 @@ export function SavedProfessionalsTab() {
 
   if (!mounted || authLoading) return <PanelListSkeleton rows={3} hasData={total > 0} />;
 
-  if (total === 0) {
-    return (
-      <PanelEmptyState
-        icon={Bookmark}
-        title="No tienes favoritos"
-        description="Guarda profesionales, ofertas y empleos para volver a encontrarlos rápido."
-        action={<Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button>}
-      />
-    );
-  }
-
   const tabs = availableFilters.map((id) => ({ id }));
   const tabLabels: Record<string, string> = {
-    professionals: "Profesionales",
-    offers: "Ofertas",
-    jobs: "Empleos",
+    professionals: t("professionalsTab"),
+    offers: t("offersTab"),
+    jobs: t("jobsTab"),
   };
   const tabCounts = {
     professionals: savedPros.length,
     offers: offers.length,
     jobs: jobs.length,
   };
+  const selectedCount = showPros ? savedPros.length : showOffers ? offers.length : jobs.length;
+  const selectedEmptyLabel = showPros
+    ? t("emptyProfessionals")
+    : showOffers
+      ? t("emptyOffers")
+      : t("emptyJobs");
 
   return (
     <div className="ccr-native-safe-list-end space-y-4">
@@ -272,6 +265,15 @@ export function SavedProfessionalsTab() {
         {showPros && savedPros.map((pro) => <SavedProCard key={`pro-${pro.id}`} pro={pro} onUnsave={handleUnsavePro} />)}
         {showOffers && offers.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
         {showJobs && jobs.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
+        {selectedCount === 0 && (
+          <div className="space-y-3 px-4 py-8 text-center">
+            <Bookmark className="mx-auto h-7 w-7 text-[#009FD9]" aria-hidden="true" />
+            <p className="text-sm font-semibold text-[#6b7280]">{selectedEmptyLabel}</p>
+            {showPros && (
+              <Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

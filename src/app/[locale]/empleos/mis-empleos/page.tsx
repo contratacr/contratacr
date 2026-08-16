@@ -24,5 +24,9 @@ export default async function MyJobsPage() {
       applicant_name: repairVisibleText((application.profiles as { full_name?: string } | null)?.full_name || "Postulante"),
     })),
   })) as Array<JobPost & { applications: Array<{ id: string; status: string; created_at: string; cover_letter: string; applicant_email: string | null; phone: string | null; resume_url: string | null; portfolio_url: string | null; applicant_name: string }> }>;
-  return <JobsManager initialJobs={jobs} />;
+  return (
+    <main data-route-content="jobs-manager">
+      <JobsManager initialJobs={jobs} />
+    </main>
+  );
 }

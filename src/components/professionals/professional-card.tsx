@@ -149,12 +149,18 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   // "Consultar precio" has no "/" and renders whole in grey.
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
   const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix } = splitPricingLabel(priceLabel);
+  const mobileIsPriceOnRequest = Boolean(priceLabel && !priceUnit && !priceTaxSuffix);
+  const mobilePricePrimary = mobileIsPriceOnRequest
+    ? (locale === "en" ? "Price" : "Precio")
+    : priceAmount;
+  const mobilePriceSecondary = mobileIsPriceOnRequest
+    ? (locale === "en" ? "On request" : "A consultar")
+    : [priceUnit, priceTaxSuffix].filter(Boolean).join(" · ");
   const priceBoxClass = "max-w-[48%]";
-  const priceFitsWithService = displayProfessions.length <= 1;
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = mobileDisplayProfessions.length - mobileProfessionList.length;
   const mobileServiceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]";
-  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 text-[10px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
+  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 translate-y-px items-baseline leading-none text-[12px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
@@ -188,42 +194,9 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   const casesLabel = locale === "en"
     ? `${portfolioCount} success ${portfolioCount === 1 ? "case" : "cases"}`
     : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
-  const followersLabel = locale === "en"
-    ? `${followerCount} ${followerCount === 1 ? "follower" : "followers"}`
-    : `${followerCount} ${followerCount === 1 ? "seguidor" : "seguidores"}`;
-  const experienceLabel = locale === "en"
-    ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"} experience`
-    : `${yearsExperience} ${yearsExperience === 1 ? "año" : "años"} experiencia`;
-  const splitMetricLabel = (label: string) => {
-    const [value, ...rest] = label.split(" ");
-    return { value, text: rest.join(" ") };
-  };
-  const followersMetric = splitMetricLabel(followersLabel);
-  const casesMetric = splitMetricLabel(casesLabel);
-  const experienceMetric = splitMetricLabel(experienceLabel);
-  const metricIconClass = "h-3.5 w-3.5 shrink-0 text-[#009FD9]";
-  const metricIconWrapClass = "inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center";
-  const metricNumberClass = "shrink-0 text-[13px] font-semibold leading-none tabular-nums text-[#162543]";
-  const metricTextClass = "min-w-0 whitespace-nowrap text-[11px] font-medium leading-none text-[#5f6f86]";
-  const secondaryMetricClass = "relative z-10 inline-flex min-w-0 items-center justify-center gap-1 py-1.5 text-center transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
-  const starFillPercent = Math.max(0, Math.min(5, professional.ratingAvg)) * 20;
   const ratingLabel = professional.reviewCount > 0
     ? tCard("reviewsCount", { count: professional.reviewCount })
     : tCard("noReviews");
-  const ratingStars = (
-    <span className="relative inline-flex h-4 w-[4.5rem] shrink-0 items-center" aria-hidden>
-      <span className="absolute inset-0 inline-flex items-center gap-0.5 text-[#d5dde8]">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <Star key={`empty-star-${index}`} className="h-3.5 w-3.5 fill-current" />
-        ))}
-      </span>
-      <span className="absolute inset-y-0 left-0 inline-flex items-center gap-0.5 overflow-hidden text-[#f59e0b]" style={{ width: `${starFillPercent}%` }}>
-        {Array.from({ length: 5 }).map((_, index) => (
-          <Star key={`filled-star-${index}`} className="h-3.5 w-3.5 shrink-0 fill-current" />
-        ))}
-      </span>
-    </span>
-  );
   const desktopMetricClass = "relative z-10 inline-flex min-w-0 items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
   const desktopMetric = (() => {
     if (highlightMetric === "successCases") {
@@ -281,16 +254,22 @@ export async function ProfessionalCard({ professional, className, highlightMetri
     </div>
   ) : null;
   const mobilePrice = priceLabel ? (
-    <div className="ml-auto min-w-0 shrink-0 text-right leading-none">
-      <span className="block max-w-[12.75rem] truncate whitespace-nowrap leading-none">
-        <span className="text-[12px] font-bold text-[#009FD9]">{priceAmount}</span>
-        {priceUnit && <span className="text-[10px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
-        {priceTaxSuffix && <span className="text-[9px] font-semibold tracking-wide text-[#9ca3af]"> {priceTaxSuffix}</span>}
-      </span>
-    </div>
+    <span
+      data-testid="professional-card-mobile-price-primary"
+      aria-label={priceLabel}
+      className="ml-auto shrink-0 whitespace-nowrap text-right text-[12px] font-bold leading-none text-[#009FD9]"
+    >
+      {mobilePricePrimary}
+    </span>
   ) : null;
-  const mobilePriceInlineWithService = mobileProfessionList.length <= 1;
-  const mobilePriceInlineWithReviews = !mobilePriceInlineWithService;
+  const mobilePriceDetail = mobilePriceSecondary ? (
+    <span
+      data-testid="professional-card-mobile-price-secondary"
+      className="ml-auto shrink-0 whitespace-nowrap text-right text-[10px] font-medium leading-none text-[#9ca3af]"
+    >
+      {mobilePriceSecondary}
+    </span>
+  ) : null;
 
   // Location data for the schedule's location control (now rendered in the LEFT
   // column under the rating — see ProfessionalSchedule). The per-place TABS +
@@ -353,13 +332,13 @@ export async function ProfessionalCard({ professional, className, highlightMetri
               </div>
               {(displayProfessions.length > 0 || professional.isFeatured) && (
                 <div
-                  className={`mt-1 flex w-full min-w-0 max-w-full items-baseline gap-2 overflow-hidden lg:hidden ${mobilePriceInlineWithService && mobilePrice ? "justify-between" : ""}`}
+                  className="mt-1 flex w-full min-w-0 max-w-full items-baseline justify-between gap-2 overflow-hidden lg:hidden"
                   data-testid="professional-card-service-summary"
                   data-service-summary-version="mobile-under-verified-v1"
                 >
                   <div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
                     {mobileProfessionList.map((cat, index) => (
-                      <div key={`mobile-service-row-${cat}`} className="flex min-w-0 items-center gap-1.5">
+                      <div key={`mobile-service-row-${cat}`} className="flex min-w-0 items-baseline gap-0.5">
                         <span
                           data-testid="professional-card-mobile-service"
                           data-full-label="true"
@@ -393,11 +372,14 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                       </span>
                     )}
                   </div>
-                  {mobilePriceInlineWithService ? mobilePrice : null}
+                  {mobilePrice}
                 </div>
               )}
-              {(professional.reviewCount > 0 || mobilePriceInlineWithReviews) && (
-                <div className="mt-1.5 flex min-w-0 items-center gap-2 lg:hidden">
+              {(professional.reviewCount > 0 || mobilePriceDetail) && (
+                <div
+                  data-testid="professional-card-mobile-meta-row"
+                  className="mt-1.5 flex min-w-0 items-center justify-between gap-2 lg:hidden"
+                >
                   {professional.reviewCount > 0 ? (
                     <Link
                       href={reviewsHref}
@@ -411,7 +393,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                   ) : (
                     <div />
                   )}
-                  {mobilePriceInlineWithReviews ? <div className="ml-auto">{mobilePrice}</div> : null}
+                  {mobilePriceDetail}
                 </div>
               )}
             </div>

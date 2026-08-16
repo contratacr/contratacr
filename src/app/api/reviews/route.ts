@@ -104,6 +104,12 @@ export async function POST(req: NextRequest) {
   if (reviewContactId) existingQuery = existingQuery.eq("whatsapp_contact_id", reviewContactId);
   else if (reviewBookingId) existingQuery = existingQuery.eq("booking_id", reviewBookingId);
   else if (reviewProjectId) existingQuery = existingQuery.eq("project_id", reviewProjectId);
+  else {
+    existingQuery = existingQuery
+      .is("whatsapp_contact_id", null)
+      .is("booking_id", null)
+      .is("project_id", null);
+  }
 
   const { data: existing } = await existingQuery.limit(1).maybeSingle();
 
@@ -207,6 +213,8 @@ export async function POST(req: NextRequest) {
         link: `/es/profesionales/${targetPro.slug}?tab=resenas#resenas`,
         professional_id: professionalId,
         review_id: insertedReview.id,
+        client_name: clientName,
+        rating: Number(rating),
       },
     };
     const { error: notificationError } = await admin.from("notifications").insert(notification);

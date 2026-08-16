@@ -1,6 +1,8 @@
+import { createHash } from "node:crypto";
 import { expect, test } from "playwright/test";
 import { apiJson, expectNoHorizontalOverflow, gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
+import { getCategoryLabel } from "../../src/lib/data/categories";
 
 type IdResponse = { id?: string; success?: boolean; error?: string };
 type ListResponse<T> = { bookings?: T[]; projects?: T[]; proposals?: T[]; error?: string };
@@ -22,6 +24,125 @@ type CategorySuggestionRow = {
   approved?: boolean | null;
   suggested_by?: string | null;
 };
+
+type RegressionSchedule = {
+  professionalDate: string;
+  professionalTime: string;
+  professionalSecondTime: string;
+  videoDate: string;
+  videoSharedTime: string;
+  videoSecondTime: string;
+  slotIds: string[];
+};
+
+// Cleanup and occupied calendar moments must be scoped to this execution. A
+// broad `E2E Regression%` delete or the canonical seed's two fixed slots lets a
+// focused local run interfere with CI. GitHub's run id remains stable across a
+// serial retry; local processes receive an independent high-entropy key.
+const regressionRunKey = process.env.GITHUB_RUN_ID
+  ? `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT ?? "1"}`
+  : `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+let regressionRowPrefix = `E2E Regression ${regressionRunKey}`;
+
+function regressionMarker(kind: string) {
+  return `${regressionRowPrefix} ${kind} ${Date.now()}`;
+}
+
+function stableNumber(key: string, modulo: number) {
+  return Number.parseInt(createHash("sha256").update(key).digest("hex").slice(0, 8), 16) % modulo;
+}
+
+function stableUuid(key: string) {
+  const hex = createHash("sha256").update(key).digest("hex").slice(0, 32);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+
+function futureDate(days: number) {
+  const date = new Date();
+  date.setUTCHours(12, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function minuteLabel(totalMinutes: number) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+async function allocateRegressionSchedule(seed: RegressionSeedState, scope: string): Promise<RegressionSchedule> {
+  const admin = regressionAdminClient();
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const candidate = `${scope}-${attempt}`;
+    const professionalDate = futureDate(45 + stableNumber(`${candidate}:professional-date`, 270));
+    const videoDate = futureDate(45 + stableNumber(`${candidate}:video-date`, 270));
+    const professionalMinute = 8 * 60 + stableNumber(`${candidate}:professional-time`, 8 * 60);
+    const videoMinute = 8 * 60 + stableNumber(`${candidate}:video-time`, 8 * 60);
+    const professionalTime = minuteLabel(professionalMinute);
+    const professionalSecondTime = minuteLabel(professionalMinute + 60);
+    const videoSharedTime = minuteLabel(videoMinute);
+    const videoSecondTime = minuteLabel(videoMinute + 60);
+    const slotIds = Array.from({ length: 5 }, (_, index) => stableUuid(`${candidate}:slot:${index}`));
+    const { error } = await admin.from("availability_slots").upsert([
+      {
+        id: slotIds[0],
+        professional_id: seed.professionalId,
+        slot_date: professionalDate,
+        slot_time: professionalTime,
+        category_id: seed.categoryId,
+        location_id: seed.slotLocationId,
+      },
+      {
+        id: slotIds[1],
+        professional_id: seed.professionalId,
+        slot_date: professionalDate,
+        slot_time: professionalSecondTime,
+        category_id: seed.categoryId,
+        location_id: seed.slotLocationId,
+      },
+      {
+        id: slotIds[2],
+        professional_id: seed.videoProfessionalId,
+        slot_date: videoDate,
+        slot_time: videoSharedTime,
+        category_id: seed.videoCategoryId,
+        location_id: "videoconsulta",
+      },
+      {
+        id: slotIds[3],
+        professional_id: seed.videoProfessionalId,
+        slot_date: videoDate,
+        slot_time: videoSharedTime,
+        category_id: seed.videoCategoryId,
+        location_id: seed.videoPhysicalLocationId,
+      },
+      {
+        id: slotIds[4],
+        professional_id: seed.videoProfessionalId,
+        slot_date: videoDate,
+        slot_time: videoSecondTime,
+        category_id: seed.videoCategoryId,
+        location_id: "videoconsulta",
+      },
+    ], { onConflict: "id" });
+
+    if (!error) {
+      return {
+        professionalDate,
+        professionalTime,
+        professionalSecondTime,
+        videoDate,
+        videoSharedTime,
+        videoSecondTime,
+        slotIds,
+      };
+    }
+    if (error.code !== "23505") throw error;
+  }
+
+  throw new Error(`Could not allocate an isolated regression schedule for ${scope}`);
+}
 
 async function expectNotification(
   userId: string,
@@ -56,13 +177,105 @@ async function expectNotification(
 test.describe.configure({ mode: "serial" });
 
 test.describe("@seeded core regression", () => {
-  test.skip(!canRunSeededRegression(), "Set E2E_SEED=1 with the test Supabase secrets to run seeded regression.");
+  test.skip(!canRunSeededRegression(), "Set E2E_FIXTURES_READY=1 with the test Supabase secrets to run seeded regression.");
 
   let seed: RegressionSeedState;
+  let schedule: RegressionSchedule | undefined;
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({}, workerInfo) => {
+    const projectScope = workerInfo.project.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+    regressionRowPrefix = `E2E Regression ${regressionRunKey} ${projectScope}`;
     seed = await ensureRegressionSeed();
+    schedule = await allocateRegressionSchedule(seed, `${regressionRunKey}-${projectScope}`);
   });
+
+  test.afterAll(async () => {
+    if (!schedule?.slotIds.length) return;
+    const admin = regressionAdminClient();
+    const { error: slotError } = await admin.from("availability_slots").delete().in("id", schedule.slotIds);
+    if (slotError) throw slotError;
+    const { error: auditError } = await admin
+      .from("user_action_audit")
+      .delete()
+      .eq("entity_table", "availability_slots")
+      .in("entity_id", schedule.slotIds);
+    if (auditError) throw auditError;
+  });
+
+  async function cleanupGeneratedRows() {
+    const admin = regressionAdminClient();
+    const actorIds = [seed.clientId, seed.professionalUserId];
+    const { data: bookings, error: bookingsLookupError } = await admin
+      .from("bookings")
+      .select("id")
+      .in("client_id", actorIds)
+      .ilike("service_description", `${regressionRowPrefix}%`);
+    if (bookingsLookupError) throw bookingsLookupError;
+    for (const booking of bookings ?? []) {
+      const { error } = await admin.from("notifications").delete().contains("data", { booking_id: booking.id });
+      if (error) throw error;
+      const { error: interactionError } = await admin.from("interaction_events").delete().contains("metadata", { booking_id: booking.id });
+      if (interactionError) throw interactionError;
+    }
+    if (bookings?.length) {
+      const bookingIds = bookings.map((booking) => booking.id);
+      const { error: deleteError } = await admin.from("bookings").delete().in("id", bookingIds);
+      if (deleteError) throw deleteError;
+      const { error: auditError } = await admin
+        .from("user_action_audit")
+        .delete()
+        .eq("entity_table", "bookings")
+        .in("entity_id", bookingIds);
+      if (auditError) throw auditError;
+    }
+
+    const { data: projects, error: projectsLookupError } = await admin
+      .from("projects")
+      .select("id")
+      .in("client_id", actorIds)
+      .ilike("title", `${regressionRowPrefix}%`);
+    if (projectsLookupError) throw projectsLookupError;
+    if (projects?.length) {
+      const projectIds = projects.map((project) => project.id);
+      for (const projectId of projectIds) {
+        const { error } = await admin.from("notifications").delete().contains("data", { project_id: projectId });
+        if (error) throw error;
+        const { error: interactionError } = await admin.from("interaction_events").delete().contains("metadata", { project_id: projectId });
+        if (interactionError) throw interactionError;
+      }
+      const { data: proposals, error: proposalsLookupError } = await admin
+        .from("proposals")
+        .select("id")
+        .in("project_id", projectIds);
+      if (proposalsLookupError) throw proposalsLookupError;
+      if (proposals?.length) {
+        const proposalIds = proposals.map((proposal) => proposal.id);
+        for (const proposalId of proposalIds) {
+          const { error: interactionError } = await admin.from("interaction_events").delete().contains("metadata", { proposal_id: proposalId });
+          if (interactionError) throw interactionError;
+        }
+        const { error: proposalDeleteError } = await admin.from("proposals").delete().in("id", proposalIds);
+        if (proposalDeleteError) throw proposalDeleteError;
+        const { error: proposalAuditError } = await admin
+          .from("user_action_audit")
+          .delete()
+          .eq("entity_table", "proposals")
+          .in("entity_id", proposalIds);
+        if (proposalAuditError) throw proposalAuditError;
+      }
+      const { error: projectDeleteError } = await admin.from("projects").delete().in("id", projectIds);
+      if (projectDeleteError) throw projectDeleteError;
+      const { error: projectAuditError } = await admin
+        .from("user_action_audit")
+        .delete()
+        .eq("entity_table", "projects")
+        .in("entity_id", projectIds);
+      if (projectAuditError) throw projectAuditError;
+    }
+  }
+
+  test.beforeEach(cleanupGeneratedRows);
+  test.afterEach(cleanupGeneratedRows);
 
   test("email-change states render cleanly without stacking duplicate messages", async ({ page }) => {
     await gotoOK(page, "/es/login?emailChanged=1");
@@ -88,20 +301,43 @@ test.describe("@seeded core regression", () => {
       }
     });
     const admin = regressionAdminClient();
-    const subject = `E2E Regression support ${Date.now()}`;
+    const subject = regressionMarker("support");
     const firstMessage = "Necesito ayuda con una prueba automatizada de soporte.";
     const autoMessage = "Gracias, recibimos su tiquete de soporte. Nuestro equipo lo revisará y le responderá lo antes posible.";
+    let insertedMessageIds: string[] = [];
 
     const { data: staleTickets, error: staleError } = await admin
       .from("support_tickets")
       .select("id")
       .eq("user_id", seed.clientId)
-      .ilike("subject", "E2E Regression support%");
+      .ilike("subject", `${regressionRowPrefix} support%`);
     if (staleError) throw staleError;
     const staleIds = (staleTickets ?? []).map((ticket) => ticket.id).filter(Boolean);
     if (staleIds.length > 0) {
-      await admin.from("support_ticket_messages").delete().in("ticket_id", staleIds);
-      await admin.from("support_tickets").delete().in("id", staleIds);
+      const { data: staleMessages, error: staleMessagesLookupError } = await admin
+        .from("support_ticket_messages")
+        .select("id")
+        .in("ticket_id", staleIds);
+      if (staleMessagesLookupError) throw staleMessagesLookupError;
+      const staleMessageIds = (staleMessages ?? []).map((message) => message.id);
+      const { error: staleMessagesDeleteError } = await admin.from("support_ticket_messages").delete().in("ticket_id", staleIds);
+      if (staleMessagesDeleteError) throw staleMessagesDeleteError;
+      if (staleMessageIds.length) {
+        const { error: staleMessageAuditError } = await admin
+          .from("user_action_audit")
+          .delete()
+          .eq("entity_table", "support_ticket_messages")
+          .in("entity_id", staleMessageIds);
+        if (staleMessageAuditError) throw staleMessageAuditError;
+      }
+      const { error: staleTicketsDeleteError } = await admin.from("support_tickets").delete().in("id", staleIds);
+      if (staleTicketsDeleteError) throw staleTicketsDeleteError;
+      const { error: staleTicketAuditError } = await admin
+        .from("user_action_audit")
+        .delete()
+        .eq("entity_table", "support_tickets")
+        .in("entity_id", staleIds);
+      if (staleTicketAuditError) throw staleTicketAuditError;
     }
 
     const now = new Date().toISOString();
@@ -123,7 +359,7 @@ test.describe("@seeded core regression", () => {
     if (ticketError || !ticket?.id) throw ticketError ?? new Error("Could not seed support ticket.");
 
     try {
-      const { error: messagesError } = await admin.from("support_ticket_messages").insert([
+      const { data: insertedMessages, error: messagesError } = await admin.from("support_ticket_messages").insert([
         {
           ticket_id: ticket.id,
           sender_role: "user",
@@ -137,8 +373,9 @@ test.describe("@seeded core regression", () => {
           sender_name: "Soporte ContrataCR",
           body: autoMessage,
         },
-      ]);
+      ]).select("id");
       if (messagesError) throw messagesError;
+      insertedMessageIds = (insertedMessages ?? []).map((message) => message.id);
 
       await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
       await gotoOK(page, `/es/dashboard/profesional?tab=soporte&mode=use&ticket=${ticket.id}`);
@@ -149,8 +386,24 @@ test.describe("@seeded core regression", () => {
       await expectNoHorizontalOverflow(page);
       expect(renderWarnings, "Support ticket reads must not update the dashboard during render").toEqual([]);
     } finally {
-      await admin.from("support_ticket_messages").delete().eq("ticket_id", ticket.id);
-      await admin.from("support_tickets").delete().eq("id", ticket.id);
+      const { error: messagesDeleteError } = await admin.from("support_ticket_messages").delete().eq("ticket_id", ticket.id);
+      if (messagesDeleteError) throw messagesDeleteError;
+      if (insertedMessageIds.length) {
+        const { error: messageAuditError } = await admin
+          .from("user_action_audit")
+          .delete()
+          .eq("entity_table", "support_ticket_messages")
+          .in("entity_id", insertedMessageIds);
+        if (messageAuditError) throw messageAuditError;
+      }
+      const { error: ticketDeleteError } = await admin.from("support_tickets").delete().eq("id", ticket.id);
+      if (ticketDeleteError) throw ticketDeleteError;
+      const { error: ticketAuditError } = await admin
+        .from("user_action_audit")
+        .delete()
+        .eq("entity_table", "support_tickets")
+        .eq("entity_id", ticket.id);
+      if (ticketAuditError) throw ticketAuditError;
     }
   });
 
@@ -225,7 +478,7 @@ test.describe("@seeded core regression", () => {
   });
 
   test("client booking flow creates a request, blocks double booking, and supports completion", async ({ page }) => {
-    const marker = `E2E Regression booking ${Date.now()}`;
+    const marker = regressionMarker("booking");
 
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const created = await apiJson<IdResponse>(page, "/api/bookings", {
@@ -236,10 +489,10 @@ test.describe("@seeded core regression", () => {
         clientEmail: E2E_USERS.client.email,
         clientPhone: E2E_USERS.client.phone,
         serviceDescription: marker,
-        scheduledDate: seed.slotDate,
-        scheduledTime: seed.slotTime,
+        scheduledDate: schedule!.professionalDate,
+        scheduledTime: schedule!.professionalTime,
         categoryId: seed.categoryId,
-        slotLocationId: "e2e-main",
+        slotLocationId: seed.slotLocationId,
         slotLocationLabel: "Alajuela, Alajuela",
       },
     });
@@ -255,8 +508,8 @@ test.describe("@seeded core regression", () => {
         clientEmail: E2E_USERS.client.email,
         clientPhone: E2E_USERS.client.phone,
         serviceDescription: `${marker} duplicate`,
-        scheduledDate: seed.slotDate,
-        scheduledTime: seed.slotTime,
+        scheduledDate: schedule!.professionalDate,
+        scheduledTime: schedule!.professionalTime,
         categoryId: seed.categoryId,
       },
     });
@@ -288,19 +541,19 @@ test.describe("@seeded core regression", () => {
   });
 
   test("video consultation and in-person slots can share schedule but one booking blocks both", async ({ page }) => {
-    const marker = `E2E Regression video shared availability ${Date.now()}`;
+    const marker = regressionMarker("video shared availability");
 
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     const videoBooking = await apiJson<IdResponse>(page, "/api/bookings", {
       method: "POST",
       body: {
         professionalId: seed.videoProfessionalId,
-        clientName: E2E_USERS.client.fullName,
-        clientEmail: E2E_USERS.client.email,
-        clientPhone: E2E_USERS.client.phone,
+        clientName: E2E_USERS.professional.fullName,
+        clientEmail: E2E_USERS.professional.email,
+        clientPhone: E2E_USERS.professional.phone,
         serviceDescription: marker,
-        scheduledDate: seed.videoSlotDate,
-        scheduledTime: seed.videoSharedSlotTime,
+        scheduledDate: schedule!.videoDate,
+        scheduledTime: schedule!.videoSharedTime,
         categoryId: seed.videoCategoryId,
         slotLocationId: "videoconsulta",
         slotLocationLabel: "Videoconsulta",
@@ -317,17 +570,17 @@ test.describe("@seeded core regression", () => {
     expect(availability.status).toBe(200);
     expect(
       (availability.body.allSlots ?? []).filter(
-        (slot) => slot.date === seed.videoSlotDate && slot.time === seed.videoSharedSlotTime,
+        (slot) => slot.date === schedule!.videoDate && slot.time === schedule!.videoSharedTime,
       ).map((slot) => slot.locationId).sort(),
-    ).toEqual(["e2e-video-office", "videoconsulta"]);
+    ).toEqual([seed.videoPhysicalLocationId, "videoconsulta"].sort());
     expect(
       (availability.body.slots ?? []).filter(
-        (slot) => slot.date === seed.videoSlotDate && slot.time === seed.videoSharedSlotTime,
+        (slot) => slot.date === schedule!.videoDate && slot.time === schedule!.videoSharedTime,
       ),
     ).toHaveLength(0);
     expect(
       (availability.body.slots ?? []).some(
-        (slot) => slot.date === seed.videoSlotDate && slot.time === seed.videoSecondSlotTime && slot.locationId === "videoconsulta",
+        (slot) => slot.date === schedule!.videoDate && slot.time === schedule!.videoSecondTime && slot.locationId === "videoconsulta",
       ),
     ).toBe(true);
 
@@ -335,14 +588,14 @@ test.describe("@seeded core regression", () => {
       method: "POST",
       body: {
         professionalId: seed.videoProfessionalId,
-        clientName: E2E_USERS.client.fullName,
-        clientEmail: E2E_USERS.client.email,
-        clientPhone: E2E_USERS.client.phone,
+        clientName: E2E_USERS.professional.fullName,
+        clientEmail: E2E_USERS.professional.email,
+        clientPhone: E2E_USERS.professional.phone,
         serviceDescription: `${marker} duplicate physical`,
-        scheduledDate: seed.videoSlotDate,
-        scheduledTime: seed.videoSharedSlotTime,
+        scheduledDate: schedule!.videoDate,
+        scheduledTime: schedule!.videoSharedTime,
         categoryId: seed.videoCategoryId,
-        slotLocationId: "e2e-video-office",
+        slotLocationId: seed.videoPhysicalLocationId,
         slotLocationLabel: "Atenas, Alajuela",
       },
     });
@@ -350,7 +603,7 @@ test.describe("@seeded core regression", () => {
   });
 
   test("project and proposal flow enforces ownership, decision, notifications state, and completion", async ({ page }) => {
-    const marker = `E2E Regression project ${Date.now()}`;
+    const marker = regressionMarker("project");
 
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const project = await apiJson<IdResponse>(page, "/api/projects", {
@@ -368,6 +621,16 @@ test.describe("@seeded core regression", () => {
     });
     expect(project.status).toBe(200);
     expect(project.body.id).toBeTruthy();
+    const { data: clientProfessional, error: clientProfessionalError } = await regressionAdminClient()
+      .from("professionals")
+      .select("verification_status")
+      .eq("id", seed.videoProfessionalId)
+      .single();
+    if (clientProfessionalError) throw clientProfessionalError;
+    expect(
+      clientProfessional.verification_status,
+      "Using a dual-role account as a client must not demote its professional verification",
+    ).toBe("verified");
     await expectNotification(seed.professionalUserId, "new_project", { project_id: project.body.id });
 
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
@@ -433,7 +696,7 @@ test.describe("@seeded core regression", () => {
   });
 
   test("withdrawn and declined proposals are handled without reopening duplicate actions", async ({ page }) => {
-    const marker = `E2E Regression withdraw ${Date.now()}`;
+    const marker = regressionMarker("withdraw");
 
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const project = await apiJson<IdResponse>(page, "/api/projects", {
@@ -497,7 +760,7 @@ test.describe("@seeded core regression", () => {
   });
 
   test("cancellations notify only the affected opposite side", async ({ page }) => {
-    const bookingMarker = `E2E Regression cancel booking ${Date.now()}`;
+    const bookingMarker = regressionMarker("cancel booking");
 
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const booking = await apiJson<IdResponse>(page, "/api/bookings", {
@@ -508,10 +771,10 @@ test.describe("@seeded core regression", () => {
         clientEmail: E2E_USERS.client.email,
         clientPhone: E2E_USERS.client.phone,
         serviceDescription: bookingMarker,
-        scheduledDate: seed.slotDate,
-        scheduledTime: "11:00",
+        scheduledDate: schedule!.professionalDate,
+        scheduledTime: schedule!.professionalSecondTime,
         categoryId: seed.categoryId,
-        slotLocationId: "e2e-main",
+        slotLocationId: seed.slotLocationId,
         slotLocationLabel: "Alajuela, Alajuela",
       },
     });
@@ -527,7 +790,7 @@ test.describe("@seeded core regression", () => {
     const project = await apiJson<IdResponse>(page, "/api/projects", {
       method: "POST",
       body: {
-        title: `E2E Regression cancel project ${Date.now()}`,
+        title: regressionMarker("cancel project"),
         description: "Proyecto para probar cancelación sin propuesta activa.",
         categoryId: seed.categoryId,
         provinciaId: "al",
@@ -557,33 +820,39 @@ test.describe("@seeded core regression", () => {
   });
 
   test("public seeded professional profile and search remain reachable on desktop and mobile layouts", async ({ page }) => {
+    const categoryLabel = getCategoryLabel(seed.categoryId, "es");
+
     await resetAuth(page);
     await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
-    await expect(page.getByText(E2E_USERS.professional.fullName).first()).toBeVisible();
-    await expect(page.getByText(/Plomer/i).first()).toBeVisible();
+    await expect(
+      page.locator("h1").filter({ hasText: E2E_USERS.professional.fullName, visible: true }).first(),
+    ).toBeVisible();
+    await expect(page.getByText(categoryLabel, { exact: true }).filter({ visible: true }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await gotoOK(page, "/es/buscar?categoria=plomeria");
+    await gotoOK(page, `/es/buscar?categoria=${encodeURIComponent(seed.categoryId)}`);
     const resultCard = page.locator("article", {
       has: page.locator(`a[href^="/es/profesionales/${seed.professionalSlug}"]`),
-    }).first();
+    }).filter({ visible: true }).first();
     await expect(resultCard).toBeVisible();
-    await expect(resultCard.getByRole("link", { name: /E2E Profesional/i }).first()).toBeVisible();
-    await expect(resultCard).toContainText(/Plomer/i);
+    await expect(resultCard.getByRole("link", { name: new RegExp(`^${E2E_USERS.professional.fullName}`) }).first()).toBeVisible();
+    await expect(resultCard).toContainText(categoryLabel);
     await expectNoHorizontalOverflow(page);
   });
 
   test("anonymous visitors can see seeded offers and open an offer detail", async ({ page }) => {
+    const publishedOfferTitle = `${E2E_USERS.professional.fullName}: oferta published`;
+    const secondaryOfferTitle = `${E2E_USERS.client.fullName}: oferta published`;
     await resetAuth(page);
     await gotoOK(page, "/es/ofertas");
 
-    await expect(page.getByText("E2E Mantenimiento residencial").first()).toBeVisible();
-    await expect(page.getByText("E2E Sitio web para pyme").first()).toBeVisible();
+    await expect(page.getByText(publishedOfferTitle).first()).toBeVisible();
+    await expect(page.getByText(secondaryOfferTitle).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, `/es/ofertas/${seed.publishedOfferId}`);
-    await expect(page.getByRole("heading", { name: "E2E Mantenimiento residencial" })).toBeVisible();
-    await expect(page.getByText("Alajuela, Alajuela").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: publishedOfferTitle })).toBeVisible();
+    await expect(page.getByText("Atenas, Alajuela").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 
@@ -591,14 +860,53 @@ test.describe("@seeded core regression", () => {
     await resetAuth(page);
     await gotoOK(page, "/es/empleos");
 
-    await expect(page.getByText("E2E Asistente de operaciones").first()).toBeVisible();
-    await expect(page.getByText("E2E Desarrollador web remoto").first()).toBeVisible();
+    await expect(page.getByText(seed.publishedJobTitle, { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(seed.secondaryJobTitle, { exact: true }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, `/es/empleos/${seed.publishedJobId}`);
-    await expect(page.getByRole("heading", { name: "E2E Asistente de operaciones" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: seed.publishedJobTitle, exact: true }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Responsabilidades" })).toBeVisible();
     await expectNoHorizontalOverflow(page);
+  });
+
+  test("mobile offers and jobs keep compact owner actions above the scrolling cards", async ({ page }) => {
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    for (const surface of [
+      {
+        path: "/es/ofertas",
+        testId: "offers-mobile-sticky-actions",
+        actions: [/^Mis ofertas$/i, /^Publicar oferta$/i],
+      },
+      {
+        path: "/es/empleos",
+        testId: "jobs-mobile-sticky-actions",
+        actions: [/^Mis empleos$/i, /^Publicar empleo$/i],
+      },
+    ]) {
+      await gotoOK(page, surface.path);
+      const actions = page.getByTestId(surface.testId);
+      await expect(actions).toBeVisible();
+      for (const name of surface.actions) {
+        const action = actions.getByRole("link", { name });
+        await expect(action).toBeVisible();
+        const box = await action.boundingBox();
+        expect(box, `${surface.path} action needs visible geometry`).not.toBeNull();
+        expect(box!.height, `${surface.path} actions should stay compact on mobile`).toBeLessThanOrEqual(38);
+      }
+
+      const stickyHeader = actions.locator("xpath=ancestor::section[1]");
+      await expect(stickyHeader).toHaveCSS("position", "sticky");
+      await page.evaluate(() => window.scrollTo(0, 700));
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      const scrolledTop = (await stickyHeader.boundingBox())?.y;
+      expect(scrolledTop).toBeDefined();
+      expect(Math.abs(scrolledTop!)).toBeLessThanOrEqual(1);
+      await expect(actions).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    }
   });
 
   test("English offer listings and details render localized copy without leaking translation keys", async ({ page }) => {
@@ -607,14 +915,15 @@ test.describe("@seeded core regression", () => {
 
     await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
     await expect(page.getByText("Promotions from professionals").first()).toBeAttached();
-    await expect(page.getByText("E2E Mantenimiento residencial").first()).toBeVisible();
+    const publishedOfferTitle = `${E2E_USERS.professional.fullName}: oferta published`;
+    await expect(page.getByText(publishedOfferTitle).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, `/en/ofertas/${seed.publishedOfferId}`);
-    await expect(page.getByRole("heading", { name: "E2E Mantenimiento residencial" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: publishedOfferTitle })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Details" })).toBeVisible();
     await expect(page.getByText(/Published by/i).first()).toBeAttached();
-    await expect(page.getByText("Service offer").first()).toBeVisible();
+    await expect(page.getByText("Product").first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/(?:offers?\.|search\.filters\.|proPanel\.|verificationPanel\.)/);
     await expectNoHorizontalOverflow(page);
   });
@@ -624,11 +933,11 @@ test.describe("@seeded core regression", () => {
     await gotoOK(page, "/en/empleos");
 
     await expect(page.getByRole("heading", { name: "Jobs" })).toBeVisible();
-    await expect(page.getByText("E2E Asistente de operaciones").first()).toBeVisible();
+    await expect(page.getByText(seed.publishedJobTitle, { exact: true }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await gotoOK(page, `/en/empleos/${seed.publishedJobId}`);
-    await expect(page.getByRole("heading", { name: "E2E Asistente de operaciones" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: seed.publishedJobTitle, exact: true }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Responsibilities" })).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/(?:jobs?\.|search\.filters\.|proPanel\.|verificationPanel\.)/);
     await expectNoHorizontalOverflow(page);

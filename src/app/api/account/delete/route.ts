@@ -3,6 +3,21 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { processAccountDeletion } from "@/lib/account-deletion/process";
 
+function isTransientDeletionError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /statement timeout|canceling statement|timeout|temporarily unavailable/i.test(message);
+}
+
+async function processWithOneTransientRetry(requestId: string) {
+  try {
+    return await processAccountDeletion(requestId);
+  } catch (error) {
+    if (!isTransientDeletionError(error)) throw error;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    return processAccountDeletion(requestId);
+  }
+}
+
 export async function POST() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -35,7 +50,7 @@ export async function POST() {
   }
 
   try {
-    await processAccountDeletion(requestId as string);
+    await processWithOneTransientRetry(requestId as string);
     return NextResponse.json({ ok: true, status: "completed" });
   } catch (error) {
     console.error("[account-delete] Queued for retry", {

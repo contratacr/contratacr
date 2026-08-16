@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { MapPin, Navigation, RotateCcw } from "lucide-react";
-import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
+import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/maps/loader";
 
 export type PickedLocation = {
   lat: number;
@@ -72,15 +72,14 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     const center = value ? { lat: value.lat, lng: value.lng } : COSTA_RICA_CENTER;
     const zoom = value ? 15 : 8;
 
-    const map = new maps.Map(mapRef.current, {
+    const map = new maps.Map(mapRef.current, withConfiguredMapId({
       center,
       zoom,
-      mapId: MAP_ID,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
       gestureHandling: "greedy",
-    });
+    }));
     mapInstanceRef.current = map;
     geocoderRef.current = new maps.Geocoder();
 
@@ -146,7 +145,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
 
     if (markerRef.current) markerRef.current.map = null;
 
-    const marker = new maps.marker.AdvancedMarkerElement({
+    const marker = createGoogleMarker(maps, {
       position: latLng,
       map: mapInstanceRef.current,
       gmpDraggable: true,

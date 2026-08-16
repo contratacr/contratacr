@@ -6,7 +6,9 @@ interface NewBookingArgs {
   bookingId?: string;
   clientName: string;
   serviceDescription: string;
-  whenText: string | null;
+  scheduledDate: string | null;
+  scheduledTime: string | null;
+  preferredDateText: string | null;
 }
 
 /** Format a booking date/time as "miércoles, 10 de junio a las 14:00". */
@@ -39,10 +41,13 @@ export async function notifyNewBooking({
   bookingId,
   clientName,
   serviceDescription,
-  whenText,
+  scheduledDate,
+  scheduledTime,
+  preferredDateText,
 }: NewBookingArgs): Promise<void> {
   try {
     const admin = createAdminClient();
+    const whenText = formatBookingWhen(scheduledDate, scheduledTime, preferredDateText);
 
     const { data: pro } = await admin
       .from("professionals")
@@ -67,7 +72,15 @@ export async function notifyNewBooking({
       type: "booking_received",
       title,
       message,
-      data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: bookingId ?? null },
+      data: {
+        link: "/es/dashboard/profesional?tab=bookings",
+        booking_id: bookingId ?? null,
+        client_name: clientName,
+        service_description: serviceDescription,
+        scheduled_date: scheduledDate,
+        scheduled_time: scheduledTime,
+        preferred_date_text: preferredDateText,
+      },
     };
     await admin.from("notifications").insert(notification);
     await sendNotificationPush({
@@ -111,11 +124,10 @@ export async function notifyBookingStatusChange(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const proName: string = (booking.professionals as any)?.profiles?.full_name ?? "El profesional";
     const service = booking.service_description ?? "tu servicio";
-    const whenText = formatBookingWhen(
-      booking.scheduled_date as string | null,
-      booking.scheduled_time as string | null,
-      booking.preferred_date_text as string | null
-    );
+    const scheduledDate = booking.scheduled_date as string | null;
+    const scheduledTime = booking.scheduled_time as string | null;
+    const preferredDateText = booking.preferred_date_text as string | null;
+    const whenText = formatBookingWhen(scheduledDate, scheduledTime, preferredDateText);
 
     const verb = status === "confirmed" ? "confirmó" : "canceló";
     const title = status === "confirmed" ? "Solicitud confirmada" : "Solicitud cancelada";
@@ -130,7 +142,17 @@ export async function notifyBookingStatusChange(
         type: status === "confirmed" ? "booking_confirmed" : "booking_cancelled",
         title,
         message,
-        data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: bookingId },
+        data: {
+          link: "/es/dashboard/profesional?tab=sent_bookings",
+          booking_id: bookingId,
+          professional_name: proName,
+          service_description: service,
+          scheduled_date: scheduledDate,
+          scheduled_time: scheduledTime,
+          preferred_date_text: preferredDateText,
+          booking_status: status,
+          ...(status === "cancelled" && reason?.trim() ? { cancel_reason: reason.trim() } : {}),
+        },
       };
       await admin.from("notifications").insert(notification);
       await sendNotificationPush({
@@ -173,11 +195,10 @@ export async function notifyBookingRescheduled(bookingId: string): Promise<void>
     const proId: string | undefined = pro?.profile_id;
     const clientFirst = (booking.client_name as string | null)?.split(" ")[0] || "Tu cliente";
     const service = booking.service_description ?? "el servicio";
-    const whenText = formatBookingWhen(
-      booking.scheduled_date as string | null,
-      booking.scheduled_time as string | null,
-      booking.preferred_date_text as string | null
-    );
+    const scheduledDate = booking.scheduled_date as string | null;
+    const scheduledTime = booking.scheduled_time as string | null;
+    const preferredDateText = booking.preferred_date_text as string | null;
+    const whenText = formatBookingWhen(scheduledDate, scheduledTime, preferredDateText);
     const title = "Cita reprogramada";
     const message = whenText
       ? `${clientFirst} cambió el horario de '${service}' a ${whenText}. Coordina los detalles por WhatsApp.`
@@ -189,7 +210,15 @@ export async function notifyBookingRescheduled(bookingId: string): Promise<void>
         type: "booking_rescheduled",
         title,
         message,
-        data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: bookingId },
+        data: {
+          link: "/es/dashboard/profesional?tab=bookings",
+          booking_id: bookingId,
+          client_name: clientFirst,
+          service_description: service,
+          scheduled_date: scheduledDate,
+          scheduled_time: scheduledTime,
+          preferred_date_text: preferredDateText,
+        },
       };
       await admin.from("notifications").insert(notification);
       await sendNotificationPush({

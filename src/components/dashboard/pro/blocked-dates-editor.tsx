@@ -6,6 +6,7 @@ import { CalendarOff, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { PanelSectionLoading } from "@/components/ui/content-loading";
 
 interface BlockedDatesEditorProps {
   professionalId: string;
@@ -69,7 +70,9 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
     });
   }
 
-  if (loading) return null;
+  if (loading) {
+    return <PanelSectionLoading className="mt-6 min-h-[8rem] border-t border-[#e5e7eb] sm:min-h-[8rem]" />;
+  }
 
   return (
     <div className="mt-6 pt-6 border-t border-[#e5e7eb]">

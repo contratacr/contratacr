@@ -1,12 +1,6 @@
 name: Supabase migrations
 
 on:
-  push:
-    branches:
-      - test
-    paths:
-      - "supabase/migrations/**"
-      - ".github/workflows/supabase-migrations.yml"
   workflow_dispatch:
     inputs:
       target:
@@ -23,32 +17,35 @@ on:
         default: true
 
 concurrency:
-  group: supabase-migrations-${{ github.event_name == 'push' && 'test' || inputs.target }}
+  # Test migrations, mirroring/seeding and regression all mutate the same
+  # isolated environment and must never overlap.
+  group: ${{ inputs.target == 'test' && 'contratacr-test-environment' || 'supabase-migrations-production' }}
+  queue: max
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Migrate ${{ github.event_name == 'push' && 'test' || inputs.target }}
+    name: Migrate ${{ inputs.target }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment: ${{ github.event_name == 'push' && 'test' || inputs.target }}
+    environment: ${{ inputs.target }}
     permissions:
       contents: read
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      TARGET_ENV: ${{ github.event_name == 'push' && 'test' || inputs.target }}
+      TARGET_ENV: ${{ inputs.target }}
+      TEST_SUPABASE_PROJECT_REF: sodegkfjjrdkbohycqyq
+      PRODUCTION_SUPABASE_PROJECT_REF: kskueodxaksxvjrysouw
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
 
       - name: Validate target
         run: |
           if [ -z "$SUPABASE_DB_URL" ]; then
             echo "Missing SUPABASE_DB_URL in the $TARGET_ENV GitHub Environment."
-            exit 1
-          fi
-          if echo "$SUPABASE_DB_URL" | grep -q ":6543/"; then
-            echo "::error::SUPABASE_DB_URL is using the transaction pooler port 6543. Supabase migrations need a direct connection or the shared pooler in session mode, usually port 5432, because transaction pooling can fail with prepared statement errors."
             exit 1
           fi
           if [ "$TARGET_ENV" = "test" ] && [ "${{ github.ref }}" != "refs/heads/test" ]; then
@@ -59,6 +56,11 @@ jobs:
             echo "Production migrations must run from main."
             exit 1
           fi
+          if [ "$TARGET_ENV" = "test" ]; then
+            node scripts/ci/validate-supabase-target.mjs db SUPABASE_DB_URL "$TEST_SUPABASE_PROJECT_REF"
+          else
+            node scripts/ci/validate-supabase-target.mjs db SUPABASE_DB_URL "$PRODUCTION_SUPABASE_PROJECT_REF"
+          fi
 
       - name: Plan migrations
         run: |
@@ -68,15 +70,27 @@ jobs:
             echo "::error::001_initial_schema.sql is pending. This environment already exists, so refusing to apply old initial migrations."
             exit 1
           fi
+          historical="$(grep -Eo '[0-9]{3}_[A-Za-z0-9._-]+\.sql' migration-plan.log | awk -F_ '($1 + 0) < 165' | sort -u || true)"
+          if [ -n "$historical" ]; then
+            echo "::error::Historical migrations below 165 are missing; repair history explicitly before deployment."
+            printf '%s\n' "$historical"
+            exit 1
+          fi
 
       - name: Apply migrations
-        if: ${{ github.event_name == 'push' || inputs.dry_run == false }}
+        if: ${{ inputs.dry_run == false }}
         run: |
           set -euo pipefail
           pending="$(npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run)"
           echo "$pending"
           if echo "$pending" | grep -q "001_initial_schema.sql"; then
             echo "::error::001_initial_schema.sql is still pending. Run 'Supabase repair migration history' through 084 for this environment before applying new migrations."
+            exit 1
+          fi
+          historical="$(printf '%s\n' "$pending" | grep -Eo '[0-9]{3}_[A-Za-z0-9._-]+\.sql' | awk -F_ '($1 + 0) < 165' | sort -u || true)"
+          if [ -n "$historical" ]; then
+            echo "::error::Historical migrations below 165 are missing; refusing an implicit repair."
+            printf '%s\n' "$historical"
             exit 1
           fi
           npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --yes

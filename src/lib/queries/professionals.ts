@@ -5,6 +5,7 @@ import { deriveDisplayPricing, type PricingType } from "@/lib/pricing";
 import { getCategoryLabel, getMatchingCategoryIds, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { getProvinceById, PROVINCES, haversineKm } from "@/lib/data/cr-geography";
 import { languageSearchValues } from "@/lib/data/languages";
+import { withPromiseTimeout } from "@/lib/promise-timeout";
 
 // Build the real travel-coverage summary for "me desplazo" pros (item 16):
 // whole country, specific provinces, and/or specific cantones (display names).
@@ -270,6 +271,7 @@ export type Review = {
   createdAt: string;
   /** The job (solicitud/proyecto) this review belongs to - shown for context. */
   jobTitle?: string | null;
+  source: "verified" | "contact" | "direct";
 };
 
 // ---------------------------------------------------------------------------
@@ -301,10 +303,36 @@ function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
   return normalized;
 }
 
-export async function searchProfessionals(filters: SearchFilters): Promise<ProfessionalCardData[]> {
+export async function searchProfessionals(
+  filters: SearchFilters,
+  options: { fresh?: boolean } = {},
+): Promise<ProfessionalCardData[]> {
   const normalized = normalizeSearchFilters(filters);
-  if (normalized.bounds || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number")) {
-    return searchProfessionalsUncached(normalized);
+  if (options.fresh || normalized.bounds || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number")) {
+    const results = await searchProfessionalsUncached(normalized);
+    const shouldRecoverNationwideVideoRead =
+      results.length === 0
+      && normalized.modalities?.[0] !== "in_person"
+      && !!normalized.categoryId
+      && normalized.categoryId !== "todas"
+      && supportsVideoConsultCategory(normalized.categoryId)
+      && (normalized.bounds != null || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number"));
+    if (!shouldRecoverNationwideVideoRead) return results;
+
+    // Recover with the logically equivalent nationwide branch instead of
+    // repeating the same compound PostgREST location query. A country-wide
+    // video provider is location-independent; fetch the requested category
+    // without physical filters and retain only providers that explicitly offer
+    // video or national coverage. This remains bounded to a single fresh read.
+    const nationwide = await searchProfessionalsUncached({
+      ...normalized,
+      provinceId: undefined,
+      cantonId: undefined,
+      nearLat: undefined,
+      nearLng: undefined,
+      bounds: undefined,
+    });
+    return nationwide.filter((professional) => professional.videoconsulta || professional.coverage?.country);
   }
   return searchProfessionalsCached(normalized);
 }
@@ -634,6 +662,9 @@ async function searchProfessionalsUncached(
 
       if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
         const { nearLat, nearLng } = filters;
+        const administrativeAreaActive =
+          (!!filters.provinceId && filters.provinceId !== "todas") ||
+          (!!filters.cantonId && filters.cantonId !== "todos");
         const includeVideoNationwideForNear =
           !inPersonOnly &&
           (videoOnly ||
@@ -647,11 +678,17 @@ async function searchProfessionalsUncached(
           }
           return distances.length ? Math.min(...distances) : Number.POSITIVE_INFINITY;
         };
-        mapped = mapped.filter((p) => {
-          const distance = distOfExactPin(p);
-          if (distance <= NEAR_ME_RADIUS_KM) return true;
-          return includeVideoNationwideForNear && (p.videoconsulta || !!p.coverage?.country);
-        });
+        // Coordinates attached to a resolved address are a map/ranking hint. The
+        // authoritative province/canton filter above must keep professionals who
+        // cover the whole administrative area even when they do not publish an
+        // exact pin. Only a true coordinate-only "near me" search is radius-bound.
+        if (!administrativeAreaActive) {
+          mapped = mapped.filter((p) => {
+            const distance = distOfExactPin(p);
+            if (distance <= NEAR_ME_RADIUS_KM) return true;
+            return includeVideoNationwideForNear && (p.videoconsulta || !!p.coverage?.country);
+          });
+        }
         mapped.sort((a, b) => {
           const da = distOfExactPin(a);
           const db = distOfExactPin(b);
@@ -726,9 +763,17 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
           `provincia_id, canton_id${modern ? ", search_provincias, search_cantones, coverage_provincias, coverage_country, is_banned" : ""}, verification_status, profiles(is_disabled)`
         );
 
-    let res = await select(true).eq("is_banned", false).neq("verification_status", "rejected");
+    let res = await withPromiseTimeout(
+      select(true).eq("is_banned", false).neq("verification_status", "rejected"),
+      4_000,
+      "home-zone-coverage-timeout",
+    );
     if (res.error && /is_banned|search_|coverage_|column/i.test(res.error.message)) {
-      res = await select(false).neq("verification_status", "rejected");
+      res = await withPromiseTimeout(
+        select(false).neq("verification_status", "rejected"),
+        4_000,
+        "home-zone-coverage-fallback-timeout",
+      );
     }
     if (res.error || !res.data) return empty;
 
@@ -794,13 +839,16 @@ export async function getProfessionalBySlug(
 
       // Use LEFT joins (not !inner) so missing categories/provincias/cantones
       // rows don't silently drop the professional from results.
+      // reviews has two foreign keys to profiles (client_id and moderated_by).
+      // Keep the author relationship explicit or PostgREST rejects the whole
+      // professional query as ambiguous and the UI falls back to "not found".
       const detailSelect = (withBusinessNameOnly: boolean) => `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
            category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name${withBusinessNameOnly ? ", public_business_name_only" : ""}, workplaces, verification_status, insurance_networks, lat, lng, service_type, videoconsulta,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
-           reviews(id, rating, comment, created_at, profiles(full_name, avatar_url))`;
+           reviews(id, rating, comment, created_at, profiles!reviews_client_id_fkey(full_name, avatar_url))`;
 
       async function fetchBySlug(select: string) {
         let { data, error } = await supabase
@@ -893,16 +941,32 @@ export async function getProfessionalBySlug(
       // Job-title snapshot per review (best-effort; column from migration 036) so
       // each review shows which job it belongs to. (Edited timestamps are NOT
       // surfaced publicly - only the author sees that, item 4.)
-      const titleMap: Record<string, string | null> = {};
+      const reviewContextMap: Record<string, { title: string | null; source: Review["source"] }> = {};
+      let visibleReviewIds: Set<string> | null = null;
       try {
-        const { data: rj } = await supabase.from("reviews").select("id, job_title").eq("professional_id", proRow.id);
-        for (const r of (rj ?? []) as { id: string; job_title?: string | null }[]) titleMap[r.id] = r.job_title ?? null;
+        const { data: rj, error: reviewContextError } = await supabase
+          .from("reviews")
+          .select("id, job_title, booking_id, project_id, whatsapp_contact_id, moderation_status")
+          .eq("professional_id", proRow.id);
+        if (reviewContextError) throw reviewContextError;
+        visibleReviewIds = new Set<string>();
+        for (const r of (rj ?? []) as { id: string; job_title?: string | null; booking_id?: string | null; project_id?: string | null; whatsapp_contact_id?: string | null; moderation_status?: string | null }[]) {
+          if (r.moderation_status !== "published") continue;
+          visibleReviewIds.add(r.id);
+          reviewContextMap[r.id] = {
+            title: r.job_title ?? null,
+            source: r.booking_id || r.project_id ? "verified" : r.whatsapp_contact_id ? "contact" : "direct",
+          };
+        }
       } catch { /* column not migrated yet */ }
 
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      const reviews: Review[] = ((proRow.reviews as any[]) ?? []).map((r: any) => ({
+      const reviews: Review[] = ((proRow.reviews as any[]) ?? [])
+        .filter((r: any) => !visibleReviewIds || visibleReviewIds.has(r.id))
+        .map((r: any) => ({
         id: r.id,
-        jobTitle: titleMap[r.id] ?? null,
+        jobTitle: reviewContextMap[r.id]?.title ?? null,
+        source: reviewContextMap[r.id]?.source ?? "direct",
         clientName: r.profiles?.full_name ?? "Cliente",
         clientAvatarUrl: r.profiles?.avatar_url,
         rating: r.rating,

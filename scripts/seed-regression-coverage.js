@@ -16,9 +16,16 @@ if (fs.existsSync(envFile)) {
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 let projectRef = "invalid";
-try { projectRef = new URL(url).hostname.split(".")[0]; } catch {}
-if (projectRef !== TEST_PROJECT_REF || !serviceRole) {
-  throw new Error("Regression coverage seed only runs against the test Supabase project.");
+let parsedSupabaseUrl = null;
+try {
+  parsedSupabaseUrl = new URL(url);
+  projectRef = parsedSupabaseUrl.hostname.split(".")[0];
+} catch {}
+const localRegression = process.env.LOCAL_REGRESSION_SEED === "1"
+  && parsedSupabaseUrl
+  && ["127.0.0.1", "localhost"].includes(parsedSupabaseUrl.hostname);
+if ((projectRef !== TEST_PROJECT_REF && !localRegression) || !serviceRole) {
+  throw new Error("Regression coverage seed only runs against test or explicit loopback regression.");
 }
 
 const db = createClient(url, serviceRole, { auth: { persistSession: false } });
@@ -44,8 +51,8 @@ const ids = {
   projects: Array.from({ length: 6 }, (_, index) => `d2000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   opportunities: Array.from({ length: 40 }, (_, index) => `d2100000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   proposals: Array.from({ length: 6 }, (_, index) => `d3000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
-  jobs: Array.from({ length: 8 }, (_, index) => `d4000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
-  applications: Array.from({ length: 6 }, (_, index) => `d5000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
+  jobs: Array.from({ length: 12 }, (_, index) => `d4000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
+  applications: Array.from({ length: 12 }, (_, index) => `d5000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   offers: Array.from({ length: 10 }, (_, index) => `d6000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   tickets: Array.from({ length: 6 }, (_, index) => `d7000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
   ticketMessages: Array.from({ length: 6 }, (_, index) => `d8000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
@@ -268,15 +275,20 @@ async function main() {
   const jobs = [
     ...jobStatuses.map((status, index) => job(ids.jobs[index], actors.contratacr, contrataPro.category_id, status, index)),
     ...jobStatuses.map((status, index) => job(ids.jobs[index + 4], actors.sg, sgPro.category_id, status, index + 4)),
+    job(ids.jobs[8], actors.sg, sgPro.category_id, "published", 8),
+    job(ids.jobs[9], actors.sg, sgPro.category_id, "published", 9),
+    job(ids.jobs[10], actors.contratacr, contrataPro.category_id, "published", 10),
+    job(ids.jobs[11], actors.contratacr, contrataPro.category_id, "published", 11),
   ];
   await must("coverage jobs", db.from("job_posts").upsert(jobs, { onConflict: "id" }));
 
   const applicationStatuses = ["submitted", "reviewing", "shortlisted", "rejected", "hired", "withdrawn"];
-  const applications = applicationStatuses.map((status, index) => {
-    const applicant = index % 2 === 0 ? actors.sg : actors.contratacr;
-    const targetJob = index % 2 === 0
-      ? jobs[Math.floor(index / 2)]
-      : jobs[4 + Math.floor(index / 2)];
+  const applicationTargets = [
+    ...[4, 5, 6, 7, 8, 9].map((jobIndex) => ({ applicant: actors.contratacr, targetJob: jobs[jobIndex] })),
+    ...[0, 1, 2, 3, 10, 11].map((jobIndex) => ({ applicant: actors.sg, targetJob: jobs[jobIndex] })),
+  ];
+  const applications = applicationTargets.map(({ applicant, targetJob }, index) => {
+    const status = applicationStatuses[index % applicationStatuses.length];
     return {
       id: ids.applications[index],
       job_id: targetJob.id,
@@ -290,7 +302,18 @@ async function main() {
       updated_at: iso(-1),
     };
   });
+  // The per-actor matrix replaced an older alternating six-row layout. Clear
+  // only this seed's deterministic UUIDs first so unique(job, applicant)
+  // constraints cannot retain a stale pairing across reruns.
+  await must("reset coverage applications", db.from("job_applications").delete().in("id", ids.applications));
   await must("coverage applications", db.from("job_applications").upsert(applications, { onConflict: "id" }));
+  for (const applicationId of ids.applications) {
+    await must(`remove coverage application notification ${applicationId}`, db
+      .from("notifications")
+      .delete()
+      .eq("type", "job_application")
+      .contains("data", { application_id: applicationId }));
+  }
 
   const offerStatuses = ["published", "paused", "expired", "sold_out", "draft"];
   const offers = [
@@ -344,11 +367,22 @@ async function main() {
       type,
       title: `${owner.name}: notificación ${type}`,
       message: `Notificación enlazada para regresión de ${type}.`,
-      data: { regressionSeed: SEED, link: "/dashboard/profesional?tab=notifications" },
+      data: { regressionSeed: SEED, push_suppressed: true, link: "/dashboard/profesional?tab=notifications" },
       read: index >= 3,
       created_at: iso(-index),
     };
   }), { onConflict: "id" }));
+  await must("suppress coverage notification outbox", db
+    .from("notification_push_outbox")
+    .update({
+      status: "suppressed",
+      completed_at: iso(),
+      locked_at: null,
+      locked_by: null,
+      last_error: null,
+      updated_at: iso(),
+    })
+    .in("notification_id", ids.notifications));
 
   console.log(JSON.stringify({
     seed: SEED,

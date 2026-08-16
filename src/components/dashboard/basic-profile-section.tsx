@@ -107,6 +107,7 @@ export function BasicProfileSection({
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const profileAvatarObjectUrlRef = useRef<string | null>(null);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const applySectionToggle = (id: string) =>
     setOpenSections((prev) => {
@@ -212,6 +213,8 @@ export function BasicProfileSection({
         if (profilePhotoError) throw new Error(t("photoError"));
         const { error: authPhotoError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
         if (authPhotoError) throw new Error(t("photoError"));
+        if (profileAvatarObjectUrlRef.current) URL.revokeObjectURL(profileAvatarObjectUrlRef.current);
+        profileAvatarObjectUrlRef.current = null;
         setProfileAvatar(url);
         setPendingAvatarFile(null);
       } catch (error) {
@@ -245,11 +248,14 @@ export function BasicProfileSection({
 
   useEffect(() => () => {
     mountedRef.current = false;
+    if (profileAvatarObjectUrlRef.current) URL.revokeObjectURL(profileAvatarObjectUrlRef.current);
   }, []);
 
   useReportSaveStatus(profileSaving, profileSaved, profileDirty);
 
   function handlePhotoRemove() {
+    if (profileAvatarObjectUrlRef.current) URL.revokeObjectURL(profileAvatarObjectUrlRef.current);
+    profileAvatarObjectUrlRef.current = null;
     setProfileAvatar(null);
     setPendingAvatarFile(null);
     touchProfile("basic");
@@ -259,7 +265,10 @@ export function BasicProfileSection({
     const file = e.target.files?.[0];
     if (!file || !user) return;
     const input = e.currentTarget;
-    setProfileAvatar(URL.createObjectURL(file));
+    if (profileAvatarObjectUrlRef.current) URL.revokeObjectURL(profileAvatarObjectUrlRef.current);
+    const previewUrl = URL.createObjectURL(file);
+    profileAvatarObjectUrlRef.current = previewUrl;
+    setProfileAvatar(previewUrl);
     setPendingAvatarFile(file);
     touchProfile("basic");
     input.value = "";
@@ -279,6 +288,8 @@ export function BasicProfileSection({
 
   function cancelProfileChanges() {
     if (!profileData) return;
+    if (profileAvatarObjectUrlRef.current) URL.revokeObjectURL(profileAvatarObjectUrlRef.current);
+    profileAvatarObjectUrlRef.current = null;
     setProfileForm({ full_name: profileData.full_name ?? "", phone: profileData.phone ?? "" });
     setProfileAvatar(profileData.avatar_url ?? null);
     setPendingAvatarFile(null);
@@ -302,6 +313,7 @@ export function BasicProfileSection({
         </button>
         <button
           type="button"
+          data-testid={`profile-save-${sectionId}`}
           onClick={() => void saveProfile()}
           disabled={!sectionActive || profileSaving || photoUploading}
           className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
@@ -425,4 +437,3 @@ export function BasicProfileSection({
     </div>
   );
 }
-

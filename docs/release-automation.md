@@ -24,7 +24,8 @@ Each environment needs these secrets:
 | `SUPABASE_URL` | Padron refresh | Supabase project URL for that environment. |
 | `NEXT_PUBLIC_SUPABASE_URL` | Regression Tests | Optional if `SUPABASE_URL` already exists in the same GitHub Environment; the workflow accepts either one. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Padron refresh | Server-only service role key. Never expose it in Vercel public variables. |
-| `VERCEL_AUTOMATION_BYPASS_SECRET` | Regression Tests | Required in the `test` environment so Playwright can access protected Vercel preview deployments. |
+| `REGRESSION_TEST_PASSWORD` | Regression Tests | Shared secret for the protected ContrataCR/SG regression actors. |
+| `ADVERTISING_TEST_PASSWORD` | Regression Tests | Separate secret for the manual advertising account in test. |
 | `BACKUP_ENCRYPTION_PASSPHRASE` | Supabase backup | Long random passphrase used to encrypt backup artifacts. Store a copy in a password manager. |
 
 Do not put these in repository variables. Use environment secrets only.
@@ -100,6 +101,6 @@ Detailed restore steps are in `docs/backups.md`.
 
 ## Regression and security checks
 
-- **Regression Tests**: manual full Playwright suite fixed to the test branch and test deployment.
+- **Regression Tests**: automatic on `test` and manually dispatchable from `test`; it runs the full suite against `next start` inside GitHub Actions while using only the isolated test data environment.
 - **Security checks**: automatic on `main`, `test`, pull requests, and manual runs. It runs secret smoke checks, Supabase template validation, automation-script lint, build, and `npm audit --audit-level=high`.
 - **Dependabot**: weekly npm PRs and monthly GitHub Actions PRs.

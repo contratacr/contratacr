@@ -32,7 +32,7 @@ import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { writeStoredMode } from "@/hooks/use-mode";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { PanelSwitch } from "@/components/dashboard/panel-toggle-row";
 
@@ -169,6 +169,7 @@ function PhotoPicker({
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) onFile(f);
+          e.currentTarget.value = "";
         }}
       />
     </div>
@@ -440,12 +441,17 @@ export default function RegisterProfessionalPage() {
   const [error, setError] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const photoPreviewObjectUrlRef = useRef<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const formTopRef = useRef<HTMLDivElement | null>(null);
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [videoCoverageCountry, setVideoCoverageCountry] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
+
+  useEffect(() => () => {
+    if (photoPreviewObjectUrlRef.current) URL.revokeObjectURL(photoPreviewObjectUrlRef.current);
+  }, []);
 
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
   const [step2Data, setStep2Data] = useState<Step2Data | null>(null);
@@ -614,8 +620,17 @@ export default function RegisterProfessionalPage() {
 
   function handlePhotoSelect(file: File) {
     setPhotoFile(file);
+    if (photoPreviewObjectUrlRef.current) URL.revokeObjectURL(photoPreviewObjectUrlRef.current);
     const url = URL.createObjectURL(file);
+    photoPreviewObjectUrlRef.current = url;
     setPhotoPreview(url);
+  }
+
+  function handlePhotoRemove() {
+    if (photoPreviewObjectUrlRef.current) URL.revokeObjectURL(photoPreviewObjectUrlRef.current);
+    photoPreviewObjectUrlRef.current = null;
+    setPhotoFile(null);
+    setPhotoPreview(null);
   }
 
   // ── Cédula API lookup — commented out, activate when credentials arrive ──
@@ -767,14 +782,9 @@ export default function RegisterProfessionalPage() {
           const fd = new FormData();
           fd.append("file", preparedFile);
           fd.append("type", "avatar");
-          const uploadRes = await fetch("/api/upload/photo", { method: "POST", body: fd });
-          if (uploadRes.ok) {
-            const { url } = await uploadRes.json();
-            photoUrl = url;
-          } else {
-            const data = await uploadRes.json().catch(() => ({}));
-            throw new Error(data?.error || t("photoError"));
-          }
+          const upload = await uploadPhotoFormDataWithRetry(fd);
+          if (!upload.ok || !upload.data.url) throw new Error(upload.data.error || t("photoError"));
+          photoUrl = upload.data.url;
         } catch (error) {
           const code = getImageUploadPreparationErrorCode(error);
           setError(code === "too_large" ? t("photoTooLarge") : code === "unsupported" ? t("photoUnsupported") : error instanceof Error && error.message ? error.message : t("photoError"));
@@ -1353,7 +1363,7 @@ export default function RegisterProfessionalPage() {
             <form noValidate onSubmit={form3.handleSubmit(onStep3, scrollToFirstError)} className="flex flex-col gap-4">
               {/* Photo upload — the only step-3 field. Guidance about services /
                   casos de éxito now lives in the panel's profile-completion flow. */}
-              <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={() => { setPhotoFile(null); setPhotoPreview(null); }} />
+              <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={handlePhotoRemove} />
 
               <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-3">
                 <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)} className="px-4 sm:px-7">

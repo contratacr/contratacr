@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { clearAccountLocalCache } from "@/lib/account-cache";
+import { prepareForAccountSignOut } from "@/lib/auth/sign-out";
 
 // Soft-disable requires a reason and is recoverable. A later sign-in normally
 // reactivates the account automatically; the manual action below is a fallback
@@ -30,6 +32,9 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
     setBusy(true);
     setError(null);
     try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const accountId = session?.user.id;
       const res = await fetch("/api/account/disable", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -38,9 +43,10 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       const json = await res.json();
       if (!res.ok) { setError(json.error ?? t("processError")); return; }
       // Sign out after hiding the account. The next successful login reactivates it.
-      const supabase = createClient();
+      if (accountId) clearAccountLocalCache(accountId);
+      await prepareForAccountSignOut();
       await supabase.auth.signOut();
-      window.location.assign("/es");
+      window.location.assign(`/${locale}`);
     } catch {
       setError(t("connError"));
     } finally {
@@ -50,13 +56,21 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
 
   async function reactivate() {
     setBusy(true);
+    setError(null);
     try {
-      await fetch("/api/account/disable", {
+      const res = await fetch("/api/account/disable", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "reactivate" }),
       });
+      const json = await res.json().catch(() => null) as { error?: string } | null;
+      if (!res.ok) {
+        setError(json?.error ?? t("processError"));
+        return;
+      }
       setDisabled(false);
+    } catch {
+      setError(t("connError"));
     } finally { setBusy(false); }
   }
 
@@ -64,13 +78,19 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
     setDeleteBusy(true);
     setDeleteError(null);
     try {
+      // Capture the local session id before the endpoint removes Auth. Calling
+      // getUser after a completed deletion can no longer recover that id.
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const accountId = session?.user.id;
       const res = await fetch("/api/account/delete", { method: "POST" });
       const result = await res.json().catch(() => null) as { error?: string; status?: "completed" | "pending" } | null;
       if (!res.ok) {
         setDeleteError(result?.error || t("deleteError"));
         return;
       }
-      const supabase = createClient();
+      if (accountId) clearAccountLocalCache(accountId);
+      await prepareForAccountSignOut();
       await supabase.auth.signOut();
       const status = result?.status === "completed" ? "completed" : "pending";
       window.location.assign(`/${locale}?accountDeletion=${status}`);
@@ -86,6 +106,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] p-4">
         <p className="text-sm font-semibold text-[#92400e]">{t("disabledTitle")}</p>
         <p className="text-xs text-[#92400e] mt-0.5">{t("disabledBody")}</p>
+        {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
         <button onClick={reactivate} disabled={busy} className="mt-3 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb] disabled:opacity-60">
           {busy ? t("reactivating") : t("reactivate")}
         </button>

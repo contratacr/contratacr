@@ -13,6 +13,7 @@ const routes = [
   "/es/registro/cliente",
   "/es/registro/profesional",
   "/es/olvide-contrasena",
+  "/es/reset-password",
   "/es/soporte",
   "/es/ayuda",
   "/es/contacto",
@@ -20,6 +21,9 @@ const routes = [
   "/es/atraer-clientes",
   "/es/publicar-proyecto",
   "/es/proveedores-autorizados",
+  "/es/eliminar-cuenta",
+  "/es/mantenimiento",
+  "/es/servicio-no-disponible",
   "/es/privacidad",
   "/es/terminos",
   "/en",
@@ -33,6 +37,7 @@ const routes = [
   "/en/registro/cliente",
   "/en/registro/profesional",
   "/en/olvide-contrasena",
+  "/en/reset-password",
   "/en/soporte",
   "/en/ayuda",
   "/en/contacto",
@@ -40,6 +45,9 @@ const routes = [
   "/en/atraer-clientes",
   "/en/publicar-proyecto",
   "/en/proveedores-autorizados",
+  "/en/eliminar-cuenta",
+  "/en/mantenimiento",
+  "/en/servicio-no-disponible",
   "/en/privacidad",
   "/en/terminos",
 ];
@@ -66,7 +74,7 @@ test.describe("@smoke public routes", () => {
       await expect(page.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
       const offerServices = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).first();
       await expect(offerServices).toBeVisible();
-      await expect(offerServices.locator("svg")).toHaveCount(0);
+      await expect(offerServices.locator("svg")).toHaveCount(1);
       await expect(offerServices).toHaveCSS("color", "rgb(0, 159, 217)");
     } else {
       const navigation = page.getByRole("banner");
@@ -81,7 +89,66 @@ test.describe("@smoke public routes", () => {
     await expectHealthyPage(page);
   });
 
-  test("home near-me search uses proximity params", async ({ page }, testInfo) => {
+  test("home navbar search stays hidden until the hero search has been passed", async ({ page }) => {
+    await page.addInitScript(() => {
+      const compactSearchFlashes: Array<{ value: string | null; scrollY: number }> = [];
+      Object.defineProperty(window, "__compactSearchFlashes", {
+        configurable: true,
+        value: compactSearchFlashes,
+      });
+
+      const observeNavbar = () => {
+        const navbar = document.querySelector('[data-testid="landing-navbar"]');
+        if (!navbar) {
+          requestAnimationFrame(observeNavbar);
+          return;
+        }
+
+        const recordUnexpectedVisibleState = () => {
+          const value = navbar.getAttribute("data-compact-search");
+          if (value === "visible" && window.scrollY <= 1) compactSearchFlashes.push({ value, scrollY: window.scrollY });
+        };
+        recordUnexpectedVisibleState();
+        new MutationObserver(recordUnexpectedVisibleState).observe(navbar, {
+          attributes: true,
+          attributeFilter: ["data-compact-search"],
+        });
+      };
+      requestAnimationFrame(observeNavbar);
+    });
+
+    for (const locale of ["es", "en"] as const) {
+      await gotoOK(page, `/${locale}`);
+      await waitForInteractivePage(page);
+      const navbar = page.getByTestId("landing-navbar");
+      const sentinel = page.locator("#hero-search-sentinel");
+
+      await expect(navbar).toHaveAttribute("data-compact-search", "hidden");
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+      await expect.poll(() => sentinel.evaluate((node) => node.getBoundingClientRect().top)).toBeGreaterThan(64);
+      await expect.poll(() => page.evaluate(() => (window as Window & { __compactSearchFlashes?: unknown[] }).__compactSearchFlashes?.length ?? 0)).toBe(0);
+
+      await page.reload();
+      await waitForInteractivePage(page);
+      await expect(navbar).toHaveAttribute("data-compact-search", "hidden");
+      await expect.poll(() => sentinel.evaluate((node) => node.getBoundingClientRect().top)).toBeGreaterThan(64);
+      await expect.poll(() => page.evaluate(() => (window as Window & { __compactSearchFlashes?: unknown[] }).__compactSearchFlashes?.length ?? 0)).toBe(0);
+
+      await sentinel.evaluate((node) => {
+        const top = node.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: Math.max(0, top + 80), behavior: "instant" });
+      });
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      await expect.poll(() => sentinel.evaluate((node) => node.getBoundingClientRect().top)).toBeLessThanOrEqual(0);
+      await expect(navbar).toHaveAttribute("data-compact-search", "visible");
+
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+      await expect(navbar).toHaveAttribute("data-compact-search", "hidden");
+    }
+  });
+
+  test("home near-me search uses proximity params", async ({ page }) => {
     await page.context().setGeolocation({ latitude: 9.9281, longitude: -84.0907 });
     await gotoOK(page, "/es");
     await waitForInteractivePage(page);
@@ -100,10 +167,10 @@ test.describe("@smoke public routes", () => {
     await expect(nearMe).toBeVisible();
 
     await nearMe.click();
-    if (isMobileProject(testInfo)) {
-      await expect(location).toHaveValue(/Cerca de m[ií]|Near me/i);
-      await page.getByRole("button", { name: /^Buscar$|^Search$/i }).filter({ visible: true }).first().click();
-    }
+    await expect(location).toHaveValue(/Cerca de m[ií]|Near me/i);
+    const homeSearchForm = page.locator("form").filter({ has: location });
+    await expect(homeSearchForm).toHaveCount(1);
+    await homeSearchForm.getByRole("button", { name: /^Buscar$|^Search$/i }).click();
     await expect(page).toHaveURL(/\/es\/buscar/);
     await expect(page).toHaveURL(/lat=9\.92810/);
     await expect(page).toHaveURL(/lng=-84\.09070/);
@@ -166,7 +233,9 @@ test.describe("@smoke public routes", () => {
   test("footer keeps localized resources and safe external destinations", async ({ page }) => {
     for (const locale of ["es", "en"] as const) {
       await gotoOK(page, `/${locale}`);
-      const footer = page.locator("footer");
+      await expectPageShell(page);
+      const footer = page.locator("footer.ccr-app-footer").filter({ visible: true });
+      await expect(footer, "The page should expose exactly one visible application footer").toHaveCount(1);
       await expect(footer).toBeVisible();
 
       const internalRoutes = ["servicios", "como-funciona", "ayuda", "soporte", "privacidad", "terminos"];

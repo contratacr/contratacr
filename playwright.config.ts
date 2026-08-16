@@ -37,13 +37,18 @@ function currentEnvWith(overrides: Record<string, string>) {
 }
 
 const loadedTestEnv = !process.env.CI && loadLocalEnvFile(".env.test");
-if (loadedTestEnv && !process.env.E2E_SEED) process.env.E2E_SEED = "1";
+if (loadedTestEnv && !process.env.E2E_FIXTURES_READY) process.env.E2E_FIXTURES_READY = "1";
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 const localBaseURL = `http://localhost:${port}`;
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || localBaseURL;
 const useLocalServer = !process.env.PLAYWRIGHT_BASE_URL;
-const webServerEnv = loadedTestEnv ? currentEnvWith({ NODE_ENV: "test" }) : undefined;
+const useProductionServer = process.env.PLAYWRIGHT_LOCAL_PRODUCTION === "1";
+const webServerEnv = useProductionServer
+  ? currentEnvWith({ NODE_ENV: "production" })
+  : loadedTestEnv
+    ? currentEnvWith({ NODE_ENV: "test" })
+    : undefined;
 const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const vercelBypassHeaders = vercelBypassSecret
   ? {
@@ -54,6 +59,10 @@ const vercelBypassHeaders = vercelBypassSecret
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // OneDrive can transiently lock Playwright's default test-results directory.
+  // Local focal runs may redirect artifacts to a disposable directory without
+  // changing CI's canonical report paths.
+  outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ?? "test-results",
   // Direct messages remain parked while WhatsApp is the production contact flow.
   testIgnore: ["**/direct-chat.spec.ts"],
   globalSetup: "./tests/e2e/global-setup.ts",
@@ -61,14 +70,19 @@ export default defineConfig({
   expect: { timeout: 12_000 },
   forbidOnly: Boolean(process.env.CI),
   fullyParallel: true,
-  retries: process.env.CI ? 2 : 0,
+  // Certification requires every case to pass on its first attempt. Retrying a
+  // failure only burns CI time and would be rejected as flaky by the result gate.
+  retries: 0,
   workers: 1,
   reporter: process.env.CI
-    ? [["github"], ["list"], ["html", { open: "never" }]]
+    ? [["github"], ["list"], ["json", { outputFile: process.env.PLAYWRIGHT_JSON_REPORT ?? "test-results/results.json" }], ["html", { open: "never" }]]
     : "list",
   use: {
     baseURL,
-    trace: "on-first-retry",
+    // All date buckets in ContrataCR are defined in Costa Rica local time.
+    // Pin the browser clock so CI (UTC) and local runs agree at day boundaries.
+    timezoneId: "America/Costa_Rica",
+    trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     navigationTimeout: 30_000,
@@ -77,7 +91,9 @@ export default defineConfig({
   },
   webServer: useLocalServer
     ? {
-        command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
+        command: useProductionServer
+          ? `npm run start -- --hostname 127.0.0.1 --port ${port}`
+          : `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
         url: localBaseURL,
         env: webServerEnv,
         reuseExistingServer: true,

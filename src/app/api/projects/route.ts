@@ -171,7 +171,13 @@ export async function POST(req: NextRequest) {
       client_identity_provider: identityProvider,
     }, { onConflict: "id", ignoreDuplicates: false });
 
-    await syncProfessionalVerificationFromAccount(admin, uid, clientIdentityStatus, identityProvider);
+    // Creating a project without submitting a new identity document must not
+    // demote a separately verified professional profile on a dual-role account.
+    // Synchronize the professional badge only when this request actually
+    // revalidated (or rejected) a supplied account identity.
+    if (cedula) {
+      await syncProfessionalVerificationFromAccount(admin, uid, clientIdentityStatus, identityProvider);
+    }
 
     if (officialName) {
       try {
@@ -286,7 +292,13 @@ export async function POST(req: NextRequest) {
             type: "new_project",
             title: "Nueva oportunidad en tu categoria",
             message: `Un cliente publico "${cleanTitle}" en ${label}.`,
-            data: { link: "/es/dashboard/profesional?tab=proposals", project_id: projectId, project_created_at: projectCreatedAt },
+            data: {
+              link: "/es/dashboard/profesional?tab=proposals",
+              project_id: projectId,
+              project_created_at: projectCreatedAt,
+              project_title: cleanTitle,
+              category_id: categoryId,
+            },
           }));
           await admin.from("notifications").insert(rows);
           await Promise.all(rows.map((row) => sendNotificationPush({
@@ -470,7 +482,12 @@ export async function PATCH(req: NextRequest) {
       type: "project_work_done",
       title: "Confirma la finalización del trabajo",
       message: `El profesional marcó "${project.title}" como realizado. Confirma para finalizarlo. Si no respondes en ${AUTO_CONFIRM_DAYS} días se confirma automáticamente.`,
-      data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: id },
+      data: {
+        link: "/es/dashboard/profesional?tab=sent_projects",
+        project_id: id,
+        project_title: project.title,
+        auto_confirm_days: AUTO_CONFIRM_DAYS,
+      },
     };
     await admin.from("notifications").insert(notification);
     await sendNotificationPush({
@@ -512,7 +529,11 @@ export async function PATCH(req: NextRequest) {
           type: "project_completed",
           title: "Oportunidad finalizada",
           message: `El cliente confirmó la finalización de "${project.title}". Buen trabajo.`,
-          data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id },
+          data: {
+            link: "/es/dashboard/profesional?tab=proposals",
+            project_id: id,
+            project_title: project.title,
+          },
         };
         await admin.from("notifications").insert(notification);
         await sendNotificationPush({
@@ -610,7 +631,12 @@ async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled
       type: kind === "deleted" ? "project_deleted" : "project_cancelled",
       title: kind === "deleted" ? "Solicitud eliminada" : "Solicitud cancelada",
       message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} la solicitud "${project.title}". Ya no está activa.`,
-      data: { link: "/es/dashboard/profesional?tab=proposals", project_id: projectId },
+      data: {
+        link: "/es/dashboard/profesional?tab=proposals",
+        project_id: projectId,
+        project_title: project.title,
+        project_action: kind,
+      },
     }));
     await admin.from("notifications").insert(notifications);
     await sendNotificationPushRows(notifications);
