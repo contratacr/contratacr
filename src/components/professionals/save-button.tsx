@@ -381,7 +381,7 @@ export function SaveableCard({ pro, children, isOwn = false }: CardWrapperProps)
       {children}
       {/* Always-visible favorites button. Keep it INSIDE the card on mobile so the
           search bottom sheet/map container can never clip it. */}
-      <div className="absolute right-7 top-4 z-20 lg:right-5 lg:top-4">
+      <div className="absolute right-3 top-4 z-20 lg:right-5 lg:top-4">
         <SaveButton
           pro={pro}
           isOwn={isOwn}

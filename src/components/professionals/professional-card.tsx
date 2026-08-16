@@ -160,7 +160,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = mobileDisplayProfessions.length - mobileProfessionList.length;
   const mobileServiceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]";
-  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 items-center leading-none text-[11px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
+  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 translate-y-px items-baseline leading-none text-[12px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
@@ -338,7 +338,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                 >
                   <div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
                     {mobileProfessionList.map((cat, index) => (
-                      <div key={`mobile-service-row-${cat}`} className="flex min-w-0 items-center gap-1">
+                      <div key={`mobile-service-row-${cat}`} className="flex min-w-0 items-baseline gap-0.5">
                         <span
                           data-testid="professional-card-mobile-service"
                           data-full-label="true"
