@@ -44,7 +44,9 @@ const LOCALES: LocaleContract[] = [
 
 function enableNativeRuntime(page: Page) {
   return page.addInitScript(() => {
-    window.localStorage.setItem("ccr:native-first-run-onboarding:v1", "1");
+    if (window.sessionStorage.getItem("ccr:e2e-show-first-run-onboarding") !== "1") {
+      window.localStorage.setItem("ccr:native-first-run-onboarding:v1", "1");
+    }
     const nativeRuntime: Record<string, unknown> = {
       isNativePlatform: () => true,
     };
@@ -145,7 +147,10 @@ test.describe("@mobile native shell contracts", () => {
 
   test("first installation explains notifications and lets people choose or skip a role", async ({ page }) => {
     await resetAuth(page);
-    await page.evaluate(() => window.localStorage.removeItem("ccr:native-first-run-onboarding:v1"));
+    await page.evaluate(() => {
+      window.sessionStorage.setItem("ccr:e2e-show-first-run-onboarding", "1");
+      window.localStorage.removeItem("ccr:native-first-run-onboarding:v1");
+    });
     await gotoOK(page, "/es");
 
     const onboarding = page.getByTestId("native-first-run-onboarding");
