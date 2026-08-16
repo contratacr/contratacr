@@ -74,7 +74,7 @@ test.describe("@seeded search results", () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test("mobile cards keep service, price and price detail on aligned rows", async ({ page }) => {
+  test("mobile cards keep services above a single-line review and price row", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await gotoOK(page, "/es/buscar");
 
@@ -86,11 +86,6 @@ test.describe("@seeded search results", () => {
     await expect(primaryPrice).toBeVisible();
     await expect(primaryPrice).toHaveAttribute("aria-label", /.+/);
 
-    const detail = card.getByTestId("professional-card-mobile-price-secondary");
-    if (await detail.count()) {
-      await expect(detail).toBeVisible();
-      await expect(detail).toContainText(/A consultar|On request|\/\S+|I\.V\.A\.I\./i);
-    }
 
     const layout = await card.evaluate((node) => {
       const cardBox = node.getBoundingClientRect();
@@ -106,7 +101,6 @@ test.describe("@seeded search results", () => {
         serviceRow: rect('[data-testid="professional-card-service-summary"]'),
         service: rect('[data-testid="professional-card-mobile-service"]'),
         primary: rect('[data-testid="professional-card-mobile-price-primary"]'),
-        detail: rect('[data-testid="professional-card-mobile-price-secondary"]'),
       };
     });
     expect(layout.card).not.toBeNull();
@@ -114,14 +108,10 @@ test.describe("@seeded search results", () => {
     expect(layout.serviceRow).not.toBeNull();
     expect(layout.service).not.toBeNull();
     expect(layout.primary).not.toBeNull();
-    expect(layout.primary!.top).toBeGreaterThanOrEqual(layout.meta!.top - 1);
+    expect(layout.serviceRow!.top).toBeLessThan(layout.meta!.top);
+    expect(layout.service!.top).toBeLessThan(layout.primary!.top);
+    expect(Math.abs(layout.primary!.top - layout.meta!.top)).toBeLessThanOrEqual(2);
     expect(layout.primary!.right).toBeLessThanOrEqual(layout.card!.right + 1);
-    expect(layout.serviceRow!.top).toBeGreaterThan(layout.meta!.top);
-    expect(layout.service!.top).toBeGreaterThan(layout.primary!.top);
-    if (layout.detail) {
-      expect(layout.detail.top).toBeGreaterThanOrEqual(layout.primary!.top);
-      expect(layout.detail.right).toBeLessThanOrEqual(layout.card!.right + 1);
-    }
   });
 
   test("long mobile service labels stay readable instead of showing two truncated chips", async ({ page }, testInfo) => {

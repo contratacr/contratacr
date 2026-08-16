@@ -45,8 +45,8 @@ export function ResponsiveServiceSummary({
     const available = container.clientWidth;
     const gap = 8;
 
-    let nextCount = labels.length > 0 ? 1 : 0;
-    for (let count = labels.length; count >= 1; count -= 1) {
+    let nextCount = 0;
+    for (let count = labels.length; count >= 0; count -= 1) {
       const hiddenCount = Math.max(0, totalCount - count);
       const widths = labelWidths.slice(0, count).reduce((sum, width) => sum + width, 0);
       const moreWidth = hiddenCount > 0 ? (moreWidths[hiddenCount] ?? 0) : 0;

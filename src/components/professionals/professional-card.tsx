@@ -253,21 +253,18 @@ export async function ProfessionalCard({ professional, className, highlightMetri
       </span>
     </div>
   ) : null;
-  const mobilePrice = priceLabel ? (
+  const mobilePriceText = priceLabel
+    ? mobileIsPriceOnRequest
+      ? (locale === "en" ? "Price on request" : "Consultar precio")
+      : priceLabel
+    : "";
+  const mobilePrice = mobilePriceText ? (
     <span
       data-testid="professional-card-mobile-price-primary"
-      aria-label={priceLabel}
-      className="ml-auto shrink-0 whitespace-nowrap text-right text-[12px] font-bold leading-none text-[#009FD9]"
+      aria-label={mobilePriceText}
+      className="ml-auto min-w-0 shrink-0 whitespace-nowrap text-right text-[12px] font-bold leading-none text-[#009FD9]"
     >
-      {mobilePricePrimary}
-    </span>
-  ) : null;
-  const mobilePriceDetail = mobilePriceSecondary ? (
-    <span
-      data-testid="professional-card-mobile-price-secondary"
-      className="ml-auto shrink-0 whitespace-nowrap text-right text-[10px] font-medium leading-none text-[#9ca3af]"
-    >
-      {mobilePriceSecondary}
+      {mobilePriceText}
     </span>
   ) : null;
 
@@ -331,32 +328,6 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                 {desktopPrice}
               </div>
 
-              {(professional.reviewCount > 0 || mobilePrice || mobilePriceDetail) && (
-                <div
-                  data-testid="professional-card-mobile-meta-row"
-                  className="mt-1.5 flex min-w-0 items-start justify-between gap-2 lg:hidden"
-                >
-                  {professional.reviewCount > 0 ? (
-                    <Link
-                      href={reviewsHref}
-                      className="relative z-10 inline-flex min-w-0 w-fit items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-                      aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
-                    >
-                      <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
-                      <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                      <span>{ratingLabel}</span>
-                    </Link>
-                  ) : (
-                    <span className="min-w-0" />
-                  )}
-                  {(mobilePrice || mobilePriceDetail) && (
-                    <span className="ml-auto flex shrink-0 flex-col items-end gap-0.5 text-right">
-                      {mobilePrice}
-                      {mobilePriceDetail}
-                    </span>
-                  )}
-                </div>
-              )}
               {(displayProfessions.length > 0 || professional.isFeatured) && (
                 <ResponsiveServiceSummary
                   labels={mobileDisplayProfessions.map((cat) => catLabel(cat))}
@@ -365,12 +336,33 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                   moreTitle={tCard("moreProfessions")}
                   featuredLabel={professional.isFeatured ? tCard("featured") : undefined}
                   testId="professional-card-service-summary"
-                  className="mt-1 flex w-full min-w-0 max-w-full items-baseline gap-1 overflow-hidden lg:hidden"
+                  className="mt-1.5 flex w-full min-w-0 max-w-full items-baseline gap-1 overflow-hidden lg:hidden"
                   itemClassName="inline-flex max-w-full shrink-0 items-baseline whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]"
                   itemTestId="professional-card-mobile-service"
                   moreTestId="professional-card-more-services"
                   moreClassName={moreProfessionsClass}
                 />
+              )}
+              {(professional.reviewCount > 0 || mobilePrice) && (
+                <div
+                  data-testid="professional-card-mobile-meta-row"
+                  className="mt-1.5 flex min-w-0 items-center justify-between gap-2 lg:hidden"
+                >
+                  {professional.reviewCount > 0 ? (
+                    <Link
+                      href={reviewsHref}
+                      className="relative z-10 inline-flex min-w-0 w-fit shrink-0 items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                      aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+                    >
+                      <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
+                      <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+                      <span className="whitespace-nowrap">{ratingLabel}</span>
+                    </Link>
+                  ) : (
+                    <span className="min-w-0" />
+                  )}
+                  {mobilePrice}
+                </div>
               )}
             </div>
           </div>
