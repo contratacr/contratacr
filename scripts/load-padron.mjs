@@ -52,7 +52,7 @@ async function main() {
     const f = line.split(",");
     const cedula = clean(f[0]);
     if (!cedula) continue;
-    batch.push({ cedula, nombre: clean(f[5]), papellido: clean(f[6]), sapellido: clean(f[7]) });
+    batch.push({ cedula, nombre: clean(f[4]), papellido: clean(f[5]), sapellido: clean(f[6]) });
     if (batch.length >= BATCH) { await flush(batch); total += batch.length; batch = []; if (total % 100000 === 0) console.log(`  ${total} rows…`); }
   }
   await flush(batch); total += batch.length;
