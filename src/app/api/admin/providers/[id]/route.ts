@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { detectIdType, idTypeLabel, isValidId, cleanId } from "@/lib/cedula";
-import { nameSimilarity, NAME_MATCH_THRESHOLD } from "@/lib/verification/identity-verifier";
+import { getIdentityVerifier, nameSimilarity, NAME_MATCH_THRESHOLD } from "@/lib/verification/identity-verifier";
 
 // GET /api/admin/providers/[id]
 // Full case file for one provider: profile, documents/images, audit log,
@@ -43,8 +43,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     .order("created_at", { ascending: false });
 
   // Automatic ID-format assist (format/length only — human review still required
-  // for the badge). A live TSE name-match lookup is available on demand via
-  // /api/cedula/[id] from the panel.
+  // for the badge). The live name-match lookup uses the shared identity verifier
+  // so deployed environments read the heavy padrón from Neon first, with the
+  // Supabase RPC kept as a temporary/local fallback.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cedula = cleanId((pro.profiles as any)?.cedula ?? "");
   const detectedIdType = cedula ? detectIdType(cedula) : null;
@@ -61,7 +62,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   // Read-only/transient — not stored on the profile (data minimization).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const enteredName: string = (pro.profiles as any)?.full_name ?? "";
-  let padron: { found: boolean; name: string; score: number; matched: boolean; skipped?: boolean; reason?: string } | null = null;
+  let padron: {
+    found: boolean;
+    name: string;
+    score: number;
+    matched: boolean;
+    skipped?: boolean;
+    unavailable?: boolean;
+    reason?: string;
+    source?: string;
+  } | null = null;
   if (cedula && detectedIdType === "juridica") {
     padron = {
       found: false,
@@ -72,13 +82,23 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       reason: "La cédula jurídica no devuelve nombre desde el padrón TSE. Revísala manualmente con la documentación o datos de la empresa.",
     };
   } else if (cedula) {
-    const { data: row } = await db.from("padron").select("nombre, papellido, sapellido").eq("cedula", cedula).maybeSingle();
-    if (row) {
-      const name = [row.nombre, row.papellido, row.sapellido].filter(Boolean).join(" ");
+    const lookup = await getIdentityVerifier().lookup(cedula);
+    if (lookup.unavailable) {
+      padron = {
+        found: false,
+        name: "",
+        score: 0,
+        matched: false,
+        unavailable: true,
+        reason: "No pudimos consultar el padrón en este momento. Intenta nuevamente o revisa la documentación manualmente.",
+        source: lookup.provider,
+      };
+    } else if (lookup.found && lookup.fullName) {
+      const name = lookup.fullName;
       const score = nameSimilarity(enteredName, name);
-      padron = { found: true, name, score, matched: score >= NAME_MATCH_THRESHOLD };
+      padron = { found: true, name, score, matched: score >= NAME_MATCH_THRESHOLD, source: lookup.provider };
     } else {
-      padron = { found: false, name: "", score: 0, matched: false };
+      padron = { found: false, name: "", score: 0, matched: false, source: lookup.provider };
     }
   }
 
