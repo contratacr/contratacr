@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { once } from "node:events";
 import path from "node:path";
 import readline from "node:readline";
 
@@ -63,6 +64,13 @@ function openFile() {
   rowsInFile = 0;
 }
 
+async function writeChunk(text) {
+  if (!currentFile) return;
+  if (!currentFile.write(text)) {
+    await once(currentFile, "drain");
+  }
+}
+
 async function closeFile() {
   if (!currentFile) return;
   if (rowsInFile === 0) {
@@ -77,7 +85,7 @@ async function closeFile() {
     if (filePath) fs.rmSync(filePath, { force: true });
     return;
   }
-  flushBatch();
+  await flushBatch();
   await new Promise((resolve, reject) => {
     currentFile.end(resolve);
     currentFile.on("error", reject);
@@ -88,11 +96,11 @@ async function closeFile() {
   chunkCount += 1;
 }
 
-function flushBatch() {
+async function flushBatch() {
   if (!pendingTuples.length || !currentFile) return;
-  currentFile.write("insert or replace into padron_next (cedula, nombre, papellido, sapellido) values\n");
-  currentFile.write(pendingTuples.join(",\n"));
-  currentFile.write(";\n");
+  await writeChunk("insert or replace into padron_next (cedula, nombre, papellido, sapellido) values\n");
+  await writeChunk(pendingTuples.join(",\n"));
+  await writeChunk(";\n");
   pendingTuples = [];
 }
 
@@ -108,7 +116,7 @@ for await (const line of reader) {
   rowsInFile += 1;
   total += 1;
 
-  if (pendingTuples.length >= batchSize) flushBatch();
+  if (pendingTuples.length >= batchSize) await flushBatch();
   if (rowsInFile >= rowsPerFile) {
     await closeFile();
     openFile();
