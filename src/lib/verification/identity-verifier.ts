@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { cleanId } from "@/lib/cedula";
+import { neon } from "@neondatabase/serverless";
 
 // ── IdentityVerifier abstraction ────────────────────────────────────────────
 // ContrataCR's verification flow calls this interface only. The underlying
@@ -102,6 +103,11 @@ type PadronLookupRow = {
   sapellido?: string | null;
 };
 
+type PadronLookupSource = {
+  provider: string;
+  row: PadronLookupRow | null;
+};
+
 function tokens(s: string): string[] {
   return normalizeName(s).split(" ").filter((t) => t && !STOPWORDS.has(t));
 }
@@ -125,6 +131,56 @@ export function nameSimilarity(a: string, b: string): number {
 // Names matching at or above this share of tokens are accepted.
 export const NAME_MATCH_THRESHOLD = 0.6;
 
+let padronSql: ReturnType<typeof neon> | null = null;
+
+function getPadronDatabaseUrl(): string {
+  return process.env.PADRON_DATABASE_URL?.trim() || "";
+}
+
+async function lookupPadronInNeon(cedula: string): Promise<PadronLookupSource | null> {
+  const databaseUrl = getPadronDatabaseUrl();
+  if (!databaseUrl) return null;
+  if (!padronSql) padronSql = neon(databaseUrl);
+  const rows = await padronSql`
+    select nombre, papellido, sapellido
+    from public.padron
+    where cedula = ${cedula}
+    limit 1
+  ` as PadronLookupRow[];
+  return { provider: "neon_padron", row: rows[0] ?? null };
+}
+
+async function lookupPadronInSupabase(cedula: string): Promise<PadronLookupSource> {
+  const admin = createAdminClient();
+  // Read via the SECURITY DEFINER RPC (migration 050): it runs as the table
+  // owner, so it reads the padrón regardless of service-role table grants, and
+  // the padrón stays private (EXECUTE granted to service_role only).
+  const response = await admin.rpc("padron_lookup", { p_cedula: cedula });
+  if (response.error) {
+    console.error("[identity] padron_lookup failed:", {
+      code: response.error.code,
+      message: response.error.message,
+      details: response.error.details,
+    });
+    throw response.error;
+  }
+  const row = (Array.isArray(response.data) ? response.data[0] : response.data) as PadronLookupRow | null;
+  return { provider: "self_hosted_padron", row };
+}
+
+async function lookupPadron(cedula: string): Promise<PadronLookupSource> {
+  try {
+    const neonResult = await lookupPadronInNeon(cedula);
+    if (neonResult) return neonResult;
+  } catch (error) {
+    // During the migration window, Neon must be a safe offload path rather than a
+    // new single point of failure. Keep Supabase as fallback until production has
+    // verified parity and the padrón table can be removed from Supabase.
+    console.error("[identity] neon padron lookup failed; falling back to Supabase:", error);
+  }
+  return lookupPadronInSupabase(cedula);
+}
+
 // ── Self-hosted padrón provider ─────────────────────────────────────────────
 export class SelfHostedPadronVerifier implements IdentityVerifier {
   readonly name = "self_hosted_padron";
@@ -132,30 +188,17 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
   async lookup(cedula: string): Promise<IdentityLookupResult> {
     const id = cleanId(cedula);
     if (!id) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
-    let data: unknown;
+    let source: PadronLookupSource;
     try {
-      const admin = createAdminClient();
-      // Read via the SECURITY DEFINER RPC (migration 050): it runs as the table
-      // owner, so it reads the padrón regardless of service-role table grants, and
-      // the padrón stays private (EXECUTE granted to service_role only).
-      const response = await admin.rpc("padron_lookup", { p_cedula: id });
-      data = response.data;
-      if (response.error) {
-        console.error("[identity] padron_lookup failed:", {
-          code: response.error.code,
-          message: response.error.message,
-          details: response.error.details,
-        });
-        return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name, unavailable: true };
-      }
+      source = await lookupPadron(id);
     } catch (error) {
       console.error("[identity] padron_lookup unavailable:", error);
       return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name, unavailable: true };
     }
 
-    const row = (Array.isArray(data) ? data[0] : data) as PadronLookupRow | null;
+    const row = source.row;
     // Not found -> found:false. Technical failures are returned as unavailable above.
-    if (!row) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
+    if (!row) return { found: false, fullName: null, dob: null, isAdult: false, provider: source.provider };
     const official = titleCaseName(
       [row.nombre, row.papellido, row.sapellido].filter(Boolean).join(" ")
     );
@@ -164,23 +207,24 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
     // health bookings (beneficiary_dob / profiles.date_of_birth). Being in the electoral
     // roll already implies 18+ (the roll only contains citizens 18 or older), which is
     // our adult gate without needing a birth date.
-    return { found: true, fullName: official || null, dob: null, isAdult: true, provider: this.name };
+    return { found: true, fullName: official || null, dob: null, isAdult: true, provider: source.provider };
   }
 
   async verify({ cedula, fullName }: IdentityCheckInput): Promise<IdentityCheckResult> {
     const id = cleanId(cedula);
-    const admin = createAdminClient();
-
-    const { data, error } = await admin.rpc("padron_lookup", { p_cedula: id });
-    const row = Array.isArray(data) ? data[0] : data;
-
-    if (error || !row) {
+    let source: PadronLookupSource;
+    try {
+      source = await lookupPadron(id);
+    } catch {
       return { matched: false, found: false, score: 0, provider: this.name };
     }
+    const row = source.row;
+
+    if (!row) return { matched: false, found: false, score: 0, provider: source.provider };
 
     const padronName = [row.nombre, row.papellido, row.sapellido].filter(Boolean).join(" ");
     const score = nameSimilarity(fullName, padronName);
-    return { matched: score >= NAME_MATCH_THRESHOLD, found: true, score, provider: this.name };
+    return { matched: score >= NAME_MATCH_THRESHOLD, found: true, score, provider: source.provider };
   }
 }
 
