@@ -181,7 +181,7 @@ const EN_SECTIONS: LegalSection[] = [
     { k: "p", text: "Passwords, tokens, full identification numbers, private conversations, and private documents are not displayed publicly." },
   ] },
   { id: "providers", h: "5. Providers and transfers", body: [
-    { k: "p", text: "Depending on the feature, we use providers including **Supabase** (authentication, database, private storage), **Vercel** (hosting), **Cloudinary** (media), **Firebase** (push notifications), **OpenAI** (assistant), Google and map providers, Meta (campaign measurement), and email or support providers." },
+    { k: "p", text: "Depending on the feature, we use providers including **Supabase** (authentication, database, private storage), **Vercel** (hosting), **Cloudinary** and **Cloudflare R2** (media/files), **Firebase** (push notifications), **OpenAI** (assistant), Google and map providers, Meta (campaign measurement), and email or support providers." },
     { k: "p", text: "Some providers may process data outside Costa Rica. We seek providers with appropriate contractual, technical, and organizational safeguards. We may also disclose information when legally required." },
   ] },
   { id: "cookies", h: "6. Cookies, analytics, and advertising", body: [

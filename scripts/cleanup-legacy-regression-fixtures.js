@@ -2,6 +2,7 @@
 const fs = require("fs");
 const { v2: cloudinary } = require("cloudinary");
 const { createClient } = require("@supabase/supabase-js");
+const { DeleteObjectCommand, S3Client } = require("@aws-sdk/client-s3");
 
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";
 if (fs.existsSync(envFile)) {
@@ -86,15 +87,37 @@ async function cleanupActor(actor, users) {
   }
   for (const [bucket, names] of byBucket) await must(`storage remove ${actor.email}/${bucket}`, admin.storage.from(bucket).remove([...new Set(names)]));
 
-  const media = await must(`media ownership ${actor.email}`, admin.from("user_media_assets").select("id,public_id,resource_type").eq("user_id", profile.id));
+  const media = await must(`media ownership ${actor.email}`, admin.from("user_media_assets").select("id,provider,public_id,resource_type").eq("user_id", profile.id));
   if (media.length) {
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-    if (!cloudName || !apiKey || !apiSecret) throw new Error(`Cloudinary credentials are required to clean ${actor.email}.`);
-    cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
+    const cloudinaryAssets = media.filter((asset) => asset.provider === "cloudinary" || !asset.provider);
+    const r2Assets = media.filter((asset) => asset.provider === "r2");
+    if (cloudinaryAssets.length) {
+      const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+      const apiKey = process.env.CLOUDINARY_API_KEY;
+      const apiSecret = process.env.CLOUDINARY_API_SECRET;
+      if (!cloudName || !apiKey || !apiSecret) throw new Error(`Cloudinary credentials are required to clean ${actor.email}.`);
+      cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
+    }
+    let r2Client = null;
+    if (r2Assets.length) {
+      if (!process.env.R2_ENDPOINT || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY || !process.env.R2_BUCKET) {
+        throw new Error(`R2 credentials are required to clean ${actor.email}.`);
+      }
+      r2Client = new S3Client({
+        region: "auto",
+        endpoint: process.env.R2_ENDPOINT,
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID,
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+        },
+      });
+    }
     for (const asset of media) {
-      await cloudinary.uploader.destroy(asset.public_id, { resource_type: asset.resource_type || "image", invalidate: true });
+      if (asset.provider === "r2") {
+        await r2Client.send(new DeleteObjectCommand({ Bucket: process.env.R2_BUCKET, Key: asset.public_id }));
+      } else {
+        await cloudinary.uploader.destroy(asset.public_id, { resource_type: asset.resource_type || "image", invalidate: true });
+      }
       await must(`media row ${asset.id}`, admin.from("user_media_assets").delete().eq("id", asset.id).eq("user_id", profile.id));
     }
   }

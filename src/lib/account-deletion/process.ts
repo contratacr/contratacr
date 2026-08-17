@@ -1,8 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { deleteR2Object } from "@/lib/r2-storage";
 
 type StorageObject = { bucket_id: string; object_name: string };
-type MediaAsset = { id: string; public_id: string; resource_type: string };
+type MediaAsset = { id: string; provider: string; public_id: string; resource_type: string };
 
 function chunks<T>(items: T[], size: number) {
   const result: T[][] = [];
@@ -52,21 +53,28 @@ export async function processAccountDeletion(requestId: string) {
 
     const { data: mediaRows, error: mediaError } = await db
       .from("user_media_assets")
-      .select("id,public_id,resource_type")
+      .select("id,provider,public_id,resource_type")
       .eq("user_id", request.user_id);
     if (mediaError) throw new Error(mediaError.message);
     const assets = (mediaRows ?? []) as MediaAsset[];
     if (assets.length > 0) {
-      const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-      const apiKey = process.env.CLOUDINARY_API_KEY;
-      const apiSecret = process.env.CLOUDINARY_API_SECRET;
-      if (!cloudName || !apiKey || !apiSecret) throw new Error("Cloudinary cleanup is not configured");
-      cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
+      const cloudinaryAssets = assets.filter((asset) => asset.provider === "cloudinary");
+      if (cloudinaryAssets.length > 0) {
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+        const apiKey = process.env.CLOUDINARY_API_KEY;
+        const apiSecret = process.env.CLOUDINARY_API_SECRET;
+        if (!cloudName || !apiKey || !apiSecret) throw new Error("Cloudinary cleanup is not configured");
+        cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
+      }
       for (const asset of assets) {
-        await cloudinary.uploader.destroy(asset.public_id, {
-          resource_type: asset.resource_type || "image",
-          invalidate: true,
-        });
+        if (asset.provider === "r2") {
+          await deleteR2Object(asset.public_id);
+        } else {
+          await cloudinary.uploader.destroy(asset.public_id, {
+            resource_type: asset.resource_type || "image",
+            invalidate: true,
+          });
+        }
         const { error } = await db.from("user_media_assets").delete().eq("id", asset.id).eq("user_id", request.user_id);
         if (error) throw new Error(error.message);
       }

@@ -1,12 +1,24 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
-import { validateUpload, IMAGE_KINDS, MIME_FOR } from "@/lib/upload-validation";
+import { validateUpload, IMAGE_KINDS, MIME_FOR, type FileKind } from "@/lib/upload-validation";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
-import { recordCloudinaryAsset } from "@/lib/cloudinary-ownership";
+import { recordCloudinaryAsset, recordMediaAsset } from "@/lib/cloudinary-ownership";
+import { isR2Configured, uploadR2Object } from "@/lib/r2-storage";
 
 export const runtime = "nodejs";
+
+const EXTENSION_FOR: Record<FileKind, string> = {
+  jpeg: "jpg",
+  png: "png",
+  webp: "webp",
+  avif: "avif",
+  gif: "gif",
+  heic: "heic",
+  heif: "heif",
+  pdf: "pdf",
+};
 
 export async function POST(req: Request) {
   const rl = enforceRateLimit(req, "upload-photo", 12, 60_000);
@@ -14,19 +26,6 @@ export async function POST(req: Request) {
 
   const user = await safeGetUser(await createClient());
   if (!user) return NextResponse.json({ error: "Inicia sesión para subir imágenes." }, { status: 401 });
-
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-  if (!cloudName || !apiKey || !apiSecret) {
-    return NextResponse.json(
-      { error: "Cloudinary no está configurado. Revisa las variables de entorno en Vercel." },
-      { status: 503 }
-    );
-  }
-
-  cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
 
   try {
     const formData = await req.formData();
@@ -57,6 +56,35 @@ export async function POST(req: Request) {
     // and gallery sizes are derived via URL transforms, never stored copies.
     const kind = (formData.get("type") as string | null) ?? "portfolio";
     const isAvatar = kind === "avatar";
+
+    if (isR2Configured()) {
+      const result = await uploadR2Object({
+        buffer,
+        contentType: MIME_FOR[check.kind],
+        folder: isAvatar ? "contratacr/profiles" : "contratacr/portfolio",
+        extension: EXTENSION_FOR[check.kind],
+        userId: user.id,
+      });
+      await recordMediaAsset({
+        userId: user.id,
+        provider: "r2",
+        publicId: result.key,
+        resourceType: "image",
+        secureUrl: result.url,
+      });
+      return NextResponse.json({ url: result.url, publicId: result.key, provider: "r2" });
+    }
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    if (!cloudName || !apiKey || !apiSecret) {
+      return NextResponse.json(
+        { error: "Cloudinary no está configurado. Revisa las variables de entorno en Vercel." },
+        { status: 503 }
+      );
+    }
+    cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
 
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: isAvatar ? "contratacr/profiles" : "contratacr/portfolio",
