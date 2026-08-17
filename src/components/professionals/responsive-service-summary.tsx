@@ -9,6 +9,12 @@ type ResponsiveServiceSummaryProps = {
   profileHref: string;
   moreTitle: string;
   featuredLabel?: string;
+  testId?: string;
+  className?: string;
+  itemClassName?: string;
+  moreClassName?: string;
+  itemTestId?: string;
+  moreTestId?: string;
 };
 
 export function ResponsiveServiceSummary({
@@ -17,6 +23,12 @@ export function ResponsiveServiceSummary({
   profileHref,
   moreTitle,
   featuredLabel,
+  testId = "professional-card-desktop-service-summary",
+  className = "relative flex w-full min-w-0 items-center gap-2 overflow-hidden",
+  itemClassName = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[11px] font-semibold leading-snug text-[#6b7280]",
+  moreClassName = "relative z-10 inline-flex shrink-0 text-[10px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]",
+  itemTestId,
+  moreTestId,
 }: ResponsiveServiceSummaryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -31,10 +43,11 @@ export function ResponsiveServiceSummary({
     const moreWidths = Array.from(measurer.querySelectorAll<HTMLElement>("[data-more-measure]"), (node) => node.offsetWidth);
     const featuredWidth = measurer.querySelector<HTMLElement>("[data-featured-measure]")?.offsetWidth ?? 0;
     const available = container.clientWidth;
+    if (available <= 0) return;
     const gap = 8;
 
-    let nextCount = labels.length > 0 ? 1 : 0;
-    for (let count = labels.length; count >= 1; count -= 1) {
+    let nextCount = 0;
+    for (let count = labels.length; count >= 0; count -= 1) {
       const hiddenCount = Math.max(0, totalCount - count);
       const widths = labelWidths.slice(0, count).reduce((sum, width) => sum + width, 0);
       const moreWidth = hiddenCount > 0 ? (moreWidths[hiddenCount] ?? 0) : 0;
@@ -61,13 +74,13 @@ export function ResponsiveServiceSummary({
   return (
     <div
       ref={containerRef}
-      data-testid="professional-card-desktop-service-summary"
+      data-testid={testId}
       data-visible-count={shown.length}
       data-hidden-count={hiddenCount}
-      className="relative flex w-full min-w-0 items-center gap-2 overflow-hidden"
+      className={className}
     >
       {shown.map((label) => (
-        <span key={label} className="inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[11px] font-semibold leading-snug text-[#6b7280]" title={label}>
+        <span key={label} data-testid={itemTestId} className={itemClassName} title={label}>
           {label}
         </span>
       ))}
@@ -76,7 +89,8 @@ export function ResponsiveServiceSummary({
           href={profileHref}
           title={moreTitle}
           aria-label={moreTitle}
-          className="relative z-10 inline-flex shrink-0 text-[10px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]"
+          data-testid={moreTestId}
+          className={moreClassName}
         >
           +{hiddenCount}
         </Link>

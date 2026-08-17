@@ -337,8 +337,22 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       const preferred = locationOptions.find((o) => o.id === preferredLocationId);
       if (preferred) return [preferred];
     }
-    return locationOptions;
-  }, [forceContactOnly, locationOptions, preferredLocationId, restrictToPreferredLocation]);
+    if (locationOptions.length <= 1) return locationOptions;
+
+    const hasSpecificAvailability = (id: string) => slots.some((slot) => {
+      const loc = slot.locationId ?? "general";
+      if (loc === id) return true;
+      // A single-location pro may store legacy/public availability as "general";
+      // in a multi-location selector, keep "general" from making every tab look
+      // equally available because that would hide the truly useful ordering.
+      return locationOptions.length === 1 && loc === "general";
+    });
+
+    return locationOptions
+      .map((option, index) => ({ option, index, hasAvailability: hasSpecificAvailability(option.id) }))
+      .sort((a, b) => Number(b.hasAvailability) - Number(a.hasAvailability) || a.index - b.index)
+      .map(({ option }) => option);
+  }, [forceContactOnly, locationOptions, preferredLocationId, restrictToPreferredLocation, slots]);
 
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
   // Default to the first location that ACTUALLY has slots (so the card doesn't open on an

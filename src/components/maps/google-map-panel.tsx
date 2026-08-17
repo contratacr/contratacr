@@ -27,6 +27,7 @@ export interface MapProfessional {
   hourlyRate?: number | null;
   /** Pre-formatted "from" price for the popup (e.g. "₡10 000 /hora"). */
   priceLabel?: string | null;
+  popupMetricLabel?: string | null;
   provinceName?: string;
   lat?: number | null;
   lng?: number | null;
@@ -70,33 +71,29 @@ const MAP_CSS =
   ".ccr-pin .num{position:absolute;top:6px;left:0;right:0;text-align:center;color:#fff;font:700 12px/1 Inter,system-ui,sans-serif;}" +
   ".ccr-pin.is-active{transform:scale(1.15);}" +
   ".ccr-pin.is-active path{fill:" + PIN_HOVER + ";}" +
-  ".ccr-popwrap{transform:translateY(-54px);pointer-events:none;}" +
-  ".ccr-pop{pointer-events:auto;position:relative;width:var(--ccr-popup-width,286px);background:#fff;border:1px solid #dfe7ee;border-radius:16px;box-shadow:0 16px 40px -12px rgba(15,23,42,.34),0 3px 10px rgba(15,23,42,.10);font-family:Inter,system-ui,sans-serif;overflow:hidden;}" +
-  ".ccr-pop-link{display:block;padding:13px 13px 11px;color:inherit;text-decoration:none;}" +
-  ".ccr-pop-x{position:absolute;z-index:2;top:7px;right:7px;width:26px;height:26px;border:0;background:#fff;color:#7b8798;font-size:18px;line-height:1;cursor:pointer;border-radius:999px;box-shadow:0 1px 5px rgba(15,23,42,.12);}" +
+  ".ccr-popwrap{transform:translateY(-52px);pointer-events:none;}" +
+  ".ccr-pop{pointer-events:auto;position:relative;width:min(248px,calc(100vw - 32px));background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:12px;font-family:Inter,system-ui,sans-serif;text-decoration:none;display:block;}" +
+  ".ccr-pop-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;background:transparent;color:#9ca3af;font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}" +
   ".ccr-pop-x:hover{background:#f3f4f6;color:#374151;}" +
   ".ccr-pop-top{display:flex;gap:10px;align-items:flex-start;}" +
-  ".ccr-av{position:relative;width:48px;height:48px;border-radius:9999px;overflow:hidden;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}" +
+  ".ccr-av{position:relative;width:42px;height:42px;border-radius:9999px;overflow:hidden;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}" +
   ".ccr-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}" +
-  ".ccr-pop-main{min-width:0;flex:1;padding-right:20px;}" +
-  ".ccr-pop-name-row{display:flex;min-width:0;align-items:center;gap:4px;}" +
-  ".ccr-pop-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;color:#111827;font-size:14px;line-height:1.25;}" +
-  // Compact verification check shared with the current search cards.
-  ".ccr-ver{display:inline-flex;width:14px;height:14px;flex:0 0 14px;color:#009FD9;vertical-align:middle;}" +
+  ".ccr-pop-name{font-weight:700;color:#111827;font-size:14px;line-height:1.2;padding-right:18px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}" +
+  ".ccr-pop-sub{color:#6b7280;font-size:11px;font-weight:600;line-height:1.25;margin-top:2px;}" +
+  // "Verificado" pill — EXACTLY the /buscar card's badge: solid brand-blue #009FD9
+  // rounded-full pill, white text, font-size 10px / weight 600, padding 2px 8px
+  // (= card `rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white`).
+  // NO green, NO check icon.
+  ".ccr-ver{display:inline-flex;width:14px;height:14px;color:#009FD9;margin-left:4px;vertical-align:middle;}" +
   ".ccr-ver svg{display:block;width:14px;height:14px;}" +
-  ".ccr-pop-prof{display:flex;align-items:center;gap:4px;min-width:0;color:#6b7280;font-size:11.5px;font-weight:600;margin-top:3px;line-height:1.25;}" +
-  ".ccr-pop-prof-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
-  ".ccr-pop-more{flex-shrink:0;font-size:10px;font-weight:800;color:#526277;}" +
-  ".ccr-pop-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;}" +
-  ".ccr-pop-rate{display:flex;align-items:center;gap:3px;min-width:0;font-size:11.5px;color:#f59e0b;font-weight:800;}" +
-  ".ccr-pop-rate span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6b7280;font-weight:600;}" +
-  ".ccr-pop-price{min-width:0;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:11.5px;font-weight:800;color:" + PIN_BASE + ";}" +
-  ".ccr-pop-location{display:flex;align-items:center;gap:4px;min-width:0;margin-top:9px;padding-top:8px;border-top:1px solid #edf1f5;color:#008fbe;font-size:11.5px;font-weight:700;}" +
-  ".ccr-pop-location svg{width:13px;height:13px;flex-shrink:0;}" +
-  ".ccr-pop-location span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
-  ".ccr-pop-cta{display:flex;align-items:center;justify-content:space-between;margin-top:8px;color:#162543;font-size:11.5px;font-weight:800;}" +
-  ".ccr-pop-cta svg{width:14px;height:14px;color:#009FD9;}" +
-  "@media(max-width:640px){.ccr-pop{width:var(--ccr-popup-width,min(276px,calc(100vw - 28px)));border-radius:15px}.ccr-pop-link{padding:12px}.ccr-av{width:44px;height:44px}.ccr-pop-name{font-size:13.5px}.ccr-pop-location{margin-top:8px}.ccr-pop-cta{margin-top:7px}}" +
+  ".ccr-pop-prof{display:flex;align-items:center;gap:4px;color:#6b7280;font-size:12px;margin-top:2px;line-height:1.3;}" +
+  ".ccr-pop-more{display:inline-flex;align-items:center;font-size:10px;font-weight:800;color:#526277;line-height:1;}" +
+  ".ccr-pop-rate{display:flex;align-items:center;gap:3px;font-size:12px;margin-top:4px;color:#5f6f86;font-weight:600;line-height:1;}" +
+  ".ccr-pop-rate .star{color:#f59e0b;font-weight:800;}" +
+  ".ccr-pop-rate .score{color:#162543;font-weight:800;}" +
+  ".ccr-pop-rate .count{color:#5f6f86;font-weight:600;}" +
+  ".ccr-pop-price{font-size:12.5px;font-weight:700;color:" + PIN_BASE + ";margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.01em;}" +
+  ".ccr-pop-price.is-compact{margin-top:3px;}" +
   // Cluster preview popup — a compact list of the grouped pros (each row → profile), so a
   // cluster is never a dead marker. (No zoom button — pinch / wheel-zoom separates them.)
   ".ccr-clpop{pointer-events:auto;position:relative;width:250px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:10px;font-family:Inter,system-ui,sans-serif;}" +
@@ -181,6 +178,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // hover boundary → the anti-flicker fix stays intact.
   const activeAnchorElRef = useRef<HTMLElement | null>(null);
   const popupContentElRef = useRef<HTMLElement | null>(null);
+  const neutralizedPopupNodesRef = useRef<Array<[HTMLElement, string]>>([]);
   const canHoverRef = useRef(false);
   // proId → its pin elements (a pro can have several workplace pins).
   const pinsByProRef = useRef<Map<string, HTMLElement[]>>(new Map());
@@ -258,7 +256,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     if (!onPin && !onCard && !inBridge) hidePopup();
   }
 
+  function restorePopupPointerEvents() {
+    for (const [node, previous] of neutralizedPopupNodesRef.current) {
+      node.style.pointerEvents = previous;
+    }
+    neutralizedPopupNodesRef.current = [];
+  }
+
   function closePopup() {
+    restorePopupPointerEvents();
     if (popupRef.current) { popupRef.current.map = null; popupRef.current = null; }
     popupContentElRef.current = null;
     popupKeyRef.current = null;
@@ -285,15 +291,22 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // straight THROUGH the popup to the pin: zero steal, rock stable.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function neutralizePopup(marker: any, wrap: HTMLElement) {
-    try { if (marker?.style) marker.style.pointerEvents = "none"; } catch { /* not an element in this build */ }
+    restorePopupPointerEvents();
+    const touched = new Map<HTMLElement, string>();
+    const remember = (node: HTMLElement) => {
+      if (!touched.has(node)) touched.set(node, node.style.pointerEvents);
+      node.style.pointerEvents = "none";
+    };
+    try { if (marker?.style) remember(marker as HTMLElement); } catch { /* not an element in this build */ }
     const apply = () => {
       let node: HTMLElement | null = wrap.parentElement;
       let guard = 0;
-      while (node && guard++ < 5) {
-        node.style.pointerEvents = "none";
+      while (node && guard++ < 8) {
+        remember(node);
         if ((node.tagName || "").toLowerCase() === "gmp-advanced-marker") break; // stop AT the marker root, never the shared pane
         node = node.parentElement;
       }
+      neutralizedPopupNodesRef.current = Array.from(touched.entries());
     };
     apply();
     if (typeof requestAnimationFrame !== "undefined") requestAnimationFrame(apply);
@@ -314,42 +327,39 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const extraProfessions = Math.max(0, professionLabels.length - 1);
     const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName);
     const primaryName = displayName.primaryDesktop;
-    const reviewLabel = locale === "en"
-      ? `${pro.reviewCount} ${pro.reviewCount === 1 ? "review" : "reviews"}`
-      : `${pro.reviewCount} ${pro.reviewCount === 1 ? "reseña" : "reseñas"}`;
+    const secondaryName = displayName.secondaryDesktop;
     const verifiedLabel = locale === "en" ? "Verified by ContrataCR" : "Verificado por ContrataCR";
     const verifiedMarkup = pro.verified
       ? `<span class="ccr-ver" role="img" aria-label="${verifiedLabel}" title="${verifiedLabel}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="m8.3 12.1 2.3 2.3 5.2-5.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
       : "";
+    const ratingMetric = pro.popupMetricLabel?.match(/^★\s*([0-9.]+)\s*\((.+)\)$/);
+    const metricMarkup = ratingMetric
+      ? `<div class="ccr-pop-rate"><span class="star">★</span><span class="score">${esc(ratingMetric[1] ?? "")}</span><span class="count">${esc(ratingMetric[2] ?? "")}</span></div>`
+      : pro.popupMetricLabel ? `<div class="ccr-pop-rate"><span class="count">${esc(pro.popupMetricLabel)}</span></div>` : "";
+    const priceClass = metricMarkup ? "ccr-pop-price" : "ccr-pop-price is-compact";
     const avatarMarkup = pro.avatarUrl
       ? `${esc(initials(primaryName || pro.fullName))}<img src="${esc(pro.avatarUrl)}" alt="" />`
       : esc(initials(primaryName || pro.fullName));
-    const locationLabel = pro.provinceName || "Costa Rica";
     const wrap = document.createElement("div");
     wrap.className = "ccr-popwrap";
-    const mapWidth = mapRef.current?.clientWidth ?? window.innerWidth;
-    const preferredWidth = window.matchMedia("(max-width: 640px)").matches ? 276 : 286;
-    wrap.style.setProperty("--ccr-popup-width", `${Math.max(176, Math.min(preferredWidth, mapWidth - 16))}px`);
     wrap.innerHTML =
-      `<div class="ccr-pop">` +
+      `<a class="ccr-pop" href="${href}">` +
         `<button class="ccr-pop-x" aria-label="Cerrar">×</button>` +
-        `<a class="ccr-pop-link" href="${href}">` +
-          `<div class="ccr-pop-top">` +
-            `<div class="ccr-av">${avatarMarkup}</div>` +
-            `<div class="ccr-pop-main">` +
-              `<div class="ccr-pop-name-row"><div class="ccr-pop-name">${esc(primaryName)}</div>${verifiedMarkup}</div>` +
-              (primaryProfession ? `<div class="ccr-pop-prof"><span class="ccr-pop-prof-name">${esc(primaryProfession)}</span>${extraProfessions > 0 ? `<span class="ccr-pop-more">+${extraProfessions}</span>` : ""}</div>` : "") +
-              `<div class="ccr-pop-meta"><div class="ccr-pop-rate">★ ${pro.ratingAvg.toFixed(1)} <span>${esc(reviewLabel)}</span></div>${pro.priceLabel ? `<div class="ccr-pop-price">${esc(pro.priceLabel)}</div>` : ""}</div>` +
-            `</div>` +
+        `<div class="ccr-pop-top">` +
+          `<div class="ccr-av">${avatarMarkup}</div>` +
+          `<div style="min-width:0;">` +
+            `<div class="ccr-pop-name">${esc(primaryName)}${verifiedMarkup}</div>` +
+            (secondaryName ? `<div class="ccr-pop-sub">${esc(secondaryName)}</div>` : "") +
+            (primaryProfession ? `<div class="ccr-pop-prof"><span>${esc(primaryProfession)}</span>${extraProfessions > 0 ? `<span class="ccr-pop-more">+${extraProfessions}</span>` : ""}</div>` : "") +
+            metricMarkup +
+            (pro.priceLabel ? `<div class="${priceClass}">${esc(pro.priceLabel)}</div>` : "") +
           `</div>` +
-          `<div class="ccr-pop-location"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2"/></svg><span>${esc(locationLabel)}</span></div>` +
-          `<div class="ccr-pop-cta"><span>${locale === "en" ? "View profile" : "Ver perfil"}</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>` +
-        `</a>` +
-      `</div>`;
+        `</div>` +
+      `</a>`;
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
     popupRef.current = createGoogleMarker(g, { map, position: pos, content: wrap, zIndex: 100000 });
     popupContentElRef.current = wrap; // measured by the proximity-hide on mousemove
-    neutralizePopup(popupRef.current, wrap); // ← belt-and-suspenders: the popup also can't capture the pointer
+    if (canHoverRef.current) neutralizePopup(popupRef.current, wrap); // desktop hover anti-flicker only; touch maps must keep native gestures
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -506,19 +516,20 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       const list = pinsByProRef.current.get(proId) ?? [];
       list.push(el); pinsByProRef.current.set(proId, list);
 
+      const showPinPopup = () => {
+        if (activePinRef.current && activePinRef.current !== proId) setPinActive(activePinRef.current, false);
+        activePinRef.current = proId;
+        activeAnchorElRef.current = el;
+        setPinActive(proId, true);
+        openPopup(g, map, pro, pos);
+      };
       if (canHover) {
         // DESKTOP HOVER → switch the highlight to THIS pin (clearing the previous one) + show the
         // mini-card. There is NO mouseleave handler — the popup is NOT closed when the cursor leaves
         // the pin (that boundary toggle was the flicker). It closes only on map-leave / map-click /
         // hovering a different pin (which re-enters here and switches). Re-entering the SAME pin is a
         // no-op (openPopup dedupes by pro.id). NO scroll on hover (it would shift the sticky map).
-        el.addEventListener("mouseenter", () => {
-          if (activePinRef.current && activePinRef.current !== proId) setActive(activePinRef.current, false, false);
-          activePinRef.current = proId;
-          activeAnchorElRef.current = el;
-          setActive(proId, true, false);
-          openPopup(g, map, pro, pos);
-        });
+        el.addEventListener("mouseenter", showPinPopup);
       }
       el.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -528,12 +539,19 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           router.push(`/${locale}/profesionales/${pro.slug}`);
         } else {
           // MOBILE TAP → show the stable mini-card (tap the card itself to open the profile).
-          if (activePinRef.current && activePinRef.current !== proId) setActive(activePinRef.current, false, false);
-          activePinRef.current = proId;
-          activeAnchorElRef.current = el;
-          setActive(proId, true, false);
-          openPopup(g, map, pro, pos);
+          showPinPopup();
         }
+      });
+      marker.addListener?.("click", () => {
+        if (canHover) {
+          hidePopup();
+          router.push(`/${locale}/profesionales/${pro.slug}`);
+        } else {
+          showPinPopup();
+        }
+      });
+      marker.addListener?.("gmp-click", () => {
+        if (!canHover) showPinPopup();
       });
       return marker;
     }).filter(Boolean);
