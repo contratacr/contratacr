@@ -27,6 +27,7 @@ jobs:
   build:
     name: OpenNext Linux build
     runs-on: ubuntu-latest
+    environment: test
     timeout-minutes: 20
     steps:
       - name: Checkout
