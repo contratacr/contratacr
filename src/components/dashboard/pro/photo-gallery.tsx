@@ -18,6 +18,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { CASE_PHOTOS_PER_CASE, casoProfession, type ServiceLike } from "@/lib/services";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { AppTooltip } from "@/components/ui/app-tooltip";
+import { deleteOwnedMediaUrls } from "@/lib/client-media-cleanup";
 
 // NEW per-profession model (sprint 493): a "caso de éxito" is a CASE (service done · for whom ·
 // when · up to 3 photos), and there can be up to 3 cases PER PROFESSION (the old overall limit of
@@ -89,8 +90,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const primary = professions[0];
 
-  const initialCasesRef = useRef<SuccessCase[]>(seedCases(initialItems, initialUrls, services, primary));
-  const [cases, setCases] = useState<SuccessCase[]>(() => initialCasesRef.current);
+  const [cases, setCases] = useState<SuccessCase[]>(() => seedCases(initialItems, initialUrls, services, primary));
+  const initialCasesRef = useRef<SuccessCase[]>(cases);
   // Filter is always a real profession (no "Todas") — defaults to the first.
   const [activeProf, setActiveProf] = useState<string>(professions[0] ?? "");
   const [saving, setSaving] = useState(false);
@@ -122,6 +123,9 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         ({ error } = await supabase.from("professionals").update({ portfolio_urls: urls }).eq("id", professionalId));
       }
       if (error) throw error;
+      const previousUrls = new Set(initialCasesRef.current.flatMap((item) => item.photos));
+      const nextUrls = new Set(next.flatMap((item) => item.photos));
+      await deleteOwnedMediaUrls([...previousUrls].filter((url) => !nextUrls.has(url)));
       setJustSaved(true);
       setDirty(false);
       initialCasesRef.current = next;
@@ -190,6 +194,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   }
 
   function cancelChanges() {
+    const savedUrls = new Set(initialCasesRef.current.flatMap((item) => item.photos));
+    void deleteOwnedMediaUrls(cases.flatMap((item) => item.photos).filter((url) => !savedUrls.has(url)));
     setCases(initialCasesRef.current);
     setDraft(null);
     setDirty(false);
@@ -200,6 +206,14 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   const addProf = selectedProf || primary || "";
   const addFull = !!addProf && countFor(addProf) >= MAX_CASES_PER_PROFESSION;
   const draftIsEdit = !!draft && cases.some((c) => c.id === draft.id);
+
+  function closeDraft() {
+    if (draft) {
+      const retainedUrls = new Set(cases.flatMap((item) => item.photos));
+      void deleteOwnedMediaUrls(draft.photos.filter((url) => !retainedUrls.has(url)));
+    }
+    setDraft(null);
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -313,13 +327,13 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       </div>
       {draft && (
         <Modal
-          onClose={() => setDraft(null)}
+          onClose={closeDraft}
           title={draftIsEdit ? t("editCase") : t("newCase")}
           closeLabel={t("cancel")}
           mobilePresentation="center"
           footer={
             <>
-              <Button type="button" variant="outline" onClick={() => setDraft(null)}>{t("cancel")}</Button>
+              <Button type="button" variant="outline" onClick={closeDraft}>{t("cancel")}</Button>
               <Button type="button" onClick={saveCase} loading={saving} disabled={draft.photos.length === 0}>{t("save")}</Button>
             </>
           }
