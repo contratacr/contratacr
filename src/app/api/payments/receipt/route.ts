@@ -1,31 +1,35 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
-import { validateUpload, IMAGE_KINDS, DOC_KINDS, MIME_FOR } from "@/lib/upload-validation";
+import { validateUpload, IMAGE_KINDS, DOC_KINDS, MIME_FOR, type FileKind } from "@/lib/upload-validation";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { getApiAdmin } from "@/lib/auth/admin";
-import { recordCloudinaryAsset } from "@/lib/cloudinary-ownership";
+import { recordCloudinaryAsset, recordMediaAsset } from "@/lib/cloudinary-ownership";
+import { isR2Configured, uploadR2Object } from "@/lib/r2-storage";
 
 export const runtime = "nodejs";
 
 // Uploads a SINPE/transfer comprobante (image or PDF) to Cloudinary and returns
 // the URL. Auth required (a logged-in pro, or an admin previewing). Gated like the
 // rest of payments: nothing here is reachable by anonymous/regular users while off.
+const EXTENSION_FOR: Record<FileKind, string> = {
+  jpeg: "jpg",
+  png: "png",
+  webp: "webp",
+  avif: "avif",
+  gif: "gif",
+  heic: "heic",
+  heif: "heif",
+  pdf: "pdf",
+};
+
 export async function POST(req: Request) {
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   const admin = await getApiAdmin();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   if (!PAYMENTS_ENABLED && !admin) return NextResponse.json({ error: "No disponible" }, { status: 404 });
-
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
-  if (!cloudName || !apiKey || !apiSecret) {
-    return NextResponse.json({ error: "Cloudinary no está configurado." }, { status: 503 });
-  }
-  cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
 
   try {
     const form = await req.formData();
@@ -41,6 +45,32 @@ export async function POST(req: Request) {
       allowLabel: "JPG, PNG, WEBP, AVIF, HEIC/HEIF, GIF o PDF",
     });
     if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+
+    if (isR2Configured()) {
+      const result = await uploadR2Object({
+        buffer,
+        contentType: MIME_FOR[check.kind],
+        folder: "contratacr/comprobantes",
+        extension: EXTENSION_FOR[check.kind],
+        userId: user.id,
+      });
+      await recordMediaAsset({
+        userId: user.id,
+        provider: "r2",
+        publicId: result.key,
+        resourceType: check.kind === "pdf" ? "raw" : "image",
+        secureUrl: result.url,
+      });
+      return NextResponse.json({ url: result.url, provider: "r2" });
+    }
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    if (!cloudName || !apiKey || !apiSecret) {
+      return NextResponse.json({ error: "Cloudinary no está configurado." }, { status: 503 });
+    }
+    cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
 
     const dataUri = `data:${MIME_FOR[check.kind]};base64,${buffer.toString("base64")}`;
     // resource_type auto → handles both images and PDFs. Stored in a dedicated
