@@ -210,6 +210,33 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resultOffset = (currentPage - 1) * RESULTS_PER_PAGE;
   const results = orderedResults.slice(resultOffset, resultOffset + RESULTS_PER_PAGE);
 
+  const popupMetricLabelFor = (pro: (typeof allResults)[number]): string | null => {
+    if (sortBy === "experience") {
+      const years = Math.floor(experienceMonths(pro) / 12);
+      if (years <= 0) return null;
+      return locale === "en"
+        ? `${years} ${years === 1 ? "year experience" : "years experience"}`
+        : `${years} ${years === 1 ? "año experiencia" : "años experiencia"}`;
+    }
+    if (sortBy === "successCases") {
+      const count = pro.portfolioCount ?? 0;
+      if (count <= 0) return null;
+      return locale === "en"
+        ? `${count} ${count === 1 ? "success case" : "success cases"}`
+        : `${count} ${count === 1 ? "caso de éxito" : "casos de éxito"}`;
+    }
+    if (sortBy === "followers") {
+      const count = pro.followerCount ?? 0;
+      if (count <= 0) return null;
+      return locale === "en"
+        ? `${count} ${count === 1 ? "follower" : "followers"}`
+        : `${count} ${count === 1 ? "seguidor" : "seguidores"}`;
+    }
+    if ((pro.reviewCount ?? 0) <= 0) return null;
+    return locale === "en"
+      ? `★ ${pro.ratingAvg.toFixed(1)} (${pro.reviewCount} ${pro.reviewCount === 1 ? "review" : "reviews"})`
+      : `★ ${pro.ratingAvg.toFixed(1)} (${pro.reviewCount} ${pro.reviewCount === 1 ? "reseña" : "reseñas"})`;
+  };
   // The map mirrors the current result page: only the professionals shown as
   // cards get pins. Changing pages swaps the map to the next visible set.
   const mapData = results.flatMap((pro) => {
@@ -230,6 +257,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       verified: pro.verificationStatus === "verified",
       hourlyRate: pro.hourlyRate ?? null,
       priceLabel: primaryPricingLabel(pro.pricing, pro.hourlyRate, locale),
+      popupMetricLabel: popupMetricLabelFor(pro),
       provinceName: pro.provinceName,
     };
     const places = ((pro.workplaces ?? []) as SearchWorkplace[]).filter(isExactWorkplacePin);
@@ -471,11 +499,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       wider results column (`lg:max-w-none`), which hugs the card width while
                       the map takes the rest (see search-results-layout). Content-driven
                       height - one card per row, each grows to its content. */}
-                  <div className="flex flex-col gap-3">
+                  <div className="-mx-4 flex w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-[#eef2f6] lg:mx-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
                     {await Promise.all(results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.
-                      <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative w-full max-w-[520px] lg:max-w-none scroll-mt-24 rounded-2xl transition-shadow">
+                      <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative w-full scroll-mt-24 transition-shadow lg:max-w-none lg:rounded-2xl">
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
                           <ProfessionalCard
                             professional={pro}
@@ -484,6 +512,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={i + 1}
+                            highlightMetric={sortBy === "experience" ? "experience" : "rating"}
                             forceContactOnly={shouldShowContactOnly(pro)}
                             preferredLocationId={shouldPreferVideoLocation(pro) ? "videoconsulta" : undefined}
                             restrictToPreferredLocation={shouldPreferVideoLocation(pro)}

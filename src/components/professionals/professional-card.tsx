@@ -160,7 +160,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = mobileDisplayProfessions.length - mobileProfessionList.length;
   const mobileServiceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]";
-  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 translate-y-px items-baseline leading-none text-[12px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
+  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 items-center self-center align-middle leading-none text-[12px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
@@ -240,6 +240,48 @@ export async function ProfessionalCard({ professional, className, highlightMetri
     );
   })();
 
+  const mobileMetricClass = "relative z-10 inline-flex min-w-0 w-fit shrink-0 items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
+  const mobileMetric = (() => {
+    if (highlightMetric === "experience") {
+      if (yearsExperience <= 0) return null;
+      return (
+        <span className={mobileMetricClass} data-testid="professional-card-mobile-experience">
+          <span className="font-bold tabular-nums text-[#162543]">{yearsExperience}</span>
+          <span className="whitespace-nowrap">{yearsExperience === 1 ? (locale === "en" ? "year experience" : "año experiencia") : (locale === "en" ? "years experience" : "años experiencia")}</span>
+        </span>
+      );
+    }
+    if (highlightMetric === "successCases") {
+      if (portfolioCount <= 0) return null;
+      return (
+        <Link href={casesHref} className={mobileMetricClass} aria-label={casesLabel}>
+          <span className="font-bold tabular-nums text-[#162543]">{portfolioCount}</span>
+          <span className="whitespace-nowrap">{portfolioCount === 1 ? (locale === "en" ? "success case" : "caso de éxito") : (locale === "en" ? "success cases" : "casos de éxito")}</span>
+        </Link>
+      );
+    }
+    if (highlightMetric === "followers") {
+      if (followerCount <= 0) return null;
+      return (
+        <span className={mobileMetricClass}>
+          <span className="font-bold tabular-nums text-[#162543]">{followerCount}</span>
+          <span className="whitespace-nowrap">{followerCount === 1 ? (locale === "en" ? "follower" : "seguidor") : (locale === "en" ? "followers" : "seguidores")}</span>
+        </span>
+      );
+    }
+    if (professional.reviewCount <= 0) return null;
+    return (
+      <Link
+        href={reviewsHref}
+        className={mobileMetricClass}
+        aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
+      >
+        <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
+        <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+        <span className="whitespace-nowrap">{ratingLabel}</span>
+      </Link>
+    );
+  })();
   const desktopPrice = priceLabel ? (
     <div className={`relative z-10 ml-auto hidden shrink-0 self-baseline text-right lg:block ${priceBoxClass}`}>
       <span className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-1 gap-y-0.5 leading-[1.1]">
@@ -291,19 +333,19 @@ export async function ProfessionalCard({ professional, className, highlightMetri
           be siblings of this row and got pushed BELOW the taller avatar, leaving a gap).
           PRICE is right-aligned on the company-name line only. The mobile `pr-8` keeps the
           price clear of the inside top-right bookmark (`lg:pr-0` on desktop). */}
-      <div className="flex flex-wrap items-start gap-x-3 gap-y-1 lg:flex-nowrap">
+      <div className="flex flex-wrap items-start gap-x-2.5 gap-y-1 lg:flex-nowrap lg:gap-x-3">
         <Link href={profileHref} className="relative z-10 shrink-0">
-          <Avatar className="h-14 w-14 rounded-full lg:h-16 lg:w-16">
+          <Avatar className="h-[52px] w-[52px] rounded-full lg:h-16 lg:w-16">
             <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
             <AvatarFallback
-              delayMs={professional.avatarUrl ? 700 : 0}
+              delayMs={0}
               className="rounded-full bg-[#EBF5FB] text-[#009FD9] font-bold data-[delayed-open]:animate-pulse"
             >
-              {professional.avatarUrl ? "" : getInitials(professional.fullName)}
+              {getInitials(professional.fullName)}
             </AvatarFallback>
           </Avatar>
           {rank != null && (
-            <span className="absolute -top-1.5 -left-1.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white">
+            <span className="absolute -top-1.5 -left-1.5 hidden h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">
               {rank}
             </span>
           )}
@@ -343,24 +385,12 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                   moreClassName={moreProfessionsClass}
                 />
               )}
-              {(professional.reviewCount > 0 || mobilePrice) && (
+              {(mobileMetric || mobilePrice) && (
                 <div
                   data-testid="professional-card-mobile-meta-row"
                   className="mt-1.5 flex min-w-0 items-center justify-between gap-2 lg:hidden"
                 >
-                  {professional.reviewCount > 0 ? (
-                    <Link
-                      href={reviewsHref}
-                      className="relative z-10 inline-flex min-w-0 w-fit shrink-0 items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-                      aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
-                    >
-                      <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
-                      <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                      <span className="whitespace-nowrap">{ratingLabel}</span>
-                    </Link>
-                  ) : (
-                    <span className="min-w-0" />
-                  )}
+                  {mobileMetric ?? <span className="min-w-0" />}
                   {mobilePrice}
                 </div>
               )}
@@ -397,7 +427,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
     // divider; MOBILE stacks them — all owned by ProfessionalSchedule, which holds the
     // schedule state and receives the info above as a slot. The ranking number now rides on
     // the avatar; the favorite bookmark sits inside the card so responsive sheets never clip it.
-    <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
+    <article className={`group relative flex h-full min-w-0 flex-col bg-white px-4 py-3 shadow-[0_8px_14px_-14px_rgba(15,23,42,0.55)] transition-shadow duration-200 lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:p-4 lg:shadow-none lg:hover:border-[#cbd5e1] lg:hover:shadow-md ${className ?? ""}`}>
       <ProfessionalSchedule
         info={info}
         professional={professional}

@@ -43,6 +43,7 @@ export function ResponsiveServiceSummary({
     const moreWidths = Array.from(measurer.querySelectorAll<HTMLElement>("[data-more-measure]"), (node) => node.offsetWidth);
     const featuredWidth = measurer.querySelector<HTMLElement>("[data-featured-measure]")?.offsetWidth ?? 0;
     const available = container.clientWidth;
+    if (available <= 0) return;
     const gap = 8;
 
     let nextCount = 0;

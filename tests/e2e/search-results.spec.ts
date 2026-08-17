@@ -114,6 +114,18 @@ test.describe("@seeded search results", () => {
     expect(layout.primary!.right).toBeLessThanOrEqual(layout.card!.right + 1);
   });
 
+
+  test("mobile experience sort shows experience metric on result cards", async ({ page }, testInfo) => {
+    if (!isMobileProject(testInfo)) return;
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoOK(page, "/es/buscar?sortBy=experience");
+
+    const card = page.locator("[data-pro-id]").first();
+    await expect(card).toBeVisible();
+    const experience = card.getByTestId("professional-card-mobile-experience");
+    await expect(experience).toBeVisible();
+    await expect(experience).toContainText(/año(?:s)? experiencia|year(?:s)? experience/i);
+  });
   test("long mobile service labels stay readable instead of showing two truncated chips", async ({ page }, testInfo) => {
     if (!isMobileProject(testInfo)) return;
     await firstProfessionalHref(page);
