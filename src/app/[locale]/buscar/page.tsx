@@ -482,14 +482,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {/* Results list */}
             <div className="min-w-0">
               {allResults.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-2xl border border-[#e5e7eb]">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 rounded-full bg-[#EBF5FB] flex items-center justify-center">
+                <div data-search-empty-state className="-mx-4 flex min-h-[18rem] w-[calc(100%+2rem)] flex-col items-center justify-center border-t border-[#e5e7eb] bg-white px-6 py-16 text-center lg:mx-0 lg:min-h-[24rem] lg:w-full lg:rounded-2xl lg:border lg:px-8 lg:py-20">
+                  <div className="mb-4 flex justify-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF5FB]">
                       <Search className="h-8 w-8 text-[#009FD9]" />
                     </div>
                   </div>
-                  <h2 className="text-xl font-semibold text-[#111827] mb-2">{t("noResults.title")}</h2>
-                  <p className="text-[#6b7280] text-sm max-w-sm mx-auto">{t("noResults.desc")}</p>
+                  <h2 className="mb-2 text-xl font-semibold text-[#111827]">{t("noResults.title")}</h2>
+                  <p className="mx-auto max-w-sm text-sm text-[#6b7280]">{t("noResults.desc")}</p>
                 </div>
               ) : (
                 <>
