@@ -40,7 +40,8 @@
     "test:e2e:mobile:chat": "playwright test --config=playwright.mobile.config.ts tests/e2e/direct-chat.spec.ts",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:ui": "playwright test --ui",
-    "padron:load:neon": "node scripts/load-padron-neon.mjs"
+    "padron:load:neon": "node scripts/load-padron-neon.mjs",
+    "padron:check:neon": "node scripts/check-padron-neon.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.4.2",
