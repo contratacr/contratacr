@@ -74,6 +74,16 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/prepare-padron-copy.mjs "$PADRON_FILE" padron-copy.tsv
+          if [ "$TARGET" = "test" ]; then
+            {
+              grep "^${PADRON_SAMPLE_CEDULA}	" padron-copy.tsv || true
+              head -n 100000 padron-copy.tsv
+            } | awk '!seen[$1]++' > padron-copy-test.tsv
+            mv padron-copy-test.tsv padron-copy.tsv
+            echo "PADRON_MIN_ROWS=1000" >> "$GITHUB_ENV"
+          else
+            echo "PADRON_MIN_ROWS=3000000" >> "$GITHUB_ENV"
+          fi
           echo "PADRON_COPY_FILE=$PWD/padron-copy.tsv" >> "$GITHUB_ENV"
 
       - name: Ensure Neon schema
@@ -86,7 +96,8 @@ jobs:
             papellido text,
             sapellido text
           );
-          create table if not exists public.padron_staging (
+          drop table if exists public.padron_staging;
+          create table public.padron_staging (
             cedula text primary key,
             nombre text,
             papellido text,
@@ -105,12 +116,14 @@ jobs:
             staging_count bigint;
           BEGIN
             SELECT count(*) INTO staging_count FROM public.padron_staging;
-            IF staging_count < 3000000 THEN
+            IF staging_count < current_setting('app.padron_min_rows')::bigint THEN
               RAISE EXCEPTION 'padron_staging has only % rows; refusing to swap', staging_count;
             END IF;
           END;
           $$;
           SQL
+        env:
+          PGOPTIONS: -c app.padron_min_rows=${{ env.PADRON_MIN_ROWS }}
 
       - name: Promote Neon staging
         if: ${{ inputs.dry_run == false }}
