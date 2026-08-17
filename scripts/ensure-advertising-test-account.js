@@ -372,6 +372,29 @@ async function main() {
       : { manual_test_account: "advertising", source_type: row.type, push_suppressed: true },
   })));
 
+  // The remote mobile regression shares the isolated test project with manual
+  // QA. Remove notification rows created by incidental test logins so the
+  // canonical fixture verifier sees only the three approved test accounts.
+  // The project-ref guard above makes this cleanup impossible in production.
+  const approvedNotificationUsers = new Set([
+    SOURCE_PROFILE_ID,
+    COUNTERPART_PROFILE_ID,
+    user.id,
+  ]);
+  const existingNotifications = await must(
+    "test notification isolation",
+    admin.from("notifications").select("id,user_id").limit(5000),
+  );
+  const unapprovedNotificationIds = existingNotifications
+    .filter((row) => !approvedNotificationUsers.has(row.user_id))
+    .map((row) => row.id);
+  if (unapprovedNotificationIds.length) {
+    await must(
+      "unapproved test notifications",
+      admin.from("notifications").delete().in("id", unapprovedNotificationIds),
+    );
+  }
+
   console.log(JSON.stringify({
     ready: true,
     environment: "test",
