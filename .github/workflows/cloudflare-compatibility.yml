@@ -15,6 +15,14 @@ on:
         description: "Cloudflare Worker name used only when mode=deploy-preview."
         required: true
         default: contratacr-preview
+      target_environment:
+        description: "GitHub environment whose secrets are used for the build."
+        required: true
+        default: test
+        type: choice
+        options:
+          - test
+          - production
 
 permissions:
   contents: read
@@ -27,7 +35,7 @@ jobs:
   build:
     name: OpenNext Linux build
     runs-on: ubuntu-latest
-    environment: test
+    environment: ${{ inputs.target_environment }}
     timeout-minutes: 20
     steps:
       - name: Checkout
