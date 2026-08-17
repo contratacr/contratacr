@@ -169,7 +169,7 @@ test.describe("@seeded search results", () => {
   });
 
   test("mobile no-results state uses the full-width search sheet layout", async ({ page }, testInfo) => {
-    test.skip(!isMobileProject(testInfo), "Responsive search sheet layout is covered by the mobile project.");
+    if (!isMobileProject(testInfo)) return;
     await page.setViewportSize({ width: 390, height: 844 });
     await gotoOK(page, "/es/buscar?q=__contratacr_no_results_visual_regression__");
     await waitForInteractivePage(page);
