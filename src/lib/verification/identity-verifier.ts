@@ -4,10 +4,10 @@ import { neon } from "@neondatabase/serverless";
 
 // ── IdentityVerifier abstraction ────────────────────────────────────────────
 // ContrataCR's verification flow calls this interface only. The underlying
-// provider is swappable WITHOUT touching callers: self-hosted padrón today,
-// ApifyCR / Verifik later by swapping `getIdentityVerifier()`. INTERNAL USE
-// ONLY — there is no public endpoint, no third-party auth, no external rate
-// limiting; the app calls it server-side.
+// provider is swappable WITHOUT touching callers: Cloudflare D1 padrón first,
+// Neon/Supabase as migration fallbacks, and ApifyCR / Verifik later by swapping
+// `getIdentityVerifier()`. INTERNAL USE ONLY — there is no public endpoint, no
+// third-party auth, no external rate limiting; the app calls it server-side.
 
 export interface IdentityCheckInput {
   cedula: string;   // clean digits
@@ -108,6 +108,15 @@ type PadronLookupSource = {
   row: PadronLookupRow | null;
 };
 
+type D1PreparedStatement = {
+  bind(...values: unknown[]): D1PreparedStatement;
+  first<T = unknown>(): Promise<T | null>;
+};
+
+type PadronD1Database = {
+  prepare(query: string): D1PreparedStatement;
+};
+
 function tokens(s: string): string[] {
   return normalizeName(s).split(" ").filter((t) => t && !STOPWORDS.has(t));
 }
@@ -131,10 +140,47 @@ export function nameSimilarity(a: string, b: string): number {
 // Names matching at or above this share of tokens are accepted.
 export const NAME_MATCH_THRESHOLD = 0.6;
 
+let padronD1: PadronD1Database | null | undefined;
+let padronD1Unavailable = false;
 let padronSql: ReturnType<typeof neon> | null = null;
+
+async function getPadronD1Database(): Promise<PadronD1Database | null> {
+  if (padronD1Unavailable) return null;
+  if (padronD1 !== undefined) return padronD1;
+
+  try {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const context = await getCloudflareContext({ async: true });
+    padronD1 = (context.env as { PADRON_D1?: PadronD1Database }).PADRON_D1 ?? null;
+    return padronD1;
+  } catch (error) {
+    padronD1Unavailable = true;
+    if (process.env.PADRON_D1_DEBUG === "1") {
+      console.warn("[identity] Cloudflare D1 padrón binding unavailable; falling back:", error);
+    }
+    return null;
+  }
+}
 
 function getPadronDatabaseUrl(): string {
   return process.env.PADRON_DATABASE_URL?.trim() || "";
+}
+
+async function lookupPadronInD1(cedula: string): Promise<PadronLookupSource | null> {
+  const db = await getPadronD1Database();
+  if (!db) return null;
+
+  const row = await db
+    .prepare(`
+      select nombre, papellido, sapellido
+      from padron
+      where cedula = ?
+      limit 1
+    `)
+    .bind(cedula)
+    .first<PadronLookupRow>();
+
+  return { provider: "cloudflare_d1_padron", row: row ?? null };
 }
 
 async function lookupPadronInNeon(cedula: string): Promise<PadronLookupSource | null> {
@@ -169,6 +215,15 @@ async function lookupPadronInSupabase(cedula: string): Promise<PadronLookupSourc
 }
 
 async function lookupPadron(cedula: string): Promise<PadronLookupSource> {
+  try {
+    const d1Result = await lookupPadronInD1(cedula);
+    if (d1Result) return d1Result;
+  } catch (error) {
+    // D1 is the long-term low-cost padrón store, but during migration it must
+    // not become a hard dependency until the import is verified.
+    console.error("[identity] Cloudflare D1 padron lookup failed; falling back:", error);
+  }
+
   try {
     const neonResult = await lookupPadronInNeon(cedula);
     if (neonResult) return neonResult;

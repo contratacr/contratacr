@@ -35,6 +35,7 @@
     "test:e2e:ui": "playwright test --ui",
     "padron:load:neon": "node scripts/load-padron-neon.mjs",
     "padron:check:neon": "node scripts/check-padron-neon.mjs",
+    "padron:prepare-d1-sql": "node scripts/prepare-padron-d1-sql.mjs",
     "cloudflare:build": "opennextjs-cloudflare build",
     "cloudflare:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cloudflare:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"

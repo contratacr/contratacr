@@ -8,6 +8,12 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "d1_databases": [
+    {
+      "binding": "PADRON_D1",
+      "database_name": "contratacr-padron"
+    }
+  ],
   "observability": {
     "enabled": true
   }
