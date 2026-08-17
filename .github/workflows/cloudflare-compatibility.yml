@@ -1,0 +1,38 @@
+name: Cloudflare Compatibility
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-compatibility-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: OpenNext Linux build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify private env files are absent
+        run: npm run security:env
+
+      - name: Build Cloudflare bundle
+        run: npm run cloudflare:build
+
+      - name: Validate Worker bundle and report size
+        run: npx wrangler deploy --dry-run

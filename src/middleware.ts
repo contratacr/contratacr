@@ -27,12 +27,11 @@ const PUBLIC_PREFIXES = [
   "/privacidad",
 ];
 
-// Next.js 16 renamed the `middleware` file convention to `proxy`. For a `src/`
-// project the file must live at `src/proxy.ts` (same level as `src/app`) — the
-// previous `middleware.ts` at the repo root silently stopped running on the
-// Next 16 upgrade, which disabled the auth gate + locale redirect. This runs
+// Cloudflare's OpenNext adapter does not yet support the Node.js-only `proxy.ts`
+// convention introduced by Next.js 16. Keep this request boundary in the legacy
+// Edge Middleware convention until the adapter supports Node Proxy. It still runs
 // before every matched route: i18n locale routing + the Supabase auth gate.
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/api/")) {
