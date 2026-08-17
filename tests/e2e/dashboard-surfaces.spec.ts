@@ -138,6 +138,20 @@ test.describe("@seeded dashboard surfaces", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("follow network modal closes when tapping outside", async ({ page }, testInfo) => {
+    test.skip(!isMobileProject(testInfo), "The reported follow-network modal behavior is mobile-only.");
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional");
+
+    for (const label of [/seguidos|following/i, /seguidores|followers/i]) {
+      await page.getByRole("button", { name: label }).filter({ visible: true }).first().click();
+      const dialog = page.getByRole("dialog", { name: label });
+      await expect(dialog).toBeVisible();
+      await page.mouse.click(10, 120);
+      await expect(dialog).toHaveCount(0);
+    }
+  });
+
   test("dashboard sections never expose a blank body while their first request is pending", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
 

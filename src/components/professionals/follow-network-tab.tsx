@@ -202,11 +202,22 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
   const title = view === "following" ? (es ? "Seguidos" : "Following") : (es ? "Seguidores" : "Followers");
 
   return (
-    <div className="fixed inset-0 z-[220] flex items-center justify-center bg-[#111827]/72 px-3 py-5 backdrop-blur-[1px]">
-      <section className="flex h-[min(72svh,410px)] min-h-[360px] w-full max-w-[560px] flex-col overflow-hidden rounded-[22px] bg-white shadow-[0_24px_80px_-24px_rgba(0,0,0,0.65)]">
+    <div
+      className="fixed inset-0 z-[220] flex items-center justify-center bg-[#111827]/72 px-3 py-5 backdrop-blur-[1px]"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onBack?.();
+      }}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="follow-network-title"
+        className="flex h-[min(72svh,410px)] min-h-[360px] w-full max-w-[560px] flex-col overflow-hidden rounded-[22px] bg-white shadow-[0_24px_80px_-24px_rgba(0,0,0,0.65)]"
+        onClick={(event) => event.stopPropagation()}
+      >
         <header className="grid h-12 shrink-0 grid-cols-[48px_minmax(0,1fr)_48px] items-center border-b border-[#dfe3e8]">
           <span />
-          <h2 className="truncate text-center text-base font-semibold text-[#111827]">{title}</h2>
+          <h2 id="follow-network-title" className="truncate text-center text-base font-semibold text-[#111827]">{title}</h2>
           <button
             type="button"
             onClick={onBack}
