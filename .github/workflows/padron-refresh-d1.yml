@@ -106,15 +106,32 @@ jobs:
               grep "^${PADRON_SAMPLE_CEDULA}	" padron-copy.tsv || true
               head -n 1000 padron-copy.tsv
             } | awk '!seen[$1]++' > padron-copy-dry-run.tsv
-            PADRON_D1_ROW_LIMIT=0 PADRON_D1_ROWS_PER_FILE=1000 node scripts/prepare-padron-d1-sql.mjs padron-copy-dry-run.tsv padron-d1-sql
+            PADRON_D1_BATCH_SIZE=50 PADRON_D1_ROWS_PER_FILE=500 node scripts/prepare-padron-d1-sql.mjs padron-copy-dry-run.tsv padron-d1-sql
           else
-            PADRON_D1_BATCH_SIZE=100 PADRON_D1_ROWS_PER_FILE=5000 node scripts/prepare-padron-d1-sql.mjs padron-copy.tsv padron-d1-sql
+            PADRON_D1_BATCH_SIZE=50 PADRON_D1_ROWS_PER_FILE=1000 node scripts/prepare-padron-d1-sql.mjs padron-copy.tsv padron-d1-sql
           fi
+          find padron-d1-sql -type f -maxdepth 1 -printf "%f %s bytes\n" | sort | head -n 5
 
       - name: Validate D1 access
         run: |
           set -euo pipefail
           npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "select 1 as ok;"
+
+      - name: Validate D1 small import
+        if: ${{ inputs.dry_run == true }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "drop table if exists padron_dry_run; create table padron_dry_run (cedula text primary key, nombre text, papellido text, sapellido text); drop table if exists padron_next; create table padron_next (cedula text primary key, nombre text, papellido text, sapellido text);"
+          for file in padron-d1-sql/*.sql; do
+            echo "Dry-run importing $file"
+            npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --file "$file"
+          done
+          count="$(npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --json --command "select count(*) as count from padron_next;" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const j=JSON.parse(s);console.log(j[0]?.results?.[0]?.count ?? 0)})")"
+          if [ "$count" -lt 1000 ]; then
+            echo "D1 dry-run imported only $count rows; refusing to continue."
+            exit 1
+          fi
+          npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "drop table if exists padron_dry_run; drop table if exists padron_next;"
 
       - name: Stop after dry run
         if: ${{ inputs.dry_run == true }}

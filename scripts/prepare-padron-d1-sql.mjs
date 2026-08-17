@@ -60,7 +60,6 @@ function openFile() {
   if (currentFile) return;
   currentFilePath = chunkName(fileIndex);
   currentFile = fs.createWriteStream(currentFilePath, { encoding: "utf8" });
-  currentFile.write("begin;\n");
   rowsInFile = 0;
 }
 
@@ -79,7 +78,6 @@ async function closeFile() {
     return;
   }
   flushBatch();
-  currentFile.write("commit;\n");
   await new Promise((resolve, reject) => {
     currentFile.end(resolve);
     currentFile.on("error", reject);
@@ -92,9 +90,9 @@ async function closeFile() {
 
 function flushBatch() {
   if (!pendingTuples.length || !currentFile) return;
-  currentFile.write("insert into padron_next (cedula, nombre, papellido, sapellido) values\n");
+  currentFile.write("insert or replace into padron_next (cedula, nombre, papellido, sapellido) values\n");
   currentFile.write(pendingTuples.join(",\n"));
-  currentFile.write("\non conflict(cedula) do update set nombre = excluded.nombre, papellido = excluded.papellido, sapellido = excluded.sapellido;\n");
+  currentFile.write(";\n");
   pendingTuples = [];
 }
 
