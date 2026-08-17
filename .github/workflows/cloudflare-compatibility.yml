@@ -11,6 +11,8 @@ on:
         options:
           - dry-run
           - deploy-preview
+          - test-cutover
+          - test-rollback
           - production-cutover
           - production-rollback
       worker_name:
@@ -75,8 +77,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npx wrangler deploy --name "${{ inputs.worker_name }}"
 
-      - name: Sync production Worker runtime secrets
-        if: ${{ inputs.mode == 'deploy-preview' && inputs.target_environment == 'production' && inputs.worker_name == 'contratacr' }}
+      - name: Sync Worker runtime secrets
+        if: ${{ inputs.mode == 'deploy-preview' && ((inputs.target_environment == 'production' && inputs.worker_name == 'contratacr') || (inputs.target_environment == 'test' && inputs.worker_name == 'contratacr-preview')) }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -125,9 +127,91 @@ jobs:
             if (value) secrets[name] = value;
           }
           fs.writeFileSync("worker-secrets.json", JSON.stringify(secrets));
-          console.log(`Prepared ${Object.keys(secrets).length} production Worker runtime secrets.`);
+          console.log(`Prepared ${Object.keys(secrets).length} Worker runtime secrets.`);
           NODE
-          npx wrangler secret bulk worker-secrets.json --name contratacr
+          npx wrangler secret bulk worker-secrets.json --name "${{ inputs.worker_name }}"
+
+      - name: Route test traffic to Worker
+        if: ${{ inputs.mode == 'test-cutover' && inputs.target_environment == 'test' && inputs.worker_name == 'contratacr-preview' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
+          const script = "contratacr-preview";
+          const patterns = ["test.contratacr.com/*"];
+
+          async function cf(path, init = {}) {
+            const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+              ...init,
+              headers: {
+                "Authorization": `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+                "Content-Type": "application/json",
+                ...(init.headers ?? {})
+              }
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.success === false) {
+              throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
+            }
+            return json.result;
+          }
+
+          const existing = await cf(`/zones/${zoneId}/workers/routes`);
+          for (const pattern of patterns) {
+            const current = existing.find((route) => route.pattern === pattern);
+            if (current) {
+              await cf(`/zones/${zoneId}/workers/routes/${current.id}`, {
+                method: "PUT",
+                body: JSON.stringify({ pattern, script })
+              });
+              console.log(`Updated route ${pattern} -> ${script}`);
+            } else {
+              await cf(`/zones/${zoneId}/workers/routes`, {
+                method: "POST",
+                body: JSON.stringify({ pattern, script })
+              });
+              console.log(`Created route ${pattern} -> ${script}`);
+            }
+          }
+          NODE
+
+      - name: Roll back test Worker routes
+        if: ${{ inputs.mode == 'test-rollback' && inputs.target_environment == 'test' && inputs.worker_name == 'contratacr-preview' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
+          const script = "contratacr-preview";
+          const patterns = new Set(["test.contratacr.com/*"]);
+
+          async function cf(path, init = {}) {
+            const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+              ...init,
+              headers: {
+                "Authorization": `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+                "Content-Type": "application/json",
+                ...(init.headers ?? {})
+              }
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.success === false) {
+              throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
+            }
+            return json.result;
+          }
+
+          const existing = await cf(`/zones/${zoneId}/workers/routes`);
+          for (const route of existing) {
+            if (!patterns.has(route.pattern)) continue;
+            if (route.script !== script) {
+              throw new Error(`Refusing to delete ${route.pattern}; it points to ${route.script}, not ${script}.`);
+            }
+            await cf(`/zones/${zoneId}/workers/routes/${route.id}`, { method: "DELETE" });
+            console.log(`Deleted route ${route.pattern}`);
+          }
+          NODE
 
       - name: Route production traffic to Worker
         if: ${{ inputs.mode == 'production-cutover' && inputs.target_environment == 'production' && inputs.worker_name == 'contratacr' }}
