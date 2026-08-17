@@ -63,6 +63,7 @@ import {
   type DashboardProfileData,
 } from "@/lib/dashboard-bootstrap-cache";
 import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { deleteOwnedMediaUrl } from "@/lib/client-media-cleanup";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 
@@ -1413,7 +1414,11 @@ export default function DashboardPage() {
       fd.append("type", "avatar");
       const upload = await uploadPhotoFormDataWithRetry(fd);
       if (!upload.ok || !upload.data.url) throw new Error(upload.data.error || "No se pudo subir la foto.");
+      const previousAvatarUrl = profile?.avatar_url || proProfile?.avatar_url || null;
       await updateHeaderAvatar(upload.data.url);
+      if (previousAvatarUrl !== upload.data.url) {
+        await deleteOwnedMediaUrl(previousAvatarUrl).catch(() => false);
+      }
       handleSaved("internal");
     } catch (error) {
       console.error("[dashboard] avatar upload failed", error);
@@ -1427,7 +1432,9 @@ export default function DashboardPage() {
     setHeaderPhotoUploading(true);
     setHeaderPhotoMenuOpen(false);
     try {
+      const previousAvatarUrl = profile?.avatar_url || proProfile?.avatar_url || null;
       await updateHeaderAvatar(null);
+      await deleteOwnedMediaUrl(previousAvatarUrl).catch(() => false);
       handleSaved("internal");
     } catch (error) {
       console.error("[dashboard] avatar remove failed", error);

@@ -15,6 +15,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { deleteOwnedMediaUrl } from "@/lib/client-media-cleanup";
 
 // Mandatory profile completion for OAuth (Facebook/Google) users who never
 // provided a cédula. Required before they can book.
@@ -99,6 +100,7 @@ export default function CompleteProfilePage() {
       if (profileError) throw profileError;
       const { error: authError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
       if (authError) throw authError;
+      if (previousAvatarUrl !== url) await deleteOwnedMediaUrl(previousAvatarUrl).catch(() => false);
       URL.revokeObjectURL(previewUrl);
       if (photoPreviewObjectUrlRef.current === previewUrl) photoPreviewObjectUrlRef.current = null;
       setAvatarUrl(url);
