@@ -33,7 +33,7 @@ for await (const line of reader) {
   const fields = line.split(",");
   const cedula = clean(fields[0]);
   if (!cedula) continue;
-  writer.write([cedula, clean(fields[5]), clean(fields[6]), clean(fields[7])].join("\t"));
+  writer.write([cedula, clean(fields[4]), clean(fields[5]), clean(fields[6])].join("\t"));
   writer.write("\n");
   total += 1;
 }

@@ -33,6 +33,9 @@ jobs:
       DRY_RUN: ${{ inputs.dry_run }}
       PADRON_DATABASE_URL: ${{ secrets.PADRON_DATABASE_URL }}
       PADRON_SAMPLE_CEDULA: "101053316"
+      PADRON_SAMPLE_NOMBRE: "LUCILA"
+      PADRON_SAMPLE_PAPELLIDO: "PORRAS"
+      PADRON_SAMPLE_SAPELLIDO: "AGUERO"
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -149,8 +152,8 @@ jobs:
         run: |
           set -euo pipefail
           psql "$PADRON_DATABASE_URL" -v ON_ERROR_STOP=1 -c "select cedula, nombre, papellido, sapellido from public.padron where cedula = '$PADRON_SAMPLE_CEDULA';"
-          row_count="$(psql "$PADRON_DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "select count(*) from public.padron where cedula = '$PADRON_SAMPLE_CEDULA' and nombre is not null;")"
+          row_count="$(psql "$PADRON_DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "select count(*) from public.padron where cedula = '$PADRON_SAMPLE_CEDULA' and nombre = '$PADRON_SAMPLE_NOMBRE' and papellido = '$PADRON_SAMPLE_PAPELLIDO' and sapellido = '$PADRON_SAMPLE_SAPELLIDO';")"
           if [ "$row_count" != "1" ]; then
-            echo "Neon padron sample lookup failed."
+            echo "Neon padron sample lookup failed or parsed the name columns incorrectly."
             exit 1
           fi
