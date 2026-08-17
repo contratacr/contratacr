@@ -168,6 +168,26 @@ test.describe("@seeded search results", () => {
     ).toBeVisible();
   });
 
+  test("mobile no-results state uses the full-width search sheet layout", async ({ page }, testInfo) => {
+    test.skip(!isMobileProject(testInfo), "Responsive search sheet layout is covered by the mobile project.");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoOK(page, "/es/buscar?q=__contratacr_no_results_visual_regression__");
+    await waitForInteractivePage(page);
+
+    const emptyState = page.locator("[data-search-empty-state]");
+    await expect(emptyState).toBeVisible();
+    await expect(page.getByText(/No encontramos resultados/i)).toBeVisible();
+
+    const [viewport, box] = await Promise.all([
+      page.viewportSize(),
+      emptyState.boundingBox(),
+    ]);
+    expect(viewport).not.toBeNull();
+    expect(box).not.toBeNull();
+    expect(box!.width).toBeGreaterThanOrEqual(viewport!.width - 4);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("location search suggests Costa Rica provinces and cantons", async ({ page }, testInfo) => {
     await gotoOK(page, "/es/buscar");
     await waitForInteractivePage(page);
