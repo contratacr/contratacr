@@ -32,13 +32,15 @@
     "test:e2e:focal": "playwright test",
     "test:e2e:verify-results": "node scripts/ci/verify-playwright-results.mjs",
     "test:e2e:smoke": "playwright test --grep @smoke",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "padron:load:neon": "node scripts/load-padron-neon.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.4.2",
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/push-notifications": "^8.1.2",
     "@hookform/resolvers": "^5.4.0",
+    "@neondatabase/serverless": "^1.1.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.8",
