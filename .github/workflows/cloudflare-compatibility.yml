@@ -139,6 +139,8 @@ jobs:
           node - <<'NODE'
           const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
           const script = "contratacr-preview";
+          const dnsName = "test.contratacr.com";
+          const dnsFallbackTarget = "cname.vercel-dns.com";
           const patterns = ["test.contratacr.com/*"];
 
           async function cf(path, init = {}) {
@@ -155,6 +157,34 @@ jobs:
               throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
             }
             return json.result;
+          }
+
+          const dnsRecords = await cf(`/zones/${zoneId}/dns_records?type=CNAME&name=${encodeURIComponent(dnsName)}`);
+          const dnsRecord = dnsRecords[0];
+          if (dnsRecord) {
+            await cf(`/zones/${zoneId}/dns_records/${dnsRecord.id}`, {
+              method: "PUT",
+              body: JSON.stringify({
+                type: dnsRecord.type,
+                name: dnsRecord.name,
+                content: dnsRecord.content,
+                ttl: 1,
+                proxied: true
+              })
+            });
+            console.log(`Updated DNS ${dnsName} to proxied`);
+          } else {
+            await cf(`/zones/${zoneId}/dns_records`, {
+              method: "POST",
+              body: JSON.stringify({
+                type: "CNAME",
+                name: "test",
+                content: dnsFallbackTarget,
+                ttl: 1,
+                proxied: true
+              })
+            });
+            console.log(`Created proxied DNS ${dnsName}`);
           }
 
           const existing = await cf(`/zones/${zoneId}/workers/routes`);
@@ -184,6 +214,7 @@ jobs:
           node - <<'NODE'
           const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
           const script = "contratacr-preview";
+          const dnsName = "test.contratacr.com";
           const patterns = new Set(["test.contratacr.com/*"]);
 
           async function cf(path, init = {}) {
@@ -200,6 +231,21 @@ jobs:
               throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
             }
             return json.result;
+          }
+
+          const dnsRecords = await cf(`/zones/${zoneId}/dns_records?type=CNAME&name=${encodeURIComponent(dnsName)}`);
+          for (const dnsRecord of dnsRecords) {
+            await cf(`/zones/${zoneId}/dns_records/${dnsRecord.id}`, {
+              method: "PUT",
+              body: JSON.stringify({
+                type: dnsRecord.type,
+                name: dnsRecord.name,
+                content: dnsRecord.content,
+                ttl: 1,
+                proxied: false
+              })
+            });
+            console.log(`Updated DNS ${dnsName} to DNS-only`);
           }
 
           const existing = await cf(`/zones/${zoneId}/workers/routes`);
