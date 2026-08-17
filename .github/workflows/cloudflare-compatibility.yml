@@ -11,8 +11,10 @@ on:
         options:
           - dry-run
           - deploy-preview
+          - production-cutover
+          - production-rollback
       worker_name:
-        description: "Cloudflare Worker name used only when mode=deploy-preview."
+        description: "Cloudflare Worker name used for deploy/cutover/rollback."
         required: true
         default: contratacr-preview
       target_environment:
@@ -126,3 +128,85 @@ jobs:
           console.log(`Prepared ${Object.keys(secrets).length} production Worker runtime secrets.`);
           NODE
           npx wrangler secret bulk worker-secrets.json --name contratacr
+
+      - name: Route production traffic to Worker
+        if: ${{ inputs.mode == 'production-cutover' && inputs.target_environment == 'production' && inputs.worker_name == 'contratacr' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
+          const script = "contratacr";
+          const patterns = ["contratacr.com/*", "www.contratacr.com/*"];
+
+          async function cf(path, init = {}) {
+            const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+              ...init,
+              headers: {
+                "Authorization": `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+                "Content-Type": "application/json",
+                ...(init.headers ?? {})
+              }
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.success === false) {
+              throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
+            }
+            return json.result;
+          }
+
+          const existing = await cf(`/zones/${zoneId}/workers/routes`);
+          for (const pattern of patterns) {
+            const current = existing.find((route) => route.pattern === pattern);
+            if (current) {
+              await cf(`/zones/${zoneId}/workers/routes/${current.id}`, {
+                method: "PUT",
+                body: JSON.stringify({ pattern, script })
+              });
+              console.log(`Updated route ${pattern} -> ${script}`);
+            } else {
+              await cf(`/zones/${zoneId}/workers/routes`, {
+                method: "POST",
+                body: JSON.stringify({ pattern, script })
+              });
+              console.log(`Created route ${pattern} -> ${script}`);
+            }
+          }
+          NODE
+
+      - name: Roll back production Worker routes
+        if: ${{ inputs.mode == 'production-rollback' && inputs.target_environment == 'production' && inputs.worker_name == 'contratacr' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
+          const script = "contratacr";
+          const patterns = new Set(["contratacr.com/*", "www.contratacr.com/*"]);
+
+          async function cf(path, init = {}) {
+            const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+              ...init,
+              headers: {
+                "Authorization": `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+                "Content-Type": "application/json",
+                ...(init.headers ?? {})
+              }
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.success === false) {
+              throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
+            }
+            return json.result;
+          }
+
+          const existing = await cf(`/zones/${zoneId}/workers/routes`);
+          for (const route of existing) {
+            if (!patterns.has(route.pattern)) continue;
+            if (route.script !== script) {
+              throw new Error(`Refusing to delete ${route.pattern}; it points to ${route.script}, not ${script}.`);
+            }
+            await cf(`/zones/${zoneId}/workers/routes/${route.id}`, { method: "DELETE" });
+            console.log(`Deleted route ${route.pattern}`);
+          }
+          NODE
