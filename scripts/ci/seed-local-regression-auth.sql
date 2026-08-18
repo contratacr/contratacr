@@ -128,11 +128,19 @@ values
     now()
   );
 
-insert into public.padron (cedula, nombre, papellido, sapellido)
-values
-  ('100000001', 'LOCAL', 'CONTRATACR', 'PRUEBA'),
-  ('100000002', 'LOCAL', 'SOLUTIONS', 'PRUEBA')
-on conflict (cedula) do update set
-  nombre = excluded.nombre,
-  papellido = excluded.papellido,
-  sapellido = excluded.sapellido;
+-- Migration 173 removed the Supabase padrón after the Cloudflare D1 cutover.
+-- Keep this seed compatible with older migration snapshots without recreating
+-- a production table that no longer belongs in Supabase.
+do $$
+begin
+  if to_regclass('public.padron') is not null then
+    insert into public.padron (cedula, nombre, papellido, sapellido)
+    values
+      ('100000001', 'LOCAL', 'CONTRATACR', 'PRUEBA'),
+      ('100000002', 'LOCAL', 'SOLUTIONS', 'PRUEBA')
+    on conflict (cedula) do update set
+      nombre = excluded.nombre,
+      papellido = excluded.papellido,
+      sapellido = excluded.sapellido;
+  end if;
+end $$;

@@ -52,11 +52,22 @@ begin
 end $$;
 
 revoke all on table
-  public.padron,
-  public.padron_staging,
   public.account_deletion_requests,
   public.user_media_assets,
   public.user_push_tokens,
   public.notification_push_outbox,
   public.notification_push_deliveries
 from public, anon, authenticated;
+
+-- The production padrón moved to Cloudflare D1 in migration 173. Older local
+-- rebuilds may still contain these relations, so preserve their restrictive
+-- grants when present without making the current schema depend on them.
+do $$
+begin
+  if to_regclass('public.padron') is not null then
+    execute 'revoke all on table public.padron from public, anon, authenticated';
+  end if;
+  if to_regclass('public.padron_staging') is not null then
+    execute 'revoke all on table public.padron_staging from public, anon, authenticated';
+  end if;
+end $$;
