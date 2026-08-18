@@ -108,7 +108,7 @@ jobs:
             } | awk '!seen[$1]++' > padron-copy-dry-run.tsv
             PADRON_D1_BATCH_SIZE=50 PADRON_D1_ROWS_PER_FILE=500 node scripts/prepare-padron-d1-sql.mjs padron-copy-dry-run.tsv padron-d1-sql
           else
-            PADRON_D1_BATCH_SIZE=50 PADRON_D1_ROWS_PER_FILE=1000 node scripts/prepare-padron-d1-sql.mjs padron-copy.tsv padron-d1-sql
+            PADRON_D1_BATCH_SIZE=50 PADRON_D1_ROWS_PER_FILE=5000 node scripts/prepare-padron-d1-sql.mjs padron-copy.tsv padron-d1-sql
           fi
           node - <<'NODE'
           const fs = require("node:fs");
