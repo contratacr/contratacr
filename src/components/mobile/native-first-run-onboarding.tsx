@@ -7,14 +7,15 @@ import { BellRing, BriefcaseBusiness, ChevronRight, Search, ShieldCheck } from "
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { cn } from "@/lib/utils";
 
-const COMPLETED_KEY = "ccr:native-first-run-onboarding:v1";
+const COMPLETED_KEY = "ccr:native-first-run-onboarding:v2";
 
 type Step = "notifications" | "role";
 
 export function NativeFirstRunOnboarding() {
+  const nativeApp = useNativeApp();
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
@@ -24,11 +25,11 @@ export function NativeFirstRunOnboarding() {
   const english = pathname?.startsWith("/en") ?? false;
 
   useEffect(() => {
-    if (!isNativeAppRuntime()) return;
+    if (!nativeApp) return;
     if (window.localStorage.getItem(COMPLETED_KEY) === "1") return;
-    const timer = window.setTimeout(() => setVisible(true), 450);
+    const timer = window.setTimeout(() => setVisible(true), 50);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [nativeApp]);
 
   useEffect(() => {
     if (!visible) return;
@@ -66,7 +67,7 @@ export function NativeFirstRunOnboarding() {
     router.push(isProvider ? "/dashboard/profesional" : "/registro/profesional");
   }, [complete, router, user]);
 
-  if (!visible || !isNativeAppRuntime()) return null;
+  if (!visible || !nativeApp) return null;
 
   return createPortal(
     <div

@@ -16,19 +16,7 @@ export function MobileAppBridge() {
     document.documentElement.classList.add("ccr-native-app");
     document.body.classList.add("ccr-native-app");
 
-    const capacitor = window as unknown as {
-      Capacitor?: { Plugins?: { SplashScreen?: { hide?: () => Promise<void> } } };
-    };
-    let secondFrame: number | null = null;
-    const firstFrame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(() => {
-        void capacitor.Capacitor?.Plugins?.SplashScreen?.hide?.().catch(() => {});
-      });
-    });
-
     return () => {
-      window.cancelAnimationFrame(firstFrame);
-      if (secondFrame !== null) window.cancelAnimationFrame(secondFrame);
       document.documentElement.classList.remove("ccr-native-app");
       document.body.classList.remove("ccr-native-app");
     };
