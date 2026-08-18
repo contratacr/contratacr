@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { PushNotifications, type Token } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 import { Bell, X } from "lucide-react";
@@ -10,17 +9,12 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import type { AccountSignOutDetail } from "@/lib/auth/sign-out";
-import {
-  NATIVE_ONBOARDING_COMPLETED_EVENT,
-  NATIVE_ONBOARDING_COMPLETED_KEY,
-} from "@/lib/mobile-onboarding";
 
 function isNativeMobile() {
   if (typeof window === "undefined") return false;
   if (!Capacitor.isNativePlatform()) return false;
   return Capacitor.getPlatform() === "ios" || Capacitor.getPlatform() === "android";
 }
-
 type PushTokenPayload = {
   token: string;
   platform: "android" | "ios";
@@ -77,7 +71,7 @@ function normalizePushUrl(rawUrl: unknown) {
 }
 
 function promptSessionKey(userId: string) {
-  return `ccr:push-permission-context-shown:v4:${userId}`;
+  return `ccr:push-permission-context-shown:v3:${userId}`;
 }
 
 function permissionGrantedKey(userId: string) {
@@ -123,7 +117,6 @@ export function PushTokenManager() {
   const promptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [promptVisible, setPromptVisible] = useState(false);
   const [requesting, setRequesting] = useState(false);
-  const [onboardingComplete, setOnboardingComplete] = useState(false);
 
   const cleanupListeners = useCallback(() => {
     while (removersRef.current.length) {
@@ -136,29 +129,7 @@ export function PushTokenManager() {
   // Version the contextual decision independently from the OS permission.
   // Older builds asked at a different point in the journey, so their dismissal
   // must not suppress the improved post-login explanation.
-  const dismissKey = user ? `ccr:push-permission-context-dismissed:v4:${user.id}` : null;
-
-  useEffect(() => {
-    if (!isNativeMobile()) return;
-    const sync = () => {
-      setOnboardingComplete(window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1");
-    };
-    sync();
-    window.addEventListener(NATIVE_ONBOARDING_COMPLETED_EVENT, sync);
-    return () => window.removeEventListener(NATIVE_ONBOARDING_COMPLETED_EVENT, sync);
-  }, []);
-
-  useEffect(() => {
-    if (!promptVisible) return;
-    const bodyOverflow = document.body.style.overflow;
-    const htmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = bodyOverflow;
-      document.documentElement.style.overflow = htmlOverflow;
-    };
-  }, [promptVisible]);
+  const dismissKey = user ? `ccr:push-permission-context-dismissed:v3:${user.id}` : null;
 
   useEffect(() => {
     if (!isNativeMobile()) return;
@@ -274,7 +245,7 @@ export function PushTokenManager() {
       return;
     }
 
-    if (!isNativeMobile() || !onboardingComplete || !canShowPermissionPrompt(pathname)) return;
+    if (!isNativeMobile() || !canShowPermissionPrompt(pathname)) return;
 
     let cancelled = false;
     const grantedKey = permissionGrantedKey(user.id);
@@ -326,7 +297,7 @@ export function PushTokenManager() {
         promptTimerRef.current = null;
       }
     };
-  }, [cleanupListeners, dismissKey, loading, onboardingComplete, pathname, registerCurrentDevice, user]);
+  }, [cleanupListeners, dismissKey, loading, pathname, registerCurrentDevice, user]);
 
   useEffect(() => {
     if (loading || !user || !isNativeMobile()) return;
@@ -385,24 +356,16 @@ export function PushTokenManager() {
     ? "Activa notificaciones para enterarte cuando un cliente te escriba o haya proyectos relacionados con tus servicios."
     : "Activa notificaciones para enterarte cuando un profesional te responda o tengas novedades en tus solicitudes.";
 
-  return createPortal(
-    <div className="fixed inset-0 z-[230] flex items-end bg-[#071523]/38 backdrop-blur-[1px]" role="presentation" onMouseDown={dismissPrompt}>
-      <div
-        className="app-bottom-sheet w-full rounded-t-[26px] bg-white px-5 pb-[max(22px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-16px_48px_-22px_rgba(15,23,42,0.5)] sm:mx-auto sm:mb-6 sm:max-w-sm sm:rounded-[26px] sm:pb-5"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="native-push-title"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#d7e0e8]" aria-hidden="true" />
-        <div className="rounded-2xl bg-white">
+  return (
+    <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+86px)] z-[95] sm:left-auto sm:right-5 sm:max-w-sm">
+      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.35)]">
         <div className="flex items-start gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#EBF5FB] text-[#009FD9]">
             <Bell className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
-              <p id="native-push-title" className="text-base font-extrabold text-[#162543]">Activa notificaciones</p>
+              <p className="text-sm font-extrabold text-[#162543]">Activa notificaciones</p>
               <button
                 type="button"
                 onClick={dismissPrompt}
@@ -413,13 +376,13 @@ export function PushTokenManager() {
               </button>
             </div>
             <p className="mt-1 text-sm leading-snug text-[#475569]">{copy}</p>
-            <div className="mt-4 grid grid-cols-[1fr_auto] items-center gap-2">
+            <div className="mt-3 flex items-center justify-center gap-2">
               <button
                 type="button"
                 onClick={requestNotifications}
                 disabled={requesting}
                 className={cn(
-                  "min-h-11 rounded-full bg-[#009FD9] px-5 py-2 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#0089BB]",
+                  "rounded-full bg-[#009FD9] px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#0089BB]",
                   requesting && "cursor-wait opacity-70",
                 )}
               >
@@ -428,7 +391,7 @@ export function PushTokenManager() {
               <button
                 type="button"
                 onClick={dismissPrompt}
-                className="min-h-11 rounded-full px-4 py-2 text-sm font-bold text-[#64748b] hover:bg-[#f4f7fa] hover:text-[#162543]"
+                className="rounded-full px-4 py-2 text-sm font-bold text-[#64748b] hover:bg-[#f4f7fa] hover:text-[#162543]"
               >
                 Ahora no
               </button>
@@ -436,8 +399,6 @@ export function PushTokenManager() {
           </div>
         </div>
       </div>
-      </div>
-    </div>,
-    document.body,
+    </div>
   );
 }
