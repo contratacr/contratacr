@@ -53,12 +53,6 @@
   display: none;
 }
 
-/* Android/iOS already show the native splash. Keep the web handoff quiet so
-   the brand mark never appears a second time at a different size. */
-.ccr-native-app .ccr-page-route-loading .ccr-brand-loading-mark {
-  display: none;
-}
-
 .ccr-native-app {
   background: #f4f7fa;
 }

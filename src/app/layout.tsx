@@ -39,11 +39,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 function InitialRouteLoading() {
   return (
     <main
-      className="ccr-page-route-loading fixed inset-0 z-[200] min-h-dvh bg-[#f4f7fa]"
+      className="ccr-page-route-loading fixed inset-0 z-[100000] grid min-h-dvh place-items-center bg-[#f4f7fa]"
       aria-busy="true"
       aria-live="polite"
       role="status"
     >
+      {/* Keep the root suspense fallback visually identical to route loading. */}
+      <img
+        src="/logo-mark-transparent.png"
+        alt=""
+        width={72}
+        height={72}
+        className="ccr-brand-loading-mark"
+      />
       <span className="sr-only">Cargando...</span>
     </main>
   );

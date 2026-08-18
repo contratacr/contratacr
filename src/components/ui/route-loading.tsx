@@ -11,6 +11,6 @@ export function PageRouteLoading() {
   if (isSigningOut()) return null;
 
   return (
-    <BrandLoadingMark className="ccr-page-route-loading fixed inset-0 z-[200] bg-[#f4f7fa] text-[#162543]" />
+    <BrandLoadingMark className="ccr-page-route-loading fixed inset-0 z-[100000] bg-[#f4f7fa] text-[#162543]" />
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { PushNotifications, type Token } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 import { Bell, X } from "lucide-react";
@@ -353,16 +354,25 @@ export function PushTokenManager() {
 
   const copy = "Recibe avisos de mensajes, solicitudes, propuestas, reseñas y cambios importantes sin tener que abrir la app.";
 
-  return (
-    <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+86px)] z-[95] sm:left-auto sm:right-5 sm:max-w-sm">
-      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.35)]">
+  return createPortal(
+    <div
+      className="pointer-events-none fixed inset-0 flex items-end justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+86px)] sm:items-end sm:justify-end sm:p-5"
+      style={{ zIndex: 100000 }}
+      role="presentation"
+    >
+      <div
+        className="pointer-events-auto w-full max-w-sm rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]"
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="push-permission-title"
+      >
         <div className="flex items-start gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#EBF5FB] text-[#009FD9]">
             <Bell className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
-              <p className="text-sm font-extrabold text-[#162543]">Activa notificaciones</p>
+              <p id="push-permission-title" className="text-sm font-extrabold text-[#162543]">Activa notificaciones</p>
               <button
                 type="button"
                 onClick={dismissPrompt}
@@ -396,6 +406,7 @@ export function PushTokenManager() {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
