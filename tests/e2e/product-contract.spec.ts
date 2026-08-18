@@ -6,6 +6,7 @@ import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "../../
 import { resolveAuthCallbackLocale } from "../../src/lib/auth/callback-locale";
 import { IMAGE_ACCEPT, IMAGE_DOC_ACCEPT, IMAGE_KINDS, sniffFileType, validateUpload } from "../../src/lib/upload-validation";
 import { apiJson, resetAuth } from "./helpers";
+import { repairVisibleText } from "../../src/lib/text/repair-visible-text";
 
 const notificationTypes = [...TRANSLATED_NOTIFICATION_TYPES].sort();
 
@@ -81,6 +82,11 @@ test.describe("@contract product safety contracts", () => {
       }
       expect(["professional", "client", "support", null]).toContain(notificationContext(type));
     }
+  });
+
+  test("known legacy replacement characters are repaired at display boundaries", () => {
+    expect(repairVisibleText("Maria Monserrat Naranjo Ure?a")).toBe("Maria Monserrat Naranjo Ureña");
+    expect(repairVisibleText("Dise?o, jardiner?a y rese?as")).toBe("Diseño, jardinería y reseñas");
   });
 
   test("structured notification metadata localizes dates, categories, ratings, and legacy verification", () => {

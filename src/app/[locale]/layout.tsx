@@ -22,6 +22,7 @@ import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 import { AppIntlProvider } from "@/components/app-intl-provider";
 import { GlobalActionLoading } from "@/components/global-action-loading";
 import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
+import { RouteScrollReset } from "@/components/util/route-scroll-reset";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 
 type LocaleParams = {
@@ -152,6 +153,7 @@ export default async function LocaleLayout({
     <AppIntlProvider messages={messages} locale={locale}>
       <GlobalActionLoading />
       <GlobalDataRefresh />
+      <RouteScrollReset />
       <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialNotificationUnread={initialNotificationUnread}>
         <DocumentLocale locale={locale} />
         <EmojiBlocker />

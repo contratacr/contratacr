@@ -103,16 +103,6 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   }
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const previousRestoration = window.history.scrollRestoration;
-    window.history.scrollRestoration = "manual";
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    return () => {
-      window.history.scrollRestoration = previousRestoration;
-    };
-  }, []);
-
-  useEffect(() => {
     const syncSnapPoints = () => {
       const points = mobileSheetSnapPoints();
       setCurrentSnapPoints(points);

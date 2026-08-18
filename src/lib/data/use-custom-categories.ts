@@ -34,7 +34,10 @@ export function refreshCustomCategories({ force = false }: { force?: boolean } =
     .then((d) => {
       if (!d) return;
       const nextKey = payloadKey(d);
-      if (!force && nextKey === lastPayloadKey) return;
+      // `force` bypasses the refresh interval, not equality. Reinstalling an
+      // unchanged catalog invalidates every consumer and made tab focus and
+      // section navigation perform a large, unnecessary render.
+      if (nextKey === lastPayloadKey) return;
       lastPayloadKey = nextKey;
       if (Array.isArray(d.categoryFlags)) setCategoryFeatureOverrides(d.categoryFlags);
       if (Array.isArray(d.categories)) setCustomCategories(d.categories, Array.isArray(d.groups) ? d.groups : []);
@@ -63,18 +66,19 @@ export function useCustomCategories() {
 
     const unsubscribe = subscribeCustomCategories(() => bump((n) => n + 1));
     const onCatalogChanged = () => { void refreshCustomCategories({ force: true }); };
+    const onFocus = () => { void refreshCustomCategories(); };
     const onVisibility = () => {
       if (document.visibilityState === "visible") void refreshCustomCategories();
     };
     window.addEventListener(CATEGORY_CATALOG_EVENT, onCatalogChanged);
     document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("focus", onCatalogChanged);
+    window.addEventListener("focus", onFocus);
 
     return () => {
       unsubscribe();
       window.removeEventListener(CATEGORY_CATALOG_EVENT, onCatalogChanged);
       document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("focus", onCatalogChanged);
+      window.removeEventListener("focus", onFocus);
     };
   }, []);
   return getCustomCategories();
