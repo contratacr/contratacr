@@ -72,7 +72,7 @@ function normalizePushUrl(rawUrl: unknown) {
 }
 
 function promptSessionKey(userId: string) {
-  return `ccr:push-permission-shown:${userId}`;
+  return `ccr:push-permission-context-shown:v2:${userId}`;
 }
 
 function permissionGrantedKey(userId: string) {
@@ -127,7 +127,10 @@ export function PushTokenManager() {
     activeRef.current = false;
   }, []);
 
-  const dismissKey = user ? `ccr:push-permission-dismissed:${user.id}` : null;
+  // Version the contextual decision independently from the OS permission.
+  // Older builds asked at a different point in the journey, so their dismissal
+  // must not suppress the improved post-login explanation.
+  const dismissKey = user ? `ccr:push-permission-context-dismissed:v2:${user.id}` : null;
 
   useEffect(() => {
     if (!isNativeMobile()) return;
