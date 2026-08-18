@@ -11,6 +11,17 @@ export const dynamic = "force-dynamic";
 
 export default async function OffersPage() {
   const locale = await getLocale();
+  const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
+
+  try {
+    return await OffersPageContent(serviceOptions);
+  } catch (error) {
+    console.error("Could not initialize offers page", error);
+    return <OffersBoard offers={[]} canPost={false} currentProfessionalId={null} currentUserId={null} serviceOptions={serviceOptions} />;
+  }
+}
+
+async function OffersPageContent(serviceOptions: Array<{ value: string; label: string }>) {
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   const today = crTodayISO();
@@ -28,7 +39,9 @@ export default async function OffersPage() {
     user ? supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
 
-  if (offersError) throw offersError;
+  if (offersError) {
+    console.error("Could not load published offers", offersError.message);
+  }
 
   const offers = ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
     const professional = row.professionals as { slug?: string; business_name?: string; whatsapp?: string | null; allow_phone_call?: boolean | null; call_phone?: string | null; contact_email?: string | null; profiles?: { full_name?: string } | null } | null;
@@ -47,8 +60,6 @@ export default async function OffersPage() {
       professional_contact_email: professional?.contact_email ?? null,
     } as ProfessionalOffer;
   });
-
-  const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
 
   return <OffersBoard offers={offers} canPost={!!professional} currentProfessionalId={professional?.id ?? null} currentUserId={user?.id ?? null} serviceOptions={serviceOptions} />;
 }
