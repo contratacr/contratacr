@@ -6,6 +6,10 @@
     android:viewportHeight="1180">
     <group
         android:name="logo"
+        android:pivotX="600"
+        android:pivotY="590"
+        android:scaleX="0.66"
+        android:scaleY="0.66"
         android:translateX="-27"
         android:translateY="-28">
         <path

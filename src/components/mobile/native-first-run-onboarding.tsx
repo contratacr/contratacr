@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { BriefcaseBusiness, Search } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -81,9 +81,7 @@ export function NativeFirstRunOnboarding() {
       <main className="relative mx-auto flex h-[100dvh] w-full max-w-lg flex-col px-6 pb-[max(24px,env(safe-area-inset-bottom))] pt-[max(22px,env(safe-area-inset-top))]">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-2.5" aria-label="ContrataCR">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/95 shadow-lg shadow-black/10">
-              <img src="/logo-mark-transparent.png" alt="" className="h-7 w-7 object-contain" />
-            </span>
+            <img src="/logo-mark-dark.png" alt="" className="h-10 w-10 object-contain drop-shadow-lg" />
             <span className="text-[21px] font-black tracking-[-0.04em] drop-shadow-sm">
               Contrata<span className="text-[#20b8e8]">CR</span>
             </span>
@@ -113,16 +111,18 @@ export function NativeFirstRunOnboarding() {
               : "Encuentra profesionales de confianza o haz crecer tus servicios desde un solo lugar."}
           </p>
 
-          <div className="mt-6 grid grid-cols-2 gap-3" aria-label={english ? "Choose how to start" : "Elige cómo empezar"}>
+          <div className="mt-6 grid gap-3" aria-label={english ? "Choose how to start" : "Elige cómo empezar"}>
             <RoleButton
               icon={Search}
               label={english ? "Find a service" : "Buscar servicios"}
+              description={english ? "Explore trusted professionals" : "Explora profesionales de confianza"}
               onClick={() => chooseRole("client")}
               primary
             />
             <RoleButton
               icon={BriefcaseBusiness}
               label={english ? "Offer services" : "Ofrecer servicios"}
+              description={english ? "Create your professional profile" : "Crea tu perfil profesional"}
               onClick={() => chooseRole("professional")}
             />
           </div>
@@ -147,11 +147,13 @@ export function NativeFirstRunOnboarding() {
 function RoleButton({
   icon: Icon,
   label,
+  description,
   onClick,
   primary = false,
 }: {
   icon: typeof Search;
   label: string;
+  description: string;
   onClick: () => void;
   primary?: boolean;
 }) {
@@ -160,12 +162,21 @@ function RoleButton({
       type="button"
       onClick={onClick}
       className={primary
-        ? "flex min-h-[92px] flex-col items-start justify-between rounded-[20px] bg-[#08a8dc] p-4 text-left shadow-[0_18px_38px_-18px_rgba(8,168,220,0.9)] transition active:scale-[0.985]"
-        : "flex min-h-[92px] flex-col items-start justify-between rounded-[20px] border border-white/35 bg-white/[0.08] p-4 text-left backdrop-blur-md transition active:scale-[0.985] active:bg-white/[0.14]"
+        ? "group flex min-h-[76px] w-full items-center gap-3 rounded-[22px] bg-[#08a8dc] px-4 py-3 text-left shadow-[0_18px_38px_-18px_rgba(8,168,220,0.9)] transition active:scale-[0.985]"
+        : "group flex min-h-[76px] w-full items-center gap-3 rounded-[22px] border border-white/35 bg-[#071523]/45 px-4 py-3 text-left backdrop-blur-md transition active:scale-[0.985] active:bg-white/[0.14]"
       }
     >
-      <Icon className="h-6 w-6" strokeWidth={2.2} />
-      <span className="text-[15px] font-extrabold leading-5">{label}</span>
+      <span className={primary
+        ? "grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/18"
+        : "grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/10"
+      }>
+        <Icon className="h-5 w-5" strokeWidth={2.3} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[16px] font-extrabold leading-5">{label}</span>
+        <span className="mt-0.5 block text-[12px] font-medium leading-4 text-white/70">{description}</span>
+      </span>
+      <ArrowRight className="h-5 w-5 shrink-0 text-white/85 transition-transform group-active:translate-x-0.5" />
     </button>
   );
 }
