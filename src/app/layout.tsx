@@ -1,5 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import { Inter } from "next/font/google";
+import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 import "./globals.css";
 
 const inter = Inter({
@@ -22,8 +23,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           type="text/javascript"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html:
-              'try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add("ccr-native-app")}}catch(e){}',
+            __html: `try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add("ccr-native-app");if(window.localStorage&&window.localStorage.getItem(${JSON.stringify(NATIVE_ONBOARDING_COMPLETED_KEY)})!=="1"){document.documentElement.classList.add("ccr-native-first-run-pending")}}}catch(e){}`,
           }}
         />
       </head>

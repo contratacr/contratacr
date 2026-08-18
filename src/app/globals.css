@@ -69,6 +69,19 @@
   overscroll-behavior-y: contain;
 }
 
+html.ccr-native-app.ccr-native-first-run-pending,
+html.ccr-native-app.ccr-native-first-run-pending body {
+  background: #071523 !important;
+}
+
+html.ccr-native-app.ccr-native-first-run-pending body > *:not([data-testid="native-first-run-onboarding"]) {
+  visibility: hidden !important;
+}
+
+html.ccr-native-app.ccr-native-first-run-pending [data-testid="native-first-run-onboarding"] {
+  visibility: visible !important;
+}
+
 .ccr-native-app button,
 .ccr-native-app a {
   touch-action: manipulation;
@@ -108,7 +121,7 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
   --ccr-native-header-height: 64px;
   --ccr-native-bottom-nav-height: 72px;
   --ccr-native-bottom-nav-total: calc(var(--ccr-native-bottom-nav-height) + env(safe-area-inset-bottom));
-  --ccr-native-panel-end-gap: 10px;
+  --ccr-native-panel-end-gap: 0px;
   --ccr-native-content-end-gap: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
   --ccr-native-content-height: calc(var(--app-visual-viewport-height, 100svh) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total));
 }

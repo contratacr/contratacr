@@ -31,6 +31,7 @@ export function NativeFirstRunOnboarding() {
 
   useEffect(() => {
     if (!nativeApp || window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1") return;
+    document.documentElement.classList.add("ccr-native-first-run-pending");
     setVisible(true);
   }, [nativeApp]);
 
@@ -49,6 +50,7 @@ export function NativeFirstRunOnboarding() {
   const complete = useCallback(() => {
     window.localStorage.setItem(NATIVE_ONBOARDING_COMPLETED_KEY, "1");
     window.dispatchEvent(new Event(NATIVE_ONBOARDING_COMPLETED_EVENT));
+    document.documentElement.classList.remove("ccr-native-first-run-pending");
     setVisible(false);
   }, []);
 
