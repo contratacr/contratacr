@@ -110,21 +110,20 @@ async function main() {
     if (logout.error) throw new Error(`Logout ${actor.businessName}: ${logout.error.message}`);
   }
 
-  const padron = await must("service-role padrón lookup", admin.rpc("padron_lookup", { p_cedula: "100000001" }));
-  assert(Array.isArray(padron) && padron.length === 1, "Synthetic padrón lookup did not return exactly one row.");
-
-  const deniedPadron = await anonymous.rpc("padron_lookup", { p_cedula: "100000001" });
-  assert(Boolean(deniedPadron.error), "Anonymous callers must not execute padrón lookup.");
-
+  // Migration 173 moved the padrón to Cloudflare D1. A local Supabase rebuild
+  // must prove that the legacy RPC and tables stay absent rather than seeding
+  // a second source of truth that production no longer has.
+  const removedPadronRpc = await admin.rpc("padron_lookup", { p_cedula: "100000001" });
+  assert(Boolean(removedPadronRpc.error), "The removed Supabase padrón RPC unexpectedly exists.");
   for (const table of ["padron", "padron_staging"]) {
-    const directPadron = await anonymous.from(table).select("cedula").limit(1);
-    assert(Boolean(directPadron.error), `Anonymous callers must not read ${table} directly.`);
+    const directPadron = await admin.from(table).select("cedula").limit(1);
+    assert(Boolean(directPadron.error), `The removed Supabase table ${table} unexpectedly exists.`);
   }
 
   const buckets = await must("local storage buckets", admin.storage.listBuckets());
   assert(buckets.some((bucket) => bucket.name === "direct-message-attachments"), "Private local storage bucket is missing.");
 
-  console.log("Verified local Auth, profiles, professionals, RLS, padrón isolation and Storage foundation.");
+  console.log("Verified local Auth, profiles, professionals, RLS, D1 padrón cutover and Storage foundation.");
 }
 
 main().catch((error) => {

@@ -6,6 +6,7 @@ import { getCategoryLabel, getMatchingCategoryIds, normalizeText, supportsVideoC
 import { getProvinceById, PROVINCES, haversineKm } from "@/lib/data/cr-geography";
 import { languageSearchValues } from "@/lib/data/languages";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
+import { repairVisibleText } from "@/lib/text/repair-visible-text";
 
 // Build the real travel-coverage summary for "me desplazo" pros (item 16):
 // whole country, specific provinces, and/or specific cantones (display names).
@@ -545,7 +546,7 @@ async function searchProfessionalsUncached(
           return ({
         id: row.id,
         slug: row.slug,
-        fullName: row.profiles?.full_name ?? "Profesional",
+        fullName: repairVisibleText(row.profiles?.full_name ?? "Profesional"),
         avatarUrl: row.profiles?.avatar_url ?? null,
         categoryId: publicProfessions[0] ?? row.category_id ?? "",
         categoryIcon: "",
@@ -566,7 +567,7 @@ async function searchProfessionalsUncached(
         isAvailable: row.is_available ?? true,
         availabilityPublic: row.availability_public ?? true,
         contactPreference: (row.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
-        businessName: row.business_name ?? undefined,
+        businessName: repairVisibleText(row.business_name ?? undefined),
         publicBusinessNameOnly: !!row.business_name && row.public_business_name_only === true,
         workplaces: (row.workplaces as ProfessionalCardData["workplaces"]) ?? [],
         verificationStatus: (row.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
@@ -967,10 +968,10 @@ export async function getProfessionalBySlug(
         id: r.id,
         jobTitle: reviewContextMap[r.id]?.title ?? null,
         source: reviewContextMap[r.id]?.source ?? "direct",
-        clientName: r.profiles?.full_name ?? "Cliente",
+        clientName: repairVisibleText(r.profiles?.full_name ?? "Cliente"),
         clientAvatarUrl: r.profiles?.avatar_url,
         rating: r.rating,
-        comment: r.comment,
+        comment: repairVisibleText(r.comment),
         createdAt: r.created_at,
       }));
       const rawServices = proRow.services as ProService[] | undefined;
@@ -989,7 +990,7 @@ export async function getProfessionalBySlug(
       return withAdvertisingDemoStats({
         id: proRow.id,
         slug: proRow.slug,
-        fullName: (proRow.profiles as any)?.full_name ?? "Profesional",
+        fullName: repairVisibleText((proRow.profiles as any)?.full_name ?? "Profesional"),
         avatarUrl: (proRow.profiles as any)?.avatar_url ?? null,
         // category_id is a plain text column - no join needed
         categoryId: publicProfessions[0] ?? proRow.category_id ?? "",
@@ -1022,7 +1023,7 @@ export async function getProfessionalBySlug(
         availabilityPublic: proRow.availability_public ?? true,
         contactPreference: (proRow.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
         languages: Array.isArray(proRow.languages) && proRow.languages.length > 0 ? proRow.languages as string[] : ["es"],
-        businessName: (proRow.business_name as string) ?? undefined,
+        businessName: repairVisibleText((proRow.business_name as string) ?? undefined),
         publicBusinessNameOnly: !!proRow.business_name && proRow.public_business_name_only === true,
         workplaces: (proRow.workplaces as ProfessionalCardData["workplaces"]) ?? [],
         verificationStatus: (proRow.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",

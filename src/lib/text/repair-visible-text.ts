@@ -1,4 +1,5 @@
 const REPAIRS: Array<[RegExp, string]> = [
+  [/\bUre\?a\b/gi, "Ureña"],
   [/\bJardiner\?a\b/gi, "Jardinería"],
   [/\bPlomer\?a\b/gi, "Plomería"],
   [/\bTapicer\?a\b/gi, "Tapicería"],
@@ -7,7 +8,7 @@ const REPAIRS: Array<[RegExp, string]> = [
   [/\bCl\?nica\b/gi, "Clínica"],
   [/\bp\?gina\b/gi, "página"],
   [/\bdise\?o\b/gi, "diseño"],
-  [/\brese\?a\b/gi, "reseña"],
+  [/\brese\?as?\b/gi, "reseña"],
   [/\bsecci\?n\b/gi, "sección"],
   [/\binformaci\?n\b/gi, "información"],
   [/\bubicaci\?n\b/gi, "ubicación"],
@@ -98,7 +99,13 @@ export function repairVisibleText<T extends string | null | undefined>(value: T)
   if (typeof value !== "string") return value;
   let next: string = repairMojibake(value);
   for (const [pattern, replacement] of REPAIRS) {
-    next = next.replace(pattern, replacement);
+    next = next.replace(pattern, (match) => {
+      const plural = match.toLocaleLowerCase().endsWith("s") && !replacement.toLocaleLowerCase().endsWith("s") ? "s" : "";
+      const repaired = `${replacement}${plural}`;
+      return match[0] === match[0].toLocaleUpperCase()
+        ? `${repaired[0].toLocaleUpperCase()}${repaired.slice(1)}`
+        : `${repaired[0].toLocaleLowerCase()}${repaired.slice(1)}`;
+    });
   }
   return next as T;
 }

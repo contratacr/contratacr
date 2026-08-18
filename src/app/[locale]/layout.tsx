@@ -23,6 +23,7 @@ import { NativeFirstRunOnboarding } from "@/components/mobile/native-first-run-o
 import { AppIntlProvider } from "@/components/app-intl-provider";
 import { GlobalActionLoading } from "@/components/global-action-loading";
 import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
+import { RouteScrollReset } from "@/components/util/route-scroll-reset";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 import { AiConcierge } from "@/components/landing/ai-concierge";
 
@@ -154,6 +155,7 @@ export default async function LocaleLayout({
     <AppIntlProvider messages={messages} locale={locale}>
       <GlobalActionLoading />
       <GlobalDataRefresh />
+      <RouteScrollReset />
       <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialNotificationUnread={initialNotificationUnread}>
         <DocumentLocale locale={locale} />
         <EmojiBlocker />

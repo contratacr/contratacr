@@ -41,7 +41,11 @@
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:ui": "playwright test --ui",
     "padron:load:neon": "node scripts/load-padron-neon.mjs",
-    "padron:check:neon": "node scripts/check-padron-neon.mjs"
+    "padron:check:neon": "node scripts/check-padron-neon.mjs",
+    "padron:prepare-d1-sql": "node scripts/prepare-padron-d1-sql.mjs",
+    "cloudflare:build": "opennextjs-cloudflare build",
+    "cloudflare:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cloudflare:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1111.0",
@@ -83,6 +87,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.2",
+    "@opennextjs/cloudflare": "^1.20.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "8.0.1",
@@ -92,7 +97,8 @@
     "eslint-config-next": "16.2.11",
     "playwright": "^1.60.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.123.0"
   },
   "overrides": {
     "glob": {

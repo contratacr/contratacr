@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { startTransition, useCallback, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
@@ -28,16 +28,30 @@ export default function ServiciosPage() {
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
   const [mobileGroupKey, setMobileGroupKey] = useState<string | null>(null);
-  const [searchGroupSelection, setSearchGroupSelection] = useState<{ query: string; key: string } | null>(null);
-  const groups = getAllCategoryGroups().map((group) => {
-    return {
+  const categoryCatalogVersion = JSON.stringify(customCategories);
+  const groups = useMemo(() => {
+    void categoryCatalogVersion;
+    const categories = getAllCategories();
+    const idsByGroup = new Map<string, string[]>();
+    for (const category of categories) {
+      const ids = idsByGroup.get(category.groupId) ?? [];
+      ids.push(category.id);
+      idsByGroup.set(category.groupId, ids);
+    }
+    return getAllCategoryGroups().map((group) => ({
       key: group.id,
       Icon: getCategoryGroupIcon(group.id, group.iconKey),
       label: getCategoryGroupLabel(group.id, locale),
-      ids: getAllCategories().filter((category) => category.groupId === group.id).map((category) => category.id),
-    };
-  });
-  const categoriesById = useMemo(() => new Map(getAllCategories().map((category) => [category.id, category])), [customCategories]);
+      ids: idsByGroup.get(group.id) ?? [],
+    }));
+  }, [categoryCatalogVersion, locale]);
+  const categoriesById = useMemo(
+    () => {
+      void categoryCatalogVersion;
+      return new Map(getAllCategories().map((category) => [category.id, category]));
+    },
+    [categoryCatalogVersion],
+  );
   const normalizedQuery = normalizeText(query.trim());
   const matchedIds = useMemo(() => {
     if (!normalizedQuery) return null;
@@ -73,11 +87,11 @@ export default function ServiciosPage() {
   const searchResults = useMemo(() => visibleGroups.flatMap((group) =>
     group.visibleIds.map((id) => ({ id, groupLabel: group.label, Icon: group.Icon }))
   ), [visibleGroups]);
-  const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
+  const resultCount = useMemo(
+    () => visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0),
+    [visibleGroups],
+  );
   const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0];
-  const selectedSearchGroupKey = searchGroupSelection?.query === normalizedQuery ? searchGroupSelection.key : "";
-  const activeSearchGroup = visibleGroups.find((group) => group.key === selectedSearchGroupKey) ?? visibleGroups[0];
-  const activeSearchIds = activeSearchGroup?.visibleIds ?? searchResults.map((item) => item.id);
   const activeGroupHasServices = activeGroup.ids.length > 0;
   const mobileGroups = useMemo(() => [...visibleGroups].sort((a, b) => {
     const aOther = isOtherCategoryGroup(a.key, a.label);
@@ -109,6 +123,14 @@ export default function ServiciosPage() {
     setQuery("");
     setMobileGroupKey(null);
   }
+
+  const selectGroup = useCallback((groupKey: string, mobile: boolean) => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    startTransition(() => {
+      if (mobile) setMobileGroupKey(groupKey);
+      else setActiveGroupKey(groupKey);
+    });
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -236,7 +258,7 @@ export default function ServiciosPage() {
                     key={group.key}
                     type="button"
                     data-testid="services-mobile-group-option"
-                    onClick={() => setMobileGroupKey(group.key)}
+                    onClick={() => selectGroup(group.key, true)}
                     className="flex min-h-[62px] w-full items-center justify-between gap-4 border-b border-[#d7dbe0] bg-white px-4 py-3 text-left last:border-b-0"
                   >
                     <span className="min-w-0 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">{group.label}</span>
@@ -383,7 +405,7 @@ export default function ServiciosPage() {
                             key={group.key}
                             type="button"
                             data-testid="services-group-option"
-                            onClick={() => setActiveGroupKey(group.key)}
+                            onClick={() => selectGroup(group.key, false)}
                             className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors lg:w-full ${
                               active ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"
                             }`}

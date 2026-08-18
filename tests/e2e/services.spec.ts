@@ -98,8 +98,10 @@ test.describe("@smoke services catalog", () => {
       .filter({ hasText: /Eventos|Seguridad|Technology|Events/i })
       .first();
     await target.scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollTo({ top: 500, behavior: "auto" }));
     if (mobile) {
       await target.click();
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(10);
       const title = page.getByRole("heading", { name: /Eventos|Seguridad|Technology|Events/i }).first();
       const firstService = page.getByRole("link", { name: /Todos los servicios de|All .* services/i }).first();
       await expect(title).toBeVisible();
@@ -113,6 +115,7 @@ test.describe("@smoke services catalog", () => {
     } else {
       const groupBox = await target.boundingBox();
       await target.click();
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(10);
       const title = page.getByRole("heading", { name: /Eventos|Seguridad|Technology|Events/i }).last();
       await expect(title).toBeVisible();
       const titleBox = await title.boundingBox();

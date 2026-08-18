@@ -125,11 +125,28 @@ jobs:
 
       - name: Run the exhaustive local release regression once
         if: github.event_name == 'workflow_dispatch'
-        run: npm run test:e2e
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A single 400-case browser/server process can accumulate enough state
+          # to make localhost stop answering late in the release suite. Keep the
+          # database and runner isolated, but restart Next.js and Chromium between
+          # four sequential shards so this remains one exhaustive certification.
+          for shard in 1 2 3 4; do
+            export PLAYWRIGHT_JSON_REPORT="test-results/results-${shard}.json"
+            export PLAYWRIGHT_OUTPUT_DIR="test-results/shard-${shard}"
+            export PLAYWRIGHT_HTML_OUTPUT_DIR="playwright-report/shard-${shard}"
+            npx playwright test --shard="${shard}/4"
+          done
 
       - name: Require zero failures, flakies and unexpected skips
         if: github.event_name == 'workflow_dispatch'
-        run: npm run test:e2e:verify-results
+        shell: bash
+        run: |
+          set -euo pipefail
+          for shard in 1 2 3 4; do
+            PLAYWRIGHT_JSON_REPORT="test-results/results-${shard}.json" npm run test:e2e:verify-results
+          done
 
       - name: Verify synthetic fixtures after the release regression
         if: github.event_name == 'workflow_dispatch' && always()

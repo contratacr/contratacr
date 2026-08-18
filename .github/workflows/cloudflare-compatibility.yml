@@ -1,0 +1,342 @@
+name: Cloudflare Compatibility
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Validate only or deploy an isolated preview Worker."
+        required: true
+        default: dry-run
+        type: choice
+        options:
+          - dry-run
+          - deploy-preview
+          - test-cutover
+          - test-rollback
+          - production-cutover
+          - production-rollback
+      worker_name:
+        description: "Cloudflare Worker name used for deploy/cutover/rollback."
+        required: true
+        default: contratacr-preview
+      target_environment:
+        description: "GitHub environment whose secrets are used for the build."
+        required: true
+        default: test
+        type: choice
+        options:
+          - test
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-compatibility-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: OpenNext Linux build
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target_environment }}
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify private env files are absent
+        run: npm run security:env
+
+      - name: Build Cloudflare bundle
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+          NEXT_PUBLIC_FACEBOOK_APP_ID: ${{ secrets.NEXT_PUBLIC_FACEBOOK_APP_ID }}
+        run: npm run cloudflare:build
+
+      - name: Validate Worker bundle and report size
+        if: ${{ inputs.mode == 'dry-run' }}
+        run: npx wrangler deploy --dry-run
+
+      - name: Deploy isolated preview Worker
+        if: ${{ inputs.mode == 'deploy-preview' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler deploy --name "${{ inputs.worker_name }}"
+
+      - name: Sync Worker runtime secrets
+        if: ${{ inputs.mode == 'deploy-preview' && ((inputs.target_environment == 'production' && inputs.worker_name == 'contratacr') || (inputs.target_environment == 'test' && inputs.worker_name == 'contratacr-preview')) }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+          NEXT_PUBLIC_FACEBOOK_APP_ID: ${{ secrets.NEXT_PUBLIC_FACEBOOK_APP_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PADRON_DATABASE_URL: ${{ secrets.PADRON_DATABASE_URL }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        run: |
+          node - <<'NODE'
+          const fs = require("node:fs");
+
+          const names = [
+            "NEXT_PUBLIC_SUPABASE_URL",
+            "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+            "NEXT_PUBLIC_APP_URL",
+            "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+            "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+            "NEXT_PUBLIC_FACEBOOK_APP_ID",
+            "SUPABASE_URL",
+            "SUPABASE_SERVICE_ROLE_KEY",
+            "PADRON_DATABASE_URL",
+            "R2_ENDPOINT",
+            "R2_ACCESS_KEY_ID",
+            "R2_SECRET_ACCESS_KEY",
+            "R2_BUCKET",
+            "R2_PUBLIC_BASE_URL",
+            "CLOUDINARY_CLOUD_NAME",
+            "CLOUDINARY_API_KEY",
+            "CLOUDINARY_API_SECRET"
+          ];
+          const secrets = {};
+          for (const name of names) {
+            const value = process.env[name]?.trim();
+            if (value) secrets[name] = value;
+          }
+          fs.writeFileSync("worker-secrets.json", JSON.stringify(secrets));
+          console.log(`Prepared ${Object.keys(secrets).length} Worker runtime secrets.`);
+          NODE
+          npx wrangler secret bulk worker-secrets.json --name "${{ inputs.worker_name }}"
+
+      - name: Route test traffic to Worker
+        if: ${{ inputs.mode == 'test-cutover' && inputs.target_environment == 'test' && inputs.worker_name == 'contratacr-preview' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
+          const script = "contratacr-preview";
+          const dnsName = "test.contratacr.com";
+          const dnsFallbackTarget = "cname.vercel-dns.com";
+          const patterns = ["test.contratacr.com/*"];
+
+          async function cf(path, init = {}) {
+            const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+              ...init,
+              headers: {
+                "Authorization": `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+                "Content-Type": "application/json",
+                ...(init.headers ?? {})
+              }
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.success === false) {
+              throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
+            }
+            return json.result;
+          }
+
+          const dnsRecords = await cf(`/zones/${zoneId}/dns_records?type=CNAME&name=${encodeURIComponent(dnsName)}`);
+          const dnsRecord = dnsRecords[0];
+          if (dnsRecord) {
+            await cf(`/zones/${zoneId}/dns_records/${dnsRecord.id}`, {
+              method: "PUT",
+              body: JSON.stringify({
+                type: dnsRecord.type,
+                name: dnsRecord.name,
+                content: dnsRecord.content,
+                ttl: 1,
+                proxied: true
+              })
+            });
+            console.log(`Updated DNS ${dnsName} to proxied`);
+          } else {
+            await cf(`/zones/${zoneId}/dns_records`, {
+              method: "POST",
+              body: JSON.stringify({
+                type: "CNAME",
+                name: "test",
+                content: dnsFallbackTarget,
+                ttl: 1,
+                proxied: true
+              })
+            });
+            console.log(`Created proxied DNS ${dnsName}`);
+          }
+
+          const existing = await cf(`/zones/${zoneId}/workers/routes`);
+          for (const pattern of patterns) {
+            const current = existing.find((route) => route.pattern === pattern);
+            if (current) {
+              await cf(`/zones/${zoneId}/workers/routes/${current.id}`, {
+                method: "PUT",
+                body: JSON.stringify({ pattern, script })
+              });
+              console.log(`Updated route ${pattern} -> ${script}`);
+            } else {
+              await cf(`/zones/${zoneId}/workers/routes`, {
+                method: "POST",
+                body: JSON.stringify({ pattern, script })
+              });
+              console.log(`Created route ${pattern} -> ${script}`);
+            }
+          }
+          NODE
+
+      - name: Roll back test Worker routes
+        if: ${{ inputs.mode == 'test-rollback' && inputs.target_environment == 'test' && inputs.worker_name == 'contratacr-preview' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
+          const script = "contratacr-preview";
+          const dnsName = "test.contratacr.com";
+          const patterns = new Set(["test.contratacr.com/*"]);
+
+          async function cf(path, init = {}) {
+            const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+              ...init,
+              headers: {
+                "Authorization": `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+                "Content-Type": "application/json",
+                ...(init.headers ?? {})
+              }
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.success === false) {
+              throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
+            }
+            return json.result;
+          }
+
+          const dnsRecords = await cf(`/zones/${zoneId}/dns_records?type=CNAME&name=${encodeURIComponent(dnsName)}`);
+          for (const dnsRecord of dnsRecords) {
+            await cf(`/zones/${zoneId}/dns_records/${dnsRecord.id}`, {
+              method: "PUT",
+              body: JSON.stringify({
+                type: dnsRecord.type,
+                name: dnsRecord.name,
+                content: dnsRecord.content,
+                ttl: 1,
+                proxied: false
+              })
+            });
+            console.log(`Updated DNS ${dnsName} to DNS-only`);
+          }
+
+          const existing = await cf(`/zones/${zoneId}/workers/routes`);
+          for (const route of existing) {
+            if (!patterns.has(route.pattern)) continue;
+            if (route.script !== script) {
+              throw new Error(`Refusing to delete ${route.pattern}; it points to ${route.script}, not ${script}.`);
+            }
+            await cf(`/zones/${zoneId}/workers/routes/${route.id}`, { method: "DELETE" });
+            console.log(`Deleted route ${route.pattern}`);
+          }
+          NODE
+
+      - name: Route production traffic to Worker
+        if: ${{ inputs.mode == 'production-cutover' && inputs.target_environment == 'production' && inputs.worker_name == 'contratacr' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
+          const script = "contratacr";
+          const patterns = ["contratacr.com/*", "www.contratacr.com/*"];
+
+          async function cf(path, init = {}) {
+            const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+              ...init,
+              headers: {
+                "Authorization": `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+                "Content-Type": "application/json",
+                ...(init.headers ?? {})
+              }
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.success === false) {
+              throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
+            }
+            return json.result;
+          }
+
+          const existing = await cf(`/zones/${zoneId}/workers/routes`);
+          for (const pattern of patterns) {
+            const current = existing.find((route) => route.pattern === pattern);
+            if (current) {
+              await cf(`/zones/${zoneId}/workers/routes/${current.id}`, {
+                method: "PUT",
+                body: JSON.stringify({ pattern, script })
+              });
+              console.log(`Updated route ${pattern} -> ${script}`);
+            } else {
+              await cf(`/zones/${zoneId}/workers/routes`, {
+                method: "POST",
+                body: JSON.stringify({ pattern, script })
+              });
+              console.log(`Created route ${pattern} -> ${script}`);
+            }
+          }
+          NODE
+
+      - name: Roll back production Worker routes
+        if: ${{ inputs.mode == 'production-rollback' && inputs.target_environment == 'production' && inputs.worker_name == 'contratacr' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const zoneId = "3a5d901a61df25e30a69ff5c056604b2";
+          const script = "contratacr";
+          const patterns = new Set(["contratacr.com/*", "www.contratacr.com/*"]);
+
+          async function cf(path, init = {}) {
+            const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+              ...init,
+              headers: {
+                "Authorization": `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+                "Content-Type": "application/json",
+                ...(init.headers ?? {})
+              }
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.success === false) {
+              throw new Error(`Cloudflare API failed ${res.status}: ${JSON.stringify(json.errors ?? json)}`);
+            }
+            return json.result;
+          }
+
+          const existing = await cf(`/zones/${zoneId}/workers/routes`);
+          for (const route of existing) {
+            if (!patterns.has(route.pattern)) continue;
+            if (route.script !== script) {
+              throw new Error(`Refusing to delete ${route.pattern}; it points to ${route.script}, not ${script}.`);
+            }
+            await cf(`/zones/${zoneId}/workers/routes/${route.id}`, { method: "DELETE" });
+            console.log(`Deleted route ${route.pattern}`);
+          }
+          NODE

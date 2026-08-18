@@ -139,7 +139,7 @@ test.describe("@seeded dashboard surfaces", () => {
   });
 
   test("follow network modal closes when tapping outside", async ({ page }, testInfo) => {
-    test.skip(!isMobileProject(testInfo), "The reported follow-network modal behavior is mobile-only.");
+    if (!isMobileProject(testInfo)) return;
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/es/dashboard/profesional");
 

@@ -1,0 +1,186 @@
+name: Cloudflare D1 padron refresh
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Environment allowed to run this refresh. Use production for the shared D1 padrón."
+        required: true
+        type: choice
+        options:
+          - test
+          - production
+      dry_run:
+        description: "Validate download and D1 access without swapping the live table."
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: cloudflare-d1-padron-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Refresh shared Cloudflare D1 padrón
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment: ${{ inputs.target }}
+    permissions:
+      contents: read
+    env:
+      TARGET: ${{ inputs.target }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      DEFAULT_CLOUDFLARE_ACCOUNT_ID: 5caf14b53df75c99c1356e3ada70768c
+      PADRON_D1_DATABASE_NAME: contratacr-padron
+      PADRON_SAMPLE_CEDULA: "101053316"
+      PADRON_SAMPLE_NOMBRE: "LUCILA"
+      PADRON_SAMPLE_PAPELLIDO: "PORRAS"
+      PADRON_SAMPLE_SAPELLIDO: "AGUERO"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate target and Cloudflare secrets
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "Missing CLOUDFLARE_API_TOKEN in the $TARGET GitHub Environment."
+            exit 1
+          fi
+          RESOLVED_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-${CF_ACCOUNT_ID:-$DEFAULT_CLOUDFLARE_ACCOUNT_ID}}"
+          echo "CLOUDFLARE_ACCOUNT_ID=$RESOLVED_ACCOUNT_ID" >> "$GITHUB_ENV"
+          if [ "$DRY_RUN" = "false" ] && [ "$TARGET" != "production" ]; then
+            echo "The shared D1 padrón can only be promoted from target=production."
+            exit 1
+          fi
+          if [ "$DRY_RUN" = "false" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "Production D1 padron refresh must run from main."
+            exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure shared D1 database exists
+        run: |
+          set -euo pipefail
+          node <<'JS'
+          const { execFileSync } = require("node:child_process");
+          const name = process.env.PADRON_D1_DATABASE_NAME;
+          const list = execFileSync("npx", ["wrangler", "d1", "list", "--json"], { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] });
+          const databases = JSON.parse(list);
+          if (!databases.some((db) => db.name === name)) {
+            execFileSync("npx", ["wrangler", "d1", "create", name], { stdio: "inherit" });
+          }
+          JS
+
+      - name: Download and unzip padron
+        run: |
+          set -euo pipefail
+          curl -L --retry 3 --retry-delay 5 -o padron.zip "https://www.tse.go.cr/zip/padron/padron_completo.zip"
+          unzip -o padron.zip -d padron
+          PADRON_FILE="$(find padron -maxdepth 2 -iname 'padron_completo.txt' -print -quit)"
+          if [ -z "$PADRON_FILE" ]; then
+            echo "Could not find padron_completo.txt inside the downloaded zip."
+            find padron -maxdepth 2 -type f -print
+            exit 1
+          fi
+          echo "PADRON_FILE=$PADRON_FILE" >> "$GITHUB_ENV"
+
+      - name: Prepare D1 import chunks
+        run: |
+          set -euo pipefail
+          node scripts/prepare-padron-copy.mjs "$PADRON_FILE" padron-copy.tsv
+          if [ "$DRY_RUN" = "true" ]; then
+            {
+              grep "^${PADRON_SAMPLE_CEDULA}	" padron-copy.tsv || true
+              head -n 1000 padron-copy.tsv
+            } | awk '!seen[$1]++' > padron-copy-dry-run.tsv
+            PADRON_D1_BATCH_SIZE=50 PADRON_D1_ROWS_PER_FILE=500 node scripts/prepare-padron-d1-sql.mjs padron-copy-dry-run.tsv padron-d1-sql
+          else
+            PADRON_D1_BATCH_SIZE=50 PADRON_D1_ROWS_PER_FILE=5000 node scripts/prepare-padron-d1-sql.mjs padron-copy.tsv padron-d1-sql
+          fi
+          node - <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const files = fs.readdirSync("padron-d1-sql").filter((file) => file.endsWith(".sql")).sort();
+          for (const file of files.slice(0, 5)) {
+            const size = fs.statSync(path.join("padron-d1-sql", file)).size;
+            console.log(`${file} ${size} bytes`);
+          }
+          console.log(`Total chunks: ${files.length}`);
+          NODE
+
+      - name: Validate D1 access
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "select 1 as ok;"
+
+      - name: Validate D1 small import
+        if: ${{ inputs.dry_run == true }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "drop table if exists padron_dry_run; create table padron_dry_run (cedula text primary key, nombre text, papellido text, sapellido text); drop table if exists padron_next; create table padron_next (cedula text primary key, nombre text, papellido text, sapellido text);"
+          for file in padron-d1-sql/*.sql; do
+            echo "Dry-run importing $file"
+            npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --file "$file"
+          done
+          count="$(npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --json --command "select count(*) as count from padron_next;" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const j=JSON.parse(s);console.log(j[0]?.results?.[0]?.count ?? 0)})")"
+          if [ "$count" -lt 1000 ]; then
+            echo "D1 dry-run imported only $count rows; refusing to continue."
+            exit 1
+          fi
+          npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "drop table if exists padron_dry_run; drop table if exists padron_next;"
+
+      - name: Stop after dry run
+        if: ${{ inputs.dry_run == true }}
+        run: |
+          set -euo pipefail
+          echo "Dry run completed: padrón download, parsing, SQL chunking, and D1 access are valid."
+
+      - name: Ensure D1 staging schema
+        if: ${{ inputs.dry_run == false }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "create table if not exists padron (cedula text primary key, nombre text, papellido text, sapellido text); drop table if exists padron_next; create table padron_next (cedula text primary key, nombre text, papellido text, sapellido text);"
+
+      - name: Load D1 staging
+        if: ${{ inputs.dry_run == false }}
+        run: |
+          set -euo pipefail
+          for file in padron-d1-sql/*.sql; do
+            echo "Importing $file"
+            npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --file "$file"
+          done
+
+      - name: Promote D1 staging
+        if: ${{ inputs.dry_run == false }}
+        run: |
+          set -euo pipefail
+          count="$(npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --json --command "select count(*) as count from padron_next;" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const j=JSON.parse(s);console.log(j[0]?.results?.[0]?.count ?? 0)})")"
+          if [ "$count" -lt 3000000 ]; then
+            echo "padron_next has only $count rows; refusing to swap."
+            exit 1
+          fi
+          npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "drop table if exists padron_old; alter table padron rename to padron_old; alter table padron_next rename to padron; drop table if exists padron_old;"
+
+      - name: Verify D1 padron lookup
+        if: ${{ inputs.dry_run == false }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "select cedula, nombre, papellido, sapellido from padron where cedula = '$PADRON_SAMPLE_CEDULA';"
+          row_count="$(npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --json --command "select count(*) as count from padron where cedula = '$PADRON_SAMPLE_CEDULA' and nombre = '$PADRON_SAMPLE_NOMBRE' and papellido = '$PADRON_SAMPLE_PAPELLIDO' and sapellido = '$PADRON_SAMPLE_SAPELLIDO';" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const j=JSON.parse(s);console.log(j[0]?.results?.[0]?.count ?? 0)})")"
+          if [ "$row_count" != "1" ]; then
+            echo "D1 padron sample lookup failed or parsed the name columns incorrectly."
+            exit 1
+          fi

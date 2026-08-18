@@ -157,7 +157,7 @@ async function main() {
     throw new Error(`local storage bucket: ${bucketError.message}`);
   }
 
-  console.log(`Seeded ${actors.length} synthetic local actors, padrón samples and private storage.`);
+  console.log(`Seeded ${actors.length} synthetic local actors and private storage.`);
 }
 
 main().catch((error) => {

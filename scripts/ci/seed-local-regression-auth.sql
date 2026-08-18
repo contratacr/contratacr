@@ -127,12 +127,3 @@ values
     now(),
     now()
   );
-
-insert into public.padron (cedula, nombre, papellido, sapellido)
-values
-  ('100000001', 'LOCAL', 'CONTRATACR', 'PRUEBA'),
-  ('100000002', 'LOCAL', 'SOLUTIONS', 'PRUEBA')
-on conflict (cedula) do update set
-  nombre = excluded.nombre,
-  papellido = excluded.papellido,
-  sapellido = excluded.sapellido;
