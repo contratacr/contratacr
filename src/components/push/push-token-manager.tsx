@@ -351,10 +351,7 @@ export function PushTokenManager() {
 
   if (loading || !promptVisible || !user || !isNativeMobile()) return null;
 
-  const professional = user.user_metadata?.is_provider === true;
-  const copy = professional
-    ? "Activa notificaciones para enterarte cuando un cliente te escriba o haya proyectos relacionados con tus servicios."
-    : "Activa notificaciones para enterarte cuando un profesional te responda o tengas novedades en tus solicitudes.";
+  const copy = "Recibe avisos de mensajes, solicitudes, propuestas, reseñas y cambios importantes sin tener que abrir la app.";
 
   return (
     <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+86px)] z-[95] sm:left-auto sm:right-5 sm:max-w-sm">

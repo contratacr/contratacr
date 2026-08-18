@@ -31,8 +31,7 @@ export function NativeFirstRunOnboarding() {
 
   useEffect(() => {
     if (!nativeApp || window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1") return;
-    const timer = window.setTimeout(() => setVisible(true), 80);
-    return () => window.clearTimeout(timer);
+    setVisible(true);
   }, [nativeApp]);
 
   useEffect(() => {

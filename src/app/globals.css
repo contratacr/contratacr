@@ -328,7 +328,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   background: #fff;
   border-top: 0 !important;
   padding-bottom: calc(env(safe-area-inset-bottom) + 0.35rem);
-  box-shadow: 0 -10px 34px -24px rgba(15, 23, 42, 0.55);
+  box-shadow: none !important;
 }
 
 .ccr-native-app .ccr-native-bottom-nav::before {
