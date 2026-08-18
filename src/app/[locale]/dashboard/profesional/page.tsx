@@ -1988,7 +1988,7 @@ export default function DashboardPage() {
                   </h1>
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
                 </div>
-                <div data-testid="dashboard-identity-actions" className="mt-2 flex min-h-[36px] items-end justify-between gap-3 sm:mt-1 sm:min-h-[22px] sm:justify-start">
+                <div data-testid="dashboard-identity-actions" className="mt-2 flex min-h-[36px] items-center justify-between gap-3 sm:mt-1 sm:min-h-[22px] sm:justify-start">
                   <div className="flex min-w-0 items-center">
                     <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                   </div>
@@ -1998,7 +1998,7 @@ export default function DashboardPage() {
                       onClick={openInNewTabOnDesktop}
                       aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
                       data-testid="dashboard-mobile-view-profile"
-                      className="inline-flex shrink-0 items-center gap-1 pb-0.5 text-xs font-semibold leading-normal text-[#526277] underline-offset-2 transition hover:text-[#009FD9] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
+                      className="inline-flex shrink-0 items-center gap-1 self-center text-xs font-semibold leading-none text-[#526277] underline-offset-2 transition hover:text-[#009FD9] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
                     >
                       <span>{locale === "en" ? "View profile" : "Ver perfil"}</span>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0 self-center text-[#162543]" />

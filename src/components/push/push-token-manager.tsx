@@ -72,7 +72,7 @@ function normalizePushUrl(rawUrl: unknown) {
 }
 
 function promptSessionKey(userId: string) {
-  return `ccr:push-permission-context-shown:v2:${userId}`;
+  return `ccr:push-permission-context-shown:v3:${userId}`;
 }
 
 function permissionGrantedKey(userId: string) {
@@ -130,7 +130,7 @@ export function PushTokenManager() {
   // Version the contextual decision independently from the OS permission.
   // Older builds asked at a different point in the journey, so their dismissal
   // must not suppress the improved post-login explanation.
-  const dismissKey = user ? `ccr:push-permission-context-dismissed:v2:${user.id}` : null;
+  const dismissKey = user ? `ccr:push-permission-context-dismissed:v3:${user.id}` : null;
 
   useEffect(() => {
     if (!isNativeMobile()) return;
@@ -278,9 +278,10 @@ export function PushTokenManager() {
           return;
         }
         if (!shownThisSession) {
-          window.sessionStorage.setItem(promptSessionKey(user.id), "1");
           promptTimerRef.current = setTimeout(() => {
-            if (!cancelled) setPromptVisible(true);
+            if (cancelled) return;
+            window.sessionStorage.setItem(promptSessionKey(user.id), "1");
+            setPromptVisible(true);
           }, promptDelayForPath(pathname));
         }
       } catch (error) {
