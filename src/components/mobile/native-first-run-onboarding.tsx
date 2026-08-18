@@ -6,10 +6,13 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useNativeApp } from "@/hooks/use-native-app";
+import {
+  NATIVE_ONBOARDING_COMPLETED_EVENT,
+  NATIVE_ONBOARDING_COMPLETED_KEY,
+} from "@/lib/mobile-onboarding";
 
 // Bump this key whenever the first-run journey changes materially so an
 // existing native installation gets one clean chance to see the new flow.
-const COMPLETED_KEY = "ccr:native-first-run-onboarding:v9";
 type Role = "client" | "professional";
 
 const ROLE_IMAGES: Record<Role, string> = {
@@ -27,7 +30,7 @@ export function NativeFirstRunOnboarding() {
   const english = pathname?.startsWith("/en") ?? false;
 
   useEffect(() => {
-    if (!nativeApp || window.localStorage.getItem(COMPLETED_KEY) === "1") return;
+    if (!nativeApp || window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1") return;
     const timer = window.setTimeout(() => setVisible(true), 80);
     return () => window.clearTimeout(timer);
   }, [nativeApp]);
@@ -45,7 +48,8 @@ export function NativeFirstRunOnboarding() {
   }, [visible]);
 
   const complete = useCallback(() => {
-    window.localStorage.setItem(COMPLETED_KEY, "1");
+    window.localStorage.setItem(NATIVE_ONBOARDING_COMPLETED_KEY, "1");
+    window.dispatchEvent(new Event(NATIVE_ONBOARDING_COMPLETED_EVENT));
     setVisible(false);
   }, []);
 

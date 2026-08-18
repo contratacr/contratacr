@@ -31,18 +31,6 @@ const config: CapacitorConfig = {
       // on Android.
       presentationOptions: ["badge", "sound", "banner", "list"],
     },
-    SplashScreen: {
-      // Android and iOS already provide the native launch splash. Let
-      // Capacitor dismiss that same surface automatically instead of holding
-      // a second, smaller splash while React hydrates.
-      launchAutoHide: true,
-      launchShowDuration: 520,
-      launchFadeOutDuration: 160,
-      backgroundColor: "#F4F7FA",
-      showSpinner: false,
-      splashFullScreen: true,
-      splashImmersive: true,
-    },
     StatusBar: {
       overlaysWebView: false,
       backgroundColor: "#FFFFFF",
