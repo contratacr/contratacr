@@ -7,7 +7,9 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useNativeApp } from "@/hooks/use-native-app";
 
-const COMPLETED_KEY = "ccr:native-first-run-onboarding:v8";
+// Bump this key whenever the first-run journey changes materially so an
+// existing native installation gets one clean chance to see the new flow.
+const COMPLETED_KEY = "ccr:native-first-run-onboarding:v9";
 type Role = "client" | "professional";
 
 const ROLE_IMAGES: Record<Role, string> = {
