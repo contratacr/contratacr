@@ -631,6 +631,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
   if (includesAny(normalized, ["como funciona", "how does", "funciona", "usar contratacr", "que es contratacr"])) {
     return {
       action: "how_it_works",
+      confidence: 1,
       answer: locale === "en"
         ? "ContrataCR helps you find professionals, compare profiles, create projects, receive proposals, book services and coordinate directly."
         : "ContrataCR permite buscar profesionales, comparar perfiles, crear proyectos, recibir propuestas, agendar servicios y coordinar directamente.",
@@ -641,6 +642,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
   if (includesAny(normalized, ["gratis", "cuesta", "precio de la app", "comision", "free", "commission"])) {
     return {
       action: "answer",
+      confidence: 1,
       answer: locale === "en"
         ? "Using ContrataCR to search, create projects and create a professional profile is currently free. ContrataCR does not add a commission to the price agreed between client and professional."
         : "Actualmente buscar, crear proyectos y crear un perfil profesional en ContrataCR es gratis. ContrataCR no agrega comisión al precio acordado entre cliente y profesional.",
@@ -650,6 +652,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
   if (includesAny(normalized, ["publicar", "solicitud", "request", "propuesta", "cotizar", "quote"])) {
     return {
       action: "publish_request",
+      confidence: 1,
       answer: locale === "en"
         ? "Create a project with what you need, the area and the details. ContrataCR will notify professionals related to that service so they can send proposals."
         : "Crea un proyecto con lo que necesitas, la zona y los detalles. ContrataCR notificará a profesionales relacionados con ese servicio para que puedan enviar propuestas.",
@@ -660,6 +663,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
   if (categoryName || placeLabel) {
     return {
       action: "search_professionals",
+      confidence: 0.95,
       serviceId: category?.id ?? null,
       locationText: placeLabel,
       answer: locale === "en"
@@ -671,6 +675,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
 
   return {
     action: "answer",
+    confidence: 0,
     answer: locale === "en"
       ? "Tell me the service and area you need. I can also explain any ContrataCR feature."
       : "Dime qué servicio y zona necesita. También puedo explicarle cualquier función de ContrataCR.",
@@ -752,9 +757,9 @@ async function openAiAnswer(message: string, locale: Locale, history: HistoryMes
         ...history,
         { role: "user", content: message },
       ],
-      max_tokens: 520,
+      max_tokens: 320,
     }),
-    signal: AbortSignal.timeout(20_000),
+    signal: AbortSignal.timeout(8_000),
   });
 
   if (!res.ok) {
@@ -1519,13 +1524,21 @@ export async function POST(req: Request) {
     // opt-in so tests and repeated FAQ-style questions cannot silently spend
     // API credit. Set AI_ASSISTANT_PROVIDER=openai only when that fallback is
     // deliberately enabled for an environment.
+    const documentedPayload = localAnswer(rawMessage, locale);
     const externalProvider = (process.env.AI_ASSISTANT_PROVIDER ?? "local").trim().toLowerCase();
-    const aiPayload = safetyPayload || externalProvider !== "openai"
+    const needsExternalFallback = documentedPayload.confidence === 0;
+    const externalRateLimited = needsExternalFallback && externalProvider === "openai"
+      ? enforceRateLimit(req, "ai-assistant-external", 3, 60_000)
+      : null;
+    // Product documentation, guided intents and catalog matches always win.
+    // The paid provider is an opt-in last resort for genuinely open questions,
+    // capped separately so repeated prompts cannot consume credit unchecked.
+    const aiPayload = safetyPayload || externalProvider !== "openai" || !needsExternalFallback || externalRateLimited
       ? null
       : await openAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
-    const payload = safetyPayload ?? normalizePayload(aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history, catalog.labels);
+    const payload = safetyPayload ?? normalizePayload(aiPayload ?? documentedPayload, rawMessage, locale, history, catalog.labels);
     const needsGenericClarification = ambiguousGenericServiceRequest(rawMessage);
     const hasValidResolvedService = !needsGenericClarification && !!payload.serviceId && catalog.labels.has(payload.serviceId);
     const resolvedCategory = hasValidResolvedService
