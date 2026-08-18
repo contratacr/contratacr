@@ -65,7 +65,8 @@ type AssistantProfessionalResult = {
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-const MAX_HISTORY_MESSAGES = 8;
+const WORKERS_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast";
+const MAX_HISTORY_MESSAGES = 3;
 const MAX_HISTORY_CONTENT = 700;
 const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)/gi;
 const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|crear|hacer|abrir)|(?:publicar|crear|hacer|abrir)|(?:i want to|i need to|how can i)\s+(?:publish|create|open)|(?:publish|create|open))\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)\b/i;
@@ -122,6 +123,23 @@ function sanitizeHistory(value: unknown): HistoryMessage[] {
       serviceId: typeof item.serviceId === "string" ? item.serviceId : null,
     }))
     .filter((item) => item.content.length > 0);
+}
+
+function redactExternalText(value: string) {
+  return value
+    .replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g, "[correo oculto]")
+    .replace(/https?:\/\/\S+/gi, "[enlace oculto]")
+    .replace(/\b\d[\s-]?\d{4}[\s-]?\d{4}\b/g, "[identificación oculta]")
+    .replace(/\b\d{9,12}\b/g, "[identificación oculta]")
+    .replace(/(?:\+?506[\s-]?)?(?:\d[\s-]?){8}\b/g, "[teléfono oculto]")
+    .trim();
+}
+
+function externalHistory(history: HistoryMessage[]) {
+  return history.slice(-MAX_HISTORY_MESSAGES).map((item) => ({
+    role: item.role,
+    content: redactExternalText(item.content).slice(0, 500),
+  }));
 }
 
 async function liveCatalog(locale: Locale) {
@@ -776,6 +794,49 @@ async function openAiAnswer(message: string, locale: Locale, history: HistoryMes
     return typeof parsed.answer === "string" && parsed.answer.trim() ? parsed : null;
   } catch (error) {
     console.error("[ai-assistant] invalid JSON", error);
+    return null;
+  }
+}
+
+type WorkersAiBinding = {
+  run(model: string, input: Record<string, unknown>): Promise<unknown>;
+};
+
+async function workersAiAnswer(
+  message: string,
+  locale: Locale,
+  history: HistoryMessage[],
+  catalogPrompt: string,
+  pageContext: string,
+): Promise<AssistantPayload | null> {
+  try {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const context = await getCloudflareContext({ async: true });
+    const ai = (context.env as { AI?: WorkersAiBinding }).AI;
+    if (!ai) return null;
+
+    const result = await Promise.race([
+      ai.run(WORKERS_AI_MODEL, {
+        messages: [
+          { role: "system", content: systemPrompt(locale, catalogPrompt, pageContext) },
+          ...externalHistory(history),
+          { role: "user", content: redactExternalText(message).slice(0, 900) },
+        ],
+        temperature: 0.2,
+        max_tokens: 220,
+      }),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 6_000)),
+    ]);
+    if (!result || typeof result !== "object") return null;
+    const response = (result as { response?: unknown }).response;
+    const content = typeof response === "string" ? response : JSON.stringify(response ?? "");
+    if (!content) return null;
+    const jsonText = content.match(/\{[\s\S]*\}/)?.[0];
+    if (!jsonText) return null;
+    const parsed = JSON.parse(jsonText) as AssistantPayload;
+    return typeof parsed.answer === "string" && parsed.answer.trim() ? parsed : null;
+  } catch (error) {
+    console.warn("[ai-assistant] Workers AI fallback unavailable", error);
     return null;
   }
 }
@@ -1525,17 +1586,21 @@ export async function POST(req: Request) {
     // API credit. Set AI_ASSISTANT_PROVIDER=openai only when that fallback is
     // deliberately enabled for an environment.
     const documentedPayload = localAnswer(rawMessage, locale);
-    const externalProvider = (process.env.AI_ASSISTANT_PROVIDER ?? "local").trim().toLowerCase();
     const needsExternalFallback = documentedPayload.confidence === 0;
-    const externalRateLimited = needsExternalFallback && externalProvider === "openai"
+    const externalRateLimited = needsExternalFallback
       ? enforceRateLimit(req, "ai-assistant-external", 3, 60_000)
       : null;
     // Product documentation, guided intents and catalog matches always win.
-    // The paid provider is an opt-in last resort for genuinely open questions,
-    // capped separately so repeated prompts cannot consume credit unchecked.
-    const aiPayload = safetyPayload || externalProvider !== "openai" || !needsExternalFallback || externalRateLimited
+    // Workers AI is a bounded fallback for genuinely open questions. OpenAI stays
+    // explicitly opt-in, so exhausted Workers AI capacity never consumes credit.
+    const workersPayload = safetyPayload || !needsExternalFallback || externalRateLimited
       ? null
-      : await openAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
+      : await workersAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
+    const openAiEnabled = process.env.AI_ASSISTANT_OPENAI_FALLBACK === "true";
+    const openAiPayload = safetyPayload || workersPayload || !openAiEnabled || !needsExternalFallback || externalRateLimited
+      ? null
+      : await openAiAnswer(rawMessage, locale, externalHistory(history), catalog.prompt, pageContext);
+    const aiPayload = workersPayload ?? openAiPayload;
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
     const payload = safetyPayload ?? normalizePayload(aiPayload ?? documentedPayload, rawMessage, locale, history, catalog.labels);
@@ -1674,7 +1739,7 @@ export async function POST(req: Request) {
       selectedResultIndex: payload.action === "select_professional" && Number.isInteger(payload.selectedResultIndex)
         ? payload.selectedResultIndex
         : null,
-      aiProvider: aiPayload ? "openai" : "local",
+      aiProvider: workersPayload ? "workers-ai" : openAiPayload ? "openai" : "local",
     });
   } catch (error) {
     console.error("[ai-assistant]", error);
