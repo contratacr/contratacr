@@ -1472,13 +1472,16 @@ async function realProfessionalMatches(payload: AssistantPayload, originalMessag
 export async function POST(req: Request) {
   // A normal guided conversation can legitimately use several short turns.
   // Keep abuse protection without cutting off regression or real users mid-flow.
-  const limited = enforceRateLimit(req, "ai-assistant", 60, 60_000);
+  const limited = enforceRateLimit(req, "ai-assistant", 20, 60_000);
   if (limited) return limited;
 
   try {
     const body = await req.json().catch(() => ({}));
     const locale = localeKey(body.locale);
     const nativeApp = body.platform === "native";
+    if (!nativeApp) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     const rawMessage = limitTrimmedText(body.message, Math.min(LONG_TEXT_MAX_LENGTH, 1200));
     const pagePath = limitTrimmedText(body.pagePath, 240) || `/${locale}`;
     const supabase = await createClient();
@@ -1512,7 +1515,14 @@ export async function POST(req: Request) {
 
     const catalog = await liveCatalog(locale);
     const safetyPayload = urgentSafetyAnswer(rawMessage, locale) ?? sensitiveOrUnsafeAnswer(rawMessage, locale);
-    const aiPayload = safetyPayload ? null : await openAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
+    // Deterministic, catalog-grounded answers are the default. External AI is
+    // opt-in so tests and repeated FAQ-style questions cannot silently spend
+    // API credit. Set AI_ASSISTANT_PROVIDER=openai only when that fallback is
+    // deliberately enabled for an environment.
+    const externalProvider = (process.env.AI_ASSISTANT_PROVIDER ?? "local").trim().toLowerCase();
+    const aiPayload = safetyPayload || externalProvider !== "openai"
+      ? null
+      : await openAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
     const payload = safetyPayload ?? normalizePayload(aiPayload ?? localAnswer(rawMessage, locale), rawMessage, locale, history, catalog.labels);

@@ -326,15 +326,13 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 .ccr-native-app .ccr-native-bottom-nav {
   isolation: isolate;
   background: #fff;
+  border-top: 0 !important;
   padding-bottom: calc(env(safe-area-inset-bottom) + 0.35rem);
+  box-shadow: 0 -12px 30px -18px rgba(15, 39, 70, 0.42);
 }
 
 .ccr-native-app .ccr-native-bottom-nav::before {
-  content: "";
-  position: absolute;
-  inset: -10px 0 0;
-  z-index: -1;
-  background: #fff;
+  content: none;
 }
 
 .ccr-native-app .ccr-search-bottom-sheet {

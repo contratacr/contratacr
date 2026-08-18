@@ -43,7 +43,7 @@ export function ErrorScreen({
   children?: ReactNode;
 }) {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-white px-4 py-12 text-center">
+    <main className="fixed inset-0 z-[200] flex min-h-[100dvh] flex-col items-center justify-center overflow-y-auto bg-white px-4 py-[max(3rem,env(safe-area-inset-top))] text-center">
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a href="/" aria-label="ContrataCR inicio" className="mb-8 sm:mb-10">
         <BrandLogo />

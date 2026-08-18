@@ -258,7 +258,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             <h3 className="text-lg font-extrabold leading-tight text-[#162543] sm:text-[1.15rem]">{headingTitle}</h3>
           )}
           <p className="mt-1 inline-flex w-fit items-center rounded-full bg-[#eef6fb] px-2.5 py-1 text-xs font-extrabold text-[#526277]">
-            {unread} {locale === "en" ? "unread" : "sin leer"}
+            {unread > 0
+              ? locale === "en" ? `${unread} unread` : `${unread} sin leer`
+              : locale === "en" ? "All caught up" : "Todo al día"}
           </p>
         </div>
         <div ref={globalMenuRef} className="relative shrink-0">

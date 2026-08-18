@@ -61,5 +61,24 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
 }
 
 export default async function JobsPage() {
-  return <JobsPageContent />;
+  try {
+    return await JobsPageContent();
+  } catch (error) {
+    console.error("Could not initialize jobs page", error);
+    return (
+      <JobsBoard
+        jobs={[]}
+        canPost={false}
+        initialSelectedJobId={null}
+        returnTo={null}
+        currentProfessionalId={null}
+        currentUserId={null}
+        currentUserEmail={null}
+        currentUserPhone={null}
+        currentUserLinkedIn={null}
+        appliedJobIds={[]}
+        detailOnly={false}
+      />
+    );
+  }
 }

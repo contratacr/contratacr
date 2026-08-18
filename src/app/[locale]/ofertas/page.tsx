@@ -11,6 +11,17 @@ export const dynamic = "force-dynamic";
 
 export default async function OffersPage() {
   const locale = await getLocale();
+  const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
+
+  try {
+    return await OffersPageContent(serviceOptions);
+  } catch (error) {
+    console.error("Could not initialize offers page", error);
+    return <OffersBoard offers={[]} canPost={false} currentProfessionalId={null} currentUserId={null} serviceOptions={serviceOptions} />;
+  }
+}
+
+async function OffersPageContent(serviceOptions: Array<{ value: string; label: string }>) {
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   const today = crTodayISO();
@@ -49,8 +60,6 @@ export default async function OffersPage() {
       professional_contact_email: professional?.contact_email ?? null,
     } as ProfessionalOffer;
   });
-
-  const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
 
   return <OffersBoard offers={offers} canPost={!!professional} currentProfessionalId={professional?.id ?? null} currentUserId={user?.id ?? null} serviceOptions={serviceOptions} />;
 }

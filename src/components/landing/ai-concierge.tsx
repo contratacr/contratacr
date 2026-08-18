@@ -443,6 +443,9 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
   const nativeAssistantShell = nativeApp && compactViewport;
   if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
+  // The assistant is a native-app feature. Keep the web experience focused on
+  // search and direct navigation, even if an old browser event tries to open it.
+  if (!embedded && !nativeApp) return null;
   if (!embedded && nativeAssistantShell && !open) return null;
   if (!embedded && !open) {
     return (
