@@ -38,7 +38,7 @@ export function StatusFilterTabs({
 }) {
   const tr = useTranslations("statusTabs");
   const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
-  const useEqualMobileLayout = mobileLayout === "equal" && tabs.length >= 2 && tabs.length <= 3;
+  const useBalancedLayout = tabs.length >= 2 && tabs.length <= 3 && (mobileLayout === "equal" || mobileLayout === "wrap");
 
   // PILLS — rounded chips, no counts (used for the profession filter). A wrapping row.
   if (variant === "pills") {
@@ -70,15 +70,15 @@ export function StatusFilterTabs({
   // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
   return (
     <div className={cn(
-      "w-full max-w-full items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1 sm:w-fit sm:min-w-[22rem]",
-      useEqualMobileLayout
+      "w-full max-w-full min-w-0 items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1",
+      useBalancedLayout
         ? "grid overflow-visible"
         : mobileLayout === "wrap"
           ? "flex flex-wrap overflow-visible"
           : "flex overflow-x-auto scroll-px-1 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-      useEqualMobileLayout && tabs.length === 2 && "grid-cols-2",
-      useEqualMobileLayout && tabs.length === 3 && "grid-cols-3",
-    )} data-status-filter-tabs="" data-filter-layout={useEqualMobileLayout ? "equal" : mobileLayout}>
+      useBalancedLayout && tabs.length === 2 && "grid-cols-2",
+      useBalancedLayout && tabs.length === 3 && "grid-cols-3",
+    )} data-status-filter-tabs="" data-filter-layout={useBalancedLayout ? "balanced" : mobileLayout}>
       {tabs.map((tab) => {
         const active = value === tab.id;
         const count = counts?.[tab.id] ?? 0;
@@ -89,7 +89,7 @@ export function StatusFilterTabs({
             onClick={() => onChange(tab.id)}
             className={cn(
               "group inline-flex min-h-10 max-w-full items-center justify-center rounded-lg py-2 text-center text-[13px] font-semibold transition-all sm:min-w-[6.75rem] sm:text-[14px]",
-              useEqualMobileLayout
+              useBalancedLayout
                 ? "min-w-0 gap-1 whitespace-normal px-1.5 [overflow-wrap:anywhere] sm:gap-1.5 sm:px-3"
                 : mobileLayout === "wrap"
                   ? "min-w-0 flex-none gap-1.5 whitespace-normal px-3 [overflow-wrap:anywhere]"
