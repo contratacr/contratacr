@@ -107,7 +107,7 @@ test.describe("@mobile native shell contracts", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
   });
 
-  test("signed-out public pages reserve the complete native header and keep the offer-services icon", async ({ page }) => {
+  test("signed-out public pages reserve the compact native header and keep the offer-services icon", async ({ page }) => {
     await resetAuth(page);
     await gotoOK(page, "/es/login");
 
@@ -130,7 +130,7 @@ test.describe("@mobile native shell contracts", () => {
     });
     expect(geometry).not.toBeNull();
     expect(geometry!.mainTop).toBeGreaterThanOrEqual(geometry!.headerBottom - 1);
-    expect(geometry!.reservedHeaderHeight).toBe("124px");
+    expect(geometry!.reservedHeaderHeight).toBe("64px");
 
     const terms = page.getByRole("checkbox");
     const apple = page.getByRole("button", { name: /continuar con apple/i });
