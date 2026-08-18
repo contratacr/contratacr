@@ -5,11 +5,10 @@ const config: CapacitorConfig = {
   appName: "ContrataCR",
   webDir: "mobile-web",
   server: {
-    url: "https://contratacr-mobile-test.vercel.app/es",
+    url: "https://test.contratacr.com/es",
     allowNavigation: [
       "contratacr.com",
       "*.contratacr.com",
-      "contratacr-mobile-test.vercel.app",
       "*.supabase.co",
       "res.cloudinary.com",
       "www.google.com",

@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 const expected = {
   appId: "com.contratacr.app",
   appName: "ContrataCR",
-  serverOrigin: "https://contratacr-mobile-test.vercel.app",
+  serverOrigin: "https://test.contratacr.com",
   serverPath: "/es",
   firebaseProjectId: "contratacr-95d6f",
 };
@@ -78,7 +78,7 @@ requireMatch(
   capacitor,
   new RegExp(`url:\\s*"${expected.serverOrigin.replaceAll(".", "\\.")}${expected.serverPath}"`),
 );
-requireMatch("Capacitor navigation allowlist", capacitor, /"contratacr-mobile-test\.vercel\.app"/);
+requireMatch("Capacitor navigation allowlist", capacitor, /"\*\.contratacr\.com"/);
 requireMatch(
   "Foreground push presentation",
   capacitor,

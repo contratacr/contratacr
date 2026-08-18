@@ -58,7 +58,7 @@ async function findMirroredProfessionalByBusinessName(businessName) {
 }
 
 const demo = "mobile-test-demo";
-const appUrl = process.env.DEMO_APP_URL || "https://contratacr-mobile-test.vercel.app";
+const appUrl = process.env.DEMO_APP_URL || "https://test.contratacr.com";
 const hiddenDemoSlugs = new Set(["test-contratacr-1n0wba32", "test-contratacr-web"]);
 const day = 24 * 60 * 60 * 1000;
 const now = Date.now();
