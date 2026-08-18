@@ -11,7 +11,22 @@ const inter = Inter({
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={`${inter.variable} h-full antialiased`} data-scroll-behavior="smooth">
+    <html
+      lang="es"
+      className={`${inter.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
+      <head>
+        <script
+          type="text/javascript"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html:
+              'try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add("ccr-native-app")}}catch(e){}',
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-white">
         <Suspense fallback={<InitialRouteLoading />}>
           {children}

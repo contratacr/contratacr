@@ -45,7 +45,7 @@ const LOCALES: LocaleContract[] = [
 function enableNativeRuntime(page: Page) {
   return page.addInitScript(() => {
     if (window.sessionStorage.getItem("ccr:e2e-show-first-run-onboarding") !== "1") {
-      window.localStorage.setItem("ccr:native-first-run-onboarding:v4", "1");
+      window.localStorage.setItem("ccr:native-first-run-onboarding:v6", "1");
     }
     const nativeRuntime: Record<string, unknown> = {
       isNativePlatform: () => true,
@@ -149,18 +149,18 @@ test.describe("@mobile native shell contracts", () => {
     await resetAuth(page);
     await page.evaluate(() => {
       window.sessionStorage.setItem("ccr:e2e-show-first-run-onboarding", "1");
-      window.localStorage.removeItem("ccr:native-first-run-onboarding:v4");
+      window.localStorage.removeItem("ccr:native-first-run-onboarding:v6");
     });
     await gotoOK(page, "/es");
 
     const onboarding = page.getByTestId("native-first-run-onboarding");
     await expect(onboarding).toBeVisible();
-    await expect(onboarding.getByText("Lo que necesitas, más cerca.")).toBeVisible();
+    await expect(onboarding.getByText("Elige cómo quieres comenzar")).toBeVisible();
     await expect(onboarding.getByRole("button", { name: /Buscar servicios/i })).toBeVisible();
     await expect(onboarding.getByRole("button", { name: /Ofrecer servicios/i })).toBeVisible();
     await onboarding.getByRole("button", { name: /Buscar servicios/i }).click();
     await expect(onboarding).toBeHidden();
-    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v4"))).toBe("1");
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v6"))).toBe("1");
   });
 
   for (const contract of LOCALES) {
