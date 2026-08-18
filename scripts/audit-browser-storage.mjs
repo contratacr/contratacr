@@ -22,6 +22,7 @@ const reviewed = new Map([
   ["src/app/api/portfolio-like/route.ts", { count: 1, reason: "documentation for anonymous browser guard" }],
   ["src/components/professionals/save-button.tsx", { count: 16, reason: "Supabase-backed favorites cache and login handoff" }],
   ["src/components/professionals/follow-button.tsx", { count: 7, reason: "Supabase-backed follows cache and short-lived post-login follow handoff" }],
+  ["src/components/professionals/leave-review-modal.tsx", { count: 6, reason: "short-lived profile review draft handoff before login; submitted reviews persist in Supabase" }],
   ["src/components/professionals/follow-network-summary-link.tsx", { count: 2, reason: "account-keyed backend follow-count render cache; Supabase remains authoritative" }],
   ["src/lib/dashboard-prefetch-cache.ts", { count: 6, reason: "five-minute backend response cache" }],
   ["src/lib/account-cache.ts", { count: 1, reason: "account-scoped removal of reviewed browser caches during disable/deletion" }],
