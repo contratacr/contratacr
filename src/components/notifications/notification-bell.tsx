@@ -189,7 +189,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         </span>
       </button>
       {menuOpen && (
-        <div className="absolute right-0 top-11 z-[90] w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]">
+        <div className="ccr-notification-bell-menu absolute right-0 top-11 z-[90] w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]">
           <div className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3">
             <div className="min-w-0">
               <p className="text-sm font-extrabold text-[#111827]">{t("title")}</p>

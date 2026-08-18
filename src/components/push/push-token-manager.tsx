@@ -352,58 +352,56 @@ export function PushTokenManager() {
 
   if (loading || !promptVisible || !user || !isNativeMobile()) return null;
 
-  const copy = "Recibe avisos de mensajes, solicitudes, propuestas, reseñas y cambios importantes sin tener que abrir la app.";
+  const copy = "Te avisaremos sobre mensajes, solicitudes, propuestas, reseñas y cambios importantes.";
 
   return createPortal(
     <div
-      className="pointer-events-none fixed inset-0 flex items-end justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+86px)] sm:items-end sm:justify-end sm:p-5"
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm"
       style={{ zIndex: 100000 }}
       role="presentation"
+      onClick={dismissPrompt}
     >
       <div
-        className="pointer-events-auto w-full max-w-sm rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]"
+        className="relative w-full max-w-[21.5rem] rounded-[2rem] bg-white p-6 text-center shadow-[0_28px_80px_-28px_rgba(15,23,42,0.55)]"
         role="dialog"
-        aria-modal="false"
+        aria-modal="true"
         aria-labelledby="push-permission-title"
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#EBF5FB] text-[#009FD9]">
-            <Bell className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start gap-2">
-              <p id="push-permission-title" className="text-sm font-extrabold text-[#162543]">Activa notificaciones</p>
-              <button
-                type="button"
-                onClick={dismissPrompt}
-                aria-label="Cerrar"
-                className="ml-auto rounded-full p-1 text-[#64748b] hover:bg-[#f4f7fa] hover:text-[#162543]"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="mt-1 text-sm leading-snug text-[#475569]">{copy}</p>
-            <div className="mt-3 flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={requestNotifications}
-                disabled={requesting}
-                className={cn(
-                  "rounded-full bg-[#009FD9] px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#0089BB]",
-                  requesting && "cursor-wait opacity-70",
-                )}
-              >
-                {requesting ? "Activando..." : "Activar"}
-              </button>
-              <button
-                type="button"
-                onClick={dismissPrompt}
-                className="rounded-full px-4 py-2 text-sm font-bold text-[#64748b] hover:bg-[#f4f7fa] hover:text-[#162543]"
-              >
-                Ahora no
-              </button>
-            </div>
-          </div>
+        <button
+          type="button"
+          onClick={dismissPrompt}
+          aria-label="Cerrar"
+          className="absolute right-5 top-5 rounded-full p-1.5 text-[#94a3b8] transition hover:bg-[#f4f7fa] hover:text-[#162543]"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9] shadow-[0_18px_40px_-22px_rgba(0,159,217,0.65)]">
+          <Bell className="h-9 w-9" />
+        </div>
+        <h2 id="push-permission-title" className="mt-5 text-[1.35rem] font-black leading-tight tracking-[-0.03em] text-[#111827]">
+          Activa notificaciones
+        </h2>
+        <p className="mx-auto mt-2 max-w-[17rem] text-[15px] leading-snug text-[#64748b]">{copy}</p>
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={dismissPrompt}
+            className="min-h-12 rounded-full border border-[#e2e8f0] bg-white px-4 text-sm font-extrabold text-[#334155] transition hover:bg-[#f8fafc]"
+          >
+            Ahora no
+          </button>
+          <button
+            type="button"
+            onClick={requestNotifications}
+            disabled={requesting}
+            className={cn(
+              "min-h-12 rounded-full bg-[#009FD9] px-4 text-sm font-extrabold text-white shadow-[0_14px_32px_-20px_rgba(0,159,217,0.75)] transition hover:bg-[#0089BB]",
+              requesting && "cursor-wait opacity-70",
+            )}
+          >
+            {requesting ? "Activando..." : "Activar"}
+          </button>
         </div>
       </div>
     </div>,
