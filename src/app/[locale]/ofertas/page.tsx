@@ -28,7 +28,9 @@ export default async function OffersPage() {
     user ? supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
 
-  if (offersError) throw offersError;
+  if (offersError) {
+    console.error("Could not load published offers", offersError.message);
+  }
 
   const offers = ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
     const professional = row.professionals as { slug?: string; business_name?: string; whatsapp?: string | null; allow_phone_call?: boolean | null; call_phone?: string | null; contact_email?: string | null; profiles?: { full_name?: string } | null } | null;

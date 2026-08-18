@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -211,7 +212,6 @@ export function ClientRegistrationModal({
   const [noCedula, setNoCedula] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Login state
   const [loginPassword, setLoginPassword] = useState("");
@@ -232,7 +232,6 @@ export function ClientRegistrationModal({
     setNoCedula(false);
     setPassword("");
     setConfirmPassword("");
-    setTermsAccepted(false);
     setLoginPassword("");
     setError(null);
     setDuplicateEmailDetected(false);
@@ -270,10 +269,6 @@ export function ClientRegistrationModal({
   // ── SignUp ─────────────────────────────────────────────────────────────────
 
   async function handleSignUp() {
-    if (!termsAccepted) {
-      setError(locale === "en" ? "Accept the Terms, Privacy Policy and zero-tolerance rules to continue." : "Acepta los Términos, la Política de Privacidad y las reglas de tolerancia cero para continuar.");
-      return;
-    }
     if (!isPasswordValid()) return;
     if (password !== confirmPassword) {
       setError(tRp("passwordsDontMatch"));
@@ -616,7 +611,8 @@ export function ClientRegistrationModal({
             <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0 flex flex-col gap-3">
               {/* Actions */}
               {view === "register" ? (
-                <div className="flex gap-3">
+                <div className="space-y-3">
+                  <div className="flex gap-3">
                   {step !== "identity" && (
                     <Button
                       variant="outline"
@@ -637,7 +633,7 @@ export function ClientRegistrationModal({
                     disabled={
                       (step === "identity" && !identityReady) ||
                       (step === "email" && !email.includes("@")) ||
-                      (step === "password" && (!isPasswordValid() || !confirmPassword || !termsAccepted))
+                      (step === "password" && (!isPasswordValid() || !confirmPassword))
                     }
                     onClick={() => {
                       setError(null);
@@ -650,20 +646,17 @@ export function ClientRegistrationModal({
                       ? submitting ? t("creatingAccount") : t("createAccount")
                       : <>{t("continue")} <ArrowRight className="h-4 w-4" /></>}
                   </Button>
+                  </div>
+                  {step === "password" && (
+                    <p className="text-center text-xs leading-relaxed text-[#8a94a6]">
+                      {t.rich("terms", {
+                        terms: (chunks) => <Link className="font-medium text-[#00a8e0] hover:underline" href={`/${locale}/terminos`}>{chunks}</Link>,
+                        privacy: (chunks) => <Link className="font-medium text-[#00a8e0] hover:underline" href={`/${locale}/privacidad`}>{chunks}</Link>,
+                      })}
+                    </p>
+                  )}
                 </div>
               ) : null}
-              {view === "register" && step === "password" && (
-                <label className="mt-3 flex items-start gap-3 rounded-xl border border-[#dce8f0] bg-[#f8fbfd] p-3 text-xs leading-5 text-[#526277]">
-                  <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#009FD9]" />
-                  <span>
-                  {t.rich("terms", {
-                    terms: (c) => <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
-                    privacy: (c) => <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
-                  })}
-                  {locale === "en" ? " Zero tolerance applies to objectionable content and abusive users." : " Se aplica tolerancia cero al contenido ofensivo y a usuarios abusivos."}
-                  </span>
-                </label>
-              )}
               {view === "login" && (
                 <div className="flex gap-3">
                   <Button variant="outline" size="md" onClick={() => { setView("register"); setError(null); }}>

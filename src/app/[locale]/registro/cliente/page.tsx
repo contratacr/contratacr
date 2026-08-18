@@ -38,7 +38,6 @@ export default function RegisterClientPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -82,7 +81,6 @@ export default function RegisterClientPage() {
     if (!user && !email.trim()) { setError(t("errEmail")); return; }
     if (!user && password.length < 8) { setError(t("errPasswordLen")); return; }
     if (!user && password !== confirmPassword) { setError(t("errPasswordMismatch")); return; }
-    if (!user && !termsAccepted) { setError("Debes aceptar los Términos, la Política de Privacidad y las reglas de tolerancia cero para crear la cuenta."); return; }
 
     // The account holder's phone is REQUIRED — client↔professional coordination
     // happens by WhatsApp/call, so without it they can't reach each other.
@@ -355,16 +353,14 @@ export default function RegisterClientPage() {
                 </div>
               )}
 
-              {!user && (
-                <label className="flex items-start gap-3 rounded-xl border border-[#dce8f0] bg-[#f8fbfd] p-3 text-xs leading-5 text-[#526277]">
-                  <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#009FD9]" />
-                  <span>Acepto los <Link href="/terminos" className="font-semibold text-[#009FD9] underline">Términos</Link>, la <Link href="/privacidad" className="font-semibold text-[#009FD9] underline">Política de Privacidad</Link> y la política de tolerancia cero contra contenido ofensivo y usuarios abusivos.</span>
-                </label>
-              )}
-
-              <Button type="submit" size="lg" className="w-full mt-1" loading={submitting} disabled={submitting || (!user && !termsAccepted)}>
+              <Button type="submit" size="lg" className="w-full mt-1" loading={submitting} disabled={submitting}>
                 {submitting ? t("creating") : user ? t("saveContinue") : t("createFree")}
               </Button>
+              {!user && (
+                <p className="text-center text-xs leading-relaxed text-[#8a9aab]">
+                  Al crear una cuenta, aceptas los <Link href="/terminos" className="font-semibold text-[#009FD9]">Términos</Link> y la <Link href="/privacidad" className="font-semibold text-[#009FD9]">Política de Privacidad</Link> de ContrataCR.
+                </p>
+              )}
 
               <p className="sr-only">
                 {t.rich("terms", {

@@ -254,6 +254,7 @@ export function DirectChatInbox() {
 
   const loadConversations = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
+    setError("");
     try {
       const res = await fetch(`/api/direct-chat${showArchived ? "?status=archived" : ""}`, { cache: "no-store" });
       const json = await res.json();
@@ -272,11 +273,6 @@ export function DirectChatInbox() {
       }
       if (showArchived) {
         setArchivedCount(json.conversations?.length ?? 0);
-      } else {
-        fetch("/api/direct-chat?status=archived", { cache: "no-store" })
-          .then((archivedRes) => archivedRes.ok ? archivedRes.json() : { conversations: [] })
-          .then((archivedJson) => setArchivedCount(Array.isArray(archivedJson.conversations) ? archivedJson.conversations.length : 0))
-          .catch(() => setArchivedCount(0));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load messages." : "No se pudieron cargar los mensajes.");
@@ -603,13 +599,13 @@ export function DirectChatInbox() {
           <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>
         </div>
         <div className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
-          {!showArchived && archivedCount > 0 && (
+          {!showArchived && (
             <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e7eef3] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
                 <Archive className="h-5 w-5" />
               </span>
               <span className="min-w-0 flex-1 text-sm font-extrabold text-[#162543]">{isEn ? "Archived" : "Archivados"}</span>
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>
+              {archivedCount > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>}
             </button>
           )}
           {filtered.map((item) => { const person = personFor(item); const summary = contextSummaryFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
