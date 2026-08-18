@@ -196,7 +196,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
               <p className="mt-0.5 text-xs font-semibold text-[#64748b]">
                 {unreadCount > 0
                   ? locale === "en" ? `${unreadCount} unread` : `${unreadCount} sin leer`
-                  : locale === "en" ? "No unread notifications" : "Sin notificaciones sin leer"}
+                  : locale === "en" ? "All caught up" : "Todo al día"}
               </p>
             </div>
             {unreadCount > 0 && (

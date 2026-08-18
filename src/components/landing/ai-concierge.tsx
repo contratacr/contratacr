@@ -429,6 +429,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
   const nativeAssistantShell = nativeApp && compactViewport;
   if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
+  if (!embedded && !nativeApp) return null;
   if (!embedded && nativeAssistantShell && !open) return null;
   if (!embedded && !open) {
     return (
