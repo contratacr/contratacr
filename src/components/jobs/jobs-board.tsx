@@ -413,16 +413,16 @@ function jobSaveSnapshot(job: JobPost, locale: MarketplaceLocale) {
 function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; onSelect: () => void }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
-  return <article className={`relative h-36 overflow-hidden border-b border-[#dfe6ec] bg-white px-4 py-3 transition last:border-b-0 hover:bg-[#f8fafc] ${selected ? "lg:bg-[#eef9fd] shadow-[inset_4px_0_0_#162543]" : ""}`}>
+  return <article className={`relative min-h-[7.25rem] overflow-hidden border-b border-[#dfe6ec] bg-white px-3 py-3 transition last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] shadow-[inset_4px_0_0_#162543]" : ""}`}>
     <button type="button" onClick={onSelect} aria-label={`Ver ${job.title}`} className="absolute inset-0 hidden lg:block" />
     <Link href={`/empleos/${job.id}`} className="relative z-[1] block w-full text-left lg:pointer-events-none">
-      <div className="flex min-w-0 items-start gap-3">
+      <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
         <EmployerAvatar job={job} />
         <div className="min-w-0 flex-1">
           <h2 className="line-clamp-2 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base">{job.title}</h2>
           <p className="mt-0.5 truncate text-sm font-semibold text-[#101d35]">{job.employer_name || copy.professionalFallback}</p>
           <JobMetaLine job={job} showApplicants={false} className="mt-0.5 truncate text-sm text-[#52627a]" />
-          <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-xs font-medium text-[#60708a]"><span>{workplaceTypeLabel(job.workplace_type, locale)}</span><span aria-hidden="true" className="text-[#9aa8b8]">&middot;</span><span>{experienceLevelLabel(job.experience_level ?? "any", locale)}</span></div>
+          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs font-medium text-[#60708a]"><span className="truncate">{workplaceTypeLabel(job.workplace_type, locale)}</span><span aria-hidden="true" className="shrink-0 text-[#9aa8b8]">&middot;</span><span className="truncate">{experienceLevelLabel(job.experience_level ?? "any", locale)}</span></div>
           <div className="mt-0.5 truncate text-xs font-bold text-[#008fc3]">{formatJobSalary(job, locale)}</div>
         </div>
       </div>
@@ -465,7 +465,7 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
 
 function EmployerAvatar({ job, size = "default" }: { job: JobPost; size?: "default" | "large" }) {
   const locale = marketplaceLocale(useLocale());
-  const dimensions = size === "large" ? "h-14 w-14" : "h-11 w-11";
+  const dimensions = size === "large" ? "h-14 w-14" : "h-11 w-11 sm:h-12 sm:w-12";
   if (job.employer_avatar_url) return <img src={job.employer_avatar_url} alt={`${JOBS_COPY[locale].professionalPhoto}: ${job.employer_name || JOBS_COPY[locale].professionalFallback}`} className={`${dimensions} shrink-0 rounded-full object-cover`} />;
   return <span className={`grid ${dimensions} shrink-0 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]`}><Building2 className={size === "large" ? "h-6 w-6" : "h-5 w-5"} /></span>;
 }

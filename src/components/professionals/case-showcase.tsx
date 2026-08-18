@@ -86,6 +86,31 @@ export function CaseShowcase({
     return () => window.removeEventListener("keydown", onKey);
   }, [detail, close, prev, next]);
 
+  useEffect(() => {
+    if (!detail) return;
+    const scrollY = window.scrollY;
+    const previousOverflow = document.body.style.overflow;
+    const previousPosition = document.body.style.position;
+    const previousTop = document.body.style.top;
+    const previousWidth = document.body.style.width;
+    const previousOverscroll = document.body.style.overscrollBehavior;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    document.body.style.overscrollBehavior = "none";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.position = previousPosition;
+      document.body.style.top = previousTop;
+      document.body.style.width = previousWidth;
+      document.body.style.overscrollBehavior = previousOverscroll;
+      window.scrollTo(0, scrollY);
+    };
+  }, [detail]);
+
   return (
     <div className="flex flex-col gap-5">
       {showFilter && (
@@ -160,9 +185,9 @@ export function CaseShowcase({
         const photos = c.photos;
         const cur = photos[pi] ?? photos[0];
         return (
-          <div className="fixed inset-0 z-[300] flex items-stretch justify-stretch bg-black/70 p-0 sm:items-center sm:justify-center sm:p-6" onClick={close}>
+          <div className="fixed inset-0 z-[300] flex touch-none items-end justify-center overflow-hidden bg-[#08111f]/90 p-0 backdrop-blur-[3px] sm:items-center sm:p-6" onClick={close}>
             <div
-              className="relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-white shadow-2xl sm:h-auto sm:max-h-[92vh] sm:max-w-5xl sm:rounded-2xl sm:flex-row"
+              className="relative flex h-[100dvh] max-h-[100dvh] w-full touch-auto flex-col overflow-hidden bg-[#0f172a] shadow-2xl sm:h-auto sm:max-h-[92vh] sm:max-w-5xl sm:rounded-2xl sm:bg-white sm:flex-row"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
@@ -171,28 +196,28 @@ export function CaseShowcase({
               <button
                 onClick={close}
                 aria-label={tg("close")}
-                className="absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white transition-colors hover:bg-black/65 sm:bg-white/90 sm:text-[#374151] sm:hover:bg-white"
+                className="absolute right-4 top-[max(env(safe-area-inset-top),0.875rem)] z-30 grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-black/60 text-white shadow-lg backdrop-blur transition-colors hover:bg-black/75 sm:right-3 sm:top-3 sm:h-9 sm:w-9 sm:bg-white/90 sm:text-[#374151] sm:hover:bg-white"
               >
                 <X className="h-5 w-5" />
               </button>
 
               {/* PHOTO viewer — larger, browsable (arrows + thumbnails). */}
               {cur && (
-                <div className="relative flex h-[42dvh] min-h-[220px] shrink-0 items-center justify-center overflow-hidden bg-[#111827] sm:h-auto sm:min-h-[620px] sm:w-[62%]">
+                <div className="relative flex h-[58dvh] min-h-[320px] shrink-0 items-center justify-center overflow-hidden bg-[#0f172a] pt-[env(safe-area-inset-top)] sm:h-auto sm:min-h-[620px] sm:w-[62%] sm:pt-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cldLarge(cur, 900)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-2xl" />
-                  <div className="absolute inset-0 bg-black/35" />
+                  <img src={cldLarge(cur, 900)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-[#0f172a]/80" />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} className="relative z-10 h-full w-full object-contain" />
                   {photos.length > 1 && (
                     <>
-                      <button onClick={prev} aria-label={tg("prev")} className="absolute left-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#111827]/85 text-white shadow-lg backdrop-blur transition-colors hover:bg-[#111827] sm:left-4">
-                        <ChevronLeft className="h-7 w-7" />
+                      <button onClick={prev} aria-label={tg("prev")} className="absolute left-3 top-1/2 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#111827]/80 text-white shadow-lg backdrop-blur transition-colors hover:bg-[#111827] sm:left-4 sm:h-11 sm:w-11">
+                        <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
                       </button>
-                      <button onClick={next} aria-label={tg("next")} className="absolute right-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#111827]/85 text-white shadow-lg backdrop-blur transition-colors hover:bg-[#111827] sm:right-4">
-                        <ChevronRight className="h-7 w-7" />
+                      <button onClick={next} aria-label={tg("next")} className="absolute right-3 top-1/2 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#111827]/80 text-white shadow-lg backdrop-blur transition-colors hover:bg-[#111827] sm:right-4 sm:h-11 sm:w-11">
+                        <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
                       </button>
-                      <span className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/25 bg-[#111827]/90 px-2.5 py-1 text-[11px] font-bold text-white shadow-lg backdrop-blur">
+                      <span className="absolute bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/25 bg-[#111827]/85 px-3 py-1.5 text-[12px] font-bold text-white shadow-lg backdrop-blur sm:bottom-3 sm:px-2.5 sm:py-1 sm:text-[11px]">
                         {pi + 1} / {photos.length}
                       </span>
                     </>
@@ -201,32 +226,54 @@ export function CaseShowcase({
               )}
 
               {/* INFO — the service, recipient, date + full description, with room to breathe. */}
-              <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] sm:p-6">
-                <span className="inline-flex w-fit rounded-full bg-[#EBF5FB] px-2.5 py-1 text-[11px] font-bold text-[#0089bb]">{profLabel(c.profession)}</span>
-                {c.title && <h3 className="text-xl font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</h3>}
-                {(c.recipient || c.date) && (
-                  <p className="flex flex-wrap items-baseline gap-x-1.5 text-[13px] [overflow-wrap:anywhere]">
-                    {c.recipient && <span className="font-medium text-[#374151]">{c.recipient}</span>}
-                    {c.recipient && c.date && <span className="text-[#d1d5db]">·</span>}
-                    {c.date && <span className="text-[#9ca3af]">{c.date}</span>}
-                  </p>
-                )}
-                {c.description && <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{c.description}</p>}
-                {photos.length > 1 && (
-                  <div className="mt-1 grid grid-cols-3 gap-2">
-                    {photos.map((p, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setPi(idx)}
-                        aria-label={tg("workAlt", { n: idx + 1 })}
-                        className={cn("h-16 overflow-hidden rounded-xl bg-white p-1 transition-all", idx === pi ? "opacity-100 ring-2 ring-[#009FD9] ring-offset-2" : "opacity-55 hover:opacity-100")}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(p, 220)} alt="" className="h-full w-full object-contain" />
-                      </button>
-                    ))}
+              <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden bg-white shadow-[0_-18px_40px_rgba(15,23,42,0.22)] sm:mt-0 sm:rounded-none sm:shadow-none">
+                <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-[#dbe5ee] sm:hidden" />
+                <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-4 sm:p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="inline-flex min-w-0 max-w-full rounded-full bg-[#EBF5FB] px-3 py-1.5 text-[12px] font-bold text-[#0089bb]">
+                      <span className="truncate">{profLabel(c.profession)}</span>
+                    </span>
+                    {photos.length > 1 && (
+                      <span className="shrink-0 rounded-full bg-[#f1f5f9] px-2.5 py-1 text-[12px] font-bold text-[#64748b] sm:hidden">
+                        {pi + 1}/{photos.length}
+                      </span>
+                    )}
                   </div>
-                )}
+                  {c.title && <h3 className="text-[21px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-xl">{c.title}</h3>}
+                  {(c.recipient || c.date) && (
+                    <p className="flex flex-wrap items-baseline gap-x-1.5 text-[13px] [overflow-wrap:anywhere]">
+                      {c.recipient && <span className="font-medium text-[#374151]">{c.recipient}</span>}
+                      {c.recipient && c.date && <span className="text-[#d1d5db]">·</span>}
+                      {c.date && <span className="text-[#9ca3af]">{c.date}</span>}
+                    </p>
+                  )}
+                  {c.description && <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{c.description}</p>}
+                  {photos.length > 1 && (
+                    <div className="-mx-5 mt-1 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0">
+                      {photos.map((p, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setPi(idx)}
+                          aria-label={tg("workAlt", { n: idx + 1 })}
+                          className={cn(
+                            "h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-transparent p-0 transition-opacity sm:w-auto",
+                            idx === pi ? "opacity-100" : "opacity-55 hover:opacity-85"
+                          )}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={cldThumb(p, 220)}
+                            alt=""
+                            className={cn(
+                              "h-full w-full rounded-xl object-cover transition-shadow",
+                              idx === pi ? "shadow-[0_0_0_2px_rgba(15,23,42,0.18),0_8px_18px_rgba(15,23,42,0.16)]" : "shadow-none"
+                            )}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
