@@ -12,7 +12,6 @@ import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { OtpVerification } from "@/components/auth/otp-verification";
@@ -298,7 +297,6 @@ export default function LoginPage() {
               shadow, p-8 — so the whole auth flow (login + both signups) is consistent. */}
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-8">
-            <ContrataCRLogo className="justify-center mb-4" />
             <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
           </div>
