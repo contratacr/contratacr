@@ -1413,24 +1413,23 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             showMobileNavbarSearch && "h-[124px] min-[1200px]:h-16",
           )}>
             <div className={cn(
-              "absolute left-0 right-0 top-0 h-16 min-[1200px]:hidden",
+              "absolute left-0 right-0 top-0 flex h-16 items-center min-[1200px]:hidden",
               nativeHeaderShell
-                ? "grid grid-cols-[96px_minmax(0,1fr)_96px] items-center gap-0"
-                : "flex items-center gap-2",
+                ? "justify-start gap-1.5"
+                : "justify-start gap-2",
             )}>
               <button
                 type="button"
                 onClick={openMobileMenu}
                 className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50",
-                  nativeHeaderShell && "justify-self-start",
                 )}
                 aria-label={t("openMenu")}
               >
                 <Menu className="h-5 w-5 stroke-[2.5]" />
               </button>
 
-              <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "min-w-0 justify-self-center")}>
+              <Link href="/" aria-label="ContrataCR inicio" className="mr-auto flex shrink-0 items-center justify-start">
                 {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
               </Link>
 
@@ -1440,12 +1439,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
               {nativeHeaderShell ? (
                 user ? (
-                  <div className="flex h-10 w-[88px] justify-self-end items-center justify-end gap-1">
+                    <div className="flex h-10 w-[88px] shrink-0 items-center justify-end gap-1">
                     <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
                     <NotificationBell scope="all" />
                   </div>
                 ) : (
-                  <span className="h-10 w-10 justify-self-end" aria-hidden />
+                  <span className="h-10 w-10 shrink-0" aria-hidden />
                 )
               ) : (
               <div className="ml-auto flex shrink-0 items-center gap-0.5">

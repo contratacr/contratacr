@@ -96,33 +96,33 @@ export function NativeFirstRunOnboarding() {
         </header>
 
         <section className="mt-auto pb-1" data-testid="native-onboarding-role-step">
-          <p className="mb-2 text-sm font-bold uppercase tracking-[0.18em] text-[#55c8ed]">
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.17em] text-[#55c8ed]">
             {english ? "Services across Costa Rica" : "Servicios en toda Costa Rica"}
           </p>
           <h1
             id="native-onboarding-title"
-            className="max-w-[22rem] text-[clamp(2.25rem,10vw,3.15rem)] font-black leading-[0.98] tracking-[-0.055em] text-balance"
+            className="max-w-[21rem] text-[clamp(2rem,8.5vw,2.65rem)] font-black leading-[1.01] tracking-[-0.05em] text-balance"
           >
             {english ? "Everything you need, closer." : "Lo que necesitas, más cerca."}
           </h1>
-          <p className="mt-3 max-w-sm text-[15px] font-medium leading-6 text-white/75">
+          <p className="mt-2 max-w-[21rem] text-sm font-medium leading-5 text-white/75">
             {english
               ? "Find trusted professionals or grow your services from one place."
               : "Encuentra profesionales de confianza o haz crecer tus servicios desde un solo lugar."}
           </p>
 
-          <div className="mt-6 grid gap-3" aria-label={english ? "Choose how to start" : "Elige cómo empezar"}>
+          <div className="mt-4 grid grid-cols-2 gap-3" aria-label={english ? "Choose how to start" : "Elige cómo empezar"}>
             <RoleButton
               icon={Search}
               label={english ? "Find a service" : "Buscar servicios"}
-              description={english ? "Explore trusted professionals" : "Explora profesionales de confianza"}
+              description={english ? "Find professionals" : "Encuentra profesionales"}
               onClick={() => chooseRole("client")}
               primary
             />
             <RoleButton
               icon={BriefcaseBusiness}
               label={english ? "Offer services" : "Ofrecer servicios"}
-              description={english ? "Create your professional profile" : "Crea tu perfil profesional"}
+              description={english ? "Grow your business" : "Haz crecer tu negocio"}
               onClick={() => chooseRole("professional")}
             />
           </div>
@@ -162,21 +162,21 @@ function RoleButton({
       type="button"
       onClick={onClick}
       className={primary
-        ? "group flex min-h-[76px] w-full items-center gap-3 rounded-[22px] bg-[#08a8dc] px-4 py-3 text-left shadow-[0_18px_38px_-18px_rgba(8,168,220,0.9)] transition active:scale-[0.985]"
-        : "group flex min-h-[76px] w-full items-center gap-3 rounded-[22px] border border-white/35 bg-[#071523]/45 px-4 py-3 text-left backdrop-blur-md transition active:scale-[0.985] active:bg-white/[0.14]"
+        ? "group relative flex min-h-[118px] w-full flex-col items-start rounded-[22px] bg-[#08a8dc] px-4 py-4 text-left shadow-[0_18px_38px_-18px_rgba(8,168,220,0.9)] transition active:scale-[0.985]"
+        : "group relative flex min-h-[118px] w-full flex-col items-start rounded-[22px] border border-white/35 bg-[#071523]/48 px-4 py-4 text-left backdrop-blur-md transition active:scale-[0.985] active:bg-white/[0.14]"
       }
     >
       <span className={primary
-        ? "grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/18"
-        : "grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/10"
+        ? "grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/18"
+        : "grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/10"
       }>
         <Icon className="h-5 w-5" strokeWidth={2.3} />
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[16px] font-extrabold leading-5">{label}</span>
-        <span className="mt-0.5 block text-[12px] font-medium leading-4 text-white/70">{description}</span>
+      <span className="mt-3 min-w-0 pr-4">
+        <span className="block text-[15px] font-extrabold leading-[1.15]">{label}</span>
+        <span className="mt-1 block text-[11px] font-medium leading-4 text-white/70">{description}</span>
       </span>
-      <ArrowRight className="h-5 w-5 shrink-0 text-white/85 transition-transform group-active:translate-x-0.5" />
+      <ArrowRight className="absolute right-3.5 top-4 h-4 w-4 text-white/80 transition-transform group-active:translate-x-0.5" />
     </button>
   );
 }
