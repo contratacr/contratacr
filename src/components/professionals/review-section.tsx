@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { LogIn, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -94,10 +94,10 @@ export function ReviewSection({
     return () => { active = false; };
   }, [commentsToTranslate, locale]);
 
-  function goToReviewLogin() {
-    const redirect = `${window.location.pathname}?tab=resenas#resenas`;
-    window.location.assign(`/${locale}/login?redirect=${encodeURIComponent(redirect)}`);
-  }
+  const reviewRedirectPath =
+    typeof window === "undefined"
+      ? `/${locale}/profesionales`
+      : `${window.location.pathname}?tab=resenas&pendingReview=1#resenas`;
 
   return (
     <>
@@ -114,33 +114,15 @@ export function ReviewSection({
       </div>
 
       <div className="mb-6">
-        {isAuthenticated ? (
-          <LeaveReviewModal
-            professionalId={professionalId}
-            professionalName={professionalName}
-            embedded
-            onClose={() => undefined}
-            onSuccess={() => router.refresh()}
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={goToReviewLogin}
-            className="flex w-full items-center gap-3 rounded-2xl border border-[#dbe7ef] bg-[#f8fcfe] px-4 py-3 text-left transition hover:border-[#9fd9ee] hover:bg-[#eef9fd]"
-          >
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[#009FD9] shadow-sm">
-              <LogIn className="h-5 w-5" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-bold text-[#162543]">
-                {locale === "en" ? "Share your experience" : "Comparte tu experiencia"}
-              </span>
-              <span className="block text-xs text-[#64748b]">
-                {locale === "en" ? "Sign in to rate this professional." : "Ingresa para calificar a este profesional."}
-              </span>
-            </span>
-          </button>
-        )}
+        <LeaveReviewModal
+          professionalId={professionalId}
+          professionalName={professionalName}
+          embedded
+          isAuthenticated={isAuthenticated}
+          loginRedirectPath={reviewRedirectPath}
+          onClose={() => undefined}
+          onSuccess={() => router.refresh()}
+        />
       </div>
 
       <div className="flex flex-col gap-5">

@@ -182,7 +182,7 @@ export default function RegisterClientPage() {
   if (otpEmail) {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
-        <Navbar />
+        <Navbar mobileSearch={false} />
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
@@ -197,7 +197,7 @@ export default function RegisterClientPage() {
   if (success) {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
-        <Navbar />
+        <Navbar mobileSearch={false} />
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md text-center">
             <SuccessIcon size={80} className="mx-auto mb-5" />
@@ -222,7 +222,7 @@ export default function RegisterClientPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      <Navbar />
+      <Navbar mobileSearch={false} />
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">

@@ -71,7 +71,7 @@ export default function OlvideContrasenaPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      <Navbar />
+      <Navbar mobileSearch={false} />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
           <div className="rounded-3xl border border-[#e5e7eb] bg-white p-7 shadow-sm sm:p-8">

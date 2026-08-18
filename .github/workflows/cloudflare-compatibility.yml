@@ -1,6 +1,10 @@
 name: Cloudflare Compatibility
 
 on:
+  push:
+    branches:
+      - main
+      - test
   workflow_dispatch:
     inputs:
       mode:
@@ -39,8 +43,12 @@ jobs:
   build:
     name: OpenNext Linux build
     runs-on: ubuntu-latest
-    environment: ${{ inputs.target_environment }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target_environment || (github.ref_name == 'main' && 'production' || 'test') }}
     timeout-minutes: 20
+    env:
+      EFFECTIVE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'deploy-preview' }}
+      EFFECTIVE_WORKER_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.worker_name || (github.ref_name == 'main' && 'contratacr' || 'contratacr-preview') }}
+      EFFECTIVE_TARGET_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.target_environment || (github.ref_name == 'main' && 'production' || 'test') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,17 +76,17 @@ jobs:
         run: npm run cloudflare:build
 
       - name: Validate Worker bundle and report size
-        if: ${{ inputs.mode == 'dry-run' }}
+        if: ${{ env.EFFECTIVE_MODE == 'dry-run' }}
         run: npx wrangler deploy --dry-run
 
       - name: Deploy isolated preview Worker
-        if: ${{ inputs.mode == 'deploy-preview' }}
+        if: ${{ env.EFFECTIVE_MODE == 'deploy-preview' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx wrangler deploy --name "${{ inputs.worker_name }}"
+        run: npx wrangler deploy --name "$EFFECTIVE_WORKER_NAME"
 
       - name: Sync Worker runtime secrets
-        if: ${{ inputs.mode == 'deploy-preview' && ((inputs.target_environment == 'production' && inputs.worker_name == 'contratacr') || (inputs.target_environment == 'test' && inputs.worker_name == 'contratacr-preview')) }}
+        if: ${{ env.EFFECTIVE_MODE == 'deploy-preview' && ((env.EFFECTIVE_TARGET_ENVIRONMENT == 'production' && env.EFFECTIVE_WORKER_NAME == 'contratacr') || (env.EFFECTIVE_TARGET_ENVIRONMENT == 'test' && env.EFFECTIVE_WORKER_NAME == 'contratacr-preview')) }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -129,10 +137,10 @@ jobs:
           fs.writeFileSync("worker-secrets.json", JSON.stringify(secrets));
           console.log(`Prepared ${Object.keys(secrets).length} Worker runtime secrets.`);
           NODE
-          npx wrangler secret bulk worker-secrets.json --name "${{ inputs.worker_name }}"
+          npx wrangler secret bulk worker-secrets.json --name "$EFFECTIVE_WORKER_NAME"
 
       - name: Route test traffic to Worker
-        if: ${{ inputs.mode == 'test-cutover' && inputs.target_environment == 'test' && inputs.worker_name == 'contratacr-preview' }}
+        if: ${{ env.EFFECTIVE_MODE == 'test-cutover' && env.EFFECTIVE_TARGET_ENVIRONMENT == 'test' && env.EFFECTIVE_WORKER_NAME == 'contratacr-preview' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -207,7 +215,7 @@ jobs:
           NODE
 
       - name: Roll back test Worker routes
-        if: ${{ inputs.mode == 'test-rollback' && inputs.target_environment == 'test' && inputs.worker_name == 'contratacr-preview' }}
+        if: ${{ env.EFFECTIVE_MODE == 'test-rollback' && env.EFFECTIVE_TARGET_ENVIRONMENT == 'test' && env.EFFECTIVE_WORKER_NAME == 'contratacr-preview' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -260,7 +268,7 @@ jobs:
           NODE
 
       - name: Route production traffic to Worker
-        if: ${{ inputs.mode == 'production-cutover' && inputs.target_environment == 'production' && inputs.worker_name == 'contratacr' }}
+        if: ${{ env.EFFECTIVE_MODE == 'production-cutover' && env.EFFECTIVE_TARGET_ENVIRONMENT == 'production' && env.EFFECTIVE_WORKER_NAME == 'contratacr' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -305,7 +313,7 @@ jobs:
           NODE
 
       - name: Roll back production Worker routes
-        if: ${{ inputs.mode == 'production-rollback' && inputs.target_environment == 'production' && inputs.worker_name == 'contratacr' }}
+        if: ${{ env.EFFECTIVE_MODE == 'production-rollback' && env.EFFECTIVE_TARGET_ENVIRONMENT == 'production' && env.EFFECTIVE_WORKER_NAME == 'contratacr' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |

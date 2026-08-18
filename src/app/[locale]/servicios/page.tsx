@@ -7,7 +7,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
-import { useCategoryCatalogReady, useCustomCategories } from "@/lib/data/use-custom-categories";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import {
@@ -24,7 +24,6 @@ export default function ServiciosPage() {
   const locale = useLocale();
   const router = useRouter();
   const customCategories = useCustomCategories();
-  const catalogReady = useCategoryCatalogReady();
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
   const [mobileGroupKey, setMobileGroupKey] = useState<string | null>(null);
@@ -188,15 +187,7 @@ export default function ServiciosPage() {
             </form>
           </header>
 
-          {!catalogReady ? (
-            <div className="mx-4 mt-3 overflow-hidden rounded border border-[#d2d6dc] bg-white">
-              {Array.from({ length: 10 }).map((_, index) => (
-                <div key={index} className="flex h-16 items-center border-b border-[#d7dbe0] px-4 last:border-b-0">
-                  <span className="h-4 w-44 rounded-full bg-[#edf1f5]" />
-                </div>
-              ))}
-            </div>
-          ) : query.trim() && resultCount === 0 ? (
+          {query.trim() && resultCount === 0 ? (
             <section className="mx-4 mt-4 rounded border border-[#d2d6dc] bg-white px-5 py-12 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#eef8fd] text-[#009FD9]">
                 <Search className="h-6 w-6" />
@@ -310,37 +301,7 @@ export default function ServiciosPage() {
               </form>
             </div>
 
-            {!catalogReady ? (
-              <section className="grid scroll-mt-32 lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)]">
-                <aside className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-[#f8fafc] p-2 lg:border-b-0 lg:border-r">
-                  <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
-                    {Array.from({ length: 8 }).map((_, index) => (
-                      <div key={index} className="flex min-h-[48px] shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 lg:w-full">
-                        <span className="h-8 w-8 shrink-0 rounded-lg bg-[#e8eef5]" />
-                        <span className="min-w-[130px] flex-1 lg:min-w-0">
-                          <span className="block h-3 w-28 rounded-full bg-[#e8eef5]" />
-                          <span className="mt-2 block h-2.5 w-16 rounded-full bg-[#eef3f7]" />
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </aside>
-                <div className="min-w-0 p-4">
-                  <div className="mb-4">
-                    <div className="h-5 w-44 rounded-full bg-[#e8eef5]" />
-                    <div className="mt-2 h-3 w-20 rounded-full bg-[#eef3f7]" />
-                  </div>
-                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                    {Array.from({ length: 12 }).map((_, index) => (
-                      <div key={index} className="flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2">
-                        <span className="h-3.5 w-36 rounded-full bg-[#eef3f7]" />
-                        <span className="h-7 w-7 shrink-0 rounded-full bg-[#eef3f7]" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            ) : query.trim() && resultCount === 0 ? (
+            {query.trim() && resultCount === 0 ? (
               <section className="px-4 py-12 text-center sm:px-6">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f1f7fb] text-[#9ca3af]">
                   <Search className="h-6 w-6" />

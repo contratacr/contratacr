@@ -1467,6 +1467,7 @@ export default function DashboardPage() {
   // route behind the loading guard while fetchPro retries, then the effect
   // below sends the account straight to professional registration.
   const professionalRecordResolving = !!user && canOffer(user) && !pro && !proLoadError;
+  if (isSigningOut()) return null;
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro) || professionalRecordResolving) {
     return <DashboardRouteLoading />;
   }

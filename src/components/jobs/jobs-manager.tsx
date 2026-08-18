@@ -217,7 +217,17 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
               </article>
             );
           })}
-          {jobs.length === 0 && <div className="rounded-2xl border border-[#dfe8f0] bg-white px-6 py-14 text-center shadow-[0_2px_8px_rgba(15,23,42,0.05)]"><h2 className="font-bold">{copy.emptyTitle}</h2><p className="mt-1 text-sm text-[#68778d]">{copy.emptyBody}</p></div>}
+          {jobs.length === 0 && (
+            <div className={cn(
+              "px-6 py-12 text-center",
+              embedded
+                ? "rounded-xl border border-dashed border-[#d8e4ec] bg-[#f8fbfd]"
+                : "rounded-2xl border border-[#dfe8f0] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05)]"
+            )}>
+              <h2 className="font-bold">{copy.emptyTitle}</h2>
+              <p className="mt-1 text-sm text-[#68778d]">{copy.emptyBody}</p>
+            </div>
+          )}
         </div>
       </div>
       {publishOpen && professionalId && (

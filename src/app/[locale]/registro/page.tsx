@@ -27,7 +27,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      <Navbar />
+      <Navbar mobileSearch={false} />
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">
           <div className="text-center mb-10">
