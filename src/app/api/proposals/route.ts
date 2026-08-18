@@ -314,10 +314,23 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Persist via service-role so the status change isn't silently dropped by RLS.
-    const { error } = await adminStatus
+    let { error } = await adminStatus
       .from("proposals")
       .update({ status })
       .eq("id", id);
+
+    // The local Supabase gateway (and occasionally a recovering hosted
+    // PostgREST instance) can close an otherwise valid request with a transient
+    // upstream-response error. Updating a proposal status is idempotent, so one
+    // bounded retry is safe and prevents a momentary gateway hiccup from
+    // surfacing as a broken client action.
+    if (error && /invalid response.*upstream|bad gateway|gateway timeout|fetch failed/i.test(error.message)) {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      ({ error } = await adminStatus
+        .from("proposals")
+        .update({ status })
+        .eq("id", id));
+    }
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await auditUserAction(adminStatus, req, {
