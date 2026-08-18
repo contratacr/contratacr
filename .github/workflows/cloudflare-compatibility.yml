@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - test
+      - mobile
   workflow_dispatch:
     inputs:
       mode:
