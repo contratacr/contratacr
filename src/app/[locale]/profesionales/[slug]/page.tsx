@@ -417,9 +417,9 @@ export default function ProfilePage() {
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
     { id: "resenas",        label: t("tabs.resenas") },
+    ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     ...(publicOffers.length > 0 ? [{ id: "ofertas" as Tab, label: locale === "en" ? "Offers" : "Ofertas" }] : []),
     ...(publicJobs.length > 0 ? [{ id: "empleos" as Tab, label: locale === "en" ? "Jobs" : "Empleos" }] : []),
-    ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     ...(hasCerts ? [{ id: "certificaciones" as Tab, label: t("tabs.certificaciones") }] : []),
     { id: "sobre",          label: t("tabs.sobre") },
   ];
@@ -661,39 +661,28 @@ export default function ProfilePage() {
                 <div className="relative border-b border-[#e5e7eb] bg-white">
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white via-white/90 to-transparent"
-                  />
-                  <div
-                    aria-hidden
                     className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white via-white/95 to-transparent"
                   />
                   <div
                     role="tablist"
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
-                    className="flex gap-2 overflow-x-auto scroll-smooth px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    className="flex overflow-x-auto scroll-smooth pr-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                   >
-                    {TABS.map(tab => {
-                      const active = activeTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          role="tab"
-                          aria-selected={active}
-                          onClick={() => setActiveTab(tab.id)}
-                          className={cn(
-                            "relative inline-flex min-h-10 shrink-0 items-center justify-center rounded-full px-4 text-sm font-extrabold transition-all",
-                            active
-                              ? "bg-[#eaf7fd] text-[#008fbe] shadow-[inset_0_0_0_1px_rgba(0,159,217,0.14)]"
-                              : "text-[#697789] hover:bg-[#f4f8fb] hover:text-[#162543]"
-                          )}
-                        >
-                          {tab.label}
-                          {active && (
-                            <span className="absolute -bottom-3 left-1/2 h-0.5 w-10 -translate-x-1/2 rounded-full bg-[#009FD9]" />
-                          )}
-                        </button>
-                      );
-                    })}
+                    {TABS.map(tab => (
+                      <button
+                        key={tab.id}
+                        role="tab"
+                        aria-selected={activeTab === tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className="relative shrink-0 px-5 py-4 text-sm font-semibold transition-colors"
+                        style={{ color: activeTab === tab.id ? "#009FD9" : "#6b7280" }}
+                      >
+                        {tab.label}
+                        {activeTab === tab.id && (
+                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#009FD9] rounded-full" />
+                        )}
+                      </button>
+                    ))}
                   </div>
                 </div>
 

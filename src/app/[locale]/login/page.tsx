@@ -40,19 +40,19 @@ async function waitForAuthCookie(maxMs = 2000): Promise<void> {
   }
 }
 
-// A post-login `?redirect=` is honored ONLY when it targets an AUTHENTICATED area —
-// a `/dashboard` deep-link (the proxy preserves these for gated pages, incl.
-// support-ticket / notification email links) or the "projects" alias. A generic /
-// PUBLIC target (home `/`, `/buscar`, a profile — e.g. the navbar "Ingresar"
-// current-path) returns null, so it can NEVER override the role-based DASHBOARD
-// redirect (that was the "login lands on the main page" regression). Returns
-// "projects", a (possibly locale-prefixed) /dashboard path, or null.
+// A post-login `?redirect=` is honored only for authenticated-area deep links, plus
+// the explicit guest-review continuation marker. Generic public redirects still
+// return null so the navbar "Ingresar" flow keeps landing in the role-aware panel.
 function meaningfulRedirect(raw: string | null): string | null {
   if (!raw) return null;
   if (raw === "projects") return "projects";
   if (!raw.startsWith("/") || raw.startsWith("//")) return null;
   const path = raw.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
-  return path.startsWith("/dashboard") ? raw : null;
+  if (path.startsWith("/dashboard")) return raw;
+  const [pathname, query = ""] = path.split(/[?#]/, 2);
+  const params = new URLSearchParams(query);
+  if (pathname.startsWith("/profesionales/") && params.get("pendingReview") === "1") return raw;
+  return null;
 }
 
 function withPostLoginActivity(path: string): string {
@@ -269,7 +269,7 @@ export default function LoginPage() {
   if (otpEmail) {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
-        <Navbar />
+        <Navbar mobileSearch={false} />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
@@ -290,7 +290,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      <Navbar />
+      <Navbar mobileSearch={false} />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
           {/* Same card container as the client ("Crear cuenta de cliente") and

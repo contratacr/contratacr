@@ -38,48 +38,90 @@ export function StatusFilterTabs({
 }) {
   const tr = useTranslations("statusTabs");
   const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
-  const useBalancedLayout = tabs.length >= 2 && tabs.length <= 3 && mobileLayout === "equal";
-  const useCompactWrapLayout = mobileLayout === "wrap";
+  const useSegmentedLayout = tabs.length >= 2 && tabs.length <= 4 && mobileLayout !== "scroll";
+  const useScrollableLayout = !useSegmentedLayout;
 
-  // PILLS — rounded chips, no counts (used for the profession filter). A wrapping row.
+  // PILLS — same segmented language, without count badges. Used for profession
+  // filters where labels can be long; 2–4 fit the row, 5+ become a clean rail.
   if (variant === "pills") {
+    const usePillSegmentedLayout = tabs.length >= 2 && tabs.length <= 4;
     return (
-      <div data-status-filter-tabs="" data-filter-layout="pills" className="flex min-w-0 max-w-full flex-wrap gap-2">
-        {tabs.map((tab) => {
-          const active = value === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => onChange(tab.id)}
-              className={cn(
-                "inline-flex max-w-full items-center justify-center gap-1.5 whitespace-normal rounded-lg border px-4 py-2 text-center text-[13px] font-semibold [overflow-wrap:anywhere] transition-colors",
-                active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
-              )}
-            >
-              {label(tab.id)}
-              {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9] shrink-0" aria-hidden />}
-            </button>
-          );
-        })}
+      <div
+        data-status-filter-tabs=""
+        data-filter-layout={usePillSegmentedLayout ? "segmented-pills" : "scroll-pills"}
+        className={cn(
+          "relative w-full max-w-full min-w-0",
+          usePillSegmentedLayout ? "rounded-xl bg-[#f3f4f6] p-1" : "overflow-hidden",
+        )}
+      >
+        {!usePillSegmentedLayout && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white via-white/90 to-transparent"
+          />
+        )}
+        <div
+          className={cn(
+            usePillSegmentedLayout
+              ? "grid items-stretch gap-1"
+              : "flex gap-1 overflow-x-auto rounded-xl bg-[#f3f4f6] p-1 pr-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            usePillSegmentedLayout && tabs.length === 2 && "grid-cols-2",
+            usePillSegmentedLayout && tabs.length === 3 && "grid-cols-3",
+            usePillSegmentedLayout && tabs.length === 4 && "grid-cols-4",
+          )}
+        >
+          {tabs.map((tab) => {
+            const active = value === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => onChange(tab.id)}
+                className={cn(
+                  "inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-center text-[13px] font-semibold leading-tight transition-all",
+                  usePillSegmentedLayout
+                    ? "min-w-0 whitespace-normal [overflow-wrap:anywhere]"
+                    : "min-w-[8.25rem] flex-none whitespace-normal [overflow-wrap:anywhere]",
+                  active ? "bg-white text-[#009FD9] shadow-sm" : "text-[#6b7280] hover:text-[#374151]"
+                )}
+              >
+                {label(tab.id)}
+                {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />}
+              </button>
+            );
+          })}
+        </div>
       </div>
     );
   }
 
-  // UNDERLINE — status tabs with a clean count badge after each label (owner image):
-  // active = brand-blue underline + blue text + a filled blue count pill; inactive = grey
-  // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
+  // UNDERLINE — one modern segmented pattern everywhere. With 2–4 filters we
+  // distribute the available width; with 5+ filters we keep the same visual
+  // language but let the row scroll horizontally without exposing a scrollbar.
   return (
-    <div className={cn(
-      "w-full max-w-full min-w-0",
-      useBalancedLayout
-        ? "grid items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1"
-        : useCompactWrapLayout
-          ? "flex flex-wrap items-center gap-2 overflow-visible"
-          : "flex overflow-x-auto scroll-px-1 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-      useBalancedLayout && tabs.length === 2 && "grid-cols-2",
-      useBalancedLayout && tabs.length === 3 && "grid-cols-3",
-    )} data-status-filter-tabs="" data-filter-layout={useBalancedLayout ? "balanced" : mobileLayout}>
+    <div
+      className={cn(
+        "relative w-full max-w-full min-w-0",
+        useSegmentedLayout && "rounded-xl bg-[#f3f4f6] p-1",
+        useScrollableLayout && "overflow-hidden",
+      )}
+      data-status-filter-tabs=""
+      data-filter-layout={useSegmentedLayout ? "segmented" : "scroll"}
+    >
+      {useScrollableLayout && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white via-white/90 to-transparent"
+        />
+      )}
+      <div className={cn(
+        useSegmentedLayout
+          ? "grid items-stretch gap-1"
+          : "flex gap-1 overflow-x-auto rounded-xl bg-[#f3f4f6] p-1 pr-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        useSegmentedLayout && tabs.length === 2 && "grid-cols-2",
+        useSegmentedLayout && tabs.length === 3 && "grid-cols-3",
+        useSegmentedLayout && tabs.length === 4 && "grid-cols-4",
+      )}>
       {tabs.map((tab) => {
         const active = value === tab.id;
         const count = counts?.[tab.id] ?? 0;
@@ -89,19 +131,13 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group inline-flex min-h-10 max-w-full items-center justify-center text-center text-[13px] font-semibold transition-all sm:text-[14px]",
-              useBalancedLayout
-                ? "min-w-0 gap-1 whitespace-normal px-1.5 [overflow-wrap:anywhere] sm:gap-1.5 sm:px-3"
-                : useCompactWrapLayout
-                  ? "min-w-0 flex-none gap-1.5 whitespace-normal rounded-full border border-[#e5edf3] bg-white px-3.5 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.06)] [overflow-wrap:anywhere]"
-                  : "min-w-max flex-1 gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 sm:min-w-[6.75rem]",
+              "group inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-center text-[13px] font-semibold leading-tight transition-all sm:text-[14px]",
+              useSegmentedLayout
+                ? "min-w-0 whitespace-normal [overflow-wrap:anywhere]"
+                : "min-w-[8.25rem] flex-none whitespace-normal [overflow-wrap:anywhere]",
               active
-                ? useCompactWrapLayout
-                  ? "border-[#d8e7ef] bg-white text-[#008fbe] shadow-[0_2px_7px_rgba(15,23,42,0.14)]"
-                  : "bg-white text-[#008fbe] shadow-[0_1px_3px_rgba(15,23,42,0.12)]"
-                : useCompactWrapLayout
-                  ? "text-[#5f6f82] hover:border-[#cbd9e3] hover:text-[#162543]"
-                  : "text-[#5f6f82] hover:bg-white/60 hover:text-[#162543]"
+                ? "bg-white text-[#009FD9] shadow-sm"
+                : "text-[#6b7280] hover:text-[#374151]"
             )}
             aria-pressed={active}
           >
@@ -120,6 +156,7 @@ export function StatusFilterTabs({
           </button>
         );
       })}
+      </div>
     </div>
   );
 }

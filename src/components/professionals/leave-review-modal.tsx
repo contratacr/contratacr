@@ -11,9 +11,19 @@ interface LeaveReviewModalProps {
   bookingId?: string;
   projectId?: string;
   contactId?: string;
+  isAuthenticated?: boolean;
+  loginRedirectPath?: string;
   onClose: () => void;
   onSuccess?: () => void;
   embedded?: boolean;
+}
+
+const PENDING_REVIEW_KEY_PREFIX = "contratacr:pending-profile-review:";
+
+function currentLocalePrefix() {
+  if (typeof window === "undefined") return "/es";
+  const segment = window.location.pathname.split("/")[1];
+  return segment === "en" ? "/en" : "/es";
 }
 
 export function LeaveReviewModal({
@@ -22,6 +32,8 @@ export function LeaveReviewModal({
   bookingId,
   projectId,
   contactId,
+  isAuthenticated = true,
+  loginRedirectPath,
   onClose,
   onSuccess,
   embedded = false,
@@ -34,8 +46,10 @@ export function LeaveReviewModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const pendingReviewKey = `${PENDING_REVIEW_KEY_PREFIX}${professionalId}`;
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     let active = true;
     const query = bookingId
       ? `bookingId=${bookingId}`
@@ -58,7 +72,78 @@ export function LeaveReviewModal({
       }
     })();
     return () => { active = false; };
-  }, [bookingId, contactId, professionalId, projectId]);
+  }, [bookingId, contactId, isAuthenticated, professionalId, projectId]);
+
+  useEffect(() => {
+    if (isAuthenticated || typeof window === "undefined") return;
+    try {
+      const raw = window.sessionStorage.getItem(pendingReviewKey);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as { rating?: unknown; comment?: unknown };
+      const draftRating = Number(draft.rating);
+      const draftComment = typeof draft.comment === "string" ? draft.comment.slice(0, 300) : "";
+      if (draftRating >= 0.5 && draftRating <= 5) setRating(draftRating);
+      if (draftComment) setComment(draftComment);
+    } catch {
+      // Ignore malformed local drafts.
+    }
+  }, [isAuthenticated, pendingReviewKey]);
+
+  useEffect(() => {
+    if (!isAuthenticated || typeof window === "undefined") return;
+    let cancelled = false;
+
+    async function submitPendingReview() {
+      let draft: { rating?: unknown; comment?: unknown; ts?: unknown } | null = null;
+      try {
+        const raw = window.sessionStorage.getItem(pendingReviewKey);
+        if (!raw) return;
+        draft = JSON.parse(raw);
+      } catch {
+        window.sessionStorage.removeItem(pendingReviewKey);
+        return;
+      }
+
+      const draftRating = Number(draft?.rating);
+      const draftComment = typeof draft?.comment === "string" ? draft.comment.trim() : "";
+      const draftAge = Date.now() - Number(draft?.ts ?? 0);
+      if (!(draftRating >= 0.5 && draftRating <= 5) || !draftComment || draftAge > 1000 * 60 * 60 * 24) {
+        window.sessionStorage.removeItem(pendingReviewKey);
+        return;
+      }
+
+      setRating(draftRating);
+      setComment(draftComment.slice(0, 300));
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch("/api/reviews", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ professionalId, rating: draftRating, comment: draftComment.slice(0, 300), bookingId, projectId, contactId }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (cancelled) return;
+        if (!response.ok) {
+          setError(data.error ?? t("errSubmit"));
+          return;
+        }
+        window.sessionStorage.removeItem(pendingReviewKey);
+        setSuccess(true);
+        window.setTimeout(() => {
+          onSuccess?.();
+          if (!embedded) onClose();
+        }, 1200);
+      } catch {
+        if (!cancelled) setError(t("errConnection"));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void submitPendingReview();
+    return () => { cancelled = true; };
+  }, [bookingId, contactId, embedded, isAuthenticated, onClose, onSuccess, pendingReviewKey, professionalId, projectId, t]);
 
   useEffect(() => {
     if (embedded) return;
@@ -77,6 +162,28 @@ export function LeaveReviewModal({
     }
     if (!comment.trim()) {
       setError(t("errComment"));
+      return;
+    }
+    if (!isAuthenticated) {
+      try {
+        window.sessionStorage.setItem(
+          pendingReviewKey,
+          JSON.stringify({
+            professionalId,
+            rating,
+            comment: comment.trim(),
+            bookingId,
+            projectId,
+            contactId,
+            ts: Date.now(),
+            returnTo: loginRedirectPath ?? window.location.pathname + window.location.search + window.location.hash,
+          }),
+        );
+      } catch {
+        // If storage is blocked, the login redirect still preserves the destination.
+      }
+      const redirect = encodeURIComponent(loginRedirectPath ?? window.location.pathname + window.location.search + window.location.hash);
+      window.location.assign(`${currentLocalePrefix()}/login?redirect=${redirect}`);
       return;
     }
     setError(null);

@@ -708,7 +708,7 @@ function ResourceIcon({ name, className = "h-5 w-5 shrink-0" }: { name: string; 
   return <Headset className={className} />;
 }
 
-export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = true, marketplaceDesktop = false, drawerOnly = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
+export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -778,7 +778,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
   const compactEnabled = true;
   const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
-  const showDesktopCompactSearch = effectiveCompact && !effectiveMarketplaceDesktop;
+  const showDesktopCompactSearch = forceCompactSearch && effectiveCompact && !effectiveMarketplaceDesktop;
   // The global navbar is navigation-only. /buscar explicitly opts into its
   // contextual professional search; every other destination owns its search.
   const showMobileNavbarSearch = mobileSearch && effectiveCompact && !mobileInline;

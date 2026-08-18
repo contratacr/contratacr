@@ -927,7 +927,7 @@ export default function RegisterProfessionalPage() {
   if (otpEmail) {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
-        <Navbar />
+        <Navbar mobileSearch={false} />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
@@ -998,7 +998,7 @@ export default function RegisterProfessionalPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      <Navbar />
+      <Navbar mobileSearch={false} />
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div ref={formTopRef} className="w-full max-w-md scroll-mt-24">
           {/* Same container treatment as the client registration ("Crear cuenta de

@@ -9,7 +9,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
  * the same role-aware header. Pages can opt out of the mobile search when the
  * header should stay navigation-only, like dashboard/account sections.
  */
-export function Navbar({ mobileSearch = true }: { mobileSearch?: boolean } = {}) {
+export function Navbar({ mobileSearch = false }: { mobileSearch?: boolean } = {}) {
   return (
     <>
       <LandingNavbar mobileSearch={mobileSearch} />

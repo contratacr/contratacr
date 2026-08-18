@@ -439,7 +439,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       {/* Mobile keeps the header to logo + search + menu; filters float over the map. */}
-      <LandingNavbar forceCompactSearch />
+      <LandingNavbar forceCompactSearch mobileSearch />
       <div className="ccr-navbar-spacer h-16" aria-hidden />
 
       {/* Top bar - title + subtitle. Background MATCHES the page/results area (#f4f7fa)
