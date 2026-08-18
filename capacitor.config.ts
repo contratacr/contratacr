@@ -36,8 +36,8 @@ const config: CapacitorConfig = {
       // Capacitor dismiss that same surface automatically instead of holding
       // a second, smaller splash while React hydrates.
       launchAutoHide: true,
-      launchShowDuration: 450,
-      launchFadeOutDuration: 150,
+      launchShowDuration: 300,
+      launchFadeOutDuration: 120,
       backgroundColor: "#F4F7FA",
       showSpinner: false,
       splashFullScreen: true,

@@ -2,13 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, BriefcaseBusiness, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useNativeApp } from "@/hooks/use-native-app";
 
-const COMPLETED_KEY = "ccr:native-first-run-onboarding:v4";
+const COMPLETED_KEY = "ccr:native-first-run-onboarding:v5";
 type Role = "client" | "professional";
 
 export function NativeFirstRunOnboarding() {
@@ -79,13 +78,7 @@ export function NativeFirstRunOnboarding() {
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,13,23,0.14),transparent_45%,rgba(2,13,23,0.08))]" />
 
       <main className="relative mx-auto flex h-[100dvh] w-full max-w-lg flex-col px-6 pb-[max(24px,env(safe-area-inset-bottom))] pt-[max(22px,env(safe-area-inset-top))]">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5" aria-label="ContrataCR">
-            <img src="/logo-mark-dark.png" alt="" className="h-10 w-10 object-contain drop-shadow-lg" />
-            <span className="text-[21px] font-black tracking-[-0.04em] drop-shadow-sm">
-              Contrata<span className="text-[#20b8e8]">CR</span>
-            </span>
-          </div>
+        <header className="flex justify-end">
           <button
             type="button"
             onClick={complete}
@@ -95,35 +88,34 @@ export function NativeFirstRunOnboarding() {
           </button>
         </header>
 
-        <section className="mt-auto pb-1" data-testid="native-onboarding-role-step">
-          <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.17em] text-[#55c8ed]">
-            {english ? "Services across Costa Rica" : "Servicios en toda Costa Rica"}
-          </p>
+        <section className="mt-auto pb-1 text-center" data-testid="native-onboarding-role-step">
+          <div className="mb-4 inline-flex items-center" aria-label="ContrataCR">
+            <img src="/logo-mark-dark.png" alt="" className="h-10 w-10 object-contain drop-shadow-lg" />
+            <span className="-ml-0.5 text-[25px] font-black tracking-[-0.055em] drop-shadow-sm">
+              Contrata<span className="text-[#38bdf8]">CR</span>
+            </span>
+          </div>
           <h1
             id="native-onboarding-title"
-            className="max-w-[21rem] text-[clamp(2rem,8.5vw,2.65rem)] font-black leading-[1.01] tracking-[-0.05em] text-balance"
+            className="mx-auto max-w-[19rem] text-[clamp(1.75rem,7.5vw,2.3rem)] font-black leading-[1.04] tracking-[-0.045em] text-balance"
           >
-            {english ? "Everything you need, closer." : "Lo que necesitas, más cerca."}
+            {english ? "Services, all in one place." : "Servicios, en un solo lugar."}
           </h1>
-          <p className="mt-2 max-w-[21rem] text-sm font-medium leading-5 text-white/75">
+          <p className="mx-auto mt-2 max-w-[19rem] text-sm font-medium leading-5 text-white/75">
             {english
-              ? "Find trusted professionals or grow your services from one place."
-              : "Encuentra profesionales de confianza o haz crecer tus servicios desde un solo lugar."}
+              ? "Choose how you want to get started."
+              : "Elige cómo quieres comenzar."}
           </p>
 
-          <div className="mt-4 grid grid-cols-2 gap-3" aria-label={english ? "Choose how to start" : "Elige cómo empezar"}>
+          <div className="mt-5 grid grid-cols-2 overflow-hidden rounded-full border border-white/80" aria-label={english ? "Choose how to start" : "Elige cómo empezar"}>
             <RoleButton
-              icon={Search}
               label={english ? "Find a service" : "Buscar servicios"}
-              description={english ? "Find professionals" : "Encuentra profesionales"}
               onClick={() => chooseRole("client")}
-              primary
             />
             <RoleButton
-              icon={BriefcaseBusiness}
               label={english ? "Offer services" : "Ofrecer servicios"}
-              description={english ? "Grow your business" : "Haz crecer tu negocio"}
               onClick={() => chooseRole("professional")}
+              divided
             />
           </div>
 
@@ -145,38 +137,21 @@ export function NativeFirstRunOnboarding() {
 }
 
 function RoleButton({
-  icon: Icon,
   label,
-  description,
   onClick,
-  primary = false,
+  divided = false,
 }: {
-  icon: typeof Search;
   label: string;
-  description: string;
   onClick: () => void;
-  primary?: boolean;
+  divided?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={primary
-        ? "group relative flex min-h-[118px] w-full flex-col items-start rounded-[22px] bg-[#08a8dc] px-4 py-4 text-left shadow-[0_18px_38px_-18px_rgba(8,168,220,0.9)] transition active:scale-[0.985]"
-        : "group relative flex min-h-[118px] w-full flex-col items-start rounded-[22px] border border-white/35 bg-[#071523]/48 px-4 py-4 text-left backdrop-blur-md transition active:scale-[0.985] active:bg-white/[0.14]"
-      }
+      className={`min-h-14 px-3 text-[14px] font-extrabold text-white transition active:bg-white active:text-[#071523] ${divided ? "border-l border-white/80" : ""}`}
     >
-      <span className={primary
-        ? "grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/18"
-        : "grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/10"
-      }>
-        <Icon className="h-5 w-5" strokeWidth={2.3} />
-      </span>
-      <span className="mt-3 min-w-0 pr-4">
-        <span className="block text-[15px] font-extrabold leading-[1.15]">{label}</span>
-        <span className="mt-1 block text-[11px] font-medium leading-4 text-white/70">{description}</span>
-      </span>
-      <ArrowRight className="absolute right-3.5 top-4 h-4 w-4 text-white/80 transition-transform group-active:translate-x-0.5" />
+      {label}
     </button>
   );
 }
