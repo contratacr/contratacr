@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Search, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,7 +10,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
-import { PanelSectionLoading } from "@/components/ui/content-loading";
 
 type NetworkItem = {
   id: string;
@@ -27,7 +26,6 @@ type View = "following" | "followers";
 
 export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void; initialView?: View }) {
   const locale = useLocale();
-  const tLoading = useTranslations("loading");
   const es = locale !== "en";
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -246,74 +244,100 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
               {removeFollowerError}
             </p>
           )}
-          {loading && showLoadingSkeleton && items.length > 0 ? (
-            <div className="space-y-3 py-2">
-              {[0, 1, 2, 3, 4].map((item) => (
-                <div key={item} className="flex items-center gap-3">
-                  <div className="h-11 w-11 animate-pulse rounded-full bg-[#eef0f2]" />
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="h-3 w-32 animate-pulse rounded bg-[#eef0f2]" />
-                    <div className="h-3 w-44 animate-pulse rounded bg-[#eef0f2]" />
-                  </div>
-                  <div className="h-8 w-20 animate-pulse rounded-lg bg-[#eef0f2]" />
-                </div>
-              ))}
-            </div>
-          ) : loading ? (
-            <PanelSectionLoading title={tLoading("profile")} className="h-full min-h-[230px] sm:min-h-[230px]" />
+          {loading && items.length > 0 ? (
+            <NetworkList items={items} view={view} es={es} onBack={onBack} removingFollowerId={removingFollowerId} removeFollower={removeFollower} />
+          ) : loading && showLoadingSkeleton ? (
+            <NetworkRowsSkeleton />
           ) : items.length === 0 ? (
             <div className="grid h-full min-h-[230px] place-items-center text-center text-sm font-medium text-[#6b7280]">
               {query ? (es ? "No encontramos resultados." : "No results found.") : (es ? "Todavía no hay perfiles aquí." : "No profiles here yet.")}
             </div>
           ) : (
-            <ul className="space-y-1">
-              {items.map((item) => (
-                <li data-follow-relation-id={item.id} key={item.id} className="flex min-h-[58px] items-center gap-3">
-                  <Link href={item.slug ? `/profesionales/${item.slug}` : "#"} onClick={item.slug ? onBack : undefined} className="flex min-w-0 flex-1 items-center gap-3">
-                    <Avatar className="h-11 w-11 shrink-0">
-                      <AvatarImage src={item.avatarUrl ?? undefined} alt="" />
-                      <AvatarFallback className="bg-[#eaf7fc] text-sm font-extrabold text-[#0089bb]">{getInitials(item.name)}</AvatarFallback>
-                    </Avatar>
-                    <span className="min-w-0">
-                      <span className="flex min-w-0 items-center text-sm font-bold leading-5 text-[#111827]">
-                        <span className="truncate">{item.name}</span>
-                        {item.isVerified && (
-                          <CheckCircle2
-                            aria-label={es ? "Verificado" : "Verified"}
-                            className="ml-1 h-3.5 w-3.5 shrink-0 text-[#009FD9]"
-                          />
-                        )}
-                      </span>
-                      <span className="block truncate text-sm leading-5 text-[#6b7280]">{item.subtitle}</span>
-                    </span>
-                  </Link>
-                  <div className="shrink-0">
-                    {view === "followers" ? (
-                      <button
-                        type="button"
-                        onClick={() => void removeFollower(item.id)}
-                        disabled={removingFollowerId !== null}
-                        className="inline-flex h-8 min-w-[96px] items-center justify-center rounded-lg bg-[#f0f2f5] px-4 text-sm font-bold text-[#111827] transition-colors hover:bg-[#e5e9ee] disabled:opacity-60"
-                      >
-                        {removingFollowerId === item.id
-                          ? (es ? "Quitando..." : "Removing...")
-                          : (es ? "Quitar" : "Remove")}
-                      </button>
-                    ) : item.professionalId ? (
-                      <FollowButton professionalId={item.professionalId} compact />
-                    ) : (
-                      <button type="button" className="h-8 rounded-lg bg-[#eef0f2] px-4 text-sm font-semibold text-[#111827]">
-                        {es ? "Siguiendo" : "Following"}
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <NetworkList items={items} view={view} es={es} onBack={onBack} removingFollowerId={removingFollowerId} removeFollower={removeFollower} />
           )}
         </div>
       </section>
     </div>
+  );
+}
+
+function NetworkRowsSkeleton() {
+  return (
+    <div className="space-y-3 py-2" aria-label="Cargando conexiones">
+      {[0, 1, 2, 3, 4].map((item) => (
+        <div key={item} className="flex items-center gap-3">
+          <div className="h-11 w-11 animate-pulse rounded-full bg-[#eef0f2]" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-3 w-32 animate-pulse rounded bg-[#eef0f2]" />
+            <div className="h-3 w-44 animate-pulse rounded bg-[#eef0f2]" />
+          </div>
+          <div className="h-8 w-20 animate-pulse rounded-lg bg-[#eef0f2]" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function NetworkList({
+  items,
+  view,
+  es,
+  onBack,
+  removingFollowerId,
+  removeFollower,
+}: {
+  items: NetworkItem[];
+  view: View;
+  es: boolean;
+  onBack?: () => void;
+  removingFollowerId: string | null;
+  removeFollower: (followId: string) => Promise<void>;
+}) {
+  return (
+    <ul className="space-y-1">
+      {items.map((item) => (
+        <li data-follow-relation-id={item.id} key={item.id} className="flex min-h-[58px] items-center gap-3">
+          <Link href={item.slug ? `/profesionales/${item.slug}` : "#"} onClick={item.slug ? onBack : undefined} className="flex min-w-0 flex-1 items-center gap-3">
+            <Avatar className="h-11 w-11 shrink-0">
+              <AvatarImage src={item.avatarUrl ?? undefined} alt="" />
+              <AvatarFallback className="bg-[#eaf7fc] text-sm font-extrabold text-[#0089bb]">{getInitials(item.name)}</AvatarFallback>
+            </Avatar>
+            <span className="min-w-0">
+              <span className="flex min-w-0 items-center text-sm font-bold leading-5 text-[#111827]">
+                <span className="truncate">{item.name}</span>
+                {item.isVerified && (
+                  <CheckCircle2
+                    aria-label={es ? "Verificado" : "Verified"}
+                    className="ml-1 h-3.5 w-3.5 shrink-0 text-[#009FD9]"
+                  />
+                )}
+              </span>
+              <span className="block truncate text-sm leading-5 text-[#6b7280]">{item.subtitle}</span>
+            </span>
+          </Link>
+          <div className="shrink-0">
+            {view === "followers" ? (
+              <button
+                type="button"
+                onClick={() => void removeFollower(item.id)}
+                disabled={removingFollowerId !== null}
+                className="inline-flex h-8 min-w-[96px] items-center justify-center rounded-lg bg-[#f0f2f5] px-4 text-sm font-bold text-[#111827] transition-colors hover:bg-[#e5e9ee] disabled:opacity-60"
+              >
+                {removingFollowerId === item.id
+                  ? (es ? "Quitando..." : "Removing...")
+                  : (es ? "Quitar" : "Remove")}
+              </button>
+            ) : item.professionalId ? (
+              <FollowButton professionalId={item.professionalId} compact />
+            ) : (
+              <button type="button" className="h-8 rounded-lg bg-[#eef0f2] px-4 text-sm font-semibold text-[#111827]">
+                {es ? "Siguiendo" : "Following"}
+              </button>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 

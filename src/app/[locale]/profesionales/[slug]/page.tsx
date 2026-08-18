@@ -453,28 +453,28 @@ export default function ProfilePage() {
           {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
-          <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm sm:p-6">
+          <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-start gap-4">
+              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
                 <ImagePreviewDialog
                   src={professional.avatarUrl}
                   alt={professional.fullName}
                   openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
                   closeLabel={locale === "en" ? "Close" : "Cerrar"}
                 >
-                  <Avatar className="h-20 w-20 shrink-0 sm:h-[88px] sm:w-[88px]">
+                  <Avatar className="h-16 w-16 shrink-0 sm:h-[88px] sm:w-[88px]">
                     <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
-                    <AvatarFallback className="text-2xl bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
+                    <AvatarFallback className="bg-[#EBF5FB] text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(professional.fullName)}</AvatarFallback>
                   </Avatar>
                 </ImagePreviewDialog>
                 <div className="min-w-0">
                   <div className="min-w-0">
-                    <h1 data-testid="professional-profile-name" className="line-clamp-3 min-w-0 text-[18px] font-bold leading-[1.15] text-[#111827] [overflow-wrap:anywhere] sm:line-clamp-2 sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
+                    <h1 data-testid="professional-profile-name" className="line-clamp-2 min-w-0 text-[17px] font-bold leading-[1.15] text-[#111827] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                       {displayName.primaryDesktop}
                       {professional.verificationStatus === "verified" && (
                         <CheckCircle2
                           aria-label={t("identityVerified")}
-                          className="ml-1.5 inline-block h-[0.85em] w-[0.85em] align-[-0.05em] text-[#009FD9]"
+                          className="mb-[0.08em] ml-1 inline-block h-4 w-4 shrink-0 align-middle text-[#009FD9] sm:h-5 sm:w-5"
                         />
                       )}
                     </h1>

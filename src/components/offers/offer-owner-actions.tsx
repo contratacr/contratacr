@@ -23,7 +23,8 @@ type Props = {
 
 export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromPanel = false }: Props) {
   const router = useRouter();
-  const copy = OWNER_ACTION_COPY[marketplaceLocale(useLocale())];
+  const locale = marketplaceLocale(useLocale());
+  const copy = OWNER_ACTION_COPY[locale];
   const [editing, setEditing] = useState(false);
   const editHref = `/ofertas/${offer.id}/editar${fromPanel ? "?from=panel" : ""}`;
 
@@ -33,15 +34,16 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="hidden h-11 w-full items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
+          className="hidden h-11 w-full min-w-0 items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
         >
-          {copy.edit}
+          <span className="truncate">{copy.edit}</span>
         </button>
-        <Link href={editHref} className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
-          {copy.edit}
+        <Link href={editHref} className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-lg bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-4 lg:hidden">
+          <span className="truncate">{copy.edit}</span>
         </Link>
-        <Link href="/dashboard/profesional?mode=offer&tab=offers" className="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[#b9d9e8] px-4 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">
-          {copy.manage}
+        <Link href="/dashboard/profesional?mode=offer&tab=offers" className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-lg border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:px-4">
+          <span className="truncate sm:hidden">{locale === "es" ? "Administrar" : copy.manage}</span>
+          <span className="hidden truncate sm:inline">{copy.manage}</span>
         </Link>
       </div>
 

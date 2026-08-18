@@ -407,7 +407,7 @@ export function OffersBoard({
               </p>
                <p className="text-xs text-[#68778d]">{copy.country}</p>
             </div>
-            <div className="[&>article]:h-36">
+            <div>
               {filtered.map((offer) => (
                 <OfferRow
                   key={offer.id}
@@ -525,16 +525,16 @@ function OfferImage({
   const extraCount = Math.max(0, offer.image_urls.length - 1);
   return (
     <div
-      className={`${large ? "aspect-[16/8] w-full" : "h-14 w-14 shrink-0"} relative overflow-hidden rounded-lg bg-[#f3f7fa]`}
+      className={`${large ? "aspect-[16/8] w-full rounded-lg bg-[#f3f7fa]" : "h-11 w-11 shrink-0 sm:h-12 sm:w-12"} relative overflow-hidden`}
     >
       {offer.image_urls[0] ? (
         <img
           src={offer.image_urls[0]}
           alt={offer.title}
-          className={`block h-full max-h-full w-full max-w-full ${large ? "object-cover" : "object-contain p-1"}`}
+          className={`block h-full max-h-full w-full max-w-full rounded-lg ${large ? "object-cover" : "object-cover"}`}
         />
       ) : (
-        <span className="grid h-full place-items-center text-xs font-extrabold text-[#009fd9]">
+        <span className="grid h-full place-items-center rounded-lg bg-[#f3f7fa] text-xs font-extrabold text-[#009fd9]">
           {offer.title.slice(0, 2).toUpperCase()}
         </span>
       )}
@@ -702,7 +702,7 @@ function OfferRow({
   const discount = offerDiscountPercent(offer);
   return (
     <article
-      className={`relative overflow-hidden border-b border-[#dfe6ec] bg-white px-4 py-3 transition last:border-b-0 hover:bg-[#f8fafc] ${selected ? "lg:bg-[#eef9fd] shadow-[inset_4px_0_0_#162543]" : ""}`}
+      className={`relative overflow-hidden border-b border-[#dfe6ec] bg-white px-3 py-2 transition hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}
     >
       <button
         type="button"
@@ -714,26 +714,26 @@ function OfferRow({
         href={`/ofertas/${offer.id}`}
         className="relative z-[1] block lg:pointer-events-none"
       >
-        <div className="flex gap-3">
+        <div className="flex gap-2.5 sm:gap-3">
           <OfferImage offer={offer} />
           <div className="min-w-0 flex-1">
-            <div className="flex items-start gap-2">
-              <h2 className="line-clamp-2 flex-1 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base">
+            <div className="flex min-w-0 items-center gap-2">
+              <h2 className="min-w-0 flex-1 truncate text-[14px] font-extrabold leading-5 text-[#005eaa] sm:text-[15px] lg:text-base">
                 {offer.title}
               </h2>
               {discount && (
-                <span className="shrink-0 rounded-md bg-[#009fd9] px-2 py-1 text-[10px] font-extrabold text-white">
+                <span className="shrink-0 rounded-full bg-[#009fd9] px-2 py-0.5 text-[10px] font-extrabold leading-4 text-white shadow-sm">
                   -{discount}%
                 </span>
               )}
             </div>
-            <p className="mt-0.5 truncate text-sm font-semibold text-[#101d35]">
+            <p className="truncate text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
               {offer.professional_name}
             </p>
-            <p className="mt-0.5 text-sm font-extrabold text-[#007fae]">
+            <p className="truncate text-[13px] font-extrabold leading-5 text-[#007fae] sm:text-sm">
                {formatOfferPrice(offer, locale)}
             </p>
-            <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs">
+            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-[11px] leading-4 sm:text-xs">
               <span className="shrink-0 text-[#68778d]">
                  {offerTypeLabel(offer.offer_type, locale)}
               </span>
@@ -742,14 +742,14 @@ function OfferRow({
                   <span aria-hidden="true" className="text-[#c0cad5]">
                     ·
                   </span>
-                  <span className="min-w-0 font-semibold text-[#008fc3]">
+                  <span className="min-w-0 truncate font-semibold text-[#008fc3]">
                     {offer.service_label}
                   </span>
                 </>
               )}
             </div>
             {offer.location_label && (
-              <p className="mt-1 line-clamp-2 text-xs leading-4 text-[#68778d]">
+              <p className="truncate text-[11px] leading-4 text-[#68778d] sm:text-xs">
                 {offer.location_label}
               </p>
             )}
@@ -797,22 +797,23 @@ function OfferPreview({
         </div>
       </div>
       {isOwner && (
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]"
+            className="inline-flex h-11 min-w-0 items-center justify-center rounded-lg bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-5"
           >
-             {copy.editOffer}
+            <span className="truncate">{copy.editOffer}</span>
           </button>
-          <Link
-            href={`/dashboard/profesional?mode=offer&tab=offers&offer=${offer.id}`}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-[#b9d9e8] px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]"
-          >
-             {copy.manageOffer}
-          </Link>
-        </div>
-      )}
+                        <Link
+                          href={`/dashboard/profesional?mode=offer&tab=offers&offer=${offer.id}`}
+                          className="inline-flex h-11 min-w-0 items-center justify-center rounded-lg border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:px-5"
+                        >
+                          <span className="truncate sm:hidden">{locale === "es" ? "Administrar" : copy.manageOffer}</span>
+                          <span className="hidden truncate sm:inline">{copy.manageOffer}</span>
+                        </Link>
+                      </div>
+                    )}
       <OfferContactActions offer={offer} userId={userId} isOwner={isOwner} />
       <div className="mt-5 flex flex-wrap items-end gap-3">
         <p className="text-2xl font-extrabold text-[#007fae]">
