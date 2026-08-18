@@ -38,7 +38,8 @@ export function StatusFilterTabs({
 }) {
   const tr = useTranslations("statusTabs");
   const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
-  const useBalancedLayout = tabs.length >= 2 && tabs.length <= 3 && (mobileLayout === "equal" || mobileLayout === "wrap");
+  const useBalancedLayout = tabs.length >= 2 && tabs.length <= 3 && mobileLayout === "equal";
+  const useCompactWrapLayout = mobileLayout === "wrap";
 
   // PILLS — rounded chips, no counts (used for the profession filter). A wrapping row.
   if (variant === "pills") {
@@ -70,11 +71,11 @@ export function StatusFilterTabs({
   // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
   return (
     <div className={cn(
-      "w-full max-w-full min-w-0 items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1",
+      "w-full max-w-full min-w-0",
       useBalancedLayout
-        ? "grid overflow-visible"
-        : mobileLayout === "wrap"
-          ? "flex flex-wrap overflow-visible"
+        ? "grid items-stretch gap-1 rounded-xl bg-[#f1f6f9] p-1"
+        : useCompactWrapLayout
+          ? "flex flex-wrap items-center gap-2 overflow-visible"
           : "flex overflow-x-auto scroll-px-1 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
       useBalancedLayout && tabs.length === 2 && "grid-cols-2",
       useBalancedLayout && tabs.length === 3 && "grid-cols-3",
@@ -88,15 +89,19 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group inline-flex min-h-10 max-w-full items-center justify-center rounded-lg py-2 text-center text-[13px] font-semibold transition-all sm:min-w-[6.75rem] sm:text-[14px]",
+              "group inline-flex min-h-10 max-w-full items-center justify-center text-center text-[13px] font-semibold transition-all sm:text-[14px]",
               useBalancedLayout
                 ? "min-w-0 gap-1 whitespace-normal px-1.5 [overflow-wrap:anywhere] sm:gap-1.5 sm:px-3"
-                : mobileLayout === "wrap"
-                  ? "min-w-0 flex-none gap-1.5 whitespace-normal px-3 [overflow-wrap:anywhere]"
-                  : "min-w-max flex-1 gap-1.5 whitespace-nowrap px-3",
+                : useCompactWrapLayout
+                  ? "min-w-0 flex-none gap-1.5 whitespace-normal rounded-full border border-[#e5edf3] bg-white px-3.5 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.06)] [overflow-wrap:anywhere]"
+                  : "min-w-max flex-1 gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 sm:min-w-[6.75rem]",
               active
-                ? "bg-white text-[#008fbe] shadow-[0_1px_3px_rgba(15,23,42,0.12)]"
-                : "text-[#5f6f82] hover:bg-white/60 hover:text-[#162543]"
+                ? useCompactWrapLayout
+                  ? "border-[#d8e7ef] bg-white text-[#008fbe] shadow-[0_2px_7px_rgba(15,23,42,0.14)]"
+                  : "bg-white text-[#008fbe] shadow-[0_1px_3px_rgba(15,23,42,0.12)]"
+                : useCompactWrapLayout
+                  ? "text-[#5f6f82] hover:border-[#cbd9e3] hover:text-[#162543]"
+                  : "text-[#5f6f82] hover:bg-white/60 hover:text-[#162543]"
             )}
             aria-pressed={active}
           >
