@@ -1,5 +1,6 @@
 package com.contratacr.app;
 
+import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -14,6 +15,9 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         WebView webView = getBridge().getWebView();
+        if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
         webView.getSettings().setTextZoom(100);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         // Match the native splash if Android exposes the WebView before its

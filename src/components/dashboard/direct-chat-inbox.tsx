@@ -189,10 +189,13 @@ export function DirectChatInbox() {
     const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
     if (!shouldLockScroll) return;
     const root = document.documentElement;
+    const body = document.body;
     root.classList.add("contratacr-chat-thread-open");
+    body.classList.add("contratacr-chat-thread-open");
     const releaseBodyScroll = lockBodyScroll();
     return () => {
       root.classList.remove("contratacr-chat-thread-open");
+      body.classList.remove("contratacr-chat-thread-open");
       releaseBodyScroll();
     };
   }, [mobileThread]);

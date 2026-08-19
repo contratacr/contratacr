@@ -53,6 +53,45 @@ export function MobileAppBridge() {
 
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
+    const root = document.documentElement;
+    let frame = 0;
+
+    const syncNativeInsets = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const nav = document.querySelector<HTMLElement>(".ccr-native-bottom-nav");
+        const navHeight = nav?.getBoundingClientRect().height ?? 0;
+        const vv = window.visualViewport;
+        const visualHeight = vv?.height ?? window.innerHeight;
+        const visualTop = vv?.offsetTop ?? 0;
+        const keyboardInset = Math.max(0, window.innerHeight - visualHeight - visualTop);
+        root.style.setProperty("--ccr-native-live-bottom-nav-height", `${Math.ceil(navHeight)}px`);
+        root.style.setProperty("--ccr-native-keyboard-inset", `${Math.ceil(keyboardInset)}px`);
+        root.toggleAttribute("data-native-keyboard-open", keyboardInset > 80);
+      });
+    };
+
+    syncNativeInsets();
+    window.addEventListener("resize", syncNativeInsets);
+    window.addEventListener("orientationchange", syncNativeInsets);
+    window.visualViewport?.addEventListener("resize", syncNativeInsets);
+    window.visualViewport?.addEventListener("scroll", syncNativeInsets);
+    const observer = new ResizeObserver(syncNativeInsets);
+    const nav = document.querySelector<HTMLElement>(".ccr-native-bottom-nav");
+    if (nav) observer.observe(nav);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", syncNativeInsets);
+      window.removeEventListener("orientationchange", syncNativeInsets);
+      window.visualViewport?.removeEventListener("resize", syncNativeInsets);
+      window.visualViewport?.removeEventListener("scroll", syncNativeInsets);
+      observer.disconnect();
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isNativeAppRuntime()) return;
     document.documentElement.classList.add("ccr-native-app");
     document.body.classList.add("ccr-native-app");
 

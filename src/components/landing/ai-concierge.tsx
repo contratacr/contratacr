@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,6 +12,7 @@ import {
   MapPin,
   Minus,
   RotateCcw,
+  Send,
   Sparkles,
   Star,
 } from "lucide-react";
@@ -251,6 +252,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const [conversationId, setConversationId] = useState("");
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
   const [compactViewport, setCompactViewport] = useState(false);
+  const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionHydratedRef = useRef(false);
@@ -411,6 +413,14 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     } finally {
       setLoading(false);
     }
+  }
+
+  function submitDraft(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const text = draft.trim();
+    if (!text || loading) return;
+    setDraft("");
+    void ask(text);
   }
 
   async function suggestService(messageIndex: number, name: string) {
@@ -610,8 +620,24 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           )}
         </div>
 
-        <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3">
-          <p className="ccr-ai-footer-notice text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:text-[11px]">{copy.notice}</p>
+        <footer className="ccr-ai-composer shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3">
+          <form onSubmit={submitDraft} className="flex items-center gap-2">
+            <input
+              value={draft}
+              onChange={(event) => setDraft(event.target.value.slice(0, 240))}
+              placeholder={lang === "en" ? "Ask anything..." : "Escribe una pregunta..."}
+              className="h-12 min-w-0 flex-1 rounded-2xl border-2 border-[#0585a0] bg-white px-4 text-[15px] font-medium text-[#173052] outline-none placeholder:text-[#8b96a6] focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+            />
+            <button
+              type="submit"
+              disabled={loading || !draft.trim()}
+              aria-label={copy.send}
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eef1f4] text-[#9aa3ad] transition enabled:bg-[#009FD9] enabled:text-white disabled:opacity-80"
+            >
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            </button>
+          </form>
+          <p className="ccr-ai-footer-notice mt-2 text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:text-[11px]">{copy.notice}</p>
         </footer>
       </div>
     </section>

@@ -174,8 +174,12 @@ export function NativeFirstRunOnboarding() {
   }, [continuePendingJourney, destinationFor, selectedRole]);
 
   const goToLogin = useCallback(() => {
-    continuePendingJourney("/login");
-  }, [continuePendingJourney]);
+    window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
+    document.documentElement.classList.remove("ccr-native-first-run-pending");
+    setVisible(false);
+    router.push("/login");
+    hideNativeSplashAfterPaint();
+  }, [router]);
 
   if (!visible || !nativeApp) return null;
 
