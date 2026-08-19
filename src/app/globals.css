@@ -271,7 +271,7 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
   --ccr-native-header-height: 64px;
   --ccr-native-bottom-nav-height: calc(64px + max(env(safe-area-inset-bottom), 0.2rem));
   --ccr-native-bottom-nav-total: var(--ccr-native-bottom-nav-height);
-  --ccr-native-panel-end-gap: 0.75rem;
+  --ccr-native-panel-end-gap: 1.5rem;
   --ccr-native-content-end-gap: var(--ccr-native-panel-end-gap);
   --ccr-native-content-height: calc(var(--app-visual-viewport-height, 100svh) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total));
 }
@@ -295,7 +295,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 
 body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet,
 html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
-  bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap));
+  bottom: var(--ccr-native-bottom-nav-total);
 }
 
 @media (max-width: 1023px) {
@@ -335,14 +335,14 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     top: var(--ccr-native-header-height);
     /* Keep route content above the fixed nav. Individual scroll areas still get
        a small end gap, but the nav no longer covers the final section. */
-    bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap));
+    bottom: var(--ccr-native-bottom-nav-total);
     height: auto;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     background: #fff;
     box-sizing: border-box;
-    padding-bottom: 0 !important;
+    padding-bottom: var(--ccr-native-content-end-gap) !important;
     scroll-padding-bottom: var(--ccr-native-content-end-gap);
     -webkit-overflow-scrolling: touch;
   }
@@ -386,7 +386,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     min-height: 0 !important;
     height: auto;
     margin-bottom: 0 !important;
-    padding-bottom: var(--ccr-native-content-end-gap) !important;
+    padding-bottom: 0 !important;
     background: #fff;
   }
 
@@ -410,7 +410,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
-    padding-bottom: var(--ccr-native-content-end-gap) !important;
+    padding-bottom: 0 !important;
     margin-bottom: 0 !important;
   }
 
@@ -543,7 +543,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 .ccr-native-app .ccr-search-bottom-sheet {
   bottom: 0;
   z-index: 80 !important;
-  max-height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total) - var(--ccr-native-content-end-gap)) !important;
+  max-height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total)) !important;
   overflow: hidden;
   isolation: isolate;
   background: #fff !important;
@@ -552,7 +552,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
 body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet,
 html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet {
-  bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap)) !important;
+  bottom: var(--ccr-native-bottom-nav-total) !important;
   padding-bottom: 0 !important;
 }
 

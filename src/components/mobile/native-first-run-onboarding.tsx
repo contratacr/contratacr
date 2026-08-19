@@ -4,10 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
+import { useAuth } from "@/hooks/use-auth";
 import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
 import {
   NATIVE_ONBOARDING_COMPLETED_EVENT,
   NATIVE_ONBOARDING_COMPLETED_KEY,
+  NATIVE_ONBOARDING_PENDING_PATH_KEY,
+  type NativeOnboardingPendingPath,
 } from "@/lib/mobile-onboarding";
 
 // Bump this key whenever the first-run journey changes materially so an
@@ -22,16 +25,40 @@ const ROLE_IMAGES: Record<Role, string> = {
 function shouldShowNativeFirstRun() {
   if (typeof window === "undefined") return false;
   try {
-    return isNativeAppRuntime() && window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1";
+    return isNativeAppRuntime()
+      && window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1"
+      && !window.localStorage.getItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
   } catch {
     return false;
   }
+}
+
+function routeWithoutLocale(pathname: string | null) {
+  return (pathname ?? "/").replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
+}
+
+function readPendingPath(): NativeOnboardingPendingPath | null {
+  const value = window.localStorage.getItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
+  return value === "/login" || value === "/registro/cliente" || value === "/registro/profesional"
+    ? value
+    : null;
+}
+
+function hideNativeSplashAfterPaint() {
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      void import("@capacitor/splash-screen")
+        .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
+        .catch(() => {});
+    });
+  });
 }
 
 export function NativeFirstRunOnboarding() {
   const nativeApp = useNativeApp();
   const pathname = usePathname();
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [visible, setVisible] = useState(() => shouldShowNativeFirstRun());
   const [selectedRole, setSelectedRole] = useState<Role>("client");
   const [heroReady, setHeroReady] = useState(false);
@@ -40,11 +67,29 @@ export function NativeFirstRunOnboarding() {
   useEffect(() => {
     if (!nativeApp) return;
     const syncFirstRunState = () => {
-      if (window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1") {
+      const completed = window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1";
+      if (completed || user) {
+        if (user && !completed) {
+          window.localStorage.setItem(NATIVE_ONBOARDING_COMPLETED_KEY, "1");
+          window.dispatchEvent(new Event(NATIVE_ONBOARDING_COMPLETED_EVENT));
+        }
+        window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
         document.documentElement.classList.remove("ccr-native-first-run-pending");
         setVisible(false);
+        hideNativeSplashAfterPaint();
         return;
       }
+
+      if (authLoading) return;
+      const pendingPath = readPendingPath();
+      if (pendingPath) {
+        document.documentElement.classList.remove("ccr-native-first-run-pending");
+        setVisible(false);
+        if (routeWithoutLocale(pathname) !== pendingPath) router.replace(pendingPath);
+        hideNativeSplashAfterPaint();
+        return;
+      }
+
       document.documentElement.classList.add("ccr-native-first-run-pending");
       setVisible(true);
     };
@@ -57,7 +102,7 @@ export function NativeFirstRunOnboarding() {
       window.removeEventListener("focus", syncFirstRunState);
       document.removeEventListener("visibilitychange", syncFirstRunState);
     };
-  }, [nativeApp]);
+  }, [authLoading, nativeApp, pathname, router, user]);
 
   useEffect(() => {
     if (!visible) return;
@@ -86,38 +131,33 @@ export function NativeFirstRunOnboarding() {
   }, [nativeApp, visible]);
 
   useEffect(() => {
-    setHeroReady(false);
-  }, [selectedRole]);
-
-  useEffect(() => {
     if (!visible || heroReady) return;
     // A broken/slow image must not strand the app behind the native splash.
     const timeout = window.setTimeout(() => setHeroReady(true), 1500);
     return () => window.clearTimeout(timeout);
   }, [heroReady, visible]);
 
-  const complete = useCallback(() => {
-    window.localStorage.setItem(NATIVE_ONBOARDING_COMPLETED_KEY, "1");
-    window.dispatchEvent(new Event(NATIVE_ONBOARDING_COMPLETED_EVENT));
-    document.documentElement.classList.remove("ccr-native-first-run-pending");
-    setVisible(false);
-  }, []);
-
   const destinationFor = useCallback((role: Role) => {
     if (role === "client") return "/registro/cliente";
     return "/registro/profesional";
   }, []);
 
+  const continuePendingJourney = useCallback((destination: NativeOnboardingPendingPath) => {
+    window.localStorage.setItem(NATIVE_ONBOARDING_PENDING_PATH_KEY, destination);
+    document.documentElement.classList.remove("ccr-native-first-run-pending");
+    setVisible(false);
+    router.push(destination);
+    hideNativeSplashAfterPaint();
+  }, [router]);
+
   const continueWithRole = useCallback(() => {
     const destination = destinationFor(selectedRole);
-    complete();
-    router.push(destination);
-  }, [complete, destinationFor, router, selectedRole]);
+    continuePendingJourney(destination);
+  }, [continuePendingJourney, destinationFor, selectedRole]);
 
   const goToLogin = useCallback(() => {
-    complete();
-    router.push("/login");
-  }, [complete, router]);
+    continuePendingJourney("/login");
+  }, [continuePendingJourney]);
 
   if (!visible || !nativeApp) return null;
 
@@ -170,12 +210,18 @@ export function NativeFirstRunOnboarding() {
             <RoleButton
               label={english ? "Find services" : "Buscar servicios"}
               selected={selectedRole === "client"}
-              onClick={() => setSelectedRole("client")}
+              onClick={() => {
+                setHeroReady(false);
+                setSelectedRole("client");
+              }}
             />
             <RoleButton
               label={english ? "Offer services" : "Ofrecer servicios"}
               selected={selectedRole === "professional"}
-              onClick={() => setSelectedRole("professional")}
+              onClick={() => {
+                setHeroReady(false);
+                setSelectedRole("professional");
+              }}
               divided
             />
           </div>

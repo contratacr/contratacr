@@ -45,7 +45,7 @@ const LOCALES: LocaleContract[] = [
 function enableNativeRuntime(page: Page) {
   return page.addInitScript(() => {
     if (window.sessionStorage.getItem("ccr:e2e-show-first-run-onboarding") !== "1") {
-      window.localStorage.setItem("ccr:native-first-run-onboarding:v10", "1");
+      window.localStorage.setItem("ccr:native-first-run-onboarding:v12", "1");
     }
     const nativeRuntime: Record<string, unknown> = {
       isNativePlatform: () => true,
@@ -149,7 +149,8 @@ test.describe("@mobile native shell contracts", () => {
     await resetAuth(page);
     await page.evaluate(() => {
       window.sessionStorage.setItem("ccr:e2e-show-first-run-onboarding", "1");
-      window.localStorage.removeItem("ccr:native-first-run-onboarding:v10");
+      window.localStorage.removeItem("ccr:native-first-run-onboarding:v12");
+      window.localStorage.removeItem("ccr:native-first-run-pending-path:v1");
     });
     await gotoOK(page, "/es");
 
@@ -165,7 +166,13 @@ test.describe("@mobile native shell contracts", () => {
     await clientRole.click();
     await onboarding.getByRole("button", { name: "Crear una cuenta" }).click();
     await expect(onboarding).toBeHidden();
-    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v10"))).toBe("1");
+    await expect(page).toHaveURL(/\/es\/registro\/cliente/);
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-pending-path:v1"))).toBe("/registro/cliente");
+
+    await gotoOK(page, "/es");
+    await expect(page).toHaveURL(/\/es\/registro\/cliente/);
+    await expect(onboarding).toBeHidden();
   });
 
   for (const contract of LOCALES) {

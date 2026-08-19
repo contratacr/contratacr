@@ -2223,10 +2223,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Search className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
-              <Link href="/ofertas" onPointerDown={() => prepareNativeNavigation("/ofertas")} onClick={(event) => navigateNativeMarketplace(event, "/ofertas")} className={nativeBottomNavClass("/ofertas")}>
+              <a href="/ofertas" onPointerDown={() => prepareNativeNavigation("/ofertas")} className={nativeBottomNavClass("/ofertas")}>
                 <OfferTagPercentIcon className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Deals" : "Ofertas"}</span>
-              </Link>
+              </a>
               <button
                 type="button"
                 onClick={() => {
@@ -2239,10 +2239,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Bot className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>
               </button>
-              <Link href="/empleos" onPointerDown={() => prepareNativeNavigation("/empleos")} onClick={(event) => navigateNativeMarketplace(event, "/empleos")} className={nativeBottomNavClass("/empleos")}>
+              <a href="/empleos" onPointerDown={() => prepareNativeNavigation("/empleos")} className={nativeBottomNavClass("/empleos")}>
                 <Briefcase className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Jobs" : "Empleos"}</span>
-              </Link>
+              </a>
               <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
                 <UserRound className="h-5 w-5" />
                 <span className="max-w-full truncate">Panel</span>
