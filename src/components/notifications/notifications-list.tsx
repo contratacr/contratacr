@@ -160,6 +160,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
+  const hasVisibleNotifications = visible.length > 0;
   const notificationTitle = (n: Notification) => localizedNotificationCopy(n, locale).title;
   const notificationMessage = (n: Notification) => localizedNotificationCopy(n, locale).message;
   const notificationTime = (n: Notification) => {
@@ -263,6 +264,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
               : locale === "en" ? "All caught up" : "Todo al día"}
           </p>
         </div>
+        {hasVisibleNotifications && (
         <div ref={globalMenuRef} className="relative shrink-0">
           <button
             type="button"
@@ -273,7 +275,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
               setItemMenuOpenId(null);
               setGlobalMenuOpen((open) => !open);
             }}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#162543] ring-1 ring-[#dbe7ef] transition-colors hover:bg-[#eef6fb]"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#f8fafc] text-[#162543] ring-1 ring-[#c9d8e4] transition-colors hover:bg-[#eef6fb]"
           >
             <MoreVertical className="h-5 w-5" strokeWidth={3} />
           </button>
@@ -308,6 +310,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             </div>
           )}
         </div>
+        )}
       </div>
 
       {confirmDelete && (
@@ -428,7 +431,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                         setGlobalMenuOpen(false);
                         setItemMenuOpenId((current) => (current === n.id ? null : n.id));
                       }}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#eef4f8] hover:text-[#162543]"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#526277] ring-1 ring-[#dbe7ef] transition-colors hover:bg-[#eef4f8] hover:text-[#162543]"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </button>
