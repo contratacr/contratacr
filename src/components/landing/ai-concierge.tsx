@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,7 +11,6 @@ import {
   MapPin,
   Minus,
   RotateCcw,
-  Send,
   Sparkles,
   Star,
 } from "lucide-react";
@@ -44,6 +43,7 @@ type ResultCard = {
 };
 
 type MessageAction = { label: string; href: string; kind?: string | null };
+type GuidedQuestion = { label: string; prompt: string };
 type ChatMessage = {
   role: "assistant" | "user";
   body: string;
@@ -96,8 +96,7 @@ const COPY = {
     closedLabel: "Abrir asistente de ContrataCR",
     minimize: "Minimizar asistente",
     title: "Asistente ContrataCR",
-    intro: "¡Hola! ¿En qué puedo ayudarle hoy?",
-    placeholder: "Pregunte o describa lo que necesita",
+    intro: "¡Hola! Escoja una pregunta para ayudarle con información actual de ContrataCR.",
     send: "Enviar mensaje",
     thinking: "Buscando la mejor respuesta...",
     viewProfile: "Ver perfil",
@@ -106,16 +105,24 @@ const COPY = {
     suggesting: "Enviando...",
     suggested: "Sugerencia enviada",
     error: "No pude responder en este momento. Inténtelo nuevamente.",
-    notice: "La IA puede equivocarse. Revise los detalles antes de continuar.",
+    notice: "Respuestas guiadas con datos de ContrataCR.",
     reset: "Nuevo chat",
     resetHint: "Limpia esta conversacion y empieza de cero.",
+    guidedTitle: "Preguntas rápidas",
+    guidedQuestions: [
+      { label: "Buscar plomería en San José", prompt: "Busco plomería en San José" },
+      { label: "Buscar electricista en Alajuela", prompt: "Busco electricidad en Alajuela" },
+      { label: "Crear una solicitud", prompt: "Quiero crear una solicitud" },
+      { label: "¿Cómo funciona?", prompt: "¿Cómo funciona ContrataCR?" },
+      { label: "Ofrecer mis servicios", prompt: "Quiero ofrecer mis servicios" },
+      { label: "Soporte", prompt: "Necesito soporte" },
+    ] satisfies GuidedQuestion[],
   },
   en: {
     closedLabel: "Open ContrataCR assistant",
     minimize: "Minimize assistant",
     title: "ContrataCR Assistant",
-    intro: "Hi! How can I help you today?",
-    placeholder: "Ask or describe what you need",
+    intro: "Hi! Choose a question and I will answer with current ContrataCR information.",
     send: "Send message",
     thinking: "Finding the best answer...",
     viewProfile: "View profile",
@@ -124,9 +131,18 @@ const COPY = {
     suggesting: "Sending...",
     suggested: "Suggestion sent",
     error: "I could not answer right now. Please try again.",
-    notice: "AI can be wrong. Review the details before continuing.",
+    notice: "Guided answers with ContrataCR data.",
     reset: "New chat",
     resetHint: "Clear this conversation and start fresh.",
+    guidedTitle: "Quick questions",
+    guidedQuestions: [
+      { label: "Find plumbing in San José", prompt: "Find plumbing in San José" },
+      { label: "Find an electrician in Alajuela", prompt: "Find electricity in Alajuela" },
+      { label: "Create a project", prompt: "I want to create a project" },
+      { label: "How does it work?", prompt: "How does ContrataCR work?" },
+      { label: "Offer my services", prompt: "I want to offer my services" },
+      { label: "Support", prompt: "I need support" },
+    ] satisfies GuidedQuestion[],
   },
 } as const;
 
@@ -224,14 +240,12 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const copy = COPY[lang];
   const [open, setOpen] = useState(embedded);
   const [sessionHydrated, setSessionHydrated] = useState(false);
-  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState("");
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
   const [compactViewport, setCompactViewport] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
   useContainedTouchScroll(scrollRef, open || embedded);
@@ -347,11 +361,10 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     return () => cancelAnimationFrame(frame);
   }, [messages, loading, open]);
 
-  async function ask(prefilled?: string) {
-    const text = (prefilled ?? input).trim();
+  async function ask(prefilled: string) {
+    const text = prefilled.trim();
     if (!text || loading) return;
     const previous = messages;
-    setInput("");
     setMessages([...previous, { role: "user", body: text, createdAt: new Date().toISOString() }]);
     setLoading(true);
     try {
@@ -390,7 +403,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
       setMessages((current) => [...current, { role: "assistant", body: copy.error, createdAt: new Date().toISOString() }]);
     } finally {
       setLoading(false);
-      requestAnimationFrame(() => inputRef.current?.focus());
     }
   }
 
@@ -412,11 +424,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     }
   }
 
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    void ask();
-  }
-
   function navigate(href: string) {
     const protectedDestination = href.includes("/publicar-proyecto") || href.includes("/dashboard/");
     if (!user && protectedDestination) storePendingIntent(href);
@@ -436,8 +443,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   function resetConversation() {
     setConversationId(crypto.randomUUID());
     setMessages([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
-    setInput("");
-    requestAnimationFrame(() => inputRef.current?.focus());
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
@@ -583,26 +588,22 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
 
         <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3">
           <p className="ccr-ai-footer-notice mb-2 text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:hidden">{copy.notice}</p>
-          <form onSubmit={submit} className="flex items-end gap-2 rounded-[24px] border-2 border-[#009FD9] bg-white p-2 pl-4 shadow-[0_10px_30px_-18px_rgba(0,159,217,0.48)] focus-within:ring-4 focus-within:ring-[#009FD9]/10">
-            <input
-              type="text"
-              ref={inputRef}
-              value={input}
-              onChange={(event) => setInput(event.target.value.slice(0, 1200))}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  void ask();
-                }
-              }}
-              placeholder={copy.placeholder}
-              aria-label={copy.placeholder}
-              className="h-11 min-w-0 flex-1 bg-transparent py-2.5 text-sm leading-6 text-[#173052] outline-none placeholder:text-[#7f91aa] sm:text-base"
-            />
-            <button type="submit" disabled={!input.trim() || loading} aria-label={copy.send} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_8px_18px_-8px_rgba(0,159,217,0.85)] transition hover:scale-[1.04] hover:bg-[#0089bb] active:scale-95 disabled:bg-[#d7e3e9] disabled:shadow-none">
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-            </button>
-          </form>
+          <div className="rounded-[22px] border border-[#cfe1ee] bg-[#f8fcff] p-2.5 shadow-[0_10px_30px_-22px_rgba(0,91,145,0.42)]">
+            <p className="mb-2 px-1 text-[11px] font-extrabold uppercase tracking-wide text-[#607693]">{copy.guidedTitle}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {copy.guidedQuestions.map((question) => (
+                <button
+                  key={question.prompt}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => void ask(question.prompt)}
+                  className="min-h-11 rounded-2xl border border-[#d8e8f2] bg-white px-3 py-2 text-left text-[12px] font-extrabold leading-snug text-[#173052] shadow-sm transition hover:border-[#009FD9] hover:bg-[#eef9fd] active:scale-[0.99] disabled:opacity-60"
+                >
+                  {question.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <p className="ccr-ai-footer-notice mt-3 hidden text-center text-[11px] font-medium leading-tight text-[#7d8fa8] sm:block">{copy.notice}</p>
         </footer>
       </div>

@@ -657,6 +657,61 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     };
   }
 
+  if (includesAny(normalized, ["soporte", "ayuda con mi cuenta", "problema con mi cuenta", "support", "account help"])) {
+    return {
+      action: "support",
+      confidence: 1,
+      answer: locale === "en"
+        ? "You can open Support to create a ticket or continue an existing conversation with the ContrataCR team."
+        : "Puede abrir Soporte para crear un ticket o continuar una conversación existente con el equipo de ContrataCR.",
+      ctaLabel: locale === "en" ? "Open support" : "Ir a soporte",
+    };
+  }
+
+  if (includesAny(normalized, ["ofrecer mis servicios", "soy profesional", "registrarme como profesional", "offer my services", "professional account"])) {
+    return {
+      action: "register_professional",
+      confidence: 1,
+      answer: locale === "en"
+        ? "Create a professional profile, add your services, work areas, prices and availability, then keep your profile updated so clients can find you."
+        : "Cree un perfil profesional, agregue sus servicios, zonas de trabajo, precios y disponibilidad, y mantenga el perfil actualizado para que los clientes le encuentren.",
+      ctaLabel: locale === "en" ? "Offer my services" : "Ofrecer mis servicios",
+    };
+  }
+
+  if (includesAny(normalized, ["crear cuenta cliente", "registrarme como cliente", "buscar servicios con cuenta", "client account", "create client account"])) {
+    return {
+      action: "register_client",
+      confidence: 1,
+      answer: locale === "en"
+        ? "Create a client account to save professionals, create projects, receive proposals and manage your requests from your panel."
+        : "Cree una cuenta de cliente para guardar profesionales, crear proyectos, recibir propuestas y manejar solicitudes desde su panel.",
+      ctaLabel: locale === "en" ? "Create client account" : "Crear cuenta de cliente",
+    };
+  }
+
+  if (includesAny(normalized, ["iniciar sesion", "loguearme", "entrar a mi cuenta", "sign in", "log in", "login"])) {
+    return {
+      action: "login",
+      confidence: 1,
+      answer: locale === "en"
+        ? "Open sign in to access your panel, messages, saved professionals, requests and projects."
+        : "Abra inicio de sesión para entrar a su panel, mensajes, favoritos, solicitudes y proyectos.",
+      ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
+    };
+  }
+
+  if (includesAny(normalized, ["ver servicios", "catalogo", "categorias", "browse services", "service catalog", "categories"])) {
+    return {
+      action: "browse_services",
+      confidence: 1,
+      answer: locale === "en"
+        ? "The service catalog shows the approved categories available in ContrataCR. From there you can open search with the service already selected."
+        : "El catálogo muestra las categorías aprobadas en ContrataCR. Desde ahí puede abrir la búsqueda con el servicio ya seleccionado.",
+      ctaLabel: locale === "en" ? "Browse services" : "Ver servicios",
+    };
+  }
+
   if (includesAny(normalized, ["gratis", "cuesta", "precio de la app", "comision", "free", "commission"])) {
     return {
       action: "answer",
