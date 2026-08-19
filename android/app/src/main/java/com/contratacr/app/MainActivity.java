@@ -16,6 +16,9 @@ public class MainActivity extends BridgeActivity {
         WebView webView = getBridge().getWebView();
         webView.getSettings().setTextZoom(100);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        webView.setBackgroundColor(Color.WHITE);
+        // Match the native splash if Android exposes the WebView before its
+        // first composited frame. The splash plugin remains visible until the
+        // first-run screen (or the requested route) is ready.
+        webView.setBackgroundColor(Color.rgb(244, 247, 250));
     }
 }

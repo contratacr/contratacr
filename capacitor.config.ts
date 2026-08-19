@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "ContrataCR",
   webDir: "mobile-web",
   server: {
-    url: "https://test.contratacr.com",
+    url: "https://test.contratacr.com/es",
     allowNavigation: [
       "contratacr.com",
       "*.contratacr.com",
@@ -25,6 +25,12 @@ const config: CapacitorConfig = {
     contentInset: "never",
   },
   plugins: {
+    SplashScreen: {
+      launchAutoHide: false,
+      launchFadeOutDuration: 0,
+      backgroundColor: "#F4F7FA",
+      showSpinner: false,
+    },
     PushNotifications: {
       // Show incoming pushes while the app is open. `banner` and `list`
       // replace the deprecated iOS `alert` option and map to alert behavior

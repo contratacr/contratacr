@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 
 function isSearchPath(pathname: string) {
   return /(^|\/)buscar(\/|$)/.test(pathname);
@@ -16,7 +17,30 @@ export function MobileAppBridge() {
     document.documentElement.classList.add("ccr-native-app");
     document.body.classList.add("ccr-native-app");
 
+    if (window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1") {
+      document.documentElement.classList.add("ccr-native-first-run-pending");
+    }
+
+    let cancelled = false;
+    let firstFrame = 0;
+    let secondFrame = 0;
+
+    // Keep the native splash over the WebView until the real first screen has
+    // painted. This prevents the white frame between Android's splash and the
+    // first-run role chooser.
+    firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        if (cancelled) return;
+        void import("@capacitor/splash-screen")
+          .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
+          .catch(() => {});
+      });
+    });
+
     return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
       document.documentElement.classList.remove("ccr-native-app");
       document.body.classList.remove("ccr-native-app");
     };
