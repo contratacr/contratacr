@@ -39,7 +39,7 @@
   --color-muted-foreground: #6b7280;
   --color-foreground: #111827;
   --ccr-responsive-footer-reserve: 0px;
-  --ccr-native-bottom-nav-height: 72px;
+  --ccr-native-bottom-nav-height: calc(64px + max(env(safe-area-inset-bottom), 0.2rem));
   /* ResizeObserver reports the complete native nav height, safe-area included. */
   --ccr-native-bottom-nav-total: var(--ccr-native-bottom-nav-height);
 
@@ -62,6 +62,18 @@
   min-height: 100svh;
   background: #f4f7fa;
   overscroll-behavior-y: contain;
+}
+
+.ccr-native-app .ccr-page-route-loading {
+  background: #f4f7fa !important;
+}
+
+.ccr-native-app .ccr-page-route-loading .ccr-brand-loading-mark {
+  display: none !important;
+}
+
+html.ccr-native-app.ccr-native-first-run-pending .ccr-page-route-loading {
+  display: none !important;
 }
 
 html.ccr-native-app.ccr-native-first-run-pending,
@@ -116,13 +128,13 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 .ccr-native-app .ccr-notification-bell-menu {
   position: fixed !important;
   top: calc(var(--ccr-native-header-height, 64px) + 0.35rem) !important;
-  right: max(1rem, calc(env(safe-area-inset-right) + 0.75rem)) !important;
+  right: max(1.25rem, calc(env(safe-area-inset-right) + 1rem)) !important;
   left: auto !important;
-  width: min(calc(100vw - 5.75rem), 17.5rem) !important;
-  max-height: min(calc(100svh - var(--ccr-native-header-height, 64px) - 1.75rem), 27rem);
+  width: min(calc(100vw - 6.5rem), 16.25rem) !important;
+  max-height: min(calc(100svh - var(--ccr-native-header-height, 64px) - 1.75rem), 25.5rem);
   margin: 0 !important;
   transform: none !important;
-  border-radius: 1.15rem !important;
+  border-radius: 1rem !important;
 }
 
 .ccr-native-app .ccr-notification-bell-menu > div:nth-child(2) {
@@ -139,7 +151,7 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 
 .ccr-native-app {
   --ccr-native-header-height: 64px;
-  --ccr-native-bottom-nav-height: 72px;
+  --ccr-native-bottom-nav-height: calc(64px + max(env(safe-area-inset-bottom), 0.2rem));
   --ccr-native-bottom-nav-total: var(--ccr-native-bottom-nav-height);
   --ccr-native-panel-end-gap: 0px;
   --ccr-native-content-end-gap: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
@@ -199,14 +211,14 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     position: fixed;
     inset-inline: 0;
     top: var(--ccr-native-header-height);
-    bottom: calc(var(--ccr-native-bottom-nav-total) - 1px);
+    bottom: var(--ccr-native-bottom-nav-total);
     height: auto;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     background: #fff;
     padding-bottom: var(--ccr-native-panel-end-gap) !important;
-    scroll-padding-bottom: var(--ccr-native-content-end-gap);
+    scroll-padding-bottom: 0;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -382,10 +394,11 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   isolation: isolate;
   background: #fff !important;
   border-top: 1px solid #e2e8f0 !important;
-  margin-top: -1px !important;
+  margin-top: 0 !important;
   padding-top: 0 !important;
   padding-bottom: max(env(safe-area-inset-bottom), 0.2rem) !important;
   box-shadow: none !important;
+  overflow: hidden;
 }
 
 .ccr-native-app .ccr-native-bottom-nav::before {

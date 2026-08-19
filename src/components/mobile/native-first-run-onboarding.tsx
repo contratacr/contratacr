@@ -106,6 +106,8 @@ export function NativeFirstRunOnboarding() {
           alt=""
           aria-hidden="true"
           onLoad={() => setLoadedRoles((prev) => (prev[role] ? prev : { ...prev, [role]: true }))}
+          onError={() => setLoadedRoles((prev) => (prev[role] ? prev : { ...prev, [role]: true }))}
+          fetchPriority={selectedRole === role ? "high" : "auto"}
           className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-500 motion-reduce:transition-none ${
             selectedRole === role ? "opacity-100" : "opacity-0"
           }`}

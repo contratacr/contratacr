@@ -27,7 +27,6 @@ export function MobileAppBridge() {
     let firstFrame = 0;
     let secondFrame = 0;
     let observer: MutationObserver | null = null;
-    let readyTimeout = 0;
 
     const hideSplash = () => {
       if (cancelled) return;
@@ -52,7 +51,6 @@ export function MobileAppBridge() {
         observer = new MutationObserver(() => {
           if (!firstRunScreenReady()) return;
           observer?.disconnect();
-          if (readyTimeout) window.clearTimeout(readyTimeout);
           hideAfterPaint();
         });
         observer.observe(document.documentElement, {
@@ -61,10 +59,6 @@ export function MobileAppBridge() {
           childList: true,
           subtree: true,
         });
-        readyTimeout = window.setTimeout(() => {
-          observer?.disconnect();
-          hideAfterPaint();
-        }, 2800);
       }
     } else {
       hideAfterPaint();
@@ -73,7 +67,6 @@ export function MobileAppBridge() {
     return () => {
       cancelled = true;
       observer?.disconnect();
-      if (readyTimeout) window.clearTimeout(readyTimeout);
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
       document.documentElement.classList.remove("ccr-native-app");
