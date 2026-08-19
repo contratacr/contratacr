@@ -128,13 +128,13 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 .ccr-native-app .ccr-notification-bell-menu {
   position: fixed !important;
   top: calc(var(--ccr-native-header-height, 64px) + 0.35rem) !important;
-  right: max(1.25rem, calc(env(safe-area-inset-right) + 1rem)) !important;
+  right: max(0.85rem, calc(env(safe-area-inset-right) + 0.85rem)) !important;
   left: auto !important;
-  width: min(calc(100vw - 6.5rem), 16.25rem) !important;
-  max-height: min(calc(100svh - var(--ccr-native-header-height, 64px) - 1.75rem), 25.5rem);
+  width: min(calc(100vw - 1.7rem), 22rem) !important;
+  max-height: min(calc(100svh - var(--ccr-native-header-height, 64px) - 1.75rem), 27rem);
   margin: 0 !important;
   transform: none !important;
-  border-radius: 1rem !important;
+  border-radius: 1.15rem !important;
 }
 
 .ccr-native-app .ccr-notification-bell-menu > div:nth-child(2) {
