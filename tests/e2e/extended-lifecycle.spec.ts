@@ -226,9 +226,18 @@ test.describe("@seeded extended lifecycle", () => {
       await gotoOK(page, "/es/dashboard/profesional?tab=services&mode=offer");
       const serviceCard = page.locator("section").filter({ has: page.getByRole("button", { name: /Editar informaci/i }) }).first();
       await expect(serviceCard).toHaveCount(1);
+      await page.evaluate(() => {
+        const spacer = document.createElement("div");
+        spacer.dataset.testid = "service-editor-scroll-regression-spacer";
+        spacer.style.height = "720px";
+        document.body.prepend(spacer);
+      });
+      await serviceCard.scrollIntoViewIfNeeded();
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
       await serviceCard.getByRole("button", { name: /Editar informaci/i }).click();
       const dialog = page.getByRole("dialog").filter({ has: page.locator("textarea") });
       await expect(dialog).toBeVisible();
+      await expect.poll(() => page.evaluate(() => document.body.style.position)).toBe("fixed");
       await dialog.locator("textarea").fill(`${marker} service`);
 
       const month = dialog.getByRole("button", { name: /Enero|January/i }).filter({ visible: true });
@@ -242,11 +251,17 @@ test.describe("@seeded extended lifecycle", () => {
       const monthPopup = page.locator("[data-selectmenu-popup]");
       await expect(monthPopup).toHaveCount(1);
       const popupBox = await monthPopup.boundingBox();
+      const monthBox = await month.boundingBox();
       expect(popupBox, "The month popup needs visible geometry").not.toBeNull();
+      expect(monthBox, "The month trigger needs visible geometry").not.toBeNull();
       expect(popupBox!.x).toBeGreaterThanOrEqual(0);
       expect(popupBox!.x + popupBox!.width).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
       expect(popupBox!.y).toBeGreaterThanOrEqual(0);
       expect(popupBox!.y + popupBox!.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1);
+      expect(
+        popupBox!.y + popupBox!.height <= monthBox!.y + 1 || popupBox!.y >= monthBox!.y + monthBox!.height - 1,
+        "The month popup should stay attached without covering its trigger.",
+      ).toBe(true);
       await page.getByRole("option", { name: /Febrero|February/i }).click();
 
       await dialog.locator('input[type="file"]').setInputFiles({

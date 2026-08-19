@@ -8,8 +8,11 @@ export type AnchoredPos = { left: number; top: number; width: number; maxH: numb
 
 // Position an autocomplete dropdown so it stays ATTACHED to its field and NEVER
 // covers it. It's portaled to <body> (so no ancestor `overflow:hidden`/`transform`
-// can clip it) and positioned **`absolute` in DOCUMENT coordinates** (rect +
-// scrollX/scrollY). Why absolute-in-document, not `fixed`: a `fixed` panel is
+// can clip it) and positioned **`absolute` in the portal's coordinates**. Usually
+// those are document coordinates (rect + scrollX/scrollY), but modals lock the
+// page by making <body> fixed. In that state <body> becomes the containing block,
+// so its viewport offset must be used instead of window.scrollY. Why absolute,
+// not `fixed`: a `fixed` panel is
 // pinned to the VIEWPORT, so on iOS — where focusing an input opens the keyboard
 // and shifts the visual viewport — the panel floats up and OVER the field while
 // the input scrolls down with the page (it "detaches"). In document coords the
@@ -29,23 +32,32 @@ export function useAnchoredPosition(
     if (!el || typeof window === "undefined") return;
     const r = el.getBoundingClientRect();
     if (r.width === 0 && r.height === 0) { setPos(null); return; } // field hidden (display:none)
-    const sx = window.scrollX;
-    const sy = window.scrollY;
+    const body = document.body;
+    const bodyIsContainingBlock = window.getComputedStyle(body).position !== "static";
+    const bodyRect = bodyIsContainingBlock ? body.getBoundingClientRect() : null;
+    const portalOffsetX = bodyRect ? -bodyRect.left : window.scrollX;
+    const portalOffsetY = bodyRect ? -bodyRect.top : window.scrollY;
     const vv = window.visualViewport;
+    const viewLeft = vv?.offsetLeft ?? 0;
+    const viewWidth = vv?.width ?? window.innerWidth;
     const viewBottom = (vv?.offsetTop ?? 0) + (vv?.height ?? window.innerHeight);
     const GAP = 6;
     const PAD = 10;
     const width = r.width;
-    let left = r.left + sx;
-    if (left + width > sx + window.innerWidth - 8) left = Math.max(8 + sx, sx + window.innerWidth - 8 - width);
+    let viewportLeft = r.left;
+    if (viewportLeft + width > viewLeft + viewWidth - 8) {
+      viewportLeft = Math.max(viewLeft + 8, viewLeft + viewWidth - 8 - width);
+    }
+    const left = viewportLeft + portalOffsetX;
     const viewTop = vv?.offsetTop ?? 0;
     const spaceBelow = viewBottom - r.bottom - PAD;
     const spaceAbove = r.top - viewTop - PAD;
     const openAbove = spaceBelow < Math.min(220, maxHeight) && spaceAbove > spaceBelow;
     const maxH = Math.max(120, Math.min(maxHeight, openAbove ? spaceAbove : spaceBelow));
-    const top = openAbove
-      ? Math.max(sy + viewTop + PAD, r.top + sy - GAP - maxH)
-      : r.bottom + sy + GAP;
+    const viewportTop = openAbove
+      ? Math.max(viewTop + PAD, r.top - GAP - maxH)
+      : r.bottom + GAP;
+    const top = viewportTop + portalOffsetY;
     setPos((prev) => {
       const next = { left, top, width, maxH };
       if (
@@ -62,7 +74,10 @@ export function useAnchoredPosition(
   }, [anchorRef, maxHeight]);
 
   useEffect(() => {
-    if (!open) { setPos(null); return; }
+    if (!open) {
+      const frame = window.requestAnimationFrame(() => setPos(null));
+      return () => window.cancelAnimationFrame(frame);
+    }
     reposition();
     const onMove = () => reposition();
     window.addEventListener("scroll", onMove, true); // capture → catches scrolling parents/modals
