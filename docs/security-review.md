@@ -1,6 +1,6 @@
 # Security review
 
-Last reviewed: 2026-07-01
+Last reviewed: 2026-08-19
 
 This is the launch-readiness security checklist for ContrataCR.
 
@@ -26,7 +26,7 @@ This is the launch-readiness security checklist for ContrataCR.
   - portfolio likes
   - image uploads
 - Facebook login is hidden to avoid Meta production/review friction before launch.
-- Supabase migrations and padron refreshes are deployable from GitHub Actions with environment scoping.
+- Supabase migrations and Cloudflare D1 padrón refreshes are deployable from GitHub Actions with environment scoping.
 - Encrypted daily Supabase logical backups are automated from GitHub Actions. Backup artifacts are encrypted before upload and exclude the rebuildable TSE padron data.
 - High/critical dependency audit, build, template validation, and secret smoke checks are automated in GitHub Actions.
 
@@ -34,7 +34,7 @@ This is the launch-readiness security checklist for ContrataCR.
 
 1. Rotate any secrets that were pasted into chats, screenshots, local terminals, or temporary docs while setting up test/prod. A service-role key and a Cloudinary secret were found in tracked project context and have been redacted from the repo; still rotate them before public launch.
 2. Add required reviewers to the GitHub `production` Environment.
-3. Confirm Vercel production variables are scoped only to Production, and test variables only to Preview/Test.
+3. Confirm Cloudflare Worker secrets and GitHub Environment secrets are scoped to the matching production/test Worker. Keep any temporary Vercel rollback project equally isolated while it exists.
 4. Confirm Supabase redirect URLs:
    - production app URL
    - production `/auth/callback`
@@ -42,14 +42,14 @@ This is the launch-readiness security checklist for ContrataCR.
    - test `/auth/callback`
 5. Confirm Google Maps API restrictions include only production/test/local URLs actually used.
 6. Confirm Cloudinary unsigned uploads are not enabled. Current server upload routes should keep using signed/server credentials.
-7. Confirm the test and production Supabase projects both have the padron loaded, and that only server-side service-role code can call `padron_lookup`.
+7. Confirm `/api/cedula` reads the shared D1 padrón and does not silently depend on the removed Supabase tables.
 
 ## Recommended next hardening
 
-- Move rate limiting from in-memory to a shared store before paid traffic or heavy launch campaigns. Upstash Redis is a good fit on Vercel.
+- Move rate limiting from in-memory to a shared Cloudflare-compatible store before paid traffic or heavy launch campaigns.
 - Add CAPTCHA or invisible bot protection to password reset, support/contact, and public suggestion endpoints if spam starts.
 - Add a stricter full CSP after launch testing. Current CSP intentionally only locks framing to avoid breaking maps, Cloudinary, Supabase, and inline email-safe UI.
-- Enable Cloudinary automatic backup or define a periodic media export plan once production portfolios/support images become business-critical. Database backups store Cloudinary URLs, not the original media binaries.
+- Define and rehearse an R2/Cloudinary media inventory and restore plan once production portfolios/support images become business-critical. Database backups store URLs and metadata, not the original media binaries.
 - Review Supabase RLS after every migration that adds a table, especially admin/support/payment tables.
 - Keep production Supabase service-role key out of local `.env.local` unless actively needed.
 - Clean existing full-project ESLint debt and then make `npm run lint` blocking in CI. It currently reports pre-existing React/Next lint errors unrelated to the release automation work.

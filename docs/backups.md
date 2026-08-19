@@ -12,23 +12,18 @@ It includes the database content reachable through the Postgres connection, incl
 - Supabase auth/storage metadata stored in Postgres, such as auth users and storage rows.
 - Schema objects needed by the dump, without owner or ACL metadata.
 
-It intentionally excludes data from:
-
-- `public.padron`
-- `public.padron_staging`
-
-The padron is large operational data and is reloaded from TSE through the **Padron refresh** workflow.
+The national padrón is not part of Supabase anymore. It is rebuildable operational data stored in Cloudflare D1 and refreshed from TSE through the **Cloudflare D1 padron refresh** workflow.
 
 ## What is not backed up
 
-- Cloudinary original image/video binaries. The database backup stores URLs and metadata, but not the media files themselves.
-- Vercel project settings and environment variables.
+- Cloudinary or R2 original binaries. The database backup stores URLs and metadata, but not the media files themselves.
+- Cloudflare Worker/D1/R2 settings, objects and environment variables.
 - Supabase dashboard/provider settings outside Postgres.
 - External email provider account settings.
 
 Email templates are stored in `supabase/email-templates/` and code/migrations are stored in Git.
 
-For Cloudinary, enable Cloudinary automatic backup when possible. Cloudinary documents automatic backup as the way to recover deleted original assets and previous versions. Until then, avoid deleting production folders manually unless you are sure the asset is unused.
+Maintain a provider inventory for both R2 and Cloudinary. Avoid deleting production objects or folders manually unless ownership records prove the asset is unused. Database recovery alone does not restore media binaries.
 
 ## GitHub secrets
 
@@ -117,7 +112,7 @@ pg_restore \
   backup.dump
 ```
 
-6. Load the padron separately with **Padron refresh**.
+6. Verify or rebuild the shared D1 padrón separately with **Cloudflare D1 padron refresh**.
 7. Point a test deployment at the restored Supabase project and run regression tests before switching production traffic.
 
 ## Monthly check

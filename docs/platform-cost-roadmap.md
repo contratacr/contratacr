@@ -1,6 +1,31 @@
-# Platform cost and regression roadmap
+# Platform migration status and cost roadmap
 
-## Decision
+Last reviewed: 2026-08-19
+
+## Current status
+
+The architecture proposal is not one atomic migration. Hosting and the national padrón have moved, while the application database, Auth and Realtime intentionally remain on Supabase.
+
+| Function | Current source of truth | Status | Next decision |
+|---|---|---|---|
+| Hosting, CDN and API | Cloudflare Workers + OpenNext | Implemented; `main` and `test` deploy through GitHub Actions | Keep the documented rollback path until it is retired deliberately |
+| Application PostgreSQL | Supabase Postgres | Intentionally retained | Reconsider Neon only after the exit criteria below |
+| Authentication | Supabase Auth | Intentionally retained | Do not split Auth from RLS without an end-to-end rehearsal |
+| National padrón | Cloudflare D1 | Implemented; Supabase copies removed by migration 173 | Verify a known sample after every D1 refresh |
+| Files and images | R2 when configured, Cloudinary fallback; legacy provider metadata retained | Partial/hybrid | Finish inventory and recovery testing before removing Cloudinary |
+| Realtime/chat | Supabase Realtime | Not migrated | Durable Objects requires a separate protocol, persistence and reconnect design |
+| Queues and jobs | Postgres outbox/RPC plus GitHub workflows | Not migrated to Cloudflare Queues | Migrate only jobs that need independent retry and dead-letter handling |
+| Mobile push | Firebase/FCM | Android implemented; iOS blocked on external Firebase/APNs setup | Complete `docs/mobile-native-push.md` on `mobile` |
+| Email | Brevo | Consolidated in application code | Keep provider delivery in hosted smoke checks |
+| Analytics and logs | Meta/application events plus Worker observability | Partial | Confirm account-level Web Analytics and define retention/sampling from real volume |
+| Maps | Google Maps | Retained | Keep key restrictions current |
+| Translation | ES/EN catalogs built with the app | Implemented | Do not add runtime translation calls for catalog copy |
+| AI assistant | Local documented answers first, bounded Workers AI fallback | Implemented; OpenAI is not the default fallback | Keep rate, history and redaction limits covered by tests |
+| Regression | GitHub Actions, local `next start`, local Supabase gate and bounded hosted smoke | Implemented in stages | Move remaining hosted seeded dependency to synthetic local fixtures |
+
+The dollar amounts in the earlier architecture image were estimates, not verified invoices. Review actual provider usage before changing a service.
+
+## Database and Auth decision
 
 Keep Supabase Pro as the production backend for now. Do not migrate the live
 database to Neon yet.
@@ -30,7 +55,7 @@ not justify the migration and operational risk.
 
 ## Target low-cost architecture
 
-- Production: Supabase Pro for the real database, Auth, RLS, and padrón.
+- Production: Supabase for the application database, Auth and RLS; Cloudflare D1 for the padrón.
 - Development: local Next.js and local Supabase; no hosted deployment.
 - Pull-request and change gates: GitHub Actions with `next start`, a rebuilt
   local Supabase schema, and deterministic synthetic fixtures.
@@ -73,10 +98,12 @@ not justify the migration and operational risk.
 5. Remove duplicate pre-runs once the full suite is ordered and reports failures
    early without executing the same tests twice.
 
+For the machine handoff and mobile continuation point, see `docs/mac-migration-handoff.md`.
+
 ## Cost guardrails
 
 - Do not deploy every development commit to production or hosted test.
-- Do not run the exhaustive suite on Vercel URLs.
+- Do not run the exhaustive suite against hosted deployment URLs.
 - Keep one release-candidate deployment and cancel superseded builds before
   they start when the provider supports it.
 - Keep test fixtures synthetic and disposable; never mirror private production

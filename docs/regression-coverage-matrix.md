@@ -31,7 +31,7 @@ Legend:
 | Admin | Signed-out boundary, private API boundaries and authenticated routes for overview, verification, users, requests, publications, reports, insurers, services, accounts, subscriptions, support, analytics and activity | UI + API |
 | Localization | Public routes in Spanish/English, English panels, notification labels and destinations | UI + Contract |
 | Responsive | Entire suite repeated at 390 x 844; explicit overflow/modal/card checks, including separate service/price rows and price-unit/tax detail | UI |
-| Security baseline | Test-only Supabase guard, guest write rejection, private env check, TypeScript contracts, Vercel protection preflight | Contract + CI |
+| Security baseline | Test-only Supabase guard, guest write rejection, private env check, TypeScript contracts, hosted deployment preflight | Contract + CI |
 
 ## Permanent contracts for reported bugs
 
