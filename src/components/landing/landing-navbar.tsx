@@ -1064,10 +1064,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     (href: string) => {
       if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
       setNativePendingHref(href);
-      router.prefetch(href);
+      const isNativeMarketplaceList = nativeApp && (href === "/ofertas" || href === "/empleos");
+      if (!isNativeMarketplaceList) {
+        router.prefetch(href);
+      }
       nativePendingTimer.current = window.setTimeout(() => setNativePendingHref(null), 8000);
     },
-    [router],
+    [nativeApp, router],
   );
 
   useEffect(() => {

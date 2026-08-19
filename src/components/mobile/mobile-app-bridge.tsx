@@ -9,6 +9,12 @@ function isSearchPath(pathname: string) {
   return /(^|\/)buscar(\/|$)/.test(pathname);
 }
 
+function isNativeMarketplaceListPath(pathname: string) {
+  const normalized = pathname.replace(/\/+$/, "") || "/";
+  const withoutLocale = normalized.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
+  return withoutLocale === "/ofertas" || withoutLocale === "/empleos";
+}
+
 export function MobileAppBridge() {
   const pathname = usePathname();
 
@@ -88,6 +94,50 @@ export function MobileAppBridge() {
       document.body.classList.remove("ccr-native-web-parity");
     };
   }, [pathname]);
+
+  useEffect(() => {
+    if (!isNativeAppRuntime()) return;
+
+    const onNativeMarketplaceClick = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const anchor = target.closest("a[href]");
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+
+      const rawHref = anchor.getAttribute("href");
+      if (!rawHref || rawHref.startsWith("#") || rawHref.startsWith("mailto:") || rawHref.startsWith("tel:")) return;
+
+      let url: URL;
+      try {
+        url = new URL(rawHref, window.location.href);
+      } catch {
+        return;
+      }
+
+      if (url.origin !== window.location.origin) return;
+      if (!isNativeMarketplaceListPath(url.pathname)) return;
+      if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      window.location.assign(url.toString());
+    };
+
+    document.addEventListener("click", onNativeMarketplaceClick, true);
+    return () => document.removeEventListener("click", onNativeMarketplaceClick, true);
+  }, []);
 
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
