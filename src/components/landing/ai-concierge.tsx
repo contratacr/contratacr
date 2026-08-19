@@ -6,6 +6,7 @@ import {
   ArrowRight,
   BadgeCheck,
   CheckCheck,
+  CheckCircle2,
   ClipboardList,
   Loader2,
   MapPin,
@@ -200,7 +201,13 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-1.5">
             <p className="min-w-0 flex-1 text-sm font-extrabold leading-snug text-[#162543]">{result.name}</p>
-            {result.verified && <span className="inline-flex w-fit shrink-0 items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">{copy.verified}</span>}
+            {result.verified && (
+              <CheckCircle2
+                aria-label={copy.verified}
+                className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]"
+                strokeWidth={2.8}
+              />
+            )}
           </div>
           <p className="mt-0.5 text-xs font-semibold text-[#53657a]">{result.service}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[#708095]">
@@ -576,18 +583,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             </div>
           ))}
 
-          {loading && (
-            <div className="flex gap-3">
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm"><Image src="/brand/ai-assistant-robot.png" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>
-              <div className="inline-flex items-center gap-2 rounded-[22px] rounded-bl-md border border-[#dbe7f0] bg-white px-4 py-3 text-sm font-semibold text-[#607693] shadow-sm">
-                <Loader2 className="h-4 w-4 animate-spin text-[#0b7fe8]" />{copy.thinking}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3">
-          <p className="ccr-ai-footer-notice mb-2 text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:hidden">{copy.notice}</p>
           <div className="rounded-[22px] border border-[#cfe1ee] bg-[#f8fcff] p-2.5 shadow-[0_10px_30px_-22px_rgba(0,91,145,0.42)]">
             <p className="mb-2 px-1 text-[11px] font-extrabold uppercase tracking-wide text-[#607693]">{copy.guidedTitle}</p>
             <div className="grid grid-cols-2 gap-2">
@@ -604,7 +599,19 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               ))}
             </div>
           </div>
-          <p className="ccr-ai-footer-notice mt-3 hidden text-center text-[11px] font-medium leading-tight text-[#7d8fa8] sm:block">{copy.notice}</p>
+
+          {loading && (
+            <div className="flex gap-3">
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm"><Image src="/brand/ai-assistant-robot.png" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>
+              <div className="inline-flex items-center gap-2 rounded-[22px] rounded-bl-md border border-[#dbe7f0] bg-white px-4 py-3 text-sm font-semibold text-[#607693] shadow-sm">
+                <Loader2 className="h-4 w-4 animate-spin text-[#0b7fe8]" />{copy.thinking}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3">
+          <p className="ccr-ai-footer-notice text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:text-[11px]">{copy.notice}</p>
         </footer>
       </div>
     </section>

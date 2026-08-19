@@ -2223,7 +2223,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Search className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
-              <a href="/ofertas" onPointerDown={() => prepareNativeNavigation("/ofertas")} className={nativeBottomNavClass("/ofertas")}>
+              <a href="/ofertas" onClick={(event) => navigateNativeMarketplace(event, "/ofertas")} onPointerDown={() => prepareNativeNavigation("/ofertas")} className={nativeBottomNavClass("/ofertas")}>
                 <OfferTagPercentIcon className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Deals" : "Ofertas"}</span>
               </a>
@@ -2239,7 +2239,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Bot className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>
               </button>
-              <a href="/empleos" onPointerDown={() => prepareNativeNavigation("/empleos")} className={nativeBottomNavClass("/empleos")}>
+              <a href="/empleos" onClick={(event) => navigateNativeMarketplace(event, "/empleos")} onPointerDown={() => prepareNativeNavigation("/empleos")} className={nativeBottomNavClass("/empleos")}>
                 <Briefcase className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Jobs" : "Empleos"}</span>
               </a>

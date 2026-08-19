@@ -23,6 +23,31 @@ function getNativeLocalizedPath(pathname: string) {
   return `/${currentLocale}${normalized}`;
 }
 
+function mountNativeFirstRunPrepaint() {
+  if (document.getElementById("ccr-native-first-run-prepaint")) return;
+  const prepaint = document.createElement("div");
+  prepaint.id = "ccr-native-first-run-prepaint";
+  prepaint.setAttribute("aria-hidden", "true");
+  prepaint.innerHTML = `
+    <div class="ccr-native-first-run-prepaint-bg"></div>
+    <div class="ccr-native-first-run-prepaint-shade"></div>
+    <div class="ccr-native-first-run-prepaint-content">
+      <div class="ccr-native-first-run-prepaint-logo">
+        <img src="/logo-mark-dark.png" alt="" />
+        <span>Contrata<span>CR</span></span>
+      </div>
+      <p>Elige como quieres comenzar</p>
+      <div class="ccr-native-first-run-prepaint-actions">
+        <span>Buscar servicios</span>
+        <span>Ofrecer servicios</span>
+      </div>
+      <div class="ccr-native-first-run-prepaint-cta">Crear una cuenta</div>
+      <div class="ccr-native-first-run-prepaint-login">Ya tienes una cuenta? <span>Inicia sesion</span></div>
+    </div>
+  `;
+  document.body.appendChild(prepaint);
+}
+
 export function MobileAppBridge() {
   const pathname = usePathname();
 
@@ -35,6 +60,7 @@ export function MobileAppBridge() {
 
     if (firstRunPending) {
       document.documentElement.classList.add("ccr-native-first-run-pending");
+      mountNativeFirstRunPrepaint();
     }
 
     let cancelled = false;

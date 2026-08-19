@@ -44,9 +44,18 @@ function readPendingPath(): NativeOnboardingPendingPath | null {
     : null;
 }
 
+function isPendingJourneyPath(path: string): path is NativeOnboardingPendingPath {
+  return path === "/login" || path === "/registro/cliente" || path === "/registro/profesional";
+}
+
+function clearNativePrepaint() {
+  document.getElementById("ccr-native-first-run-prepaint")?.remove();
+}
+
 function hideNativeSplashAfterPaint() {
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
+      clearNativePrepaint();
       void import("@capacitor/splash-screen")
         .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
         .catch(() => {});
@@ -82,10 +91,18 @@ export function NativeFirstRunOnboarding() {
 
       if (authLoading) return;
       const pendingPath = readPendingPath();
+      const currentRoute = routeWithoutLocale(pathname);
       if (pendingPath) {
+        if (isPendingJourneyPath(currentRoute)) {
+          window.localStorage.setItem(NATIVE_ONBOARDING_PENDING_PATH_KEY, currentRoute);
+          document.documentElement.classList.remove("ccr-native-first-run-pending");
+          setVisible(false);
+          hideNativeSplashAfterPaint();
+          return;
+        }
         document.documentElement.classList.remove("ccr-native-first-run-pending");
         setVisible(false);
-        if (routeWithoutLocale(pathname) !== pendingPath) router.replace(pendingPath);
+        if (currentRoute !== pendingPath) router.replace(pendingPath);
         hideNativeSplashAfterPaint();
         return;
       }
@@ -121,6 +138,7 @@ export function NativeFirstRunOnboarding() {
 
     const firstFrame = window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
+        clearNativePrepaint();
         void import("@capacitor/splash-screen")
           .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
           .catch(() => {});
