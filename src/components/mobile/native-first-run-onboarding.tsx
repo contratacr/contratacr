@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { useNativeApp } from "@/hooks/use-native-app";
+import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
 import {
   NATIVE_ONBOARDING_COMPLETED_EVENT,
   NATIVE_ONBOARDING_COMPLETED_KEY,
@@ -20,17 +20,33 @@ const ROLE_IMAGES: Record<Role, string> = {
   professional: "/mobile/contratacr-welcome-professional-v1.webp",
 };
 
+function shouldShowNativeFirstRun() {
+  if (typeof window === "undefined") return false;
+  try {
+    return isNativeAppRuntime() && window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1";
+  } catch {
+    return false;
+  }
+}
+
 export function NativeFirstRunOnboarding() {
   const nativeApp = useNativeApp();
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => shouldShowNativeFirstRun());
   const [selectedRole, setSelectedRole] = useState<Role>("client");
+  const [loadedRoles, setLoadedRoles] = useState<Partial<Record<Role, boolean>>>({});
   const english = pathname?.startsWith("/en") ?? false;
+  const activeImageReady = loadedRoles[selectedRole] === true;
 
   useEffect(() => {
-    if (!nativeApp || window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1") return;
+    if (!nativeApp) return;
+    if (window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1") {
+      document.documentElement.classList.remove("ccr-native-first-run-pending");
+      setVisible(false);
+      return;
+    }
     document.documentElement.classList.add("ccr-native-first-run-pending");
     setVisible(true);
   }, [nativeApp]);
@@ -78,6 +94,7 @@ export function NativeFirstRunOnboarding() {
     <div
       className="fixed inset-0 z-[220] overflow-hidden bg-[#071523] text-white"
       data-testid="native-first-run-onboarding"
+      data-native-onboarding-ready={activeImageReady ? "true" : "false"}
       role="dialog"
       aria-modal="true"
       aria-labelledby="native-onboarding-title"
@@ -88,6 +105,7 @@ export function NativeFirstRunOnboarding() {
           src={src}
           alt=""
           aria-hidden="true"
+          onLoad={() => setLoadedRoles((prev) => (prev[role] ? prev : { ...prev, [role]: true }))}
           className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-500 motion-reduce:transition-none ${
             selectedRole === role ? "opacity-100" : "opacity-0"
           }`}

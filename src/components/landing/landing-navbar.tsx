@@ -1053,7 +1053,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       const baseHref = href.split("?")[0] ?? href;
       const isActive = nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
       return cn(
-        "flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#526277] transition-colors active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]",
+        "flex min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1 text-[9px] font-extrabold leading-tight text-[#526277] transition-colors active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]",
         isActive && "text-[#009FD9]",
       );
     },
@@ -2198,7 +2198,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           <nav
             ref={nativeBottomNavRef}
             aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
-            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] bg-white px-1.5 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1 min-[360px]:px-2"
+            className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] bg-white px-1.5 min-[360px]:px-2"
           >
             <div className="mx-auto grid w-full max-w-[520px] grid-cols-[repeat(5,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
               <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>

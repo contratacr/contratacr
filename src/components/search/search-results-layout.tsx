@@ -384,7 +384,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} onScroll={updateMobileScrollThumb} className="ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-8 pt-0 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
+          <div ref={listRef} onScroll={updateMobileScrollThumb} className="ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-8 pt-0 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
             {quickFilters && <div className="mb-3 hidden lg:block xl:hidden">{quickFilters}</div>}
             {children}
           </div>

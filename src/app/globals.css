@@ -66,18 +66,11 @@
 
 html.ccr-native-app.ccr-native-first-run-pending,
 html.ccr-native-app.ccr-native-first-run-pending body {
-  background: #071523 !important;
+  background: #f4f7fa !important;
 }
 
-.ccr-native-first-run-shell {
-  display: none;
-}
-
+.ccr-native-first-run-shell,
 html.ccr-native-app.ccr-native-first-run-pending .ccr-native-first-run-shell {
-  display: block;
-}
-
-html.ccr-native-app:not(.ccr-native-first-run-pending) .ccr-native-first-run-shell {
   display: none !important;
 }
 
@@ -122,17 +115,18 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 
 .ccr-native-app .ccr-notification-bell-menu {
   position: fixed !important;
-  top: calc(var(--ccr-native-header-height, 64px) + 0.25rem) !important;
-  right: 0.25rem !important;
+  top: calc(var(--ccr-native-header-height, 64px) + 0.35rem) !important;
+  right: max(1rem, calc(env(safe-area-inset-right) + 0.75rem)) !important;
   left: auto !important;
-  width: min(calc(100vw - 1.5rem), 22rem);
-  max-height: min(calc(100svh - var(--ccr-native-header-height, 64px) - 1.5rem), 30rem);
+  width: min(calc(100vw - 5.75rem), 17.5rem) !important;
+  max-height: min(calc(100svh - var(--ccr-native-header-height, 64px) - 1.75rem), 27rem);
   margin: 0 !important;
   transform: none !important;
+  border-radius: 1.15rem !important;
 }
 
 .ccr-native-app .ccr-notification-bell-menu > div:nth-child(2) {
-  max-height: min(16rem, calc(100svh - var(--ccr-native-header-height, 64px) - 12rem));
+  max-height: min(14.5rem, calc(100svh - var(--ccr-native-header-height, 64px) - 12rem));
 }
 
 .ccr-native-app [role="dialog"] {
@@ -205,7 +199,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     position: fixed;
     inset-inline: 0;
     top: var(--ccr-native-header-height);
-    bottom: var(--ccr-native-bottom-nav-total);
+    bottom: calc(var(--ccr-native-bottom-nav-total) - 1px);
     height: auto;
     min-height: 0;
     overflow-y: auto;
@@ -251,6 +245,19 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     overscroll-behavior-y: contain;
   }
 
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-dashboard-main {
+    min-height: 0 !important;
+    height: auto;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    background: #fff;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-dashboard-main > .dashboard-panel-content {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-card {
     min-height: 0 !important;
     background: #fff;
@@ -266,7 +273,12 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
-    padding-bottom: var(--ccr-native-panel-end-gap);
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home > :last-child {
+    margin-bottom: 0 !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-footer {
@@ -368,14 +380,26 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
 .ccr-native-app .ccr-native-bottom-nav {
   isolation: isolate;
-  background: #fff;
+  background: #fff !important;
   border-top: 1px solid #e2e8f0 !important;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 0.35rem);
+  margin-top: -1px !important;
+  padding-top: 0 !important;
+  padding-bottom: max(env(safe-area-inset-bottom), 0.2rem) !important;
   box-shadow: none !important;
 }
 
 .ccr-native-app .ccr-native-bottom-nav::before {
   content: none;
+}
+
+.ccr-native-app .ccr-native-bottom-nav > div {
+  min-height: 64px;
+  align-items: center;
+}
+
+.ccr-native-app .ccr-native-bottom-nav a,
+.ccr-native-app .ccr-native-bottom-nav button {
+  min-height: 56px !important;
 }
 
 .ccr-native-app .ccr-search-bottom-sheet {
@@ -384,7 +408,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   max-height: calc(var(--app-visual-viewport-height) - 164px) !important;
   overflow: hidden;
   isolation: isolate;
-  background: #fff;
+  background: #fff !important;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -404,9 +428,24 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 }
 
 .ccr-native-app .ccr-search-sheet-scroll {
-  background: #fff;
+  min-height: 100%;
+  background: #fff !important;
   padding-bottom: 1.5rem !important;
   scroll-padding-bottom: 1.5rem;
+}
+
+.ccr-native-app .ccr-search-sheet-scroll > *,
+.ccr-native-app .ccr-search-results-list,
+.ccr-native-app [data-search-empty-state] {
+  min-height: 100%;
+}
+
+.ccr-native-app .ccr-search-results-list {
+  background: #eef2f6 !important;
+}
+
+.ccr-native-app [data-search-empty-state] {
+  background: #fff !important;
 }
 
 html.ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav,

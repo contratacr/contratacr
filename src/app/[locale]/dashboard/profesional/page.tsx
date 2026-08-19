@@ -1895,7 +1895,7 @@ export default function DashboardPage() {
         </div>
       )}
       <main className={cn(
-        "flex-1 min-h-[calc(100svh-88px)]",
+        "ccr-dashboard-main flex-1 min-h-[calc(100svh-88px)]",
         mobileSectionOpen && "bg-white lg:bg-[#fafafa]",
         mobileFullScreenTab && "bg-white lg:bg-[#fafafa]",
       )}>
@@ -2166,11 +2166,11 @@ export default function DashboardPage() {
                         )}
                       </CardHeader>}
                       <CardContent className={mobileSectionOpen ? cn(
-                        "min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-white px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-5",
+                        "dashboard-section-content min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-white px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-5",
                         singleSurfaceTab && "!bg-transparent lg:px-0 lg:pb-0 lg:pt-0"
                       ) : cn(
                         "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6",
-                        activeTab === "home" && "px-0 sm:px-0",
+                        activeTab === "home" && "ccr-dashboard-mobile-home px-0 sm:px-0",
                         singleSurfaceTab && "!bg-transparent px-0 pt-0 pb-0 sm:px-0 sm:pt-0 sm:pb-0",
                       )}>
                         {activeTab === "home" && (

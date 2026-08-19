@@ -17,28 +17,63 @@ export function MobileAppBridge() {
     document.documentElement.classList.add("ccr-native-app");
     document.body.classList.add("ccr-native-app");
 
-    if (window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1") {
+    const firstRunPending = window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1";
+
+    if (firstRunPending) {
       document.documentElement.classList.add("ccr-native-first-run-pending");
     }
 
     let cancelled = false;
     let firstFrame = 0;
     let secondFrame = 0;
+    let observer: MutationObserver | null = null;
+    let readyTimeout = 0;
 
-    // Keep the native splash over the WebView until the real first screen has
-    // painted. This prevents the white frame between Android's splash and the
-    // first-run role chooser.
-    firstFrame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(() => {
-        if (cancelled) return;
-        void import("@capacitor/splash-screen")
-          .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
-          .catch(() => {});
+    const hideSplash = () => {
+      if (cancelled) return;
+      void import("@capacitor/splash-screen")
+        .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
+        .catch(() => {});
+    };
+
+    const hideAfterPaint = () => {
+      firstFrame = window.requestAnimationFrame(() => {
+        secondFrame = window.requestAnimationFrame(hideSplash);
       });
-    });
+    };
+
+    if (firstRunPending) {
+      const readySelector = '[data-testid="native-first-run-onboarding"][data-native-onboarding-ready="true"]';
+      const firstRunScreenReady = () => Boolean(document.querySelector(readySelector));
+
+      if (firstRunScreenReady()) {
+        hideAfterPaint();
+      } else {
+        observer = new MutationObserver(() => {
+          if (!firstRunScreenReady()) return;
+          observer?.disconnect();
+          if (readyTimeout) window.clearTimeout(readyTimeout);
+          hideAfterPaint();
+        });
+        observer.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ["data-native-onboarding-ready"],
+          childList: true,
+          subtree: true,
+        });
+        readyTimeout = window.setTimeout(() => {
+          observer?.disconnect();
+          hideAfterPaint();
+        }, 2800);
+      }
+    } else {
+      hideAfterPaint();
+    }
 
     return () => {
       cancelled = true;
+      observer?.disconnect();
+      if (readyTimeout) window.clearTimeout(readyTimeout);
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
       document.documentElement.classList.remove("ccr-native-app");

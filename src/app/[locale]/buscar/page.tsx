@@ -482,7 +482,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {/* Results list */}
             <div className="min-w-0">
               {allResults.length === 0 ? (
-                <div data-search-empty-state className="-mx-4 flex min-h-[18rem] w-[calc(100%+2rem)] flex-col items-center justify-center bg-white px-6 py-16 text-center lg:mx-0 lg:min-h-[24rem] lg:w-full lg:rounded-2xl lg:border lg:px-8 lg:py-20">
+                <div data-search-empty-state className="-mx-4 flex min-h-full w-[calc(100%+2rem)] flex-col items-center justify-center bg-white px-6 py-16 text-center lg:mx-0 lg:min-h-[24rem] lg:w-full lg:rounded-2xl lg:border lg:px-8 lg:py-20">
                   <div className="mb-4 flex justify-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF5FB]">
                       <Search className="h-8 w-8 text-[#009FD9]" />
@@ -499,7 +499,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       wider results column (`lg:max-w-none`), which hugs the card width while
                       the map takes the rest (see search-results-layout). Content-driven
                       height - one card per row, each grows to its content. */}
-                  <div className="-mx-4 flex w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-[#eef2f6] lg:mx-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
+                  <div className="ccr-search-results-list -mx-4 flex min-h-full w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-[#eef2f6] lg:mx-0 lg:min-h-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
                     {await Promise.all(results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.
