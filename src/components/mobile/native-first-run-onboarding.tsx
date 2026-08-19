@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
 import {
+  NATIVE_ONBOARDING_AUTH_SESSION_KEY,
   NATIVE_ONBOARDING_COMPLETED_EVENT,
   NATIVE_ONBOARDING_COMPLETED_KEY,
   NATIVE_ONBOARDING_PENDING_PATH_KEY,
@@ -25,9 +26,12 @@ const ROLE_IMAGES: Record<Role, string> = {
 function shouldShowNativeFirstRun() {
   if (typeof window === "undefined") return false;
   try {
+    const currentRoute = routeWithoutLocale(window.location.pathname);
+    const authSession = window.sessionStorage.getItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY) === "1";
     return isNativeAppRuntime()
       && window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1"
-      && !window.localStorage.getItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
+      && !window.localStorage.getItem(NATIVE_ONBOARDING_PENDING_PATH_KEY)
+      && !(authSession && isPendingJourneyPath(currentRoute));
   } catch {
     return false;
   }
@@ -92,7 +96,21 @@ export function NativeFirstRunOnboarding() {
       if (authLoading) return;
       const pendingPath = readPendingPath();
       const currentRoute = routeWithoutLocale(pathname);
+      const authSession = window.sessionStorage.getItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY) === "1";
+      if (authSession && isPendingJourneyPath(currentRoute)) {
+        document.documentElement.classList.remove("ccr-native-first-run-pending");
+        setVisible(false);
+        hideNativeSplashAfterPaint();
+        return;
+      }
+
       if (pendingPath) {
+        if (!authSession) {
+          window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
+          document.documentElement.classList.add("ccr-native-first-run-pending");
+          setVisible(true);
+          return;
+        }
         if (isPendingJourneyPath(currentRoute)) {
           window.localStorage.setItem(NATIVE_ONBOARDING_PENDING_PATH_KEY, currentRoute);
           document.documentElement.classList.remove("ccr-native-first-run-pending");
@@ -134,7 +152,7 @@ export function NativeFirstRunOnboarding() {
   }, [visible]);
 
   useEffect(() => {
-    if (!visible || !nativeApp) return;
+    if (!visible || !nativeApp || !heroReady) return;
 
     const firstFrame = window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
@@ -146,7 +164,7 @@ export function NativeFirstRunOnboarding() {
     });
 
     return () => window.cancelAnimationFrame(firstFrame);
-  }, [nativeApp, visible]);
+  }, [heroReady, nativeApp, visible]);
 
   useEffect(() => {
     if (!visible || heroReady) return;
@@ -161,7 +179,8 @@ export function NativeFirstRunOnboarding() {
   }, []);
 
   const continuePendingJourney = useCallback((destination: NativeOnboardingPendingPath) => {
-    window.localStorage.setItem(NATIVE_ONBOARDING_PENDING_PATH_KEY, destination);
+    window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
+    window.sessionStorage.setItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY, "1");
     document.documentElement.classList.remove("ccr-native-first-run-pending");
     setVisible(false);
     router.push(destination);
@@ -175,6 +194,7 @@ export function NativeFirstRunOnboarding() {
 
   const goToLogin = useCallback(() => {
     window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
+    window.sessionStorage.setItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY, "1");
     document.documentElement.classList.remove("ccr-native-first-run-pending");
     setVisible(false);
     router.push("/login");
@@ -185,7 +205,7 @@ export function NativeFirstRunOnboarding() {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[220] overflow-hidden bg-[#f4f7fa] text-white"
+      className={`fixed inset-0 z-[220] overflow-hidden text-white ${heroReady ? "bg-[#f4f7fa]" : "bg-transparent"}`}
       data-testid="native-first-run-onboarding"
       data-native-onboarding-ready="true"
       role="dialog"

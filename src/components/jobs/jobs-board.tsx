@@ -10,6 +10,7 @@ import { Modal } from "@/components/ui/modal";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { JobApplicationForm } from "@/components/jobs/job-application-form";
 import { SaveItemButton } from "@/components/saved/save-item-button";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { COMMON_JOB_TITLES, EMPLOYMENT_TYPES, EXPERIENCE_LEVELS, formatJobSalary, jobMatchesSearch, type JobPost, WORKPLACE_TYPES } from "@/lib/jobs";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, type MarketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
 import { marketplaceReturnLabel, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
@@ -97,6 +98,7 @@ function JobMetaLine({ job, className = "", showApplicants = true }: { job: JobP
 export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo = null, currentProfessionalId = null, currentUserId = null, currentUserEmail = null, currentUserPhone = null, currentUserLinkedIn = null, appliedJobIds = [], detailOnly = false }: Props) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
+  const nativeApp = useNativeApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get("q")?.trim() ?? "");
@@ -111,6 +113,23 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const [experience, setExperience] = useState("all");
   const [published, setPublished] = useState("all");
   const [selectedId, setSelectedId] = useState(() => searchParams.get("job") ?? searchParams.get("apply") ?? initialSelectedJobId ?? jobs[0]?.id ?? "");
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    if (!nativeApp) return;
+    console.info("[native-debug] jobs-board-mounted", {
+      jobs: jobs.length,
+      canPost,
+      currentUserId: currentUserId ? "present" : "none",
+      selectedId,
+      apply: searchParams.get("apply"),
+      href: window.location.href,
+    });
+  }, [canPost, currentUserId, jobs.length, nativeApp, searchParams, selectedId]);
+
+  useEffect(() => {
+    queueMicrotask(() => setNow(Date.now()));
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -127,20 +146,22 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   useEffect(() => {
     const applyId = searchParams.get("apply");
     if (!applyId) return;
-    setSelectedId(applyId);
-    if (currentUserId) setApplyingJobId(applyId);
+    queueMicrotask(() => {
+      setSelectedId(applyId);
+      if (currentUserId) setApplyingJobId(applyId);
+    });
   }, [currentUserId, searchParams]);
 
   const filtered = useMemo(() => jobs.filter((job) => {
     const matchesQuery = jobMatchesSearch(query, [job.title, job.employer_name, job.location_label, job.description, ...(job.requirements ?? []), ...(job.responsibilities ?? [])]);
-    const age = Date.now() - new Date(job.created_at).getTime();
-    const matchesDate = published === "all" || age <= Number(published) * 86_400_000;
+    const age = now - new Date(job.created_at).getTime();
+    const matchesDate = published === "all" || (now > 0 && age <= Number(published) * 86_400_000);
     const matchesLocation = !locationFilter || job.workplace_type === "remote" || job.location_label?.toLocaleLowerCase("es-CR").includes(locationFilter.toLocaleLowerCase("es-CR"));
     return matchesQuery && matchesLocation && matchesDate
       && (workplace === "all" || job.workplace_type === workplace)
       && (employment === "all" || job.employment_type === employment)
       && (experience === "all" || (job.experience_level ?? "any") === experience);
-  }), [employment, experience, jobs, locationFilter, published, query, workplace]);
+  }), [employment, experience, jobs, locationFilter, now, published, query, workplace]);
 
   const selected = filtered.find((job) => job.id === selectedId) ?? filtered[0] ?? null;
   const suggestions = [...new Set([...jobs.map((job) => job.title), ...COMMON_JOB_TITLES])];
@@ -170,7 +191,9 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   }
 
   useEffect(() => {
-    if (filtered.length > 0 && !filtered.some((job) => job.id === selectedId)) setSelectedId(filtered[0].id);
+    if (filtered.length > 0 && !filtered.some((job) => job.id === selectedId)) {
+      queueMicrotask(() => setSelectedId(filtered[0].id));
+    }
   }, [filtered, selectedId]);
 
   const renderSearch = () => (

@@ -133,6 +133,7 @@ export function OffersBoard({
 }: Props) {
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
+  const nativeApp = useNativeApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get("q")?.trim() ?? "");
@@ -153,6 +154,22 @@ export function OffersBoard({
   );
   const deferredQuery = useDeferredValue(query);
   const deferredServiceQuery = useDeferredValue(serviceQuery);
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    if (!nativeApp) return;
+    console.info("[native-debug] offers-board-mounted", {
+      offers: offers.length,
+      canPost,
+      currentUserId: currentUserId ? "present" : "none",
+      selectedId,
+      href: window.location.href,
+    });
+  }, [canPost, currentUserId, nativeApp, offers.length, selectedId]);
+
+  useEffect(() => {
+    queueMicrotask(() => setNow(Date.now()));
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -206,8 +223,8 @@ export function OffersBoard({
           .includes(serviceNeedle);
       const matchesDate =
         published === "all" ||
-        Date.now() - new Date(offer.created_at).getTime() <=
-          Number(published) * 86_400_000;
+        (now > 0 && now - new Date(offer.created_at).getTime() <=
+          Number(published) * 86_400_000);
       const matchesLocation =
         !locationFilter ||
         offer.location_label
@@ -226,6 +243,7 @@ export function OffersBoard({
     deferredServiceQuery,
     locationFilter,
     offers,
+    now,
     published,
     type,
   ]);
@@ -244,7 +262,7 @@ export function OffersBoard({
 
   useEffect(() => {
     const offerId = searchParams.get("offer");
-    if (offerId) setSelectedId(offerId);
+    if (offerId) queueMicrotask(() => setSelectedId(offerId));
   }, [searchParams]);
   function clearSearchAndFilters() {
     setQuery("");
@@ -263,7 +281,7 @@ export function OffersBoard({
       filtered.length > 0 &&
       !filtered.some((offer) => offer.id === selectedId)
     )
-      setSelectedId(filtered[0].id);
+      queueMicrotask(() => setSelectedId(filtered[0].id));
   }, [filtered, selectedId]);
 
   const renderSearch = () => (

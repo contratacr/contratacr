@@ -134,15 +134,18 @@ export function SupportTickets({
   }, []);
 
   useLayoutEffect(() => {
-    if (!openId || !window.matchMedia("(max-width: 1023px)").matches) return;
+    if ((!openId && !showNewTicketPage) || !window.matchMedia("(max-width: 1023px)").matches) return;
     const root = document.documentElement;
+    const body = document.body;
     root.classList.add("contratacr-chat-thread-open");
+    body.classList.add("contratacr-chat-thread-open");
     const releaseBodyScroll = lockBodyScroll();
     return () => {
       root.classList.remove("contratacr-chat-thread-open");
+      body.classList.remove("contratacr-chat-thread-open");
       releaseBodyScroll();
     };
-  }, [openId]);
+  }, [openId, showNewTicketPage]);
 
   useEffect(() => {
     if (!openId) return;
@@ -258,8 +261,10 @@ export function SupportTickets({
   useEffect(() => {
     if (!initialNewSupport || didOpenInitialSupportForm.current) return;
     didOpenInitialSupportForm.current = true;
-    if (window.matchMedia("(max-width: 639px)").matches) setShowNewTicketPage(true);
-    else setShowModal(true);
+    queueMicrotask(() => {
+      if (window.matchMedia("(max-width: 639px)").matches) setShowNewTicketPage(true);
+      else setShowModal(true);
+    });
   }, [initialNewSupport]);
 
   async function sendReply() {

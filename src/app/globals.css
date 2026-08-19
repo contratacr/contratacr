@@ -304,7 +304,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
 
 body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet,
 html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
-  bottom: var(--ccr-native-bottom-nav-total);
+  bottom: 0;
 }
 
 @media (max-width: 1023px) {
@@ -469,7 +469,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-support-thread {
-    height: calc(100dvh - var(--ccr-native-header-height, 124px) - var(--ccr-native-bottom-nav-total, var(--ccr-responsive-footer-reserve, 72px)));
+    height: calc(100dvh - var(--ccr-native-header-height, 124px));
     min-height: 0;
     background: #fff;
   }
@@ -557,8 +557,8 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
 body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet,
 html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet {
-  bottom: var(--ccr-native-bottom-nav-total) !important;
-  padding-bottom: 0 !important;
+  bottom: 0 !important;
+  padding-bottom: env(safe-area-inset-bottom) !important;
 }
 
 .ccr-native-app .ccr-search-bottom-sheet::before {
@@ -591,7 +591,7 @@ html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet 
 
 .ccr-native-app .ccr-search-results-list {
   background: #fff !important;
-  padding-bottom: calc(var(--ccr-native-live-bottom-nav-height, var(--ccr-native-bottom-nav-total)) + var(--ccr-native-content-end-gap)) !important;
+  padding-bottom: calc(var(--ccr-native-content-end-gap) + env(safe-area-inset-bottom)) !important;
 }
 
 .ccr-native-app [data-search-empty-state] {
@@ -601,8 +601,7 @@ html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet 
 html.ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav,
 html.ccr-native-app body.ccr-native-search-route .ccr-native-bottom-nav,
 body.ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav {
-  border-top-color: #d8e2ec !important;
-  box-shadow: none !important;
+  display: none !important;
 }
 
 body.ccr-native-app.ccr-booking-modal-open .ccr-search-bottom-sheet,
@@ -1145,12 +1144,10 @@ input::-ms-clear {
 
   .contratacr-chat-thread-open .dashboard-mobile-nav,
   .contratacr-chat-thread-open .ccr-app-header,
+  .contratacr-chat-thread-open .ccr-native-bottom-nav,
   .contratacr-chat-thread-open [data-ai-concierge-button],
-  .contratacr-ai-open .dashboard-mobile-nav {
-    display: none !important;
-  }
-
-  html:not(.ccr-native-app) .contratacr-chat-thread-open .ccr-native-bottom-nav {
+  .contratacr-ai-open .dashboard-mobile-nav,
+  .contratacr-ai-open .ccr-native-bottom-nav {
     display: none !important;
   }
 
@@ -1170,8 +1167,8 @@ input::-ms-clear {
     right: auto;
     bottom: auto;
     left: var(--app-visual-viewport-left);
-    z-index: 80;
-    height: calc(var(--app-visual-viewport-height) - var(--ccr-native-live-bottom-nav-height, 0px));
+    z-index: 110;
+    height: var(--app-visual-viewport-height);
     width: var(--app-visual-viewport-width);
     min-height: 0;
     border-radius: 0;
@@ -1202,15 +1199,15 @@ input::-ms-clear {
   html.ccr-native-app body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll,
   body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll {
     padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important;
     scroll-padding-top: 1rem;
-    scroll-padding-bottom: 1rem;
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
   }
 
   html[data-keyboard-open].ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-composer,
   html[data-keyboard-open].ccr-native-app body.contratacr-chat-thread-open .ccr-direct-chat-composer,
   html[data-keyboard-open] body.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-composer {
-    padding-bottom: 0.5rem !important;
+    padding-bottom: calc(0.5rem + var(--app-keyboard-inset-bottom, 0px)) !important;
   }
 
   .contratacr-chat-thread-open .direct-chat-shell--thread > section,
@@ -1240,7 +1237,7 @@ input::-ms-clear {
     bottom: auto !important;
     left: var(--app-visual-viewport-left, 0px) !important;
     right: auto !important;
-    height: calc(var(--app-visual-viewport-height, 100dvh) - var(--ccr-native-live-bottom-nav-height, 0px)) !important;
+    height: var(--app-visual-viewport-height, 100dvh) !important;
     width: var(--app-visual-viewport-width, 100vw) !important;
     min-height: 0 !important;
     max-height: none !important;
@@ -1250,20 +1247,6 @@ input::-ms-clear {
     justify-content: stretch !important;
     background: #fff !important;
     backdrop-filter: none !important;
-  }
-
-  html.ccr-native-app.contratacr-ai-open .ccr-native-bottom-nav,
-  html.ccr-native-app body.contratacr-ai-open .ccr-native-bottom-nav,
-  body.ccr-native-app.contratacr-ai-open .ccr-native-bottom-nav {
-    display: block !important;
-    z-index: 90 !important;
-  }
-
-  html.ccr-native-app.contratacr-chat-thread-open .ccr-native-bottom-nav,
-  html.ccr-native-app body.contratacr-chat-thread-open .ccr-native-bottom-nav,
-  body.ccr-native-app.contratacr-chat-thread-open .ccr-native-bottom-nav {
-    display: block !important;
-    z-index: 90 !important;
   }
 
   html.ccr-native-app.contratacr-ai-open [data-ai-concierge-panel],

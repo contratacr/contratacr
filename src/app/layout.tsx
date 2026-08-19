@@ -1,5 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import { Inter } from "next/font/google";
+import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 import "./globals.css";
 
@@ -28,11 +29,39 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="min-h-full flex flex-col bg-white">
+        <StaticNativeFirstRunPrepaint />
+        <NativeDebugLogger />
         <Suspense fallback={<InitialRouteLoading />}>
           {children}
         </Suspense>
       </body>
     </html>
+  );
+}
+
+function StaticNativeFirstRunPrepaint() {
+  return (
+    <div id="ccr-native-first-run-prepaint" aria-hidden="true">
+      <div className="ccr-native-first-run-prepaint-bg" />
+      <div className="ccr-native-first-run-prepaint-shade" />
+      <div className="ccr-native-first-run-prepaint-content">
+        <div className="ccr-native-first-run-prepaint-logo">
+          <img src="/logo-mark-dark.png" alt="" />
+          <span>
+            Contrata<span>CR</span>
+          </span>
+        </div>
+        <p>Elige como quieres comenzar</p>
+        <div className="ccr-native-first-run-prepaint-actions">
+          <span>Buscar servicios</span>
+          <span>Ofrecer servicios</span>
+        </div>
+        <div className="ccr-native-first-run-prepaint-cta">Crear una cuenta</div>
+        <div className="ccr-native-first-run-prepaint-login">
+          Ya tienes una cuenta? <span>Inicia sesion</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
