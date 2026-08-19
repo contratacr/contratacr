@@ -223,7 +223,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-page-main {
     position: fixed;
     inset-inline: 0;
-    top: max(var(--ccr-native-header-height), 124px);
+    top: var(--ccr-native-header-height);
     bottom: var(--ccr-native-bottom-nav-total);
     height: auto;
     min-height: 0;
@@ -249,10 +249,6 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-items {
     padding-bottom: var(--ccr-native-panel-end-gap);
-  }
-
-  body:not(.ccr-native-app) .ccr-notifications-page-main {
-    padding-top: max(var(--ccr-native-header-height, 124px), 124px) !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-safe-list-end {
