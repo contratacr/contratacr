@@ -89,9 +89,22 @@ export async function middleware(request: NextRequest) {
   // stale/invalid we recover gracefully: clear the bad cookie so the browser is
   // cleanly logged out (instead of crashing SSR with an AuthApiError on every
   // visit — the reason a normal browser failed where incognito worked).
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // Local visual/mobile checks may run without Supabase env vars. Do not let
+    // stale auth cookies crash the whole app before the page can render.
+    clearAuthCookies(request, response);
+    if (needsAuthGate) {
+      return redirectToLogin(locale, request, response);
+    }
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {

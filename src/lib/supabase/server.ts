@@ -2,8 +2,16 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { assertSafeSupabaseRuntime } from "@/lib/security/supabase-target";
 
+export function hasSupabaseServerConfig() {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+}
+
 export async function createClient() {
   assertSafeSupabaseRuntime("Supabase server");
+
+  if (!hasSupabaseServerConfig()) {
+    throw new Error("Supabase server env vars are not configured.");
+  }
 
   const cookieStore = await cookies();
   return createServerClient(

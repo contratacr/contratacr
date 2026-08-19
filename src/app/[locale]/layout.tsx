@@ -12,7 +12,7 @@ import { OperationalStatusBanner } from "@/components/status/operational-status-
 import { getOperationalStatusBanner } from "@/lib/status/runtime-status";
 import { AuthProvider } from "@/hooks/use-auth";
 import { MetaPixel } from "@/components/analytics/meta-pixel";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
 import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-followup";
@@ -119,11 +119,11 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
   const operationalStatus = getOperationalStatusBanner(locale);
-  const supabase = await createClient();
-  const initialUser = await safeGetUser(supabase);
+  const supabase = hasSupabaseServerConfig() ? await createClient() : null;
+  const initialUser = supabase ? await safeGetUser(supabase) : null;
   let initialAvatarUrl: string | null | undefined;
   const initialNotificationUnread = { offer: 0, use: 0, neutral: 0 };
-  if (initialUser) {
+  if (supabase && initialUser) {
     try {
       const [{ data }, { data: unreadNotifications }] = await withPromiseTimeout(Promise.all([
         supabase

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
-import { useAuth } from "@/hooks/use-auth";
 import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
 import {
   NATIVE_ONBOARDING_COMPLETED_EVENT,
@@ -33,12 +32,10 @@ export function NativeFirstRunOnboarding() {
   const nativeApp = useNativeApp();
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useAuth();
   const [visible, setVisible] = useState(() => shouldShowNativeFirstRun());
   const [selectedRole, setSelectedRole] = useState<Role>("client");
-  const [loadedRoles, setLoadedRoles] = useState<Partial<Record<Role, boolean>>>({});
+  const [heroReady, setHeroReady] = useState(false);
   const english = pathname?.startsWith("/en") ?? false;
-  const activeImageReady = loadedRoles[selectedRole] === true;
 
   useEffect(() => {
     if (!nativeApp) return;
@@ -63,6 +60,31 @@ export function NativeFirstRunOnboarding() {
     };
   }, [visible]);
 
+  useEffect(() => {
+    if (!visible || !nativeApp) return;
+
+    const firstFrame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        void import("@capacitor/splash-screen")
+          .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
+          .catch(() => {});
+      });
+    });
+
+    return () => window.cancelAnimationFrame(firstFrame);
+  }, [nativeApp, visible]);
+
+  useEffect(() => {
+    setHeroReady(false);
+  }, [selectedRole]);
+
+  useEffect(() => {
+    if (!visible || heroReady) return;
+    // A broken/slow image must not strand the app behind the native splash.
+    const timeout = window.setTimeout(() => setHeroReady(true), 1500);
+    return () => window.clearTimeout(timeout);
+  }, [heroReady, visible]);
+
   const complete = useCallback(() => {
     window.localStorage.setItem(NATIVE_ONBOARDING_COMPLETED_KEY, "1");
     window.dispatchEvent(new Event(NATIVE_ONBOARDING_COMPLETED_EVENT));
@@ -71,11 +93,9 @@ export function NativeFirstRunOnboarding() {
   }, []);
 
   const destinationFor = useCallback((role: Role) => {
-    if (role === "client") return user ? "/buscar" : "/registro/cliente";
-    return user?.user_metadata?.is_provider === true
-      ? "/dashboard/profesional"
-      : "/registro/profesional";
-  }, [user]);
+    if (role === "client") return "/registro/cliente";
+    return "/registro/profesional";
+  }, []);
 
   const continueWithRole = useCallback(() => {
     const destination = destinationFor(selectedRole);
@@ -92,9 +112,9 @@ export function NativeFirstRunOnboarding() {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[220] overflow-hidden bg-[#071523] text-white"
+      className="fixed inset-0 z-[220] overflow-hidden bg-[#f4f7fa] text-white"
       data-testid="native-first-run-onboarding"
-      data-native-onboarding-ready={activeImageReady ? "true" : "false"}
+      data-native-onboarding-ready="true"
       role="dialog"
       aria-modal="true"
       aria-labelledby="native-onboarding-title"
@@ -105,9 +125,9 @@ export function NativeFirstRunOnboarding() {
           src={src}
           alt=""
           aria-hidden="true"
-          onLoad={() => setLoadedRoles((prev) => (prev[role] ? prev : { ...prev, [role]: true }))}
-          onError={() => setLoadedRoles((prev) => (prev[role] ? prev : { ...prev, [role]: true }))}
           fetchPriority={selectedRole === role ? "high" : "auto"}
+          onLoad={role === selectedRole ? () => setHeroReady(true) : undefined}
+          onError={role === selectedRole ? () => setHeroReady(true) : undefined}
           className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-500 motion-reduce:transition-none ${
             selectedRole === role ? "opacity-100" : "opacity-0"
           }`}
@@ -154,9 +174,7 @@ export function NativeFirstRunOnboarding() {
             onClick={continueWithRole}
             className="mt-4 min-h-14 w-full rounded-full bg-[#08a7df] px-5 text-[15px] font-extrabold text-white shadow-[0_14px_32px_rgba(0,159,217,0.3)] transition hover:bg-[#0796ca] active:scale-[0.99] motion-reduce:transform-none"
           >
-            {user
-              ? (english ? "Continue" : "Continuar")
-              : (english ? "Create an account" : "Crear una cuenta")}
+            {english ? "Create an account" : "Crear una cuenta"}
           </button>
 
           <button

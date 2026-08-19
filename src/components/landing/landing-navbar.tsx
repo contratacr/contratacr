@@ -1073,6 +1073,21 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     [nativeApp, router],
   );
 
+  const navigateNativeMarketplace = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, href: "/ofertas" | "/empleos") => {
+      if (!nativeApp) return;
+      // Capacitor WebView occasionally loses the RSC response for these two
+      // data-heavy lists.  A document navigation is deterministic and keeps
+      // the same test/prod origin and locale.
+      event.preventDefault();
+      event.stopPropagation();
+      setMobileOpen(false);
+      prepareNativeNavigation(href);
+      window.location.assign(`${window.location.origin}/${locale}${href}`);
+    },
+    [locale, nativeApp, prepareNativeNavigation],
+  );
+
   useEffect(() => {
     const id = window.setTimeout(() => setNativePendingHref(null), 0);
     if (nativePendingTimer.current) {
@@ -2071,11 +2086,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <DrawerIcon><Wrench /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{t("categories")}</span>
               </Link>
-              <Link href="/empleos" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+              <Link href="/empleos" onClick={(event) => navigateNativeMarketplace(event, "/empleos")} className={mobileDrawerItemClass}>
                 <DrawerIcon><Briefcase /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
               </Link>
-              <Link href="/ofertas" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+              <Link href="/ofertas" onClick={(event) => navigateNativeMarketplace(event, "/ofertas")} className={mobileDrawerItemClass}>
                 <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                 <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
               </Link>
@@ -2208,7 +2223,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Search className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
               </Link>
-              <Link href="/ofertas" onPointerDown={() => prepareNativeNavigation("/ofertas")} className={nativeBottomNavClass("/ofertas")}>
+              <Link href="/ofertas" onPointerDown={() => prepareNativeNavigation("/ofertas")} onClick={(event) => navigateNativeMarketplace(event, "/ofertas")} className={nativeBottomNavClass("/ofertas")}>
                 <OfferTagPercentIcon className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Deals" : "Ofertas"}</span>
               </Link>
@@ -2224,7 +2239,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Bot className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>
               </button>
-              <Link href="/empleos" onPointerDown={() => prepareNativeNavigation("/empleos")} className={nativeBottomNavClass("/empleos")}>
+              <Link href="/empleos" onPointerDown={() => prepareNativeNavigation("/empleos")} onClick={(event) => navigateNativeMarketplace(event, "/empleos")} className={nativeBottomNavClass("/empleos")}>
                 <Briefcase className="h-5 w-5" />
                 <span className="max-w-full truncate">{locale === "en" ? "Jobs" : "Empleos"}</span>
               </Link>

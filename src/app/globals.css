@@ -78,6 +78,8 @@ html.ccr-native-app.ccr-native-first-run-pending .ccr-page-route-loading {
 
 html.ccr-native-app.ccr-native-first-run-pending,
 html.ccr-native-app.ccr-native-first-run-pending body {
+  /* The Android system splash remains visible until the real onboarding is
+     painted.  Never reveal an intermediate dark/blank document behind it. */
   background: #f4f7fa !important;
 }
 
@@ -86,12 +88,127 @@ html.ccr-native-app.ccr-native-first-run-pending .ccr-native-first-run-shell {
   display: none !important;
 }
 
-html.ccr-native-app.ccr-native-first-run-pending body > *:not([data-testid="native-first-run-onboarding"]) {
+html.ccr-native-app.ccr-native-first-run-pending body > *:not([data-testid="native-first-run-onboarding"]):not(#ccr-native-first-run-prepaint) {
   visibility: hidden !important;
 }
 
 html.ccr-native-app.ccr-native-first-run-pending [data-testid="native-first-run-onboarding"] {
   visibility: visible !important;
+  z-index: 220;
+}
+
+#ccr-native-first-run-prepaint {
+  display: none;
+}
+
+html.ccr-native-app.ccr-native-first-run-pending #ccr-native-first-run-prepaint {
+  display: none !important;
+}
+
+.ccr-native-first-run-prepaint-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 18, 31, 0.02) 0%, rgba(5, 18, 31, 0.12) 34%, rgba(8, 28, 52, 0.72) 60%, #081c34 78%, #081c34 100%),
+    url("/mobile/contratacr-welcome-client-v1.png") center / cover no-repeat;
+  transform: scale(1.01);
+}
+
+.ccr-native-first-run-prepaint-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(2, 13, 23, 0.14), transparent 48%, rgba(2, 13, 23, 0.08));
+}
+
+.ccr-native-first-run-prepaint-content {
+  position: absolute;
+  right: 1.5rem;
+  bottom: max(2rem, calc(env(safe-area-inset-bottom) + 1.5rem));
+  left: 1.5rem;
+  text-align: center;
+}
+
+.ccr-native-first-run-prepaint-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
+}
+
+.ccr-native-first-run-prepaint-logo img {
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: contain;
+}
+
+.ccr-native-first-run-prepaint-logo > span {
+  margin-left: -0.125rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.055em;
+}
+
+.ccr-native-first-run-prepaint-logo > span > span {
+  color: #38bdf8;
+}
+
+.ccr-native-first-run-prepaint-content p {
+  margin-top: 0.85rem;
+  font-size: clamp(1.55rem, 6.5vw, 2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.ccr-native-first-run-prepaint-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 1.35rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  background: rgba(4, 17, 29, 0.36);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.26);
+}
+
+.ccr-native-first-run-prepaint-actions span {
+  display: grid;
+  min-height: 3rem;
+  place-items: center;
+  padding: 0 0.85rem;
+  color: #fff;
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.ccr-native-first-run-prepaint-actions span:first-child {
+  background: #fff;
+  color: #10223d;
+}
+
+.ccr-native-first-run-prepaint-cta {
+  display: grid;
+  min-height: 3.25rem;
+  margin-top: 1rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #08a7df;
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 14px 32px rgba(0, 159, 217, 0.3);
+}
+
+.ccr-native-first-run-prepaint-login {
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.ccr-native-first-run-prepaint-login span {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 .ccr-native-app button,
@@ -128,17 +245,18 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 .ccr-native-app .ccr-notification-bell-menu {
   position: fixed !important;
   top: calc(var(--ccr-native-header-height, 64px) + 0.35rem) !important;
-  right: max(0.85rem, calc(env(safe-area-inset-right) + 0.85rem)) !important;
+  right: max(1rem, calc(env(safe-area-inset-right) + 1rem)) !important;
   left: auto !important;
-  width: min(calc(100vw - 1.7rem), 22rem) !important;
-  max-height: min(calc(100svh - var(--ccr-native-header-height, 64px) - 1.75rem), 27rem);
+  /* Keep this a desktop-like popover, not a centred mobile sheet. */
+  width: min(calc(100vw - 2.5rem), 24rem) !important;
+  max-height: min(calc(100svh - var(--ccr-native-header-height, 64px) - 1.25rem), 30rem);
   margin: 0 !important;
   transform: none !important;
-  border-radius: 1.15rem !important;
+  border-radius: 1.25rem !important;
 }
 
 .ccr-native-app .ccr-notification-bell-menu > div:nth-child(2) {
-  max-height: min(14.5rem, calc(100svh - var(--ccr-native-header-height, 64px) - 12rem));
+  max-height: min(18rem, calc(100svh - var(--ccr-native-header-height, 64px) - 10rem));
 }
 
 .ccr-native-app [role="dialog"] {
@@ -153,8 +271,8 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
   --ccr-native-header-height: 64px;
   --ccr-native-bottom-nav-height: calc(64px + max(env(safe-area-inset-bottom), 0.2rem));
   --ccr-native-bottom-nav-total: var(--ccr-native-bottom-nav-height);
-  --ccr-native-panel-end-gap: 0px;
-  --ccr-native-content-end-gap: calc(var(--ccr-native-panel-end-gap) + env(safe-area-inset-bottom));
+  --ccr-native-panel-end-gap: 1.25rem;
+  --ccr-native-content-end-gap: var(--ccr-native-panel-end-gap);
   --ccr-native-content-height: calc(var(--app-visual-viewport-height, 100svh) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total));
 }
 
@@ -164,6 +282,10 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 
 body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main {
   min-height: calc(100svh - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total));
+  /* Reserve layout space for the fixed nav itself so the last control never
+     sits underneath it.  The end gap above remains intentionally small. */
+  padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap));
+  scroll-padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap));
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
@@ -211,14 +333,17 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     position: fixed;
     inset-inline: 0;
     top: var(--ccr-native-header-height);
+    /* Keep route content above the fixed nav. Individual scroll areas still get
+       a small end gap, but the nav no longer covers the final section. */
     bottom: var(--ccr-native-bottom-nav-total);
     height: auto;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     background: #fff;
-    padding-bottom: var(--ccr-native-panel-end-gap) !important;
-    scroll-padding-bottom: 0;
+    box-sizing: border-box;
+    padding-bottom: var(--ccr-native-content-end-gap) !important;
+    scroll-padding-bottom: var(--ccr-native-content-end-gap);
     -webkit-overflow-scrolling: touch;
   }
 
@@ -252,7 +377,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .dashboard-panel-content {
     min-height: 0;
-    padding-bottom: 0 !important;
+    padding-bottom: var(--ccr-native-content-end-gap) !important;
     background: #fff;
     overscroll-behavior-y: contain;
   }
@@ -261,13 +386,13 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     min-height: 0 !important;
     height: auto;
     margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
+    padding-bottom: var(--ccr-native-content-end-gap) !important;
     background: #fff;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-dashboard-main > .dashboard-panel-content {
     margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
+    padding-bottom: var(--ccr-native-content-end-gap) !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-card {
@@ -285,7 +410,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
-    padding-bottom: 0 !important;
+    padding-bottom: var(--ccr-native-content-end-gap) !important;
     margin-bottom: 0 !important;
   }
 
@@ -393,7 +518,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 .ccr-native-app .ccr-native-bottom-nav {
   isolation: isolate;
   background: #fff !important;
-  border-top: 1px solid #e2e8f0 !important;
+  border-top: 1px solid #b8c6d6 !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
   padding-bottom: max(env(safe-area-inset-bottom), 0.2rem) !important;
@@ -425,6 +550,12 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet,
+html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet {
+  bottom: var(--ccr-native-bottom-nav-total) !important;
+  padding-bottom: 0 !important;
+}
+
 .ccr-native-app .ccr-search-bottom-sheet::before {
   content: "";
   position: absolute;
@@ -443,8 +574,8 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 .ccr-native-app .ccr-search-sheet-scroll {
   min-height: 100%;
   background: #fff !important;
-  padding-bottom: 1.5rem !important;
-  scroll-padding-bottom: 1.5rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom)) !important;
+  scroll-padding-bottom: calc(2rem + env(safe-area-inset-bottom));
 }
 
 .ccr-native-app .ccr-search-sheet-scroll > *,
@@ -454,7 +585,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 }
 
 .ccr-native-app .ccr-search-results-list {
-  background: #eef2f6 !important;
+  background: #fff !important;
 }
 
 .ccr-native-app [data-search-empty-state] {
@@ -464,7 +595,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 html.ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav,
 html.ccr-native-app body.ccr-native-search-route .ccr-native-bottom-nav,
 body.ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav {
-  border-top-color: transparent !important;
+  border-top-color: #d8e2ec !important;
   box-shadow: none !important;
 }
 

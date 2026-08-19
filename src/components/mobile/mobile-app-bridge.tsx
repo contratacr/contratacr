@@ -15,6 +15,14 @@ function isNativeMarketplaceListPath(pathname: string) {
   return withoutLocale === "/ofertas" || withoutLocale === "/empleos";
 }
 
+function getNativeLocalizedPath(pathname: string) {
+  const normalized = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  if (/^\/(?:es|en)(?=\/|$)/.test(normalized)) return normalized;
+
+  const currentLocale = window.location.pathname.match(/^\/(es|en)(?=\/|$)/)?.[1] ?? "es";
+  return `/${currentLocale}${normalized}`;
+}
+
 export function MobileAppBridge() {
   const pathname = usePathname();
 
@@ -32,8 +40,6 @@ export function MobileAppBridge() {
     let cancelled = false;
     let firstFrame = 0;
     let secondFrame = 0;
-    let observer: MutationObserver | null = null;
-
     const hideSplash = () => {
       if (cancelled) return;
       void import("@capacitor/splash-screen")
@@ -47,32 +53,12 @@ export function MobileAppBridge() {
       });
     };
 
-    if (firstRunPending) {
-      const readySelector = '[data-testid="native-first-run-onboarding"][data-native-onboarding-ready="true"]';
-      const firstRunScreenReady = () => Boolean(document.querySelector(readySelector));
-
-      if (firstRunScreenReady()) {
-        hideAfterPaint();
-      } else {
-        observer = new MutationObserver(() => {
-          if (!firstRunScreenReady()) return;
-          observer?.disconnect();
-          hideAfterPaint();
-        });
-        observer.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ["data-native-onboarding-ready"],
-          childList: true,
-          subtree: true,
-        });
-      }
-    } else {
+    if (!firstRunPending) {
       hideAfterPaint();
     }
 
     return () => {
       cancelled = true;
-      observer?.disconnect();
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
       document.documentElement.classList.remove("ccr-native-app");
@@ -128,11 +114,18 @@ export function MobileAppBridge() {
 
       if (url.origin !== window.location.origin) return;
       if (!isNativeMarketplaceListPath(url.pathname)) return;
-      if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+
+      const targetPath = getNativeLocalizedPath(url.pathname);
+      const targetHref = `${targetPath}${url.search}${url.hash}`;
+      const currentHref = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (targetHref === currentHref) return;
 
       event.preventDefault();
       event.stopPropagation();
-      window.location.assign(url.toString());
+      // Marketplace list pages are server-rendered. In the native WebView, SPA
+      // transitions to these routes can race the RSC payload and land on the
+      // global error screen, while a full localized navigation loads cleanly.
+      window.location.assign(targetHref);
     };
 
     document.addEventListener("click", onNativeMarketplaceClick, true);

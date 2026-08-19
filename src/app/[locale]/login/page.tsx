@@ -11,7 +11,7 @@ import { ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { OtpVerification } from "@/components/auth/otp-verification";
@@ -69,6 +69,12 @@ function withPostLoginActivity(path: string): string {
 }
 
 const POST_LOGIN_PROMPT_KEY = "contratacr:post-login-prompt";
+
+function authUnavailableMessage(locale: string) {
+  return locale === "en"
+    ? "Login is not available in this local preview because Supabase environment variables are missing."
+    : "El inicio de sesión no está disponible en este localhost porque faltan las variables de Supabase.";
+}
 
 function setPostLoginPrompt(userId = "") {
   if (typeof window === "undefined") return;
@@ -198,6 +204,11 @@ export default function LoginPage() {
     setError(null);
     setSocialHint(null);
     setOtpEmail(null);
+    if (!hasSupabaseBrowserConfig()) {
+      setSubmitting(false);
+      setError(authUnavailableMessage(locale));
+      return;
+    }
     const supabase = createClient();
     let authResult;
     try {
@@ -262,6 +273,12 @@ export default function LoginPage() {
     if (provider === "google") setGoogleLoading(true);
     else setAppleLoading(true);
     setError(null);
+    if (!hasSupabaseBrowserConfig()) {
+      setError(authUnavailableMessage(locale));
+      if (provider === "google") setGoogleLoading(false);
+      else setAppleLoading(false);
+      return;
+    }
     const supabase = createClient();
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
@@ -299,6 +316,10 @@ export default function LoginPage() {
                 email={otpEmail}
                 autoResendOnMount
                 onVerified={async () => {
+                  if (!hasSupabaseBrowserConfig()) {
+                    setError(authUnavailableMessage(locale));
+                    return;
+                  }
                   await finishPasswordLogin(createClient());
                 }}
               />
