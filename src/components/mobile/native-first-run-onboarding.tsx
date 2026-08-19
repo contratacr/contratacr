@@ -39,13 +39,24 @@ export function NativeFirstRunOnboarding() {
 
   useEffect(() => {
     if (!nativeApp) return;
-    if (window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1") {
-      document.documentElement.classList.remove("ccr-native-first-run-pending");
-      setVisible(false);
-      return;
-    }
-    document.documentElement.classList.add("ccr-native-first-run-pending");
-    setVisible(true);
+    const syncFirstRunState = () => {
+      if (window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1") {
+        document.documentElement.classList.remove("ccr-native-first-run-pending");
+        setVisible(false);
+        return;
+      }
+      document.documentElement.classList.add("ccr-native-first-run-pending");
+      setVisible(true);
+    };
+    syncFirstRunState();
+    window.addEventListener("pageshow", syncFirstRunState);
+    window.addEventListener("focus", syncFirstRunState);
+    document.addEventListener("visibilitychange", syncFirstRunState);
+    return () => {
+      window.removeEventListener("pageshow", syncFirstRunState);
+      window.removeEventListener("focus", syncFirstRunState);
+      document.removeEventListener("visibilitychange", syncFirstRunState);
+    };
   }, [nativeApp]);
 
   useEffect(() => {
