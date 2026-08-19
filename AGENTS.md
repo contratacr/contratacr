@@ -27,6 +27,8 @@ All changes must be made directly in the appropriate existing branch and canonic
 
 Do not use the default repository folder `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr` for implementation work while it is a detached preservation worktree.
 
+On macOS, the exact parent directory may differ. The canonical layout is one checkout for `main` plus sibling worktrees named `contratacr-test` and `contratacr-mobile`; record their absolute paths in the local Codex workspace instructions. Do not recreate the detached Windows preservation worktree. See `docs/mac-migration-handoff.md` for the bootstrap commands.
+
 Before pushing:
 
 - Run `git status --short --branch` in the target canonical worktree and confirm the branch is the intended one.

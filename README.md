@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Branches and Worktrees
 
-Use `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-main` for production-ready work on `main`.
+Use `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-main` for production-ready work on `main` on the current Windows machine.
 
 Use `C:\Users\isaac\OneDrive\Desktop\contratacr\contratacr-test` for test-environment work on `test`.
 
@@ -12,7 +12,9 @@ additional branches. `main` and `test` must resolve to the exact same commit; `m
 contains that shared web baseline plus its explicitly mobile-only shell and messaging
 differences. Never push `local/pro-suite-no-push`.
 
-Before pushing, confirm `git status --short --branch` shows `main` or `test`, and confirm migrations are current. The current production baseline includes `supabase/migrations/139_interaction_analytics_saved_actions.sql`.
+Before pushing, confirm `git status --short --branch` shows the intended canonical branch and confirm migrations are current. The current shared baseline ends at `supabase/migrations/174_repair_known_visible_text_encoding.sql`.
+
+For the macOS checkout and exact handoff state, follow [docs/mac-migration-handoff.md](docs/mac-migration-handoff.md). Do not copy `node_modules`, `.next`, Android build output, logs, or the detached Windows preservation worktree.
 
 ## Getting Started
 
@@ -59,8 +61,8 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy on Cloudflare
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The web application is built with OpenNext and deployed to Cloudflare Workers by `.github/workflows/cloudflare-compatibility.yml`. Production uses `main`; test uses `test`. Supabase still owns the application database and Auth, while the national padrón is served from Cloudflare D1.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Use `npm run cloudflare:build` for a local compatibility build. Deployment and traffic cutover remain controlled by the GitHub workflow and its environment-scoped secrets.

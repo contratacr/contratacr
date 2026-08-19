@@ -42,7 +42,7 @@ Do not push after every fix. During an active bug-fix batch:
    that same commit, let the fast gates pass, and dispatch exactly one exhaustive
    regression run. Do not use retries to hide a flaky first attempt.
 
-Local Playwright starts the app on loopback; it does not navigate through Vercel
+Local Playwright starts the app on loopback; it does not navigate through Cloudflare
 unless `PLAYWRIGHT_BASE_URL` is explicitly provided. Seeded cases still require
 the isolated test credentials. If those credentials are unavailable, the local
 gate must stop instead of silently using production.
@@ -64,7 +64,7 @@ npm run test:e2e:focal -- tests/e2e/search-results.spec.ts
 Run explicitly against a deployed host only for a bounded smoke or diagnosis:
 
 ```bash
-PLAYWRIGHT_BASE_URL=https://your-test-url.vercel.app npm run test:e2e
+PLAYWRIGHT_BASE_URL=https://test.contratacr.com npm run test:e2e
 ```
 
 Run only the always-safe smoke layer:
@@ -141,7 +141,7 @@ branch. It checks out the event SHA, validates that every secret points to the t
 Supabase project, builds with `next build`, and lets Playwright start `next start` on
 the runner loopback interface.
 
-This keeps exhaustive browser navigation, server rendering and API calls off Vercel.
+This keeps exhaustive browser navigation, server rendering and API calls off Cloudflare Workers.
 Provider-specific deployment checks must stay in a separate, short smoke and must not
 grow into a second exhaustive suite.
 
