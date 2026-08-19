@@ -356,13 +356,14 @@ export function PushTokenManager() {
 
   return createPortal(
     <div
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm"
+      className="app-modal-screen app-centered-modal-screen fixed inset-0 flex items-center justify-center p-4"
       style={{ zIndex: 100000 }}
       role="presentation"
       onClick={dismissPrompt}
     >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-[21.5rem] rounded-[2rem] bg-white p-6 text-center shadow-[0_28px_80px_-28px_rgba(15,23,42,0.55)]"
+        className="app-centered-modal ccr-push-permission-dialog relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 text-center shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="push-permission-title"
@@ -372,22 +373,22 @@ export function PushTokenManager() {
           type="button"
           onClick={dismissPrompt}
           aria-label="Cerrar"
-          className="absolute right-5 top-5 rounded-full p-1.5 text-[#94a3b8] transition hover:bg-[#f4f7fa] hover:text-[#162543]"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-[#94a3b8] transition hover:bg-[#f4f7fa] hover:text-[#162543]"
         >
           <X className="h-4 w-4" />
         </button>
-        <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9] shadow-[0_18px_40px_-22px_rgba(0,159,217,0.65)]">
-          <Bell className="h-9 w-9" />
+        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9] shadow-[0_14px_35px_-20px_rgba(0,159,217,0.7)]">
+          <Bell className="h-7 w-7" />
         </div>
-        <h2 id="push-permission-title" className="mt-5 text-[1.35rem] font-black leading-tight tracking-[-0.03em] text-[#111827]">
+        <h2 id="push-permission-title" className="mb-1.5 text-lg font-bold leading-tight tracking-[-0.03em] text-[#111827]">
           Activa notificaciones
         </h2>
-        <p className="mx-auto mt-2 max-w-[17rem] text-[15px] leading-snug text-[#64748b]">{copy}</p>
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <p className="mx-auto mb-5 max-w-[18rem] text-sm leading-relaxed text-[#64748b]">{copy}</p>
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={dismissPrompt}
-            className="min-h-12 rounded-full border border-[#e2e8f0] bg-white px-4 text-sm font-extrabold text-[#334155] transition hover:bg-[#f8fafc]"
+            className="flex-1 rounded-xl border border-[#e2e8f0] bg-white px-4 py-2.5 text-sm font-semibold text-[#334155] transition hover:bg-[#f8fafc]"
           >
             Ahora no
           </button>
@@ -396,7 +397,7 @@ export function PushTokenManager() {
             onClick={requestNotifications}
             disabled={requesting}
             className={cn(
-              "min-h-12 rounded-full bg-[#009FD9] px-4 text-sm font-extrabold text-white shadow-[0_14px_32px_-20px_rgba(0,159,217,0.75)] transition hover:bg-[#0089BB]",
+              "flex-1 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_28px_-18px_rgba(0,159,217,0.8)] transition hover:bg-[#0089BB]",
               requesting && "cursor-wait opacity-70",
             )}
           >

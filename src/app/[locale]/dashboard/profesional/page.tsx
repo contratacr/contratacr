@@ -2361,9 +2361,7 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      {/* Footer stays visible on desktop and mobile because the dashboard no longer uses
-          the fixed mobile bottom tab bar. */}
-      <div>
+      <div className="ccr-dashboard-footer">
         <LandingFooter />
       </div>
     </div>

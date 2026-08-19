@@ -132,6 +132,10 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.ccr-native-app .ccr-push-permission-dialog[role="dialog"] {
+  padding-bottom: 1.5rem !important;
+}
+
 .ccr-native-app {
   --ccr-native-header-height: 64px;
   --ccr-native-bottom-nav-height: 72px;
@@ -256,6 +260,10 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
     padding-bottom: var(--ccr-native-panel-end-gap);
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-footer {
+    display: none !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-page-main {
