@@ -240,6 +240,21 @@ test.describe("@seeded extended lifecycle", () => {
       await expect.poll(() => page.evaluate(() => document.body.style.position)).toBe("fixed");
       await dialog.locator("textarea").fill(`${marker} service`);
 
+      const save = dialog.getByTestId("service-edit-save");
+      const consultPrice = dialog.getByRole("checkbox", { name: /Consultar precio|Ask for price/i });
+      await consultPrice.uncheck();
+      await save.click();
+      const validationNotice = dialog.getByTestId("service-form-error");
+      await expect(validationNotice).toBeVisible();
+      await expect(validationNotice).toContainText(/precio|price/i);
+      const [noticeBox, validationSaveBox] = await Promise.all([validationNotice.boundingBox(), save.boundingBox()]);
+      expect(noticeBox, "The service validation notice needs visible geometry").not.toBeNull();
+      expect(validationSaveBox, "The service save action needs visible geometry").not.toBeNull();
+      expect(noticeBox!.y + noticeBox!.height).toBeLessThanOrEqual(validationSaveBox!.y + 1);
+      await expect(dialog.locator('input[inputmode="numeric"]').first()).toBeFocused();
+      await consultPrice.check();
+      await expect(validationNotice).toBeHidden();
+
       const month = dialog.getByRole("button", { name: /Enero|January/i }).filter({ visible: true });
       const year = dialog.getByRole("button", { name: /^2020$/i }).filter({ visible: true });
       await expect(month).toHaveCount(1);
@@ -278,7 +293,6 @@ test.describe("@seeded extended lifecycle", () => {
       expect(previewBox!.x).toBeGreaterThanOrEqual(dialogBox!.x);
       expect(previewBox!.x + previewBox!.width).toBeLessThanOrEqual(dialogBox!.x + dialogBox!.width + 1);
 
-      const save = dialog.getByTestId("service-edit-save");
       const idleBox = await save.boundingBox();
       expect(idleBox, "The service save action needs visible geometry").not.toBeNull();
       const saveGate = new Promise<void>((resolve) => { releaseServiceSave = resolve; });

@@ -29,6 +29,8 @@ interface ModalProps {
   children: ReactNode;
   /** Optional pinned footer (e.g. Cancelar / Guardar). */
   footer?: ReactNode;
+  /** Optional validation/status notice pinned immediately above the footer. */
+  footerNotice?: ReactNode;
   /** aria-label for the X button. */
   closeLabel?: string;
   /** Extra classes on the body wrapper (e.g. remove default padding). */
@@ -47,6 +49,7 @@ export function Modal({
   size = "md",
   children,
   footer,
+  footerNotice,
   closeLabel = "Cerrar",
   bodyClassName,
   mobilePresentation = "sheet",
@@ -129,9 +132,15 @@ export function Modal({
           {children}
         </div>
 
+        {footerNotice && (
+          <div className="shrink-0 border-t border-[#f3f4f6] bg-white px-5 pt-3 sm:px-6">
+            {footerNotice}
+          </div>
+        )}
+
         {/* Footer (pinned) */}
         {footer && (
-          <div className={cn("flex shrink-0 justify-end gap-3 border-t border-[#f3f4f6] px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4", footerClassName)}>
+          <div className={cn("flex shrink-0 justify-end gap-3 px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4", !footerNotice && "border-t border-[#f3f4f6]", footerClassName)}>
             {footer}
           </div>
         )}

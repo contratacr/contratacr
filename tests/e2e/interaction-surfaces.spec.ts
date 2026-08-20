@@ -45,6 +45,16 @@ test.describe("@seeded interaction surfaces", () => {
       dialog,
       /Titulo|T.tulo|Servicio|Descripcion|Descripci.n|Provincia|Canton|Cant.n|Cuando lo necesitas|Cu.ndo lo necesitas/i,
     );
+    const submit = dialog.getByRole("button", { name: /Publicar|Publish/i });
+    await expect(submit).toBeEnabled();
+    await submit.click();
+    const validationNotice = dialog.getByTestId("project-form-error");
+    await expect(validationNotice).toBeVisible();
+    await expect(validationNotice).toContainText(/categor.a|category|servicio/i);
+    const [noticeBox, submitBox] = await Promise.all([validationNotice.boundingBox(), submit.boundingBox()]);
+    expect(noticeBox, "The project validation notice needs visible geometry").not.toBeNull();
+    expect(submitBox, "The project submit action needs visible geometry").not.toBeNull();
+    expect(noticeBox!.y + noticeBox!.height).toBeLessThanOrEqual(submitBox!.y + 1);
     await expectHealthyPage(page);
   });
 
