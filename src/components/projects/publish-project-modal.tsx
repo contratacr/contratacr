@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { DateOfBirthPicker } from "@/components/ui/date-of-birth-picker";
 import { FormLoadingState } from "@/components/ui/loading-state";
-import { ArrowLeft, Loader2, ShieldAlert, ShieldCheck, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { isHealthCategory } from "@/lib/data/categories";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +25,7 @@ const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 
 const phoneDigits = (value: string) => value.replace(/\D/g, "");
+type ProjectErrorField = "category" | "title" | "description" | "beneficiaryName" | "beneficiaryDob" | "cedula" | "phone";
 
 // "Publicar proyecto" as a MODAL (was a standalone page). Same fields, validation
 // and submit logic as the old publish-form — only the container changed to a modal:
@@ -62,6 +63,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     beneficiaryDob: "",
   });
   const [error, setError] = useState<string | null>(null);
+  const [errorField, setErrorField] = useState<ProjectErrorField | null>(null);
   const [identityNotice, setIdentityNotice] = useState<string | null>(null);
   const [clientName, setClientName] = useState("");
   const [identityLookup, setIdentityLookup] = useState<"idle" | "loading" | "found" | "notfound">("idle");
@@ -78,6 +80,25 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   // and professional panels. The user can keep it or edit it before publishing.
   const [phone, setPhone] = useState("");
   const [profilePhoneInitial, setProfilePhoneInitial] = useState("");
+  const categoryFieldRef = useRef<HTMLDivElement>(null);
+  const titleFieldRef = useRef<HTMLDivElement>(null);
+  const descriptionFieldRef = useRef<HTMLDivElement>(null);
+  const beneficiaryNameFieldRef = useRef<HTMLDivElement>(null);
+  const beneficiaryDobFieldRef = useRef<HTMLDivElement>(null);
+  const cedulaFieldRef = useRef<HTMLDivElement>(null);
+  const phoneFieldRef = useRef<HTMLDivElement>(null);
+
+  function reportError(message: string, field?: ProjectErrorField, ref?: RefObject<HTMLDivElement | null>) {
+    setError(message);
+    setErrorField(field ?? null);
+    if (!ref) return;
+    requestAnimationFrame(() => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      ref.current
+        ?.querySelector<HTMLElement>("input:not(:disabled), button:not(:disabled), textarea:not(:disabled)")
+        ?.focus({ preventScroll: true });
+    });
+  }
   useEffect(() => {
     if (!user?.id) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -167,6 +188,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       field === "beneficiaryName" ? limitText(value, NAME_MAX_LENGTH) :
       value;
     setForm((f) => ({ ...f, [field]: nextValue, ...(field === "provinciaId" ? { cantonId: "" } : {}) }));
+    if (errorField === field) {
+      setError(null);
+      setErrorField(null);
+    }
   }
 
   function setForSomeoneElse(value: boolean) {
@@ -184,6 +209,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       categoryId: id,
       ...(isHealthCategory(id) ? {} : { forSomeoneElse: false, beneficiaryName: "", beneficiaryDob: "" }),
     }));
+    if (errorField === "category") {
+      setError(null);
+      setErrorField(null);
+    }
   }
 
   function skipCedula() {
@@ -206,19 +235,20 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     e.preventDefault();
     if (published) { onClose(); return; }
     setError(null);
+    setErrorField(null);
     setIdentityNotice(null);
 
-    if (!form.categoryId) { setError(t("errCategory")); return; }
-    if (!form.title.trim()) { setError(t("errTitle")); return; }
-    if (!form.description.trim()) { setError(t("errDescription")); return; }
-    if (selectedIsHealth && form.forSomeoneElse && !form.beneficiaryName.trim()) { setError(t("errBeneficiaryName")); return; }
-    if (selectedIsHealth && form.forSomeoneElse && !form.beneficiaryDob) { setError(t("errBeneficiaryDob")); return; }
+    if (!form.categoryId) { reportError(t("errCategory"), "category", categoryFieldRef); return; }
+    if (!form.title.trim()) { reportError(t("errTitle"), "title", titleFieldRef); return; }
+    if (!form.description.trim()) { reportError(t("errDescription"), "description", descriptionFieldRef); return; }
+    if (selectedIsHealth && form.forSomeoneElse && !form.beneficiaryName.trim()) { reportError(t("errBeneficiaryName"), "beneficiaryName", beneficiaryNameFieldRef); return; }
+    if (selectedIsHealth && form.forSomeoneElse && !form.beneficiaryDob) { reportError(t("errBeneficiaryDob"), "beneficiaryDob", beneficiaryDobFieldRef); return; }
     if (!profileReady) return;
     const sendingWithoutCedula = noCedula && !savedCedula;
     const cedulaForSubmit = savedCedula || (sendingWithoutCedula ? "" : form.cedula);
-    if (!savedCedula && !sendingWithoutCedula && !isValidId(cedulaForSubmit)) { setError(t("errCedula")); return; }
+    if (!savedCedula && !sendingWithoutCedula && !isValidId(cedulaForSubmit)) { reportError(t("errCedula"), "cedula", cedulaFieldRef); return; }
     const cleanPhone = phoneDigits(phone);
-    if (cleanPhone.length < 8) { setError(t("errPhone")); return; }
+    if (cleanPhone.length < 8) { reportError(t("errPhone"), "phone", phoneFieldRef); return; }
 
     setSubmitting(true);
     try {
@@ -321,13 +351,13 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         </div>
 
         {/* Form: scrolling body + pinned footer */}
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col sm:flex-none">
+        <form noValidate onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col sm:flex-none">
           {!profileReady ? (
             <FormLoadingState label={t("loadingProfile")} />
           ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain px-5 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none sm:px-6">
             {/* Category */}
-            <div>
+            <div ref={categoryFieldRef}>
               <label className="text-sm font-medium text-[#374151] block mb-1.5">
                 {t("category")} <span className="text-red-500">*</span>
               </label>
@@ -336,11 +366,12 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 value={form.categoryId}
                 onChange={handleCategoryChange}
                 placeholder={t("categoryPlaceholder")}
+                error={errorField === "category" ? error ?? undefined : undefined}
               />
             </div>
 
             {/* Title */}
-            <div>
+            <div ref={titleFieldRef}>
               <label className="text-sm font-medium text-[#374151] block mb-1.5">
                 {t("projectTitle")} <span className="text-red-500">*</span>
               </label>
@@ -352,6 +383,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 onChange={(e) => update("title", e.target.value)}
                 maxLength={PROJECT_TITLE_MAX_LENGTH}
                 required
+                aria-invalid={errorField === "title"}
               />
               {form.title.length >= PROJECT_TITLE_MAX_LENGTH && (
                 <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: PROJECT_TITLE_MAX_LENGTH })}</p>
@@ -359,7 +391,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
             </div>
 
             {/* Description */}
-            <div>
+            <div ref={descriptionFieldRef}>
               <label className="text-sm font-medium text-[#374151] block mb-1.5">
                 {t("description")} <span className="text-red-500">*</span>
               </label>
@@ -370,6 +402,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 onChange={(e) => update("description", e.target.value)}
                 maxLength={PROJECT_DESCRIPTION_MAX_LENGTH}
                 required
+                aria-invalid={errorField === "description"}
               />
               {/* Limit message ONLY once the cap is reached — silent otherwise (no counter).
                   300 is the SAME cap as the direct-booking note (sprint 449) — both fields ask
@@ -381,12 +414,14 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
             {shouldAskCedula && (
               <>
-                <CedulaInput
-                  value={form.cedula}
-                  onChange={(cedula) => update("cedula", cedula)}
-                  required
-                  hint={t("cedulaHelp")}
-                />
+                <div ref={cedulaFieldRef}>
+                  <CedulaInput
+                    value={form.cedula}
+                    onChange={(cedula) => update("cedula", cedula)}
+                    required
+                    hint={t("cedulaHelp")}
+                  />
+                </div>
                 {identityLookup === "loading" && (
                   <div className="flex items-center gap-2 text-sm text-[#6b7280]">
                     <Loader2 className="h-4 w-4 animate-spin" /> {ti("searching")}
@@ -450,7 +485,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 </div>
                 {form.forSomeoneElse && (
                   <div className="mt-3 flex flex-col gap-3 border-l-2 border-[#d8eef8] pl-3">
-                    <div>
+                    <div ref={beneficiaryNameFieldRef}>
                       <label className="text-xs font-medium text-[#374151] block mb-1.5">
                         {t("forWho.nameLabel")} <span className="text-red-500">*</span>
                       </label>
@@ -463,7 +498,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                         onChange={(e) => update("beneficiaryName", e.target.value)}
                       />
                     </div>
-                    <div>
+                    <div ref={beneficiaryDobFieldRef}>
                       <label className="text-xs font-medium text-[#374151] block mb-1.5">
                         {t("forWho.dobLabel")} <span className="text-red-500">*</span>
                       </label>
@@ -526,21 +561,22 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
             </div>
 
             {/* Contact phone: always visible so the client can confirm or update it before publishing. */}
-            <div>
+            <div ref={phoneFieldRef}>
               <PhoneInput
                 label={t("phoneLabel")}
                 required
                 value={phone}
-                onChange={setPhone}
+                onChange={(value) => {
+                  setPhone(value);
+                  if (errorField === "phone") {
+                    setError(null);
+                    setErrorField(null);
+                  }
+                }}
               />
               <p className="text-xs text-[#9ca3af] mt-1">{t("phoneHelp")}</p>
             </div>
 
-            {error && (
-              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
             {identityNotice && (
               <p className="text-sm font-medium leading-relaxed text-[#374151] [overflow-wrap:anywhere]">
                 {identityNotice}
@@ -549,8 +585,22 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           </div>
           )}
 
+          {error && !published && (
+            <div className="shrink-0 border-t border-[#f3f4f6] bg-white px-5 pt-3 sm:px-6">
+              <div
+                role="alert"
+                aria-live="assertive"
+                data-testid="project-form-error"
+                className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold leading-5 text-red-700"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+
           {/* Footer (pinned) */}
-          <div className="flex shrink-0 gap-3 border-t border-[#f3f4f6] px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4">
+          <div className={`flex shrink-0 gap-3 px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4 ${error && !published ? "" : "border-t border-[#f3f4f6]"}`}>
             <Button type="button" variant="outline" size="lg" onClick={onClose} className="hidden sm:inline-flex">
               {t("cancel")}
             </Button>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { BadgeCheck, ImagePlus, Loader2, Plus, Trash2, Pencil, Search, X } from "lucide-react";
+import { AlertCircle, BadgeCheck, ImagePlus, Loader2, Plus, Trash2, Pencil, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -236,6 +236,20 @@ export function ServicesEditor({
   const [pendingNewCategory, setPendingNewCategory] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const serviceImageInputRef = useRef<HTMLInputElement>(null);
+  const categoryFieldRef = useRef<HTMLDivElement>(null);
+  const priceFieldRef = useRef<HTMLDivElement>(null);
+  const experienceFieldRef = useRef<HTMLDivElement>(null);
+
+  function reportFormError(message: string, field?: RefObject<HTMLDivElement | null>) {
+    setFormError(message);
+    if (!field) return;
+    requestAnimationFrame(() => {
+      field.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      field.current
+        ?.querySelector<HTMLElement>("input:not(:disabled), button:not(:disabled), textarea:not(:disabled)")
+        ?.focus({ preventScroll: true });
+    });
+  }
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
   useReportSaveStatus(saving, saved, dirty);
@@ -333,7 +347,7 @@ export function ServicesEditor({
   function changeEditingService(id: string) {
     if (!id) return;
     if (id !== editOriginalCategory && professions.includes(id)) {
-      setFormError(t("alreadyAdded"));
+      reportFormError(t("alreadyAdded"), categoryFieldRef);
       closePicker();
       return;
     }
@@ -495,14 +509,14 @@ export function ServicesEditor({
   async function handleFormSave() {
     // Require an explicit price OR the deliberate "Consultar precio" choice.
     if (!form.aConsultar && !form.priceAmount.trim()) {
-      setFormError(t("priceRequired"));
+      reportFormError(t("priceRequired"), priceFieldRef);
       return;
     }
     setFormError(null);
 
     const originalCategory = editOriginalCategory || editCategory;
     if (editCategory !== originalCategory && professions.includes(editCategory)) {
-      setFormError(t("alreadyAdded"));
+      reportFormError(t("alreadyAdded"), categoryFieldRef);
       return;
     }
 
@@ -514,7 +528,7 @@ export function ServicesEditor({
     const description = form.description.trim().slice(0, SERVICE_DESCRIPTION_MAX_LENGTH);
     const experience = experienceFromMonthValue(form.startedAt);
     if (!experience || (experience.years <= 0 && experience.months <= 0)) {
-      setFormError(t("experienceRequired"));
+      reportFormError(t("experienceRequired"), experienceFieldRef);
       return;
     }
 
@@ -754,6 +768,17 @@ export function ServicesEditor({
           title={getCategoryLabel(editCategory, locale)}
           subtitle={t("editInfo")}
           closeLabel={t("cancel")}
+          footerNotice={formError ? (
+            <div
+              role="alert"
+              aria-live="assertive"
+              data-testid="service-form-error"
+              className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold leading-5 text-red-700"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{formError}</span>
+            </div>
+          ) : undefined}
           footer={
             <>
               <Button
@@ -783,11 +808,7 @@ export function ServicesEditor({
           }
         >
           <div className="flex flex-col gap-4">
-            {formError && (
-              <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-xs text-red-600">{formError}</p>
-            )}
-
-            <div>
+            <div ref={categoryFieldRef}>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("serviceLabel")}</label>
               <CategorySearch
                 value={editCategory}
@@ -874,14 +895,17 @@ export function ServicesEditor({
               </div>
             </div>
 
-            <div>
+            <div ref={priceFieldRef}>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("priceRef")} {!form.aConsultar && <span className="text-red-500">*</span>}</label>
               <div className="flex items-stretch gap-2">
                 <div className={cn("flex-1", form.aConsultar && "opacity-50 pointer-events-none")}>
                   <PriceInput
                     placeholder={t("amountPlaceholder")}
                     value={form.priceAmount}
-                    onChange={(v) => setForm((f) => ({ ...f, priceAmount: v }))}
+                    onChange={(v) => {
+                      setForm((f) => ({ ...f, priceAmount: v }));
+                      setFormError(null);
+                    }}
                     suffix={form.aConsultar ? undefined : TAX_INCLUDED_SUFFIX}
                     className="h-11"
                   />
@@ -898,21 +922,27 @@ export function ServicesEditor({
                 <input
                   type="checkbox"
                   checked={form.aConsultar}
-                  onChange={(e) => setForm((f) => ({ ...f, aConsultar: e.target.checked }))}
+                  onChange={(e) => {
+                    setForm((f) => ({ ...f, aConsultar: e.target.checked }));
+                    setFormError(null);
+                  }}
                   className="h-5 w-5 rounded-[4px] border-[#b8c5d3] bg-white text-[#009FD9] focus:ring-[#009FD9]"
                 />
                 <span className="text-sm text-[#374151]">{t("aConsultarLabel")}</span>
               </label>
             </div>
 
-            <div>
+            <div ref={experienceFieldRef}>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">
                 {t("experienceLabel")} <span className="text-red-500">*</span>
               </label>
               <ServiceStartMonthPicker
                 value={form.startedAt}
                 locale={locale}
-                onChange={(startedAt) => setForm((f) => ({ ...f, startedAt }))}
+                onChange={(startedAt) => {
+                  setForm((f) => ({ ...f, startedAt }));
+                  setFormError(null);
+                }}
               />
             </div>
 
