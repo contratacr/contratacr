@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
+import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import type { User } from "@supabase/supabase-js";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
@@ -280,6 +282,28 @@ export default function LoginPage() {
       return;
     }
     const supabase = createClient();
+    // Inside the app the platform sheet signs the user in without leaving
+    // ContrataCR; the callback only has to resolve where they land.
+    if (isNativeAppRuntime()) {
+      try {
+        const outcome = await nativeSocialSignIn(provider, supabase);
+        if (outcome === "signed-in") {
+          window.location.assign(oauthCallbackUrl().replace("flow=oauth", "flow=native"));
+          return;
+        }
+        if (outcome === "cancelled") {
+          if (provider === "google") setGoogleLoading(false);
+          else setAppleLoading(false);
+          return;
+        }
+        // "unavailable": provider not configured for this platform → web flow.
+      } catch (nativeError) {
+        setError(nativeError instanceof Error ? nativeError.message : String(nativeError));
+        if (provider === "google") setGoogleLoading(false);
+        else setAppleLoading(false);
+        return;
+      }
+    }
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: oauthCallbackUrl() },

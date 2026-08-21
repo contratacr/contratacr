@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import type { EmailOtpType } from "@supabase/supabase-js";
+import type { EmailOtpType, SupabaseClient, User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isLocalRequest, isProductionSupabaseTarget } from "@/lib/security/write-guard";
@@ -48,6 +48,125 @@ async function reactivateAccount(userId: string): Promise<"ok" | "deletion-pendi
   return "ok";
 }
 
+async function serverSupabase() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+}
+
+type SignedInContext = { origin: string; callbackLocale: string; safeNext: string | null; next: string | null; flow: string | null };
+
+// Everything that happens once Supabase has a user: shared by the PKCE code
+// exchange (web OAuth, password reset) and the native app's id-token sign-in.
+async function finishSignedIn(
+  user: User,
+  supabase: SupabaseClient,
+  ctx: SignedInContext,
+): Promise<NextResponse> {
+  // ── One email = ONE login method (BLOCK mixing) ─────────────────────────
+  // A Google/Facebook sign-in (flow=oauth, set by /login's OAuth buttons) must
+  // NOT attach to / take over an account that already has an email+password
+  // identity. Supabase GoTrue auto-links the OAuth identity to a same-email
+  // account during the code exchange; left unchecked, that flips a manual
+  // account to "Google", routes the user to onboarding, and can break password
+  // login. So: if the just-authenticated user ALSO has an "email" (password)
+  // identity, we REFUSE the OAuth session and send them to manual login with a
+  // clear message — their password account stays intact. A brand-new Google
+  // user (no password identity) passes through normally to onboarding.
+  if (ctx.flow === "oauth" || ctx.flow === "native") {
+    const hasPassword = (user.identities ?? []).some((i) => i.provider === "email");
+    if (hasPassword) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/login?autherror=use_password`);
+    }
+  }
+
+  if (await reactivateAccount(user.id) === "deletion-pending") {
+    await supabase.auth.signOut();
+    return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/login?autherror=account_deletion_pending`);
+  }
+
+  // Guest→account linking: attach prior GUEST tickets with this (now
+  // verified) email to the account so the history continues in-app.
+  if (user.email && user.email_confirmed_at) {
+    try {
+      const admin = createAdminClient();
+      await admin.from("support_tickets").update({ user_id: user.id }).is("user_id", null).ilike("email", user.email);
+    } catch { /* best-effort */ }
+  }
+
+  const professionalSignupIncomplete =
+    user.user_metadata?.professional_signup_started === true &&
+    user.user_metadata?.is_provider !== true;
+
+  // Explicit next PATH (e.g. password reset → /es/reset-password, or a support
+  // email's ticket deep-link /es/dashboard/…?tab=soporte&ticket=…). `next` was
+  // URL-encoded by the login page, so `searchParams.get` returns it decoded and
+  // whole. Only INTERNAL paths (single leading "/", never "//") to avoid an
+  // open-redirect. The "projects" alias is NOT a path — it falls through to the
+  // role-aware resolution below.
+  if (ctx.safeNext) {
+    if (professionalSignupIncomplete && /^\/(?:es|en)\/dashboard\/profesional(?:[/?]|$)/.test(ctx.safeNext)) {
+      return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/registro/profesional`);
+    }
+    return NextResponse.redirect(`${ctx.origin}${withPostLoginActivity(ctx.safeNext)}`);
+  }
+
+  // ── Onboarding decision ──
+  // CANONICAL signal = `user_metadata.onboarding_completed` (same as the proxy +
+  // the onboarding page). DO NOT select `profiles.onboarding_completed`/`cedula`
+  // here: migration 047 COLUMN-restricts them from the authenticated role, so the
+  // select ERRORS → null → EVERY existing OAuth user was wrongly sent to
+  // /onboarding (then bounced to the panel = the onboarding "flash"). For accounts
+  // whose metadata predates the flag, fall back to the SECURITY DEFINER RPC
+  // (`get_my_profile`) which returns the full row regardless of column grants.
+  let onboardingDone = user.user_metadata?.onboarding_completed === true;
+  if (!onboardingDone) {
+    const { data: prof } = await supabase.rpc("get_my_profile");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const p = prof as any;
+    if (p?.onboarding_completed) onboardingDone = true;
+  }
+
+  if (!onboardingDone) {
+    // Genuinely new OAuth user, no role chosen yet → onboarding.
+    return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/onboarding`);
+  }
+
+  if (professionalSignupIncomplete) {
+    return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/registro/profesional`);
+  }
+
+  // The "Publicar proyecto" CTA carries ?next=projects → land on "Solicitudes
+  // publicadas" after authenticating. Everyone lands on the ONE unified panel; it
+  // opens in the right mode itself.
+  // "sent_projects" is a use-mode tab, so it works for any account.
+  const wantProjects = ctx.next === "projects";
+  const destPath = wantProjects
+    ? `/${ctx.callbackLocale}/dashboard/profesional?tab=sent_projects`
+    : `/${ctx.callbackLocale}/dashboard/profesional`;
+
+  // Cédula is NOT required up-front for clients — it is requested later, at
+  // the moment they book/request a service (see the booking flow). So we no
+  // longer force clients to a profile-completion screen here. Professionals
+  // provide their cédula during professional registration.
+  return NextResponse.redirect(`${ctx.origin}${withPostLoginActivity(destPath)}`);
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -57,28 +176,21 @@ export async function GET(request: NextRequest) {
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
   const callbackLocale = resolveAuthCallbackLocale(searchParams.get("locale"), safeNext);
 
+  // Native app: Apple/Google already signed in through signInWithIdToken, so
+  // there is no code to exchange — resolve the destination from the session.
+  if (!code && !tokenHash && searchParams.get("flow") === "native") {
+    const supabase = await serverSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.redirect(`${origin}/${callbackLocale}/login?autherror=native`);
+    return finishSignedIn(user, supabase, { origin, callbackLocale, safeNext, next, flow: "native" });
+  }
+
   if (code || tokenHash) {
     if (isUnsafeProductionSupabaseRuntime() || (isLocalRequest(request) && isProductionSupabaseTarget())) {
       return NextResponse.redirect(`${origin}/${callbackLocale}?auth=unsafe_prod_env_blocked`);
     }
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          },
-        },
-      }
-    );
+    const supabase = await serverSupabase();
 
     // Finalize the session. OAuth + password reset arrive with a PKCE `code`
     // (exchangeCodeForSession). Email-link OTP flows — notably EMAIL CHANGE
@@ -136,94 +248,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!error && data.user) {
-      // ── One email = ONE login method (BLOCK mixing) ─────────────────────────
-      // A Google/Facebook sign-in (flow=oauth, set by /login's OAuth buttons) must
-      // NOT attach to / take over an account that already has an email+password
-      // identity. Supabase GoTrue auto-links the OAuth identity to a same-email
-      // account during the code exchange; left unchecked, that flips a manual
-      // account to "Google", routes the user to onboarding, and can break password
-      // login. So: if the just-authenticated user ALSO has an "email" (password)
-      // identity, we REFUSE the OAuth session and send them to manual login with a
-      // clear message — their password account stays intact. A brand-new Google
-      // user (no password identity) passes through normally to onboarding.
-      if (searchParams.get("flow") === "oauth") {
-        const hasPassword = (data.user.identities ?? []).some((i) => i.provider === "email");
-        if (hasPassword) {
-          await supabase.auth.signOut();
-          return NextResponse.redirect(`${origin}/${callbackLocale}/login?autherror=use_password`);
-        }
-      }
-
-      if (await reactivateAccount(data.user.id) === "deletion-pending") {
-        await supabase.auth.signOut();
-        return NextResponse.redirect(`${origin}/${callbackLocale}/login?autherror=account_deletion_pending`);
-      }
-
-      // Guest→account linking: attach prior GUEST tickets with this (now
-      // verified) email to the account so the history continues in-app.
-      if (data.user.email && data.user.email_confirmed_at) {
-        try {
-          const admin = createAdminClient();
-          await admin.from("support_tickets").update({ user_id: data.user.id }).is("user_id", null).ilike("email", data.user.email);
-        } catch { /* best-effort */ }
-      }
-
-      const professionalSignupIncomplete =
-        data.user.user_metadata?.professional_signup_started === true &&
-        data.user.user_metadata?.is_provider !== true;
-
-      // Explicit next PATH (e.g. password reset → /es/reset-password, or a support
-      // email's ticket deep-link /es/dashboard/…?tab=soporte&ticket=…). `next` was
-      // URL-encoded by the login page, so `searchParams.get` returns it decoded and
-      // whole. Only INTERNAL paths (single leading "/", never "//") to avoid an
-      // open-redirect. The "projects" alias is NOT a path — it falls through to the
-      // role-aware resolution below.
-      if (safeNext) {
-        if (professionalSignupIncomplete && /^\/(?:es|en)\/dashboard\/profesional(?:[/?]|$)/.test(safeNext)) {
-          return NextResponse.redirect(`${origin}/${callbackLocale}/registro/profesional`);
-        }
-        return NextResponse.redirect(`${origin}${withPostLoginActivity(safeNext)}`);
-      }
-
-      // ── Onboarding decision ──
-      // CANONICAL signal = `user_metadata.onboarding_completed` (same as the proxy +
-      // the onboarding page). DO NOT select `profiles.onboarding_completed`/`cedula`
-      // here: migration 047 COLUMN-restricts them from the authenticated role, so the
-      // select ERRORS → null → EVERY existing OAuth user was wrongly sent to
-      // /onboarding (then bounced to the panel = the onboarding "flash"). For accounts
-      // whose metadata predates the flag, fall back to the SECURITY DEFINER RPC
-      // (`get_my_profile`) which returns the full row regardless of column grants.
-      let onboardingDone = data.user.user_metadata?.onboarding_completed === true;
-      if (!onboardingDone) {
-        const { data: prof } = await supabase.rpc("get_my_profile");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const p = prof as any;
-        if (p?.onboarding_completed) onboardingDone = true;
-      }
-
-      if (!onboardingDone) {
-        // Genuinely new OAuth user, no role chosen yet → onboarding.
-        return NextResponse.redirect(`${origin}/${callbackLocale}/onboarding`);
-      }
-
-      if (professionalSignupIncomplete) {
-        return NextResponse.redirect(`${origin}/${callbackLocale}/registro/profesional`);
-      }
-
-      // The "Publicar proyecto" CTA carries ?next=projects → land on "Solicitudes
-      // publicadas" after authenticating. Everyone lands on the ONE unified panel; it
-      // opens in the right mode itself.
-      // "sent_projects" is a use-mode tab, so it works for any account.
-      const wantProjects = next === "projects";
-      const destPath = wantProjects
-        ? `/${callbackLocale}/dashboard/profesional?tab=sent_projects`
-        : `/${callbackLocale}/dashboard/profesional`;
-
-      // Cédula is NOT required up-front for clients — it is requested later, at
-      // the moment they book/request a service (see the booking flow). So we no
-      // longer force clients to a profile-completion screen here. Professionals
-      // provide their cédula during professional registration.
-      return NextResponse.redirect(`${origin}${withPostLoginActivity(destPath)}`);
+      return finishSignedIn(data.user, supabase, { origin, callbackLocale, safeNext, next, flow: searchParams.get("flow") });
     }
   }
 
