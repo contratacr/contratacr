@@ -150,3 +150,22 @@ grow into a second exhaustive suite.
 When running locally, Google Maps can log `RefererNotAllowedMapError` if the local URL is not allowed in Google Cloud. That warning does not fail the suite; the test environment URL should be allowlisted.
 
 Playwright verifies that ContrataCR submits or renders the correct behavior around Google OAuth, Resend/Brevo, Cloudinary, Google Maps, and WhatsApp. It cannot guarantee that those independent providers deliver a message, keep their service online, or preserve a third-party UI. Use the short manual checklist in the coverage matrix whenever one of those integrations changes.
+
+## Environments: what runs where
+
+| Environment | Branch | Data | Automated | Manual |
+|---|---|---|---|---|
+| Production | `main` | Real users | `security-checks` on push; daily `supabase-backup` | Never test against production. |
+| Test | `test` (same code as `main`) | Production copy refreshed on demand with `sync-production-to-test`, plus the two regression identities below | `regression-tests` on every push to `test` (local stack rebuilt from migrations, seeded, full Playwright release regression) | Sign in at https://test.contratacr.com with the regression identities. |
+| Mobile | `mobile` (`test` + native shell) | Same as test | `mobile-native-regression` on every push to `mobile`: contracts plus the native WebView shell and direct-chat suites. The Android emulator and iOS simulator jobs run only from *Run workflow* (the macOS runner costs ten times a Linux minute). | Debug APK pointed at a local dev server (`android/app/src/debug`) or the release build against test. |
+
+`cloudflare-compatibility` is the deployment pipeline despite its name: a push to `main` deploys the production Worker (`contratacr`), and a push to `test` **or** `mobile` deploys the shared `contratacr-preview` Worker behind test.contratacr.com — the last of the two pushed wins, which is why the native app loads test.contratacr.com with the `mobile` code after a `mobile` push.
+
+## Manual testing identities (test only)
+
+The seeded regression pair is the same pair you see as **ContrataCR** (client side) and **SG Solutions** (professional side):
+
+- `e2e.client@contratacr.test`
+- `e2e.pro@contratacr.test`
+
+Both use the password stored as `E2E_TEST_PASSWORD` — in `.env.test` locally and as a GitHub Actions secret. The value is never committed. `npm run seed:test:full` recreates the pair and its coverage data; `npm run seed:test:verify` checks it. These accounts cannot be deleted through the app (the deletion RPC refuses regression identities).

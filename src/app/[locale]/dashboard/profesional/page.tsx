@@ -65,6 +65,7 @@ import {
 import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { deleteOwnedMediaUrl } from "@/lib/client-media-cleanup";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
+import { formatPersonDisplayName, getProfessionalDisplayName } from "@/lib/display-name";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
@@ -1490,6 +1491,11 @@ export default function DashboardPage() {
   const professionalDisplayName = businessName || personalDisplayName;
   const displayName = mode === "offer" ? professionalDisplayName : personalDisplayName;
   const compactHeaderName = compactDisplayName(displayName);
+  // Phones get one line: business name for the offer mode, first name and first
+  // surname for people. The verified check then always sits right after it.
+  const mobileHeaderName = mode === "offer"
+    ? getProfessionalDisplayName(personalDisplayName, businessName).primaryMobile
+    : formatPersonDisplayName(personalDisplayName, "mobile");
   const headerAvatar = profile?.avatar_url || proProfile?.avatar_url || null;
   const proForCompletion = pro && headerAvatar && !proProfile?.avatar_url
     ? { ...pro, profiles: { ...(proProfile ?? {}), avatar_url: headerAvatar } }
@@ -1974,13 +1980,11 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="min-w-0 self-center">
-                <div className="flex min-w-0 items-start gap-1.5 sm:hidden">
-                  {/* The badge rides inline after the last word, so a two-line client
-                      name reads "Nombre Apellido ✓" exactly like the professional panel. */}
-                  <h1 data-testid="dashboard-identity-name" className="line-clamp-2 min-w-0 text-[16px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere]" title={displayName}>
-                    {displayName}
-                    <span className="ml-1 inline-flex translate-y-[2px] align-baseline">{identityBadge()}</span>
+                <div className="flex min-w-0 items-center gap-1.5 sm:hidden">
+                  <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[16px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
+                    {mobileHeaderName || displayName}
                   </h1>
+                  <div className="flex shrink-0 items-center">{identityBadge()}</div>
                 </div>
                 <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 sm:flex">
                   <h1 className="min-w-0 shrink truncate whitespace-nowrap text-2xl font-bold leading-tight text-[#162543]" title={displayName}>
