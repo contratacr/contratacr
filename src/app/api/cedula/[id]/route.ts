@@ -15,9 +15,9 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 // and showed valid people "cédula no encontrada" — the exact regression this
 // reverts. (Do NOT re-add an auth gate here; see WARNING in contratacr-context.md.)
 //
-// PRIVACY is preserved a different way: the padrón TABLE stays private — it is
-// read ONLY server-side via the SECURITY DEFINER `padron_lookup` RPC
-// (service-role), never exposed to the client. Abuse is bounded by a per-IP rate
+// PRIVACY is preserved a different way: the Cloudflare D1 padrón stays private
+// and is read ONLY through its server-side binding, never exposed to the client.
+// Abuse is bounded by a per-IP rate
 // limit; the endpoint returns at most ONE name for ONE valid-format cédula (no
 // bulk/enumerable listing), and that name is the same public datum the TSE's own
 // consulta returns.
@@ -89,4 +89,3 @@ export async function GET(
     { status: 404 }
   );
 }
-

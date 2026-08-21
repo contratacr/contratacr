@@ -18,7 +18,7 @@ type AssistantResponse = {
   serviceId?: string | null;
   searchHref?: string | null;
   ctaLabel?: string | null;
-  aiProvider?: "openai" | "local";
+  aiProvider?: "workers-ai" | "openai" | "local";
   selectedResultIndex?: number | null;
   professionals?: Array<{
     id: string;
@@ -38,10 +38,22 @@ type HistoryResponse = {
 const ask = (page: Parameters<typeof apiJson>[0], message: string, options: Record<string, unknown> = {}) =>
   apiJson<AssistantResponse>(page, "/api/ai-assistant", {
     method: "POST",
-    body: { message, locale: "es", pagePath: "/es", ...options },
+    body: { message, locale: "es", pagePath: "/es", platform: "native", ...options },
   });
 
 test.describe.configure({ mode: "serial" });
+
+function assistantTestClientIp(value: string) {
+  let hash = 0;
+  for (const character of value) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  return `203.0.113.${(hash % 254) + 1}`;
+}
+
+test.beforeEach(async ({ page }, testInfo) => {
+  await page.setExtraHTTPHeaders({
+    "x-forwarded-for": assistantTestClientIp(`${testInfo.project.name}:${testInfo.title}`),
+  });
+});
 
 test.describe("@smoke ContrataCR AI service resolver", () => {
   test("resolves a natural customer scenario for every catalog service", async () => {
@@ -341,10 +353,10 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "Olvidé mi contraseña", action: "reset_password", href: "/es/olvide-contrasena" },
       { prompt: "Quiero ver todos los servicios", action: "browse_services", href: "/es/servicios" },
     ];
-    for (const [index, item] of cases.entries()) {
+    for (const item of cases) {
       const response = await ask(page, item.prompt);
       expect(response.status, JSON.stringify(response.body)).toBe(200);
-      if (index === 0 && process.env.OPENAI_API_KEY) expect(response.body.aiProvider).toBe("openai");
+      expect(response.body.aiProvider).toBe("local");
       expect(response.body.answer?.length).toBeGreaterThan(10);
       expect(response.body.action).toBe(item.action);
       expect(response.body.searchHref).toBe(item.href);
@@ -400,7 +412,7 @@ test.describe("@seeded ContrataCR AI", () => {
 
     const empty = await apiJson<AssistantResponse>(page, "/api/ai-assistant", {
       method: "POST",
-      body: { message: "   ", locale: "es", pagePath: "/es" },
+      body: { message: "   ", locale: "es", pagePath: "/es", platform: "native" },
     });
     expect(empty.status).toBe(200);
     expect(empty.body.action).toBe("answer");
@@ -635,7 +647,7 @@ test.describe("@seeded ContrataCR AI", () => {
     await gotoOK(page, "/en");
     const response = await apiJson<AssistantResponse>(page, "/api/ai-assistant", {
       method: "POST",
-      body: { message: "I forgot my password", locale: "en", pagePath: "/en" },
+      body: { message: "I forgot my password", locale: "en", pagePath: "/en", platform: "native" },
     });
     expect(response.status).toBe(200);
     expect(response.body.action).toBe("reset_password");

@@ -44,8 +44,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   // Automatic ID-format assist (format/length only — human review still required
   // for the badge). The live name-match lookup uses the shared identity verifier
-  // so deployed environments read the heavy padrón from Neon first, with the
-  // Supabase RPC kept as a temporary/local fallback.
+  // so deployed environments read the padrón from Cloudflare D1 first. Neon is
+  // optional; the retired Supabase padrón is never queried.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cedula = cleanId((pro.profiles as any)?.cedula ?? "");
   const detectedIdType = cedula ? detectIdType(cedula) : null;

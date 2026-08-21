@@ -1,11 +1,10 @@
-import { createAdminClient } from "@/lib/supabase/admin";
 import { cleanId } from "@/lib/cedula";
 import { neon } from "@neondatabase/serverless";
 
 // ── IdentityVerifier abstraction ────────────────────────────────────────────
 // ContrataCR's verification flow calls this interface only. The underlying
 // provider is swappable WITHOUT touching callers: Cloudflare D1 padrón first,
-// Neon/Supabase as migration fallbacks, and ApifyCR / Verifik later by swapping
+// optional Neon as an offload fallback, and ApifyCR / Verifik later by swapping
 // `getIdentityVerifier()`. INTERNAL USE ONLY — there is no public endpoint, no
 // third-party auth, no external rate limiting; the app calls it server-side.
 
@@ -196,25 +195,7 @@ async function lookupPadronInNeon(cedula: string): Promise<PadronLookupSource | 
   return { provider: "neon_padron", row: rows[0] ?? null };
 }
 
-async function lookupPadronInSupabase(cedula: string): Promise<PadronLookupSource> {
-  const admin = createAdminClient();
-  // Read via the SECURITY DEFINER RPC (migration 050): it runs as the table
-  // owner, so it reads the padrón regardless of service-role table grants, and
-  // the padrón stays private (EXECUTE granted to service_role only).
-  const response = await admin.rpc("padron_lookup", { p_cedula: cedula });
-  if (response.error) {
-    console.error("[identity] padron_lookup failed:", {
-      code: response.error.code,
-      message: response.error.message,
-      details: response.error.details,
-    });
-    throw response.error;
-  }
-  const row = (Array.isArray(response.data) ? response.data[0] : response.data) as PadronLookupRow | null;
-  return { provider: "self_hosted_padron", row };
-}
-
-async function lookupPadron(cedula: string): Promise<PadronLookupSource> {
+async function lookupPadron(cedula: string): Promise<PadronLookupSource | null> {
   try {
     const d1Result = await lookupPadronInD1(cedula);
     if (d1Result) return d1Result;
@@ -228,12 +209,13 @@ async function lookupPadron(cedula: string): Promise<PadronLookupSource> {
     const neonResult = await lookupPadronInNeon(cedula);
     if (neonResult) return neonResult;
   } catch (error) {
-    // During the migration window, Neon must be a safe offload path rather than a
-    // new single point of failure. Keep Supabase as fallback until production has
-    // verified parity and the padrón table can be removed from Supabase.
-    console.error("[identity] neon padron lookup failed; falling back to Supabase:", error);
+    // Neon is optional and must never become a new single point of failure.
+    console.error("[identity] neon padron lookup failed:", error);
   }
-  return lookupPadronInSupabase(cedula);
+  // Migration 173 removed the Supabase padrón tables and RPC. Do not silently
+  // call that retired path when the D1 binding is unavailable (for example in a
+  // plain local Next.js server); let callers surface a bounded unavailable state.
+  return null;
 }
 
 // ── Self-hosted padrón provider ─────────────────────────────────────────────
@@ -243,7 +225,7 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
   async lookup(cedula: string): Promise<IdentityLookupResult> {
     const id = cleanId(cedula);
     if (!id) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
-    let source: PadronLookupSource;
+    let source: PadronLookupSource | null;
     try {
       source = await lookupPadron(id);
     } catch (error) {
@@ -251,6 +233,9 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
       return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name, unavailable: true };
     }
 
+    if (!source) {
+      return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name, unavailable: true };
+    }
     const row = source.row;
     // Not found -> found:false. Technical failures are returned as unavailable above.
     if (!row) return { found: false, fullName: null, dob: null, isAdult: false, provider: source.provider };
@@ -267,12 +252,13 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
 
   async verify({ cedula, fullName }: IdentityCheckInput): Promise<IdentityCheckResult> {
     const id = cleanId(cedula);
-    let source: PadronLookupSource;
+    let source: PadronLookupSource | null;
     try {
       source = await lookupPadron(id);
     } catch {
       return { matched: false, found: false, score: 0, provider: this.name };
     }
+    if (!source) return { matched: false, found: false, score: 0, provider: this.name };
     const row = source.row;
 
     if (!row) return { matched: false, found: false, score: 0, provider: source.provider };

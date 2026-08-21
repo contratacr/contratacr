@@ -756,6 +756,16 @@ input::-ms-clear {
 /* Scrollbar */
 * { scrollbar-color: #94a3b8 transparent; }
 ::-webkit-scrollbar { width: 7px; height: 7px; }
+
+/* Horizontal chip rows (marketplace filters) hint overflow by clipping the last
+   chip, never with a scrollbar. Older Android WebViews ignore scrollbar-width
+   once a ::-webkit-scrollbar rule exists, so both forms are required. */
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.ccr-chip-row {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 4.5rem), transparent calc(100% - 0.5rem));
+  mask-image: linear-gradient(to right, #000 calc(100% - 4.5rem), transparent calc(100% - 0.5rem));
+}
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { min-height: 72px; background: #94a3b8; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #64748b; }

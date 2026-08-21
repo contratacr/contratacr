@@ -1975,12 +1975,12 @@ export default function DashboardPage() {
               </div>
               <div className="min-w-0 self-center">
                 <div className="flex min-w-0 items-start gap-1.5 sm:hidden">
-                  <div className="flex min-w-0 items-center gap-1.5">
-                    <h1 data-testid="dashboard-identity-name" className="line-clamp-2 min-w-0 text-[16px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere]" title={displayName}>
-                      {displayName}
-                    </h1>
-                    <div className="flex shrink-0 items-center">{identityBadge()}</div>
-                  </div>
+                  {/* The badge rides inline after the last word, so a two-line client
+                      name reads "Nombre Apellido ✓" exactly like the professional panel. */}
+                  <h1 data-testid="dashboard-identity-name" className="line-clamp-2 min-w-0 text-[16px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere]" title={displayName}>
+                    {displayName}
+                    <span className="ml-1 inline-flex translate-y-[2px] align-baseline">{identityBadge()}</span>
+                  </h1>
                 </div>
                 <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 sm:flex">
                   <h1 className="min-w-0 shrink truncate whitespace-nowrap text-2xl font-bold leading-tight text-[#162543]" title={displayName}>

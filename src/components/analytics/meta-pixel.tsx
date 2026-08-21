@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { trackMetaPageView } from "@/lib/analytics/meta-pixel";
+import { isNativeAppRuntime } from "@/hooks/use-native-app";
 
 interface MetaPixelProps {
   pixelId?: string;
@@ -27,6 +28,12 @@ export function MetaPixel({ pixelId }: MetaPixelProps) {
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
+      // The native app never loads the pixel: 220 KB of tracking script on every
+      // cold start, and third-party tracking inside the app needs its own consent.
+      if (isNativeAppRuntime()) {
+        setMeasurement("declined");
+        return;
+      }
       const stored = window.localStorage.getItem(CONSENT_KEY);
       setMeasurement(stored === "declined" ? "declined" : "enabled");
     });

@@ -368,7 +368,7 @@ export function OffersBoard({
             </h1>
           </div>
           <div className="px-4 pb-3">{renderSearch()}</div>
-          <div className="scrollbar-none flex gap-1.5 overflow-x-auto px-4 pb-4">
+          <div className="ccr-chip-row scrollbar-none flex gap-1.5 overflow-x-auto px-4 pb-4">
             {renderFilters()}
           </div>
           <div className="px-4 pb-3" data-testid="offers-mobile-sticky-actions">

@@ -131,10 +131,12 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-center text-[13px] font-semibold leading-tight transition-all sm:text-[14px]",
+              "group relative inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-lg py-2 text-center font-semibold leading-tight transition-all sm:text-[14px]",
+              // Segmented cells are narrow on phones: the label never breaks mid-word
+              // and the count floats as a corner badge instead of taking row width.
               useSegmentedLayout
-                ? "min-w-0 whitespace-normal [overflow-wrap:anywhere]"
-                : "min-w-[8.25rem] flex-none whitespace-normal [overflow-wrap:anywhere]",
+                ? "min-w-0 whitespace-nowrap px-1.5 text-[12px] min-[400px]:text-[13px] sm:px-3"
+                : "min-w-[8.25rem] flex-none whitespace-normal px-3 text-[13px] [overflow-wrap:anywhere]",
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
                 : "text-[#6b7280] hover:text-[#374151]"
@@ -145,6 +147,7 @@ export function StatusFilterTabs({
             {count > 0 && (
               <span className={cn(
                 "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none tabular-nums transition-colors",
+                useSegmentedLayout && "absolute -top-1.5 right-0.5 h-4 min-w-4 px-1 text-[9px] ring-2 ring-[#f3f4f6]",
                 active
                   ? "bg-[#e5f6fc] text-[#007fae]"
                   : "bg-[#e4ebf0] text-[#718096] group-hover:bg-[#dce6ec] group-hover:text-[#526277]"
