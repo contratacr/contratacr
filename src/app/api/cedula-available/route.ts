@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -8,6 +9,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // the DB unique constraint only after the user presses confirm. Only the boolean
 // is returned — no account details are ever leaked.
 export async function GET(req: Request) {
+  // Public endpoint: bound abuse and enumeration per client IP.
+  const limited = enforceRateLimit(req, "cedula-available", 30, 60000);
+  if (limited) return limited;
   const { searchParams } = new URL(req.url);
   const cedula = (searchParams.get("cedula") ?? "").replace(/\D/g, "");
   if (!cedula) return NextResponse.json({ taken: false });

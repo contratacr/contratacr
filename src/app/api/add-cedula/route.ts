@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runIdentityVerification } from "@/lib/verification/run-verification";
@@ -8,6 +9,9 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 // cédula) adds it from their panel. We store it, clear the no_cr_id flag, and run
 // the normal padrón verification automatically (no ticket).
 export async function POST(req: Request) {
+  // Public endpoint: bound abuse and enumeration per client IP.
+  const limited = enforceRateLimit(req, "add-cedula", 10, 600000);
+  if (limited) return limited;
   const session = await createServerClient();
   const { data: { user } } = await session.auth.getUser();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });

@@ -395,7 +395,20 @@ export async function GET(req: NextRequest) {
     console.error("[GET /api/projects] pro error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ projects: await enrichProjects(data ?? []) });
+  // A professional browsing open projects gets the brief, never the client's
+  // contact details or the beneficiary's identity: those are shared through
+  // the proposal and chat flows once the client chooses to engage.
+  const briefs = (data ?? []).map((row) => {
+    const {
+      client_name_snapshot: _name, client_email_snapshot: _email, client_phone_snapshot: _phone,
+      beneficiary_name: _beneficiary, beneficiary_dob: _dob,
+      created_source_host: _host, created_app_environment: _env, created_supabase_project_ref: _ref,
+      ...brief
+    } = row as Record<string, unknown>;
+    void _name; void _email; void _phone; void _beneficiary; void _dob; void _host; void _env; void _ref;
+    return brief;
+  });
+  return NextResponse.json({ projects: await enrichProjects(briefs) });
 }
 
 // Lazy auto-confirm: if the pro marked work done > AUTO_CONFIRM_DAYS and the client

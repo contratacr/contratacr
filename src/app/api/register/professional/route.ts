@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { runIdentityVerification } from "@/lib/verification/run-verification";
@@ -116,6 +117,9 @@ async function notifyMatchingOpenProjectsForProfessional(
 }
 
 export async function POST(req: Request) {
+  // Public endpoint: bound abuse and enumeration per client IP.
+  const limited = enforceRateLimit(req, "register", 10, 600000);
+  if (limited) return limited;
   try {
     const body = await req.json();
     const {

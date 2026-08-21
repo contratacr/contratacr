@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Lightweight existence checks for inline, real-time validation of the email
 // and cedula fields during registration / booking.
 export async function GET(req: NextRequest) {
+  // Public endpoint: bound abuse and enumeration per client IP.
+  const limited = enforceRateLimit(req, "check-availability", 30, 60000);
+  if (limited) return limited;
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email")?.trim();
   const cedula = searchParams.get("cedula")?.replace(/\D/g, "");
