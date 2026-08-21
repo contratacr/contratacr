@@ -1133,7 +1133,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 type="button"
                 onClick={() => setShowPublish(true)}
                 aria-label={t("publishProject")}
-                className="lg:hidden fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 inline-flex items-center gap-2 rounded-full bg-[#009FD9] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#009FD9]/30 transition-transform active:scale-95 hover:bg-[#0089bb]"
+                className="ccr-native-fab lg:hidden fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 inline-flex items-center gap-2 rounded-full bg-[#009FD9] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#009FD9]/30 transition-transform active:scale-95 hover:bg-[#0089bb]"
               >
                 <Plus className="h-5 w-5" />
                 {t("publishShort")}

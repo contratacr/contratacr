@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations, useLocale } from "next-intl";
-import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreVertical } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
@@ -64,9 +65,11 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
   const [itemMenuOpenId, setItemMenuOpenId] = useState<string | null>(null);
+  const [itemMenuPosition, setItemMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const globalMenuRef = useRef<HTMLDivElement | null>(null);
   const itemMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const itemMenuPortalRef = useRef<HTMLDivElement | null>(null);
   const projectTimes = useNotificationProjectTimes(items);
 
   const loadNotifications = useCallback(() => {
@@ -140,13 +143,16 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       const target = event.target as Node;
       if (globalMenuOpen && globalMenuRef.current?.contains(target)) return;
       if (itemMenuOpenId && itemMenuRefs.current[itemMenuOpenId]?.contains(target)) return;
+      if (itemMenuOpenId && itemMenuPortalRef.current?.contains(target)) return;
       setGlobalMenuOpen(false);
       setItemMenuOpenId(null);
+      setItemMenuPosition(null);
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setGlobalMenuOpen(false);
         setItemMenuOpenId(null);
+        setItemMenuPosition(null);
       }
     }
     document.addEventListener("mousedown", onPointerDown);
@@ -156,6 +162,18 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [globalMenuOpen, itemMenuOpenId]);
+
+  useEffect(() => {
+    if (!itemMenuOpenId) return;
+    const closeDetachedMenu = () => {
+      setItemMenuOpenId(null);
+      setItemMenuPosition(null);
+    };
+    window.addEventListener("resize", closeDetachedMenu);
+    return () => {
+      window.removeEventListener("resize", closeDetachedMenu);
+    };
+  }, [itemMenuOpenId]);
 
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
@@ -201,6 +219,27 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   }
 
   const role = user?.user_metadata?.role as string | undefined;
+
+  function toggleItemMenu(event: React.MouseEvent<HTMLButtonElement>, item: Notification) {
+    event.stopPropagation();
+    setGlobalMenuOpen(false);
+    if (itemMenuOpenId === item.id) {
+      setItemMenuOpenId(null);
+      setItemMenuPosition(null);
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const estimatedHeight = item.read ? 58 : 104;
+    const top = window.innerHeight - rect.bottom >= estimatedHeight + 8
+      ? rect.bottom + 6
+      : Math.max(8, rect.top - estimatedHeight - 6);
+    setItemMenuPosition({
+      top,
+      right: Math.max(8, window.innerWidth - rect.right),
+    });
+    setItemMenuOpenId(item.id);
+  }
 
   function open(n: Notification) {
     const href = notificationActionHref(n, role, locale);
@@ -277,7 +316,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             }}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#f8fafc] text-[#162543] ring-1 ring-[#c9d8e4] transition-colors hover:bg-[#eef6fb]"
           >
-            <MoreVertical className="h-5 w-5" strokeWidth={3} />
+            <MoreHorizontal className="h-5 w-5" strokeWidth={3} />
           </button>
           {globalMenuOpen && (
             <div role="menu" className="absolute right-0 top-full z-30 mt-2 min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl">
@@ -426,18 +465,20 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                       aria-label={locale === "en" ? "Notification options" : "Opciones"}
                       aria-haspopup="menu"
                       aria-expanded={itemMenuOpenId === n.id}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setGlobalMenuOpen(false);
-                        setItemMenuOpenId((current) => (current === n.id ? null : n.id));
-                      }}
+                      onClick={(event) => toggleItemMenu(event, n)}
                       className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#526277] ring-1 ring-[#dbe7ef] transition-colors hover:bg-[#eef4f8] hover:text-[#162543]"
                     >
-                      <MoreVertical className="h-4 w-4" />
+                      <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </AppTooltip>
-                  {itemMenuOpenId === n.id && (
-                    <div role="menu" className="absolute right-0 top-full z-30 mt-1.5 min-w-[190px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl">
+                  {itemMenuOpenId === n.id && itemMenuPosition && typeof document !== "undefined" && createPortal(
+                    <div
+                      ref={itemMenuPortalRef}
+                      role="menu"
+                      data-notification-item-menu
+                      className="fixed z-[240] min-w-[190px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl"
+                      style={{ top: itemMenuPosition.top, right: itemMenuPosition.right }}
+                    >
                       {!n.read && (
                         <button
                           type="button"
@@ -458,7 +499,8 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                         <Trash2 className="h-4 w-4" />
                         {t("delete")}
                       </button>
-                    </div>
+                    </div>,
+                    document.body,
                   )}
                 </div>
               </li>

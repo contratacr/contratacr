@@ -359,16 +359,21 @@ export function LandingHero() {
     setLocActive(-1);
   }, [location]);
 
-  // Load Google Maps (Places) once so the location field can autocomplete ADDRESSES.
-  useEffect(() => {
-    if (!GMAPS_KEY) return;
-    loadGoogleMaps(GMAPS_KEY).then(() => { mapsReadyRef.current = true; }).catch(() => {});
-  }, []);
+  // Google Maps (Places) is only needed for ADDRESS autocomplete, so it loads the
+  // first time the location field gets attention instead of on every home view:
+  // ~330 KB across ten scripts that most visits never used.
+  const mapsRequestedRef = useRef(false);
+  const ensureMaps = () => {
+    if (!GMAPS_KEY || mapsRequestedRef.current) return;
+    mapsRequestedRef.current = true;
+    loadGoogleMaps(GMAPS_KEY).then(() => { mapsReadyRef.current = true; }).catch(() => { mapsRequestedRef.current = false; });
+  };
 
   // Google Places ADDRESS predictions (new AutocompleteSuggestion API), debounced. Costa Rica
   // only. Best-effort: any failure just leaves the province/cantón taxonomy working.
   useEffect(() => {
     const q = location.trim();
+    if (q.length >= 2) ensureMaps();
     if (nearMeRef.current && q === nearMeActiveLabel) return;
     if (q.length < 3) { setAddrSug([]); return; }
     const id = setTimeout(async () => {
@@ -675,7 +680,7 @@ export function LandingHero() {
                   value={location}
                   onChange={(e) => handleLocationChange(e.target.value)}
                   onKeyDown={handleLocKeyDown}
-                  onFocus={() => setOpenLoc(location.trim().length >= 2)}
+                  onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
                   onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
                   placeholder={t("location")}
                   className="flex-1 w-full text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
@@ -724,7 +729,7 @@ export function LandingHero() {
                   value={location}
                   onChange={(e) => handleLocationChange(e.target.value)}
                   onKeyDown={handleLocKeyDown}
-                  onFocus={() => setOpenLoc(location.trim().length >= 2)}
+                  onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
                   onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
                   placeholder={t("location")}
                   className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
@@ -756,7 +761,7 @@ export function LandingHero() {
       {/* Arch / dome image — responsive height */}
       <div className="flex justify-center px-4 pb-0">
         <div
-          className="relative overflow-hidden w-full h-[180px] sm:h-[280px] md:h-[360px] lg:h-[420px]"
+          className="relative overflow-hidden w-full h-[180px] bg-[#c9d6e0] sm:h-[280px] md:h-[360px] lg:h-[420px]"
           style={{ maxWidth: 800, borderRadius: "50% 50% 0 0 / 100% 100% 0 0" }}
         >
           <Image

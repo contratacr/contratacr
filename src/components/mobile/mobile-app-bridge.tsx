@@ -5,8 +5,61 @@ import { usePathname } from "next/navigation";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 
+// The first history entry of a WebView session is tagged so the hardware back
+// button can tell "return to the previous screen" from "leave the app".
+const NATIVE_BACK_ROOT_STATE_KEY = "__ccrNativeBackRoot";
+const NATIVE_BACK_ROOT_SESSION_KEY = "ccr-native-back-root";
+
 function isSearchPath(pathname: string) {
   return /(^|\/)buscar(\/|$)/.test(pathname);
+}
+
+// Flows that own the whole screen: no app header and no bottom nav, because the
+// form needs the full height and the route has its own way back.
+export function isNativeFullscreenPath(pathname: string) {
+  return /(^|\/)publicar-proyecto(\/|$)/.test(pathname);
+}
+
+// Overlays own the back gesture while they are open, and each one listens for a
+// different dismissal, so back replays whichever gesture that overlay expects.
+function dismissTopMostNativeOverlay() {
+  // Screens that render their own in-app back control keep owning the gesture,
+  // so back returns to the list instead of leaving the screen behind.
+  const inAppBack = document.querySelector<HTMLElement>("[data-native-back]");
+  if (inAppBack && inAppBack.getBoundingClientRect().width > 0) {
+    inAppBack.click();
+    return true;
+  }
+
+  const assistantOpen = document.documentElement.classList.contains("contratacr-ai-open");
+  const escapableLayer = document.querySelector(
+    '[data-radix-popper-content-wrapper], [role="dialog"][data-state="open"], [role="menu"][data-state="open"]',
+  );
+  if (assistantOpen || escapableLayer) {
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    return true;
+  }
+
+  // The notification menu closes on a pointer landing outside its panel.
+  if (document.querySelector(".ccr-notification-bell-menu")) {
+    document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    return true;
+  }
+
+  // The navigation drawer closes through the transparent layer next to it. It
+  // stays mounted off-screen, so only an on-screen panel counts as open.
+  const drawer = [...document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')].find((panel) => {
+    if (panel.dataset.testid?.startsWith("native-first-run")) return false;
+    const bounds = panel.getBoundingClientRect();
+    return bounds.width > 0 && bounds.left >= 0;
+  });
+  const drawerDismissLayer = drawer?.previousElementSibling;
+  if (drawerDismissLayer instanceof HTMLElement) {
+    drawerDismissLayer.click();
+    return true;
+  }
+
+  return false;
 }
 
 function isNativeMarketplaceListPath(pathname: string) {
@@ -134,11 +187,22 @@ export function MobileAppBridge() {
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
     const isSearchRoute = isSearchPath(pathname);
+    // Routes that, like the web, mount only the drawer and draw their own title
+    // bar: the shell must not reserve space for an app header that is not there.
+    const isMarketplaceRoute = /(^|\/)(?:ofertas|empleos|servicios)(\/|$)/.test(pathname);
+    const isFullscreenRoute = isNativeFullscreenPath(pathname);
     document.documentElement.classList.toggle("ccr-native-search-route", isSearchRoute);
     document.body.classList.toggle("ccr-native-search-route", isSearchRoute);
+    for (const root of [document.documentElement, document.body]) {
+      root.classList.toggle("ccr-native-marketplace-route", isMarketplaceRoute);
+      root.classList.toggle("ccr-native-fullscreen-route", isFullscreenRoute);
+    }
     document.documentElement.classList.remove("ccr-native-web-parity");
     document.body.classList.remove("ccr-native-web-parity");
     return () => {
+      for (const root of [document.documentElement, document.body]) {
+        root.classList.remove("ccr-native-marketplace-route", "ccr-native-fullscreen-route");
+      }
       document.documentElement.classList.remove("ccr-native-search-route");
       document.body.classList.remove("ccr-native-search-route");
       document.documentElement.classList.remove("ccr-native-web-parity");
@@ -193,8 +257,90 @@ export function MobileAppBridge() {
       window.location.assign(targetHref);
     };
 
+    // Kept as an explicit opt-in: marketplace links now navigate in-document.
+    // Flip the flag only if the RSC failure that motivated full reloads returns.
+    const FORCE_DOCUMENT_NAVIGATION = false;
+    if (!FORCE_DOCUMENT_NAVIGATION) return;
     document.addEventListener("click", onNativeMarketplaceClick, true);
     return () => document.removeEventListener("click", onNativeMarketplaceClick, true);
+  }, []);
+
+  useEffect(() => {
+    if (!isNativeAppRuntime()) return;
+    let cancelled = false;
+    let removeListener: (() => void) | undefined;
+
+    // Android delivers back to the WebView, whose canGoBack() does not track the
+    // router's same-document navigations. Without this the activity just closes.
+    try {
+      if (window.sessionStorage.getItem(NATIVE_BACK_ROOT_SESSION_KEY) !== "1") {
+        window.sessionStorage.setItem(NATIVE_BACK_ROOT_SESSION_KEY, "1");
+        const state = (window.history.state ?? {}) as Record<string, unknown>;
+        window.history.replaceState({ ...state, [NATIVE_BACK_ROOT_STATE_KEY]: true }, "");
+      }
+    } catch {
+      // Private storage can be unavailable; the fallback below still applies.
+    }
+
+    void import("@capacitor/app")
+      .then(async ({ App }) => {
+        if (cancelled) return;
+
+        const handle = await App.addListener("backButton", () => {
+          if (dismissTopMostNativeOverlay()) return;
+
+          const state = window.history.state as Record<string, unknown> | null;
+          if (state?.[NATIVE_BACK_ROOT_STATE_KEY] || window.history.length <= 1) {
+            void App.exitApp();
+            return;
+          }
+
+          const from = window.location.href;
+          window.history.back();
+          // The root tag is lost whenever the router replaces the entry, so a
+          // back that goes nowhere must still let the user leave the app.
+          window.setTimeout(() => {
+            if (window.location.href === from) void App.exitApp();
+          }, 600);
+        });
+
+        if (cancelled) {
+          void handle.remove();
+          return;
+        }
+        removeListener = () => void handle.remove();
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      removeListener?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isNativeAppRuntime()) return;
+    // `main` is position:fixed in the native shell, which makes it a stacking
+    // context: a full-screen modal rendered inside it can never paint above the
+    // app header or the bottom nav, however high its z-index. While such a
+    // modal is open, the shell steps aside and gives the modal the whole height.
+    const roots = [document.documentElement, document.body];
+    let frame = 0;
+    const sync = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const open = !!document.querySelector(".app-modal-screen:not(.app-centered-modal-screen)");
+        for (const root of roots) root.classList.toggle("ccr-native-fullscreen-layer", open);
+      });
+    };
+    const observer = new MutationObserver(sync);
+    observer.observe(document.body, { childList: true, subtree: true });
+    sync();
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
+      for (const root of roots) root.classList.remove("ccr-native-fullscreen-layer");
+    };
   }, []);
 
   useEffect(() => {

@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { limitTrimmedText } from "@/lib/text-limits";
 import { validateDirectMessage } from "@/lib/moderation/messages";
 import { sendNotificationPush } from "@/lib/push/notify";
+import { sendBrevoEmail } from "@/lib/email/send";
+import { notifyRecipientOutsideApp, usersWithActivePush } from "@/lib/direct-chat/outside-app-notify";
 
 type ConversationRow = {
   id: string;
@@ -101,15 +103,27 @@ async function enrichConversations(db: ReturnType<typeof createAdminClient>, row
   const bookings = new Map((bookingsResult.data ?? []).map((row) => [row.id, row]));
   const projects = new Map((projectsResult.data ?? []).map((row) => [row.id, row]));
   const proposals = new Map((proposalsResult.data ?? []).map((row) => [row.id, row]));
-  return rows.map((row) => ({
+  const withPush = await usersWithActivePush(db, rows.flatMap((row) => [row.client_id, row.professional_profile_id]));
+  return rows.map((row) => {
+    const professionalHasApp = withPush.has(row.professional_profile_id);
+    const joined = row.professionals as { whatsapp?: string | null } | null | undefined;
+    const { whatsapp, ...professionalPublic } = joined ?? {};
+    return {
     ...row,
+    professionals: joined ? professionalPublic : row.professionals,
+    client_has_app: withPush.has(row.client_id),
+    professional_has_app: professionalHasApp,
+    // Exposed only as the last-resort contact when the professional cannot be
+    // reached inside the app; the web already shows this number publicly.
+    professional_whatsapp: professionalHasApp ? null : (whatsapp ?? null),
     client_profile: clients.get(row.client_id) ?? null,
     context: row.booking_id
       ? { type: "booking", ...(bookings.get(row.booking_id) ?? {}) }
       : row.project_id
         ? { type: row.proposal_id ? "proposal" : "project", ...(projects.get(row.project_id) ?? {}), proposal_status: row.proposal_id ? proposals.get(row.proposal_id)?.status : null }
         : { type: "profile", title: row.subject ?? null, status: "open" },
-  }));
+    };
+  });
 }
 
 export async function GET(req: Request) {
@@ -120,7 +134,7 @@ export async function GET(req: Request) {
   const id = searchParams.get("id");
   if (id) {
     const { data } = await db.from("direct_conversations")
-      .select("*, professionals(id, slug, business_name, profiles(full_name, avatar_url))")
+      .select("*, professionals(id, slug, business_name, whatsapp, profiles(full_name, avatar_url))")
       .eq("id", id).maybeSingle();
     const conversation = data as ConversationRow | null;
     const deletedForParticipant = conversation && (conversation.client_id === user.id
@@ -152,7 +166,7 @@ export async function GET(req: Request) {
   const archived = searchParams.get("status") === "archived";
   const buildConversationsQuery = (filterDeleted: boolean) => {
     let conversationsQuery = db.from("direct_conversations")
-      .select("*, professionals(id, slug, business_name, profiles(full_name, avatar_url))")
+      .select("*, professionals(id, slug, business_name, whatsapp, profiles(full_name, avatar_url))")
       .or(`client_id.eq.${user.id},professional_profile_id.eq.${user.id}`)
       .neq("status", "blocked");
     conversationsQuery = archived
@@ -320,6 +334,36 @@ export async function POST(req: Request) {
       proposal_id: conversation.proposal_id,
     },
   });
+  // Push only lands on installed apps. Someone without one hears about the
+  // first unread message by email (professionals also by WhatsApp); later
+  // messages in the same unread run stay quiet so a long exchange is one notice.
+  const recipientIsProfessional = recipientId === conversation.professional_profile_id;
+  const priorUnread = Number(
+    (recipientIsProfessional ? conversation.professional_unread_count : conversation.client_unread_count) ?? 0,
+  );
+  if (priorUnread === 0) {
+    const reachable = await usersWithActivePush(db, [recipientId]);
+    if (!reachable.has(recipientId)) {
+      const [{ data: senderProfile }, { data: senderProfessional }] = await Promise.all([
+        db.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+        recipientIsProfessional
+          ? Promise.resolve({ data: null })
+          : db.from("professionals").select("business_name").eq("profile_id", user.id).maybeSingle(),
+      ]);
+      const senderName = (senderProfessional as { business_name?: string | null } | null)?.business_name
+        || senderProfile?.full_name
+        || "Alguien";
+      await notifyRecipientOutsideApp({
+        db,
+        origin: process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin,
+        conversationId: conversation.id,
+        recipientId,
+        recipientIsProfessional,
+        senderName,
+        preview: pushPreview,
+      }).catch((error) => console.error("[direct-chat] outside-app notice failed:", error));
+    }
+  }
   const [signedMessage] = await signMessageAttachments(db, [msg as DirectMessageRow]);
   return NextResponse.json({ ok: true, conversationId: conversation.id, message: signedMessage, created: conversationCreated });
 }
@@ -351,6 +395,24 @@ export async function PATCH(req: Request) {
     const now = new Date().toISOString();
     const { error: blockError } = await db.from("direct_conversations").update({ status: "blocked", updated_at: now }).eq("id", conversationId);
     if (blockError) return NextResponse.json({ error: blockError.message }, { status: 500 });
+    // The report is already queued for moderation; the email only makes sure a
+    // human sees it inside the 24-hour window. A delivery failure never blocks
+    // the user, who is already protected by the blocked conversation.
+    const escaped = reportReason.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    void sendBrevoEmail({
+      to: "soporte@contratacr.com",
+      replyTo: user.email ?? undefined,
+      subject: `[Reporte] Mensaje directo bloqueado — conversación ${conversationId.slice(0, 8)}`,
+      html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#374151;line-height:1.6;">
+        <h2 style="margin:0 0 12px;color:#162543;">Reporte desde el chat — ContrataCR</h2>
+        <p style="margin:0 0 6px;"><strong>Conversación:</strong> ${conversationId}</p>
+        <p style="margin:0 0 6px;"><strong>Reportado por:</strong> ${user.email ?? "—"} (${reportingAsClient ? "cliente" : "profesional"})</p>
+        <p style="margin:0 0 6px;"><strong>Usuario reportado:</strong> ${reportingAsClient ? `profesional ${conversation.professional_id ?? "—"}` : `cliente ${conversation.client_id}`}</p>
+        <p style="margin:12px 0 4px;color:#6b7280;">Motivo:</p>
+        <div style="white-space:pre-wrap;">${escaped}</div>
+        <p style="margin:16px 0 0;color:#6b7280;font-size:12px;">La conversación quedó bloqueada de inmediato para ambas partes. Revisa el reporte en el panel de administración.</p>
+      </div>`,
+    }).catch((error) => console.error("[direct-chat] report email failed:", error));
     return NextResponse.json({ ok: true, blocked: true });
   }
   const archived = body.status === "archived" ? true : body.status === "open" ? false : null;

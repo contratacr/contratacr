@@ -283,7 +283,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">{copy.jobs}</h1>
         </div>
         <div className="px-4 pb-3">{renderSearch()}</div>
-        <div className="scrollbar-none flex gap-1.5 overflow-x-auto px-4 pb-4">{renderFilters()}</div>
+        <div className="ccr-chip-row scrollbar-none flex gap-1.5 overflow-x-auto px-4 pb-4">{renderFilters()}</div>
         <div className="px-4 pb-3" data-testid="jobs-mobile-sticky-actions">{renderActions()}</div>
       </div>
     </section>

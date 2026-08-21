@@ -18,7 +18,7 @@ type AssistantResponse = {
   serviceId?: string | null;
   searchHref?: string | null;
   ctaLabel?: string | null;
-  aiProvider?: "openai" | "local";
+  aiProvider?: "workers-ai" | "openai" | "local";
   selectedResultIndex?: number | null;
   professionals?: Array<{
     id: string;
@@ -38,10 +38,22 @@ type HistoryResponse = {
 const ask = (page: Parameters<typeof apiJson>[0], message: string, options: Record<string, unknown> = {}) =>
   apiJson<AssistantResponse>(page, "/api/ai-assistant", {
     method: "POST",
-    body: { message, locale: "es", pagePath: "/es", ...options },
+    body: { message, locale: "es", pagePath: "/es", platform: "native", ...options },
   });
 
 test.describe.configure({ mode: "serial" });
+
+function assistantTestClientIp(value: string) {
+  let hash = 0;
+  for (const character of value) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  return `203.0.113.${(hash % 254) + 1}`;
+}
+
+test.beforeEach(async ({ page }, testInfo) => {
+  await page.setExtraHTTPHeaders({
+    "x-forwarded-for": assistantTestClientIp(`${testInfo.project.name}:${testInfo.title}`),
+  });
+});
 
 test.describe("@smoke ContrataCR AI service resolver", () => {
   test("resolves a natural customer scenario for every catalog service", async () => {
@@ -327,9 +339,14 @@ test.describe("@seeded ContrataCR AI", () => {
     const professional = response.body.professionals?.find((item) => item.id === aiProfessional!.professionalId);
     expect(professional, JSON.stringify(response.body.professionals)).toBeTruthy();
     expect(professional?.actionKind).toBe("message");
-    expect(professional?.actionLabel).toBe("Contactar por WhatsApp");
+    // The assistant is native-only here, so the contact CTA stays inside the app.
+    // What must never happen is promising availability the professional lacks.
+    expect(professional?.actionLabel).toBe("Enviar mensaje");
     expect(professional?.actionLabel).not.toBe("Ver disponibilidad");
-    expect(professional?.actionLabel).not.toBe("Enviar mensaje");
+
+    // The web platform has no assistant in the mobile build.
+    const webResponse = await ask(page, "Necesito un plomero en Atenas, Alajuela", { platform: "web" });
+    expect(webResponse.status).toBe(404);
   });
 
   test("answers product questions with stable, actionable destinations", async ({ page }) => {
@@ -341,10 +358,10 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "Olvidé mi contraseña", action: "reset_password", href: "/es/olvide-contrasena" },
       { prompt: "Quiero ver todos los servicios", action: "browse_services", href: "/es/servicios" },
     ];
-    for (const [index, item] of cases.entries()) {
+    for (const item of cases) {
       const response = await ask(page, item.prompt);
       expect(response.status, JSON.stringify(response.body)).toBe(200);
-      if (index === 0 && process.env.OPENAI_API_KEY) expect(response.body.aiProvider).toBe("openai");
+      expect(response.body.aiProvider).toBe("local");
       expect(response.body.answer?.length).toBeGreaterThan(10);
       expect(response.body.action).toBe(item.action);
       expect(response.body.searchHref).toBe(item.href);
@@ -400,7 +417,7 @@ test.describe("@seeded ContrataCR AI", () => {
 
     const empty = await apiJson<AssistantResponse>(page, "/api/ai-assistant", {
       method: "POST",
-      body: { message: "   ", locale: "es", pagePath: "/es" },
+      body: { message: "   ", locale: "es", pagePath: "/es", platform: "native" },
     });
     expect(empty.status).toBe(200);
     expect(empty.body.action).toBe("answer");
@@ -476,19 +493,19 @@ test.describe("@seeded ContrataCR AI", () => {
     }
   });
 
-  test("explains the current WhatsApp contact flow in Spanish and English", async ({ page }) => {
+  test("keeps the contact flow inside the app in Spanish and English", async ({ page }) => {
     await gotoOK(page, "/es");
     const spanish = await ask(page, "¿Cómo contacto a un profesional?");
     expect(spanish.status, JSON.stringify(spanish.body)).toBe(200);
     expect(spanish.body.action).toBe("answer");
-    expect(spanish.body.answer).toMatch(/WhatsApp/i);
-    expect(spanish.body.answer).not.toMatch(/chat interno|mensajes dentro de la app/i);
+    expect(spanish.body.answer).toMatch(/mensaje/i);
+    expect(spanish.body.answer).not.toMatch(/WhatsApp/i);
 
     const english = await ask(page, "How do I contact a professional?", { locale: "en", pagePath: "/en" });
     expect(english.status, JSON.stringify(english.body)).toBe(200);
     expect(english.body.action).toBe("answer");
-    expect(english.body.answer).toMatch(/WhatsApp/i);
-    expect(english.body.answer).not.toMatch(/in-app chat|direct chat/i);
+    expect(english.body.answer).toMatch(/message/i);
+    expect(english.body.answer).not.toMatch(/WhatsApp/i);
   });
 
   test("uses internal messaging copy and actions for the native app", async ({ page }) => {
@@ -651,7 +668,7 @@ test.describe("@seeded ContrataCR AI", () => {
     await gotoOK(page, "/en");
     const response = await apiJson<AssistantResponse>(page, "/api/ai-assistant", {
       method: "POST",
-      body: { message: "I forgot my password", locale: "en", pagePath: "/en" },
+      body: { message: "I forgot my password", locale: "en", pagePath: "/en", platform: "native" },
     });
     expect(response.status).toBe(200);
     expect(response.body.action).toBe("reset_password");

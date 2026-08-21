@@ -23,7 +23,7 @@ const LOCALES: LocaleContract[] = [
     messages: "Mensajes",
     assistant: "Abrir asistente",
     assistantDialog: /Asistente ContrataCR/i,
-    assistantInput: /Pregunte o describa lo que necesita/i,
+    assistantInput: /Escribe una pregunta/i,
     assistantSend: /^Enviar mensaje$/i,
     assistantAnswer: "Encontré una opción para su solicitud.",
     messageAction: "Mensaje",
@@ -35,7 +35,7 @@ const LOCALES: LocaleContract[] = [
     messages: "Messages",
     assistant: "Open assistant",
     assistantDialog: /ContrataCR Assistant/i,
-    assistantInput: /Ask or describe what you need/i,
+    assistantInput: /Ask anything/i,
     assistantSend: /^Send message$/i,
     assistantAnswer: "I found an option for your request.",
     messageAction: "Message",
@@ -92,6 +92,51 @@ async function assertNativeChrome(page: Page, contract: LocaleContract) {
   expect(geometry!.navBottom).toBeLessThanOrEqual(geometry!.viewportHeight + 1);
 }
 
+async function assertKeyboardSafeComposer(page: Page, composerSelector: string, inputSelector: string) {
+  const input = page.locator(inputSelector);
+  await input.focus();
+  const geometry = await page.evaluate(({ composerSelector, inputSelector }) => {
+    const root = document.documentElement;
+    root.style.setProperty("--app-visual-viewport-height", "500px");
+    root.style.setProperty("--app-visual-viewport-width", "390px");
+    root.style.setProperty("--app-visual-viewport-top", "0px");
+    root.style.setProperty("--app-visual-viewport-left", "0px");
+    root.style.setProperty("--app-keyboard-inset-bottom", "344px");
+    root.setAttribute("data-keyboard-open", "");
+    const composer = document.querySelector<HTMLElement>(composerSelector);
+    const field = document.querySelector<HTMLElement>(inputSelector);
+    if (!composer || !field) return null;
+    const shell = composer.closest<HTMLElement>(".direct-chat-shell--thread, [data-ai-concierge-dialog]");
+    const composerRect = composer.getBoundingClientRect();
+    const fieldRect = field.getBoundingClientRect();
+    const shellRect = shell?.getBoundingClientRect();
+    return {
+      composerHeight: composerRect.height,
+      composerBottom: composerRect.bottom,
+      fieldBottom: fieldRect.bottom,
+      shellBottom: shellRect?.bottom ?? null,
+      shellHeight: shellRect?.height ?? null,
+      shellPosition: shell ? getComputedStyle(shell).position : null,
+      visualHeight: getComputedStyle(root).getPropertyValue("--app-visual-viewport-height").trim(),
+    };
+  }, { composerSelector, inputSelector });
+
+  expect(geometry).not.toBeNull();
+  expect(geometry!.composerHeight).toBeLessThan(120);
+  expect(geometry!.composerBottom, JSON.stringify(geometry)).toBeLessThanOrEqual(501);
+  expect(geometry!.fieldBottom).toBeLessThanOrEqual(501);
+
+  await page.evaluate(() => {
+    const root = document.documentElement;
+    root.style.removeProperty("--app-visual-viewport-height");
+    root.style.removeProperty("--app-visual-viewport-width");
+    root.style.removeProperty("--app-visual-viewport-top");
+    root.style.removeProperty("--app-visual-viewport-left");
+    root.style.removeProperty("--app-keyboard-inset-bottom");
+    root.removeAttribute("data-keyboard-open");
+  });
+}
+
 test.describe.configure({ mode: "serial" });
 test.describe("@mobile native shell contracts", () => {
   test.skip(!canRunSeededRegression(), "Requires the isolated test Supabase fixtures in the mobile workflow.");
@@ -132,12 +177,12 @@ test.describe("@mobile native shell contracts", () => {
     expect(geometry!.mainTop).toBeGreaterThanOrEqual(geometry!.headerBottom - 1);
     expect(geometry!.reservedHeaderHeight).toBe("64px");
 
-    const terms = page.getByRole("checkbox");
     const apple = page.getByRole("button", { name: /continuar con apple/i });
-    await expect(terms).not.toBeChecked();
-    await expect(apple).toBeDisabled();
-    await terms.check();
+    const google = page.getByRole("button", { name: /continuar con google/i });
+    await expect(page.getByRole("button", { name: /^ingresar$/i })).toBeEnabled();
+    await expect(page.getByRole("checkbox")).toHaveCount(0);
     await expect(apple).toBeEnabled();
+    await expect(google).toBeEnabled();
 
     await page.getByRole("button", { name: /abrir men[uú]/i }).click();
     const offerServices = page.getByRole("link", { name: "Ofrecer mis servicios" });
@@ -145,7 +190,7 @@ test.describe("@mobile native shell contracts", () => {
     await expect(offerServices.locator("svg")).toHaveCount(1);
   });
 
-  test("first installation presents one focused welcome screen and lets people choose a role", async ({ page }) => {
+  test("first installation keeps incomplete login and registration journeys retryable", async ({ page }) => {
     await resetAuth(page);
     await page.evaluate(() => {
       window.sessionStorage.setItem("ccr:e2e-show-first-run-onboarding", "1");
@@ -167,12 +212,135 @@ test.describe("@mobile native shell contracts", () => {
     await onboarding.getByRole("button", { name: "Crear una cuenta" }).click();
     await expect(onboarding).toBeHidden();
     await expect(page).toHaveURL(/\/es\/registro\/cliente/);
+    await expect(page.getByRole("heading", { name: "Crear cuenta de cliente", exact: true })).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
-    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-pending-path:v1"))).toBe("/registro/cliente");
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-pending-path:v1"))).toBeNull();
+    await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("ccr:native-first-run-auth-session:v1"))).toBe("1");
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/es\/?$/);
+    await expect(onboarding).toBeVisible();
+    await expect(onboarding.getByText("Elige cómo quieres comenzar")).toBeVisible();
+
+    await onboarding.getByRole("button", { name: /Ofrecer servicios/i }).click();
+    await onboarding.getByRole("button", { name: "Crear una cuenta" }).click();
+    await expect(page).toHaveURL(/\/es\/registro\/profesional/);
+    await expect(page.getByRole("heading", { name: "Crea tu cuenta profesional", exact: true })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(/\/es\/?$/);
+    await expect(onboarding).toBeVisible();
+
+    await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
+    await expect(page).toHaveURL(/\/es\/login/);
+    await expect(page.getByRole("heading", { name: "Bienvenido de vuelta", exact: true })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(/\/es\/?$/);
+    await expect(onboarding).toBeVisible();
+
+    await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
+    await expect(page).toHaveURL(/\/es\/login/);
+    await expect(page.getByRole("heading", { name: "Bienvenido de vuelta", exact: true })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
+  });
+
+  test("native marketplace tabs survive localized document navigations", async ({ page }) => {
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
 
     await gotoOK(page, "/es");
-    await expect(page).toHaveURL(/\/es\/registro\/cliente/);
-    await expect(onboarding).toBeHidden();
+
+    for (const destination of [
+      { label: "Ofertas", path: "/es/ofertas", heading: "Ofertas" },
+      { label: "Empleos", path: "/es/empleos", heading: "Empleos" },
+    ]) {
+      const nativeNav = page.locator("nav.ccr-native-bottom-nav").filter({ visible: true });
+      await expect(nativeNav).toBeVisible();
+      await Promise.all([
+        page.waitForURL(new RegExp(`${destination.path.replaceAll("/", "\\/")}(?:[?#].*)?$`)),
+        nativeNav.getByRole("link", { name: destination.label, exact: true }).click(),
+      ]);
+      await expect(page.getByRole("heading", { name: destination.heading, exact: true })).toBeVisible();
+      // Same as the web: the board owns its title row and no app header is
+      // mounted, so the native shell must not reserve a blank band above it.
+      await expect(page.locator("header.ccr-app-header").filter({ visible: true })).toHaveCount(0);
+      // The reserve is dropped by the native bridge after hydration, so poll.
+      await expect.poll(() => page.getByRole("heading", { name: destination.heading, exact: true })
+        .evaluate((node) => node.closest("section")?.getBoundingClientRect().top ?? -1), { timeout: 8_000 })
+        .toBeLessThanOrEqual(1);
+      await page.waitForTimeout(1_000);
+      await expect(page.getByRole("heading", { name: "Algo salió mal", exact: true })).toHaveCount(0);
+    }
+
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("native search owns the full viewport without a hidden footer reserve", async ({ page }) => {
+    await gotoOK(page, "/es/buscar?regression=1");
+
+    await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveCount(0);
+    await expect(page.locator("body")).not.toHaveClass(/ccr-native-bottom-nav-visible/);
+
+    const sheet = page.locator(".ccr-search-bottom-sheet");
+    const handle = sheet.getByRole("button", { name: "Cambiar tamaño del panel de resultados" });
+    await expect(sheet).toBeVisible();
+    await handle.press("Enter");
+    await expect.poll(async () => {
+      const box = await sheet.boundingBox();
+      return box?.y ?? 999;
+    }).toBeLessThanOrEqual(183);
+
+    const sheetGeometry = await sheet.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const headerHeight = Number.parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--ccr-native-header-height"),
+      );
+      return { top: rect.top, bottom: rect.bottom, headerHeight, viewportHeight: window.innerHeight };
+    });
+    expect(sheetGeometry.top).toBeGreaterThanOrEqual(sheetGeometry.headerHeight + 57);
+    expect(sheetGeometry.bottom).toBeLessThanOrEqual(sheetGeometry.viewportHeight + 1);
+
+    await page.getByRole("button", { name: "¿Qué servicio estás buscando?" }).click();
+    const serviceInput = page.getByRole("combobox", { name: "Servicio" });
+    await expect(serviceInput).toBeVisible();
+    const overlayGeometry = await serviceInput.evaluate((element) => {
+      const overlay = element.closest<HTMLElement>(".fixed.z-\\[220\\]");
+      if (!overlay) return null;
+      const rect = overlay.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom, viewportHeight: window.innerHeight };
+    });
+    expect(overlayGeometry).not.toBeNull();
+    expect(overlayGeometry!.top).toBe(0);
+    expect(overlayGeometry!.bottom).toBeLessThanOrEqual(overlayGeometry!.viewportHeight + 1);
+    expect(overlayGeometry!.bottom).toBeGreaterThanOrEqual(overlayGeometry!.viewportHeight - 1);
+  });
+
+  test("notification item actions escape the scrolling panel", async ({ page }) => {
+    await gotoOK(page, "/es/notificaciones");
+    await expect(page.getByRole("heading", { name: "Notificaciones", exact: true })).toBeVisible();
+
+    const itemOptions = page.getByRole("button", { name: "Opciones", exact: true });
+    await expect(itemOptions.first()).toBeVisible();
+    await itemOptions.last().click();
+
+    const menu = page.locator("[data-notification-item-menu]");
+    await expect(menu).toBeVisible();
+    const geometry = await menu.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        parentIsBody: element.parentElement === document.body,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        zIndex: Number.parseInt(getComputedStyle(element).zIndex, 10),
+      };
+    });
+    expect(geometry.parentIsBody).toBe(true);
+    expect(geometry.top).toBeGreaterThanOrEqual(0);
+    expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth);
+    expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight);
+    expect(geometry.zIndex).toBeGreaterThan(200);
   });
 
   for (const contract of LOCALES) {
@@ -181,12 +349,21 @@ test.describe("@mobile native shell contracts", () => {
       let directChatRequests = 0;
       await page.route("**/api/direct-chat", async (route) => {
         if (route.request().method() === "GET") {
+          const requestUrl = new URL(route.request().url());
           await route.fulfill({
             status: 200,
             contentType: "application/json",
-            body: JSON.stringify({
-              conversations: [{ client_id: seed.clientId, client_unread_count: 3, professional_unread_count: 0 }],
-            }),
+            body: JSON.stringify(requestUrl.searchParams.has("id")
+              ? { messages: [] }
+              : {
+                  conversations: [{
+                    id: conversationId,
+                    client_id: seed.clientId,
+                    professional_profile_id: seed.professionalId,
+                    client_unread_count: 3,
+                    professional_unread_count: 0,
+                  }],
+                }),
           });
           return;
         }
@@ -235,7 +412,13 @@ test.describe("@mobile native shell contracts", () => {
       await page.getByRole("button", { name: contract.assistant }).click();
       const dialog = page.getByRole("dialog", { name: contract.assistantDialog });
       await expect(dialog).toBeVisible();
+      await expect(page.locator("nav.ccr-native-bottom-nav")).toBeHidden();
       await dialog.getByRole("textbox", { name: contract.assistantInput }).fill("E2E native assistant contact");
+      await assertKeyboardSafeComposer(
+        page,
+        "[data-ai-concierge-panel] .ccr-ai-composer",
+        "[data-ai-concierge-panel] .ccr-ai-composer input",
+      );
       await dialog.getByRole("button", { name: contract.assistantSend }).click();
 
       const messageButton = dialog.getByRole("button", { name: contract.messageAction, exact: true });
@@ -245,6 +428,14 @@ test.describe("@mobile native shell contracts", () => {
 
       await expect.poll(() => directChatRequests).toBe(1);
       await expect(page).toHaveURL(new RegExp(`/${contract.locale}/mensajes\\?conversation=${conversationId}$`));
+      await expect(page.locator("html")).toHaveClass(/contratacr-chat-thread-open/);
+      await expect(page.locator("nav.ccr-native-bottom-nav")).toBeHidden();
+      await expect(page.locator(".ccr-direct-chat-composer")).toBeVisible();
+      await assertKeyboardSafeComposer(
+        page,
+        ".ccr-direct-chat-composer",
+        ".ccr-direct-chat-composer textarea",
+      );
     });
   }
 });

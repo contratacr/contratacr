@@ -5,16 +5,22 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
+  BriefcaseBusiness,
   CheckCheck,
   CheckCircle2,
+  ChevronRight,
   ClipboardList,
+  HelpCircle,
+  LifeBuoy,
   Loader2,
   MapPin,
   Minus,
   RotateCcw,
+  Search,
   Send,
   Sparkles,
   Star,
+  Wrench,
 } from "lucide-react";
 import Image from "next/image";
 import { useLocale } from "next-intl";
@@ -45,7 +51,17 @@ type ResultCard = {
 };
 
 type MessageAction = { label: string; href: string; kind?: string | null };
-type GuidedQuestion = { label: string; prompt: string };
+function topicIcon(icon: GuidedTopic["icon"]) {
+  const className = "h-[18px] w-[18px]";
+  if (icon === "search") return <Search className={className} />;
+  if (icon === "request") return <ClipboardList className={className} />;
+  if (icon === "offer") return <Wrench className={className} />;
+  if (icon === "jobs") return <BriefcaseBusiness className={className} />;
+  if (icon === "how") return <HelpCircle className={className} />;
+  return <LifeBuoy className={className} />;
+}
+
+type GuidedTopic = { label: string; example: string; prompt: string; icon: "search" | "request" | "offer" | "jobs" | "how" | "support" };
 type ChatMessage = {
   role: "assistant" | "user";
   body: string;
@@ -98,7 +114,6 @@ const COPY = {
     closedLabel: "Abrir asistente de ContrataCR",
     minimize: "Minimizar asistente",
     title: "Asistente ContrataCR",
-    intro: "¡Hola! Escoja una pregunta para ayudarle con información actual de ContrataCR.",
     send: "Enviar mensaje",
     thinking: "Buscando la mejor respuesta...",
     viewProfile: "Ver perfil",
@@ -110,21 +125,21 @@ const COPY = {
     notice: "Respuestas guiadas con datos de ContrataCR.",
     reset: "Nuevo chat",
     resetHint: "Limpia esta conversacion y empieza de cero.",
-    guidedTitle: "Preguntas rápidas",
-    guidedQuestions: [
-      { label: "Buscar plomería en San José", prompt: "Busco plomería en San José" },
-      { label: "Buscar electricista en Alajuela", prompt: "Busco electricidad en Alajuela" },
-      { label: "Crear una solicitud", prompt: "Quiero crear una solicitud" },
-      { label: "¿Cómo funciona?", prompt: "¿Cómo funciona ContrataCR?" },
-      { label: "Ofrecer mis servicios", prompt: "Quiero ofrecer mis servicios" },
-      { label: "Soporte", prompt: "Necesito soporte" },
-    ] satisfies GuidedQuestion[],
+    emptyTitle: "¿En qué te ayudo?",
+    emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, solicitudes, empleos y tu cuenta.",
+    topics: [
+      { label: "Buscar un profesional", example: "Busco plomería en San José", prompt: "Busco plomería en San José", icon: "search" },
+      { label: "Publicar un proyecto", example: "Quiero publicar un proyecto", prompt: "Quiero publicar un proyecto", icon: "request" },
+      { label: "Ofrecer mis servicios", example: "Quiero ofrecer mis servicios", prompt: "Quiero ofrecer mis servicios", icon: "offer" },
+      { label: "Empleos", example: "¿Cómo aplico a un empleo?", prompt: "¿Cómo aplico a un empleo?", icon: "jobs" },
+      { label: "Cómo funciona la app", example: "¿Cómo funciona ContrataCR?", prompt: "¿Cómo funciona ContrataCR?", icon: "how" },
+      { label: "Soporte", example: "Necesito ayuda con mi cuenta", prompt: "Necesito soporte", icon: "support" },
+    ] satisfies GuidedTopic[],
   },
   en: {
     closedLabel: "Open ContrataCR assistant",
     minimize: "Minimize assistant",
     title: "ContrataCR Assistant",
-    intro: "Hi! Choose a question and I will answer with current ContrataCR information.",
     send: "Send message",
     thinking: "Finding the best answer...",
     viewProfile: "View profile",
@@ -136,15 +151,16 @@ const COPY = {
     notice: "Guided answers with ContrataCR data.",
     reset: "New chat",
     resetHint: "Clear this conversation and start fresh.",
-    guidedTitle: "Quick questions",
-    guidedQuestions: [
-      { label: "Find plumbing in San José", prompt: "Find plumbing in San José" },
-      { label: "Find an electrician in Alajuela", prompt: "Find electricity in Alajuela" },
-      { label: "Create a project", prompt: "I want to create a project" },
-      { label: "How does it work?", prompt: "How does ContrataCR work?" },
-      { label: "Offer my services", prompt: "I want to offer my services" },
-      { label: "Support", prompt: "I need support" },
-    ] satisfies GuidedQuestion[],
+    emptyTitle: "How can I help?",
+    emptySubtitle: "I guide you through ContrataCR with data from the app: professionals, projects, jobs and your account.",
+    topics: [
+      { label: "Find a professional", example: "Find plumbing in San José", prompt: "Find plumbing in San José", icon: "search" },
+      { label: "Publish a project", example: "I want to publish a project", prompt: "I want to publish a project", icon: "request" },
+      { label: "Offer my services", example: "I want to offer my services", prompt: "I want to offer my services", icon: "offer" },
+      { label: "Jobs", example: "How do I apply to a job?", prompt: "How do I apply to a job?", icon: "jobs" },
+      { label: "How the app works", example: "How does ContrataCR work?", prompt: "How does ContrataCR work?", icon: "how" },
+      { label: "Support", example: "I need help with my account", prompt: "I need support", icon: "support" },
+    ] satisfies GuidedTopic[],
   },
 } as const;
 
@@ -253,7 +269,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
   const [compactViewport, setCompactViewport] = useState(false);
   const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
@@ -459,7 +475,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
 
   function resetConversation() {
     setConversationId(crypto.randomUUID());
-    setMessages([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
+    setMessages([]);
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
@@ -593,22 +609,41 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             </div>
           ))}
 
-          <div className="rounded-[22px] border border-[#cfe1ee] bg-[#f8fcff] p-2.5 shadow-[0_10px_30px_-22px_rgba(0,91,145,0.42)]">
-            <p className="mb-2 px-1 text-[11px] font-extrabold uppercase tracking-wide text-[#607693]">{copy.guidedTitle}</p>
-            <div className="grid grid-cols-2 gap-2">
-              {copy.guidedQuestions.map((question) => (
-                <button
-                  key={question.prompt}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => void ask(question.prompt)}
-                  className="min-h-11 rounded-2xl border border-[#d8e8f2] bg-white px-3 py-2 text-left text-[12px] font-extrabold leading-snug text-[#173052] shadow-sm transition hover:border-[#009FD9] hover:bg-[#eef9fd] active:scale-[0.99] disabled:opacity-60"
-                >
-                  {question.label}
-                </button>
-              ))}
+          {/* Guided index, shown only while the thread is empty: each row states what
+              the assistant covers and the example question it answers with app data. */}
+          {messages.length === 0 && (
+            <div className="space-y-4">
+              <div className="flex flex-col items-center px-2 text-center">
+                <div className="h-20 w-20"><Image src="/brand/ai-assistant-robot.png" alt="" width={128} height={128} className="h-full w-full object-contain drop-shadow-[0_12px_18px_rgba(0,99,189,0.18)]" /></div>
+                <h3 className="mt-1 text-[19px] font-black leading-tight text-[#102746]">{copy.emptyTitle}</h3>
+                <p className="mt-1.5 max-w-[19rem] text-[13px] font-medium leading-relaxed text-[#5c718c]">{copy.emptySubtitle}</p>
+              </div>
+
+              <div className="overflow-hidden rounded-[22px] border border-[#dbe7f0] bg-white shadow-[0_10px_30px_-24px_rgba(0,91,145,0.5)]">
+                {copy.topics.map((topic, index) => (
+                  <button
+                    key={topic.prompt}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => void ask(topic.prompt)}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-3.5 py-3 text-left transition active:bg-[#eef9fd] disabled:opacity-60",
+                      index > 0 && "border-t border-[#eef3f7]",
+                    )}
+                  >
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eef8fd] text-[#0089bb]">
+                      {topicIcon(topic.icon)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-extrabold leading-tight text-[#173052]">{topic.label}</span>
+                      <span className="mt-0.5 block truncate text-[12px] font-medium leading-tight text-[#7b8da7]">{topic.example}</span>
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-[#a8b7c9]" />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {loading && (
             <div className="flex gap-3">

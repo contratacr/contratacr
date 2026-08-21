@@ -429,6 +429,16 @@ export default function LoginPage() {
             </button>
           </div>
 
+          {/* Social sign-in can create an account, so the terms must be visible before
+              continuing here too — not only on the registration forms. */}
+          <p className="mt-4 text-center text-xs leading-relaxed text-[#8a9aab]">
+            {locale === "en" ? "By continuing, you accept the " : "Al continuar, aceptas los "}
+            <Link href="/terminos" className="font-semibold text-[#009FD9]">{locale === "en" ? "Terms" : "Términos"}</Link>
+            {locale === "en" ? " and the " : " y la "}
+            <Link href="/privacidad" className="font-semibold text-[#009FD9]">{locale === "en" ? "Privacy Policy" : "Política de Privacidad"}</Link>
+            {locale === "en" ? " of ContrataCR." : " de ContrataCR."}
+          </p>
+
           <p className="text-center text-sm text-[#6b7280] mt-6">
             {t("noAccount")}{" "}
             <Link href={registerHref} className="text-[#009FD9] font-medium hover:underline">

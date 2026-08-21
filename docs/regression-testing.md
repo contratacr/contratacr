@@ -118,7 +118,7 @@ It covers:
 - Editable review lifecycle after completed work, including one-review-per-request persistence.
 - Signed-in and guest support ticket creation, automatic acknowledgement, reply, reopen, and confirmation.
 - Contextual in-app chat from profiles, requests and proposals, including both participants, unread state, realtime delivery, archive/restore and access control.
-- ContrataCR AI routing, real OpenAI responses, live search results, safety boundaries, localized actions, responsive visibility and private account history.
+- ContrataCR AI routing, local documented answers, bounded Workers AI fallback, live search results, safety boundaries, localized actions, responsive visibility and private account history. OpenAI remains disabled by default.
 - Real password change and restored seeded credentials.
 - Real professional bio, service description, success-case upload, and availability privacy persistence.
 - Notification translation and destination contracts for every supported notification type.

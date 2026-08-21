@@ -44,17 +44,27 @@ export function useDirectMessageUnread(enabled = true) {
     reload();
     window.addEventListener("notificationsChanged", reload);
     window.addEventListener("directMessagesChanged", reload);
-    const channel = supabase
-      .channel(`navbar-direct-message-unread-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, reload)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, reload)
-      .subscribe();
+    // RealtimeClient reuses channels by topic. React can reconnect passive
+    // effects before removeChannel() finishes, so a stable topic may return a
+    // channel that has already subscribed and reject new postgres callbacks.
+    // A per-mount topic keeps that race from taking down the whole route.
+    const channelTopic = `navbar-direct-message-unread-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel(channelTopic)
+        .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, reload)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, reload)
+        .subscribe();
+    } catch (error) {
+      console.warn("[direct-message-unread] realtime subscription unavailable", error);
+    }
 
     return () => {
       stopped = true;
       window.removeEventListener("notificationsChanged", reload);
       window.removeEventListener("directMessagesChanged", reload);
-      void supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
   }, [enabled, refresh, user]);
 

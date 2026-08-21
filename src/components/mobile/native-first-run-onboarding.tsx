@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
+import { useNativeApp } from "@/hooks/use-native-app";
 import {
   NATIVE_ONBOARDING_AUTH_SESSION_KEY,
   NATIVE_ONBOARDING_COMPLETED_EVENT,
@@ -23,20 +23,6 @@ const ROLE_IMAGES: Record<Role, string> = {
   professional: "/mobile/contratacr-welcome-professional-v1.webp",
 };
 
-function shouldShowNativeFirstRun() {
-  if (typeof window === "undefined") return false;
-  try {
-    const currentRoute = routeWithoutLocale(window.location.pathname);
-    const authSession = window.sessionStorage.getItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY) === "1";
-    return isNativeAppRuntime()
-      && window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1"
-      && !window.localStorage.getItem(NATIVE_ONBOARDING_PENDING_PATH_KEY)
-      && !(authSession && isPendingJourneyPath(currentRoute));
-  } catch {
-    return false;
-  }
-}
-
 function routeWithoutLocale(pathname: string | null) {
   return (pathname ?? "/").replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
 }
@@ -52,14 +38,9 @@ function isPendingJourneyPath(path: string): path is NativeOnboardingPendingPath
   return path === "/login" || path === "/registro/cliente" || path === "/registro/profesional";
 }
 
-function clearNativePrepaint() {
-  document.getElementById("ccr-native-first-run-prepaint")?.remove();
-}
-
 function hideNativeSplashAfterPaint() {
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
-      clearNativePrepaint();
       void import("@capacitor/splash-screen")
         .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
         .catch(() => {});
@@ -72,7 +53,10 @@ export function NativeFirstRunOnboarding() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [visible, setVisible] = useState(() => shouldShowNativeFirstRun());
+  // Keep the server and the first client render identical. The static prepaint
+  // in the root layout covers the native splash while this effect-owned state
+  // is resolved after hydration.
+  const [visible, setVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role>("client");
   const [heroReady, setHeroReady] = useState(false);
   const english = pathname?.startsWith("/en") ?? false;
@@ -156,7 +140,6 @@ export function NativeFirstRunOnboarding() {
 
     const firstFrame = window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        clearNativePrepaint();
         void import("@capacitor/splash-screen")
           .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
           .catch(() => {});

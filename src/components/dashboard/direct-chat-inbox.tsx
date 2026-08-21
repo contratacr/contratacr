@@ -16,6 +16,7 @@ import { AppTooltip } from "@/components/ui/app-tooltip";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { readCachedConversations, storeConversations } from "@/lib/direct-chat/conversations-cache";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
@@ -25,6 +26,9 @@ type Conversation = {
   status?: "open" | "archived" | "blocked";
   client_unread_count?: number; professional_unread_count?: number;
   client_profile?: Person | null;
+  client_has_app?: boolean;
+  professional_has_app?: boolean;
+  professional_whatsapp?: string | null;
   professionals?: { id?: string; slug?: string | null; business_name?: string | null; profiles?: Person | null } | null;
   context?: { type: "booking" | "project" | "proposal" | "profile"; title?: string | null; service_description?: string | null; status?: string | null; proposal_status?: string | null };
 };
@@ -256,13 +260,21 @@ export function DirectChatInbox() {
   }, [contextSummaryFor, displayedConversations, locale, personFor, query]);
 
   const loadConversations = useCallback(async (quiet = false) => {
-    if (!quiet) setLoading(true);
+    // Paint the warmed list at once; the network refresh below replaces it.
+    const warm = !showArchived && !quiet ? (readCachedConversations() as Conversation[] | null) : null;
+    if (warm) {
+      setConversations(warm);
+      setLoading(false);
+    } else if (!quiet) {
+      setLoading(true);
+    }
     setError("");
     try {
       const res = await fetch(`/api/direct-chat${showArchived ? "?status=archived" : ""}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
       const rows = json.conversations ?? [];
+      if (!showArchived) storeConversations(rows);
       const existingDraftConversation = findExistingDraftConversation(rows, pendingDraftPayload);
       setConversations(rows);
       if (existingDraftConversation) {
@@ -581,6 +593,32 @@ export function DirectChatInbox() {
   const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
   const deleteLabel = isEn ? "Delete" : "Eliminar";
   const activePersonName = activePerson?.name || "";
+  // Be honest about delivery: push only reaches installed apps, everyone else is
+  // told by email (professionals also by WhatsApp) the moment the first message lands.
+  const otherHasApp = active
+    ? (activePerson?.role === "professional" ? active.professional_has_app : active.client_has_app)
+    : undefined;
+  const deliveryHint = !active || active.id.startsWith("__") || otherHasApp === undefined
+    ? null
+    : otherHasApp
+      ? (isEn ? "Gets notified in the app" : "Recibe avisos en la app")
+      : activePerson?.role === "professional"
+        ? (isEn ? "No app yet: notified by email and WhatsApp" : "Sin la app: le avisamos por correo y WhatsApp")
+        : (isEn ? "No app yet: notified by email" : "Sin la app: le avisamos por correo");
+  // Last resort after a full day without an answer from a professional who is
+  // not in the app: let the client continue on WhatsApp instead of losing them.
+  const whatsappEscape = (() => {
+    if (!active || !user?.id || activePerson?.role !== "professional" || otherHasApp || !active.professional_whatsapp) return null;
+    const last = messages[messages.length - 1];
+    if (!last || last.sender_id !== user.id) return null;
+    if (Date.now() - new Date(last.created_at).getTime() < 24 * 60 * 60 * 1000) return null;
+    const digits = active.professional_whatsapp.replace(/\D/g, "");
+    const number = digits.length === 8 ? `506${digits}` : digits;
+    const text = isEn
+      ? "Hi, I wrote to you on ContrataCR and wanted to follow up."
+      : "Hola, te escribí por ContrataCR y quería dar seguimiento.";
+    return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+  })();
   const activeContextTitle = activeContext?.title || "";
   const activeContextAction = active ? contextActionFor(active) : "";
   return (
@@ -622,17 +660,17 @@ export function DirectChatInbox() {
 
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
         <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e3ebf1] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
-          <button type="button" onClick={() => setMobileThread(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
+          <button type="button" data-native-back="conversations" onClick={() => setMobileThread(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
           <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
             <Avatar className="h-9 w-9 sm:h-10 sm:w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
           </button>
           <div className="min-w-0 flex-1">
             {activePerson?.profileHref ? (
-              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full truncate text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline">
+              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline line-clamp-2 lg:truncate">
                 {activePerson.name}
               </button>
             ) : (
-              <p className="truncate text-[15px] font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
+              <p className="text-[15px] font-extrabold leading-tight text-[#162543] line-clamp-2 lg:truncate">{activePerson?.name}</p>
             )}
             {active && activeContext && activeContext.type !== "profile" && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
             {activeContextTitle && <p className="mt-0.5 line-clamp-1 text-xs font-semibold leading-snug text-[#63748a] sm:line-clamp-2">{activeContextTitle}</p>}
@@ -728,6 +766,14 @@ export function DirectChatInbox() {
             );
           })}
         </div>
+        {whatsappEscape && (
+          <div className="border-t border-[#e3ebf1] bg-[#fffbeb] px-4 py-2.5 text-xs font-semibold text-[#8a6d1f]">
+            <p>{isEn ? "No reply in the app for over a day." : "Más de un día sin respuesta en la app."}</p>
+            <a href={whatsappEscape} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#25D366] px-3 text-[13px] font-extrabold text-white">
+              {isEn ? "Continue on WhatsApp" : "Continuar por WhatsApp"}
+            </a>
+          </div>
+        )}
         {(error || attachmentError) && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error || attachmentError}</p>}
         <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
           {!!selectedAttachments.length && (

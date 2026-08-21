@@ -20,6 +20,7 @@ import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
+import { prefetchConversations } from "@/lib/direct-chat/conversations-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
@@ -766,7 +767,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const nativeHeaderShell = hydrated && nativeApp;
   const nativeBottomShell = hydrated && nativeApp;
   const { user, loading: authLoading } = useAuth();
-  const nativeBottomNavVisible = nativeBottomShell && !!user;
+  const nativeSearchRoute = /(^|\/)buscar(?:\/|$)/.test(pathname ?? "");
+  // Search is a full-viewport map + results sheet. Do not merely hide the nav
+  // with CSS: leaving it mounted keeps its layout class and safe-area reserve
+  // active, which shortens the sheet and the full-screen search overlay.
+  const nativeFullscreenRoute = /(^|\/)publicar-proyecto(?:\/|$)/.test(pathname ?? "");
+  const nativeBottomNavVisible = nativeBottomShell && !!user && !nativeSearchRoute && !nativeFullscreenRoute;
   const [accountCapability, setAccountCapability] = useState<{
     userId: string;
     role: string | null;
@@ -1026,6 +1032,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     router.prefetch("/mensajes");
     router.prefetch(primaryPanelHref);
     prefetchDashboardBootstrap(user.id);
+    void prefetchConversations();
   }, [nativeApp, primaryPanelHref, router, user]);
 
   const visibleResourceLinks = useMemo(() => RESOURCES_LINKS, []);
@@ -1064,10 +1071,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     (href: string) => {
       if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
       setNativePendingHref(href);
-      const isNativeMarketplaceList = nativeApp && (href === "/ofertas" || href === "/empleos");
-      if (!isNativeMarketplaceList) {
-        router.prefetch(href);
-      }
+      router.prefetch(href);
       nativePendingTimer.current = window.setTimeout(() => setNativePendingHref(null), 8000);
     },
     [nativeApp, router],
@@ -1076,16 +1080,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const navigateNativeMarketplace = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement>, href: "/ofertas" | "/empleos") => {
       if (!nativeApp) return;
-      // Capacitor WebView occasionally loses the RSC response for these two
-      // data-heavy lists.  A document navigation is deterministic and keeps
-      // the same test/prod origin and locale.
+      // Same-document navigation, like every other tab. The old full reload
+      // cost a blank frame plus re-running all scripts on each tap; if the RSC
+      // payload ever fails, the route error boundary still offers a retry.
       event.preventDefault();
       event.stopPropagation();
       setMobileOpen(false);
       prepareNativeNavigation(href);
-      window.location.assign(`${window.location.origin}/${locale}${href}`);
+      router.push(href);
     },
-    [locale, nativeApp, prepareNativeNavigation],
+    [nativeApp, prepareNativeNavigation, router],
   );
 
   useEffect(() => {
@@ -1762,7 +1766,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
                   </div>
                 ) : user ? (
-                  <div className="flex w-auto min-w-0 items-center justify-end gap-1">                 {/* Sobre ContrataCR - simple dropdown */}
+                  <div className="flex w-auto min-w-0 items-center justify-end gap-1">
+                 {/* Sobre ContrataCR - simple dropdown */}
                     <div
                       ref={resourcesMenuRef}
                       className="relative"
@@ -1822,7 +1827,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         {t("offerServices")}
                       </Link>
                     )}
-                    {nativeApp && (
+                    {nativeHeaderShell && (
                       <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
                     )}
                     <NotificationBell scope="all" />
@@ -2110,7 +2115,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                 </Link>
               )}
-              {nativeApp && user && (
+              {nativeHeaderShell && user && (
                 <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                   <DrawerIcon><MessageSquareText /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>

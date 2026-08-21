@@ -548,7 +548,9 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 .ccr-native-app .ccr-search-bottom-sheet {
   bottom: 0;
   z-index: 80 !important;
-  max-height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total)) !important;
+  /* /buscar owns the viewport and does not render the native footer. Preserve
+     only the intentional map-control gap above the expanded sheet. */
+  max-height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - 58px) !important;
   overflow: hidden;
   isolation: isolate;
   background: #fff !important;
@@ -999,6 +1001,35 @@ input::-ms-clear {
 /* Scrollbar */
 * { scrollbar-color: #94a3b8 transparent; }
 ::-webkit-scrollbar { width: 7px; height: 7px; }
+
+/* Horizontal chip rows (marketplace filters) hint overflow by clipping the last
+   chip, never with a scrollbar. Older Android WebViews ignore scrollbar-width
+   once a ::-webkit-scrollbar rule exists, so both forms are required. */
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.ccr-chip-row {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 4.5rem), transparent calc(100% - 0.5rem));
+  mask-image: linear-gradient(to right, #000 calc(100% - 4.5rem), transparent calc(100% - 0.5rem));
+}
+
+/* Marketplace and full-screen flows render no app header on mobile (same as the
+   web). The native shell pins `main` below the header, so the reserve must drop
+   to zero there or a blank band appears above the board. */
+.ccr-native-app.ccr-native-marketplace-route,
+.ccr-native-app.ccr-native-fullscreen-route,
+.ccr-native-app.ccr-native-fullscreen-layer { --ccr-native-header-height: 0px; }
+.ccr-native-app.ccr-native-fullscreen-route,
+.ccr-native-app.ccr-native-fullscreen-layer { --ccr-native-bottom-nav-total: 0px; }
+body.ccr-native-app.ccr-native-fullscreen-route .ccr-app-header,
+body.ccr-native-app.ccr-native-fullscreen-layer .ccr-app-header,
+body.ccr-native-app.ccr-native-fullscreen-route nav.ccr-native-bottom-nav,
+body.ccr-native-app.ccr-native-fullscreen-layer nav.ccr-native-bottom-nav { display: none !important; }
+
+/* Floating actions anchor to the viewport bottom; in the app that edge belongs
+   to the bottom nav, so they ride above it. */
+body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
+  bottom: calc(var(--ccr-native-bottom-nav-total) + 0.75rem) !important;
+}
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { min-height: 72px; background: #94a3b8; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #64748b; }
@@ -1168,7 +1199,8 @@ input::-ms-clear {
     bottom: auto;
     left: var(--app-visual-viewport-left);
     z-index: 110;
-    height: var(--app-visual-viewport-height);
+    height: var(--app-visual-viewport-height) !important;
+    max-height: var(--app-visual-viewport-height) !important;
     width: var(--app-visual-viewport-width);
     min-height: 0;
     border-radius: 0;
@@ -1183,9 +1215,9 @@ input::-ms-clear {
     left: var(--app-visual-viewport-left);
     z-index: 110;
     width: var(--app-visual-viewport-width);
-    height: var(--app-visual-viewport-height);
+    height: var(--app-visual-viewport-height) !important;
     min-height: 0;
-    max-height: var(--app-visual-viewport-height);
+    max-height: var(--app-visual-viewport-height) !important;
     overflow: hidden;
     overscroll-behavior: none;
     background: #fff;
@@ -1207,7 +1239,10 @@ input::-ms-clear {
   html[data-keyboard-open].ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-composer,
   html[data-keyboard-open].ccr-native-app body.contratacr-chat-thread-open .ccr-direct-chat-composer,
   html[data-keyboard-open] body.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-composer {
-    padding-bottom: calc(0.5rem + var(--app-keyboard-inset-bottom, 0px)) !important;
+    /* The thread itself already matches the visual viewport. Adding the full
+       keyboard inset here a second time turns the composer into a giant blank
+       block and pushes the input away from the keyboard. */
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom)) !important;
   }
 
   .contratacr-chat-thread-open .direct-chat-shell--thread > section,

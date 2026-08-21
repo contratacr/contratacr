@@ -14,6 +14,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsaveProRemote, type SavedPro } from "./save-button";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getProfessionalDisplayName } from "@/lib/display-name";
+import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 
 type SavedFilter = "professionals" | "offers" | "jobs";
 type SavedItemKind = "offer" | "job";
@@ -52,13 +53,14 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-sm font-semibold leading-5 text-[#162543]">{displayName}</span>
-          {pro.isVerified && (
-            <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
-              {tCard("verifiedShort")}
-            </span>
-          )}
+        {/* Same verified mark as the /buscar card: the check sits right after the
+            name and the name truncates before it, never the other way around. */}
+        <div className="flex min-w-0 items-center text-sm font-semibold leading-5 text-[#162543]">
+          <ResponsiveVerifiedName
+            name={displayName}
+            verified={pro.isVerified}
+            verifiedLabel={tCard("verifiedShort")}
+          />
         </div>
         <div className="mt-1 grid gap-1 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
           <span className="flex items-center gap-1 text-xs text-[#6b7280]">
