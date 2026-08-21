@@ -32,15 +32,17 @@ async function loadPlugin() {
 function ensureInitialized() {
   if (!initialization) {
     initialization = (async () => {
-      const { SocialLogin } = await loadPlugin();
+      const { SocialLogin, platform } = await loadPlugin();
+      // Android validates the Apple block eagerly (it needs the Services ID and
+      // redirect URL), so an unconfigured Apple must not take Google down with it.
+      const appleConfigured = platform === "ios" || (Boolean(APPLE_SERVICES_ID) && Boolean(APPLE_REDIRECT_URL));
       await SocialLogin.initialize({
         ...(GOOGLE_WEB_CLIENT_ID
           ? { google: { webClientId: GOOGLE_WEB_CLIENT_ID, iOSClientId: GOOGLE_IOS_CLIENT_ID || undefined, mode: "online" as const } }
           : {}),
-        apple: {
-          clientId: APPLE_SERVICES_ID || undefined,
-          redirectUrl: APPLE_REDIRECT_URL || undefined,
-        },
+        ...(appleConfigured
+          ? { apple: { clientId: APPLE_SERVICES_ID || undefined, redirectUrl: APPLE_REDIRECT_URL || undefined } }
+          : {}),
       });
       return true;
     })().catch((error) => {
@@ -92,7 +94,9 @@ export async function nativeSocialSignIn(
 
   const { SocialLogin } = await loadPlugin();
   // The provider receives the hashed nonce and signs it into the id token;
-  // Supabase gets the raw one and checks that the hashes match.
+  // Supabase gets the raw one and checks that the hashes match. Google gets no
+  // extra scopes: the default OIDC id token already carries email and profile,
+  // and the Android plugin refuses scopes without a patched MainActivity.
   const nonce = randomNonce();
   const hashedNonce = await sha256Hex(nonce);
 
@@ -100,7 +104,7 @@ export async function nativeSocialSignIn(
   try {
     const response = provider === "apple"
       ? await SocialLogin.login({ provider: "apple", options: { scopes: ["email", "name"], nonce: hashedNonce } })
-      : await SocialLogin.login({ provider: "google", options: { scopes: ["email", "profile"], nonce: hashedNonce } });
+      : await SocialLogin.login({ provider: "google", options: { nonce: hashedNonce } });
     idToken = (response.result as { idToken?: string | null }).idToken;
   } catch (error) {
     if (isCancellation(error)) return "cancelled";

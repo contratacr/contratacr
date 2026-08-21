@@ -1,6 +1,15 @@
 name: Mobile Native Regression
 
 on:
+  # Every push to mobile runs the cheap Linux jobs (contracts + WebView suites).
+  # The Android emulator and the macOS iOS job stay on demand: the macOS runner
+  # bills ten Linux minutes per minute.
+  push:
+    branches:
+      - mobile
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
     inputs:
       mobile_ref:
@@ -12,7 +21,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: mobile-native-regression-${{ github.event.inputs.mobile_ref }}
+  group: mobile-native-regression-${{ github.event.inputs.mobile_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,14 +32,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.inputs.mobile_ref }}
+          ref: ${{ github.event.inputs.mobile_ref || github.sha }}
       - name: Validate mobile ref
         shell: bash
         env:
           REQUESTED_MOBILE_REF: ${{ github.event.inputs.mobile_ref }}
         run: |
           set -euo pipefail
-          requested_ref="$REQUESTED_MOBILE_REF"
+          requested_ref="${REQUESTED_MOBILE_REF:-mobile}"
           if [[ "$requested_ref" != "mobile" && ! "$requested_ref" =~ ^[0-9a-f]{40}$ ]]; then
             echo "::error::Mobile regression accepts only the mobile branch or an exact 40-character commit SHA."
             exit 1
@@ -70,7 +79,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.inputs.mobile_ref }}
+          ref: ${{ github.event.inputs.mobile_ref || github.sha }}
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -107,12 +116,13 @@ jobs:
   android:
     name: Android lint, unit and emulator regression
     needs: contracts
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.inputs.mobile_ref }}
+          ref: ${{ github.event.inputs.mobile_ref || github.sha }}
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -159,12 +169,13 @@ jobs:
   ios:
     name: iOS simulator build and launch regression
     needs: contracts
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-15
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.inputs.mobile_ref }}
+          ref: ${{ github.event.inputs.mobile_ref || github.sha }}
       - uses: actions/setup-node@v5
         with:
           node-version: 22

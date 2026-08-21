@@ -135,7 +135,7 @@ export function StatusFilterTabs({
               // Segmented cells are narrow on phones: the label never breaks mid-word
               // and the count floats as a corner badge instead of taking row width.
               useSegmentedLayout
-                ? "min-w-0 whitespace-nowrap px-1.5 text-[12px] min-[400px]:text-[13px] sm:px-3"
+                ? "min-w-0 whitespace-nowrap px-1 text-[12px] min-[400px]:text-[13px] sm:px-3"
                 : "min-w-[8.25rem] flex-none whitespace-normal px-3 text-[13px] [overflow-wrap:anywhere]",
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
@@ -145,12 +145,13 @@ export function StatusFilterTabs({
           >
             {label(tab.id)}
             {count > 0 && (
+              // The count is part of the label, not decoration: brand blue on the
+              // active tab, slate on the rest, always large enough to read at a glance.
               <span className={cn(
-                "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none tabular-nums transition-colors",
-                useSegmentedLayout && "absolute -top-1.5 right-0.5 h-4 min-w-4 px-1 text-[9px] ring-2 ring-[#f3f4f6]",
+                "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold leading-none tabular-nums transition-colors",
                 active
-                  ? "bg-[#e5f6fc] text-[#007fae]"
-                  : "bg-[#e4ebf0] text-[#718096] group-hover:bg-[#dce6ec] group-hover:text-[#526277]"
+                  ? "bg-[#009FD9] text-white"
+                  : "bg-[#d5dfe8] text-[#3f4f63] group-hover:bg-[#c8d5e0]"
               )}>
                 {count > 99 ? "99+" : count}
               </span>
