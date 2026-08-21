@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { slugifyCategory } from "@/lib/data/categories";
@@ -22,6 +23,9 @@ function isValidUuid(value: unknown): value is string {
 // id on approval) is the CLEAN slug of the canonical Spanish name — e.g. "Amor"
 // "Amor bueno" —> "amor_bueno" — with NO prefix (the old `sg_` suggestion tag is gone).
 export async function POST(req: NextRequest) {
+  // Public endpoint: bound abuse and enumeration per client IP.
+  const limited = enforceRateLimit(req, "categories-suggest", 10, 600000);
+  if (limited) return limited;
   try {
     const body = await req.json();
     const { name, locale, userId } = body as {

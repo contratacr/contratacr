@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
@@ -7,6 +8,9 @@ import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 
 export async function POST(req: Request) {
+  // Public endpoint: bound abuse and enumeration per client IP.
+  const limited = enforceRateLimit(req, "register", 10, 600000);
+  if (limited) return limited;
   try {
     const body = await req.json();
     // NOTE: clients do NOT send provincia/cantón (location is gathered at search /

@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrevoEmail } from "@/lib/email/send";
 import { auditUserAction } from "@/lib/audit/user-action";
@@ -9,6 +10,9 @@ import { writeSourceColumns } from "@/lib/security/write-guard";
 const SUPPORT_TO = "soporte@contratacr.com";
 
 export async function POST(req: NextRequest) {
+  // Public endpoint: bound abuse and enumeration per client IP.
+  const limited = enforceRateLimit(req, "report", 10, 600000);
+  if (limited) return limited;
   try {
     const { professionalName, professionalSlug, reason, reporterEmail } = await req.json();
 
