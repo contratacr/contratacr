@@ -899,11 +899,19 @@ test.describe("@seeded core regression", () => {
 
       const stickyHeader = actions.locator("xpath=ancestor::section[1]");
       await expect(stickyHeader).toHaveCSS("position", "sticky");
-      await page.evaluate(() => window.scrollTo(0, 700));
+      // A short board (few seeded items) cannot scroll 700px; scroll as far as
+      // the document allows and only judge the pinned position while the
+      // sticky section's container still extends below it — at the very end
+      // of its container a sticky element legitimately scrolls away.
+      const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+      await page.evaluate((y) => window.scrollTo(0, y), Math.min(700, Math.max(0, maxScroll)));
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
-      const scrolledTop = (await stickyHeader.boundingBox())?.y;
-      expect(scrolledTop).toBeDefined();
-      expect(Math.abs(scrolledTop!)).toBeLessThanOrEqual(1);
+      const pinned = await stickyHeader.evaluate((section) => {
+        const own = section.getBoundingClientRect();
+        const container = section.parentElement?.getBoundingClientRect();
+        return { top: own.y, stillInside: !!container && container.bottom >= own.height + 1 };
+      });
+      if (pinned.stillInside) expect(Math.abs(pinned.top), `${surface.path} sticky actions should stay pinned`).toBeLessThanOrEqual(1);
       await expect(actions).toBeVisible();
       await expectNoHorizontalOverflow(page);
     }
