@@ -8,6 +8,9 @@ export function hasSupabaseServerConfig() {
 }
 
 export async function createClient() {
+  // Pages and layouts render concurrently; whoever asks for a client first
+  // makes sure the service catalogue (renames, groups) is loaded for labels.
+  await ensureServerCategoryCatalog();
   assertSafeSupabaseRuntime("Supabase server");
 
   if (!hasSupabaseServerConfig()) {

@@ -119,7 +119,7 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
-  if (hasSupabaseServerConfig()) await ensureServerCategoryCatalog();
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) await ensureServerCategoryCatalog();
   const operationalStatus = getOperationalStatusBanner(locale);
   const supabase = hasSupabaseServerConfig() ? await createClient() : null;
   const initialUser = supabase ? await safeGetUser(supabase) : null;
