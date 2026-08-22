@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordServerInteraction } from "@/lib/analytics/server-events";
 import {
   categorySearchScore,
   getAllCategories,
@@ -1718,6 +1719,15 @@ export async function POST(req: Request) {
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
             : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
           : payload.answer;
+
+    const assistantProvider = workersPayload ? "workers-ai" : openAiPayload ? "openai" : "local";
+    void recordServerInteraction({
+      type: "assistant_question",
+      source: "assistant",
+      locale,
+      categoryId: payload.serviceId ?? null,
+      metadata: { provider: assistantProvider, action: noResults ? "publish_request" : payload.action ?? "answer", results: assistantProfessionals.length, confidence: documentedPayload.confidence },
+    });
 
     return NextResponse.json({
       answer: assistantAnswer,

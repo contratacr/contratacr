@@ -14,6 +14,7 @@ import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
+import { recordServerInteraction } from "@/lib/analytics/server-events";
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -209,6 +210,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     : 1;
   const resultOffset = (currentPage - 1) * RESULTS_PER_PAGE;
   const results = orderedResults.slice(resultOffset, resultOffset + RESULTS_PER_PAGE);
+  if (currentPage === 1) {
+    void recordServerInteraction({
+      type: "search_performed",
+      source: "search",
+      locale,
+      categoryId: params.categoria ?? null,
+      metadata: { q: params.q ?? null, provincia: params.provincia ?? null, canton: params.canton ?? null, sortBy: params.sortBy ?? null, results: orderedResults.length },
+    });
+  }
 
   const popupMetricLabelFor = (pro: (typeof allResults)[number]): string | null => {
     if (sortBy === "experience") {

@@ -1,4 +1,5 @@
 import { JobsBoard } from "@/components/jobs/jobs-board";
+import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { type JobPost } from "@/lib/jobs";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { createClient } from "@/lib/supabase/server";
@@ -46,6 +47,13 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
       application_count: Number.isFinite(applicationCount) ? applicationCount : 0,
     } as JobPost;
   });
+
+  if (detailOnly && initialSelectedJobId) {
+    const viewed = jobs.find((job) => job.id === initialSelectedJobId);
+    if (viewed && viewed.employer_id !== professional?.id) {
+      void recordServerInteraction({ type: "job_view", source: "jobs", professionalId: viewed.employer_id ?? null, categoryId: viewed.service_category_id ?? null, viewerUserId: user?.id ?? null, metadata: { jobId: viewed.id } });
+    }
+  }
 
   const socialLinks = (professional?.social_links && typeof professional.social_links === "object" ? professional.social_links : {}) as Record<string, string>;
 

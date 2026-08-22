@@ -191,6 +191,17 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           <Tile label="WhatsApp" value={interactions.byType.find((item) => item.label === "WhatsApp")?.value ?? 0} accent="#16a34a" />
           <Tile label="Llamadas" value={interactions.byType.find((item) => item.label === "Llamadas")?.value ?? 0} accent="#f59e0b" />
         </div>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {[
+            ["Búsquedas", "Búsquedas"],
+            ["Vistas de empleos", "Vistas de empleos"],
+            ["Postulaciones", "Postulaciones enviadas"],
+            ["Vistas de ofertas", "Vistas de ofertas"],
+            ["Asistente", "Preguntas al asistente"],
+          ].map(([label, key]) => (
+            <Tile key={key} label={label} value={interactions.byType.find((item) => item.label === key)?.value ?? 0} accent="#0ea5e9" />
+          ))}
+        </div>
         <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-2">
           <div>
             <p className="mb-2 text-xs font-semibold text-[#334155]">Interacciones diarias · últimos 30 días</p>

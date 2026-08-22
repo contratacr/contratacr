@@ -16,6 +16,7 @@ import {
 import { marketplaceLocale, offerTypeLabel } from "@/lib/marketplace-copy";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { createClient } from "@/lib/supabase/server";
+import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { crTodayISO } from "@/lib/time-cr";
 import { marketplaceReturnLabel, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
@@ -69,6 +70,10 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     .maybeSingle();
   if (offerError) throw offerError;
   if (!data) notFound();
+  const offerOwnerProfileId = (data.professionals as { profile_id?: string | null } | null)?.profile_id ?? null;
+  if (!user || offerOwnerProfileId !== user.id) {
+    void recordServerInteraction({ type: "offer_view", source: "offers", locale, professionalId: data.professional_id ?? null, categoryId: data.service_category_id ?? null, viewerUserId: user?.id ?? null, metadata: { offerId: id } });
+  }
   const professional = data.professionals as {
     slug?: string;
     business_name?: string;

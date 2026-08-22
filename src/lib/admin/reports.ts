@@ -183,6 +183,11 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       proposal_sent: "Propuestas enviadas",
       proposal_accepted: "Propuestas aceptadas",
       review_created: "Reseñas recibidas",
+      search_performed: "Búsquedas",
+      job_view: "Vistas de empleos",
+      job_application_sent: "Postulaciones enviadas",
+      offer_view: "Vistas de ofertas",
+      assistant_question: "Preguntas al asistente",
     };
     empty.interactions.total = Number(payload.total) || 0;
     empty.interactions.uniqueVisitors = Number(payload.uniqueVisitors) || 0;
