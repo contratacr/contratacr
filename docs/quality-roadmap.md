@@ -43,6 +43,17 @@ Each block ends with a gate. Nothing moves to the next block until the gate is g
 - Mobile app: the same flows inside the native shell (header/bottom nav/back).
 - **Gate:** every page in `src/app/[locale]` is *opened and interacted with* by at least one test, not only mapped.
 
+**Status 2026-08-22.** Block A gate reached on CI: the manual release regression
+(`Regression Tests` → *Run workflow*) is green on `5c1c02c4` — 4 shards × 104
+tests, zero failures, zero flakies — and `mobile-native-regression` is green on
+the matching `mobile` commit. Delivered on the way: real-screen editors and
+account specs, the offer-form FileList bug, the optimistic-status race in the
+offer/job managers, segmented filters that never clip at 320px, the assistant
+route no longer booting wrangler outside the Worker, third-party hosts kept off
+the wire during tests, the request journal and Supabase log dump in CI, and a
+dedicated concurrency group so pushes cannot cancel a pending release run.
+Still open in Block A: admin per-section actions and `olvide-contrasena`.
+
 ### Block B — Visual truth (1–2 sessions)
 
 - Screenshot baselines with `toHaveScreenshot` for ~30 deterministic routes on Pixel 7 and desktop, fed only by seeded data. Masks for timestamps and avatars.
