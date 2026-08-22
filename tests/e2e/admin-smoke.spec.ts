@@ -248,6 +248,7 @@ test.describe("@admin surfaces", () => {
     const admin = regressionAdminClient();
     const state = seed ?? (await ensureRegressionSeed());
     const stamp = Date.now();
+    const startedAt = new Date(stamp - 60_000).toISOString();
     let account: DisposableAccount | undefined;
     let victim: DisposableAccount | undefined;
     let ticketId = "";
@@ -309,6 +310,9 @@ test.describe("@admin surfaces", () => {
       if (ticketId) await admin.from("support_tickets").delete().eq("id", ticketId);
       if (reportId) await admin.from("reports").delete().eq("id", reportId);
       await cleanupDisposableAccount(victim).catch(() => undefined);
+      // The finalizer anonymizes the request (user_id becomes null), so the
+      // per-account cleanup cannot find it; remove what this test produced.
+      await admin.from("account_deletion_requests").delete().is("user_id", null).eq("status", "completed").gte("requested_at", startedAt);
       await cleanupDisposableAccount(account);
     }
   });
