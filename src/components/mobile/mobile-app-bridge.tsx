@@ -147,6 +147,8 @@ export function MobileAppBridge() {
     if (!isNativeAppRuntime()) return;
     document.documentElement.classList.add("ccr-native-app");
     document.body.classList.add("ccr-native-app");
+    // Server-side analytics read this to tell app traffic from web traffic.
+    document.cookie = "ccr_platform=native; path=/; max-age=31536000; SameSite=Lax";
 
     const firstRunPending = window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1";
 

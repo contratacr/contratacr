@@ -14,6 +14,9 @@ const VALID_SOURCES = new Set([
   "booking",
   "project",
   "favorites",
+  "jobs",
+  "offers",
+  "assistant",
   "api",
   "unknown",
 ]);

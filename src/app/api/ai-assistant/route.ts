@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordServerInteraction } from "@/lib/analytics/server-events";
 import {
   categorySearchScore,
   getAllCategories,
@@ -1788,6 +1789,15 @@ export async function POST(req: Request) {
           .replace(/through WhatsApp/gi, "by message")
           .replace(/WhatsApp/gi, locale === "en" ? "internal messaging" : "mensajería interna")
       : rawAssistantAnswer;
+
+    const assistantProvider = workersPayload ? "workers-ai" : openAiPayload ? "openai" : "local";
+    void recordServerInteraction({
+      type: "assistant_question",
+      source: "assistant",
+      locale,
+      categoryId: payload.serviceId ?? null,
+      metadata: { provider: assistantProvider, action: noResults ? "publish_request" : payload.action ?? "answer", results: assistantProfessionals.length, confidence: documentedPayload.confidence },
+    });
 
     return NextResponse.json({
       answer: assistantAnswer,

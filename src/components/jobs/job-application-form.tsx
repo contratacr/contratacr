@@ -1,5 +1,7 @@
 "use client";
 
+import { trackInteraction } from "@/lib/analytics/interaction-events";
+
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, FileText, LoaderCircle, Upload } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -307,6 +309,7 @@ export function JobApplicationForm({
       resume_url: resumeUrl,
       portfolio_url: portfolioUrl || linkedinUrl || null,
     });
+    if (!insertError) trackInteraction({ type: "job_application_sent", source: "jobs", metadata: { jobId } });
     if (insertError) {
       console.error("[jobs] job application insert failed", {
         code: insertError.code,

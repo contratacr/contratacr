@@ -14,6 +14,11 @@ export const INTERACTION_EVENT_TYPES = [
   "proposal_sent",
   "proposal_accepted",
   "review_created",
+  "search_performed",
+  "job_view",
+  "job_application_sent",
+  "offer_view",
+  "assistant_question",
 ] as const;
 
 export type InteractionEventType = (typeof INTERACTION_EVENT_TYPES)[number];
