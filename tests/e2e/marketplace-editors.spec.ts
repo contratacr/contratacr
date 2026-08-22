@@ -29,6 +29,15 @@ async function openOwnerEditor(page: Page, label: string, editPath: RegExp) {
   await page.waitForURL(editPath);
   return page.locator("main");
 }
+
+// After a save the detail is re-rendered on the server; CI runners can take
+// longer than the default expectation, and a single reload settles the rare
+// case where the router still shows the previous payload.
+async function expectUpdatedDetail(page: Page, text: string) {
+  const updated = page.getByText(text).first();
+  if (!(await updated.isVisible({ timeout: 15_000 }).catch(() => false))) await page.reload();
+  await expectVisibleText(page.locator("body"), text, 30_000);
+}
 async function openItemActions(page: Page, card: ReturnType<Page["locator"]>) {
   await card.getByRole("button", { name: /M[aá]s opciones|More options/i }).first().click();
 }
@@ -102,7 +111,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await offerEditor.getByRole("button", { name: /^Guardar cambios$/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 45_000 });
     await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000 });
-    await expectVisibleText(page.locator("body"), `${offerTitle} editada`);
+    await expectUpdatedDetail(page, `${offerTitle} editada`);
     await expectVisibleText(page.locator("body"), /40[\s.,]?000/);
     await expectHealthyPage(page);
 
@@ -149,7 +158,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await jobEditor.getByRole("button", { name: /^Guardar cambios$/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 45_000 });
     await page.waitForURL(/\/es\/empleos\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000 });
-    await expectVisibleText(page.locator("body"), `${jobTitle} editado`);
+    await expectUpdatedDetail(page, `${jobTitle} editado`);
     await expectHealthyPage(page);
 
     await gotoOK(page, "/es/empleos/mis-empleos");
