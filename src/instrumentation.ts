@@ -5,7 +5,7 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs" || process.env.CI_REQUEST_LOG !== "1") return;
   const http = await import("node:http");
-  const originalEmit = http.Server.prototype.emit;
+  const originalEmit = http.Server.prototype.emit as (this: unknown, ...emitArgs: unknown[]) => boolean;
   let sequence = 0;
   http.Server.prototype.emit = function patchedEmit(this: unknown, event: string | symbol, ...args: unknown[]) {
     if (event === "request") {
@@ -21,5 +21,5 @@ export async function register() {
       });
     }
     return originalEmit.call(this, event, ...args);
-  } as typeof http.Server.prototype.emit;
+  } as unknown as typeof http.Server.prototype.emit;
 }
