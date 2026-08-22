@@ -217,7 +217,7 @@ test.describe("@mobile native shell contracts", () => {
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-pending-path:v1"))).toBeNull();
     await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("ccr:native-first-run-auth-session:v1"))).toBe("1");
 
-    await page.goBack();
+    await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/es\/?$/);
     await expect(onboarding).toBeVisible();
     await expect(onboarding.getByText("Elige cómo quieres comenzar")).toBeVisible();
@@ -226,14 +226,14 @@ test.describe("@mobile native shell contracts", () => {
     await onboarding.getByRole("button", { name: "Crear una cuenta" }).click();
     await expect(page).toHaveURL(/\/es\/registro\/profesional/);
     await expect(page.getByRole("heading", { name: "Crea tu cuenta profesional", exact: true })).toBeVisible();
-    await page.goBack();
+    await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/es\/?$/);
     await expect(onboarding).toBeVisible();
 
     await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
     await expect(page).toHaveURL(/\/es\/login/);
     await expect(page.getByRole("heading", { name: "Bienvenido de vuelta", exact: true })).toBeVisible();
-    await page.goBack();
+    await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/es\/?$/);
     await expect(onboarding).toBeVisible();
 
@@ -256,7 +256,7 @@ test.describe("@mobile native shell contracts", () => {
       const nativeNav = page.locator("nav.ccr-native-bottom-nav").filter({ visible: true });
       await expect(nativeNav).toBeVisible();
       await Promise.all([
-        page.waitForURL(new RegExp(`${destination.path.replaceAll("/", "\\/")}(?:[?#].*)?$`)),
+        page.waitForURL(new RegExp(`${destination.path.replaceAll("/", "\\/")}(?:[?#].*)?$`), { waitUntil: "domcontentloaded" }),
         nativeNav.getByRole("link", { name: destination.label, exact: true }).click(),
       ]);
       await expect(page.getByRole("heading", { name: destination.heading, exact: true })).toBeVisible();

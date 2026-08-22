@@ -94,7 +94,7 @@ test.describe("@account disposable account lifecycle", () => {
       await page.getByRole("button", { name: /^Disable account$/i }).filter({ visible: true }).click();
       await page.getByPlaceholder(/I no longer need the service/i).fill("Disposable regression cycle");
       await page.getByRole("button", { name: /^Confirm disable$/i }).filter({ visible: true }).click();
-      await page.waitForURL(/\/en(?:\?|$)/, { timeout: 20_000 });
+      await page.waitForURL(/\/en(?:\?|$)/, { timeout: 20_000, waitUntil: "domcontentloaded" });
       await expect(page).toHaveURL(/\/en(?:\?|$)/);
 
       await expect.poll(async () => {
@@ -505,7 +505,7 @@ test.describe("@account disposable account lifecycle", () => {
       });
       await page.getByRole("button", { name: /^Delete account$/i }).filter({ visible: true }).click();
       await page.getByRole("button", { name: /^Confirm deletion$/i }).filter({ visible: true }).click();
-      await page.waitForURL(/\/en\?accountDeletion=(?:completed|pending)/, { timeout: 45_000 });
+      await page.waitForURL(/\/en\?accountDeletion=(?:completed|pending)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
       await expect(page.getByRole("status")).toContainText(/Your account (?:was deleted|deletion has started)/i);
       await expectHealthyPage(page);
 

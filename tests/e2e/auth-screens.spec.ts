@@ -21,13 +21,13 @@ test.describe("@account screens through the real pages", () => {
     await expectVisibleText(page.locator("body"), /Ofrezco servicios/);
     // Each role card is a link; the "Continuar" caption is part of the card.
     await page.getByRole("link", { name: /Busco servicios/ }).first().click();
-    await page.waitForURL(/\/es\/registro\/cliente/);
+    await page.waitForURL(/\/es\/registro\/cliente/, { waitUntil: "domcontentloaded" });
     await expectVisibleText(page.locator("body"), /Crear cuenta de cliente/);
     await expectHealthyPage(page);
 
     await gotoOK(page, "/es/registro");
     await page.getByRole("link", { name: /Ofrezco servicios/ }).first().click();
-    await page.waitForURL(/\/es\/registro\/profesional/);
+    await page.waitForURL(/\/es\/registro\/profesional/, { waitUntil: "domcontentloaded" });
     await expectHealthyPage(page);
   });
 
@@ -57,7 +57,7 @@ test.describe("@account screens through the real pages", () => {
       await gotoOK(page, "/es/onboarding");
       // The page resolves the account before rendering the cards and hands off
       // to the panel; the role question must not flash for someone who already chose.
-      await page.waitForURL(/\/dashboard\//, { timeout: 30_000 });
+      await page.waitForURL(/\/dashboard\//, { timeout: 30_000, waitUntil: "domcontentloaded" });
       await expect(page.getByText(/¿Para qué usarás ContrataCR\?/)).toHaveCount(0);
       await expectHealthyPage(page);
     });
@@ -76,7 +76,7 @@ test.describe("@account screens through the real pages", () => {
       await page.locator('input[type="tel"]').first().fill("88887777");
       await page.getByPlaceholder("1-0000-0000").fill(randomCedula());
       await page.getByRole("button", { name: /Guardar y continuar/ }).click();
-      await page.waitForURL(/\/dashboard\//, { timeout: 30_000 });
+      await page.waitForURL(/\/dashboard\//, { timeout: 30_000, waitUntil: "domcontentloaded" });
       await expectHealthyPage(page);
     });
   });
