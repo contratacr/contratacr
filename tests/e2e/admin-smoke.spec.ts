@@ -144,7 +144,8 @@ test.describe("@admin surfaces", () => {
 
       // Ofertas: the owner finds the publication with its creator and moderates it.
       await gotoOK(page, "/es/admin/ofertas");
-      await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).fill(offerTitle);
+      await expectVisibleText(page.locator("body"), /en esta vista/);
+      await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).filter({ visible: true }).first().fill(offerTitle);
       const row = page.locator("li").filter({ hasText: offerTitle }).first();
       await expect(row).toBeVisible();
       await expect(row.getByText("SG Solutions")).toBeVisible();
@@ -162,7 +163,7 @@ test.describe("@admin surfaces", () => {
       // Empleos: the seeded SG job lists its creator and the application count.
       await gotoOK(page, "/es/admin/empleos");
       await expectVisibleText(page.locator("body"), /en esta vista/);
-      await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).fill("SG Solutions");
+      await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).filter({ visible: true }).first().fill("SG Solutions");
       await expect(page.locator("li").filter({ hasText: "SG Solutions" }).first()).toBeVisible();
       await expect(page.getByText(/postulaci(?:ón|ones)/).first()).toBeVisible();
       await expectHealthyPage(page);
@@ -175,7 +176,7 @@ test.describe("@admin surfaces", () => {
       for (const province of ["San José", "Alajuela", "Cartago", "Heredia", "Guanacaste", "Puntarenas", "Limón"]) {
         await expect(page.getByRole("button", { name: new RegExp(`^${province}`) }).first()).toBeVisible();
       }
-      await page.getByPlaceholder(/Buscar provincia o cantón/).fill("Atenas");
+      await page.getByPlaceholder(/Buscar provincia o cantón/).filter({ visible: true }).first().fill("Atenas");
       await expect(page.getByText("Atenas", { exact: true }).first()).toBeVisible();
       await expectHealthyPage(page);
 
@@ -184,7 +185,7 @@ test.describe("@admin surfaces", () => {
       const homeGroup = page.getByRole("button", { name: /^Hogar/ }).first();
       await expect(homeGroup).toBeVisible();
       await expect(homeGroup).toContainText(/servicios · \d+ con profesionales/);
-      await page.getByPlaceholder(/Buscar servicio o categoría/).fill("Redes e internet");
+      await page.getByPlaceholder(/Buscar servicio o categoría/).filter({ visible: true }).first().fill("Redes e internet");
       await expect(page.getByText(/\d+ profesionales · \d+ verificados/).first()).toBeVisible();
       await expectHealthyPage(page);
 
