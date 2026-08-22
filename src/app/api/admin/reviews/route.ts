@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCategoryLabel } from "@/lib/data/categories";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateReviewText } from "@/lib/moderation/reviews";
@@ -61,7 +62,7 @@ export async function GET(req: Request) {
 
   const [professionalsRes, clientsRes] = await Promise.all([
     professionalIds.length
-      ? db.from("professionals").select("id, name, business_name, slug, profession").in("id", professionalIds)
+      ? db.from("professionals").select("id, business_name, slug, category_id, profiles(full_name)").in("id", professionalIds)
       : Promise.resolve({ data: [] }),
     clientIds.length
       ? db.from("profiles").select("id, full_name, email, avatar_url").in("id", clientIds)
@@ -97,9 +98,9 @@ export async function GET(req: Request) {
       moderatedAt: row.moderated_at ?? null,
       professional: {
         id: row.professional_id,
-        name: professional?.business_name || professional?.name || "Profesional",
+        name: professional?.business_name || (professional?.profiles as { full_name?: string | null } | null)?.full_name || "Profesional",
         slug: professional?.slug ?? null,
-        profession: professional?.profession ?? null,
+        profession: professional?.category_id ? getCategoryLabel(professional.category_id) : null,
       },
       client: {
         id: row.client_id,

@@ -84,7 +84,7 @@ function DailyBars({ data, aKey, bKey, aColor, bColor }: { data: Record<string, 
       {data.map((d, i) => {
         const a = d[aKey] ?? 0, b = bKey ? d[bKey] ?? 0 : 0; const total = a + b;
         return (
-          <div key={i} className="flex flex-1 flex-col justify-end" title={`${String(d.date)}: ${total}`}>
+          <div key={i} className="flex h-full flex-1 flex-col justify-end" title={`${String(d.date)}: ${total}`}>
             <div className="w-full overflow-hidden rounded-sm" style={{ height: `${(total / max) * 100}%`, minHeight: total > 0 ? 4 : 0 }}>
               {bKey && <div className="w-full" style={{ height: `${total ? (b / total) * 100 : 0}%`, backgroundColor: bColor }} />}
               <div className="w-full" style={{ height: `${total ? (a / total) * 100 : 100}%`, backgroundColor: aColor }} />

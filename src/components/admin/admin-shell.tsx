@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShieldCheck, LogOut, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList, ArrowLeft, Star } from "lucide-react";
+import { ShieldCheck, LogOut, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
   | "resumen" | "verificacion" | "usuarios" | "solicitudes" | "publicaciones" | "reportes" | "aseguradoras"
-  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas";
+  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "ofertas" | "cobertura";
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
 // scroll strip on small screens). "Resumen" is the home/overview; the other
@@ -59,6 +59,17 @@ export function AdminShell({
     };
   }, []);
 
+  // The phone rail scrolls sideways; bring the active section into view so
+  // the admin always sees where they are after navigating.
+  const railRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const rail = railRef.current;
+    const current = rail?.querySelector<HTMLElement>("[data-admin-active='true']");
+    if (!rail || !current) return;
+    const target = current.offsetLeft - (rail.clientWidth - current.offsetWidth) / 2;
+    rail.scrollTo({ left: Math.max(0, target), behavior: "auto" });
+  }, [active]);
+
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -72,6 +83,9 @@ export function AdminShell({
     { id: "solicitudes", label: "Solicitudes", icon: CalendarCheck, href: "/admin/solicitudes", badge: 0 },
     { id: "publicaciones", label: "Proyectos", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
     { id: "resenas", label: "Reseñas", icon: Star, href: "/admin/resenas", badge: 0 },
+    { id: "empleos", label: "Empleos", icon: Briefcase, href: "/admin/empleos", badge: 0 },
+    { id: "ofertas", label: "Ofertas", icon: BadgePercent, href: "/admin/ofertas", badge: 0 },
+    { id: "cobertura", label: "Cobertura", icon: MapPinned, href: "/admin/cobertura", badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },
@@ -92,6 +106,7 @@ export function AdminShell({
     <Link
       key={it.id}
       href={it.href}
+      data-admin-active={active === it.id ? "true" : undefined}
       className={cn(
         variant === "side"
           ? "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
@@ -134,8 +149,9 @@ export function AdminShell({
           {[
             { label: "Principal", ids: ["resumen", "usuarios"] },
             { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "resenas", "reportes", "soporte"] },
+            { label: "Marketplace", ids: ["empleos", "ofertas"] },
             { label: "Gestión", ids: ["categorias", "aseguradoras", "cuentas"] },
-            { label: "Información", ids: ["analitica", "actividad"] },
+            { label: "Información", ids: ["analitica", "cobertura", "actividad"] },
           ].map((group, index) => (
             <div key={group.label} className={index === 0 ? "" : "mt-4 border-t border-white/10 pt-3"}>
               <p className="mb-1 px-3 text-[10px] font-semibold uppercase text-white/35">{group.label}</p>
@@ -173,7 +189,7 @@ export function AdminShell({
             </button>
           </div>
         </div>
-        <div className="px-2 flex gap-1 overflow-x-auto">
+        <div ref={railRef} className="scrollbar-none flex gap-1 overflow-x-auto px-2">
           {items.map((it) => navLink(it, "top"))}
         </div>
       </header>

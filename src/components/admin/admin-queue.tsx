@@ -143,17 +143,20 @@ export function AdminQueue() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-[#111827] text-sm truncate">
+                    <p className="line-clamp-2 text-sm font-medium leading-snug text-[#111827] sm:truncate">
                       {r.profiles?.full_name ?? "Sin nombre"}
                     </p>
-                    <p className="text-xs text-[#6b7280] truncate">
+                    <p className="line-clamp-2 text-xs text-[#6b7280] sm:truncate">
                       {r.profiles?.cedula ? `${formatId(r.profiles.cedula)} · ` : ""}
                       {r.role_label ?? "Cuenta"}
                       {r.category_id ? ` · ${getCategoryLabel(r.category_id)}` : ""}
                     </p>
+                    <span className={`mt-1 inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium sm:hidden ${verificationPillClasses(r.verification_status)}`}>
+                      {verificationLabel(r.verification_status)}
+                    </span>
                   </div>
                   <span
-                    className={`text-xs font-medium px-2 py-1 rounded-md border ${verificationPillClasses(
+                    className={`hidden shrink-0 rounded-md border px-2 py-1 text-xs font-medium sm:inline-flex ${verificationPillClasses(
                       r.verification_status
                     )}`}
                   >
