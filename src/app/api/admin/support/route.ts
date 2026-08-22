@@ -143,3 +143,17 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true });
 }
+// DELETE /api/admin/support?id=… — removes a ticket and its whole thread.
+export async function DELETE(req: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  const id = new URL(req.url).searchParams.get("id") ?? "";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
+  const db = createAdminClient();
+  const { error } = await db.from("support_tickets").delete().eq("id", id);
+  if (error) {
+    console.error("[admin/support] delete", error.message);
+    return NextResponse.json({ error: "No se pudo eliminar el caso." }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true, id });
+}

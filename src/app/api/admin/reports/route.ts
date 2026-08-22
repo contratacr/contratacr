@@ -39,3 +39,17 @@ export async function PATCH(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
+// DELETE /api/admin/reports?id=… — removes a report record.
+export async function DELETE(req: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  const id = new URL(req.url).searchParams.get("id") ?? "";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
+  const db = createAdminClient();
+  const { error } = await db.from("reports").delete().eq("id", id);
+  if (error) {
+    console.error("[admin/reports] delete", error.message);
+    return NextResponse.json({ error: "No se pudo eliminar el reporte." }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true, id });
+}

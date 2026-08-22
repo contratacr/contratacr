@@ -84,7 +84,7 @@ function creatorOf(row: CreatorRow | undefined) {
     id: row.id,
     profileId: row.profile_id,
     slug: row.slug,
-    name: row.business_name || row.profiles?.full_name || "Profesional",
+    name: (row.business_name ?? "").trim().length > 1 ? (row.business_name as string).trim() : row.profiles?.full_name || "Profesional",
     personName: row.profiles?.full_name ?? null,
     email: row.profiles?.email ?? null,
     avatarUrl: row.profiles?.avatar_url ?? null,
@@ -211,4 +211,24 @@ export async function PATCH(request: Request) {
   }
   if (!data) return NextResponse.json({ error: "La publicación ya no existe." }, { status: 404 });
   return NextResponse.json({ id: data.id, status: data.status });
+}
+
+// DELETE /api/admin/marketplace?kind=jobs|offers&id=… — removes the publication,
+// its follower-feed rows and the notifications that pointed at it.
+export async function DELETE(request: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  const url = new URL(request.url);
+  const kind = url.searchParams.get("kind") === "offers" ? "offers" : "jobs";
+  const id = url.searchParams.get("id") ?? "";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
+  const db = createAdminClient();
+  await db.from("notifications").delete().eq("type", "followed_professional_activity").eq("data->>content_id", id);
+  await db.from("professional_activity").delete().eq("content_id", id);
+  const { error } = await db.from(kind === "jobs" ? "job_posts" : "professional_offers").delete().eq("id", id);
+  if (error) {
+    console.error(`[admin/marketplace] delete ${kind}`, error.message);
+    return NextResponse.json({ error: "No se pudo eliminar la publicación." }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true, id });
 }

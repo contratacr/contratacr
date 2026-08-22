@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Flag, ExternalLink, Check, RotateCcw, Loader2 } from "lucide-react";
+import { Flag, ExternalLink, Check, RotateCcw, Loader2, Trash2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
@@ -56,6 +56,20 @@ export function AdminReports() {
     });
     setBusyId(null);
     load(status);
+  }
+
+  async function removeReport(id: string) {
+    if (!window.confirm("Esta eliminación es permanente. ¿Deseas eliminar el reporte?")) return;
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/admin/reports?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "No se pudo eliminar.");
+      setReports((current) => current.filter((item) => item.id !== id));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "No se pudo eliminar.");
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -121,7 +135,14 @@ export function AdminReports() {
                       )}
                     </div>
                   </div>
-                  <div className="shrink-0">
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <button
+                      onClick={() => void removeReport(r.id)}
+                      disabled={busyId === r.id}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-60"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                    </button>
                     {r.status === "open" ? (
                       <button
                         onClick={() => setReportStatus(r.id, "resolved")}

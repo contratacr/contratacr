@@ -5,7 +5,7 @@ import {
   ArrowLeft, Loader2, ExternalLink, ShieldCheck, Headset, Flag, FolderOpen,
   CalendarDays, Ban, ShieldOff, Mail, Phone, IdCard, BadgeCheck, History,
   CheckCircle2, RotateCcw, XCircle, Clock3, MousePointerClick,
-  Users,
+  Users, Trash2,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getInitials } from "@/lib/utils";
@@ -167,6 +167,25 @@ export function AdminUserProfile({
     const json = await res.json();
     if (!res.ok || json.error) throw new Error(json.error ?? "No se pudo cargar el usuario.");
     setData(json);
+  }
+
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  async function deleteAccount() {
+    const name = data?.profile?.full_name || data?.profile?.email || "esta cuenta";
+    if (!window.confirm(`Vas a eliminar al 100% la cuenta de ${name}. Se borra todo lo que creó y no se puede deshacer. ¿Continuar?`)) return;
+    if (window.prompt("Escribe ELIMINAR para confirmar") !== "ELIMINAR") return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/admin/users?id=${encodeURIComponent(userId)}`, { method: "DELETE" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.error) throw new Error(json.error ?? "No se pudo eliminar la cuenta.");
+      window.location.assign("/es/admin/usuarios?deleted=1");
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "No se pudo eliminar la cuenta.");
+      setDeleting(false);
+    }
   }
 
   async function updateIdentity(action: ActionState, reason?: string) {
@@ -636,6 +655,27 @@ export function AdminUserProfile({
           </ul>
         )}
       </Section>
+
+      {/* ── Danger zone: complete account deletion ── */}
+      <section className="rounded-xl border border-[#fecaca] bg-[#fff7f7] p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-[#991b1b]">Eliminar esta cuenta al 100%</p>
+            <p className="mt-0.5 text-xs text-[#7f1d1d]">
+              Borra el acceso, el perfil, las fotos y todo lo que creó (solicitudes, proyectos, publicaciones, reseñas, mensajes). No se puede deshacer.
+            </p>
+            {deleteError && <p className="mt-2 text-xs font-semibold text-[#b91c1c]">{deleteError}</p>}
+          </div>
+          <button
+            type="button"
+            disabled={deleting}
+            onClick={() => void deleteAccount()}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-[#b91c1c] px-3 text-xs font-semibold text-white hover:bg-[#991b1b] disabled:opacity-60"
+          >
+            {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Eliminar cuenta
+          </button>
+        </div>
+      </section>
 
       {/* ── Requests (bookings as client) ── */}
       <Section icon={CalendarDays} title="Solicitudes enviadas" count={bookings.length}>

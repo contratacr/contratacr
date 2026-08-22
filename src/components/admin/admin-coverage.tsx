@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronDown, Loader2, MapPinned, Search, Tag } from "lucide-react";
+import { ChevronDown, ExternalLink, Loader2, MapPinned, Search, SlidersHorizontal, Tag, X } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
+import { PROVINCES } from "@/lib/data/cr-geography";
+import { getInitials } from "@/lib/utils";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +13,25 @@ type Service = { id: string; label: string; groupId: string; groupLabel: string;
 type Group = { id: string; label: string; services: number; withProfessionals: number; professionals: number };
 type Canton = { id: string; name: string; based: number; serving: number };
 type Province = { id: string; name: string; based: number; serving: number; cantons: Canton[] };
+type Match = {
+  id: string;
+  slug: string | null;
+  profileId: string | null;
+  name: string;
+  personName: string | null;
+  avatarUrl: string | null;
+  category: string | null;
+  services: number;
+  province: string | null;
+  canton: string | null;
+  basedHere: boolean;
+  nationwide: boolean;
+  verified: boolean;
+  status: string;
+};
 type Coverage = {
+  filter?: { service: string | null; provincia: string | null; canton: string | null; total: number };
+  professionals?: Match[];
   totals: {
     professionals: number;
     verified: number;
@@ -63,6 +84,38 @@ export function AdminCoverage() {
   const [openProvinces, setOpenProvinces] = useState<Record<string, boolean>>({});
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [groupFilter, setGroupFilter] = useState<string>("all");
+  // The simple filter bar: pick a service, a province and/or a canton and see
+  // exactly which professionals match (based there or serving it).
+  const [serviceFilter, setServiceFilter] = useState("");
+  const [provinceFilter, setProvinceFilter] = useState("");
+  const [cantonFilter, setCantonFilter] = useState("");
+  const [matches, setMatches] = useState<Match[] | null>(null);
+  const [matchesTotal, setMatchesTotal] = useState(0);
+  const [matchesLoading, setMatchesLoading] = useState(false);
+  const hasFilter = !!(serviceFilter || provinceFilter || cantonFilter);
+
+  useEffect(() => {
+    if (!hasFilter) return;
+    let alive = true;
+    queueMicrotask(() => { if (alive) setMatchesLoading(true); });
+    const params = new URLSearchParams();
+    if (serviceFilter) params.set("service", serviceFilter);
+    if (provinceFilter) params.set("provincia", provinceFilter);
+    if (cantonFilter) params.set("canton", cantonFilter);
+    fetch(`/api/admin/coverage?${params.toString()}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((payload: Coverage) => {
+        if (!alive) return;
+        setMatches(payload.professionals ?? []);
+        setMatchesTotal(payload.filter?.total ?? payload.professionals?.length ?? 0);
+      })
+      .catch(() => { if (alive) setMatches([]); })
+      .finally(() => { if (alive) setMatchesLoading(false); });
+    return () => { alive = false; };
+  }, [cantonFilter, hasFilter, provinceFilter, serviceFilter]);
+
+  const cantonOptions = useMemo(() => (provinceFilter ? PROVINCES.find((province) => province.id === provinceFilter)?.cantons ?? [] : []), [provinceFilter]);
+  const clearFilters = () => { setServiceFilter(""); setProvinceFilter(""); setCantonFilter(""); setMatches(null); };
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -147,6 +200,89 @@ export function AdminCoverage() {
             <Tile label="Cubren todo el país" value={data.totals.nationwide} />
           </div>
 
+          <section className="mb-4 rounded-2xl border border-[#e5e7eb] bg-white p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-[#009FD9]" />
+              <h2 className="text-sm font-bold text-[#0f172a]">Ver profesionales por servicio y lugar</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <label className="block text-xs font-semibold text-[#374151]">
+                Servicio
+                <select aria-label="Servicio" value={serviceFilter} onChange={(event) => setServiceFilter(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827] outline-none focus:border-[#009FD9]">
+                  <option value="">Todos los servicios</option>
+                  {data.groups.map((group) => (
+                    <optgroup key={group.id} label={group.label}>
+                      {data.services.filter((service) => service.groupId === group.id).map((service) => (
+                        <option key={service.id} value={service.id}>{service.label} ({service.professionals})</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-xs font-semibold text-[#374151]">
+                Provincia
+                <select aria-label="Provincia" value={provinceFilter} onChange={(event) => { setProvinceFilter(event.target.value); setCantonFilter(""); }} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827] outline-none focus:border-[#009FD9]">
+                  <option value="">Todas las provincias</option>
+                  {PROVINCES.map((province) => <option key={province.id} value={province.id}>{province.name}</option>)}
+                </select>
+              </label>
+              <label className="block text-xs font-semibold text-[#374151]">
+                Cantón
+                <select aria-label="Cantón" value={cantonFilter} disabled={!provinceFilter} onChange={(event) => setCantonFilter(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827] outline-none focus:border-[#009FD9] disabled:bg-[#f8fafc] disabled:text-[#94a3b8]">
+                  <option value="">{provinceFilter ? "Todos los cantones" : "Elige una provincia"}</option>
+                  {cantonOptions.map((canton) => <option key={canton.id} value={canton.id}>{canton.name}</option>)}
+                </select>
+              </label>
+            </div>
+            {hasFilter && (
+              <div className="mt-4 rounded-xl border border-[#e5e7eb]">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f1f5f9] px-4 py-2.5">
+                  <p className="text-sm font-bold text-[#0f172a]">
+                    {matchesLoading ? "Buscando…" : `${matchesTotal.toLocaleString("es-CR")} ${matchesTotal === 1 ? "profesional cumple" : "profesionales cumplen"}`}
+                    {!matchesLoading && matchesTotal > 300 && <span className="ml-1 text-xs font-normal text-[#94a3b8]">(se muestran 300)</span>}
+                  </p>
+                  <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 text-xs font-semibold text-[#6b7280] hover:text-[#0f172a]"><X className="h-3.5 w-3.5" /> Limpiar filtros</button>
+                </div>
+                {matchesLoading ? (
+                  <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div>
+                ) : (matches ?? []).length === 0 ? (
+                  <p className="px-4 py-6 text-sm text-[#94a3b8]">Nadie ofrece esto aquí todavía.</p>
+                ) : (
+                  <ul className="max-h-[520px] divide-y divide-[#f1f5f9] overflow-y-auto">
+                    {(matches ?? []).map((pro) => (
+                      <li key={pro.id} className="flex items-center gap-3 px-4 py-2.5">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EBF5FB] text-xs font-bold text-[#009FD9]">
+                          {pro.avatarUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={pro.avatarUrl} alt="" className="h-full w-full object-cover" />
+                          ) : getInitials(pro.name)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-[#111827]">
+                            <Link href={`/admin/proveedores/${pro.id}`} className="hover:text-[#009FD9]">{pro.name}</Link>
+                            {pro.personName && pro.personName !== pro.name && <span className="ml-1 text-xs font-normal text-[#6b7280]">· {pro.personName}</span>}
+                          </p>
+                          <p className="truncate text-xs text-[#6b7280]">
+                            {[pro.category, pro.services > 1 ? `${pro.services} servicios` : null, [pro.canton, pro.province].filter(Boolean).join(", ") || "Sin ubicación"].filter(Boolean).join(" · ")}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                          {pro.verified && <span className="rounded-md bg-[#f0fdf4] px-2 py-0.5 text-[11px] font-semibold text-[#15803d]">Verificado</span>}
+                          {(provinceFilter || cantonFilter) && (
+                            <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-semibold", pro.basedHere ? "bg-[#e0f2fe] text-[#0369a1]" : "bg-[#f1f5f9] text-[#64748b]")}>{pro.basedHere ? "Con sede aquí" : pro.nationwide ? "Todo el país" : "Atiende aquí"}</span>
+                          )}
+                          {pro.slug && (
+                            <a href={`/es/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer" aria-label="Ver perfil público" className="grid h-7 w-7 place-items-center rounded-md border border-[#e5e7eb] text-[#6b7280] hover:text-[#009FD9]"><ExternalLink className="h-3.5 w-3.5" /></a>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </section>
+
           <AdminFilterTabs tabs={VIEWS} value={view} onChange={setView} />
 
           <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:flex-row sm:items-center">
@@ -214,6 +350,7 @@ export function AdminCoverage() {
                     {section.items.map((service) => (
                       <li key={service.id} className="px-4 py-2">
                         <div className="flex items-center justify-between gap-3">
+                          <button type="button" onClick={() => { setServiceFilter(service.id); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="min-w-0 text-left hover:text-[#009FD9]" title="Ver profesionales de este servicio">
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-[#111827]">
                               {service.label}
@@ -221,6 +358,7 @@ export function AdminCoverage() {
                             </p>
                             <p className="truncate text-xs text-[#6b7280]">{service.groupLabel}</p>
                           </div>
+                          </button>
                           <p className={cn("shrink-0 text-sm font-bold tabular-nums", service.professionals === 0 ? "text-[#b91c1c]" : "text-[#0f172a]")}>
                             {service.professionals.toLocaleString("es-CR")} <span className="text-xs font-semibold text-[#6b7280]">· {service.verified.toLocaleString("es-CR")}</span>
                           </p>
@@ -280,7 +418,7 @@ export function AdminCoverage() {
                         {province.cantons.length === 0 && <li className="px-4 py-3 text-sm text-[#9ca3af]">Sin cantones con ese filtro.</li>}
                         {province.cantons.map((canton) => (
                           <li key={canton.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2 sm:grid-cols-[minmax(0,1fr)_120px_auto]">
-                            <p className="truncate text-sm text-[#334155]">{canton.name}</p>
+                            <button type="button" onClick={() => { setProvinceFilter(province.id); setCantonFilter(canton.id); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="truncate text-left text-sm text-[#334155] hover:text-[#009FD9]" title="Ver profesionales de este cantón">{canton.name}</button>
                             <div className="hidden sm:block"><Bar value={canton.based} max={maxCanton} /></div>
                             <p className="shrink-0 text-xs font-semibold text-[#6b7280]">
                               <span className={cn("text-sm font-bold tabular-nums", canton.based === 0 ? "text-[#b91c1c]" : "text-[#0f172a]")}>{canton.based}</span> con sede · {canton.serving} atienden

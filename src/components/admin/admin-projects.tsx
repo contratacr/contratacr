@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, ClipboardList, Loader2, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList, Loader2, Search, Trash2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
@@ -147,6 +147,21 @@ export function AdminProjects() {
     return () => clearTimeout(timer);
   }, [q]);
 
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  async function removeProject(id: string) {
+    if (!window.confirm("Esta eliminación es permanente: el proyecto y sus propuestas desaparecen. ¿Deseas continuar?")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/projects?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "No se pudo eliminar.");
+      setItems((current) => current.filter((item) => item.id !== id));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "No se pudo eliminar.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
@@ -290,6 +305,16 @@ export function AdminProjects() {
                           <p className="mt-1 text-xs text-[#9ca3af]">Sin profesional aceptado</p>
                         )}
                         <p className="mt-1 text-xs text-[#9ca3af]">Creada: {fmtDateTime(project.created_at)} · ID: {project.id.slice(0, 8)}</p>
+                      </div>
+                      <div className="sm:col-span-2 lg:col-span-1 xl:col-span-2">
+                        <button
+                          type="button"
+                          disabled={deletingId === project.id}
+                          onClick={() => void removeProject(project.id)}
+                          className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-60"
+                        >
+                          {deletingId === project.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Eliminar proyecto
+                        </button>
                       </div>
                     </div>
                   </div>

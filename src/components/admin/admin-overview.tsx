@@ -1,9 +1,11 @@
 "use client";
 
-import { UserPlus, Users, Briefcase, ShieldCheck, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { UserPlus, Users, Briefcase, ShieldCheck, ArrowUpRight, ArrowDownRight, FolderOpen, Headset } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { formatRelativeTime } from "@/lib/utils";
-import type { AdminOverview as Data, Kpi, RankItem } from "@/lib/admin/overview";
+import type { AdminOverview as Data, Kpi } from "@/lib/admin/overview";
+import type { ActivityEvent, ActivityKind } from "@/lib/admin/activity";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
 
 function Delta({ pct, invert = false }: { pct: number | null; invert?: boolean }) {
@@ -83,26 +85,6 @@ function GrowthChart({ data }: { data: Data["growth"] }) {
   );
 }
 
-function RankBars({ items, color }: { items: RankItem[]; color: string }) {
-  if (items.length === 0) return <EmptyMini label="Sin datos aún" className="py-8" />;
-  const max = Math.max(1, ...items.map((i) => i.value));
-  return (
-    <div className="flex flex-col gap-3">
-      {items.map((it) => (
-        <div key={it.label}>
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="truncate text-[#334155]">{it.label}</span>
-            <span className="shrink-0 font-semibold tabular-nums text-[#0f172a]">{it.value.toLocaleString("es-CR")}</span>
-          </div>
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
-            <div className="h-full rounded-full" style={{ width: `${(it.value / max) * 100}%`, backgroundColor: color }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function EmptyMini({ label, className = "" }: { label: string; className?: string }) {
   return <div className={`flex items-center justify-center rounded-xl bg-[#f8fafc] text-sm text-[#94a3b8] ${className}`}>{label}</div>;
 }
@@ -126,8 +108,33 @@ function Card({ title, action, children }: { title: string; action?: React.React
   );
 }
 
-export function AdminOverview({ adminName, data }: { adminName: string; data: Data }) {
+const ATTENTION: { key: string; label: string; href: string; hint: string }[] = [
+  { key: "verificacion", label: "Verificaciones por revisar", href: "/admin/verificacion", hint: "Profesionales y clientes esperando la insignia" },
+  { key: "soporte", label: "Casos de soporte esperando respuesta", href: "/admin/soporte", hint: "Tickets abiertos o con la última palabra del usuario" },
+  { key: "reportes", label: "Reportes abiertos", href: "/admin/reportes", hint: "Perfiles o contenido reportado" },
+  { key: "categorias", label: "Servicios sugeridos por revisar", href: "/admin/servicios", hint: "Propuestas de servicios nuevos" },
+  { key: "cuentas", label: "Eliminaciones de cuenta pendientes", href: "/admin/cuentas", hint: "Solicitudes de borrado en proceso o fallidas" },
+];
+
+const ACTIVITY_META: Record<ActivityKind, { icon: typeof UserPlus; bg: string; fg: string; tag: string }> = {
+  pro: { icon: UserPlus, bg: "bg-[#e0f2fe]", fg: "text-[#0369a1]", tag: "Profesional" },
+  client: { icon: Users, bg: "bg-[#dcfce7]", fg: "text-[#15803d]", tag: "Cliente" },
+  solicitud: { icon: Briefcase, bg: "bg-[#ede9fe]", fg: "text-[#6d28d9]", tag: "Solicitud" },
+  proyecto: { icon: FolderOpen, bg: "bg-[#fef3c7]", fg: "text-[#b45309]", tag: "Proyecto" },
+  ticket: { icon: Headset, bg: "bg-[#fee2e2]", fg: "text-[#b91c1c]", tag: "Soporte" },
+};
+
+export function AdminOverview({ adminName, data, activity = [] }: { adminName: string; data: Data; activity?: ActivityEvent[] }) {
   const firstName = adminName.split(" ")[0] || "Admin";
+  // What needs a hand today, from the same endpoint that feeds the sidebar badges.
+  const [attention, setAttention] = useState<Record<string, number> | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/admin/pending-counts").then((r) => r.json()).then((d) => { if (alive) setAttention(d ?? {}); }).catch(() => { if (alive) setAttention({}); });
+    return () => { alive = false; };
+  }, []);
+  const attentionItems = ATTENTION.map((item) => ({ ...item, count: attention?.[item.key] ?? 0 }));
+  const attentionTotal = attentionItems.reduce((sum, item) => sum + item.count, 0);
   return (
     <div className="flex flex-col gap-5">
       {/* Greeting */}
@@ -183,8 +190,23 @@ export function AdminOverview({ adminName, data }: { adminName: string; data: Da
         )}
       </Card>
 
-      {/* Bottom row: pending + two rankings */}
+      {/* What needs attention + the verification queue + recent activity */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card title={attention == null ? "Qué necesita tu atención" : attentionTotal === 0 ? "Nada pendiente hoy" : `Qué necesita tu atención · ${attentionTotal}`}>
+          <ul className="flex flex-col divide-y divide-[#f1f5f9]">
+            {attentionItems.map((item) => (
+              <li key={item.key}>
+                <Link href={item.href} className="flex items-center gap-3 py-2.5 hover:text-[#008ce0]">
+                  <span className={`grid h-8 min-w-8 place-items-center rounded-lg px-1.5 text-sm font-bold tabular-nums ${item.count > 0 ? "bg-[#fff7ed] text-[#c2410c]" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>{item.count}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-[#0f172a]">{item.label}</span>
+                    <span className="block truncate text-[11px] text-[#94a3b8]">{item.hint}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
         <Card
           title={`Verificación pendiente${data.pendingCount ? ` · ${data.pendingCount}` : ""}`}
           action={<Link href="/admin/verificacion" className="text-xs font-semibold text-[#008ce0] hover:underline">Revisar cola</Link>}
@@ -207,12 +229,26 @@ export function AdminOverview({ adminName, data }: { adminName: string; data: Da
           )}
         </Card>
 
-        <Card title="Categorías más comunes">
-          <RankBars items={data.topCategories} color="#008ce0" />
-        </Card>
-
-        <Card title="Profesionales por provincia">
-          <RankBars items={data.byProvince} color="#16a34a" />
+        <Card title="Actividad reciente">
+          {activity.length === 0 ? (
+            <EmptyMini label="Sin actividad aún" className="py-8" />
+          ) : (
+            <div className="flex flex-col divide-y divide-[#f1f5f9]">
+              {activity.map((event) => {
+                const meta = ACTIVITY_META[event.kind];
+                return (
+                  <div key={event.id} className="flex items-center gap-3 py-2">
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${meta.bg} ${meta.fg}`}><meta.icon className="h-4 w-4" /></span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[#0f172a]">{event.title}</p>
+                      <p className="truncate text-xs text-[#64748b]">{event.sub}</p>
+                    </div>
+                    <span className="shrink-0 text-[11px] text-[#94a3b8]">{formatRelativeTime(event.createdAt, "es")}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Card>
       </div>
     </div>

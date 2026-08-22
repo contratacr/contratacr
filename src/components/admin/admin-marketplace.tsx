@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BadgePercent, Briefcase, ChevronLeft, ChevronRight, ExternalLink, Loader2, Search } from "lucide-react";
+import { BadgePercent, Briefcase, ChevronLeft, ChevronRight, ExternalLink, Loader2, Search, Trash2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
@@ -220,6 +220,23 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
     }
   }
 
+  async function remove(item: Item) {
+    if (!window.confirm(`Esta eliminación es permanente: se borra "${item.title}" con sus postulaciones y avisos. ¿Deseas continuar?`)) return;
+    setBusy(item.id);
+    setNotice(null);
+    try {
+      const res = await fetch(`/api/admin/marketplace?kind=${kind}&id=${encodeURIComponent(item.id)}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "No se pudo eliminar.");
+      setItems((current) => current.filter((entry) => entry.id !== item.id));
+      setCounts((current) => ({ ...current, all: Math.max(0, (current.all ?? 1) - 1), [item.status]: Math.max(0, (current[item.status] ?? 1) - 1) }));
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "No se pudo eliminar.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   const actionsFor = (item: Item): { label: string; status: string; tone?: "danger" }[] => {
     if (item.kind === "job") {
       if (item.status === "published") return [{ label: "Pausar", status: "paused" }, { label: "Cerrar vacante", status: "closed", tone: "danger" }];
@@ -334,6 +351,14 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                       {busy === item.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : action.label}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    disabled={busy === item.id}
+                    onClick={() => void remove(item)}
+                    className="inline-flex h-9 items-center justify-center gap-1 rounded-lg px-3 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-60"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                  </button>
                 </div>
               </li>
             ))}
