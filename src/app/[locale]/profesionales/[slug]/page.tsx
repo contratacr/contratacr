@@ -43,6 +43,7 @@ import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 import { PageRouteLoading } from "@/components/ui/route-loading";
+import { ProfileStickyActions } from "@/components/professionals/profile-sticky-actions";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -545,7 +546,7 @@ export default function ProfilePage() {
           <div className="flex flex-col lg:flex-row gap-6">
 
             {/* ── LEFT STICKY CARD ── */}
-            <aside className="w-full shrink-0 lg:order-2 lg:w-80">
+            <aside id="perfil-contacto" className="w-full shrink-0 scroll-mt-20 lg:order-2 lg:w-80">
               <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] p-5 lg:sticky lg:top-24 flex flex-col gap-4">
 
                 {/* "Desde" price — mirrors the right side of the /buscar card. Identity
@@ -656,10 +657,10 @@ export default function ProfilePage() {
 
             {/* ── TABBED CONTENT (LEFT on desktop; contact card is the right aside) ── */}
             <div id="resenas" className="flex-1 min-w-0 scroll-mt-24 lg:order-1">
-              <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+              <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
 
-                {/* Tab bar */}
-                <div className="relative border-b border-[#e5e7eb] bg-white">
+                {/* Tab bar — sticks under the header on the phone so any section is one tap away. */}
+                <div className="sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white lg:static lg:rounded-t-2xl">
                   <ScrollRail
                     role="tablist"
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
@@ -739,7 +740,7 @@ export default function ProfilePage() {
                               const hasFullDescription = description.length > 150;
                               const priceParts = splitPricingLabel(priceLabel);
                               return (
-                                <article key={cat} className="flex min-h-[280px] flex-col overflow-hidden rounded-2xl border border-[#dfe6ee] bg-white shadow-sm transition-colors hover:border-[#bdd7e5]">
+                                <article key={cat} className="flex flex-col overflow-hidden rounded-2xl sm:min-h-[280px] border border-[#dfe6ee] bg-white shadow-sm transition-colors hover:border-[#bdd7e5]">
                                   {serviceImageUrl && (
                                     <ImagePreviewDialog
                                       src={serviceImageUrl}
@@ -1151,6 +1152,19 @@ export default function ProfilePage() {
         />
       )}
 
+      {/* Room for the pinned action bar on phones, so the footer stays reachable. */}
+      <div aria-hidden className="h-20 lg:hidden" />
+      <ProfileStickyActions
+        professionalId={professional.id}
+        professionalName={professional.fullName}
+        contextTitle={catLabel(professional.categoryId)}
+        isOwn={isOwn}
+        callHref={(() => {
+          const contact = professional as { allowPhoneCall?: boolean | null; callPhone?: string | null; whatsapp?: string | null };
+          const digits = (contact.callPhone || contact.whatsapp || "").replace(/\D/g, "");
+          return contact.allowPhoneCall !== false && digits ? `tel:+${digits.length === 8 ? `506${digits}` : digits}` : null;
+        })()}
+      />
       <LandingFooter />
     </div>
   );
