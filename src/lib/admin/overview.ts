@@ -6,7 +6,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 // Real counts + daily series derived from professionals / profiles / bookings.
 // Best-effort and resilient: any failure degrades to zeros so /admin never 500s.
 
-export type Kpi = { value: number; deltaPct: number | null; spark: number[] };
+export type Kpi = { value: number; deltaPct: number | null; prior: number | null; spark: number[] };
 export type GrowthPoint = { date: string; pros: number; clients: number };
 export type SignupItem = { id: string; name: string; role: "professional" | "client"; meta: string; createdAt: string };
 export type PendingItem = { id: string; slug: string | null; name: string; category: string; createdAt: string };
@@ -27,7 +27,7 @@ export type AdminOverview = {
 
 const DAY = 86400000;
 
-function emptyKpi(): Kpi { return { value: 0, deltaPct: null, spark: [] }; }
+function emptyKpi(): Kpi { return { value: 0, deltaPct: null, prior: null, spark: [] }; }
 function emptyOverview(): AdminOverview {
   return {
     newPros: emptyKpi(), newClients: emptyKpi(), servicios: emptyKpi(), verificationRate: emptyKpi(),
@@ -89,15 +89,15 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
 
     // KPI 1 — Nuevos profesionales (last 7 vs prior 7)
     const prosNew7 = inWindow(proTimes, last7, now);
-    const newPros: Kpi = { value: prosNew7, deltaPct: deltaPct(prosNew7, inWindow(proTimes, prev7, last7)), spark: dailyCounts(proTimes, 7, now) };
+    const newPros: Kpi = { value: prosNew7, deltaPct: deltaPct(prosNew7, inWindow(proTimes, prev7, last7)), prior: inWindow(proTimes, prev7, last7), spark: dailyCounts(proTimes, 7, now) };
 
     // KPI 2 — Nuevos clientes (last 7 vs prior 7)
     const clientsNew7 = inWindow(clientTimes, last7, now);
-    const newClients: Kpi = { value: clientsNew7, deltaPct: deltaPct(clientsNew7, inWindow(clientTimes, prev7, last7)), spark: dailyCounts(clientTimes, 7, now) };
+    const newClients: Kpi = { value: clientsNew7, deltaPct: deltaPct(clientsNew7, inWindow(clientTimes, prev7, last7)), prior: inWindow(clientTimes, prev7, last7), spark: dailyCounts(clientTimes, 7, now) };
 
     // KPI 3 — Servicios facilitados (last 30 vs prior 30)
     const serv30 = inWindow(bookingTimes, last30, now);
-    const servicios: Kpi = { value: serv30, deltaPct: deltaPct(serv30, inWindow(bookingTimes, prev30, last30)), spark: dailyCounts(bookingTimes, 7, now) };
+    const servicios: Kpi = { value: serv30, deltaPct: deltaPct(serv30, inWindow(bookingTimes, prev30, last30)), prior: inWindow(bookingTimes, prev30, last30), spark: dailyCounts(bookingTimes, 7, now) };
 
     // KPI 4 — Tasa de verificación (% verified now; delta = recent cohort vs prior cohort)
     const isVerified = (p: ProRow) => p.verification_status === "verified";
@@ -119,7 +119,7 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
       const upto = pros.filter((p) => new Date(p.created_at).getTime() < cutoff);
       verifSpark.push(upto.length ? Math.round((upto.filter(isVerified).length / upto.length) * 100) : 0);
     }
-    const verificationRate: Kpi = { value: rateNow, deltaPct: verifDelta, spark: verifSpark };
+    const verificationRate: Kpi = { value: rateNow, deltaPct: verifDelta, prior: null, spark: verifSpark };
 
     // Growth — last 14 days, two series
     const prosDaily14 = dailyCounts(proTimes, 14, now);

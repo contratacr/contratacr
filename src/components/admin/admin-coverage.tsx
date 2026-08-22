@@ -62,6 +62,7 @@ export function AdminCoverage() {
   const [onlyEmpty, setOnlyEmpty] = useState(false);
   const [openProvinces, setOpenProvinces] = useState<Record<string, boolean>>({});
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const [groupFilter, setGroupFilter] = useState<string>("all");
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -85,15 +86,16 @@ export function AdminCoverage() {
   const services = useMemo(() => {
     if (!data) return [];
     return data.services.filter((service) => {
+      if (groupFilter !== "all" && service.groupId !== groupFilter) return false;
       if (onlyEmpty && service.professionals > 0) return false;
       if (!query) return true;
       return normalize(`${service.label} ${service.groupLabel} ${service.id}`).includes(query);
     });
-  }, [data, onlyEmpty, query]);
+  }, [data, groupFilter, onlyEmpty, query]);
   const maxService = Math.max(1, ...services.map((service) => service.professionals));
-  // 260 services is a long wall on a phone: without a search they fold per
-  // category (the top ten stay visible first); a search flattens the list.
-  const flatServices = !!query || onlyEmpty;
+  // Every category and every service stays on screen (the owner filters by
+  // eye); a search or a category filter shows the matching rows flat.
+  const flatServices = !!query || onlyEmpty || groupFilter !== "all";
   const serviceSections = useMemo(() => {
     if (!data) return [];
     if (flatServices) return [{ id: "all", label: "", items: services }];
@@ -106,7 +108,6 @@ export function AdminCoverage() {
     }
     return [...sections.values()].sort((a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999));
   }, [data, flatServices, services]);
-  const topServices = useMemo(() => (flatServices ? [] : services.slice(0, 10)), [flatServices, services]);
 
   const provinces = useMemo(() => {
     if (!data) return [];
@@ -158,6 +159,17 @@ export function AdminCoverage() {
                 className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
               />
             </div>
+            {view === "services" && (
+              <select
+                value={groupFilter}
+                onChange={(event) => setGroupFilter(event.target.value)}
+                aria-label="Filtrar por categoría"
+                className="h-10 shrink-0 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#374151] outline-none focus:border-[#009FD9]"
+              >
+                <option value="all">Todas las categorías</option>
+                {data.groups.map((group) => <option key={group.id} value={group.id}>{group.label} ({group.services})</option>)}
+              </select>
+            )}
             <button
               type="button"
               onClick={() => setOnlyEmpty((value) => !value)}
@@ -178,21 +190,8 @@ export function AdminCoverage() {
                   <div className="py-14 text-center text-sm text-[#9ca3af]">No hay servicios con ese filtro.</div>
                 ) : (
                   <>
-                  {topServices.length > 0 && (
-                    <div className="border-b border-[#f1f5f9]">
-                      <p className="bg-[#f8fafc] px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748b]">Los 10 con más profesionales</p>
-                      <ul className="divide-y divide-[#f1f5f9]">
-                        {topServices.map((service) => (
-                          <li key={`top-${service.id}`} className="flex items-center justify-between gap-3 px-4 py-2">
-                            <p className="min-w-0 truncate text-sm text-[#334155]">{service.label} <span className="text-xs text-[#94a3b8]">· {service.groupLabel}</span></p>
-                            <p className="shrink-0 text-sm font-bold tabular-nums text-[#0f172a]">{service.professionals.toLocaleString("es-CR")}</p>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                   {serviceSections.map((section) => {
-                    const open = flatServices || (openGroups[section.id] ?? false);
+                    const open = flatServices || (openGroups[section.id] ?? true);
                     const withSupply = section.items.filter((service) => service.professionals > 0).length;
                     return (
                   <div key={section.id} className="border-b border-[#f1f5f9] last:border-b-0">
@@ -213,7 +212,7 @@ export function AdminCoverage() {
                   {open && (
                   <ul className="divide-y divide-[#f1f5f9]">
                     {section.items.map((service) => (
-                      <li key={service.id} className="px-4 py-2.5">
+                      <li key={service.id} className="px-4 py-2">
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-[#111827]">
@@ -226,7 +225,7 @@ export function AdminCoverage() {
                             {service.professionals.toLocaleString("es-CR")} <span className="text-xs font-semibold text-[#6b7280]">· {service.verified.toLocaleString("es-CR")}</span>
                           </p>
                         </div>
-                        <div className="mt-1.5"><Bar value={service.professionals} max={maxService} /></div>
+                        <div className="mt-1"><Bar value={service.professionals} max={maxService} /></div>
                       </li>
                     ))}
                   </ul>
@@ -255,7 +254,7 @@ export function AdminCoverage() {
           ) : (
             <div className="space-y-3">
               {provinces.map((province) => {
-                const open = openProvinces[province.id] ?? (!!query || onlyEmpty);
+                const open = openProvinces[province.id] ?? true;
                 const maxCanton = Math.max(1, ...province.cantons.map((canton) => canton.based));
                 return (
                   <section key={province.id} className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
