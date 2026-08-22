@@ -314,6 +314,17 @@ export async function GET(req: Request) {
       };
     }
 
+    // Everything the account created or received, so the owner sees the whole
+    // picture in one place: vacancies, offers, applications, requests received
+    // as a professional and the reviews it got.
+    const [applicationsRes, jobsRes, offersRes, receivedBookingsRes, receivedReviewsRes] = await Promise.all([
+      db.from("job_applications").select("id, job_id, status, created_at, job_posts(title, status)").eq("applicant_id", profileId).order("created_at", { ascending: false }),
+      professional ? db.from("job_posts").select("id, title, status, created_at, job_applications(count)").eq("employer_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+      professional ? db.from("professional_offers").select("id, title, status, price_now, currency, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+      professional ? db.from("bookings").select("id, service_description, status, preferred_date, created_at, client_name").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+      professional ? db.from("reviews").select("id, rating, comment, moderation_status, created_at, client_name_snapshot").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    ]);
+
     return NextResponse.json({
       profile,
       professional: professional ?? null,
@@ -321,6 +332,14 @@ export async function GET(req: Request) {
       tickets: tickets ?? [],
       projects: projects ?? [],
       bookings: bookings ?? [],
+      applications: (applicationsRes.data ?? []).map((row) => {
+        const job = Array.isArray(row.job_posts) ? row.job_posts[0] : row.job_posts;
+        return { id: row.id, job_id: row.job_id, status: row.status, created_at: row.created_at, job_title: (job as { title?: string } | null)?.title ?? null, job_status: (job as { status?: string } | null)?.status ?? null };
+      }),
+      jobs: (jobsRes.data ?? []).map((row) => ({ id: row.id, title: row.title, status: row.status, created_at: row.created_at, applications: Number((Array.isArray(row.job_applications) ? row.job_applications[0] : row.job_applications)?.count ?? 0) })),
+      offers: offersRes.data ?? [],
+      receivedBookings: receivedBookingsRes.data ?? [],
+      receivedReviews: receivedReviewsRes.data ?? [],
       verificationLog,
       appeals,
       reports,

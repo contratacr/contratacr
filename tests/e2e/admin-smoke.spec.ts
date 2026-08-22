@@ -225,12 +225,19 @@ test.describe("@admin surfaces", () => {
       await expectVisibleText(page.locator("body"), /Desde dónde entran/);
       await expectHealthyPage(page);
 
-      // Resumen: the growth chart draws bars when there were sign-ups.
+      // Resumen: what needs attention today, new accounts and recent activity, in words.
       await gotoOK(page, "/es/admin");
-      const bars = page.locator('[title*=" prof. · "]');
-      await expect(bars.first()).toBeVisible();
-      const tallest = await bars.evaluateAll((columns) => Math.max(...columns.map((column) => (column.firstElementChild as HTMLElement | null)?.getBoundingClientRect().height ?? 0)));
-      expect(tallest, "Growth bars should have a visible height").toBeGreaterThan(4);
+      await expectVisibleText(page.locator("body"), /Qué necesita tu atención|Nada pendiente hoy/);
+      await expectVisibleText(page.locator("body"), /Verificaciones por revisar/);
+      await expectVisibleText(page.locator("body"), /Cuentas nuevas/);
+      await expectVisibleText(page.locator("body"), /Actividad reciente/);
+      await expectHealthyPage(page);
+
+      // The account page reads top to bottom: identity, verification, client, professional, reach, support, network, danger zone.
+      await gotoOK(page, `/es/admin/usuarios/${state.professionalUserId}`);
+      for (const heading of [/Verificación de identidad/, /Como cliente/, /Como profesional/, /Solicitudes recibidas/, /Reseñas recibidas/, /Empleos publicados/, /Ofertas publicadas/, /Alcance del perfil/, /Casos de soporte/, /Reportes recibidos/, /Seguidos y seguidores/, /Eliminar esta cuenta al 100%/]) {
+        await expectVisibleText(page.locator("body"), heading);
+      }
       await expectHealthyPage(page);
     } finally {
       if (offerId) {

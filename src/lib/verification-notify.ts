@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrevoEmail } from "@/lib/email/send";
 import { sendNotificationPush } from "@/lib/push/notify";
+import { sendWhatsAppTemplate } from "@/lib/notifications";
 
 const PRO_LINK = "/es/dashboard/profesional?tab=profile&mode=offer&focus=verification";
 
@@ -227,4 +228,65 @@ function emailShell(
         </a>
       </div>
     </div>`;
+}
+
+// ── First contact when a professional lands in manual review ─────────────────
+// Sent once per account (the in-app notification doubles as the marker):
+// in-app + email always, WhatsApp only when an approved Meta template name is
+// configured (WHATSAPP_VERIFICATION_TEMPLATE) because business-initiated
+// WhatsApp messages cannot be free text. Asks only for what the account does
+// not hold yet — never for the name, cédula or phone already on file.
+export async function notifyVerificationOutreach(professionalId: string): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const { data: pro } = await admin
+      .from("professionals")
+      .select("profile_id, whatsapp, category_id, profiles(full_name, email, cedula)")
+      .eq("id", professionalId)
+      .maybeSingle();
+    if (!pro?.profile_id) return;
+    const { data: already } = await admin
+      .from("notifications")
+      .select("id")
+      .eq("user_id", pro.profile_id)
+      .eq("type", "verification_outreach")
+      .limit(1);
+    if (already && already.length) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const profile = pro.profiles as any;
+    const firstName = (profile?.full_name ?? "profesional").split(" ")[0];
+    const hasId = !!profile?.cedula;
+    const steps = [
+      `una foto tuya sosteniendo tu identificación${hasId ? "" : " (cédula, DIMEX o pasaporte)"} junto a tu rostro`,
+      "una foto o documento que respalde tu oficio (título, carné, patente o certificado)",
+      "una foto de un trabajo reciente",
+    ];
+    const title = "Para activar tu insignia de verificado";
+    const message = `Hola ${firstName}, tu perfil quedó en revisión manual. Para marcarte como verificado necesitamos: 1) ${steps[0]}, 2) ${steps[1]} y 3) ${steps[2]}. Envíalas por WhatsApp o responde a nuestro correo y activamos tu insignia.`;
+    const notification = { user_id: pro.profile_id, type: "verification_outreach", title, message, data: { href: PRO_LINK } };
+    await admin.from("notifications").insert(notification);
+    await sendNotificationPush({ userId: pro.profile_id, title, message, data: notification.data });
+
+    if (profile?.email) {
+      const html = emailShell(
+        firstName,
+        "Verificación de tu perfil",
+        "#009FD9",
+        `Tu perfil quedó en revisión manual. Para activar la insignia de verificado necesitamos:<br/><br/>` +
+          `1) ${escapeHtml(steps[0])}<br/>2) ${escapeHtml(steps[1])}<br/>3) ${escapeHtml(steps[2])}<br/><br/>` +
+          `Responde a este correo con las fotos o escríbenos por WhatsApp y te activamos la insignia en cuanto las revisemos.`,
+        "Ver mi verificación"
+      );
+      await sendBrevoEmail({ to: profile.email, subject: "Para activar tu insignia de verificado en ContrataCR", html, replyTo: "soporte@contratacr.com" });
+    }
+
+    const template = process.env.WHATSAPP_VERIFICATION_TEMPLATE;
+    if (template && pro.whatsapp) {
+      const result = await sendWhatsAppTemplate(pro.whatsapp, template, [firstName]);
+      if (result.status === "failed") console.warn("[verification] WhatsApp outreach failed", result.detail);
+    }
+  } catch (error) {
+    console.warn("[verification] outreach not sent", error instanceof Error ? error.message : error);
+  }
 }

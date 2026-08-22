@@ -660,13 +660,9 @@ export default function ProfilePage() {
                 {/* Tab bar */}
                 <div className="relative border-b border-[#e5e7eb] bg-white">
                   <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white via-white/95 to-transparent"
-                  />
-                  <div
                     role="tablist"
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
-                    className="flex overflow-x-auto scroll-smooth pr-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    className="flex overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                   >
                     {TABS.map(tab => (
                       <button

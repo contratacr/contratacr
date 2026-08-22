@@ -59,17 +59,11 @@ export function StatusFilterTabs({
           usePillSegmentedLayout ? "rounded-xl bg-[#f3f4f6] p-1" : "overflow-hidden",
         )}
       >
-        {!usePillSegmentedLayout && (
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white via-white/90 to-transparent"
-          />
-        )}
         <div
           className={cn(
             usePillSegmentedLayout
               ? "grid items-stretch gap-1"
-              : "flex gap-1 overflow-x-auto rounded-xl bg-[#f3f4f6] p-1 pr-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+              : "flex gap-1 overflow-x-auto rounded-xl bg-[#f3f4f6] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
             usePillSegmentedLayout && tabs.length === 2 && "grid-cols-2",
             usePillSegmentedLayout && tabs.length === 3 && "grid-cols-3",
             usePillSegmentedLayout && tabs.length === 4 && "grid-cols-4",
@@ -113,16 +107,10 @@ export function StatusFilterTabs({
       data-status-filter-tabs=""
       data-filter-layout={useSegmentedLayout ? "segmented" : "scroll"}
     >
-      {useScrollableLayout && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white via-white/90 to-transparent"
-        />
-      )}
       <div className={cn(
         useSegmentedLayout
           ? "grid items-stretch gap-1"
-          : "flex gap-1 overflow-x-auto rounded-xl bg-[#f3f4f6] p-1 pr-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          : "flex gap-1 overflow-x-auto rounded-xl bg-[#f3f4f6] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         useSegmentedLayout && tabs.length === 2 && "grid-cols-2",
         useSegmentedLayout && tabs.length === 3 && "grid-cols-3",
         useSegmentedLayout && tabs.length === 4 && "grid-cols-4",

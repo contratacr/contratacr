@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteR2Object } from "@/lib/r2-storage";
+import { collectCounterparties, notifyCounterparties } from "@/lib/account-deletion/counterparties";
 
 type StorageObject = { bucket_id: string; object_name: string };
 type MediaAsset = { id: string; provider: string; public_id: string; resource_type: string };
@@ -80,8 +81,19 @@ export async function processAccountDeletion(requestId: string) {
       }
     }
 
+    // Who is on the other side of something still open? Collected now because
+    // the finalizer anonymizes and deletes those rows; told afterwards so the
+    // notice never references a row that is about to disappear.
+    const counterparties = request.user_id
+      ? await collectCounterparties(db, request.user_id).catch((error) => {
+        console.warn("[account-deletion] counterparties not collected", error instanceof Error ? error.message : error);
+        return { name: "Una persona", parties: [] };
+      })
+      : { name: "Una persona", parties: [] };
+
     const { error: finalizeError } = await db.rpc("finalize_account_deletion", { p_request_id: requestId });
     if (finalizeError) throw new Error(finalizeError.message);
+    if (counterparties.parties.length) await notifyCounterparties(db, counterparties.name, counterparties.parties);
     return { status: "completed" as const };
   } catch (error) {
     await markFailed(requestId, error);

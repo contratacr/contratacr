@@ -762,10 +762,7 @@ input::-ms-clear {
    once a ::-webkit-scrollbar rule exists, so both forms are required. */
 .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; width: 0; height: 0; }
-.ccr-chip-row {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 4.5rem), transparent calc(100% - 0.5rem));
-  mask-image: linear-gradient(to right, #000 calc(100% - 4.5rem), transparent calc(100% - 0.5rem));
-}
+.ccr-chip-row { padding-right: 0; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { min-height: 72px; background: #94a3b8; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #64748b; }
@@ -847,8 +844,6 @@ input::-ms-clear {
    set width exact. `touch-action: pan-y` lets vertical page scroll through while
    horizontal drags arrive as pointer events. Soft edge fade at the rails. */
 .cat-carousel {
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
-          mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
   overflow: hidden;
   touch-action: pan-y;
 }
@@ -1231,8 +1226,6 @@ input::-ms-clear {
 .featured-brands-marquee {
   width: 100%;
   overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
 }
 
 .featured-brands-track {
