@@ -14,6 +14,8 @@ const pageRules = [
   [/^\/\[locale\]\/profesionales(?:\/|$)/, "professional-profile.spec.ts"],
   [/^\/\[locale\]\/notificaciones$/, "notifications-guides-regression.spec.ts"],
   [/^\/\[locale\]\/mensajes$/, "direct-chat.spec.ts", true],
+  // Role choice, onboarding hand-off, profile completion and the recovery link are driven on the real pages.
+  [/^\/\[locale\]\/(?:registro|reset-password|onboarding|completar-perfil)$/, "auth-screens.spec.ts"],
   [/^\/\[locale\]\/(?:login|registro|olvide-contrasena|reset-password|onboarding|completar-perfil)(?:\/|$)/, "auth-support.spec.ts"],
   [/^\/\[locale\]\/eliminar-cuenta$/, "account-lifecycle.spec.ts"],
   [/^\/\[locale\](?:\/|$)/, "public-smoke.spec.ts"],
