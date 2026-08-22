@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShieldCheck, LogOut, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, Activity, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
@@ -70,12 +69,6 @@ export function AdminShell({
     rail.scrollTo({ left: Math.max(0, target), behavior: "auto" });
   }, [active]);
 
-  async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.assign("/es/admin");
-  }
-
   const items: { id: AdminTab; label: string; icon: typeof ShieldCheck; href: string; badge: number }[] = [
     { id: "resumen", label: "Resumen", icon: LayoutGrid, href: "/admin", badge: 0 },
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: counts.verificacion ?? 0 },
@@ -92,7 +85,6 @@ export function AdminShell({
     { id: "soporte", label: "Soporte", icon: Headset, href: "/admin/soporte", badge: counts.soporte ?? 0 },
     { id: "cuentas", label: "Cuentas", icon: Shield, href: "/admin/cuentas", badge: counts.cuentas ?? 0 },
     { id: "analitica", label: "Analítica", icon: BarChart3, href: "/admin/analitica", badge: 0 },
-    { id: "actividad", label: "Actividad", icon: Activity, href: "/admin/actividad", badge: 0 },
   ];
 
   // The sidebar footer is narrow — show ONLY first name + first surname so the name
@@ -151,7 +143,7 @@ export function AdminShell({
             { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "resenas", "reportes", "soporte"] },
             { label: "Marketplace", ids: ["empleos", "ofertas"] },
             { label: "Gestión", ids: ["categorias", "aseguradoras", "cuentas"] },
-            { label: "Información", ids: ["analitica", "cobertura", "actividad"] },
+            { label: "Información", ids: ["analitica", "cobertura"] },
           ].map((group, index) => (
             <div key={group.label} className={index === 0 ? "" : "mt-4 border-t border-white/10 pt-3"}>
               <p className="mb-1 px-3 text-[10px] font-semibold uppercase text-white/35">{group.label}</p>
@@ -163,14 +155,9 @@ export function AdminShell({
             </div>
           ))}
         </nav>
-        <div className="border-t border-white/10 p-3 flex items-center gap-2.5">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold leading-tight">{shortAdminName}</p>
-            <p className="text-[11px] text-white/50">Administrador</p>
-          </div>
-          <button onClick={signOut} aria-label="Salir" className="flex h-8 w-8 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-colors">
-            <LogOut className="h-4 w-4" />
-          </button>
+        <div className="border-t border-white/10 p-3">
+          <p className="truncate text-sm font-semibold leading-tight">{shortAdminName}</p>
+          <p className="text-[11px] text-white/50">Administrador</p>
         </div>
       </aside>
 
@@ -180,14 +167,9 @@ export function AdminShell({
           <Link href="/admin" className="flex items-center gap-2">
             <ContrataCRLogo tone="dark" />
           </Link>
-          <div className="flex items-center gap-2">
-            <Link href="/" aria-label="Volver a ContrataCR" className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-white/80 transition-colors hover:bg-white/20 hover:text-white">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-            <button onClick={signOut} className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-white/80 transition-colors hover:bg-white/20 hover:text-white" aria-label="Salir">
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
+          <Link href="/" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white/10 px-3 text-xs font-semibold text-white/85 transition-colors hover:bg-white/20 hover:text-white">
+            <ArrowLeft className="h-4 w-4" /> Volver a ContrataCR
+          </Link>
         </div>
         <div ref={railRef} className="scrollbar-none flex gap-1 overflow-x-auto px-2">
           {items.map((it) => navLink(it, "top"))}

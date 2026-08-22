@@ -3,6 +3,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminOverview } from "@/components/admin/admin-overview";
 import { AdminLogin } from "@/components/admin/admin-login";
 import { getAdminOverview } from "@/lib/admin/overview";
+import { getAdminActivity } from "@/lib/admin/activity";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +12,10 @@ export const dynamic = "force-dynamic";
 export default async function AdminHomePage() {
   const admin = await getAdminUser();
   if (!admin) return <AdminLogin />;
-  const data = await getAdminOverview("es");
+  const [data, activity] = await Promise.all([getAdminOverview("es"), getAdminActivity(12, "es")]);
   return (
     <AdminShell adminName={admin.fullName} active="resumen">
-      <AdminOverview adminName={admin.fullName} data={data} />
+      <AdminOverview adminName={admin.fullName} data={data} activity={activity} />
     </AdminShell>
   );
 }

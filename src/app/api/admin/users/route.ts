@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { processAccountDeletion } from "@/lib/account-deletion/process";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { cleanId } from "@/lib/cedula";
@@ -410,4 +411,37 @@ export async function GET(req: Request) {
     });
 
   return NextResponse.json({ users });
+}
+
+// DELETE /api/admin/users?id=… — deletes an account completely, through the same
+// pipeline a person triggers from "Eliminar mi cuenta": storage and media are
+// removed first, then the database finalizer anonymizes and deletes everything
+// owned by the account (the regression identities are protected by the database).
+export async function DELETE(req: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  const id = new URL(req.url).searchParams.get("id") ?? "";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
+  if (id === admin.id) return NextResponse.json({ error: "No puedes eliminar tu propia cuenta de administrador desde aquí." }, { status: 400 });
+  const db = createAdminClient();
+  const { data: target } = await db.from("profiles").select("id, role").eq("id", id).maybeSingle();
+  if (!target) return NextResponse.json({ error: "La cuenta no existe." }, { status: 404 });
+  if (target.role === "admin") return NextResponse.json({ error: "Las cuentas de administrador no se eliminan desde el panel." }, { status: 400 });
+  const { data: existing } = await db.from("account_deletion_requests").select("id, status").eq("user_id", id).maybeSingle();
+  let requestId = existing?.id ?? null;
+  if (!requestId) {
+    const { data: created, error: createError } = await db.from("account_deletion_requests").insert({ user_id: id, status: "pending" }).select("id").single();
+    if (createError || !created) {
+      console.error("[admin/users] deletion request", createError?.message);
+      return NextResponse.json({ error: createError?.message?.includes("Regression") ? "Esta cuenta está protegida y no se puede eliminar." : "No se pudo iniciar la eliminación." }, { status: 400 });
+    }
+    requestId = created.id;
+  }
+  try {
+    const result = await processAccountDeletion(requestId);
+    return NextResponse.json({ ok: true, id, status: result.status });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "No se pudo eliminar la cuenta.";
+    return NextResponse.json({ error: /Regression/i.test(message) ? "Esta cuenta está protegida y no se puede eliminar." : message }, { status: 500 });
+  }
 }

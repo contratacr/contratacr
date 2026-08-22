@@ -18,6 +18,10 @@ import { PROVINCES } from "@/lib/data/cr-geography";
 
 type ProfessionalRow = {
   id: string;
+  slug: string | null;
+  business_name: string | null;
+  profile_id: string | null;
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
   category_id: string | null;
   professions: string[] | null;
   provincia_id: string | null;
@@ -32,15 +36,19 @@ type ProfessionalRow = {
 type CategoryRow = { id: string; name: string | null; name_en: string | null; group_id: string | null; is_hidden: boolean | null };
 type GroupRow = { id: string; label: string | null; sort_order: number | null; is_hidden: boolean | null };
 
-export async function GET() {
+export async function GET(request: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  const url = new URL(request.url);
+  const filterService = (url.searchParams.get("service") ?? "").trim().slice(0, 100);
+  const filterProvince = (url.searchParams.get("provincia") ?? "").trim().slice(0, 20);
+  const filterCanton = (url.searchParams.get("canton") ?? "").trim().slice(0, 20);
 
   const db = createAdminClient();
   const [prosRes, categoriesRes, groupsRes] = await Promise.all([
     db
       .from("professionals")
-      .select("id, category_id, professions, provincia_id, canton_id, search_provincias, search_cantones, coverage_country, verification_status, is_banned"),
+      .select("id, slug, business_name, profile_id, profiles(full_name, avatar_url), category_id, professions, provincia_id, canton_id, search_provincias, search_cantones, coverage_country, verification_status, is_banned"),
     db.from("categories").select("id, name, name_en, group_id, is_hidden"),
     db.from("category_groups").select("id, label, sort_order, is_hidden"),
   ]);
@@ -50,7 +58,7 @@ export async function GET() {
     return NextResponse.json({ error: "No se pudo calcular la cobertura." }, { status: 500 });
   }
 
-  const pros = (prosRes.data ?? []) as ProfessionalRow[];
+  const pros = (prosRes.data ?? []) as unknown as ProfessionalRow[];
   const active = pros.filter((p) => !p.is_banned);
   const isVerified = (p: ProfessionalRow) => p.verification_status === "verified";
 
@@ -151,8 +159,42 @@ export async function GET() {
   const cantonsWithSupply = provinces.reduce((sum, province) => sum + province.cantons.filter((c) => c.based > 0).length, 0);
   const cantonsServed = provinces.reduce((sum, province) => sum + province.cantons.filter((c) => c.serving > 0).length, 0);
 
+  // ── Who matches the current filter (service / province / canton) ──
+  const matches = (filterService || filterProvince || filterCanton)
+    ? active.filter((p) => {
+      if (filterService && p.category_id !== filterService && !(p.professions ?? []).includes(filterService)) return false;
+      if (filterCanton) {
+        if (p.canton_id !== filterCanton && !(p.search_cantones ?? []).includes(filterCanton) && !p.coverage_country) return false;
+      } else if (filterProvince) {
+        if (p.provincia_id !== filterProvince && !(p.search_provincias ?? []).includes(filterProvince) && !p.coverage_country) return false;
+      }
+      return true;
+    })
+    : [];
+  const professionals = matches
+    .map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      profileId: p.profile_id,
+      name: (p.business_name ?? "").trim().length > 1 ? (p.business_name as string).trim() : p.profiles?.full_name || "Profesional",
+      personName: p.profiles?.full_name ?? null,
+      avatarUrl: p.profiles?.avatar_url ?? null,
+      category: p.category_id ? serviceMeta.get(p.category_id)?.label ?? p.category_id : null,
+      services: [...new Set([p.category_id, ...(p.professions ?? [])].filter(Boolean) as string[])].length,
+      province: p.provincia_id ? PROVINCES.find((province) => province.id === p.provincia_id)?.name ?? p.provincia_id : null,
+      canton: p.canton_id ? PROVINCES.flatMap((province) => province.cantons).find((canton) => canton.id === p.canton_id)?.name ?? p.canton_id : null,
+      basedHere: (filterCanton ? p.canton_id === filterCanton : filterProvince ? p.provincia_id === filterProvince : true),
+      nationwide: !!p.coverage_country,
+      verified: isVerified(p),
+      status: p.verification_status ?? "unverified",
+    }))
+    .sort((a, b) => Number(b.basedHere) - Number(a.basedHere) || Number(b.verified) - Number(a.verified) || a.name.localeCompare(b.name, "es"))
+    .slice(0, 300);
+
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
+    filter: { service: filterService || null, provincia: filterProvince || null, canton: filterCanton || null, total: matches.length },
+    professionals,
     totals: {
       professionals: active.length,
       verified: active.filter(isVerified).length,

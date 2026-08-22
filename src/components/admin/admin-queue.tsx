@@ -12,6 +12,7 @@ import {
 } from "@/lib/verification";
 import { formatId } from "@/lib/cedula";
 import { getInitials } from "@/lib/utils";
+import { MessageCircle } from "lucide-react";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
@@ -25,6 +26,7 @@ type Row = {
   identity_type?: IdentityBucket;
   identity_type_label?: string;
   verification_status: VerificationStatus;
+  whatsapp?: string | null;
   category_id: string | null;
   professions: string[] | null;
   created_at: string;
@@ -48,6 +50,19 @@ const FILTERS: { value: string; label: string }[] = [
   { value: "rejected", label: "Rechazados" },
   { value: "all", label: "Todos" },
 ];
+
+// The verification message asks for what the account does not already hold:
+// a selfie with the ID, proof of the trade and a recent job. Never the data
+// already on file (name, cédula, phone).
+function verificationWhatsAppHref(row: Row) {
+  const digits = String(row.whatsapp ?? "").replace(/\D/g, "");
+  const phone = digits.length === 8 ? `506${digits}` : digits;
+  const firstName = (row.profiles?.full_name ?? "").trim().split(/\s+/)[0] || "";
+  const service = row.category_id ? getCategoryLabel(row.category_id) : "tu servicio";
+  const idLabel = row.identity_type_label && row.identity_type !== "manual" ? ` (${row.identity_type_label})` : "";
+  const text = `Hola${firstName ? ` ${firstName}` : ""}, te escribimos de ContrataCR para verificar tu perfil de ${service}. Para marcarte como verificado necesitamos: 1) una foto tuya sosteniendo tu identificación${idLabel} junto a tu rostro, 2) una foto o documento que respalde tu oficio (título, carné, patente o certificado) y 3) una foto de un trabajo reciente. Con eso activamos tu insignia de verificado. ¡Gracias!`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
 
 export function AdminQueue() {
   const [status, setStatus] = useState<string>("pending");
@@ -129,10 +144,10 @@ export function AdminQueue() {
         ) : (
           <ul className="divide-y divide-[#f3f4f6]">
             {filtered.map((r) => (
-              <li key={r.id}>
+              <li key={r.id} className="flex items-center gap-3 pr-4 transition-colors hover:bg-[#f9fafb]">
                 <Link
                   href={r.detail_href ?? `/admin/proveedores/${r.id}`}
-                  className="flex items-center gap-4 px-4 py-3 hover:bg-[#f9fafb] transition-colors"
+                  className="flex min-w-0 flex-1 items-center gap-4 px-4 py-3"
                 >
                   <div className="h-10 w-10 rounded-full bg-[#EBF5FB] text-[#009FD9] font-semibold flex items-center justify-center overflow-hidden shrink-0">
                     {r.profiles?.avatar_url ? (
@@ -151,9 +166,14 @@ export function AdminQueue() {
                       {r.role_label ?? "Cuenta"}
                       {r.category_id ? ` · ${getCategoryLabel(r.category_id)}` : ""}
                     </p>
-                    <span className={`mt-1 inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium sm:hidden ${verificationPillClasses(r.verification_status)}`}>
-                      {verificationLabel(r.verification_status)}
-                    </span>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      {r.identity_type_label && (
+                        <span className="inline-flex rounded-md bg-[#eef2f6] px-2 py-0.5 text-[11px] font-semibold text-[#374151]">{r.identity_type_label}</span>
+                      )}
+                      <span className={`inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium sm:hidden ${verificationPillClasses(r.verification_status)}`}>
+                        {verificationLabel(r.verification_status)}
+                      </span>
+                    </div>
                   </div>
                   <span
                     className={`hidden shrink-0 rounded-md border px-2 py-1 text-xs font-medium sm:inline-flex ${verificationPillClasses(
@@ -162,8 +182,20 @@ export function AdminQueue() {
                   >
                     {verificationLabel(r.verification_status)}
                   </span>
-                  <ChevronRight className="h-4 w-4 text-[#9ca3af] shrink-0" />
                 </Link>
+                {r.whatsapp && (
+                  <a
+                    href={verificationWhatsAppHref(r)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Escribir por WhatsApp para verificar"
+                    title="Escribir por WhatsApp para verificar"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-2.5 text-xs font-semibold text-[#15803d] hover:bg-[#dcfce7]"
+                  >
+                    <MessageCircle className="h-4 w-4" /><span className="hidden md:inline">WhatsApp</span>
+                  </a>
+                )}
+                <Link href={r.detail_href ?? `/admin/proveedores/${r.id}`} aria-label="Abrir" className="shrink-0 text-[#9ca3af] hover:text-[#0f172a]"><ChevronRight className="h-4 w-4" /></Link>
               </li>
             ))}
           </ul>

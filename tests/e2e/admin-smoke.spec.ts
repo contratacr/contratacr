@@ -19,7 +19,7 @@ const adminRoutes = [
   { path: "/es/admin/soporte", marker: /Soporte/i },
   { path: "/es/admin/analitica", marker: /Analitica|Anal.tica/i },
   { path: "/es/admin/cobertura", marker: /Cobertura/i },
-  { path: "/es/admin/actividad", marker: /Actividad/i },
+  { path: "/es/admin/actividad", marker: /Resumen|Actividad reciente/i },
   { path: "/es/admin/resenas", marker: /Rese.nas|Reseñas/i },
 ] as const;
 
@@ -158,6 +158,11 @@ test.describe("@admin surfaces", () => {
       await row.getByRole("button", { name: /^Marcar vencida$/ }).click();
       await expect(row.getByText("Vencida", { exact: true })).toBeVisible();
       await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("expired");
+      page.once("dialog", (dialog) => void dialog.accept());
+      await row.getByRole("button", { name: /^Eliminar$/ }).click();
+      await expect(row).toBeHidden();
+      await expect.poll(async () => (await admin.from("professional_offers").select("id").eq("id", offerId).maybeSingle()).data).toBeNull();
+      offerId = "";
       await expectHealthyPage(page);
 
       // Empleos: the seeded SG job lists its creator and the application count.
@@ -177,6 +182,13 @@ test.describe("@admin surfaces", () => {
       await page.getByLabel("Filtrar por categoría").selectOption({ index: 1 });
       await expect(page.getByText(/\d+ · \d+/).first()).toBeVisible();
       await page.getByLabel("Filtrar por categoría").selectOption("all");
+      // The filter bar answers "who offers X here?" with the actual professionals.
+      await page.getByLabel("Servicio", { exact: true }).selectOption("redes_internet");
+      await expectVisibleText(page.locator("body"), /profesionales? cumplen?/);
+      await expect(page.getByText("SG Solutions").first()).toBeVisible();
+      await page.getByLabel("Provincia", { exact: true }).selectOption("al");
+      await expect(page.getByText(/Con sede aquí|Atiende aquí|Todo el país/).first()).toBeVisible();
+      await page.getByRole("button", { name: /Limpiar filtros/ }).click();
       await page.getByRole("button", { name: /Provincias y cantones/ }).click();
       for (const province of ["San José", "Alajuela", "Cartago", "Heredia", "Guanacaste", "Puntarenas", "Limón"]) {
         await expect(page.getByRole("button", { name: new RegExp(`^${province}`) }).first()).toBeVisible();
@@ -198,6 +210,11 @@ test.describe("@admin surfaces", () => {
       await gotoOK(page, "/es/admin/resenas");
       await expect(page.getByText("SG Solutions").first()).toBeVisible();
       await expectHealthyPage(page);
+
+      // Verificación names the identification type of everyone waiting.
+      await gotoOK(page, "/es/admin/verificacion");
+      await page.getByRole("button", { name: /^Todos/ }).click();
+      await expect(page.getByText(/Nacional|Jurídica|DIMEX|NITE|Manual/).first()).toBeVisible();
 
       // Analítica reads in plain words: this week, the funnel, demand vs supply.
       await gotoOK(page, "/es/admin/analitica");
@@ -221,6 +238,77 @@ test.describe("@admin surfaces", () => {
         await admin.from("professional_activity").delete().eq("content_id", offerId);
         await admin.from("professional_offers").delete().eq("id", offerId);
       }
+      await cleanupDisposableAccount(account);
+    }
+  });
+
+  test("admin deletes support cases, reports and whole accounts, and a renamed service shows everywhere", async ({ page }) => {
+    test.skip(!canRunSeededRegression(), "Requires the isolated test project.");
+    test.slow();
+    const admin = regressionAdminClient();
+    const state = seed ?? (await ensureRegressionSeed());
+    const stamp = Date.now();
+    let account: DisposableAccount | undefined;
+    let victim: DisposableAccount | undefined;
+    let ticketId = "";
+    let reportId = "";
+    const renamedId = "redes_internet";
+    const originalName = (await admin.from("categories").select("name").eq("id", renamedId).maybeSingle()).data?.name ?? null;
+    try {
+      const ticket = await admin.from("support_tickets").insert({ user_id: state.clientId, name: "ContrataCR", email: "e2e.client@contratacr.test", subject: `Caso admin regression ${stamp}`, message: "Caso sembrado por la regresión para eliminarlo desde el panel.", status: "open", topic: "cuenta" }).select("id").single();
+      if (ticket.error || !ticket.data) throw ticket.error ?? new Error("ticket");
+      ticketId = ticket.data.id;
+      const report = await admin.from("reports").insert({ professional_id: state.professionalId, professional_name: "SG Solutions", reason: `Reporte admin regression ${stamp}`, reporter_email: "e2e.client@contratacr.test", status: "open" }).select("id").single();
+      if (report.error || !report.data) throw report.error ?? new Error("report");
+      reportId = report.data.id;
+      victim = await createDisposableAccount({ prefix: "admin-delete" });
+      account = await createDisposableAccount({ prefix: "admin-deleter", admin: true });
+      await loginAdmin(page, account);
+
+      // Soporte: open the case and delete it with its thread.
+      await gotoOK(page, "/es/admin/soporte");
+      await page.getByText(`Caso admin regression ${stamp}`).first().click();
+      await expectVisibleText(page.locator("body"), /Eliminar caso/);
+      page.once("dialog", (dialog) => void dialog.accept());
+      await page.getByRole("button", { name: /Eliminar caso/ }).click();
+      await expect.poll(async () => (await admin.from("support_tickets").select("id").eq("id", ticketId).maybeSingle()).data).toBeNull();
+      ticketId = "";
+      await expectHealthyPage(page);
+
+      // Reportes: delete the record.
+      await gotoOK(page, "/es/admin/reportes");
+      const reportRow = page.locator("li").filter({ hasText: `Reporte admin regression ${stamp}` }).first();
+      await expect(reportRow).toBeVisible();
+      page.once("dialog", (dialog) => void dialog.accept());
+      await reportRow.getByRole("button", { name: /^Eliminar$/ }).click();
+      await expect.poll(async () => (await admin.from("reports").select("id").eq("id", reportId).maybeSingle()).data).toBeNull();
+      reportId = "";
+      await expectHealthyPage(page);
+
+      // Usuarios: delete a whole account from its profile (confirm + typed word).
+      await gotoOK(page, `/es/admin/usuarios/${victim.id}`);
+      await expectVisibleText(page.locator("body"), /Eliminar esta cuenta al 100%/);
+      page.on("dialog", (dialog) => void (dialog.type() === "prompt" ? dialog.accept("ELIMINAR") : dialog.accept()));
+      await page.getByRole("button", { name: /Eliminar cuenta/ }).click();
+      await page.waitForURL(/\/admin\/usuarios\?deleted=1/, { timeout: 60_000, waitUntil: "domcontentloaded" });
+      await expect.poll(async () => {
+        const { data } = await admin.auth.admin.getUserById(victim!.id);
+        return data?.user ? "exists" : "gone";
+      }, { timeout: 30_000 }).toBe("gone");
+      await expectHealthyPage(page);
+
+      // Servicios: a renamed service is what the server renders, not only what the browser patches later.
+      const marker = `Redes e internet ${stamp}`;
+      await admin.from("categories").update({ name: marker }).eq("id", renamedId);
+      await expect.poll(async () => (await page.request.get(`/es/buscar?categoria=${renamedId}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
+      const professionalSlug = (await admin.from("professionals").select("slug").eq("id", state.professionalId).single()).data?.slug;
+      expect(professionalSlug).toBeTruthy();
+      await expect.poll(async () => (await page.request.get(`/es/profesionales/${professionalSlug}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
+    } finally {
+      if (originalName) await admin.from("categories").update({ name: originalName }).eq("id", renamedId);
+      if (ticketId) await admin.from("support_tickets").delete().eq("id", ticketId);
+      if (reportId) await admin.from("reports").delete().eq("id", reportId);
+      await cleanupDisposableAccount(victim).catch(() => undefined);
       await cleanupDisposableAccount(account);
     }
   });

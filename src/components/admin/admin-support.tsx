@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Headset, ArrowLeft, Send, User, Shield, UserSearch, Loader2 } from "lucide-react";
+import { Headset, ArrowLeft, Send, User, Shield, UserSearch, Loader2, Trash2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
 import { supportTicketRef } from "@/lib/support-ticket";
@@ -126,6 +126,17 @@ export function AdminSupport() {
     else void showMessage({ title: "No se pudo enviar la respuesta", description: "Inténtalo de nuevo en unos segundos.", tone: "danger" });
   }
 
+  async function removeTicket() {
+    if (!openId || !window.confirm("Esta eliminación es permanente: el caso y todos sus mensajes desaparecen. ¿Deseas continuar?")) return;
+    const res = await fetch(`/api/admin/support?id=${encodeURIComponent(openId)}`, { method: "DELETE" });
+    if (!res.ok) {
+      void showMessage({ title: "No se pudo eliminar el caso", description: "Inténtalo de nuevo en unos segundos.", tone: "danger" });
+      return;
+    }
+    setOpenId(null); setTicket(null); setMessages([]);
+    load(status);
+  }
+
   async function changeStatus(next: string) {
     if (!openId) return;
     await fetch("/api/admin/support", {
@@ -175,6 +186,14 @@ export function AdminSupport() {
               </div>
               {/* Forward-only: open→en proceso→resuelto. No moving back to pendiente
                   (a resolved ticket reopens only when someone replies). */}
+              <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void removeTicket()}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2]"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Eliminar caso
+              </button>
               <select
                 value={ticket.status}
                 onChange={(e) => changeStatus(e.target.value)}
@@ -187,6 +206,7 @@ export function AdminSupport() {
                   : ["resolved"]
                 ).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
               </select>
+              </div>
             </div>
 
             {/* Thread */}

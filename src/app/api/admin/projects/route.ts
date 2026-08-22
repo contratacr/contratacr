@@ -219,3 +219,17 @@ export async function GET(req: Request) {
     },
   });
 }
+// DELETE /api/admin/projects?id=… — removes the project and its proposals.
+export async function DELETE(req: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  const id = new URL(req.url).searchParams.get("id") ?? "";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
+  const db = createAdminClient();
+  const { error } = await db.from("projects").delete().eq("id", id);
+  if (error) {
+    console.error("[admin/projects] delete", error.message);
+    return NextResponse.json({ error: "No se pudo eliminar el proyecto." }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true, id });
+}

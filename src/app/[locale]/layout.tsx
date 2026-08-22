@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { ensureServerCategoryCatalog } from "@/lib/data/server-category-catalog";
 import { routing } from "@/i18n/routing";
 import { EmojiBlocker } from "@/components/util/emoji-blocker";
 import { NotificationLiveToast } from "@/components/notifications/notification-live-toast";
@@ -118,6 +119,7 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
+  if (hasSupabaseServerConfig()) await ensureServerCategoryCatalog();
   const operationalStatus = getOperationalStatusBanner(locale);
   const supabase = hasSupabaseServerConfig() ? await createClient() : null;
   const initialUser = supabase ? await safeGetUser(supabase) : null;
