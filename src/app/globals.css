@@ -1689,3 +1689,9 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 .ccr-search-filter-arrows-down [data-ui="select-trigger"] > svg {
   transform: rotate(0deg) !important;
 }
+
+/* The profile's pinned action bar sits above the native bottom nav inside the app
+   and leaves room for itself at the end of the page on phones. */
+.ccr-native-app .ccr-profile-sticky-actions {
+  bottom: var(--ccr-native-live-bottom-nav-height, 0px);
+}
