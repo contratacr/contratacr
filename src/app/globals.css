@@ -781,6 +781,10 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   height: 100svh;
   min-height: 100svh;
   width: 100vw;
+  /* Fast navigations (most of them) must not flash the logo: the mark only
+     appears when the new page has taken longer than a third of a second. */
+  opacity: 0;
+  animation: ccr-loading-reveal 120ms ease-out 350ms forwards;
 }
 
 @media (max-width: 767px) {
@@ -834,7 +838,7 @@ body {
 
 .ccr-delayed-loading {
   opacity: 0;
-  animation: ccr-loading-reveal 140ms ease-out 180ms forwards;
+  animation: ccr-loading-reveal 140ms ease-out 320ms forwards;
 }
 
 .ccr-skeleton-shimmer {

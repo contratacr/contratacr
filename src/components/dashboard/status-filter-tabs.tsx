@@ -2,6 +2,12 @@
 
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { ScrollRail } from "@/components/ui/scroll-rail";
+
+// Segmented groups are a grid; rails scroll and hint the overflow with a chevron.
+function RailOrGrid({ scroll, className, children }: { scroll: boolean; className: string; children: React.ReactNode }) {
+  return scroll ? <ScrollRail className={className}>{children}</ScrollRail> : <div className={className}>{children}</div>;
+}
 
 // Shared pill status-filter tabs — used identically in the client and professional
 // panels for solicitudes AND proyectos so both feel the same. The SAME four buckets
@@ -59,11 +65,12 @@ export function StatusFilterTabs({
           usePillSegmentedLayout ? "rounded-xl bg-[#f3f4f6] p-1" : "overflow-hidden",
         )}
       >
-        <div
+        <RailOrGrid
+          scroll={!usePillSegmentedLayout}
           className={cn(
             usePillSegmentedLayout
               ? "grid items-stretch gap-1"
-              : "flex gap-1 overflow-x-auto rounded-xl bg-[#f3f4f6] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+              : "flex gap-1 rounded-xl bg-[#f3f4f6] p-1",
             usePillSegmentedLayout && tabs.length === 2 && "grid-cols-2",
             usePillSegmentedLayout && tabs.length === 3 && "grid-cols-3",
             usePillSegmentedLayout && tabs.length === 4 && "grid-cols-4",
@@ -89,7 +96,7 @@ export function StatusFilterTabs({
               </button>
             );
           })}
-        </div>
+        </RailOrGrid>
       </div>
     );
   }
@@ -107,10 +114,10 @@ export function StatusFilterTabs({
       data-status-filter-tabs=""
       data-filter-layout={useSegmentedLayout ? "segmented" : "scroll"}
     >
-      <div className={cn(
+      <RailOrGrid scroll={!useSegmentedLayout} className={cn(
         useSegmentedLayout
           ? "grid items-stretch gap-1"
-          : "flex gap-1 overflow-x-auto rounded-xl bg-[#f3f4f6] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          : "flex gap-1 rounded-xl bg-[#f3f4f6] p-1",
         useSegmentedLayout && tabs.length === 2 && "grid-cols-2",
         useSegmentedLayout && tabs.length === 3 && "grid-cols-3",
         useSegmentedLayout && tabs.length === 4 && "grid-cols-4",
@@ -151,7 +158,7 @@ export function StatusFilterTabs({
           </button>
         );
       })}
-      </div>
+      </RailOrGrid>
     </div>
   );
 }

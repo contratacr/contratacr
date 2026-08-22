@@ -10,6 +10,10 @@ import { isTooSoonCR } from "@/lib/time-cr";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 import { Skeleton } from "@/components/ui/content-loading";
+
+// Per-session memory of each professional's public agenda (5 minutes).
+const AVAILABILITY_CACHE_TTL_MS = 5 * 60_000;
+const availabilityCache = new Map<string, { availabilityPublic: boolean; slots: ScheduleSlot[]; at: number }>();
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
@@ -97,7 +101,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     professionalId: string;
     availabilityPublic: boolean;
     slots: ScheduleSlot[];
-  } | null>(null);
+  } | null>(() => {
+    // Seen this professional's agenda recently? Paint it now and refresh quietly,
+    // instead of a skeleton on every visit to the same results.
+    const cached = availabilityCache.get(professional.id);
+    return cached && Date.now() - cached.at < AVAILABILITY_CACHE_TTL_MS ? { professionalId: professional.id, availabilityPublic: cached.availabilityPublic, slots: cached.slots } : null;
+  });
   const liveSlots = liveData?.professionalId === professional.id ? liveData.slots : allSlots;
   const liveAvailabilityPublic = liveData?.professionalId === professional.id ? liveData.availabilityPublic : availabilityPublic;
   // Schedules are per-LOCATION, not per-profession: a pro at a location is reachable
@@ -243,11 +252,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         }
         const json = await res.json();
         if (!active) return;
-        setLiveData({
+        const next = {
           professionalId: professional.id,
           availabilityPublic: typeof json.availabilityPublic === "boolean" ? json.availabilityPublic : availabilityPublic,
           slots: Array.isArray(json.slots) ? (json.slots as ScheduleSlot[]) : allSlots,
-        });
+        };
+        availabilityCache.set(professional.id, { availabilityPublic: next.availabilityPublic, slots: next.slots, at: Date.now() });
+        setLiveData(next);
       } catch {
         // Resolve the loading state with the server fallback if live refresh fails.
         if (active) setLiveData({ professionalId: professional.id, availabilityPublic, slots: allSlots });
