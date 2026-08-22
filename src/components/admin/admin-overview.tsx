@@ -6,20 +6,6 @@ import { formatRelativeTime } from "@/lib/utils";
 import type { AdminOverview as Data, Kpi, RankItem } from "@/lib/admin/overview";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
 
-// ── Sparkline (small trend line) ──
-function Sparkline({ data, color }: { data: number[]; color: string }) {
-  if (!data || data.length < 2) return <div className="h-8 w-20" />;
-  const max = Math.max(...data), min = Math.min(...data);
-  const range = max - min || 1;
-  const w = 80, h = 32;
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * (h - 4) - 2}`).join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-8 w-20 overflow-visible" preserveAspectRatio="none">
-      <polyline points={pts} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function Delta({ pct, invert = false }: { pct: number | null; invert?: boolean }) {
   if (pct == null) return <span className="text-[11px] font-medium text-[#94a3b8]">sin comparación</span>;
   const positive = invert ? pct < 0 : pct >= 0;
@@ -28,6 +14,21 @@ function Delta({ pct, invert = false }: { pct: number | null; invert?: boolean }
   return (
     <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${color}`}>
       <Icon className="h-3 w-3" />{pct > 0 ? "+" : ""}{pct}%
+    </span>
+  );
+}
+
+// "2 esta semana · 22 la anterior" says more to the owner than "-91%".
+function PlainDelta({ now, prior, suffix }: { now: number; prior: number; suffix: string }) {
+  const diff = now - prior;
+  const color = diff > 0 ? "text-emerald-600" : diff < 0 ? "text-red-500" : "text-[#94a3b8]";
+  const Icon = diff > 0 ? ArrowUpRight : ArrowDownRight;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1 text-[11px]">
+      <span className={`inline-flex items-center gap-0.5 font-semibold ${color}`}>
+        {diff !== 0 && <Icon className="h-3 w-3" />}{diff > 0 ? "+" : ""}{diff.toLocaleString("es-CR")}
+      </span>
+      <span className="text-[#94a3b8]">{suffix} · anterior: {prior.toLocaleString("es-CR")}</span>
     </span>
   );
 }
@@ -41,15 +42,18 @@ function KpiCard({ icon: Icon, label, value, suffix, kpi, color, deltaSuffix, in
         <Icon className="h-4 w-4" style={{ color }} />
         <span className="text-xs font-medium">{label}</span>
       </div>
-      <div className="mt-2 flex items-end justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-3xl font-bold leading-none text-[#0f172a] tabular-nums">{value.toLocaleString("es-CR")}{suffix}</p>
-          <p className="mt-1.5 flex items-center gap-1">
-            <Delta pct={kpi.deltaPct} invert={invertDelta} />
-            <span className="text-[11px] text-[#94a3b8]">{deltaSuffix}</span>
-          </p>
-        </div>
-        <Sparkline data={kpi.spark} color={color} />
+      <div className="mt-2 min-w-0">
+        <p className="text-3xl font-bold leading-none text-[#0f172a] tabular-nums">{value.toLocaleString("es-CR")}{suffix}</p>
+        <p className="mt-1.5 flex flex-wrap items-center gap-1">
+          {kpi.prior != null ? (
+            <PlainDelta now={value} prior={kpi.prior} suffix={deltaSuffix} />
+          ) : (
+            <>
+              <Delta pct={kpi.deltaPct} invert={invertDelta} />
+              <span className="text-[11px] text-[#94a3b8]">{deltaSuffix}</span>
+            </>
+          )}
+        </p>
       </div>
     </div>
   );

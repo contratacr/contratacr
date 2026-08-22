@@ -171,7 +171,12 @@ test.describe("@admin surfaces", () => {
       // Cobertura: services with supply, every province, a canton by search.
       await gotoOK(page, "/es/admin/cobertura");
       await expectVisibleText(page.locator("body"), /Servicios con oferta/);
-      await expectVisibleText(page.locator("body"), /Los 10 con más profesionales/);
+      // Every category is on screen, with its services, and the category filter narrows the list.
+      await expect(page.getByRole("button", { name: /^Hogar/ }).first()).toBeVisible();
+      await expect(page.getByText("Plomería", { exact: true }).first()).toBeVisible();
+      await page.getByLabel("Filtrar por categoría").selectOption({ index: 1 });
+      await expect(page.getByText(/\d+ · \d+/).first()).toBeVisible();
+      await page.getByLabel("Filtrar por categoría").selectOption("all");
       await page.getByRole("button", { name: /Provincias y cantones/ }).click();
       for (const province of ["San José", "Alajuela", "Cartago", "Heredia", "Guanacaste", "Puntarenas", "Limón"]) {
         await expect(page.getByRole("button", { name: new RegExp(`^${province}`) }).first()).toBeVisible();
@@ -192,6 +197,15 @@ test.describe("@admin surfaces", () => {
       // Reseñas: the professional behind a seeded review is named, never the generic label.
       await gotoOK(page, "/es/admin/resenas");
       await expect(page.getByText("SG Solutions").first()).toBeVisible();
+      await expectHealthyPage(page);
+
+      // Analítica reads in plain words: this week, the funnel, demand vs supply.
+      await gotoOK(page, "/es/admin/analitica");
+      await expectVisibleText(page.locator("body"), /Esta semana/);
+      await expectVisibleText(page.locator("body"), /semana anterior/);
+      await expectVisibleText(page.locator("body"), /Del interés a la contratación/);
+      await expectVisibleText(page.locator("body"), /Qué buscan vs\. qué ofrecemos/);
+      await expectVisibleText(page.locator("body"), /Desde dónde entran/);
       await expectHealthyPage(page);
 
       // Resumen: the growth chart draws bars when there were sign-ups.

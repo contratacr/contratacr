@@ -1,60 +1,84 @@
-import { Users, UserCheck, Briefcase, FolderOpen, Headset, Truck, CalendarClock, MousePointerClick } from "lucide-react";
-import type { AdminReports, Count } from "@/lib/admin/reports";
+import { ArrowDownRight, ArrowUpRight, Headset, MapPinned, Minus, Search, Smartphone, UserCheck, Users } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import type { AdminReports, Count, WeekCompare } from "@/lib/admin/reports";
 
-const PALETTE = ["#008ce0", "#16a34a", "#7c3aed", "#f59e0b", "#ef4444", "#0ea5e9", "#64748b", "#ec4899"];
+// Analítica reads like a weekly note from an analyst, not a dashboard of
+// charts: what changed this week, where people drop off on their way to a
+// hire, which services are asked for more than we can serve, and where the
+// traffic comes from. Every number has a plain label and a comparison.
 
-function Section({ icon: Icon, title, sub, children }: { icon: typeof Users; title: string; sub?: string; children: React.ReactNode }) {
+function Section({ icon: Icon, title, sub, children, action }: { icon: typeof Users; title: string; sub?: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5">
-      <div className="mb-4 flex items-center gap-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f1f5f9] text-[#0f172a]"><Icon className="h-4 w-4" /></span>
-        <div>
-          <h2 className="text-sm font-bold text-[#0f172a]">{title}</h2>
-          {sub && <p className="text-xs text-[#94a3b8]">{sub}</p>}
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f1f5f9] text-[#0f172a]"><Icon className="h-4 w-4" /></span>
+          <div>
+            <h2 className="text-sm font-bold text-[#0f172a]">{title}</h2>
+            {sub && <p className="text-xs text-[#94a3b8]">{sub}</p>}
+          </div>
         </div>
+        {action}
       </div>
       {children}
     </section>
   );
 }
 
-function Tile({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
+function Compare({ label, data, help }: { label: string; data: WeekCompare; help?: string }) {
+  const diff = data.now - data.prev;
+  const Icon = diff > 0 ? ArrowUpRight : diff < 0 ? ArrowDownRight : Minus;
+  const tone = diff > 0 ? "text-emerald-600" : diff < 0 ? "text-red-500" : "text-[#94a3b8]";
   return (
     <div className="rounded-xl border border-[#e5e7eb] bg-white p-3">
-      <p className="text-3xl font-bold tabular-nums leading-none" style={{ color: accent ?? "#0f172a" }}>{typeof value === "number" ? value.toLocaleString("es-CR") : value}</p>
-      <p className="mt-1.5 text-xs text-[#64748b]">{label}</p>
+      <p className="text-xs font-medium text-[#64748b]">{label}</p>
+      <p className="mt-1 text-3xl font-bold leading-none tabular-nums text-[#0f172a]">{data.now.toLocaleString("es-CR")}</p>
+      <p className={`mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold ${tone}`}>
+        <Icon className="h-3 w-3" />
+        {diff === 0 ? "igual que la semana anterior" : `${diff > 0 ? "+" : ""}${diff.toLocaleString("es-CR")} · semana anterior: ${data.prev.toLocaleString("es-CR")}`}
+      </p>
+      {help && <p className="mt-1 text-[11px] text-[#94a3b8]">{help}</p>}
     </div>
   );
 }
 
-function Empty({ className = "" }: { className?: string }) {
-  return <div className={`flex items-center justify-center rounded-xl bg-[#f8fafc] text-sm text-[#94a3b8] ${className}`}>Sin datos aún</div>;
+function pct(part: number, whole: number) {
+  if (whole <= 0) return null;
+  return Math.round((part / whole) * 100);
 }
 
-function BarsH({ items, color }: { items: Count[]; color?: string }) {
-  if (items.length === 0) return <Empty className="py-8" />;
-  const max = Math.max(1, ...items.map((i) => i.value));
+function Funnel({ steps }: { steps: { label: string; value: number; help: string }[] }) {
+  const max = Math.max(1, ...steps.map((s) => s.value));
   return (
-    <div className="flex flex-col gap-2.5">
-      {items.map((it, idx) => (
-        <div key={it.label}>
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="truncate text-[#334155]">{it.label}</span>
-            <span className="shrink-0 font-semibold tabular-nums text-[#0f172a]">{it.value.toLocaleString("es-CR")}</span>
-          </div>
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
-            <div className="h-full rounded-full" style={{ width: `${(it.value / max) * 100}%`, backgroundColor: color ?? PALETTE[idx % PALETTE.length] }} />
-          </div>
-        </div>
-      ))}
-    </div>
+    <ol className="space-y-3">
+      {steps.map((step, index) => {
+        const previous = index > 0 ? steps[index - 1].value : null;
+        const rate = previous != null ? pct(step.value, previous) : null;
+        return (
+          <li key={step.label}>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="font-semibold text-[#0f172a]">{index + 1}. {step.label}</span>
+              <span className="shrink-0 tabular-nums">
+                <span className="font-bold text-[#0f172a]">{step.value.toLocaleString("es-CR")}</span>
+                {rate != null && (
+                  <span className="ml-2 text-xs font-semibold text-[#64748b]">{rate > 100 ? "más que el paso anterior" : `${rate}% del paso anterior`}</span>
+                )}
+              </span>
+            </div>
+            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
+              <div className="h-full rounded-full bg-[#009FD9]" style={{ width: `${(step.value / max) * 100}%` }} />
+            </div>
+            <p className="mt-1 text-[11px] text-[#94a3b8]">{step.help}</p>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
-// Single segmented bar + legend (status breakdowns).
 function Segmented({ parts }: { parts: { label: string; value: number; color: string }[] }) {
   const total = parts.reduce((a, p) => a + p.value, 0);
-  if (total === 0) return <Empty className="py-6" />;
+  if (total === 0) return <p className="text-sm text-[#94a3b8]">Sin datos aún</p>;
   return (
     <div>
       <div className="flex h-3 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
@@ -74,162 +98,123 @@ function Segmented({ parts }: { parts: { label: string; value: number; color: st
   );
 }
 
-// Daily two-series stacked bars (30 days).
-function DailyBars({ data, aKey, bKey, aColor, bColor }: { data: Record<string, number>[]; aKey: string; bKey?: string; aColor: string; bColor?: string }) {
-  const max = Math.max(1, ...data.map((d) => (d[aKey] ?? 0) + (bKey ? d[bKey] ?? 0 : 0)));
-  const hasData = data.some((d) => (d[aKey] ?? 0) + (bKey ? d[bKey] ?? 0 : 0) > 0);
-  if (!hasData) return <Empty className="h-28" />;
+function Ranked({ items, color }: { items: Count[]; color: string }) {
+  if (items.length === 0) return <p className="text-sm text-[#94a3b8]">Sin datos aún</p>;
+  const max = Math.max(1, ...items.map((i) => i.value));
   return (
-    <div className="flex h-28 items-end gap-[3px]">
-      {data.map((d, i) => {
-        const a = d[aKey] ?? 0, b = bKey ? d[bKey] ?? 0 : 0; const total = a + b;
-        return (
-          <div key={i} className="flex h-full flex-1 flex-col justify-end" title={`${String(d.date)}: ${total}`}>
-            <div className="w-full overflow-hidden rounded-sm" style={{ height: `${(total / max) * 100}%`, minHeight: total > 0 ? 4 : 0 }}>
-              {bKey && <div className="w-full" style={{ height: `${total ? (b / total) * 100 : 0}%`, backgroundColor: bColor }} />}
-              <div className="w-full" style={{ height: `${total ? (a / total) * 100 : 100}%`, backgroundColor: aColor }} />
-            </div>
+    <div className="flex flex-col gap-2.5">
+      {items.map((it) => (
+        <div key={it.label}>
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <span className="truncate text-[#334155]">{it.label}</span>
+            <span className="shrink-0 font-semibold tabular-nums text-[#0f172a]">{it.value.toLocaleString("es-CR")}</span>
           </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function Legend({ items }: { items: { label: string; color: string }[] }) {
-  return (
-    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-[#64748b]">
-      {items.map((i) => <span key={i.label} className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: i.color }} />{i.label}</span>)}
+          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
+            <div className="h-full rounded-full" style={{ width: `${(it.value / max) * 100}%`, backgroundColor: color }} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
 export function AdminAnalytics({ data }: { data: AdminReports }) {
-  const { users, pros, activity, support, interactions } = data;
+  const { users, pros, activity, support, insights } = data;
+  const week = insights.week;
+  const platformTotal = insights.platform.web + insights.platform.native;
+  const nativeShare = pct(insights.platform.native, platformTotal);
   const respRate = activity.solicitudesTotal > 0 ? Math.round((activity.solicitudesResponded / activity.solicitudesTotal) * 100) : 0;
+  const trackingSince = insights.tracking.since ? new Date(insights.tracking.since).toLocaleDateString("es-CR", { day: "numeric", month: "short", year: "numeric" }) : null;
+  const pendingTickets = support.byStatus.filter((s) => s.label !== "Resuelto").reduce((sum, s) => sum + s.value, 0);
 
   return (
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="text-2xl font-bold text-[#0f172a]">Analítica</h1>
-        <p className="mt-0.5 text-sm text-[#64748b]">Métricas globales de usuarios, profesionales, actividad, interacciones y soporte.</p>
+        <p className="mt-0.5 text-sm text-[#64748b]">Qué pasó esta semana, dónde se pierde la gente antes de contratar y qué servicios faltan. Comparado con los 7 días anteriores.</p>
       </div>
 
-      {/* USUARIOS */}
-      <Section icon={Users} title="Usuarios" sub="Totales y registros (últimos 30 días)">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <Tile label="Usuarios totales" value={users.total} />
-          <Tile label="Solo clientes" value={users.clients} accent="#16a34a" />
-          <Tile label="Profesionales" value={users.pros} accent="#008ce0" />
-          <Tile label="Prof. verificados" value={users.verifiedPros} accent="#f59e0b" />
-          <Tile label="Con solicitudes" value={users.activeClients} accent="#7c3aed" />
+      <Section icon={Users} title="Esta semana" sub="Últimos 7 días, comparados con los 7 anteriores">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          <Compare label="Profesionales nuevos" data={week.pros} />
+          <Compare label="Clientes nuevos" data={week.clients} />
+          <Compare label="Búsquedas" data={week.searches} help={trackingSince ? `Se registran desde el ${trackingSince}` : "Se registran desde hoy"} />
+          <Compare label="Contactos a profesionales" data={week.contacts} help="WhatsApp, llamadas, enlaces y solicitudes iniciadas" />
+          <Compare label="Solicitudes y proyectos" data={week.requests} help="Creados por clientes" />
+          <Compare label="Postulaciones a empleos" data={week.applications} />
         </div>
-        <div className="mt-4">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-semibold text-[#334155]">Registros diarios</p>
-            <Legend items={[{ label: "Profesionales", color: "#008ce0" }, { label: "Clientes", color: "#9ed8f2" }]} />
-          </div>
-          <DailyBars data={users.reg30 as unknown as Record<string, number>[]} aKey="pros" bKey="clients" aColor="#008ce0" bColor="#9ed8f2" />
-        </div>
+        <p className="mt-3 text-xs text-[#64748b]">
+          En total hay <strong className="text-[#0f172a]">{users.total.toLocaleString("es-CR")}</strong> cuentas: {users.pros.toLocaleString("es-CR")} profesionales ({users.verifiedPros.toLocaleString("es-CR")} verificados) y {users.clients.toLocaleString("es-CR")} clientes, de los cuales {users.activeClients.toLocaleString("es-CR")} ya enviaron al menos una solicitud.
+        </p>
       </Section>
 
-      {/* PROFESIONALES */}
-      <Section icon={UserCheck} title="Profesionales" sub={`${pros.total.toLocaleString("es-CR")} registrados`}>
-        <Segmented parts={[
-          { label: "Verificados", value: pros.verified, color: "#16a34a" },
-          { label: "Pendientes", value: pros.pending, color: "#f59e0b" },
-          { label: "Sin verificar", value: pros.unverified, color: "#94a3b8" },
-          { label: "Rechazados", value: pros.rejected, color: "#ef4444" },
-        ]} />
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div>
-            <p className="mb-2 text-xs font-semibold text-[#334155]">Por categoría</p>
-            <BarsH items={pros.byCategory} color="#008ce0" />
-          </div>
-          <div>
-            <p className="mb-2 text-xs font-semibold text-[#334155]">Por provincia</p>
-            <BarsH items={pros.byProvince} color="#16a34a" />
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Tile label="A domicilio (viajan)" value={pros.traveling} accent="#0ea5e9" />
-          <Tile label="Lugar fijo" value={pros.fixed} />
-          <Tile label="Con agenda publicada" value={pros.withSchedule} accent="#16a34a" />
-          <Tile label="Con servicios" value={pros.withServices} accent="#7c3aed" />
-        </div>
-      </Section>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Section icon={Search} title="Del interés a la contratación" sub="Últimos 7 días · cada paso muestra qué porcentaje del anterior llegó hasta ahí">
+          <Funnel steps={[
+            { label: "Búsquedas", value: insights.funnel.searches, help: "Personas que buscaron un servicio o profesional." },
+            { label: "Vistas de perfil", value: insights.funnel.profileViews, help: "Abrieron el perfil de un profesional." },
+            { label: "Contactos", value: insights.funnel.contacts, help: "Tocaron WhatsApp, llamar, un enlace o empezaron una solicitud." },
+            { label: "Solicitudes y proyectos creados", value: insights.funnel.requests, help: "Pidieron un servicio o publicaron un proyecto." },
+          ]} />
+          <p className="mt-3 text-xs text-[#64748b]">
+            De todas las solicitudes históricas, los profesionales atendieron el <strong className="text-[#0f172a]">{respRate}%</strong> ({activity.solicitudesResponded.toLocaleString("es-CR")} de {activity.solicitudesTotal.toLocaleString("es-CR")}).
+          </p>
+        </Section>
 
-      {/* ACTIVIDAD */}
-      <Section icon={Briefcase} title="Actividad del marketplace" sub="Solicitudes y proyectos (últimos 30 días)">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-semibold text-[#334155]">Volumen diario</p>
-              <Legend items={[{ label: "Solicitudes", color: "#008ce0" }, { label: "Proyectos", color: "#7c3aed" }]} />
+        <Section icon={MapPinned} title="Qué buscan vs. qué ofrecemos" sub="Últimos 30 días · servicios más pedidos y cuántos profesionales los dan" action={<Link href="/admin/cobertura" className="text-xs font-semibold text-[#008ce0] hover:underline">Ver cobertura</Link>}>
+          {insights.demand.length === 0 ? (
+            <p className="text-sm text-[#94a3b8]">Todavía no hay búsquedas ni proyectos con servicio registrados en este período.</p>
+          ) : (
+            <ul className="divide-y divide-[#f1f5f9]">
+              {insights.demand.map((row) => (
+                <li key={row.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-[#0f172a]">{row.label}</p>
+                    <p className="text-[11px] text-[#94a3b8]">{row.searches} búsquedas · {row.projects} proyectos</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-xs text-[#64748b]"><strong className="text-[#0f172a]">{row.supply}</strong> profesionales</p>
+                    <p className={`text-[11px] font-semibold ${row.gap ? "text-red-600" : "text-emerald-600"}`}>{row.gap ? "Falta oferta" : "Oferta suficiente"}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <Section icon={Smartphone} title="Desde dónde entran" sub="Acciones de los últimos 7 días">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-[#e5e7eb] p-3">
+              <p className="text-xs text-[#64748b]">Sitio web</p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-[#0f172a]">{insights.platform.web.toLocaleString("es-CR")}</p>
             </div>
-            <DailyBars data={activity.series30 as unknown as Record<string, number>[]} aKey="solicitudes" bKey="proyectos" aColor="#008ce0" bColor="#c4b5fd" />
+            <div className="rounded-xl border border-[#e5e7eb] p-3">
+              <p className="text-xs text-[#64748b]">App móvil</p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-[#0f172a]">{insights.platform.native.toLocaleString("es-CR")}</p>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 self-start">
-            <Tile label="Solicitudes" value={activity.solicitudesTotal} accent="#008ce0" />
-            <Tile label="Proyectos" value={activity.proyectosTotal} accent="#7c3aed" />
-            <Tile label="Solicitudes atendidas" value={activity.solicitudesResponded} accent="#16a34a" />
-            <Tile label="Tasa de respuesta" value={`${respRate}%`} accent="#f59e0b" />
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div><p className="mb-2 text-xs font-semibold text-[#334155]">Solicitudes por estado</p><BarsH items={activity.solicitudesByStatus} /></div>
-          <div><p className="mb-2 text-xs font-semibold text-[#334155]">Proyectos por estado</p><BarsH items={activity.proyectosByStatus} /></div>
-          <div><p className="mb-2 text-xs font-semibold text-[#334155]">Categorías más solicitadas</p><BarsH items={activity.topCategories} color="#008ce0" /></div>
-        </div>
-      </Section>
+          <p className="mt-3 text-xs text-[#64748b]">
+            {platformTotal === 0 ? "Aún no hay acciones registradas esta semana." : nativeShare === 0 ? "Todo el uso de esta semana vino del sitio web." : `El ${nativeShare}% del uso de esta semana vino de la app.`}
+          </p>
+        </Section>
 
-      {/* INTERACCIONES */}
-      <Section icon={MousePointerClick} title="Interacciones" sub="Intención comercial registrada por ContrataCR · totales históricos">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Tile label="Interacciones" value={interactions.total} accent="#008ce0" />
-          <Tile label="Visitantes únicos" value={interactions.uniqueVisitors} accent="#7c3aed" />
-          <Tile label="WhatsApp" value={interactions.byType.find((item) => item.label === "WhatsApp")?.value ?? 0} accent="#16a34a" />
-          <Tile label="Llamadas" value={interactions.byType.find((item) => item.label === "Llamadas")?.value ?? 0} accent="#f59e0b" />
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {[
-            ["Búsquedas", "Búsquedas"],
-            ["Vistas de empleos", "Vistas de empleos"],
-            ["Postulaciones", "Postulaciones enviadas"],
-            ["Vistas de ofertas", "Vistas de ofertas"],
-            ["Asistente", "Preguntas al asistente"],
-          ].map(([label, key]) => (
-            <Tile key={key} label={label} value={interactions.byType.find((item) => item.label === key)?.value ?? 0} accent="#0ea5e9" />
-          ))}
-        </div>
-        <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <div>
-            <p className="mb-2 text-xs font-semibold text-[#334155]">Interacciones diarias · últimos 30 días</p>
-            <DailyBars data={interactions.series30 as unknown as Record<string, number>[]} aKey="total" aColor="#008ce0" />
-          </div>
-          <div>
-            <p className="mb-2 text-xs font-semibold text-[#334155]">Por acción</p>
-            <BarsH items={interactions.byType} color="#008ce0" />
-          </div>
-        </div>
-      </Section>
+        <Section icon={UserCheck} title="Profesionales" sub={`${pros.total.toLocaleString("es-CR")} registrados · ${pros.withSchedule.toLocaleString("es-CR")} con agenda publicada`}>
+          <Segmented parts={[
+            { label: "Verificados", value: pros.verified, color: "#16a34a" },
+            { label: "Pendientes", value: pros.pending, color: "#f59e0b" },
+            { label: "Sin verificar", value: pros.unverified, color: "#94a3b8" },
+            { label: "Rechazados", value: pros.rejected, color: "#ef4444" },
+          ]} />
+          <p className="mb-2 mt-4 text-xs font-semibold text-[#334155]">Por provincia (sede)</p>
+          <Ranked items={pros.byProvince} color="#16a34a" />
+        </Section>
 
-      {/* SOPORTE */}
-      <Section icon={Headset} title="Soporte" sub="Tickets por estado y volumen (últimos 30 días)">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div><BarsH items={support.byStatus} /></div>
-          <div>
-            <p className="mb-2 text-xs font-semibold text-[#334155]">Tickets diarios</p>
-            <DailyBars data={support.series30 as unknown as Record<string, number>[]} aKey="tickets" aColor="#008ce0" />
-          </div>
-        </div>
-      </Section>
-
-      <p className="flex flex-wrap items-center gap-3 text-xs text-[#94a3b8]">
-        <span className="inline-flex items-center gap-1"><Truck className="h-3.5 w-3.5" /> A domicilio: {pros.traveling}</span>
-        <span className="inline-flex items-center gap-1"><CalendarClock className="h-3.5 w-3.5" /> Con agenda: {pros.withSchedule}</span>
-        <span className="inline-flex items-center gap-1"><FolderOpen className="h-3.5 w-3.5" /> Proyectos: {activity.proyectosTotal}</span>
-      </p>
+        <Section icon={Headset} title="Soporte" sub={`${pendingTickets.toLocaleString("es-CR")} tickets sin resolver`} action={<Link href="/admin/soporte" className="text-xs font-semibold text-[#008ce0] hover:underline">Ir a soporte</Link>}>
+          <Ranked items={support.byStatus} color="#7c3aed" />
+        </Section>
+      </div>
     </div>
   );
 }

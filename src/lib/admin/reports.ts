@@ -27,7 +27,18 @@ export type ProfessionalInteraction = {
   uniqueVisitors: number;
 };
 
+export type WeekCompare = { now: number; prev: number };
+export type DemandRow = { id: string; label: string; demand: number; searches: number; projects: number; supply: number; gap: boolean };
+export type AdminInsights = {
+  week: { pros: WeekCompare; clients: WeekCompare; searches: WeekCompare; requests: WeekCompare; contacts: WeekCompare; applications: WeekCompare };
+  funnel: { searches: number; profileViews: number; contacts: number; requests: number };
+  demand: DemandRow[];
+  platform: { web: number; native: number };
+  tracking: { since: string | null; events14d: number };
+};
+
 export type AdminReports = {
+  insights: AdminInsights;
   users: { total: number; clients: number; pros: number; verifiedPros: number; activeClients: number; reg30: RegPoint[] };
   pros: { total: number; verified: number; pending: number; unverified: number; rejected: number; byCategory: Count[]; byProvince: Count[]; traveling: number; fixed: number; withSchedule: number; withoutSchedule: number; withServices: number; withoutServices: number };
   activity: { solicitudesTotal: number; solicitudesByStatus: Count[]; solicitudesResponded: number; proyectosTotal: number; proyectosByStatus: Count[]; topCategories: Count[]; series30: ActPoint[] };
@@ -61,12 +72,26 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   const days30 = lastNDays(30, now);
 
   const empty: AdminReports = {
+    insights: {
+      week: { pros: { now: 0, prev: 0 }, clients: { now: 0, prev: 0 }, searches: { now: 0, prev: 0 }, requests: { now: 0, prev: 0 }, contacts: { now: 0, prev: 0 }, applications: { now: 0, prev: 0 } },
+      funnel: { searches: 0, profileViews: 0, contacts: 0, requests: 0 },
+      demand: [],
+      platform: { web: 0, native: 0 },
+      tracking: { since: null, events14d: 0 },
+    },
     users: { total: 0, clients: 0, pros: 0, verifiedPros: 0, activeClients: 0, reg30: days30.map((d) => ({ date: d, pros: 0, clients: 0 })) },
     pros: { total: 0, verified: 0, pending: 0, unverified: 0, rejected: 0, byCategory: [], byProvince: [], traveling: 0, fixed: 0, withSchedule: 0, withoutSchedule: 0, withServices: 0, withoutServices: 0 },
     activity: { solicitudesTotal: 0, solicitudesByStatus: [], solicitudesResponded: 0, proyectosTotal: 0, proyectosByStatus: [], topCategories: [], series30: days30.map((d) => ({ date: d, solicitudes: 0, proyectos: 0 })) },
     support: { total: 0, byStatus: [], series30: days30.map((d) => ({ date: d, tickets: 0 })) },
     interactions: { total: 0, uniqueVisitors: 0, byType: [], series30: days30.map((d) => ({ date: d, total: 0 })), professionals: [] },
   };
+
+  // Raw timestamps and counts shared with the plain-language insights below.
+  let proCreated: string[] = [];
+  let clientCreated: string[] = [];
+  let supplyByCategory = new Map<string, number>();
+  let requestCreated: string[] = [];
+  let projectRowsForDemand: Array<{ created_at: string; category_id: string | null }> = [];
 
   // ── Users + professionals + clients ──
   try {
@@ -84,6 +109,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     empty.users.pros = proRows.length;
     empty.users.verifiedPros = proRows.filter((p) => p.verification_status === "verified").length;
 
+    proCreated = proRows.map((p) => p.created_at as string);
+    clientCreated = clients.map((c) => c.created_at as string);
     const proReg = bucketByDay(proRows.map((p) => p.created_at as string), days30);
     const cliReg = bucketByDay(clients.map((c) => c.created_at as string), days30);
     empty.users.reg30 = days30.map((d) => ({ date: d, pros: proReg[d], clients: cliReg[d] }));
@@ -106,6 +133,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       for (const c of (p.professions as string[] | null) ?? []) if (c) ids.add(c);
       for (const id of ids) catCounts.set(id, (catCounts.get(id) ?? 0) + 1);
     }
+    supplyByCategory = catCounts;
     empty.pros.byCategory = [...catCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id, value]) => ({ label: getCategoryLabel(id, locale), value }));
     const provCounts = new Map<string, number>();
     for (const p of proRows) if (p.provincia_id) provCounts.set(p.provincia_id as string, (provCounts.get(p.provincia_id as string) ?? 0) + 1);
@@ -130,6 +158,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const pRows = projects ?? [];
 
     empty.users.activeClients = new Set(bRows.map((b) => b.client_id).filter(Boolean)).size;
+    requestCreated = [...bRows.map((b) => b.created_at as string), ...pRows.map((p) => p.created_at as string)];
+    projectRowsForDemand = pRows.map((p) => ({ created_at: p.created_at as string, category_id: (p.category_id as string | null) ?? null }));
 
     empty.activity.solicitudesTotal = bRows.length;
     const bStatusLabels: Record<string, string> = { pending: "Pendiente", confirmed: "Confirmada", in_progress: "En curso", awaiting_confirmation: "Por confirmar", completed: "Completada", cancelled: "Cancelada", rescheduled: "Reprogramada" };
@@ -158,6 +188,66 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const tBucket = bucketByDay(tRows.map((t) => t.created_at as string), days30);
     empty.support.series30 = days30.map((d) => ({ date: d, tickets: tBucket[d] }));
   } catch (e) { console.error("[reports] support", e); }
+
+  // ── Plain-language insights: this week vs the previous one, the funnel,
+  // demand vs supply per service and web vs app. Interaction rows of the last
+  // 14 days are read directly; everything else reuses the rows above.
+  try {
+    const since14 = new Date(now - 14 * DAY).toISOString();
+    const since30 = new Date(now - 30 * DAY).toISOString();
+    const [{ data: recent }, { data: demandEvents }, { data: oldest }] = await Promise.all([
+      admin.from("interaction_events").select("event_type, created_at, category_id, metadata").gte("created_at", since14),
+      admin.from("interaction_events").select("event_type, category_id").gte("created_at", since30).in("event_type", ["search_performed", "profile_view", "service_request_started"]),
+      admin.from("interaction_events").select("created_at").order("created_at", { ascending: true }).limit(1),
+    ]);
+    const events = (recent ?? []) as Array<{ event_type: string; created_at: string; category_id: string | null; metadata: Record<string, unknown> | null }>;
+    const t7 = now - 7 * DAY;
+    const inLast7 = (t: string) => new Date(t).getTime() >= t7;
+    const inPrev7 = (t: string) => { const v = new Date(t).getTime(); return v < t7 && v >= now - 14 * DAY; };
+    const countWeek = (times: string[]): WeekCompare => ({ now: times.filter(inLast7).length, prev: times.filter(inPrev7).length });
+    const eventTimes = (types: string[]) => events.filter((e) => types.includes(e.event_type)).map((e) => e.created_at);
+    const CONTACT_TYPES = ["whatsapp_click", "phone_click", "service_request_started", "external_link_click"];
+
+    empty.insights.week = {
+      pros: countWeek(proCreated),
+      clients: countWeek(clientCreated),
+      searches: countWeek(eventTimes(["search_performed"])),
+      requests: countWeek(requestCreated),
+      contacts: countWeek(eventTimes(CONTACT_TYPES)),
+      applications: countWeek(eventTimes(["job_application_sent"])),
+    };
+    empty.insights.funnel = {
+      searches: eventTimes(["search_performed"]).filter(inLast7).length,
+      profileViews: eventTimes(["profile_view"]).filter(inLast7).length,
+      contacts: eventTimes(CONTACT_TYPES).filter(inLast7).length,
+      requests: requestCreated.filter(inLast7).length,
+    };
+    const platform = { web: 0, native: 0 };
+    for (const e of events) {
+      if (!inLast7(e.created_at)) continue;
+      if (e.metadata && e.metadata.platform === "native") platform.native += 1; else platform.web += 1;
+    }
+    empty.insights.platform = platform;
+
+    const demand = new Map<string, { searches: number; projects: number }>();
+    const bump = (id: string | null | undefined, key: "searches" | "projects") => {
+      if (!id) return;
+      const entry = demand.get(id) ?? { searches: 0, projects: 0 };
+      entry[key] += 1;
+      demand.set(id, entry);
+    };
+    for (const e of (demandEvents ?? []) as Array<{ event_type: string; category_id: string | null }>) if (e.event_type === "search_performed") bump(e.category_id, "searches");
+    for (const p of projectRowsForDemand) if (new Date(p.created_at).getTime() >= now - 30 * DAY) bump(p.category_id, "projects");
+    empty.insights.demand = [...demand.entries()]
+      .map(([id, d]) => {
+        const supply = supplyByCategory.get(id) ?? 0;
+        const total = d.searches + d.projects;
+        return { id, label: getCategoryLabel(id, locale), demand: total, searches: d.searches, projects: d.projects, supply, gap: supply === 0 || total >= supply * 3 };
+      })
+      .sort((a, b) => b.demand - a.demand)
+      .slice(0, 10);
+    empty.insights.tracking = { since: (oldest?.[0] as { created_at?: string } | undefined)?.created_at ?? null, events14d: events.length };
+  } catch (e) { console.error("[reports] insights", e); }
 
   // First-party interaction analytics. Totals and per-professional values are
   // all-time; the compact trend remains limited to the last 30 days.
