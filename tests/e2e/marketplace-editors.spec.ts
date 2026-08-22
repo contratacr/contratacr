@@ -26,7 +26,7 @@ async function openOwnerEditor(page: Page, label: string, editPath: RegExp) {
   const dialog = page.getByRole("dialog").filter({ hasText: label });
   const inDialog = await dialog.isVisible({ timeout: 4_000 }).catch(() => false);
   if (inDialog) return dialog;
-  await page.waitForURL(editPath);
+  await page.waitForURL(editPath, { waitUntil: "domcontentloaded" });
   return page.locator("main");
 }
 
@@ -152,7 +152,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       await page.locator('input[name="quantity_available"]').fill("3");
       await page.getByRole("button", { name: /^Publicar oferta$/ }).click();
 
-      await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}/, { timeout: 45_000 });
+      await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
       created.offerId = page.url().match(/\/ofertas\/([0-9a-f-]{36})/)![1];
     }
     await expectVisibleText(page.locator("body"), offerTitle);
@@ -166,7 +166,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await offerEditor.locator('input[name="price_now"]').fill("40000");
     await offerEditor.getByRole("button", { name: /^Guardar cambios$/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 45_000 });
-    await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000 });
+    await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
     await expectUpdatedDetail(page, `${offerTitle} editada`);
     await expectVisibleText(page.locator("body"), /40[\s.,]?000/);
     await expectHealthyPage(page);
@@ -201,7 +201,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await page.locator('input[name="openings"]').fill("2");
     await page.getByRole("button", { name: /^Publicar empleo$/ }).click();
 
-    await page.waitForURL(/\/es\/empleos\/[0-9a-f-]{36}/, { timeout: 45_000 });
+    await page.waitForURL(/\/es\/empleos\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
     created.jobId = page.url().match(/\/empleos\/([0-9a-f-]{36})/)![1];
     await expectVisibleText(page.locator("body"), jobTitle);
     await expectVisibleText(page.locator("body"), /Remoto/);
@@ -213,7 +213,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await jobEditor.locator('input[name="openings"]').fill("1");
     await jobEditor.getByRole("button", { name: /^Guardar cambios$/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 45_000 });
-    await page.waitForURL(/\/es\/empleos\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000 });
+    await page.waitForURL(/\/es\/empleos\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
     await expectUpdatedDetail(page, `${jobTitle} editado`);
     await expectHealthyPage(page);
 

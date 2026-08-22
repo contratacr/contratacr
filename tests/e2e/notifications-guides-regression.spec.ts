@@ -218,7 +218,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
 
         const followerRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.followerName });
         await followerRow.locator(":scope > div[role='button']").click();
-        await page.waitForURL(new RegExp(`/${locale}/dashboard/profesional\\?.*tab=network`));
+        await page.waitForURL(new RegExp(`/${locale}/dashboard/profesional\\?.*tab=network`), { waitUntil: "domcontentloaded" });
         await expect.poll(async () => {
           const rows = await notificationRows([seeded.followerId]);
           return rows[0]?.read;
@@ -344,7 +344,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
       await gotoOK(page, `/${locale}/dashboard/profesional?tab=home`);
       const dialog = await openGuides(page, locale);
       await dialog.getByRole("button", { name: messages.supportCta, exact: true }).click();
-      await page.waitForURL((url) => url.pathname === `/${locale}/dashboard/profesional` && url.searchParams.get("tab") === "soporte");
+      await page.waitForURL((url) => url.pathname === `/${locale}/dashboard/profesional` && url.searchParams.get("tab") === "soporte", { waitUntil: "domcontentloaded" });
       await expectNoRawI18nKeys(page);
       await expectNoHorizontalOverflow(page);
       await expect(page.locator("body")).not.toContainText(/Application error|Internal Server Error/i);

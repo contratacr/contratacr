@@ -59,8 +59,20 @@ export function installRuntimeGuards(page: Page) {
   });
 }
 
+// Third-party scripts and stock imagery (Meta pixel, Unsplash, analytics
+// collectors) are not part of the product contract and make `load`-based waits
+// depend on someone else's latency. Keep them off the wire during regression.
+const THIRD_PARTY_HOSTS = /^(?:connect\.facebook\.net|www\.facebook\.com|images\.unsplash\.com|[a-z0-9.-]+\.on\.aws)$/i;
+const thirdPartyBlocked = new WeakSet<Page>();
+export async function blockThirdParty(page: Page) {
+  if (process.env.E2E_ALLOW_THIRD_PARTY === "1" || thirdPartyBlocked.has(page)) return;
+  thirdPartyBlocked.add(page);
+  await page.route((url) => THIRD_PARTY_HOSTS.test(url.hostname), (route) => route.abort("blockedbyclient"));
+}
+
 export async function gotoOK(page: Page, path: string) {
   installRuntimeGuards(page);
+  await blockThirdParty(page);
   // A full navigation aborts requests from the document being replaced. Reset
   // at the new document's commit so those expected aborts cannot contaminate
   // the health contract for the page we are actually asserting.
@@ -235,7 +247,7 @@ export async function loginAs(page: Page, email: string, password: string) {
     await main.getByRole("button", { name: /Ingresar|Sign in/i }).first().click();
 
     try {
-      await page.waitForURL(/\/(?:es|en)\/dashboard\/profesional/, { timeout: 30_000 });
+      await page.waitForURL(/\/(?:es|en)\/dashboard\/profesional/, { timeout: 30_000, waitUntil: "domcontentloaded" });
       await expectAuthCookie(page);
       await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
       return;
