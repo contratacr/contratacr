@@ -11,6 +11,7 @@ export default defineConfig({
   testMatch: [
     "**/direct-chat.spec.ts",
     "**/mobile-native-shell.spec.ts",
+    "**/marketplace-editors.spec.ts",
   ],
   fullyParallel: false,
   workers: 1,
