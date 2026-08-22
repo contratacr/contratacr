@@ -896,7 +896,12 @@ async function workersAiAnswer(
     const parsed = JSON.parse(jsonText) as AssistantPayload;
     return typeof parsed.answer === "string" && parsed.answer.trim() ? parsed : null;
   } catch (error) {
-    console.warn("[ai-assistant] Workers AI fallback unavailable", error);
+    // Outside the Worker (next dev/start) the binding simply does not exist;
+    // that is the normal path there and not worth a stack trace per request.
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/initOpenNextCloudflareForDev|getCloudflareContext/.test(message)) {
+      console.warn("[ai-assistant] Workers AI fallback unavailable", message.split("\n")[0]);
+    }
     return null;
   }
 }

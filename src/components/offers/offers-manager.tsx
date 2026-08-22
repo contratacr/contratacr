@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, BadgePercent, ChevronDown, MoreVertical, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -91,8 +91,20 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
     };
   }, [actionsOpen]);
 
+  // A status changed here must survive a server re-render that was started
+  // before the change committed (quick pause → publish on a slow network);
+  // the local status wins until the server snapshot agrees with it.
+  const pendingStatus = useRef<Record<string, ProfessionalOffer["status"]>>({});
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setOffers(initialOffers));
+    const frame = requestAnimationFrame(() => setOffers(initialOffers.map((item) => {
+      const pending = pendingStatus.current[item.id];
+      if (!pending) return item;
+      if (item.status === pending) {
+        delete pendingStatus.current[item.id];
+        return item;
+      }
+      return { ...item, status: pending };
+    })));
     return () => cancelAnimationFrame(frame);
   }, [initialOffers]);
 
@@ -106,6 +118,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
   async function updateStatus(id: string, status: ProfessionalOffer["status"]) {
     const response = await fetch("/api/offers", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
     if (response.ok) {
+      pendingStatus.current[id] = status;
       setOffers((current) => current.map((offer) => offer.id === id ? { ...offer, status } : offer));
       invalidateAppData("offers");
     }

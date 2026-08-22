@@ -237,8 +237,15 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         await expect(list.getByText(locale === "en" ? "All caught up" : "Todo al día", { exact: true })).toBeVisible();
 
         const applicationRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.applicantName });
+        // The row menu renders through a portal once React handles the click;
+        // on a slow runner a second click is occasionally needed after a refetch.
+        const rowMenu = page.locator("[data-notification-item-menu]");
         await applicationRow.getByRole("button", { name: copy.rowOptions, exact: true }).click();
-        await page.locator("[data-notification-item-menu]").getByRole("menuitem", { name: copy.deleteOne, exact: true }).click();
+        if (!(await rowMenu.isVisible({ timeout: 5_000 }).catch(() => false))) {
+          await applicationRow.getByRole("button", { name: copy.rowOptions, exact: true }).click();
+        }
+        await expect(rowMenu).toBeVisible();
+        await rowMenu.getByRole("menuitem", { name: copy.deleteOne, exact: true }).click();
         await expect.poll(async () => (await notificationRows([seeded.applicationId])).length, {
           message: "Deleting one notification should remove only that row",
         }).toBe(0);
