@@ -61,30 +61,6 @@ function KpiCard({ icon: Icon, label, value, suffix, kpi, color, deltaSuffix, in
   );
 }
 
-// ── Growth stacked-bar chart (14 days) ──
-function GrowthChart({ data }: { data: Data["growth"] }) {
-  const max = Math.max(1, ...data.map((d) => d.pros + d.clients));
-  const hasData = data.some((d) => d.pros + d.clients > 0);
-  if (!hasData) return <EmptyMini label="Sin datos aún" className="h-44" />;
-  return (
-    <div className="flex h-44 items-end gap-1.5">
-      {data.map((d, i) => {
-        const total = d.pros + d.clients;
-        const totalH = (total / max) * 100;
-        const prosShare = total > 0 ? d.pros / total : 0;
-        return (
-          <div key={i} className="group relative flex h-full flex-1 flex-col justify-end" title={`${d.date}: ${d.pros} prof. · ${d.clients} cli.`}>
-            <div className="w-full overflow-hidden rounded-md" style={{ height: `${totalH}%`, minHeight: total > 0 ? 6 : 0 }}>
-              <div className="w-full bg-[#9ed8f2]" style={{ height: `${(1 - prosShare) * 100}%` }} />
-              <div className="w-full bg-[#008ce0]" style={{ height: `${prosShare * 100}%` }} />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 function EmptyMini({ label, className = "" }: { label: string; className?: string }) {
   return <div className={`flex items-center justify-center rounded-xl bg-[#f8fafc] text-sm text-[#94a3b8] ${className}`}>{label}</div>;
 }
@@ -153,22 +129,8 @@ export function AdminOverview({ adminName, data, activity = [] }: { adminName: s
         <KpiCard icon={ShieldCheck} label="Tasa de verificación" value={data.verificationRate.value} suffix="%" kpi={data.verificationRate} color="#f59e0b" deltaSuffix="vs. mes pasado" />
       </div>
 
-      {/* Growth */}
-      <Card
-        title="Crecimiento"
-        action={
-          <div className="flex items-center gap-3 text-[11px] font-medium text-[#64748b]">
-            <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-[#008ce0]" /> Profesionales</span>
-            <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-[#9ed8f2]" /> Clientes</span>
-          </div>
-        }
-      >
-        <p className="-mt-2 mb-3 text-xs text-[#94a3b8]">Altas diarias · últimos 14 días</p>
-        <GrowthChart data={data.growth} />
-      </Card>
-
-      {/* Altas recientes */}
-      <Card title="Altas recientes" action={<Link href="/admin/usuarios" className="text-xs font-semibold text-[#008ce0] hover:underline">Ver todas</Link>}>
+      {/* Cuentas nuevas */}
+      <Card title="Cuentas nuevas (últimos registros)" action={<Link href="/admin/usuarios" className="text-xs font-semibold text-[#008ce0] hover:underline">Ver todas</Link>}>
         {data.recentSignups.length === 0 ? (
           <EmptyMini label="Sin datos aún" className="py-8" />
         ) : (

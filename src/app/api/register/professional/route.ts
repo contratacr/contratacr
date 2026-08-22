@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { notifyVerificationOutreach } from "@/lib/verification-notify";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
@@ -430,6 +431,17 @@ export async function POST(req: Request) {
           ? "Ya existe un perfil profesional para esta cuenta."
           : "No pudimos crear tu perfil profesional. Revisa tus datos e intenta de nuevo.";
       return NextResponse.json({ error: friendly }, { status: 500 });
+    }
+
+    // Accounts without a Costa Rican ID skip the automatic padrón check and go
+    // straight to manual review: tell them right away what we need to verify them.
+    if (noCrId) {
+      try {
+        const { data: created } = await createAdminClient().from("professionals").select("id").eq("profile_id", userId).maybeSingle();
+        if (created?.id) await notifyVerificationOutreach(created.id);
+      } catch (e) {
+        console.error("[register/professional] verification outreach:", e);
+      }
     }
 
     let opportunityCount = 0;

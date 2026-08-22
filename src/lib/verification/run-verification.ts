@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
-import { notifyVerificationDecision, notifyAppealReceived } from "@/lib/verification-notify";
+import { notifyVerificationDecision, notifyAppealReceived, notifyVerificationOutreach } from "@/lib/verification-notify";
 import { cleanId, detectIdType } from "@/lib/cedula";
 
 export type RunOutcome = "verified" | "pending" | "ticket" | "skipped";
@@ -85,6 +85,7 @@ export async function runIdentityVerification(
     });
     if (fromStatus !== "pending" || opts.isInitial) {
       await notifyVerificationDecision({ professionalId, kind: "pending", channel });
+    await notifyVerificationOutreach(professionalId);
     }
     return "pending";
   }
@@ -197,6 +198,7 @@ export async function runIdentityVerification(
     });
 
     await notifyVerificationDecision({ professionalId, kind: "pending", channel });
+    await notifyVerificationOutreach(professionalId);
     await notifyAppealReceived(professionalId, fullName, opts.appealMessage ?? failReason);
     return "ticket";
   }
@@ -240,6 +242,7 @@ export async function runIdentityVerification(
   // already-pending pro who re-saves their registration.
   if (fromStatus !== "pending" || opts.isInitial) {
     await notifyVerificationDecision({ professionalId, kind: "pending", channel });
+    await notifyVerificationOutreach(professionalId);
   }
   return "pending";
 }

@@ -383,6 +383,7 @@ export async function ProfessionalCard({ professional, className, highlightMetri
                   itemTestId="professional-card-mobile-service"
                   moreTestId="professional-card-more-services"
                   moreClassName={moreProfessionsClass}
+                  separator="·"
                 />
               )}
               {(mobileMetric || mobilePrice) && (

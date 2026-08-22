@@ -1003,14 +1003,13 @@ input::-ms-clear {
 ::-webkit-scrollbar { width: 7px; height: 7px; }
 
 /* Horizontal chip rows (marketplace filters) hint overflow by clipping the last
-   chip, never with a scrollbar. Older Android WebViews ignore scrollbar-width
-   once a ::-webkit-scrollbar rule exists, so both forms are required. */
+   chip at the edge — never with a scrollbar and never with a fade (the owner
+   wants full-colour chips; the cut itself says "there is more"). Older Android
+   WebViews ignore scrollbar-width once a ::-webkit-scrollbar rule exists, so
+   both forms are required. */
 .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; width: 0; height: 0; }
-.ccr-chip-row {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 4.5rem), transparent calc(100% - 0.5rem));
-  mask-image: linear-gradient(to right, #000 calc(100% - 4.5rem), transparent calc(100% - 0.5rem));
-}
+.ccr-chip-row { padding-right: 0; }
 
 /* Marketplace and full-screen flows render no app header on mobile (same as the
    web). The native shell pins `main` below the header, so the reserve must drop
@@ -1111,8 +1110,6 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
    set width exact. `touch-action: pan-y` lets vertical page scroll through while
    horizontal drags arrive as pointer events. Soft edge fade at the rails. */
 .cat-carousel {
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
-          mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
   overflow: hidden;
   touch-action: pan-y;
 }
@@ -1494,8 +1491,6 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 .featured-brands-marquee {
   width: 100%;
   overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
 }
 
 .featured-brands-track {
