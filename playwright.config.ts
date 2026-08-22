@@ -98,6 +98,10 @@ export default defineConfig({
         env: webServerEnv,
         reuseExistingServer: true,
         timeout: 120_000,
+        // CI keeps the server output in the job log so a request that never
+        // answers can be traced to what the server was doing at that moment.
+        stdout: process.env.CI ? "pipe" : "ignore",
+        stderr: "pipe",
       }
     : undefined,
   projects: [

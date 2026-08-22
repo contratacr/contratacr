@@ -40,6 +40,11 @@ export function StatusFilterTabs({
   const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
   const useSegmentedLayout = tabs.length >= 2 && tabs.length <= 4 && mobileLayout !== "scroll";
   const useScrollableLayout = !useSegmentedLayout;
+  // A segmented cell is narrow on a 320px screen. Short status words must never
+  // break mid-word (the count pill drops under the label instead); long dynamic
+  // labels (service names on the photos tab) may break anywhere so the row
+  // never overflows.
+  const shortLabels = tabs.every((tab) => label(tab.id).length <= 12);
 
   // PILLS — same segmented language, without count badges. Used for profession
   // filters where labels can be long; 2–4 fit the row, 5+ become a clean rail.
@@ -132,10 +137,8 @@ export function StatusFilterTabs({
             onClick={() => onChange(tab.id)}
             className={cn(
               "group relative inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-lg py-2 text-center font-semibold leading-tight transition-all sm:text-[14px]",
-              // Segmented cells are narrow on phones: the label never breaks mid-word
-              // and the count floats as a corner badge instead of taking row width.
               useSegmentedLayout
-                ? "min-w-0 whitespace-nowrap px-1 text-[12px] min-[400px]:text-[13px] sm:px-3"
+                ? cn("min-w-0 px-1 text-[12px] min-[400px]:text-[13px] sm:px-3", shortLabels ? "flex-wrap whitespace-normal [overflow-wrap:normal]" : "whitespace-normal [overflow-wrap:anywhere]")
                 : "min-w-[8.25rem] flex-none whitespace-normal px-3 text-[13px] [overflow-wrap:anywhere]",
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
