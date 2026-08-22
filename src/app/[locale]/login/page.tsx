@@ -288,7 +288,11 @@ export default function LoginPage() {
       try {
         const outcome = await nativeSocialSignIn(provider, supabase);
         if (outcome === "signed-in") {
-          window.location.assign(oauthCallbackUrl().replace("flow=oauth", "flow=native"));
+          // Same-origin path, never the absolute callback URL: the server origin
+          // can differ from the one the WebView loaded (0.0.0.0 vs localhost),
+          // and an absolute URL would push the user out of the app mid-login.
+          const callback = oauthCallbackUrl().replace("flow=oauth", "flow=native");
+          window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
           return;
         }
         if (outcome === "cancelled") {
