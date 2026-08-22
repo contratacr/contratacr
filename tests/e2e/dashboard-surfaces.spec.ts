@@ -119,7 +119,7 @@ test.describe("@seeded dashboard surfaces", () => {
     }
   });
 
-  test("responsive identity keeps a two-line name and aligns profile access with network counts", async ({ page }) => {
+  test("responsive identity keeps a single-line name with its badge and aligns profile access with network counts", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/es/dashboard/profesional");
     if ((page.viewportSize()?.width ?? 1280) >= 640) return;
@@ -137,9 +137,16 @@ test.describe("@seeded dashboard surfaces", () => {
       profileLink.boundingBox(),
     ]);
     expect(geometry.every(Boolean)).toBe(true);
-    expect(geometry[0]!.height).toBeGreaterThan(20);
-    expect(geometry[0]!.height).toBeLessThanOrEqual(40);
-    expect(Math.abs((geometry[2]!.y + geometry[2]!.height) - (geometry[1]!.y + geometry[1]!.height))).toBeLessThanOrEqual(3);
+    // The phone header shows the business name (or a short person name) on a
+    // single truncated line with the verification badge right after it, so an
+    // overlong name must never push the header to a second line.
+    expect(geometry[0]!.height).toBeGreaterThan(14);
+    expect(geometry[0]!.height).toBeLessThanOrEqual(24);
+    await expect(name.locator("xpath=following-sibling::*[1]").locator("svg").first()).toBeVisible();
+    // "Ver perfil" sits vertically centred on the counts row.
+    const linkCentre = geometry[2]!.y + geometry[2]!.height / 2;
+    const actionsCentre = geometry[1]!.y + geometry[1]!.height / 2;
+    expect(Math.abs(linkCentre - actionsCentre)).toBeLessThanOrEqual(8);
     await expectNoHorizontalOverflow(page);
   });
 
