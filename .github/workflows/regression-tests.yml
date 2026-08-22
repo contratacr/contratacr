@@ -7,11 +7,10 @@ on:
       - test
 
 concurrency:
-  # The production mirror and regression suite both mutate the isolated test
-  # database. A shared repository-wide group prevents either workflow from
-  # replacing fixtures while the other one is using them.
-  group: contratacr-test-environment
-  queue: max
+  # This workflow only touches the local Supabase stack it starts itself, so it
+  # keeps its own group: sharing one with the deploy and mobile workflows let
+  # any of their queued runs cancel a pending manual release regression.
+  group: contratacr-local-regression
   cancel-in-progress: false
 
 permissions:
