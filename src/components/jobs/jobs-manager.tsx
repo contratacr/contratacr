@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, CalendarDays, ChevronDown, FileText, Mail, MoreVertical, Phone, Plus, UserRound, Users } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -78,8 +78,20 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
     return () => cancelAnimationFrame(frame);
   }, [searchParams]);
 
+  // A status changed here must survive a server re-render that was started
+  // before the change committed (quick pause → publish on a slow network);
+  // the local status wins until the server snapshot agrees with it.
+  const pendingStatus = useRef<Record<string, JobPost["status"]>>({});
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setJobs(initialJobs));
+    const frame = requestAnimationFrame(() => setJobs(initialJobs.map((item) => {
+      const pending = pendingStatus.current[item.id];
+      if (!pending) return item;
+      if (item.status === pending) {
+        delete pendingStatus.current[item.id];
+        return item;
+      }
+      return { ...item, status: pending };
+    })));
     return () => cancelAnimationFrame(frame);
   }, [initialJobs]);
 
@@ -103,6 +115,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
   async function updateJobStatus(id: string, status: JobPost["status"]) {
     const response = await fetch("/api/jobs/posts", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
     if (response.ok) {
+      pendingStatus.current[id] = status;
       setJobs((current) => current.map((job) => job.id === id ? { ...job, status } : job));
       invalidateAppData("jobs");
     }
