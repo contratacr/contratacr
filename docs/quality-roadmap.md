@@ -52,7 +52,16 @@ offer/job managers, segmented filters that never clip at 320px, the assistant
 route no longer booting wrangler outside the Worker, third-party hosts kept off
 the wire during tests, the request journal and Supabase log dump in CI, and a
 dedicated concurrency group so pushes cannot cancel a pending release run.
-Still open in Block A: admin per-section actions and `olvide-contrasena`.
+Admin (2026-08-22): audited every section on desktop and phone. Fixed the empty
+daily charts (bar columns had no height), review cards naming "Profesional",
+clipped verification rows on phones and the phone rail not showing the active
+section. Added `Empleos`, `Ofertas` (every publication with its creator and
+moderation actions) and `Cobertura` (professionals per service, province and
+canton, including the empty ones); the services catalogue folds per category
+with professional counts. Analytics now records searches, job views,
+applications, offer views and assistant questions, each tagged web/native
+(migration 176, applied to test and production). `admin-smoke` exercises the
+new sections and the primary actions. Still open in Block A: `olvide-contrasena`.
 
 ### Block B — Visual truth (1–2 sessions)
 
