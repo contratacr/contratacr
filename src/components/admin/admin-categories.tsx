@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Layers3, Loader2, Plus, Save, Search, Tag, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, Layers3, Loader2, Plus, Save, Search, Tag, Trash2, X } from "lucide-react";
 import {
   ALL_CATEGORIES,
   autoEnglishCategoryLabel,
@@ -188,6 +188,10 @@ export function AdminCategories() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [serviceFilter, setServiceFilter] = useState<"all" | "custom" | "health" | "video">("all");
+  // Professionals per service (primary category or secondary profession) from
+  // /api/admin/coverage, so the catalogue shows which services have supply.
+  const [proCounts, setProCounts] = useState<Record<string, { professionals: number; verified: number }>>({});
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [catalogDrafts, setCatalogDrafts] = useState<Record<string, { label: string; labelEn: string; groupId: string }>>({});
   const [groupDrafts, setGroupDrafts] = useState<Record<string, { label: string; labelEn: string; sortOrder: number }>>({});
   const [edits, setEdits] = useState<Record<string, string>>({});
@@ -253,6 +257,12 @@ export function AdminCategories() {
     setGroups(data.groups ?? []);
     setPendingCount(suggestions.pendingCount ?? 0);
     if (!newServiceGroupId && data.groups?.[0]?.id) setNewServiceGroupId(data.groups[0].id);
+    void fetch("/api/admin/coverage")
+      .then((r) => r.json())
+      .then((coverage: { services?: Array<{ id: string; professionals: number; verified: number }> }) => {
+        setProCounts(Object.fromEntries((coverage.services ?? []).map((service) => [service.id, { professionals: service.professionals, verified: service.verified }])));
+      })
+      .catch(() => undefined);
   }
 
   useEffect(() => {
@@ -336,6 +346,21 @@ export function AdminCategories() {
       return normalizeText(`${item.label} ${item.labelEn ?? ""} ${item.groupLabel} ${item.id}`).includes(q);
     });
   }, [catalog, serviceFilter, query]);
+
+  // Without a search or filter the catalogue is long; show it per category,
+  // collapsed, with what each category holds. A search flattens it again.
+  const flatCatalog = !!normalizeText(query) || serviceFilter !== "all";
+  const catalogSections = useMemo(() => {
+    if (flatCatalog) return [{ id: "all", label: "", items: filteredCatalog }];
+    const order = new Map(groups.map((group, index) => [group.id, index]));
+    const sections = new Map<string, { id: string; label: string; items: CatalogCategory[] }>();
+    for (const item of filteredCatalog) {
+      const section = sections.get(item.groupId) ?? { id: item.groupId, label: item.groupLabel, items: [] };
+      section.items.push(item);
+      sections.set(item.groupId, section);
+    }
+    return [...sections.values()].sort((a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999) || a.label.localeCompare(b.label, "es"));
+  }, [filteredCatalog, flatCatalog, groups]);
 
   function draftOf(item: CatalogCategory) {
     return catalogDrafts[item.id] ?? {
@@ -1054,7 +1079,27 @@ export function AdminCategories() {
             <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
-              {filteredCatalog.map((item) => (
+              {catalogSections.map((section) => {
+                const open = flatCatalog || (openGroups[section.id] ?? false);
+                const sectionPros = section.items.reduce((sum, item) => sum + (proCounts[item.id]?.professionals ?? 0), 0);
+                const withSupply = section.items.filter((item) => (proCounts[item.id]?.professionals ?? 0) > 0).length;
+                return (
+                <div key={section.id} className="border-b border-[#f1f5f9] last:border-b-0">
+                  {!flatCatalog && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenGroups((current) => ({ ...current, [section.id]: !open }))}
+                      aria-expanded={open}
+                      className="flex w-full items-center justify-between gap-3 bg-[#f8fafc] px-4 py-3 text-left hover:bg-[#f1f5f9]"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-bold text-[#111827]">{section.label}</span>
+                        <span className="block text-xs text-[#6b7280]">{section.items.length} servicios · {withSupply} con profesionales · {sectionPros.toLocaleString("es-CR")} profesionales</span>
+                      </span>
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-[#9ca3af] transition-transform ${open ? "rotate-180" : ""}`} />
+                    </button>
+                  )}
+                  {open && section.items.map((item) => (
                 <div key={item.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 xl:grid-cols-[minmax(0,1fr)_220px_210px_auto] xl:items-center">
                   <div className="grid min-w-0 gap-2 sm:grid-cols-2">
                     <input
@@ -1076,6 +1121,10 @@ export function AdminCategories() {
                       aria-label="Nombre del servicio en inglés"
                       className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
+                    <p className={`text-[11px] font-semibold sm:col-span-2 ${(proCounts[item.id]?.professionals ?? 0) === 0 ? "text-[#b91c1c]" : "text-[#6b7280]"}`}>
+                      {(proCounts[item.id]?.professionals ?? 0).toLocaleString("es-CR")} profesionales · {(proCounts[item.id]?.verified ?? 0).toLocaleString("es-CR")} verificados
+                      {flatCatalog ? ` · ${item.groupLabel}` : ""}
+                    </p>
                   </div>
                   <select
                     value={draftOf(item).groupId}
@@ -1101,7 +1150,10 @@ export function AdminCategories() {
                     {busy === item.id && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
                   </div>
                 </div>
-              ))}
+                  ))}
+                </div>
+                );
+              })}
               {filteredCatalog.length === 0 && <div className="py-14 text-center text-sm text-[#9ca3af]">No hay servicios con ese filtro.</div>}
             </div>
           )}

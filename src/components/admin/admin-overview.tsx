@@ -67,7 +67,7 @@ function GrowthChart({ data }: { data: Data["growth"] }) {
         const totalH = (total / max) * 100;
         const prosShare = total > 0 ? d.pros / total : 0;
         return (
-          <div key={i} className="group relative flex flex-1 flex-col justify-end" title={`${d.date}: ${d.pros} prof. · ${d.clients} cli.`}>
+          <div key={i} className="group relative flex h-full flex-1 flex-col justify-end" title={`${d.date}: ${d.pros} prof. · ${d.clients} cli.`}>
             <div className="w-full overflow-hidden rounded-md" style={{ height: `${totalH}%`, minHeight: total > 0 ? 6 : 0 }}>
               <div className="w-full bg-[#9ed8f2]" style={{ height: `${(1 - prosShare) * 100}%` }} />
               <div className="w-full bg-[#008ce0]" style={{ height: `${prosShare * 100}%` }} />
