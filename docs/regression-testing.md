@@ -135,11 +135,21 @@ No regression suite can prove literally every possible user-data combination or 
 
 ## GitHub Actions
 
-The workflow runs automatically when `test` advances and can also be dispatched from
-**Actions > Regression Tests > Run workflow**. For a manual run, select the `test`
-branch. It checks out the event SHA, validates that every secret points to the test
-Supabase project, builds with `next build`, and lets Playwright start `next start` on
-the runner loopback interface.
+`regression-tests` runs two different depths:
+
+- **Every push to `test`** runs the fast gate: migrations rebuilt from an empty
+  local Supabase stack, synthetic seed, isolation contracts, surface ownership,
+  typecheck, lint and `next build`. It does **not** open a browser.
+- **Run workflow** (Actions > Regression Tests, branch `test`) additionally runs
+  the exhaustive Playwright release regression in four shards against
+  `next start` on the runner loopback, then requires zero failures, flakies and
+  unexpected skips. This is the release gate; it is never triggered by a push.
+
+Both depths use only the local stack started on the runner, so the workflow has
+its own concurrency group. After a failed manual run the job log contains the
+Next.js server output and the last 400 lines of the local `auth`, `rest`, `kong`
+and `db` containers; the `playwright-report` artifact carries traces, videos and
+the error context of every failed test.
 
 This keeps exhaustive browser navigation, server rendering and API calls off Cloudflare Workers.
 Provider-specific deployment checks must stay in a separate, short smoke and must not
@@ -156,7 +166,7 @@ Playwright verifies that ContrataCR submits or renders the correct behavior arou
 | Environment | Branch | Data | Automated | Manual |
 |---|---|---|---|---|
 | Production | `main` | Real users | `security-checks` on push; daily `supabase-backup` | Never test against production. |
-| Test | `test` (same code as `main`) | Production copy refreshed on demand with `sync-production-to-test`, plus the two regression identities below | `regression-tests` on every push to `test` (local stack rebuilt from migrations, seeded, full Playwright release regression) | Sign in at https://test.contratacr.com with the regression identities. |
+| Test | `test` (same code as `main`) | Production copy refreshed on demand with `sync-production-to-test`, plus the two regression identities below | `regression-tests` on every push to `test` (local stack rebuilt from migrations, seeded, contracts and build); the full Playwright release regression runs from *Run workflow* only | Sign in at https://test.contratacr.com with the regression identities. |
 | Mobile | `mobile` (`test` + native shell) | Same as test | `mobile-native-regression` on every push to `mobile`: contracts plus the native WebView shell and direct-chat suites. The Android emulator and iOS simulator jobs run only from *Run workflow* (the macOS runner costs ten times a Linux minute). | Debug APK pointed at a local dev server (`android/app/src/debug`) or the release build against test. |
 
 `cloudflare-compatibility` is the deployment pipeline despite its name: a push to `main` deploys the production Worker (`contratacr`), and a push to `test` **or** `mobile` deploys the shared `contratacr-preview` Worker behind test.contratacr.com — the last of the two pushed wins, which is why the native app loads test.contratacr.com with the `mobile` code after a `mobile` push.
