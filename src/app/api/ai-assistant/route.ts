@@ -866,7 +866,12 @@ async function workersAiAnswer(
 ): Promise<AssistantPayload | null> {
   try {
     const { getCloudflareContext } = await import("@opennextjs/cloudflare");
-    const context = await getCloudflareContext({ async: true });
+    // Synchronous on purpose: inside the Worker the context is already on the
+    // global scope, while the async variant would boot a local wrangler proxy
+    // under `next start`/`next dev` (the regression servers) and stall the
+    // whole process. Outside the Worker this throws and the OpenAI/local
+    // answer paths take over.
+    const context = getCloudflareContext();
     const ai = (context.env as { AI?: WorkersAiBinding }).AI;
     if (!ai) return null;
 
