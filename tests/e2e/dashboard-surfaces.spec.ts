@@ -61,10 +61,15 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
       }),
     }));
     expect(geometry.scrollWidth, `Filter group should not be clipped (${page.url()})`).toBeLessThanOrEqual(geometry.clientWidth + 2);
+    // A rail (5+ filters) scrolls sideways by design: its later chips start past
+    // the viewport and the click loop below brings each one into view. Segmented
+    // groups must fit the screen outright.
+    const rail = layout === "scroll" || layout === "scroll-pills";
     for (const button of geometry.buttons) {
-      expect(button.scrollWidth).toBeLessThanOrEqual(button.clientWidth + 2);
-      expect(button.left).toBeGreaterThanOrEqual(-1);
-      expect(button.right).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+      expect(button.scrollWidth, `Filter label should not be clipped (${page.url()})`).toBeLessThanOrEqual(button.clientWidth + 2);
+      if (rail) continue;
+      expect(button.left, `Filter should start on screen (${page.url()})`).toBeGreaterThanOrEqual(-1);
+      expect(button.right, `Filter should end on screen (${page.url()})`).toBeLessThanOrEqual(geometry.viewportWidth + 1);
     }
 
     const buttons = filter.getByRole("button");

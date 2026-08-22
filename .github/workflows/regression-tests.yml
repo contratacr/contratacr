@@ -139,6 +139,16 @@ jobs:
             npx playwright test --shard="${shard}/4"
           done
 
+      - name: Dump the local Supabase container logs after a failed regression
+        if: github.event_name == 'workflow_dispatch' && failure()
+        shell: bash
+        run: |
+          for name in $(docker ps --format '{{.Names}}' | grep -E 'supabase_(auth|rest|kong|db)_' || true); do
+            echo "::group::$name"
+            docker logs --tail 400 "$name" 2>&1 || true
+            echo "::endgroup::"
+          done
+
       - name: Require zero failures, flakies and unexpected skips
         if: github.event_name == 'workflow_dispatch'
         shell: bash
