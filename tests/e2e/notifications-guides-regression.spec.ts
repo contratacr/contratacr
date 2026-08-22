@@ -233,11 +233,12 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
           const rows = await notificationRows(seeded.ids);
           return rows.length === seeded.ids.length && rows.every((row) => row.read);
         }, { message: "Mark all read should persist for every seeded notification" }).toBe(true);
-        await expect(list.getByText(locale === "en" ? "0 unread" : "0 sin leer", { exact: true })).toBeVisible();
+        // With nothing left unread the header reads "Todo al día" / "All caught up".
+        await expect(list.getByText(locale === "en" ? "All caught up" : "Todo al día", { exact: true })).toBeVisible();
 
         const applicationRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.applicantName });
         await applicationRow.getByRole("button", { name: copy.rowOptions, exact: true }).click();
-        await applicationRow.getByRole("menuitem", { name: copy.deleteOne, exact: true }).click();
+        await page.locator("[data-notification-item-menu]").getByRole("menuitem", { name: copy.deleteOne, exact: true }).click();
         await expect.poll(async () => (await notificationRows([seeded.applicationId])).length, {
           message: "Deleting one notification should remove only that row",
         }).toBe(0);

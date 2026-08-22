@@ -48,6 +48,53 @@ async function chooseItemAction(card: ReturnType<Page["locator"]>, label: RegExp
   await card.getByRole("menuitem", { name: label }).or(card.getByRole("button", { name: label })).first().click();
 }
 
+const LOCAL_STACK = process.env.LOCAL_REGRESSION_SEED === "1";
+
+async function createOfferThroughApi(page: Page, title: string) {
+  const admin = regressionAdminClient();
+  const professionalId = (await ensureRegressionSeed()).professionalId;
+  const { data: professional, error } = await admin
+    .from("professionals")
+    .select("portfolio_urls,portfolio_items,services,category_id")
+    .eq("id", professionalId)
+    .single();
+  if (error || !professional) throw error ?? new Error("SG Solutions fixture not found");
+  const items = Array.isArray(professional.portfolio_items)
+    ? (professional.portfolio_items as Array<{ url?: string; image_url?: string; photos?: string[] }>)
+    : [];
+  const imageUrl = (Array.isArray(professional.portfolio_urls) ? professional.portfolio_urls[0] : null)
+    || items.flatMap((item) => [item.url, item.image_url, ...(item.photos ?? [])]).find(Boolean);
+  expect(imageUrl, "SG Solutions needs one existing image to seed an offer").toBeTruthy();
+  const services = Array.isArray(professional.services)
+    ? (professional.services as Array<{ id?: string; serviceId?: string; name?: string; label?: string }>)
+    : [];
+  const service = services[0] ?? {};
+  const response = await page.evaluate(async (body) => {
+    const res = await fetch("/api/offers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    return { status: res.status, body: await res.json().catch(() => ({})) };
+  }, {
+    professional_id: professionalId,
+    service_category_id: service.id || service.serviceId || professional.category_id,
+    title,
+    description: "Oferta sembrada por la regresión para validar edición, pausa y republicación desde la interfaz real.",
+    offer_type: "service_offer",
+    service_label: service.name || service.label || "Servicio profesional",
+    image_urls: [imageUrl],
+    price_now: 45000,
+    price_before: 60000,
+    currency: "CRC",
+    price_unit: "total",
+    location_label: "Todo Costa Rica",
+    valid_until: null,
+    quantity_available: 3,
+    status: "published",
+  });
+  expect(response.status, JSON.stringify(response.body)).toBe(200);
+  const id = (response.body as { id?: string; offer?: { id?: string } }).id ?? (response.body as { offer?: { id?: string } }).offer?.id;
+  expect(id, JSON.stringify(response.body)).toBeTruthy();
+  return id as string;
+}
+
 test.describe.configure({ mode: "serial" });
 
 test.describe("@seeded marketplace editors through the real screens", () => {
@@ -80,25 +127,34 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
 
-    await gotoOK(page, "/es/ofertas/publicar");
-    await expectVisibleText(page.locator("body"), /Publicar oferta/);
-    await page.locator('input[name="title"]').fill(offerTitle);
-    // The service picker is a trigger button that reveals a search box.
-    await page.getByText("Selecciona un servicio", { exact: true }).first().click();
-    const service = page.getByPlaceholder(/Ejemplo: Redes e internet/);
-    await service.fill("Desarrollo");
-    await page.locator("#offer-service-options").getByRole("option").first().click();
-    await page.locator('textarea[name="description"]').fill("Oferta publicada desde el formulario real por la regresión, con imagen, precio y cantidad.");
-    await page.locator('input[type="file"]').setInputFiles({ name: "e2e-offer.png", mimeType: "image/png", buffer: ONE_PIXEL_PNG });
-    // The picker decodes the file before it counts as attached; wait for the preview.
-    await expect(page.locator('img[src^="blob:"]').first()).toBeVisible({ timeout: 15_000 });
-    await page.locator('input[name="price_now"]').fill("45000");
-    await page.locator('input[name="price_before"]').fill("60000");
-    await page.locator('input[name="quantity_available"]').fill("3");
-    await page.getByRole("button", { name: /^Publicar oferta$/ }).click();
+    if (LOCAL_STACK) {
+      // The runner's local stack has no image host (/api/upload/photo answers
+      // 503), and an offer requires an image, so the offer starts through the
+      // API with one of SG Solutions' existing images. The form with a real
+      // upload is exercised by the mobile workflow against the test project.
+      created.offerId = await createOfferThroughApi(page, offerTitle);
+      await gotoOK(page, `/es/ofertas/${created.offerId}`);
+    } else {
+      await gotoOK(page, "/es/ofertas/publicar");
+      await expectVisibleText(page.locator("body"), /Publicar oferta/);
+      await page.locator('input[name="title"]').fill(offerTitle);
+      // The service picker is a trigger button that reveals a search box.
+      await page.getByText("Selecciona un servicio", { exact: true }).first().click();
+      const service = page.getByPlaceholder(/Ejemplo: Redes e internet/);
+      await service.fill("Desarrollo");
+      await page.locator("#offer-service-options").getByRole("option").first().click();
+      await page.locator('textarea[name="description"]').fill("Oferta publicada desde el formulario real por la regresión, con imagen, precio y cantidad.");
+      await page.locator('input[type="file"]').setInputFiles({ name: "e2e-offer.png", mimeType: "image/png", buffer: ONE_PIXEL_PNG });
+      // The picker decodes the file before it counts as attached; wait for the preview.
+      await expect(page.locator('img[src^="blob:"]').first()).toBeVisible({ timeout: 15_000 });
+      await page.locator('input[name="price_now"]').fill("45000");
+      await page.locator('input[name="price_before"]').fill("60000");
+      await page.locator('input[name="quantity_available"]').fill("3");
+      await page.getByRole("button", { name: /^Publicar oferta$/ }).click();
 
-    await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}/, { timeout: 45_000 });
-    created.offerId = page.url().match(/\/ofertas\/([0-9a-f-]{36})/)![1];
+      await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}/, { timeout: 45_000 });
+      created.offerId = page.url().match(/\/ofertas\/([0-9a-f-]{36})/)![1];
+    }
     await expectVisibleText(page.locator("body"), offerTitle);
     await expectVisibleText(page.locator("body"), /45[\s.,]?000/);
     await expectHealthyPage(page);
