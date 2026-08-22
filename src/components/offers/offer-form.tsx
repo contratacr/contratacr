@@ -201,10 +201,14 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
   const locationCantons = getCantonsByProvince(locationProvince);
 
   function addFiles(nextFiles: FileList | null) {
-    if (!nextFiles) return;
+    // Copy the selection now: the input's FileList is live, and it is emptied
+    // the moment the input value is reset below — before React runs the
+    // deferred state updater. Reading it lazily attached nothing.
+    const picked = nextFiles ? Array.from(nextFiles) : [];
+    if (!picked.length) return;
     setFiles((current) => {
       const remaining = Math.max(0, 5 - existingImageUrls.length - current.length);
-      return [...current, ...Array.from(nextFiles).slice(0, remaining)];
+      return [...current, ...picked.slice(0, remaining)];
     });
     setFieldErrors((current) => ({ ...current, images: undefined }));
   }
