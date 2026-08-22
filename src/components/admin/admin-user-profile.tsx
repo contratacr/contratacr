@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cldThumb } from "@/lib/cloudinary";
 import {
   ArrowLeft, Loader2, ExternalLink, ShieldCheck, Headset, Flag, FolderOpen,
   CalendarDays, Ban, ShieldOff, Mail, Phone, IdCard, History,
@@ -38,6 +39,7 @@ type Application = { id: string; job_id: string; status: string; created_at: str
 type Job = { id: string; title: string; status: string; created_at: string; applications: number };
 type Offer = { id: string; title: string; status: string; price_now: number | null; currency: string | null; created_at: string };
 type Review = { id: string; rating: number; comment: string | null; moderation_status: string | null; created_at: string; client_name_snapshot: string | null };
+type ReceivedProject = { id: string; project_id: string | null; title: string; project_status: string | null; proposal_status: string; price: number | null; client_name: string | null; created_at: string };
 type LogRow = { id: string; action?: string; decision?: string; status?: string; note?: string; reason?: string; admin_name?: string; created_at: string };
 type Appeal = { id: string; message?: string; status?: string; created_at: string };
 type Report = { id: string; reason: string; status: string; reporter_email: string | null; created_at: string };
@@ -88,6 +90,7 @@ type Data = {
   offers?: Offer[];
   receivedBookings?: Booking[];
   receivedReviews?: Review[];
+  receivedProjects?: ReceivedProject[];
   verificationLog: LogRow[];
   appeals: Appeal[];
   reports: Report[];
@@ -282,6 +285,7 @@ export function AdminUserProfile({
   const offers = data.offers ?? [];
   const receivedBookings = data.receivedBookings ?? [];
   const receivedReviews = data.receivedReviews ?? [];
+  const receivedProjects = data.receivedProjects ?? [];
   const identityStatus = accountVerificationStatus(profile, pro);
   const isIdentityVerified = identityStatus === "verified";
   const isIdentityPending = identityStatus === "pending";
@@ -307,7 +311,7 @@ export function AdminUserProfile({
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+              <img src={cldThumb(profile.avatar_url, 128)} alt="" decoding="async" className="h-full w-full object-cover" />
             ) : getInitials(profile.full_name ?? "?")}
           </div>
           <div className="min-w-0 flex-1">
@@ -482,8 +486,9 @@ export function AdminUserProfile({
       {pro && (
         <>
           <Section icon={Inbox} title="Como profesional" sub="Lo que recibió y publicó">
-            <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-3 xl:grid-cols-6">
               <Tile label="Solicitudes recibidas" value={receivedBookings.length} />
+              <Tile label="Proyectos recibidos" value={receivedProjects.length} />
               <Tile label="Reseñas recibidas" value={receivedReviews.length} />
               <Tile label="Calificación" value={averageRating != null ? `${averageRating.toFixed(1)} ★` : "—"} />
               <Tile label="Empleos publicados" value={jobs.length} />
@@ -510,6 +515,10 @@ export function AdminUserProfile({
                     ))}
                   </ul>
                 )}
+              </div>
+              <div className="lg:border-t lg:border-[#f3f4f6]">
+                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Proyectos recibidos</p>
+                {receivedProjects.length === 0 ? <Empty text="Todavía no envió propuestas a proyectos." /> : <ul className="divide-y divide-[#f3f4f6]">{receivedProjects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.client_name ? `${p.client_name} · ` : ""}propuesta ${money(p.price, "CRC")} · ${fmt(p.created_at)}`} status={p.proposal_status} />)}</ul>}
               </div>
               <div className="lg:border-t lg:border-[#f3f4f6]">
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Empleos publicados</p>

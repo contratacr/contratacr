@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ScrollRail } from "@/components/ui/scroll-rail";
 import { X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -127,7 +128,7 @@ export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", 
           <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">{copy.title}</h1>
         </div>
         <div className="px-4 pb-3">{search}</div>
-        <div className="scrollbar-none flex gap-1.5 overflow-x-auto px-4 pb-4">{filters}</div>
+        <ScrollRail className="flex gap-1.5 px-4 pb-4">{filters}</ScrollRail>
       </section>
       <MarketplaceNavbarPortal>
         <section className="hidden h-full bg-transparent lg:block">

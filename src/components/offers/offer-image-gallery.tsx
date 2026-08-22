@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,8 +34,9 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
       <div className="relative grid min-h-[240px] place-items-center overflow-hidden rounded-lg bg-white sm:min-h-[320px] lg:min-h-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={activeImage}
+          src={cldLarge(activeImage, 1280)}
           alt={title}
+          decoding="async"
           className="max-h-[62vh] min-h-0 w-full object-contain sm:max-h-[520px] lg:aspect-[16/9] lg:max-h-[460px]"
         />
         {safeImages.length > 1 && (
@@ -75,7 +77,7 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
               )}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="h-full w-full object-contain p-1" />
+              <img src={cldThumb(url, 160)} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain p-1" />
             </button>
           ))}
         </div>

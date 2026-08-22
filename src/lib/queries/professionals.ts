@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { cldThumb } from "@/lib/cloudinary";
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deriveDisplayPricing, type PricingType } from "@/lib/pricing";
@@ -547,7 +548,7 @@ async function searchProfessionalsUncached(
         id: row.id,
         slug: row.slug,
         fullName: repairVisibleText(row.profiles?.full_name ?? "Profesional"),
-        avatarUrl: row.profiles?.avatar_url ?? null,
+        avatarUrl: row.profiles?.avatar_url ? cldThumb(row.profiles.avatar_url, 160) : undefined,
         categoryId: publicProfessions[0] ?? row.category_id ?? "",
         categoryIcon: "",
         professions: publicProfessions,
@@ -991,7 +992,7 @@ export async function getProfessionalBySlug(
         id: proRow.id,
         slug: proRow.slug,
         fullName: repairVisibleText((proRow.profiles as any)?.full_name ?? "Profesional"),
-        avatarUrl: (proRow.profiles as any)?.avatar_url ?? null,
+        avatarUrl: (proRow.profiles as any)?.avatar_url ? cldThumb((proRow.profiles as any).avatar_url, 160) : undefined,
         // category_id is a plain text column - no join needed
         categoryId: publicProfessions[0] ?? proRow.category_id ?? "",
         categoryIcon: "",

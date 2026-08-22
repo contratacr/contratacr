@@ -71,6 +71,22 @@ export function AdminQueue() {
   const [identityCounts, setIdentityCounts] = useState<Record<IdentityBucket, number>>({} as Record<IdentityBucket, number>);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [outreachBusy, setOutreachBusy] = useState(false);
+  const [outreachResult, setOutreachResult] = useState<string | null>(null);
+  async function contactPending() {
+    setOutreachBusy(true);
+    setOutreachResult(null);
+    try {
+      const res = await fetch("/api/admin/providers/outreach", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudo contactar.");
+      setOutreachResult(`${data.pending} pendientes · ${data.notified} avisados por app y correo por primera vez · WhatsApp: ${data.whatsappConfigured ? `${data.whatsapp} enviados, ${data.alreadyWhatsApp} ya contactados antes` : "plantilla no configurada todavía"}.`);
+    } catch (error) {
+      setOutreachResult(error instanceof Error ? error.message : "No se pudo contactar.");
+    } finally {
+      setOutreachBusy(false);
+    }
+  }
 
   const load = useCallback(async (s: string, silent = false) => {
     if (!silent) setLoading(true);
@@ -112,6 +128,16 @@ export function AdminQueue() {
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
         <h1 className="text-xl font-bold text-[#111827]">Verificación de identidad</h1>
+        <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => void contactPending()}
+          disabled={outreachBusy}
+          title="Envía a cada pendiente, una sola vez por canal, el aviso con lo que necesitamos para verificarlo (app + correo, y WhatsApp si la plantilla está aprobada)"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-3 text-xs font-semibold text-[#15803d] hover:bg-[#dcfce7] disabled:opacity-60"
+        >
+          {outreachBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />} Contactar pendientes
+        </button>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
           <input
@@ -121,7 +147,9 @@ export function AdminQueue() {
             className="h-9 w-72 rounded-lg border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
           />
         </div>
+        </div>
       </div>
+      {outreachResult && <p className="mb-4 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-2 text-sm text-[#166534]">{outreachResult}</p>}
 
       <AdminFilterTabs tabs={FILTERS.map((f) => ({ id: f.value, label: f.label }))} value={status} onChange={setStatus} counts={filterCounts} />
 

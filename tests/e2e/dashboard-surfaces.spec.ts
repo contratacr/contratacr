@@ -55,7 +55,7 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
       clientWidth: container.clientWidth,
       scrollWidth: container.scrollWidth,
       viewportWidth: document.documentElement.clientWidth,
-      buttons: Array.from(container.querySelectorAll("button")).map((button) => {
+      buttons: Array.from(container.querySelectorAll("button:not([data-rail-hint])")).map((button) => {
         const box = button.getBoundingClientRect();
         return { clientWidth: button.clientWidth, scrollWidth: button.scrollWidth, left: box.left, right: box.right };
       }),
@@ -72,7 +72,8 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
       expect(button.right, `Filter should end on screen (${page.url()})`).toBeLessThanOrEqual(geometry.viewportWidth + 1);
     }
 
-    const buttons = filter.getByRole("button");
+    // The rail's "more" chevron is not a filter; it only scrolls the rail.
+    const buttons = filter.locator("button:not([data-rail-hint])");
     await expect
       .poll(() => buttons.count(), {
         message: `Expected at least two populated filter buttons on ${page.url()}`,

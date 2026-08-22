@@ -281,12 +281,44 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
       await sendBrevoEmail({ to: profile.email, subject: "Para activar tu insignia de verificado en ContrataCR", html, replyTo: "soporte@contratacr.com" });
     }
 
-    const template = process.env.WHATSAPP_VERIFICATION_TEMPLATE;
-    if (template && pro.whatsapp) {
-      const result = await sendWhatsAppTemplate(pro.whatsapp, template, [firstName]);
-      if (result.status === "failed") console.warn("[verification] WhatsApp outreach failed", result.detail);
-    }
+    await sendVerificationWhatsAppOnce(professionalId, pro.whatsapp, firstName);
   } catch (error) {
     console.warn("[verification] outreach not sent", error instanceof Error ? error.message : error);
   }
+}
+
+// WhatsApp is tracked separately from the in-app/email notice: when the Meta
+// template gets approved later, the professionals already waiting still get
+// exactly one message. The verification log is the marker.
+export async function sendVerificationWhatsAppOnce(professionalId: string, whatsapp: string | null | undefined, firstName: string): Promise<"sent" | "skipped" | "already" | "failed"> {
+  const template = process.env.WHATSAPP_VERIFICATION_TEMPLATE;
+  if (!template || !whatsapp) return "skipped";
+  const admin = createAdminClient();
+  const { data: sentBefore } = await admin.from("provider_verification_log").select("id").eq("professional_id", professionalId).eq("action", "whatsapp_outreach").limit(1);
+  if (sentBefore && sentBefore.length) return "already";
+  const result = await sendWhatsAppTemplate(whatsapp, template, [firstName]);
+  if (result.status !== "sent") {
+    if (result.status === "failed") console.warn("[verification] WhatsApp outreach failed", result.detail);
+    return result.status === "failed" ? "failed" : "skipped";
+  }
+  await admin.from("provider_verification_log").insert({ professional_id: professionalId, action: "whatsapp_outreach", admin_name: "ContrataCR (automático)", reason: `Plantilla ${template}` });
+  return "sent";
+}
+
+// Admin button "Contactar pendientes": every professional still waiting gets
+// the first-contact notice (in-app + email once) and the WhatsApp template once.
+export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; whatsapp: number; alreadyWhatsApp: number }> {
+  const admin = createAdminClient();
+  const { data: pending } = await admin.from("professionals").select("id, whatsapp, profiles(full_name)").in("verification_status", ["pending", "under_appeal"]);
+  let notified = 0, whatsapp = 0, alreadyWhatsApp = 0;
+  for (const pro of pending ?? []) {
+    const { data: before } = await admin.from("notifications").select("id").eq("type", "verification_outreach").limit(1).eq("user_id", (await admin.from("professionals").select("profile_id").eq("id", pro.id).maybeSingle()).data?.profile_id ?? "00000000-0000-0000-0000-000000000000");
+    if (!before || !before.length) { await notifyVerificationOutreach(pro.id); notified += 1; }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const firstName = (((pro.profiles as any)?.full_name ?? "profesional") as string).split(" ")[0];
+    const wa = await sendVerificationWhatsAppOnce(pro.id, pro.whatsapp, firstName);
+    if (wa === "sent") whatsapp += 1;
+    if (wa === "already") alreadyWhatsApp += 1;
+  }
+  return { pending: (pending ?? []).length, notified, whatsapp, alreadyWhatsApp };
 }

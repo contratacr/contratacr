@@ -1,6 +1,8 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { cldLarge } from "@/lib/cloudinary";
+import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, Mail, MapPin, Menu, Phone, Store } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -368,9 +370,9 @@ export function OffersBoard({
             </h1>
           </div>
           <div className="px-4 pb-3">{renderSearch()}</div>
-          <div className="ccr-chip-row scrollbar-none flex gap-1.5 overflow-x-auto px-4 pb-4">
+          <ScrollRail className="ccr-chip-row flex gap-1.5 px-4 pb-4">
             {renderFilters()}
-          </div>
+          </ScrollRail>
           <div className="px-4 pb-3" data-testid="offers-mobile-sticky-actions">
             {renderActions()}
           </div>
@@ -528,8 +530,10 @@ function OfferImage({
     >
       {offer.image_urls[0] ? (
         <img
-          src={offer.image_urls[0]}
+          src={cldLarge(offer.image_urls[0], 640)}
           alt={offer.title}
+          loading="lazy"
+          decoding="async"
           className={`block h-full max-h-full w-full max-w-full rounded-lg ${large ? "object-cover" : "object-cover"}`}
         />
       ) : (

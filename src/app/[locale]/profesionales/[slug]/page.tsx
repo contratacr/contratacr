@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
@@ -463,7 +464,7 @@ export default function ProfilePage() {
                   closeLabel={locale === "en" ? "Close" : "Cerrar"}
                 >
                   <Avatar className="h-16 w-16 shrink-0 sm:h-[88px] sm:w-[88px]">
-                    <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
+                    <AvatarImage src={professional.avatarUrl ? cldThumb(professional.avatarUrl, 320) : undefined} loading="eager" alt={professional.fullName} className="object-cover" />
                     <AvatarFallback className="bg-[#EBF5FB] text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(professional.fullName)}</AvatarFallback>
                   </Avatar>
                 </ImagePreviewDialog>
@@ -659,10 +660,10 @@ export default function ProfilePage() {
 
                 {/* Tab bar */}
                 <div className="relative border-b border-[#e5e7eb] bg-white">
-                  <div
+                  <ScrollRail
                     role="tablist"
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
-                    className="flex overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    className="flex scroll-smooth"
                   >
                     {TABS.map(tab => (
                       <button
@@ -679,7 +680,7 @@ export default function ProfilePage() {
                         )}
                       </button>
                     ))}
-                  </div>
+                  </ScrollRail>
                 </div>
 
                 {/* Tab content */}
