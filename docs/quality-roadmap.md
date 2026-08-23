@@ -61,7 +61,13 @@ canton, including the empty ones); the services catalogue folds per category
 with professional counts. Analytics now records searches, job views,
 applications, offer views and assistant questions, each tagged web/native
 (migration 176, applied to test and production). `admin-smoke` exercises the
-new sections and the primary actions. Still open in Block A: `olvide-contrasena`.
+new sections and the primary actions.
+**Block A closed (2026-08-23).** `olvide-contrasena` was the last item: the two
+screens either side of the email were covered but not the trip between them.
+`auth-support.spec.ts` now walks it end to end with a disposable account —
+request on the real form, redeem the recovery token the email would carry, set
+the new password on the real screen, then prove the account changed: the new
+password signs in and the old one is refused.
 
 ### Block B — Visual truth (1–2 sessions)
 
