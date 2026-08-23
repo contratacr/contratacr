@@ -94,7 +94,7 @@ export async function WhyContratacr() {
                   <div className="relative" style={{ background: "#04060a", borderRadius: 53, padding: 8 }}>
                     <div className="relative overflow-hidden bg-white" style={{ borderRadius: 46 }}>
                       <Image
-                        src="/landing-professionals-search-current.jpg"
+                        src="/landing-professionals-search-current.webp"
                         alt="Resultados de profesionales en ContrataCR"
                         width={588}
                         height={1280}
