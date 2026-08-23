@@ -258,44 +258,6 @@ async function recordDelivery(
   }
 }
 
-/** Business-initiated WhatsApp messages outside a 24h window must use a Meta-approved
- *  template. `templateName` is the approved name; `parameters` fill its {{n}} slots. */
-export async function sendWhatsAppTemplate(
-  toPhone: string | undefined,
-  templateName: string,
-  parameters: string[],
-  language = "es"
-): Promise<{ status: DeliveryStatus; detail: string | null }> {
-  const token = process.env.WHATSAPP_CLOUD_TOKEN;
-  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  if (!token || !phoneId) return { status: "skipped", detail: "WhatsApp Cloud API not configured" };
-  if (!toPhone) return { status: "skipped", detail: "No phone on file" };
-  if (!templateName) return { status: "skipped", detail: "No template configured" };
-  const digits = toPhone.replace(/\D/g, "");
-  const to = digits.length === 8 ? `506${digits}` : digits;
-  try {
-    const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to,
-        type: "template",
-        template: {
-          name: templateName,
-          language: { code: language },
-          components: parameters.length ? [{ type: "body", parameters: parameters.map((text) => ({ type: "text", text })) }] : [],
-        },
-      }),
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) return { status: "failed", detail: `HTTP ${res.status} ${await res.text().catch(() => "")}` };
-    return { status: "sent", detail: null };
-  } catch (err) {
-    return { status: "failed", detail: String(err) };
-  }
-}
-
 export async function sendWhatsAppText(
   toPhone: string | undefined,
   body: string

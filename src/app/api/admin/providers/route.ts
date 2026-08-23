@@ -69,6 +69,20 @@ export async function GET(req: Request) {
     return "rejected";
   }
 
+  // When the owner writes a pending professional by WhatsApp from this queue the
+  // contact is logged, so the list can say who is still waiting for a first message.
+  const { data: contactLog } = await db
+    .from("provider_verification_log")
+    .select("professional_id, created_at")
+    .eq("action", "whatsapp_manual")
+    .order("created_at", { ascending: false })
+    .limit(1000);
+  const lastContact = new Map<string, string>();
+  for (const entry of contactLog ?? []) {
+    const key = entry.professional_id as string | null;
+    if (key && !lastContact.has(key)) lastContact.set(key, entry.created_at as string);
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const clientRows = ((profiles ?? []) as any[])
     .filter((profile) => !proByProfile.has(profile.id))
@@ -85,6 +99,7 @@ export async function GET(req: Request) {
       created_at: profile.created_at,
       role_label: "Cliente",
       detail_href: `/admin/usuarios/${profile.id}?from=verificacion`,
+      last_contacted_at: null,
       profiles: profile,
       ...identityInfo(profile.cedula),
     }));
@@ -95,12 +110,17 @@ export async function GET(req: Request) {
       account_id: pro.profiles?.id ?? null,
       role_label: "Cliente y profesional",
       detail_href: pro.profiles?.id ? `/admin/usuarios/${pro.profiles.id}?from=verificacion` : `/admin/proveedores/${pro.id}`,
+      last_contacted_at: lastContact.get(pro.id) ?? null,
       ...identityInfo(pro.profiles?.cedula),
     })),
     ...clientRows,
   ];
 
   const filtered = unified.filter((row) => {
+    if (status === "uncontacted") {
+      const waiting = row.verification_status === "pending" || row.verification_status === "under_appeal";
+      return waiting && !!row.whatsapp && !row.last_contacted_at;
+    }
     if (status === "all") return true;
     if (status === "pending") return row.verification_status === "pending" || row.verification_status === "under_appeal";
     return row.verification_status === status;
@@ -111,5 +131,12 @@ export async function GET(req: Request) {
   const identityCounts: Record<IdentityBucket, number> = { cedula: 0, juridica: 0, dimex: 0, nite: 0, manual: 0 };
   for (const row of unified) identityCounts[row.identity_type as IdentityBucket] += 1;
 
-  return NextResponse.json({ providers: filtered.slice(0, 200), counts, identityCounts });
+  const uncontacted = unified.filter(
+    (row) =>
+      (row.verification_status === "pending" || row.verification_status === "under_appeal") &&
+      !!row.whatsapp &&
+      !row.last_contacted_at
+  ).length;
+
+  return NextResponse.json({ providers: filtered.slice(0, 200), counts, identityCounts, uncontacted });
 }

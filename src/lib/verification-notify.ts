@@ -1,7 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrevoEmail } from "@/lib/email/send";
 import { sendNotificationPush } from "@/lib/push/notify";
-import { sendWhatsAppTemplate } from "@/lib/notifications";
 
 const PRO_LINK = "/es/dashboard/profesional?tab=profile&mode=offer&focus=verification";
 
@@ -233,9 +232,11 @@ function emailShell(
 // ── First contact when a professional lands in manual review ─────────────────
 // Sent once per account (the in-app notification doubles as the marker):
 // in-app + email always, WhatsApp only when an approved Meta template name is
-// configured (WHATSAPP_VERIFICATION_TEMPLATE) because business-initiated
-// WhatsApp messages cannot be free text. Asks only for what the account does
-// not hold yet — never for the name, cédula or phone already on file.
+// Asks only for what the account does not hold yet — never for the name,
+// cédula or phone already on file. WhatsApp is deliberately NOT sent from here:
+// business-initiated messages would need a Meta template, and replies to the
+// API number land in an inbox nobody reads. The owner writes those by hand from
+// the admin queue, where the message comes pre-written and the contact is logged.
 export async function notifyVerificationOutreach(professionalId: string): Promise<void> {
   try {
     const admin = createAdminClient();
@@ -280,45 +281,28 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
       );
       await sendBrevoEmail({ to: profile.email, subject: "Para activar tu insignia de verificado en ContrataCR", html, replyTo: "soporte@contratacr.com" });
     }
-
-    await sendVerificationWhatsAppOnce(professionalId, pro.whatsapp, firstName);
   } catch (error) {
     console.warn("[verification] outreach not sent", error instanceof Error ? error.message : error);
   }
 }
 
-// WhatsApp is tracked separately from the in-app/email notice: when the Meta
-// template gets approved later, the professionals already waiting still get
-// exactly one message. The verification log is the marker.
-export async function sendVerificationWhatsAppOnce(professionalId: string, whatsapp: string | null | undefined, firstName: string): Promise<"sent" | "skipped" | "already" | "failed"> {
-  const template = process.env.WHATSAPP_VERIFICATION_TEMPLATE;
-  if (!template || !whatsapp) return "skipped";
+// Admin button "Contactar pendientes": every professional still waiting gets the
+// first-contact notice in the app and by email, at most once each. Free, and the
+// answer lands in the support mailbox the owner actually reads.
+export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; alreadyNotified: number }> {
   const admin = createAdminClient();
-  const { data: sentBefore } = await admin.from("provider_verification_log").select("id").eq("professional_id", professionalId).eq("action", "whatsapp_outreach").limit(1);
-  if (sentBefore && sentBefore.length) return "already";
-  const result = await sendWhatsAppTemplate(whatsapp, template, [firstName]);
-  if (result.status !== "sent") {
-    if (result.status === "failed") console.warn("[verification] WhatsApp outreach failed", result.detail);
-    return result.status === "failed" ? "failed" : "skipped";
-  }
-  await admin.from("provider_verification_log").insert({ professional_id: professionalId, action: "whatsapp_outreach", admin_name: "ContrataCR (automático)", reason: `Plantilla ${template}` });
-  return "sent";
-}
-
-// Admin button "Contactar pendientes": every professional still waiting gets
-// the first-contact notice (in-app + email once) and the WhatsApp template once.
-export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; whatsapp: number; alreadyWhatsApp: number }> {
-  const admin = createAdminClient();
-  const { data: pending } = await admin.from("professionals").select("id, whatsapp, profiles(full_name)").in("verification_status", ["pending", "under_appeal"]);
-  let notified = 0, whatsapp = 0, alreadyWhatsApp = 0;
+  const { data: pending } = await admin.from("professionals").select("id, profile_id").in("verification_status", ["pending", "under_appeal"]);
+  let notified = 0, alreadyNotified = 0;
   for (const pro of pending ?? []) {
-    const { data: before } = await admin.from("notifications").select("id").eq("type", "verification_outreach").limit(1).eq("user_id", (await admin.from("professionals").select("profile_id").eq("id", pro.id).maybeSingle()).data?.profile_id ?? "00000000-0000-0000-0000-000000000000");
-    if (!before || !before.length) { await notifyVerificationOutreach(pro.id); notified += 1; }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const firstName = (((pro.profiles as any)?.full_name ?? "profesional") as string).split(" ")[0];
-    const wa = await sendVerificationWhatsAppOnce(pro.id, pro.whatsapp, firstName);
-    if (wa === "sent") whatsapp += 1;
-    if (wa === "already") alreadyWhatsApp += 1;
+    const { data: before } = await admin
+      .from("notifications")
+      .select("id")
+      .eq("type", "verification_outreach")
+      .eq("user_id", (pro.profile_id as string | null) ?? "00000000-0000-0000-0000-000000000000")
+      .limit(1);
+    if (before && before.length) { alreadyNotified += 1; continue; }
+    await notifyVerificationOutreach(pro.id);
+    notified += 1;
   }
-  return { pending: (pending ?? []).length, notified, whatsapp, alreadyWhatsApp };
+  return { pending: (pending ?? []).length, notified, alreadyNotified };
 }
