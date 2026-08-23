@@ -8,6 +8,7 @@ import {
   CheckCircle2, RotateCcw, XCircle, Clock3, MousePointerClick,
   Users, Trash2, Star, MessageCircle, Inbox,
 } from "lucide-react";
+import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { Link } from "@/i18n/navigation";
 import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -358,7 +359,7 @@ export function AdminUserProfile({
               )}
               {waHref && (
                 <a href={waHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-2 text-xs font-semibold text-[#15803d] hover:bg-[#dcfce7]">
-                  <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                  <WhatsAppLogo className="h-3.5 w-3.5" /> WhatsApp
                 </a>
               )}
               {profile.email && (

@@ -286,7 +286,7 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
   }
 }
 
-// Admin button "Contactar pendientes": every professional still waiting gets the
+// Admin button "Avisar por app y correo": every professional still waiting gets the
 // first-contact notice in the app and by email, at most once each. Free, and the
 // answer lands in the support mailbox the owner actually reads.
 export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; alreadyNotified: number }> {
