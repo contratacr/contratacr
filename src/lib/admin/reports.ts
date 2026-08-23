@@ -37,8 +37,21 @@ export type AdminInsights = {
   tracking: { since: string | null; events14d: number };
 };
 
+export type AcquisitionRow = { key: string; label: string; pros: number; clients: number; pros30: number; clients30: number };
+export type AcquisitionCampaign = { label: string; source: string; pros: number; clients: number };
+export type AdminAcquisition = {
+  // Registrations that carry an origin vs. those created before tracking existed.
+  tracked: number;
+  untracked: number;
+  tracked30: number;
+  untracked30: number;
+  since: string | null;
+  rows: AcquisitionRow[];
+  campaigns: AcquisitionCampaign[];
+};
 export type AdminReports = {
   insights: AdminInsights;
+  acquisition: AdminAcquisition;
   users: { total: number; clients: number; pros: number; verifiedPros: number; activeClients: number; reg30: RegPoint[] };
   pros: { total: number; verified: number; pending: number; unverified: number; rejected: number; byCategory: Count[]; byProvince: Count[]; traveling: number; fixed: number; withSchedule: number; withoutSchedule: number; withServices: number; withoutServices: number };
   activity: { solicitudesTotal: number; solicitudesByStatus: Count[]; solicitudesResponded: number; proyectosTotal: number; proyectosByStatus: Count[]; topCategories: Count[]; series30: ActPoint[] };
@@ -66,6 +79,24 @@ function tally(values: (string | null | undefined)[], labels: Record<string, str
   return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([k, value]) => ({ label: labels[k] ?? k, value }));
 }
 
+// Plain-language name for an origin. utm_source is free text chosen when the ad
+// link is built, so the common spellings are folded together; a paid medium
+// (utm_medium=paid|cpc|ads, or a click id) reads as "Anuncios en …".
+const SOURCE_NAMES: Record<string, string> = {
+  meta: "Meta", instagram: "Instagram", facebook: "Facebook", fb: "Facebook", ig: "Instagram",
+  tiktok: "TikTok", google: "Google", whatsapp: "WhatsApp", direct: "Directo", other: "Otros sitios",
+};
+const PAID_MEDIUMS = new Set(["paid", "cpc", "ads", "ad", "paid_social", "paidsocial", "ppc"]);
+function acquisitionLabel(source: string, medium: string | null): { key: string; label: string } {
+  const src = SOURCE_NAMES[source] ?? source;
+  const paid = !!medium && PAID_MEDIUMS.has(medium);
+  if (source === "direct") return { key: "direct", label: "Directo (sin enlace de origen)" };
+  if (source === "other") return { key: "other", label: "Otros sitios" };
+  if (paid) return { key: `${source}:paid`, label: `Anuncios en ${src}` };
+  if (medium === "organic" || !medium) return { key: `${source}:organic`, label: `${src} (orgánico)` };
+  return { key: `${source}:${medium}`, label: `${src} (${medium})` };
+}
+
 export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   const admin = createAdminClient();
   const now = Date.now();
@@ -79,6 +110,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       platform: { web: 0, native: 0 },
       tracking: { since: null, events14d: 0 },
     },
+    acquisition: { tracked: 0, untracked: 0, tracked30: 0, untracked30: 0, since: null, rows: [], campaigns: [] },
     users: { total: 0, clients: 0, pros: 0, verifiedPros: 0, activeClients: 0, reg30: days30.map((d) => ({ date: d, pros: 0, clients: 0 })) },
     pros: { total: 0, verified: 0, pending: 0, unverified: 0, rejected: 0, byCategory: [], byProvince: [], traveling: 0, fixed: 0, withSchedule: 0, withoutSchedule: 0, withServices: 0, withoutServices: 0 },
     activity: { solicitudesTotal: 0, solicitudesByStatus: [], solicitudesResponded: 0, proyectosTotal: 0, proyectosByStatus: [], topCategories: [], series30: days30.map((d) => ({ date: d, solicitudes: 0, proyectos: 0 })) },
@@ -146,6 +178,49 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       empty.pros.withSchedule = [...withSched].filter(Boolean).length;
       empty.pros.withoutSchedule = proRows.length - empty.pros.withSchedule;
     } catch { /* table missing */ }
+
+    // Where registrations come from (migration 177). Separate query so an older
+    // schema only empties this section.
+    try {
+      const { data: acq, error: acqError } = await admin
+        .from("profiles")
+        .select("id, role, created_at, acquisition_source, acquisition_medium, acquisition_campaign, acquisition_captured_at");
+      if (acqError) throw acqError;
+      const cut30 = now - 30 * DAY;
+      const rows = new Map<string, AcquisitionRow>();
+      const campaigns = new Map<string, AcquisitionCampaign>();
+      let since: string | null = null;
+      for (const profile of acq ?? []) {
+        const isPro = professionalProfileIds.has(profile.id);
+        const isClient = profile.role === "client" && !isPro;
+        if (!isPro && !isClient) continue;
+        const recent = new Date(profile.created_at as string).getTime() >= cut30;
+        const source = (profile.acquisition_source as string | null) ?? null;
+        if (!source) {
+          empty.acquisition.untracked += 1;
+          if (recent) empty.acquisition.untracked30 += 1;
+          continue;
+        }
+        empty.acquisition.tracked += 1;
+        if (recent) empty.acquisition.tracked30 += 1;
+        const captured = (profile.acquisition_captured_at as string | null) ?? (profile.created_at as string);
+        if (!since || captured < since) since = captured;
+        const { key, label } = acquisitionLabel(source, (profile.acquisition_medium as string | null) ?? null);
+        const row = rows.get(key) ?? { key, label, pros: 0, clients: 0, pros30: 0, clients30: 0 };
+        if (isPro) { row.pros += 1; if (recent) row.pros30 += 1; } else { row.clients += 1; if (recent) row.clients30 += 1; }
+        rows.set(key, row);
+        const campaign = (profile.acquisition_campaign as string | null) ?? null;
+        if (campaign) {
+          const ck = `${source}|${campaign}`;
+          const c = campaigns.get(ck) ?? { label: campaign, source: SOURCE_NAMES[source] ?? source, pros: 0, clients: 0 };
+          if (isPro) c.pros += 1; else c.clients += 1;
+          campaigns.set(ck, c);
+        }
+      }
+      empty.acquisition.since = since;
+      empty.acquisition.rows = [...rows.values()].sort((a, b) => (b.pros + b.clients) - (a.pros + a.clients));
+      empty.acquisition.campaigns = [...campaigns.values()].sort((a, b) => (b.pros + b.clients) - (a.pros + a.clients));
+    } catch { /* columns missing until migration 177 runs */ }
   } catch (e) { console.error("[reports] users/pros", e); }
 
   // ── Active clients (sent ≥1 solicitud) + marketplace activity ──

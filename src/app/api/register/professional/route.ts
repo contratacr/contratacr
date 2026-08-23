@@ -10,6 +10,7 @@ import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitTri
 import { anyVideoConsultCategory, getCategoryLabel, OTHER_CATEGORY } from "@/lib/data/categories";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
+import { attributionColumnsFromBody, withoutAttributionColumns } from "@/lib/analytics/attribution-server";
 import { sendNotificationPushRows } from "@/lib/push/notify";
 
 const INITIAL_OPPORTUNITY_NOTIFICATION_LIMIT = 10;
@@ -123,6 +124,7 @@ export async function POST(req: Request) {
   if (limited) return limited;
   try {
     const body = await req.json();
+    const attribution = attributionColumnsFromBody(body.attribution);
     const {
       category,
       professions: bodyProfessions,
@@ -278,11 +280,12 @@ export async function POST(req: Request) {
       ...(photoUrl ? { avatar_url: photoUrl } : {}),
       ...(cedula ? { cedula } : {}),
       ...writeSourceColumns(req),
+      ...(attribution ?? {}),
     };
 
     let { error: profileError } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" });
-    if (profileError && /created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(profileError.message)) {
-      const { created_source_host: _host, created_app_environment: _env, created_supabase_project_ref: _ref, ...legacyProfileRow } = profileRow;
+    if (profileError && /created_source|created_app|created_supabase|acquisition_|column|schema cache|PGRST204|could not find/i.test(profileError.message)) {
+      const { created_source_host: _host, created_app_environment: _env, created_supabase_project_ref: _ref, ...legacyProfileRow } = withoutAttributionColumns(profileRow);
       void _host; void _env; void _ref;
       ({ error: profileError } = await supabase.from("profiles").upsert(legacyProfileRow, { onConflict: "id" }));
     }
