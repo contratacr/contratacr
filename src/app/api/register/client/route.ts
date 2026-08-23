@@ -6,6 +6,7 @@ import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
+import { attributionColumnsFromBody, withoutAttributionColumns } from "@/lib/analytics/attribution-server";
 
 export async function POST(req: Request) {
   // Public endpoint: bound abuse and enumeration per client IP.
@@ -17,6 +18,7 @@ export async function POST(req: Request) {
     // service-request, not signup), and `profiles` has no provincia_id/canton_id
     // columns anyway — never write them here.
     const { fullName, phone, cedula, userId: bodyUserId } = body;
+    const attribution = attributionColumnsFromBody(body.attribution);
 
     const sessionClient = await createServerClient();
     const { data: { user: sessionUser } } = await sessionClient.auth.getUser();
@@ -52,11 +54,12 @@ export async function POST(req: Request) {
       ...(cedula ? { cedula: String(cedula).replace(/\D/g, "") } : {}),
       ...(phone ? { phone } : {}),
       ...writeSourceColumns(req),
+      ...(attribution ?? {}),
     };
 
     let { error: profileError } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" });
-    if (profileError && /created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(profileError.message)) {
-      const { created_source_host: _host, created_app_environment: _env, created_supabase_project_ref: _ref, ...legacyProfileRow } = profileRow;
+    if (profileError && /created_source|created_app|created_supabase|acquisition_|column|schema cache|PGRST204|could not find/i.test(profileError.message)) {
+      const { created_source_host: _host, created_app_environment: _env, created_supabase_project_ref: _ref, ...legacyProfileRow } = withoutAttributionColumns(profileRow);
       void _host; void _env; void _ref;
       ({ error: profileError } = await supabase.from("profiles").upsert(legacyProfileRow, { onConflict: "id" }));
     }
@@ -116,6 +119,8 @@ export async function POST(req: Request) {
         onboarding_completed: true,
         has_phone: !!phone,
         has_cedula: !!cedula,
+        acquisition_source: attribution?.acquisition_source ?? null,
+        acquisition_campaign: attribution?.acquisition_campaign ?? null,
       },
     });
 

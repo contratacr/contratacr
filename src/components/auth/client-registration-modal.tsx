@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { readAttribution } from "@/lib/analytics/attribution";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -318,7 +320,7 @@ export function ClientRegistrationModal({
         const res = await fetch("/api/register/client", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: signUpData.user.id, fullName: resolved }),
+          body: JSON.stringify({ userId: signUpData.user.id, fullName: resolved, attribution: readAttribution() }),
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok && json?.code === "cedula_taken") {
@@ -598,7 +600,13 @@ export function ClientRegistrationModal({
 
                 {/* STEP: otp */}
                 {step === "otp" && (
-                  <OtpStep email={email} onVerified={() => { handleClose(); onSuccess(); }} />
+                  <OtpStep email={email} onVerified={() => {
+                    // The account is only usable once the code is confirmed, so this is
+                    // the client-side conversion Meta optimises campaigns against.
+                    trackMetaEvent("CompleteRegistration", { content_name: "client_registration", status: "client" });
+                    handleClose();
+                    onSuccess();
+                  }} />
                 )}
 
               </div>

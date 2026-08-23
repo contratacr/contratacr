@@ -34,6 +34,7 @@ import { writeStoredMode } from "@/hooks/use-mode";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { readAttribution } from "@/lib/analytics/attribution";
 import { PanelSwitch } from "@/components/dashboard/panel-toggle-row";
 
 // Category data lives in src/lib/data/categories.ts (single source of truth).
@@ -838,6 +839,7 @@ export default function RegisterProfessionalPage() {
           userId,
           email: userEmail,
           fullName,
+          attribution: readAttribution(),
           businessName: limitText(businessName.trim(), NAME_MAX_LENGTH) || null,
           publicBusinessNameOnly: !!businessName.trim() && publicBusinessNameOnly,
           cedula: skipCedula ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (accountCedula || oauthCedula ? (accountCedula || oauthCedula).replace(/\D/g, "") : null)),
@@ -900,7 +902,12 @@ export default function RegisterProfessionalPage() {
         status: "professional",
       });
       const welcomeParams = opportunityCount > 0 ? `&welcomeOpportunities=1&welcomeOpportunityCount=${opportunityCount}` : "";
-      window.location.href = `/${locale}/dashboard/profesional?mode=offer${welcomeParams}`;
+      // The pixel sends its beacon asynchronously; a hard navigation on the very
+      // next tick could cancel it, and the registration would never reach Meta.
+      // The loader is already on screen, so the pause is invisible.
+      window.setTimeout(() => {
+        window.location.href = `/${locale}/dashboard/profesional?mode=offer${welcomeParams}`;
+      }, 300);
       return;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t("errTitle");

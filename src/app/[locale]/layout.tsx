@@ -13,6 +13,7 @@ import { OperationalStatusBanner } from "@/components/status/operational-status-
 import { getOperationalStatusBanner } from "@/lib/status/runtime-status";
 import { AuthProvider } from "@/hooks/use-auth";
 import { MetaPixel } from "@/components/analytics/meta-pixel";
+import { AttributionCapture } from "@/components/analytics/attribution-capture";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
@@ -167,6 +168,7 @@ export default async function LocaleLayout({
         <OperationalStatusBanner locale={locale} status={operationalStatus} />
         <Suspense fallback={null}>
           <MetaPixel pixelId={META_PIXEL_ID} />
+          <AttributionCapture />
         </Suspense>
         <PushTokenManager />
         {children}

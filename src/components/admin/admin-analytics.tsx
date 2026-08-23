@@ -1,6 +1,6 @@
-import { ArrowDownRight, ArrowUpRight, Headset, MapPinned, Minus, Search, Smartphone, UserCheck, Users } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Headset, MapPinned, Megaphone, Minus, Search, Smartphone, UserCheck, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import type { AdminReports, Count, WeekCompare } from "@/lib/admin/reports";
+import type { AdminAcquisition, AdminReports, Count, WeekCompare } from "@/lib/admin/reports";
 
 // Analítica reads like a weekly note from an analyst, not a dashboard of
 // charts: what changed this week, where people drop off on their way to a
@@ -118,6 +118,79 @@ function Ranked({ items, color }: { items: Count[]; color: string }) {
   );
 }
 
+// One row per origin with the split the owner decides budgets on: how many
+// professionals and how many clients each channel brought, last 30 days and
+// since tracking began. Campaign names come straight from utm_campaign.
+function Acquisition({ data }: { data: AdminAcquisition }) {
+  const since = data.since ? new Date(data.since).toLocaleDateString("es-CR", { day: "numeric", month: "short", year: "numeric" }) : null;
+  const total30 = data.tracked30 + data.untracked30;
+  if (data.tracked === 0) {
+    return (
+      <p className="text-sm text-[#94a3b8]">
+        Todavía no hay registros con origen. Se empiezan a guardar con cada cuenta nueva; las {data.untracked.toLocaleString("es-CR")} cuentas anteriores quedan como &ldquo;sin dato&rdquo;.
+      </p>
+    );
+  }
+  return (
+    <div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-[11px] uppercase tracking-wide text-[#94a3b8]">
+              <th className="pb-2 font-semibold">Origen</th>
+              <th className="pb-2 text-right font-semibold" colSpan={2}>Últimos 30 días</th>
+              <th className="pb-2 text-right font-semibold" colSpan={2}>Desde el inicio</th>
+            </tr>
+            <tr className="text-right text-[11px] text-[#94a3b8]">
+              <th />
+              <th className="pb-1 font-medium">Profesionales</th>
+              <th className="pb-1 font-medium">Clientes</th>
+              <th className="pb-1 font-medium">Profesionales</th>
+              <th className="pb-1 font-medium">Clientes</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f1f5f9]">
+            {data.rows.map((row) => (
+              <tr key={row.key}>
+                <td className="py-2 pr-3 font-semibold text-[#0f172a]">{row.label}</td>
+                <td className="py-2 text-right tabular-nums text-[#0f172a]">{row.pros30.toLocaleString("es-CR")}</td>
+                <td className="py-2 text-right tabular-nums text-[#0f172a]">{row.clients30.toLocaleString("es-CR")}</td>
+                <td className="py-2 text-right tabular-nums text-[#64748b]">{row.pros.toLocaleString("es-CR")}</td>
+                <td className="py-2 text-right tabular-nums text-[#64748b]">{row.clients.toLocaleString("es-CR")}</td>
+              </tr>
+            ))}
+            {data.untracked > 0 && (
+              <tr>
+                <td className="py-2 pr-3 text-[#94a3b8]">Sin dato (cuentas anteriores al seguimiento)</td>
+                <td className="py-2 text-right tabular-nums text-[#94a3b8]" colSpan={2}>{data.untracked30.toLocaleString("es-CR")}</td>
+                <td className="py-2 text-right tabular-nums text-[#94a3b8]" colSpan={2}>{data.untracked.toLocaleString("es-CR")}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {data.campaigns.length > 0 && (
+        <div className="mt-4">
+          <p className="mb-2 text-xs font-semibold text-[#334155]">Por campaña (utm_campaign)</p>
+          <ul className="divide-y divide-[#f1f5f9]">
+            {data.campaigns.map((c) => (
+              <li key={`${c.source}|${c.label}`} className="flex items-center justify-between gap-3 py-1.5 text-sm">
+                <span className="min-w-0 truncate text-[#0f172a]">{c.label} <span className="text-[11px] text-[#94a3b8]">· {c.source}</span></span>
+                <span className="shrink-0 text-xs tabular-nums text-[#64748b]"><strong className="text-[#0f172a]">{c.pros}</strong> prof. · <strong className="text-[#0f172a]">{c.clients}</strong> clientes</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="mt-3 text-xs text-[#64748b]">
+        {since ? `Se guarda el origen desde el ${since}. ` : ""}
+        {total30 > 0 && `De las ${total30.toLocaleString("es-CR")} cuentas de los últimos 30 días, ${data.tracked30.toLocaleString("es-CR")} traen origen. `}
+        Para que una campaña aparezca con nombre, el enlace del anuncio debe llevar <code className="rounded bg-[#f1f5f9] px-1">?utm_source=meta&amp;utm_medium=paid&amp;utm_campaign=nombre</code>. Los clics desde anuncios de Meta o TikTok sin utm se reconocen igual por su identificador de clic.
+      </p>
+    </div>
+  );
+}
+
 export function AdminAnalytics({ data }: { data: AdminReports }) {
   const { users, pros, activity, support, insights } = data;
   const week = insights.week;
@@ -146,6 +219,10 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
         <p className="mt-3 text-xs text-[#64748b]">
           En total hay <strong className="text-[#0f172a]">{users.total.toLocaleString("es-CR")}</strong> cuentas: {users.pros.toLocaleString("es-CR")} profesionales ({users.verifiedPros.toLocaleString("es-CR")} verificados) y {users.clients.toLocaleString("es-CR")} clientes, de los cuales {users.activeClients.toLocaleString("es-CR")} ya enviaron al menos una solicitud.
         </p>
+      </Section>
+
+      <Section icon={Megaphone} title="De dónde vienen los registros" sub="Qué canal trajo a cada profesional y cliente · sirve para saber qué campaña vale la pena repetir">
+        <Acquisition data={data.acquisition} />
       </Section>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
