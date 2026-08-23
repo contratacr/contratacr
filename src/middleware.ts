@@ -49,6 +49,18 @@ export async function middleware(request: NextRequest) {
   // silently flip the site to English. Temporary (307) because the target
   // depends on the cookie (a user can switch locale anytime); SEO canonical-
   // ization is handled by the page metadata, not the redirect status.
+  // Vanity bio links (see next.config redirects — this middleware runs first on
+  // OpenNext, so they must be resolved here or the locale redirect swallows them).
+  const VANITY: Record<string, string> = {
+    "/ig": "/es?utm_source=instagram&utm_medium=organic&utm_campaign=bio",
+    "/tt": "/es?utm_source=tiktok&utm_medium=organic&utm_campaign=bio",
+    "/fb": "/es?utm_source=facebook&utm_medium=organic&utm_campaign=bio",
+    "/wa": "/es?utm_source=whatsapp&utm_medium=referral&utm_campaign=bio",
+  };
+  if (VANITY[pathname]) {
+    return NextResponse.redirect(new URL(VANITY[pathname], request.url), 307);
+  }
+
   const hasLocalePrefix = /^\/(?:es|en)(?:\/|$)/.test(pathname);
   if (!hasLocalePrefix) {
     const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;
