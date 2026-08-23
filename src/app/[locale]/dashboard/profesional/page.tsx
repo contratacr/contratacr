@@ -460,7 +460,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
           </div>
           <div className="aspect-square rounded-xl bg-[#eef2f6] p-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/ai-assistant-robot.png" alt="" className="h-full w-full object-contain" />
+            <img src="/brand/ai-assistant-robot.webp" alt="" className="h-full w-full object-contain" />
           </div>
         </div>
         <p className="mt-3 text-sm font-bold text-[#111827]">{t("preview.cases.caseTitle")}</p>

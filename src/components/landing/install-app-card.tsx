@@ -211,7 +211,7 @@ function ScreenshotGuide({ platform }: { platform: InstallPlatform }) {
           {
             title: t("androidStep1Title"),
             body: t("androidStep1Body"),
-            image: "/install-guide/install-android-step-1.jpg",
+            image: "/install-guide/install-android-step-1.webp",
             width: 576,
             height: 1280,
             targetClassName: "right-[3.2%] top-[4.8%] h-[4.1%] w-[8.4%] rounded-full",
@@ -220,7 +220,7 @@ function ScreenshotGuide({ platform }: { platform: InstallPlatform }) {
           {
             title: t("androidStep2Title"),
             body: t("androidStep2Body"),
-            image: "/install-guide/install-android-step-2.jpg",
+            image: "/install-guide/install-android-step-2.webp",
             width: 576,
             height: 1280,
             targetClassName: "left-[35.2%] top-[68.25%] h-[5.9%] w-[58.8%] rounded-2xl",
@@ -229,7 +229,7 @@ function ScreenshotGuide({ platform }: { platform: InstallPlatform }) {
           {
             title: t("androidStep3Title"),
             body: t("androidStep3Body"),
-            image: "/install-guide/install-android-step-3.jpg",
+            image: "/install-guide/install-android-step-3.webp",
             width: 576,
             height: 1280,
             targetClassName: "left-[5.4%] top-[74.6%] h-[8.35%] w-[89.2%] rounded-2xl",
@@ -240,7 +240,7 @@ function ScreenshotGuide({ platform }: { platform: InstallPlatform }) {
           {
             title: t("iosStep1Title"),
             body: t("iosStep1Body"),
-            image: "/install-guide/install-ios-step-1.jpg",
+            image: "/install-guide/install-ios-step-1.webp",
             width: 588,
             height: 1280,
             targetClassName: "bottom-[3.45%] right-[7.8%] h-[6.15%] w-[13.2%] rounded-full",
@@ -249,7 +249,7 @@ function ScreenshotGuide({ platform }: { platform: InstallPlatform }) {
           {
             title: t("iosStep2Title"),
             body: t("iosStep2Body"),
-            image: "/install-guide/install-ios-step-2.jpg",
+            image: "/install-guide/install-ios-step-2.webp",
             width: 588,
             height: 1280,
             targetClassName: "left-[30.2%] top-[52.05%] h-[5.45%] w-[56.6%] rounded-2xl",
@@ -258,7 +258,7 @@ function ScreenshotGuide({ platform }: { platform: InstallPlatform }) {
           {
             title: t("iosStep3Title"),
             body: t("iosStep3Body"),
-            image: "/install-guide/install-ios-step-3.jpg",
+            image: "/install-guide/install-ios-step-3.webp",
             width: 588,
             height: 1280,
             targetClassName: "left-[4.2%] top-[50.55%] h-[6.75%] w-[91.5%] rounded-2xl",

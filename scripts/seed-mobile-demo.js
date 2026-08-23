@@ -267,7 +267,7 @@ const contratacrPortfolioItems = [
     description: "Construcci\u00f3n de mensajer\u00eda interna, conversaciones por contexto, soporte tipo chat, estados de no le\u00eddo, archivado y composer mobile inspirado en patrones modernos para que el usuario pueda coordinar sin salir de ContrataCR.",
     recipient: "ContrataCR",
     date: "2026",
-    photos: [`${appUrl}/logo-wordmark-transparent.png`, `${appUrl}/brand/ai-assistant-robot.png`],
+    photos: [`${appUrl}/logo-wordmark-transparent.png`, `${appUrl}/brand/ai-assistant-robot.webp`],
     likes: 9
   },
   {
