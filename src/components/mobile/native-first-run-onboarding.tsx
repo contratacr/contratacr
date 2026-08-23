@@ -19,7 +19,7 @@ import {
 type Role = "client" | "professional";
 
 const ROLE_IMAGES: Record<Role, string> = {
-  client: "/mobile/contratacr-welcome-client-v1.png",
+  client: "/mobile/contratacr-welcome-client-v1.webp",
   professional: "/mobile/contratacr-welcome-professional-v1.webp",
 };
 

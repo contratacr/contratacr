@@ -172,7 +172,7 @@ function RobotMark({ compact = false }: { compact?: boolean }) {
   return (
     <div className={cn("relative shrink-0", compact ? "h-12 w-12" : "h-[72px] w-[72px]")} aria-hidden>
       <Image
-        src="/brand/ai-assistant-robot.png"
+        src="/brand/ai-assistant-robot.webp"
         alt=""
         width={96}
         height={96}
@@ -545,7 +545,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <div className="-my-2 -ml-1.5 h-[58px] w-[58px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.png" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
+          <div className="-my-2 -ml-1.5 h-[58px] w-[58px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.webp" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
             <h2 className="truncate text-[14px] font-black text-[#102746] min-[380px]:text-[15px] sm:text-lg">{copy.title}</h2>
           </div>
@@ -569,7 +569,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
         <div ref={scrollRef} data-ai-concierge-messages className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-[linear-gradient(180deg,#fbfdff_0%,#ffffff_100%)] px-4 py-5 overscroll-contain sm:px-6">
           {messages.map((message, index) => (
             <div key={`${message.role}-${index}`} className={cn("flex items-end gap-2 sm:items-start sm:gap-3", message.role === "user" && "justify-end")}>
-              {message.role === "assistant" && <div className="mb-5 h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm sm:mb-0 sm:mt-1 sm:h-11 sm:w-11"><Image src="/brand/ai-assistant-robot.png" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>}
+              {message.role === "assistant" && <div className="mb-5 h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm sm:mb-0 sm:mt-1 sm:h-11 sm:w-11"><Image src="/brand/ai-assistant-robot.webp" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>}
               <div className={cn("min-w-0 max-w-[82%] space-y-2.5", message.role === "user" && "flex flex-col items-end")}>
                 <div className={cn(
                   "whitespace-pre-line rounded-[22px] px-4 py-3.5 text-[15px] leading-relaxed shadow-[0_8px_24px_-18px_rgba(15,45,80,0.55)]",
@@ -614,7 +614,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           {messages.length === 0 && (
             <div className="space-y-4">
               <div className="flex flex-col items-center px-2 text-center">
-                <div className="h-20 w-20"><Image src="/brand/ai-assistant-robot.png" alt="" width={128} height={128} className="h-full w-full object-contain drop-shadow-[0_12px_18px_rgba(0,99,189,0.18)]" /></div>
+                <div className="h-20 w-20"><Image src="/brand/ai-assistant-robot.webp" alt="" width={128} height={128} className="h-full w-full object-contain drop-shadow-[0_12px_18px_rgba(0,99,189,0.18)]" /></div>
                 <h3 className="mt-1 text-[19px] font-black leading-tight text-[#102746]">{copy.emptyTitle}</h3>
                 <p className="mt-1.5 max-w-[19rem] text-[13px] font-medium leading-relaxed text-[#5c718c]">{copy.emptySubtitle}</p>
               </div>
@@ -647,7 +647,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
 
           {loading && (
             <div className="flex gap-3">
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm"><Image src="/brand/ai-assistant-robot.png" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm"><Image src="/brand/ai-assistant-robot.webp" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>
               <div className="inline-flex items-center gap-2 rounded-[22px] rounded-bl-md border border-[#dbe7f0] bg-white px-4 py-3 text-sm font-semibold text-[#607693] shadow-sm">
                 <Loader2 className="h-4 w-4 animate-spin text-[#0b7fe8]" />{copy.thinking}
               </div>
