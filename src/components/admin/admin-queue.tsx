@@ -12,7 +12,8 @@ import {
 } from "@/lib/verification";
 import { formatId } from "@/lib/cedula";
 import { getInitials } from "@/lib/utils";
-import { MessageCircle } from "lucide-react";
+import { Mail } from "lucide-react";
+import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
@@ -168,9 +169,9 @@ export function AdminQueue() {
           onClick={() => void contactPending()}
           disabled={outreachBusy}
           title="Envía a cada pendiente, una sola vez, el aviso en la app y por correo con lo que necesitamos para verificarlo. El WhatsApp se escribe a mano desde cada fila."
-          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-3 text-xs font-semibold text-[#15803d] hover:bg-[#dcfce7] disabled:opacity-60"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#e5e7eb] bg-white px-3 text-xs font-semibold text-[#374151] hover:bg-[#f9fafb] disabled:opacity-60"
         >
-          {outreachBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />} Contactar pendientes
+          {outreachBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Avisar por app y correo
         </button>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
@@ -259,7 +260,7 @@ export function AdminQueue() {
                         : "border-[#bbf7d0] bg-[#f0fdf4] text-[#15803d] hover:bg-[#dcfce7]"
                     }`}
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <WhatsAppLogo className="h-4 w-4" />
                     <span className="hidden md:inline">{contactedAgo(r.last_contacted_at) ?? "WhatsApp"}</span>
                   </a>
                 )}
