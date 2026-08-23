@@ -30,3 +30,22 @@ export function cldThumb(url: string, size = 400): string {
 export function cldLarge(url: string, max = 1280): string {
   return withTransform(url, `f_auto,q_auto,c_limit,w_${max}`);
 }
+
+/** Next's image optimizer is a pass-through on Cloudflare Workers: it cannot
+ *  re-encode, so it hands back whatever Cloudinary was asked for — the same
+ *  1600px JPEG on a phone as on a desktop. Giving `Image` this loader puts the
+ *  width back in Cloudinary's hands, where `f_auto` also picks WebP or AVIF:
+ *  ~80 KB on a phone instead of ~382 KB, in one hop instead of two.
+ *  Non-Cloudinary sources are returned untouched. */
+export function cloudinaryImageLoader({ src, width, quality }: { src: string; width: number; quality?: number }): string {
+  const marker = "/image/upload/";
+  const at = src.indexOf(marker);
+  if (!src.startsWith("https://res.cloudinary.com/") || at < 0) return src;
+  const base = src.slice(0, at + marker.length);
+  const rest = src.slice(at + marker.length);
+  // Drop an existing transform segment (comma-separated `x_y` params) so the
+  // requested width wins; a version segment (v123…) and the public id stay.
+  const segments = rest.split("/");
+  if (segments.length > 1 && /^[a-z]+_[^/]*$/.test(segments[0]) && !/^v\d+$/.test(segments[0])) segments.shift();
+  return `${base}f_auto,q_${quality ?? "auto"},w_${width}/${segments.join("/")}`;
+}

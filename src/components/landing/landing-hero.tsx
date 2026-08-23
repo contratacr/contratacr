@@ -7,7 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { cloudinaryAssetUrl } from "@/lib/cloudinary";
+import { cloudinaryAssetUrl, cloudinaryImageLoader } from "@/lib/cloudinary";
 import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { loadGoogleMaps } from "@/lib/maps/loader";
@@ -32,6 +32,7 @@ const ROTATING_LINES: Record<string, string[]> = {
    it's provided; nothing else needs to change. Placeholder = a local service
    professional at work (never a foreign-looking house). */
 const HERO_IMAGE = {
+  // The loader rewrites this width per device; 1600 is only the desktop ceiling.
   src: cloudinaryAssetUrl("contratacr/home/hero-sanjose.jpg", "f_auto,q_auto,w_1600"),
   alt: "Vista de la ciudad de San José, Costa Rica al atardecer",
   // A 32px blurred copy of the same photo, inlined so the arch shows the picture
@@ -774,6 +775,7 @@ export function LandingHero() {
             className="object-cover object-center"
             priority
             fetchPriority="high"
+            loader={cloudinaryImageLoader}
             placeholder="blur"
             blurDataURL={HERO_IMAGE.blurDataURL}
             sizes="(min-width:860px) 800px, 100vw"

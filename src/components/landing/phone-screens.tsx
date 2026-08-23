@@ -365,7 +365,7 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
             viewSchedule={copy.viewSchedule}
           />
           <ProCard
-            rank={3} initials="TC" image="/featured-brands/tecnoclima.png" company="Tecnoclima" profession="Aire acondicionado"
+            rank={3} initials="TC" image="/featured-brands/tecnoclima.webp" company="Tecnoclima" profession="Aire acondicionado"
             place="Provincia de Alajuela" address="Toda la provincia de Alajuela" rating="5.0" reviews={copy.reviews(1)}
             price={copy.priceOnRequest} verified={copy.verified}
             viewSchedule={copy.viewSchedule} noScheduleNote={copy.noScheduleNote}

@@ -2,15 +2,15 @@ import Image from "next/image";
 import { getLocale } from "next-intl/server";
 
 const FEATURED_BRANDS = [
-  { name: "TECNOCLIMA", src: "/featured-brands/tecnoclima.png", crop: "featured-brand-logo--tecnoclima" },
-  { name: "SG Solutions", src: "/featured-brands/sg-solutions.png", crop: "featured-brand-logo--sg" },
-  { name: "Terapia Física Andrés Arguedas Guerrero", src: "/featured-brands/terapia-fisica.png", crop: "featured-brand-logo--terapia" },
-  { name: "EasySA Consultoría", src: "/featured-brands/easysa.png", crop: "featured-brand-logo--easysa" },
-  { name: "BH Legal", src: "/featured-brands/bh-legal.png", crop: "featured-brand-logo--bh" },
-  { name: "Ley Total Abogados", src: "/featured-brands/ley-total-abogados.png", crop: "featured-brand-logo--ley-total" },
-  { name: "J Logo", src: "/featured-brands/j-logo.png", crop: "featured-brand-logo--j" },
-  { name: "+Kotas Pet Shop", src: "/featured-brands/kotas-pet-shop.png", crop: "featured-brand-logo--kotas" },
-  { name: "Titanium Fitness", src: "/featured-brands/t-corporate-logo.png", crop: "featured-brand-logo--titanium" },
+  { name: "TECNOCLIMA", src: "/featured-brands/tecnoclima.webp", crop: "featured-brand-logo--tecnoclima" },
+  { name: "SG Solutions", src: "/featured-brands/sg-solutions.webp", crop: "featured-brand-logo--sg" },
+  { name: "Terapia Física Andrés Arguedas Guerrero", src: "/featured-brands/terapia-fisica.webp", crop: "featured-brand-logo--terapia" },
+  { name: "EasySA Consultoría", src: "/featured-brands/easysa.webp", crop: "featured-brand-logo--easysa" },
+  { name: "BH Legal", src: "/featured-brands/bh-legal.webp", crop: "featured-brand-logo--bh" },
+  { name: "Ley Total Abogados", src: "/featured-brands/ley-total-abogados.webp", crop: "featured-brand-logo--ley-total" },
+  { name: "J Logo", src: "/featured-brands/j-logo.webp", crop: "featured-brand-logo--j" },
+  { name: "+Kotas Pet Shop", src: "/featured-brands/kotas-pet-shop.webp", crop: "featured-brand-logo--kotas" },
+  { name: "Titanium Fitness", src: "/featured-brands/t-corporate-logo.webp", crop: "featured-brand-logo--titanium" },
 ] as const;
 
 export async function FeaturedBrands() {
