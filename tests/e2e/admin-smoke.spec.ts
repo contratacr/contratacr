@@ -324,4 +324,41 @@ test.describe("@admin surfaces", () => {
       await cleanupDisposableAccount(account);
     }
   });
+
+  // WhatsApp outreach for verification is written by hand from this queue (business
+  // -initiated templates would leave replies in an inbox nobody reads). What the
+  // panel automates is the tally: who is still waiting for a first message.
+  test("the verification queue records who was already written to by WhatsApp", async ({ page }) => {
+    test.skip(!canRunSeededRegression(), "Needs the seeded regression environment.");
+    const account = await createDisposableAccount({ prefix: "admin-outreach", admin: true });
+    const admin = regressionAdminClient();
+    let loggedProfessionalId: string | null = null;
+    try {
+      await loginAdmin(page, account);
+
+      const before = await (await page.request.get("/api/admin/providers?status=uncontacted")).json();
+      const target = (before.providers ?? [])[0];
+      test.skip(!target, "No pending professional with a WhatsApp number to contact.");
+      expect(target.last_contacted_at ?? null).toBeNull();
+
+      const marked = await page.request.post("/api/admin/providers/contacted", { data: { professionalId: target.id } });
+      expect(marked.status()).toBe(200);
+      loggedProfessionalId = target.id;
+
+      // The stamp is what moves the row out of "still waiting for a first message".
+      const after = await (await page.request.get("/api/admin/providers?status=pending")).json();
+      const row = (after.providers ?? []).find((candidate: { id: string }) => candidate.id === target.id);
+      expect(row?.last_contacted_at).toBeTruthy();
+      expect(after.uncontacted).toBe((before.uncontacted ?? 0) - 1);
+
+      // Still pending review: writing to someone does not verify them.
+      expect(row?.verification_status === "pending" || row?.verification_status === "under_appeal").toBe(true);
+      await expectHealthyPage(page);
+    } finally {
+      if (loggedProfessionalId) {
+        await admin.from("provider_verification_log").delete().eq("professional_id", loggedProfessionalId).eq("action", "whatsapp_manual");
+      }
+      await cleanupDisposableAccount(account);
+    }
+  });
 });

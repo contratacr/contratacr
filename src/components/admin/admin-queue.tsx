@@ -30,6 +30,7 @@ type Row = {
   category_id: string | null;
   professions: string[] | null;
   created_at: string;
+  last_contacted_at?: string | null;
   profiles: { full_name?: string; email?: string; cedula?: string; avatar_url?: string } | null;
 };
 
@@ -45,11 +46,22 @@ const IDENTITY_FILTERS: { id: IdentityBucket; label: string }[] = [
 
 const FILTERS: { value: string; label: string }[] = [
   { value: "pending", label: "Pendientes de revisión" },
+  { value: "uncontacted", label: "Sin contactar por WhatsApp" },
   { value: "under_appeal", label: "Apelaciones (tickets)" },
   { value: "verified", label: "Verificados" },
   { value: "rejected", label: "Rechazados" },
   { value: "all", label: "Todos" },
 ];
+
+function contactedAgo(iso?: string | null): string | null {
+  if (!iso) return null;
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return "Contactado hoy";
+  if (days === 1) return "Contactado ayer";
+  if (days < 30) return `Contactado hace ${days} días`;
+  const months = Math.floor(days / 30);
+  return `Contactado hace ${months} ${months === 1 ? "mes" : "meses"}`;
+}
 
 // The verification message asks for what the account does not already hold:
 // a selfie with the ID, proof of the trade and a recent job. Never the data
@@ -71,6 +83,7 @@ export function AdminQueue() {
   const [identityCounts, setIdentityCounts] = useState<Record<IdentityBucket, number>>({} as Record<IdentityBucket, number>);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [uncontacted, setUncontacted] = useState(0);
   const [outreachBusy, setOutreachBusy] = useState(false);
   const [outreachResult, setOutreachResult] = useState<string | null>(null);
   async function contactPending() {
@@ -80,11 +93,29 @@ export function AdminQueue() {
       const res = await fetch("/api/admin/providers/outreach", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "No se pudo contactar.");
-      setOutreachResult(`${data.pending} pendientes · ${data.notified} avisados por app y correo por primera vez · WhatsApp: ${data.whatsappConfigured ? `${data.whatsapp} enviados, ${data.alreadyWhatsApp} ya contactados antes` : "plantilla no configurada todavía"}.`);
+      setOutreachResult(`${data.pending} pendientes · ${data.notified} avisados por primera vez (app y correo) · ${data.alreadyNotified} ya lo habían recibido antes. El WhatsApp se envía a mano desde el botón verde de cada fila.`);
     } catch (error) {
       setOutreachResult(error instanceof Error ? error.message : "No se pudo contactar.");
     } finally {
       setOutreachBusy(false);
+    }
+  }
+
+  async function markContacted(professionalId: string) {
+    const stamp = new Date().toISOString();
+    setRows((current) => current.map((row) => (row.id === professionalId ? { ...row, last_contacted_at: stamp } : row)));
+    setUncontacted((current) => Math.max(0, current - 1));
+    try {
+      // keepalive: the click also opens WhatsApp, and a plain fetch would be
+      // cancelled the moment the browser leaves or switches away from the page.
+      await fetch("/api/admin/providers/contacted", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ professionalId }),
+        keepalive: true,
+      });
+    } catch {
+      // The message was already sent by hand; a failed log is not worth interrupting.
     }
   }
 
@@ -96,6 +127,7 @@ export function AdminQueue() {
       setRows(data.providers ?? []);
       setCounts(data.counts ?? {});
       setIdentityCounts(data.identityCounts ?? {});
+      setUncontacted(data.uncontacted ?? 0);
     } catch {
       setRows([]);
     } finally {
@@ -118,9 +150,11 @@ export function AdminQueue() {
       f.value,
       f.value === "all"
         ? VERIFICATION_STATUSES.reduce((sum, s) => sum + (counts[s] ?? 0), 0)
-        : f.value === "pending"
-          ? (counts.pending ?? 0) + (counts.under_appeal ?? 0)
-          : counts[f.value] ?? 0,
+        : f.value === "uncontacted"
+          ? uncontacted
+          : f.value === "pending"
+            ? (counts.pending ?? 0) + (counts.under_appeal ?? 0)
+            : counts[f.value] ?? 0,
     ]),
   );
 
@@ -133,7 +167,7 @@ export function AdminQueue() {
           type="button"
           onClick={() => void contactPending()}
           disabled={outreachBusy}
-          title="Envía a cada pendiente, una sola vez por canal, el aviso con lo que necesitamos para verificarlo (app + correo, y WhatsApp si la plantilla está aprobada)"
+          title="Envía a cada pendiente, una sola vez, el aviso en la app y por correo con lo que necesitamos para verificarlo. El WhatsApp se escribe a mano desde cada fila."
           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-3 text-xs font-semibold text-[#15803d] hover:bg-[#dcfce7] disabled:opacity-60"
         >
           {outreachBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />} Contactar pendientes
@@ -216,11 +250,17 @@ export function AdminQueue() {
                     href={verificationWhatsAppHref(r)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => void markContacted(r.id)}
                     aria-label="Escribir por WhatsApp para verificar"
-                    title="Escribir por WhatsApp para verificar"
-                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-2.5 text-xs font-semibold text-[#15803d] hover:bg-[#dcfce7]"
+                    title={contactedAgo(r.last_contacted_at) ?? "Escribir por WhatsApp para verificar"}
+                    className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold ${
+                      r.last_contacted_at
+                        ? "border-[#e5e7eb] bg-white text-[#6b7280] hover:bg-[#f9fafb]"
+                        : "border-[#bbf7d0] bg-[#f0fdf4] text-[#15803d] hover:bg-[#dcfce7]"
+                    }`}
                   >
-                    <MessageCircle className="h-4 w-4" /><span className="hidden md:inline">WhatsApp</span>
+                    <MessageCircle className="h-4 w-4" />
+                    <span className="hidden md:inline">{contactedAgo(r.last_contacted_at) ?? "WhatsApp"}</span>
                   </a>
                 )}
                 <Link href={r.detail_href ?? `/admin/proveedores/${r.id}`} aria-label="Abrir" className="shrink-0 text-[#9ca3af] hover:text-[#0f172a]"><ChevronRight className="h-4 w-4" /></Link>
