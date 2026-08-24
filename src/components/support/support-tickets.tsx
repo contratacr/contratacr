@@ -1,5 +1,7 @@
 "use client";
 
+import { isNativeAppRuntime } from "@/hooks/use-native-app";
+
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, SendHorizontal, User, Shield, Plus, Clock3 } from "lucide-react";
@@ -134,11 +136,12 @@ export function SupportTickets({
   }, []);
 
   useLayoutEffect(() => {
-    if ((!openId && !showNewTicketPage) || !window.matchMedia("(max-width: 1023px)").matches) return;
+    const native = isNativeAppRuntime();
+    if ((!openId && !(showNewTicketPage && native)) || !window.matchMedia("(max-width: 1023px)").matches) return;
     const root = document.documentElement;
     const body = document.body;
     root.classList.add("contratacr-chat-thread-open");
-    body.classList.add("contratacr-chat-thread-open");
+    if (native) body.classList.add("contratacr-chat-thread-open");
     const releaseBodyScroll = lockBodyScroll();
     return () => {
       root.classList.remove("contratacr-chat-thread-open");

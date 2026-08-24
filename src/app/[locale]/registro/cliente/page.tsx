@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { Link, useRouter } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/layout/navbar";
@@ -357,13 +357,8 @@ export default function RegisterClientPage() {
               <Button type="submit" size="lg" className="w-full mt-1" loading={submitting} disabled={submitting}>
                 {submitting ? t("creating") : user ? t("saveContinue") : t("createFree")}
               </Button>
-              {!user && (
-                <p className="text-center text-xs leading-relaxed text-[#8a9aab]">
-                  Al crear una cuenta, aceptas los <Link href="/terminos" className="font-semibold text-[#009FD9]">Términos</Link> y la <Link href="/privacidad" className="font-semibold text-[#009FD9]">Política de Privacidad</Link> de ContrataCR.
-                </p>
-              )}
 
-              <p className="sr-only">
+              <p className="text-center text-xs text-[#9ca3af]">
                 {t.rich("terms", {
                   terms: (c) => <a href="/terminos" className="underline hover:text-[#374151]">{c}</a>,
                   privacy: (c) => <a href="/privacidad" className="underline hover:text-[#374151]">{c}</a>,

@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "ContrataCR",
   webDir: "mobile-web",
   server: {
-    url: "https://test.contratacr.com/es",
+    url: "https://contratacr.com/es",
     allowNavigation: [
       "contratacr.com",
       "*.contratacr.com",

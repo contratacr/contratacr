@@ -67,6 +67,7 @@
 }
 
 .ccr-native-app .ccr-page-route-loading {
+  z-index: 100000;
   background: #f4f7fa !important;
 }
 
@@ -1202,12 +1203,15 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     bottom: auto;
     left: var(--app-visual-viewport-left);
     z-index: 110;
-    height: var(--app-visual-viewport-height) !important;
-    max-height: var(--app-visual-viewport-height) !important;
+    height: var(--app-visual-viewport-height);
     width: var(--app-visual-viewport-width);
     min-height: 0;
     border-radius: 0;
     overscroll-behavior: none;
+  }
+  html.ccr-native-app.contratacr-chat-thread-open .direct-chat-shell--thread {
+    height: var(--app-visual-viewport-height) !important;
+    max-height: var(--app-visual-viewport-height) !important;
   }
 
   .contratacr-chat-thread-open .ccr-support-thread {
@@ -1218,12 +1222,16 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     left: var(--app-visual-viewport-left);
     z-index: 110;
     width: var(--app-visual-viewport-width);
-    height: var(--app-visual-viewport-height) !important;
+    height: var(--app-visual-viewport-height);
     min-height: 0;
-    max-height: var(--app-visual-viewport-height) !important;
+    max-height: var(--app-visual-viewport-height);
     overflow: hidden;
     overscroll-behavior: none;
     background: #fff;
+  }
+  html.ccr-native-app.contratacr-chat-thread-open .ccr-support-thread {
+    height: var(--app-visual-viewport-height) !important;
+    max-height: var(--app-visual-viewport-height) !important;
   }
 
   html[data-keyboard-open] .ccr-support-thread-composer {
@@ -1489,9 +1497,12 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 
 .featured-brands-ribbon {
   overflow: hidden;
-  border-bottom: 0;
+  border-bottom: 1px solid #dfe7ef;
   background: #fff;
   padding-block: 0.55rem var(--ccr-native-content-end-gap, 0.55rem);
+}
+.ccr-native-app .featured-brands-ribbon {
+  border-bottom: 0;
 }
 
 .featured-brands-marquee {
@@ -1719,15 +1730,27 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   pointer-events: none;
 }
 /* Desktop dissolves the sheet (display: contents), so the apron never paints there. */
-\n
 /* /buscar on phones: the page under the results panel never pans or rubber-bands. */
 body.ccr-search-sheet-page {
   overscroll-behavior-y: none;
 }
-\n
 /* Inside the results panel header the chip rail pans sideways only; vertical
    movement belongs to the panel drag, so the browser must not claim it. */
 .ccr-search-bottom-sheet [data-rail-trim],
 .ccr-search-bottom-sheet .overflow-x-auto {
   touch-action: pan-x;
+}
+
+/* Inside the app the empty search state fills the sheet; the website keeps its fixed floor. */
+.ccr-native-app [data-search-empty-state] {
+  min-height: 100%;
+}
+/* The error screen covers the native shell; on the website it is a normal page. */
+.ccr-native-app .ccr-error-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  min-height: 100dvh;
+  overflow-y: auto;
+  padding-top: max(3rem, env(safe-area-inset-top));
 }

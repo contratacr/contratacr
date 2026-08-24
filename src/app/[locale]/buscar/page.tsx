@@ -492,7 +492,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {/* Results list */}
             <div className="min-w-0">
               {allResults.length === 0 ? (
-                <div data-search-empty-state className="-mx-4 flex min-h-full w-[calc(100%+2rem)] flex-col items-center justify-center bg-white px-6 py-16 text-center lg:mx-0 lg:min-h-[24rem] lg:w-full lg:rounded-2xl lg:border lg:px-8 lg:py-20">
+                <div data-search-empty-state className="-mx-4 flex min-h-[18rem] w-[calc(100%+2rem)] flex-col items-center justify-center bg-white px-6 py-16 text-center lg:mx-0 lg:min-h-[24rem] lg:w-full lg:rounded-2xl lg:border lg:px-8 lg:py-20">
                   <div className="mb-4 flex justify-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF5FB]">
                       <Search className="h-8 w-8 text-[#009FD9]" />

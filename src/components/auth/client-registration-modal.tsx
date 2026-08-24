@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useNativeApp } from "@/hooks/use-native-app";
+
+import { useState, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -203,6 +205,7 @@ export function ClientRegistrationModal({
   const t = useTranslations("clientRegModal");
   const tRp = useTranslations("resetPassword");
   const locale = useLocale();
+  const nativeApp = useNativeApp();
   const [view, setView] = useState<ModalView>("register");
   const [step, setStep] = useState<RegisterStep>("identity");
 
@@ -619,8 +622,7 @@ export function ClientRegistrationModal({
             <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0 flex flex-col gap-3">
               {/* Actions */}
               {view === "register" ? (
-                <div className="space-y-3">
-                  <div className="flex gap-3">
+                <div className="flex gap-3">
                   {step !== "identity" && (
                     <Button
                       variant="outline"
@@ -654,17 +656,17 @@ export function ClientRegistrationModal({
                       ? submitting ? t("creatingAccount") : t("createAccount")
                       : <>{t("continue")} <ArrowRight className="h-4 w-4" /></>}
                   </Button>
-                  </div>
-                  {step === "password" && (
-                    <p className="text-center text-xs leading-relaxed text-[#8a94a6]">
-                      {t.rich("terms", {
-                        terms: (chunks) => <Link className="font-medium text-[#00a8e0] hover:underline" href={`/${locale}/terminos`}>{chunks}</Link>,
-                        privacy: (chunks) => <Link className="font-medium text-[#00a8e0] hover:underline" href={`/${locale}/privacidad`}>{chunks}</Link>,
-                      })}
-                    </p>
-                  )}
                 </div>
               ) : null}
+              {view === "register" && step === "password" && (
+                <p className="text-center text-xs text-[#9ca3af] mt-3">
+                  {t.rich("terms", {
+                    // Inside the app the legal pages open in place (a new tab would leave the app).
+                    terms: (c) => nativeApp ? <Link href={`/${locale}/terminos`} className="underline hover:text-[#374151]">{c}</Link> : <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
+                    privacy: (c) => nativeApp ? <Link href={`/${locale}/privacidad`} className="underline hover:text-[#374151]">{c}</Link> : <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
+                  })}
+                </p>
+              )}
               {view === "login" && (
                 <div className="flex gap-3">
                   <Button variant="outline" size="md" onClick={() => { setView("register"); setError(null); }}>

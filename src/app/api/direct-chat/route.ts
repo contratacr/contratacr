@@ -3,6 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { limitTrimmedText } from "@/lib/text-limits";
 import { validateDirectMessage } from "@/lib/moderation/messages";
+
+// Messages written inside the app are moderated and, when the other person
+// has no app, announced by email; the website keeps the behaviour it always
+// had. The native shell marks its requests with the ccr_platform cookie.
+function isNativeRequest(req: Request) {
+  return /(?:^|;\s*)ccr_platform=native(?:;|$)/.test(req.headers.get("cookie") ?? "");
+}
 import { sendNotificationPush } from "@/lib/push/notify";
 import { sendBrevoEmail } from "@/lib/email/send";
 import { notifyRecipientOutsideApp, usersWithActivePush } from "@/lib/direct-chat/outside-app-notify";
@@ -200,8 +207,11 @@ export async function POST(req: Request) {
   const proposalId = String(body.proposalId ?? "");
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
   const message = limitTrimmedText(body.message, 2000);
-  const moderation = validateDirectMessage(message);
-  if (!moderation.ok) return NextResponse.json({ error: moderation.error }, { status: 422 });
+  const nativeRequest = isNativeRequest(req);
+  if (nativeRequest) {
+    const moderation = validateDirectMessage(message);
+    if (!moderation.ok) return NextResponse.json({ error: moderation.error }, { status: 422 });
+  }
   const initialMessage = limitTrimmedText(body.initialMessage, 2000);
   const openConversation = body.openConversation === true;
   const hasRawAttachments = Array.isArray(body.attachmentUrls) && body.attachmentUrls.length > 0;
@@ -341,7 +351,7 @@ export async function POST(req: Request) {
   const priorUnread = Number(
     (recipientIsProfessional ? conversation.professional_unread_count : conversation.client_unread_count) ?? 0,
   );
-  if (priorUnread === 0) {
+  if (nativeRequest && priorUnread === 0) {
     const reachable = await usersWithActivePush(db, [recipientId]);
     if (!reachable.has(recipientId)) {
       const [{ data: senderProfile }, { data: senderProfessional }] = await Promise.all([

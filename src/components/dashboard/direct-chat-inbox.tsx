@@ -9,6 +9,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
@@ -149,6 +150,7 @@ export function DirectChatInbox() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const nativeApp = useNativeApp();
   const userId = user?.id ?? null;
   const initialPendingDraft = useMemo(() => buildPendingDraft(searchParams, user?.id, isEn), [isEn, searchParams, user?.id]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -198,7 +200,7 @@ export function DirectChatInbox() {
     const root = document.documentElement;
     const body = document.body;
     root.classList.add("contratacr-chat-thread-open");
-    body.classList.add("contratacr-chat-thread-open");
+    if (isNativeAppRuntime()) body.classList.add("contratacr-chat-thread-open");
     const releaseBodyScroll = lockBodyScroll();
     return () => {
       root.classList.remove("contratacr-chat-thread-open");
@@ -291,6 +293,11 @@ export function DirectChatInbox() {
       }
       if (showArchived) {
         setArchivedCount(json.conversations?.length ?? 0);
+      } else {
+        fetch("/api/direct-chat?status=archived", { cache: "no-store" })
+          .then((archivedRes) => archivedRes.ok ? archivedRes.json() : { conversations: [] })
+          .then((archivedJson) => setArchivedCount(Array.isArray(archivedJson.conversations) ? archivedJson.conversations.length : 0))
+          .catch(() => setArchivedCount(0));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load messages." : "No se pudieron cargar los mensajes.");
@@ -602,18 +609,9 @@ export function DirectChatInbox() {
   const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
   const deleteLabel = isEn ? "Delete" : "Eliminar";
   const activePersonName = activePerson?.name || "";
-  // Be honest about delivery: push only reaches installed apps, everyone else is
-  // told by email (professionals also by WhatsApp) the moment the first message lands.
   const otherHasApp = active
     ? (activePerson?.role === "professional" ? active.professional_has_app : active.client_has_app)
     : undefined;
-  const deliveryHint = !active || active.id.startsWith("__") || otherHasApp === undefined
-    ? null
-    : otherHasApp
-      ? (isEn ? "Gets notified in the app" : "Recibe avisos en la app")
-      : activePerson?.role === "professional"
-        ? (isEn ? "No app yet: notified by email and WhatsApp" : "Sin la app: le avisamos por correo y WhatsApp")
-        : (isEn ? "No app yet: notified by email" : "Sin la app: le avisamos por correo");
   // Last resort after a full day without an answer from a professional who is
   // not in the app: let the client continue on WhatsApp instead of losing them.
   const whatsappEscape = (() => {
@@ -649,7 +647,7 @@ export function DirectChatInbox() {
           <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>
         </div>
         <div className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
-          {!showArchived && (
+          {!showArchived && (nativeApp || archivedCount > 0) && (
             <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e7eef3] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
                 <Archive className="h-5 w-5" />
@@ -679,7 +677,7 @@ export function DirectChatInbox() {
                 {activePerson.name}
               </button>
             ) : (
-              <p className="text-[15px] font-extrabold leading-tight text-[#162543] line-clamp-2 lg:truncate">{activePerson?.name}</p>
+              <p className={nativeApp ? "text-[15px] font-extrabold leading-tight text-[#162543] line-clamp-2 lg:truncate" : "truncate text-[15px] font-extrabold leading-tight text-[#162543]"}>{activePerson?.name}</p>
             )}
             {active && activeContext && activeContext.type !== "profile" && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
             {activeContextTitle && <p className="mt-0.5 line-clamp-1 text-xs font-semibold leading-snug text-[#63748a] sm:line-clamp-2">{activeContextTitle}</p>}
@@ -689,7 +687,7 @@ export function DirectChatInbox() {
               </button>
             )}
           </div>
-          <ChatActionButton label={isEn ? "Report and block" : "Reportar y bloquear"} onClick={() => setReportOpen(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Flag className="h-4 w-4" /></ChatActionButton>
+          {nativeApp && <ChatActionButton label={isEn ? "Report and block" : "Reportar y bloquear"} onClick={() => setReportOpen(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Flag className="h-4 w-4" /></ChatActionButton>}
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
           {showArchived && (
             <ChatActionButton label={deleteLabel} onClick={() => void deleteArchivedActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
@@ -774,7 +772,7 @@ export function DirectChatInbox() {
             );
           })}
         </div>
-        {whatsappEscape && (
+        {nativeApp && whatsappEscape && (
           <div className="border-t border-[#e3ebf1] bg-[#fffbeb] px-4 py-2.5 text-xs font-semibold text-[#8a6d1f]">
             <p>{isEn ? "No reply in the app for over a day." : "Más de un día sin respuesta en la app."}</p>
             <a href={whatsappEscape} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#25D366] px-3 text-[13px] font-extrabold text-white">
@@ -866,7 +864,7 @@ export function DirectChatInbox() {
           </div>
         </form>
       </section>
-      {reportOpen && typeof document !== "undefined" && createPortal(
+      {nativeApp && reportOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[1000] grid place-items-center bg-[#0f172a]/55 p-4" role="dialog" aria-modal="true" aria-labelledby="chat-report-title">
           <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
             <div className="flex items-start justify-between gap-3">

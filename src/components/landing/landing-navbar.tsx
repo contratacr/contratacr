@@ -1463,7 +1463,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Menu className="h-5 w-5 stroke-[2.5]" />
                 </button>
 
-                <Link href="/" aria-label="ContrataCR inicio" className="mr-auto flex shrink-0 items-center justify-start">
+                <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
                   {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
                 </Link>
 
@@ -2103,11 +2103,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
-                <Link href="/empleos" onClick={(event) => navigateNativeMarketplace(event, "/empleos")} className={mobileDrawerItemClass}>
+                <Link href="/empleos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/empleos"); }} className={mobileDrawerItemClass}>
                   <DrawerIcon><Briefcase /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                 </Link>
-                <Link href="/ofertas" onClick={(event) => navigateNativeMarketplace(event, "/ofertas")} className={mobileDrawerItemClass}>
+                <Link href="/ofertas" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/ofertas"); }} className={mobileDrawerItemClass}>
                   <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
                 </Link>
