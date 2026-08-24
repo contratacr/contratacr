@@ -1,5 +1,7 @@
 "use client";
 
+import { ProgressiveImage } from "@/components/ui/progressive-image";
+
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { cldLarge } from "@/lib/cloudinary";
 import { ScrollRail } from "@/components/ui/scroll-rail";
@@ -548,12 +550,12 @@ function OfferImage({
       className={`${large ? "aspect-[16/8] w-full rounded-lg bg-[#f3f7fa]" : "h-11 w-11 shrink-0 sm:h-12 sm:w-12"} relative overflow-hidden`}
     >
       {offer.image_urls[0] ? (
-        <img
+        <ProgressiveImage
           src={cldLarge(offer.image_urls[0], 640)}
           alt={offer.title}
-          loading="lazy"
-          decoding="async"
-          className={`block h-full max-h-full w-full max-w-full rounded-lg ${large ? "object-cover" : "object-cover"}`}
+          fit="cover"
+          wrapperClassName="block h-full max-h-full w-full max-w-full rounded-lg"
+          className="rounded-lg"
         />
       ) : (
         <span className="grid h-full place-items-center rounded-lg bg-[#f3f7fa] text-xs font-extrabold text-[#009fd9]">

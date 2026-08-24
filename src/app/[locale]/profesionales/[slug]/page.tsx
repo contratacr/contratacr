@@ -44,6 +44,7 @@ import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 import { PageRouteLoading } from "@/components/ui/route-loading";
 import { ProfileStickyActions } from "@/components/professionals/profile-sticky-actions";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -751,8 +752,7 @@ export default function ProfilePage() {
                                       imageClassName="sm:max-w-[900px]"
                                     >
                                       <span className="flex aspect-[16/7] w-full items-center justify-center overflow-hidden border-b border-[#e8edf2] bg-white p-3">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={cldLarge(serviceImageUrl, 900)} alt={title} loading="lazy" className="h-full w-full object-contain" />
+                                        <ProgressiveImage src={cldLarge(serviceImageUrl, 900)} alt={title} fit="contain" wrapperClassName="h-full w-full" />
                                       </span>
                                     </ImagePreviewDialog>
                                   )}
@@ -853,12 +853,7 @@ export default function ProfilePage() {
                             >
                               <div className="flex h-40 items-center justify-center overflow-hidden border-b border-[#edf1f5] bg-white p-3 sm:h-44 sm:p-4">
                                 {cover ? (
-                                  <img
-                                    src={cldLarge(cover, 900)}
-                                    alt={offer.title}
-                                    loading="lazy"
-                                    className="h-full w-full object-contain"
-                                  />
+                                  <ProgressiveImage src={cldLarge(cover, 900)} alt={offer.title} fit="contain" wrapperClassName="h-full w-full" />
                                 ) : (
                                   <BadgePercent className="h-9 w-9 text-[#009FD9]" />
                                 )}

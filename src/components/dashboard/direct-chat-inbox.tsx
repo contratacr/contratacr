@@ -17,6 +17,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { readCachedConversations, storeConversations } from "@/lib/direct-chat/conversations-cache";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
@@ -728,8 +729,7 @@ export function DirectChatInbox() {
                             aria-label={isEn ? `Open ${attachment.name}` : `Abrir ${attachment.name}`}
                           >
                             {href ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={href} alt={attachment.name} className="max-h-72 min-h-36 w-full object-cover" />
+                              <ProgressiveImage src={href} alt={attachment.name} fit="cover" wrapperClassName="block w-full" className="max-h-72 min-h-36" />
                             ) : (
                               <span className="grid min-h-36 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></span>
                             )}

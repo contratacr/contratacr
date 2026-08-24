@@ -4,6 +4,7 @@ import { useState } from "react";
 import { categoryImageUrl, categoryGroupId } from "@/lib/data/category-images";
 import { getCategoryGroupVisual } from "@/lib/data/category-group-visuals";
 import { cn } from "@/lib/utils";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 // The service's visual identity: a real catalog photo when available, else a branded
 // gradient + the shared group icon. A small icon badge overlays every card.
@@ -19,8 +20,7 @@ export function ServiceImage({ categoryId, className, badge = true }: { category
       style={showPhoto ? undefined : { backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}
     >
       {showPhoto ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-cover" />
+        <ProgressiveImage src={url} alt="" fit="cover" onError={() => setFailed(true)} wrapperClassName="h-full w-full" />
       ) : (
         <div className="flex h-full w-full items-center justify-center">
           <Icon className="h-[34%] w-[34%] text-white/85" strokeWidth={1.5} />

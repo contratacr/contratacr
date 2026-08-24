@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cldThumb, cldLarge } from "@/lib/cloudinary";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 // Client-facing work gallery: a grid of optimized Cloudinary thumbnails that
 // open a larger lightbox/carousel. Sizes are URL transforms (no stored copies).
@@ -37,8 +38,7 @@ export function ProfileGallery({ urls }: { urls: string[] }) {
             onClick={() => setIndex(i)}
             className="aspect-square rounded-xl overflow-hidden border border-[#e5e7eb] hover:opacity-90 transition-opacity"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={cldThumb(url, 400)} alt={t("workAlt", { n: i + 1 })} loading="lazy" className="w-full h-full object-cover" />
+            <ProgressiveImage src={cldThumb(url, 400)} alt={t("workAlt", { n: i + 1 })} fit="cover" wrapperClassName="h-full w-full" />
           </button>
         ))}
       </div>
@@ -57,11 +57,14 @@ export function ProfileGallery({ urls }: { urls: string[] }) {
               <ChevronLeft className="h-8 w-8" />
             </button>
           )}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <ProgressiveImage
+            key={urls[index]}
             src={cldLarge(urls[index], 1280)}
             alt={t("workAlt", { n: index + 1 })}
-            className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg"
+            fit="contain"
+            priority
+            wrapperClassName="inline-block bg-transparent"
+            className="max-h-[85vh] max-w-[90vw] rounded-lg"
             onClick={(e) => e.stopPropagation()}
           />
           {urls.length > 1 && (

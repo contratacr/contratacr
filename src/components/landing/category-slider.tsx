@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { RevealImage } from "@/components/ui/progressive-image";
 import { Link } from "@/i18n/navigation";
 
 const CATEGORIES = [
@@ -189,7 +189,7 @@ export function CategorySlider() {
                     : "0 2px 12px rgba(0,0,0,0.1)",
               }}
             >
-              <Image
+              <RevealImage
                 src={cat.src}
                 alt={cat.label}
                 fill
