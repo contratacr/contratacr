@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
@@ -275,7 +275,16 @@ export default function LoginPage() {
   // destination from the session (flow=native: no code to exchange). No hop
   // through <project>.supabase.co, so Google's screen names our domain. The
   // redirect flow above stays as the fallback when Google's library cannot load.
+  // Back from Google's window: cover the form at once. If no credential arrives
+  // (they cancelled), uncover after a moment.
+  const googleCredentialSeen = useRef(false);
+  function handleGoogleReturn() {
+    setLeaving(true);
+    window.setTimeout(() => { if (!googleCredentialSeen.current) setLeaving(false); }, 2500);
+  }
+
   async function handleGoogleCredential(idToken: string, nonce: string) {
+    googleCredentialSeen.current = true;
     // Google's window has just closed: cover the form right now, not after the
     // token exchange — the person must never see the login screen again.
     setLeaving(true);
@@ -393,6 +402,7 @@ export default function LoginPage() {
               locale={locale}
               disabled={googleLoading}
               onCredential={handleGoogleCredential}
+              onReturn={handleGoogleReturn}
               fallback={
                 <button
                   type="button"

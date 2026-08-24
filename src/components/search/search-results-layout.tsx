@@ -204,19 +204,32 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     return () => window.removeEventListener("ccr:set-search-view", setSearchView);
   }, []);
 
-  // Draggable bottom sheet (mobile)
+  // Draggable bottom sheet (mobile). Anywhere on the header is a drag surface —
+  // handle, filter chips, count — the way Yelp's panel behaves. A press that does
+  // not move stays a tap (the chip still opens); the drag only takes over once the
+  // finger has travelled a few pixels, and only then captures the pointer.
+  const pendingPointerRef = useRef<{ id: number; y: number; h: number; at: number } | null>(null);
   function onHandleDown(e: React.PointerEvent) {
+    if (e.pointerType === "touch") return; // touch is handled by the panel's own listeners
     const target = e.target as HTMLElement;
-    const interactive = target.closest("button, a, input, select, textarea");
-    if (interactive && !target.closest("[data-sheet-drag-handle]")) return;
+    if (target.closest("input, select, textarea")) return;
+    pendingPointerRef.current = { id: e.pointerId, y: e.clientY, h: heightFr, at: performance.now() };
+  }
+  function beginHandleDrag(e: React.PointerEvent, pending: { id: number; y: number; h: number; at: number }) {
+    pendingPointerRef.current = null;
     draggingRef.current = true;
     setDragging(true);
-    startRef.current = { y: e.clientY, h: heightFr };
-    dragStartedAtRef.current = performance.now();
-    curRef.current = heightFr;
-    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* noop */ }
+    startRef.current = { y: pending.y, h: pending.h };
+    dragStartedAtRef.current = pending.at;
+    curRef.current = pending.h;
+    try { (e.currentTarget as HTMLElement).setPointerCapture(pending.id); } catch { /* noop */ }
   }
   function onHandleMove(e: React.PointerEvent) {
+    const pending = pendingPointerRef.current;
+    if (pending && !draggingRef.current) {
+      if (Math.abs(e.clientY - pending.y) < 6) return;
+      beginHandleDrag(e, pending);
+    }
     if (!draggingRef.current) return;
     const vh = window.innerHeight || 1;
     const snapPoints = mobileSheetSnapPoints();
@@ -229,36 +242,39 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     // height would force the browser to recalculate every result card.
     if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${Math.max(0, max - h) * 100}dvh, 0)`;
   }
+  // Where a released gesture lands. A short but deliberate move (≥12px) or a flick
+  // goes to the next state in that direction — Yelp-style, the panel answers the
+  // lightest intentional pull. A long drag lands on whichever state is nearest to
+  // where the finger let go, so one sweep can also go from map-first to expanded.
+  function resolveSnapTarget(startH: number, endH: number, elapsedMs: number): number {
+    const viewportHeight = window.innerHeight || 1;
+    const snapPoints = mobileSheetSnapPoints();
+    const deltaFr = endH - startH;
+    const movedPx = Math.abs(deltaFr) * viewportHeight;
+    const speed = movedPx / Math.max(1, elapsedMs);
+    const startIndex = snapIndex(startH, snapPoints);
+    if (movedPx < 12 && speed < 0.3) return snapPoints[startIndex];
+    const direction = deltaFr > 0 ? 1 : -1;
+    const adjacentIndex = Math.max(0, Math.min(snapPoints.length - 1, startIndex + direction));
+    const nearestIndex = snapIndex(endH, snapPoints);
+    // Never fall short of the adjacent state in the direction of the gesture, but
+    // let a long drag skip past it when the finger travelled that far.
+    const farther = direction > 0 ? Math.max(adjacentIndex, nearestIndex) : Math.min(adjacentIndex, nearestIndex);
+    return snapPoints[farther];
+  }
+
   function onHandleUp() {
+    pendingPointerRef.current = null;
     if (!draggingRef.current) return;
     draggingRef.current = false;
     setDragging(false);
-    const viewportHeight = window.innerHeight || 1;
-    const deltaFr = curRef.current - startRef.current.h;
-    const movedPx = Math.abs(deltaFr) * viewportHeight;
-    const elapsedMs = Math.max(1, performance.now() - dragStartedAtRef.current);
-    const speed = movedPx / elapsedMs;
-    const snapPoints = mobileSheetSnapPoints();
-    const startIndex = snapIndex(startRef.current.h, snapPoints);
-    const direction = deltaFr > 0 ? 1 : -1;
-    const adjacentIndex = Math.max(0, Math.min(snapPoints.length - 1, startIndex + direction));
-    const adjacentDistancePx = Math.abs(snapPoints[adjacentIndex] - snapPoints[startIndex]) * viewportHeight;
-    // Require enough travel to distinguish an intended drag from finger jitter,
-    // but scale the threshold so every gap between snap points feels equally easy.
-    const travelThresholdPx = Math.max(28, Math.min(48, adjacentDistancePx * 0.18));
-    let target: number;
-    if (adjacentIndex === startIndex || movedPx < 28 || (movedPx < travelThresholdPx && speed < 0.42)) {
-      target = snapPoints[startIndex];
-    } else {
-      // One intentional gesture advances exactly one state. This avoids skipping
-      // from map-first to fully expanded because of a short, fast flick.
-      target = snapPoints[adjacentIndex];
-    }
+    const target = resolveSnapTarget(startRef.current.h, curRef.current, performance.now() - dragStartedAtRef.current);
     curRef.current = target;
     setHeightFr(target);
   }
 
   function onHandleCancel() {
+    pendingPointerRef.current = null;
     if (!draggingRef.current) return;
     draggingRef.current = false;
     setDragging(false);
@@ -267,6 +283,96 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     curRef.current = target;
     setHeightFr(target);
   }
+
+  // Touch gestures on the whole panel, in one native handler (as on Yelp / Google
+  // Maps). Non-passive touch listeners are the only way to keep a vertical pull
+  // from turning into the browser's own scroll or pan — pointer events get
+  // cancelled the moment the browser claims the gesture, which is exactly what
+  // happened on the filter chips. Rules, decided on the first few pixels:
+  //   · mostly horizontal → leave it alone (the chip rail pans sideways);
+  //   · on the header (handle, chips, count) → drag the panel;
+  //   · on the cards while the panel is not expanded → drag the panel;
+  //   · on the cards while expanded → the list scrolls, except a pull DOWN from
+  //     the very top, which collapses the panel.
+  // A press that does not move stays a tap: chips and cards still open.
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    const list = listRef.current;
+    if (!sheet || !list) return;
+    let startX = 0;
+    let startY = 0;
+    let startH = CARD_PEEK;
+    let startedAt = 0;
+    let inList = false;
+    let mode: "undecided" | "sheet" | "native" = "undecided";
+    const onStart = (e: TouchEvent) => {
+      if (!window.matchMedia("(max-width: 1023px)").matches || e.touches.length !== 1) { mode = "native"; return; }
+      const target = e.target as HTMLElement;
+      if (target.closest("input, select, textarea")) { mode = "native"; return; }
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startH = curRef.current;
+      startedAt = performance.now();
+      inList = list.contains(target);
+      mode = "undecided";
+    };
+    const onMove = (e: TouchEvent) => {
+      if (mode === "native" || e.touches.length !== 1) return;
+      const x = e.touches[0].clientX;
+      const y = e.touches[0].clientY;
+      const dyUp = startY - y;
+      const points = mobileSheetSnapPoints();
+      const max = points[points.length - 1];
+      const min = points[0];
+      if (mode === "undecided") {
+        const dx = Math.abs(x - startX);
+        const dy = Math.abs(dyUp);
+        if (dx < 4 && dy < 4) return;
+        if (dx > dy) { mode = "native"; return; }
+        const expanded = startH >= max - 0.01;
+        const pullingDownFromTop = list.scrollTop <= 0 && dyUp < 0;
+        mode = !inList || !expanded || pullingDownFromTop ? "sheet" : "native";
+        if (mode === "native") return;
+        draggingRef.current = true;
+        setDragging(true);
+        startRef.current = { y: startY, h: startH };
+        dragStartedAtRef.current = startedAt;
+      }
+      e.preventDefault();
+      const vh = window.innerHeight || 1;
+      const h = Math.min(max, Math.max(min, startH + dyUp / vh));
+      curRef.current = h;
+      if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${Math.max(0, max - h) * 100}dvh, 0)`;
+    };
+    const onEnd = () => {
+      const wasSheet = mode === "sheet";
+      mode = "undecided";
+      if (!wasSheet) return;
+      draggingRef.current = false;
+      setDragging(false);
+      const target = resolveSnapTarget(startH, curRef.current, performance.now() - startedAt);
+      curRef.current = target;
+      setHeightFr(target);
+    };
+    sheet.addEventListener("touchstart", onStart, { passive: true });
+    sheet.addEventListener("touchmove", onMove, { passive: false });
+    sheet.addEventListener("touchend", onEnd, { passive: true });
+    sheet.addEventListener("touchcancel", onEnd, { passive: true });
+    return () => {
+      sheet.removeEventListener("touchstart", onStart);
+      sheet.removeEventListener("touchmove", onMove);
+      sheet.removeEventListener("touchend", onEnd);
+      sheet.removeEventListener("touchcancel", onEnd);
+    };
+    // resolveSnapTarget only reads refs and the viewport; it is stable enough to omit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The page behind the panel must not rubber-band or pan while the panel is in use.
+  useEffect(() => {
+    document.body.classList.add("ccr-search-sheet-page");
+    return () => document.body.classList.remove("ccr-search-sheet-page");
+  }, []);
 
   // Tapping a map pin (mobile) springs the sheet open and scrolls its card into view. The
   // map dispatches `ccr:focus-card` with the proId; the ring highlight is already applied by
@@ -356,7 +462,10 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             onPointerMove={onHandleMove}
             onPointerUp={onHandleUp}
             onPointerCancel={onHandleCancel}
-            onLostPointerCapture={onHandleUp}
+            // A touch pointer is implicitly captured by the element under the finger;
+            // taking it over for the header fires `lostpointercapture` on that child,
+            // which bubbles here. Only the header itself losing capture ends a drag.
+            onLostPointerCapture={(event) => { if (event.target === event.currentTarget) onHandleUp(); }}
             className="relative z-40 shrink-0 cursor-grab touch-none select-none overflow-visible rounded-t-[20px] pb-1 active:cursor-grabbing lg:hidden"
           >
             <div
@@ -385,7 +494,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} onScroll={updateMobileScrollThumb} className="ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-8 pt-0 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]">
+          <div ref={listRef} onScroll={updateMobileScrollThumb} className={`ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-8 pt-0 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]`}>
             {quickFilters && <div className="mb-3 hidden lg:block xl:hidden">{quickFilters}</div>}
             {children}
           </div>
