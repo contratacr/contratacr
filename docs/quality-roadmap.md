@@ -140,6 +140,17 @@ now asks for `seed:test:verify` before and after every manual session.
 
 ### Block F — Ship (after A–E)
 
+**Status 2026-08-24.** The app now loads **https://contratacr.com** (production data) —
+until today it loaded test.contratacr.com and wrote to the test database. To make that
+possible the native branch was folded into `test`/`main` with every native behaviour gated to
+the app (`isNativeAppRuntime()` / `.ccr-native-app` / `ccr_platform` cookie), so the website is
+unchanged; the three branches are identical (`3bff3122`). Still needed before store builds:
+full Xcode and Android Studio on this Mac (only Command Line Tools today), the Google Play
+upload keystore (`android/keystore.properties` + the `.jks`), the Apple Developer account
+signed in to Xcode, and in the production Supabase project the iOS client id under Google →
+Client IDs plus the Apple provider enabled. The Guideline 1.2 items (report/block in chat,
+24-hour moderation commitment in the terms) ship with this code.
+
 - Android: release build, internal testing track, the Apple 1.2 screen recording captured on the device.
 - iOS: Xcode archive on this Mac, TestFlight, App Review resubmission with the recording and the native sign-in.
 
