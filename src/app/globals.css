@@ -71,10 +71,6 @@
   background: #f4f7fa !important;
 }
 
-.ccr-native-app .ccr-page-route-loading .ccr-brand-loading-mark {
-  display: none !important;
-}
-
 html.ccr-native-app.ccr-native-first-run-pending .ccr-page-route-loading {
   display: none !important;
 }
@@ -773,7 +769,13 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   opacity: 1;
   transform-origin: center;
   will-change: transform;
-  animation: ccr-brand-loading-breathe 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite both;
+  /* Composited on its own layer: without this the scaling repaints the mark
+     every frame on phones, which reads as a shimmer rather than a breath. */
+  backface-visibility: hidden;
+  transform: translateZ(0) scale(1);
+  /* The breath starts with the fade-in (same 600ms), and both ends of the cycle
+     are the mark's natural size, so nothing jumps the moment it appears. */
+  animation: ccr-brand-loading-breathe 2.4s cubic-bezier(0.4, 0, 0.6, 1) 600ms infinite both;
 }
 
 .ccr-page-route-loading {
@@ -799,10 +801,10 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
 
 @keyframes ccr-brand-loading-breathe {
   0%, 100% {
-    transform: scale(0.965);
+    transform: translateZ(0) scale(1);
   }
   50% {
-    transform: scale(1.045);
+    transform: translateZ(0) scale(1.055);
   }
 }
 
@@ -871,7 +873,7 @@ body {
 
   .ccr-brand-loading-mark {
     animation: none;
-    transform: none;
+    transform: translateZ(0) scale(1);
   }
 
   .ccr-skeleton-shimmer::after {
