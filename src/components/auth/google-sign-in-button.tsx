@@ -150,16 +150,37 @@ export function GoogleSignInButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
+  // Google's iframe paints a moment after renderButton resolves. Until it has,
+  // the fallback stays on screen; then the two cross-fade inside a box whose
+  // height never changes, so nothing below the button moves.
+  const [painted, setPainted] = useState(false);
+  useEffect(() => {
+    if (!ready || !host.current) return;
+    const iframe = host.current.querySelector("iframe");
+    if (!iframe) return;
+    let done = false;
+    const show = () => { if (!done) { done = true; setPainted(true); } };
+    iframe.addEventListener("load", show, { once: true });
+    const fallbackTimer = window.setTimeout(show, 1500);
+    return () => { window.clearTimeout(fallbackTimer); iframe.removeEventListener("load", show); };
+  }, [ready]);
+
   return (
-    <div className="relative w-full">
+    <div className="relative h-11 w-full">
+      <div
+        aria-hidden={painted || undefined}
+        className="absolute inset-0 transition-opacity duration-200"
+        style={{ opacity: painted ? 0 : 1, pointerEvents: painted ? "none" : "auto" }}
+      >
+        {fallback}
+      </div>
       <div
         ref={host}
         data-testid="google-identity-button"
         aria-busy={disabled || undefined}
-        className={ready ? "flex w-full justify-center" : "pointer-events-none absolute inset-0 -z-10 h-0 overflow-hidden opacity-0"}
-        style={disabled ? { pointerEvents: "none", opacity: 0.6 } : undefined}
+        className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
+        style={{ opacity: painted ? (disabled ? 0.6 : 1) : 0, pointerEvents: painted && !disabled ? "auto" : "none" }}
       />
-      {!ready && fallback}
     </div>
   );
 }

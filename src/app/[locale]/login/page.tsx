@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { OtpVerification } from "@/components/auth/otp-verification";
+import { PageRouteLoading } from "@/components/ui/route-loading";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import type { User } from "@supabase/supabase-js";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
@@ -108,6 +109,9 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  // Session created, handing off to /auth/callback: cover the form so the person
+  // never sees the login screen again between Google's window and their panel.
+  const [leaving, setLeaving] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
   // When a manual login fails because the email is a Google-only account, highlight
   // the provider button and show a specific message.
@@ -281,6 +285,7 @@ export default function LoginPage() {
       setGoogleLoading(false);
       return;
     }
+    setLeaving(true);
     const callback = oauthCallbackUrl().replace("flow=oauth", "flow=native");
     window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
   }
@@ -309,6 +314,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
+      {leaving && <PageRouteLoading />}
       <Navbar mobileSearch={false} />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
