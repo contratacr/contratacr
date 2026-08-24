@@ -6,6 +6,7 @@ import { BadgePercent, Briefcase, ChevronLeft, ChevronRight, ExternalLink, Loade
 import { Link } from "@/i18n/navigation";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { cn, getInitials } from "@/lib/utils";
 
 type Creator = {
@@ -155,6 +156,9 @@ function CreatorCard({ creator }: { creator: Creator | null }) {
   );
 }
 
+type Listing = { items: Item[]; counts: Record<string, number>; pagination: Pagination };
+const EMPTY_LISTING: Listing = { items: [], counts: {}, pagination: { page: 1, pageSize: 25, total: 0, pages: 1 } };
+
 export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
   const isJobs = kind === "jobs";
   const filters = isJobs ? JOB_FILTERS : OFFER_FILTERS;
@@ -162,10 +166,31 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [page, setPage] = useState(1);
-  const [items, setItems] = useState<Item[]>([]);
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, pageSize: 25, total: 0, pages: 1 });
-  const [loading, setLoading] = useState(true);
+  // The listing for these filters lives in the shared cache: coming back to a
+  // page already seen paints it at once and refreshes quietly.
+  const listQuery = useMemo(() => {
+    const params = new URLSearchParams({ kind, filter, page: String(page) });
+    if (debouncedQ) params.set("q", debouncedQ);
+    return params.toString();
+  }, [debouncedQ, filter, kind, page]);
+  const { data: listing, loading, refresh, setData: setListing } = useCachedResource<Listing>(
+    `admin:marketplace:${listQuery}`,
+    async () => {
+      try {
+        const res = await fetch(`/api/admin/marketplace?${listQuery}`, { cache: "no-store" });
+        const data = await res.json();
+        return {
+          items: data.items ?? [],
+          counts: data.counts ?? {},
+          pagination: data.pagination ?? { page, pageSize: 25, total: 0, pages: 1 },
+        };
+      } catch {
+        return { items: [], counts: {}, pagination: { page, pageSize: 25, total: 0, pages: 1 } };
+      }
+    },
+    EMPTY_LISTING,
+  );
+  const { items, counts, pagination } = listing;
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -177,27 +202,10 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
     return () => clearTimeout(timer);
   }, [q]);
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    try {
-      const params = new URLSearchParams({ kind, filter, page: String(page) });
-      if (debouncedQ) params.set("q", debouncedQ);
-      const res = await fetch(`/api/admin/marketplace?${params.toString()}`, { cache: "no-store" });
-      const data = await res.json();
-      setItems(data.items ?? []);
-      setCounts(data.counts ?? {});
-      setPagination(data.pagination ?? { page, pageSize: 25, total: 0, pages: 1 });
-    } catch {
-      setItems([]);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [debouncedQ, filter, kind, page]);
-
-  useEffect(() => {
-    queueMicrotask(() => void load());
-  }, [load]);
-  useAdminAutoRefresh(() => void load(true), [load]);
+  const load = useCallback(async () => {
+    await refresh();
+  }, [refresh]);
+  useAdminAutoRefresh(() => void load(), [load]);
 
   const filterCounts = useMemo(() => Object.fromEntries(filters.map((tab) => [tab.id, counts[tab.id] ?? 0])), [counts, filters]);
 
@@ -212,8 +220,11 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "No se pudo actualizar.");
-      setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, status } : entry)));
-      setCounts((current) => ({ ...current, [item.status]: Math.max(0, (current[item.status] ?? 1) - 1), [status]: (current[status] ?? 0) + 1 }));
+      setListing((current) => ({
+        ...current,
+        items: current.items.map((entry) => (entry.id === item.id ? { ...entry, status } : entry)),
+        counts: { ...current.counts, [item.status]: Math.max(0, (current.counts[item.status] ?? 1) - 1), [status]: (current.counts[status] ?? 0) + 1 },
+      }));
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "No se pudo actualizar.");
     } finally {
@@ -229,8 +240,11 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
       const res = await fetch(`/api/admin/marketplace?kind=${kind}&id=${encodeURIComponent(item.id)}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "No se pudo eliminar.");
-      setItems((current) => current.filter((entry) => entry.id !== item.id));
-      setCounts((current) => ({ ...current, all: Math.max(0, (current.all ?? 1) - 1), [item.status]: Math.max(0, (current[item.status] ?? 1) - 1) }));
+      setListing((current) => ({
+        ...current,
+        items: current.items.filter((entry) => entry.id !== item.id),
+        counts: { ...current.counts, all: Math.max(0, (current.counts.all ?? 1) - 1), [item.status]: Math.max(0, (current.counts[item.status] ?? 1) - 1) },
+      }));
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "No se pudo eliminar.");
     } finally {

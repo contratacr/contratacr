@@ -8,6 +8,7 @@ import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { getInitials } from "@/lib/utils";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { cn } from "@/lib/utils";
 
 type Service = { id: string; label: string; groupId: string; groupLabel: string; source: "base" | "custom"; professionals: number; verified: number };
@@ -78,8 +79,19 @@ function Bar({ value, max, color = "#009FD9" }: { value: number; max: number; co
 
 export function AdminCoverage() {
   const [view, setView] = useState<string>("services");
-  const [data, setData] = useState<Coverage | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Cached: coming back to Cobertura paints the last summary at once.
+  const { data, loading, refresh } = useCachedResource<Coverage | null>(
+    "admin:coverage",
+    async () => {
+      try {
+        const res = await fetch("/api/admin/coverage", { cache: "no-store" });
+        return (await res.json()) as Coverage;
+      } catch {
+        return null;
+      }
+    },
+    null,
+  );
   const [q, setQ] = useState("");
   const [onlyEmpty, setOnlyEmpty] = useState(false);
   const [openProvinces, setOpenProvinces] = useState<Record<string, boolean>>({});
@@ -118,23 +130,10 @@ export function AdminCoverage() {
   const cantonOptions = useMemo(() => (provinceFilter ? PROVINCES.find((province) => province.id === provinceFilter)?.cantons ?? [] : []), [provinceFilter]);
   const clearFilters = () => { setServiceFilter(""); setProvinceFilter(""); setCantonFilter(""); setMatches(null); };
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    try {
-      const res = await fetch("/api/admin/coverage", { cache: "no-store" });
-      const payload = (await res.json()) as Coverage;
-      setData(payload);
-    } catch {
-      setData(null);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    queueMicrotask(() => void load());
-  }, [load]);
-  useAdminAutoRefresh(() => void load(true), [load]);
+  const load = useCallback(async () => {
+    await refresh();
+  }, [refresh]);
+  useAdminAutoRefresh(() => void load(), [load]);
 
   const query = normalize(q.trim());
   const services = useMemo(() => {

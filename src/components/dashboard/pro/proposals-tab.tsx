@@ -12,6 +12,8 @@ import { Card } from "@/components/ui/card";
 import { PriceInput } from "@/components/ui/price-input";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { useAuth } from "@/hooks/use-auth";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { computeAge } from "@/lib/age";
 import { TAX_INCLUDED_SUFFIX, formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
@@ -83,6 +85,9 @@ interface ProposalsTabProps {
   services?: { name?: string }[];
 }
 
+const NO_OPEN_PROJECTS: OpenProject[] = [];
+const NO_MY_PROPOSALS: MyProposal[] = [];
+
 export function ProposalsTab({ categoryId, professions = [], services = [] }: ProposalsTabProps) {
   const t = useTranslations("proposalsTab");
   const locale = useLocale();
@@ -118,21 +123,51 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const k = ["in_progress", "awaiting_confirmation", "completed", "cancelled"].includes(status ?? "") ? status! : "accepted";
     return t(`projStatus.${k}`);
   };
+  const { user } = useAuth();
   const [view, setView] = useState<"browse" | "mine">("browse");
-  const [openProjects, setOpenProjects] = useState<OpenProject[]>([]);
-  const [myProposals, setMyProposals] = useState<MyProposal[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Both lists live in the shared cache (same keys the notification prefetch
+  // warms): switching tabs or coming back paints them at once, then refreshes.
+  // The key ignores `categoryId`: the API matches by the pro's professions and
+  // only falls back to that parameter for a profile without any.
+  const openResource = useCachedResource<OpenProject[]>(
+    user ? `dashboard:pro-open-projects:${user.id}:all` : null,
+    async () => {
+      const res = await fetch(`/api/projects?role=professional${categoryId ? `&category=${categoryId}` : ""}`, { cache: "no-store" });
+      const { projects } = await res.json();
+      return (projects ?? []) as OpenProject[];
+    },
+    NO_OPEN_PROJECTS,
+  );
+  const mineResource = useCachedResource<MyProposal[]>(
+    user ? `dashboard:pro-my-proposals:${user.id}` : null,
+    async () => {
+      const res = await fetch("/api/proposals?mine=true", { cache: "no-store" });
+      const { proposals } = await res.json().catch(() => ({ proposals: [] }));
+      return (proposals ?? []) as MyProposal[];
+    },
+    NO_MY_PROPOSALS,
+  );
+  const { data: openProjects } = openResource;
+  const { data: myProposals, setData: setMyProposals } = mineResource;
+  const loading = view === "browse" ? openResource.loading || mineResource.loading : mineResource.loading;
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [expandedMine, setExpandedMine] = useState<string | null>(null);
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState<Set<string>>(new Set());
+  // Projects already proposed to: the server's list, plus what was just sent or
+  // withdrawn here (cleared once the refresh that follows lands).
+  const [submittedOverrides, setSubmittedOverrides] = useState<Record<string, boolean>>({});
+  const submitted = useMemo(() => {
+    const next = new Set(myProposals.map((p) => p.project_id));
+    for (const [projectId, on] of Object.entries(submittedOverrides)) {
+      if (on) next.add(projectId);
+      else next.delete(projectId);
+    }
+    return next;
+  }, [myProposals, submittedOverrides]);
   const [projectFilter, setProjectFilter] = useState("activas");
-  const openSnapshotRef = useRef("");
-  const mineSnapshotRef = useRef("");
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
-  const loadedViewsRef = useRef({ browse: false, mine: false });
   const targetProjectRetryRef = useRef(0);
   const targetProjectRef = useRef<string | null>(null);
   const targetProjectHandledRef = useRef(false);
@@ -149,47 +184,14 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     return Object.fromEntries(professions.map((p) => [p, visible.filter((o) => o.category_id === p).length]));
   }, [openProjects, submitted, dismissed, professions]);
 
-  async function fetchOpenProjects(silent = false) {
-    try {
-      if (!silent) setLoading(true);
-      const url = `/api/projects?role=professional${categoryId ? `&category=${categoryId}` : ""}`;
-      const [projRes, mineRes] = await Promise.all([
-        fetch(url, { cache: "no-store" }),
-        fetch("/api/proposals?mine=true", { cache: "no-store" }),
-      ]);
-      const { projects } = await projRes.json();
-      const { proposals } = await mineRes.json().catch(() => ({ proposals: [] }));
-      const nextProjects = (projects ?? []) as OpenProject[];
-      const nextProposals = (proposals ?? []) as MyProposal[];
-      const snapshot = JSON.stringify(nextProjects.map((p: OpenProject) => `${p.id}:${p.created_at}`));
-      openSnapshotRef.current = snapshot;
-      setOpenProjects(nextProjects);
-      setMyProposals(nextProposals);
-      setSubmitted(new Set<string>(nextProposals.map((p) => p.project_id)));
-      loadedViewsRef.current.browse = true;
-      loadedViewsRef.current.mine = true;
-    } catch (error) {
-      console.error("[proposals-tab] opportunities load failed:", error);
-    } finally {
-      if (!silent) setLoading(false);
-    }
+  // Re-fetch quietly; cached rows stay on screen until the answer lands.
+  const refreshOpen = openResource.refresh;
+  const refreshMine = mineResource.refresh;
+  async function fetchOpenProjects() {
+    await Promise.all([refreshOpen(), refreshMine()]);
   }
-
-  async function fetchMyProposals(silent = false) {
-    try {
-      if (!silent) setLoading(true);
-      const res = await fetch("/api/proposals?mine=true", { cache: "no-store" });
-      const { proposals } = await res.json();
-      const nextProposals = (proposals ?? []) as MyProposal[];
-      const snapshot = JSON.stringify(nextProposals.map((p: MyProposal) => `${p.id}:${p.status}:${p.projects?.status ?? ""}`));
-      mineSnapshotRef.current = snapshot;
-      setMyProposals(nextProposals);
-      loadedViewsRef.current.mine = true;
-    } catch (error) {
-      console.error("[proposals-tab] my proposals load failed:", error);
-    } finally {
-      if (!silent) setLoading(false);
-    }
+  async function fetchMyProposals() {
+    await refreshMine();
   }
 
   const refreshSoon = useCallback(() => {
@@ -199,21 +201,13 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const delay = elapsed < 1600 ? 1600 - elapsed : 700;
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
-      if (view === "browse") void fetchOpenProjects(true);
-      else void fetchMyProposals(true);
+      if (view === "browse") void fetchOpenProjects().then(() => setSubmittedOverrides({}));
+      else void fetchMyProposals();
     }, delay);
     // fetchOpenProjects/fetchMyProposals are intentionally not dependencies; their
     // inputs are read from the current render through `view` and refreshed again by polling.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      if (view === "browse") fetchOpenProjects(loadedViewsRef.current.browse);
-      else fetchMyProposals(loadedViewsRef.current.mine);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, categoryId]);
 
   useEffect(() => {
     if (loading) return;
@@ -274,8 +268,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (targetProjectRetryRef.current >= 8) return;
     targetProjectRetryRef.current += 1;
     const id = window.setTimeout(() => {
-      void fetchOpenProjects(true);
-      void fetchMyProposals(true);
+      void fetchOpenProjects().then(() => setSubmittedOverrides({}));
+      void fetchMyProposals();
     }, 900);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -298,14 +292,14 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       });
       // 409 = a proposal already exists for this project, so treat it as sent.
       if (res.ok || res.status === 409) {
-        setSubmitted((prev) => new Set([...prev, projectId]));
+        setSubmittedOverrides((prev) => ({ ...prev, [projectId]: true }));
         setExpandedProject(null);
         setProposalForms((prev) => {
           const next = { ...prev };
           delete next[projectId];
           return next;
         });
-        void Promise.all([fetchOpenProjects(true), fetchMyProposals(true)]);
+        void fetchOpenProjects().then(() => setSubmittedOverrides({}));
         return;
       }
       const j = await res.json().catch(() => ({}));
@@ -371,7 +365,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       // Retiring frees the opportunity: drop it from the "already-proposed" set so it
       // reappears in Oportunidades (the browse list hides only still-proposed projects,
       // and refetches mine=true on every switch back, so the project is available again).
-      setSubmitted((prev) => { const next = new Set(prev); next.delete(withdrawTarget.project_id); return next; });
+      setSubmittedOverrides((prev) => ({ ...prev, [withdrawTarget.project_id]: false }));
       setDismissed((prev) => {
         if (!prev.has(withdrawTarget.project_id)) return prev;
         const next = new Set(prev);
@@ -381,7 +375,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       setProjectFilter("activas");
       const opportunity = openProjects.find((project) => project.id === withdrawTarget.project_id);
       if (opportunity?.category_id && professions.includes(opportunity.category_id)) setProfFilter(opportunity.category_id);
-      void fetchOpenProjects(true);
+      void fetchOpenProjects().then(() => setSubmittedOverrides({}));
     }
     setWithdrawing(false);
     setWithdrawTarget(null);

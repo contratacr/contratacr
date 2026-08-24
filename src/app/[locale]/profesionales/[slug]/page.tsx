@@ -28,6 +28,7 @@ import { CaseShowcase } from "@/components/professionals/case-showcase";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
+import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { BookingModal } from "@/components/booking/booking-modal";
@@ -115,6 +116,13 @@ function initialProfileReturnHref() {
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
+type ProfilePageData = {
+  pro: ProfessionalDetail;
+  slots: ScheduleSlot[];
+  offers: ProfessionalOffer[];
+  jobs: JobPost[];
+};
+
 export default function ProfilePage() {
   const t = useTranslations("profile");
   const locale = useLocale();
@@ -159,7 +167,19 @@ export default function ProfilePage() {
   useEffect(() => {
     async function load() {
       if (!routeSlug) return;
-      setLoading(true);
+      // A profile seen before paints from the cache at once (five minutes in
+      // this tab) and refreshes quietly; a first visit shows the loading state.
+      const cacheKey = `profile:${routeSlug}`;
+      const warm = getDashboardCache<ProfilePageData>(cacheKey);
+      if (warm) {
+        setProfessional(warm.pro);
+        setProfileSlots(warm.slots);
+        setPublicOffers(warm.offers);
+        setPublicJobs(warm.jobs);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       setProNotFound(false);
       setSlug(routeSlug);
       const res = await fetch(`/api/professionals/${routeSlug}`);
@@ -188,18 +208,21 @@ export default function ProfilePage() {
           .catch(() => null),
         supabase.auth.getUser(),
       ]);
-      setProfessional(pro);
-      setProfileSlots(Array.isArray(availability?.slots) ? availability.slots : []);
-      setPublicOffers(
-        ((offersResult.data ?? []) as unknown as ProfessionalOffer[]).filter(
+      const fresh: ProfilePageData = {
+        pro,
+        slots: Array.isArray(availability?.slots) ? availability.slots : [],
+        offers: ((offersResult.data ?? []) as unknown as ProfessionalOffer[]).filter(
           (offer) => !offer.valid_until || offer.valid_until >= today,
         ),
-      );
-      setPublicJobs(
-        ((jobsResult.data ?? []) as unknown as JobPost[]).filter(
+        jobs: ((jobsResult.data ?? []) as unknown as JobPost[]).filter(
           (job) => !job.application_deadline || job.application_deadline >= today,
         ),
-      );
+      };
+      setDashboardCache(cacheKey, fresh);
+      setProfessional(fresh.pro);
+      setProfileSlots(fresh.slots);
+      setPublicOffers(fresh.offers);
+      setPublicJobs(fresh.jobs);
       const { data: { user } } = authResult;
       setIsAuthenticated(!!user);
       setViewerId(user?.id ?? null);

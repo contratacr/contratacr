@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { BriefcaseBusiness, CalendarDays, ChevronDown, Download, ExternalLink, FileText, MapPin } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 import { EMPLOYMENT_TYPES, WORKPLACE_TYPES, type EmploymentType, type WorkplaceType } from "@/lib/jobs";
 import { formatRelativeOrDate, getInitials } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 
 type Application = {
   id: string; status: string; createdAt: string; resumeUrl: string | null;
@@ -46,25 +48,27 @@ function applicationStatusMessage(application: Application, isEn: boolean) {
   return isEn ? "Your application was sent successfully." : "Tu postulación fue enviada correctamente.";
 }
 
+const NO_APPLICATIONS: Application[] = [];
+
 export function ClientJobApplications() {
   const locale = useLocale();
   const isEn = locale === "en";
-  const [applications, setApplications] = useState<Application[]>([]);
+  const { user } = useAuth();
+  const { data: applications, loading } = useCachedResource<Application[]>(
+    user ? `dashboard:job-applications:${user.id}` : null,
+    async () => {
+      const response = await fetch("/api/jobs/applications", { cache: "no-store" });
+      const payload = await response.json();
+      return Array.isArray(payload.applications) ? payload.applications : [];
+    },
+    NO_APPLICATIONS,
+    { refreshOn: true },
+  );
   const [openId, setOpenId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   function resumeDownloadUrl(application: Application) {
     return application.resumeUrl ?? "";
   }
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/jobs/applications", { cache: "no-store" });
-      const payload = await response.json();
-      setApplications(Array.isArray(payload.applications) ? payload.applications : []);
-    } finally { setLoading(false); }
-  }, []);
-  useEffect(() => { queueMicrotask(() => void load()); }, [load]);
   if (loading) return <PanelListSkeleton rows={3} hasData={applications.length > 0} />;
   if (!applications.length) return (
     <PanelEmptyState
