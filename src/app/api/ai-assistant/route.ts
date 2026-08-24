@@ -45,7 +45,13 @@ type AssistantPayload = {
   ctaLabel?: string | null;
   confidence?: number;
   selectedResultIndex?: number | null;
+  /** A product answer written by hand: skip every search heuristic. */
+  documented?: boolean;
+  /** Exact destination of the CTA, when the action alone is ambiguous. */
+  href?: string | null;
 };
+
+type ProfessionalSearchResult = Awaited<ReturnType<typeof searchProfessionals>>[number];
 
 type AssistantProfessionalResult = {
   id: string;
@@ -62,6 +68,11 @@ type AssistantProfessionalResult = {
   actionHref: string;
   actionLabel: string;
   actionKind: "availability" | "message";
+  /** The searched category, so the card highlights the right profession. */
+  categoryId: string | null;
+  /** The very same professional the search page renders — the app shows its
+   *  own card with its own buttons, not a summary. */
+  card: ProfessionalSearchResult;
 };
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -74,6 +85,86 @@ const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:
 
 function localeKey(value: unknown): Locale {
   return value === "en" ? "en" : "es";
+}
+
+// Words a person types that the catalogue does not know as such: English
+// professions, colloquial forms and misspellings. The message is canonicalised
+// before any detection so "electrician", "electrisista" and "electricista" all
+// reach the same keyword. Fuzzy repair only touches words the app would not
+// otherwise recognise, and never words shorter than six letters.
+const CANONICAL_WORDS: Record<string, string> = {
+  electrician: "electricista", electricians: "electricista", plumber: "plomero", plumbers: "plomero", plumbing: "plomeria",
+  cleaner: "limpieza del hogar", cleaning: "limpieza del hogar", housekeeper: "limpieza del hogar", maid: "limpieza del hogar", painter: "pintor", painters: "pintor", painting: "pintura",
+  lawyer: "abogado", attorney: "abogado", dentist: "dentista", vet: "veterinario", veterinarian: "veterinario", mechanic: "mecanico",
+  gardener: "jardinero", gardening: "jardineria", babysitter: "ninera", nanny: "ninera", psychologist: "psicologo", therapist: "psicologo",
+  carpenter: "carpintero", locksmith: "cerrajero", welder: "soldador", roofer: "techos", architect: "arquitecto", accountant: "contador",
+  photographer: "fotografo", tutor: "profesor", teacher: "profesor", masseuse: "masajista", massage: "masaje", doctor: "medico", physician: "medico",
+  nurse: "enfermera", trainer: "entrenador", designer: "disenador", developer: "desarrollador", handyman: "reparaciones",
+  limpia: "limpieza del hogar", limpiar: "limpieza del hogar", limpie: "limpieza del hogar", limpien: "limpieza del hogar", masajistas: "masajista", gotera: "goteras",
+  nesesito: "necesito", nececito: "necesito", necesitó: "necesito", qiero: "quiero", kiero: "quiero", okupo: "ocupo",
+};
+// Words of the app itself and everyday words are never "repaired" into a
+// catalogue keyword ("solicitud" must not become "solicitar").
+const CANONICAL_SKIP = new Set(("gracias buenas buenos mucho muchas necesito quiero ocupo busco quien alguien puedo puede pueden tengo hacer donde cuando porque "
+  + "servicio servicios profesional profesionales cliente clientes cuenta cuentas contratacr solicitud solicitudes solicitar proyecto proyectos "
+  + "propuesta propuestas publicar publico publica publicacion empleo empleos trabajo trabajos vacante vacantes oferta ofertas cuenta contrasena "
+  + "clave mensaje mensajes resena resenas resenar calificar calificacion perfil perfiles notificacion notificaciones agendar agenda horario horarios "
+  + "disponibilidad videoconsulta instalar instalo descargar aplicacion postular postulo postulacion postulaciones pagar pagos suscripcion "
+  + "verificar verifico cedula identidad eliminar elimino cambiar cambio actualizar imagen gracias ayuda saber tener querer conseguir "
+  + "urgente domicilio online zona cerca precio precios cotizacion cotizar presupuesto whatsapp telefono correo direccion provincia canton "
+  + "please would could should there where which about professional professionals service services account password request project proposal "
+  + "message messages review reviews schedule install download notification notifications offer offers vacancy someone anyone people").split(" "));
+let catalogVocabulary: string[] | null = null;
+function catalogWords() {
+  if (!catalogVocabulary) {
+    const words = new Set<string>();
+    for (const category of getAllCategories()) {
+      for (const keyword of [category.label, ...(category.keywords ?? [])]) {
+        for (const word of normalizeText(keyword).split(/\s+/)) if (word.length >= 6) words.add(word);
+      }
+    }
+    catalogVocabulary = [...words];
+  }
+  return catalogVocabulary;
+}
+function editDistance(a: string, b: string) {
+  const rows = a.length + 1;
+  const cols = b.length + 1;
+  const d = new Array<number>(rows * cols);
+  for (let i = 0; i < rows; i += 1) d[i * cols] = i;
+  for (let j = 0; j < cols; j += 1) d[j] = j;
+  for (let i = 1; i < rows; i += 1) {
+    for (let j = 1; j < cols; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i * cols + j] = Math.min(d[(i - 1) * cols + j] + 1, d[i * cols + j - 1] + 1, d[(i - 1) * cols + j - 1] + cost);
+    }
+  }
+  return d[rows * cols - 1];
+}
+function repairWord(word: string) {
+  if (word.length < 6 || CANONICAL_SKIP.has(word)) return word;
+  const vocabulary = catalogWords();
+  if (vocabulary.includes(word)) return word;
+  const tolerance = word.length >= 8 ? 2 : 1;
+  let best: string | null = null;
+  let bestDistance = tolerance + 1;
+  for (const candidate of vocabulary) {
+    if (Math.abs(candidate.length - word.length) > tolerance) continue;
+    const distance = editDistance(word, candidate);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = candidate;
+    }
+  }
+  return best ?? word;
+}
+export function canonicalizeMessage(raw: string) {
+  return raw.replace(/[\p{L}\p{N}]+/gu, (token) => {
+    const key = token.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const mapped = CANONICAL_WORDS[key];
+    if (mapped) return mapped;
+    return /^\p{L}+$/u.test(key) ? repairWord(key) : token;
+  });
 }
 
 function normalizeText(value: string) {
@@ -104,7 +195,7 @@ function uncertainSearchPayload(message: string, locale: Locale): AssistantPaylo
     confidence: 0,
     answer: locale === "en"
       ? "I am not fully sure which service fits that request. Search with those words first; if you do not find the right option, create a project with the details."
-      : "No tengo total certeza de qué servicio calza con esa necesidad. Busque con esas palabras primero; si no encuentra la opción correcta, publique una solicitud con los detalles.",
+      : "No estoy seguro de qué servicio calza con eso. Prueba a buscar con esas palabras; si no aparece la opción correcta, publica un proyecto con los detalles.",
     ctaLabel: locale === "en" ? "Search in ContrataCR" : "Buscar en ContrataCR",
   };
 }
@@ -187,7 +278,8 @@ function resolveLocationIntent(raw: string) {
 
 function formatPlaceLabel(place: ReturnType<typeof resolveLocationIntent>) {
   if (!place) return null;
-  return place.type === "canton" ? `${place.label}, ${place.sublabel}` : place.label;
+  if (place.type !== "canton" || !place.sublabel || normalizeText(place.sublabel) === normalizeText(place.label)) return place.label;
+  return `${place.label}, ${place.sublabel}`;
 }
 
 const GENERIC_CATEGORY_TERMS = new Set([
@@ -532,12 +624,12 @@ function categoryClarification(text: string, locale: Locale, labels: Map<string,
   if (options.length === 0) {
     return locale === "en"
       ? "Which service do you need? Please write the service name so I can search correctly."
-      : "¿Qué servicio necesita? Escríbame el nombre del servicio para buscar correctamente.";
+      : "¿Qué servicio necesitas? Escríbame el nombre del servicio para buscar correctamente.";
   }
   const formatted = options.map((option) => `“${option}”`).join(", ");
   return locale === "en"
     ? `To search correctly, which service do you mean: ${formatted}?`
-    : `Para buscar correctamente, ¿se refiere a ${formatted}?`;
+    : `Para buscar correctamente, ¿te refieres a ${formatted}?`;
 }
 
 function ambiguousClarificationOptions(text: string, labels: Map<string, string>) {
@@ -641,16 +733,239 @@ function userMessagePlace(message: string) {
   return resolveLocationIntent(message);
 }
 
+type ProductIntent = {
+  test: (normalized: string) => boolean;
+  /** Skip when the message clearly names a service (then it is a search). */
+  unlessService?: boolean;
+  answer: { es: string; en: string };
+  action?: AssistantAction;
+  cta?: { es: string; en: string };
+  href?: (locale: Locale) => string;
+};
+
+const rx = (source: string) => new RegExp(source, "i");
+const PRODUCT_INTENTS: ProductIntent[] = [
+  {
+    test: (n) => /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hello|hi|hey|saludos)[\s!.,]*(\w+[\s!.,]*){0,3}$/.test(n) && n.split(/\s+/).length <= 4,
+    answer: {
+      es: "¡Hola! Puedo ayudarte a encontrar un profesional (dime el servicio y la zona, por ejemplo «un electricista en Heredia») o explicarte cómo funciona ContrataCR. ¿Qué necesitass?",
+      en: "Hi! I can help you find a professional (tell me the service and the area, for example \"an electrician in Heredia\") or explain how ContrataCR works. What do you need?",
+    },
+  },
+  {
+    test: (n) => /^(muchas gracias|mil gracias|gracias|thank you|thanks|ok gracias|perfecto gracias)[\s!.]*$/.test(n),
+    answer: { es: "Con gusto. Si necesitas otro profesional o tienes otra duda, aquí estoy.", en: "You're welcome. If you need another professional or have another question, I'm here." },
+  },
+  {
+    test: (n) => /^(ayuda|help|\?+|necesito algo|no se|que puedes hacer|que haces|what can you do|menu)[\s?!.]*$/.test(n),
+    answer: {
+      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo agendar, chatear, publicar un proyecto o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
+      en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to book, chat, publish a project or leave a review, and help with your account (password, ID, notifications). Where do we start?",
+    },
+  },
+  {
+    test: (n) => /(pagar|pago|pagos|cobra|cobran|tarjeta|suscripcion|mensualidad|premium|pay|payment|subscription)/.test(n) && /(app|aplicacion|contratacr|plataforma|cuenta|usar|por usar|premium|suscripcion|subscription)/.test(n),
+    answer: {
+      es: "No hay nada que pagar: ContrataCR es gratis, no tiene suscripciones ni pagos dentro de la app y no cobra comisión. Lo que cueste un servicio lo acuerdas directamente con el profesional.",
+      en: "There is nothing to pay: ContrataCR is free, has no subscriptions or in-app payments and charges no commission. Whatever a service costs is agreed directly with the professional.",
+    },
+  },
+  {
+    test: (n) => /(olvide|olvido|no recuerdo|no me acuerdo|perdi|recuperar|restablecer|forgot|reset|recover).{0,25}(contrasena|clave|password)/.test(n) || /(contrasena|clave|password).{0,25}(olvide|olvidada|no la recuerdo|forgot|reset)/.test(n),
+    action: "reset_password",
+    answer: {
+      es: "Toca «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión: te enviamos un correo con un enlace para crear una nueva.",
+      en: "Tap \"Forgot your password?\" on the sign-in screen: we email you a link to create a new one.",
+    },
+    cta: { es: "Restablecer contraseña", en: "Reset password" },
+    href: (locale) => `/${locale}/olvide-contrasena`,
+  },
+  {
+    test: (n) => /(cambi|actualiz|modific|poner|nueva|change|update|new).{0,20}(contrasena|clave|password)/.test(n) || /(contrasena|clave|password).{0,20}(cambi|nueva|new)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "En tu panel, abre Cuenta y seguridad: ahí escribes la contraseña actual y la nueva. Si no la recuerdas, usa «¿Olvidaste tu contraseña?» al iniciar sesión.",
+      en: "In your panel, open Account & security: enter your current password and the new one. If you don't remember it, use \"Forgot your password?\" when signing in.",
+    },
+    cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
+    href: (locale) => `/${locale}/dashboard/profesional?tab=cuenta`,
+  },
+  {
+    test: (n) => /(elimin|borr|cerr|dar de baja|desactiv|delete|close|deactivate|remove).{0,20}(mi cuenta|la cuenta|cuenta|my account|account)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "En tu panel, abre Cuenta y seguridad y baja hasta «Eliminar cuenta». Se borran tu perfil, tus solicitudes y tus mensajes; no se puede deshacer.",
+      en: "In your panel, open Account & security and scroll to \"Delete account\". Your profile, requests and messages are removed; it cannot be undone.",
+    },
+    cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
+    href: (locale) => `/${locale}/dashboard/profesional?tab=cuenta`,
+  },
+  {
+    test: (n) => /(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "En tu panel, abre Cuenta y seguridad → Datos básicos y escribe tu número de cédula: se comprueba contra el padrón y tu nombre queda verificado. Los profesionales además pasan por la verificación del equipo, que aparece como «Verificado» en el perfil.",
+      en: "In your panel, open Account & security → Basic details and enter your ID number: it is checked against the national registry and your name gets verified. Professionals also go through the team's verification, shown as \"Verified\" on the profile.",
+    },
+    cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
+    href: (locale) => `/${locale}/dashboard/profesional?tab=cuenta`,
+  },
+  {
+    test: (n) => /(cambi|subir|poner|actualiz|change|upload|update).{0,20}(foto|imagen|photo|picture|avatar)/.test(n) || /(foto|photo).{0,20}(perfil|profile)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "Si eres profesional: en tu panel abre Mi perfil y toca la foto para cambiarla. Si eres cliente: en Cuenta y seguridad → Datos básicos.",
+      en: "Professionals: in your panel open My profile and tap the photo to change it. Clients: Account & security → Basic details.",
+    },
+    cta: { es: "Ir a mi panel", en: "Open my panel" },
+    href: (locale) => `/${locale}/dashboard/profesional?tab=cuenta`,
+  },
+  {
+    test: (n) => /(notificacion|notificaciones|avisos|alertas|notification|notifications)/.test(n) && /(no me llegan|no llegan|no recibo|no salen|no suenan|activar|desactivar|apagar|prender|configurar|not (getting|receiving)|turn (on|off)|enable|disable)/.test(n),
+    answer: {
+      es: "Dentro de la app, la campana muestra todas tus notificaciones. Para que lleguen al teléfono, revisa que ContrataCR tenga permiso: en el teléfono, Ajustes → Notificaciones → ContrataCR → Permitir. Si sigue sin llegar, cierra la app y vuelve a abrirla.",
+      en: "In the app, the bell shows all your notifications. To get them on your phone, check that ContrataCR is allowed: on the phone, Settings → Notifications → ContrataCR → Allow. If they still don't arrive, close and reopen the app.",
+    },
+    cta: { es: "Ver notificaciones", en: "See notifications" },
+    action: "help",
+    href: (locale) => `/${locale}/notificaciones`,
+  },
+  {
+    test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|publish|create|post).{0,15}(una oferta|oferta|ofertas|promocion|descuento|an offer|offer|deal)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "Las ofertas las publican los profesionales: en tu panel abre la pestaña Ofertas y toca «Publicar oferta» (título, precio de oferta, foto y vigencia). Los clientes las ven en la sección Ofertas de la app.",
+      en: "Offers are published by professionals: in your panel open the Offers tab and tap \"Publish offer\" (title, offer price, photo and validity). Clients see them in the app's Offers section.",
+    },
+    cta: { es: "Ir a Ofertas", en: "Open Offers" },
+    href: (locale) => `/${locale}/dashboard/profesional?tab=offers`,
+  },
+  {
+    test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|busco|necesito|ocupo|publish|create|post|hire).{0,15}(un empleo|empleo|empleos|vacante|puesto|plaza|un trabajo para|personal|empleado|empleada|a job|job post|vacancy)/.test(n) && !/(postul|aplic|apply)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "Para contratar personal, publica un empleo desde tu panel: pestaña Empleos → «Publicar empleo» (puesto, tipo de contrato, lugar, salario si quieres mostrarlo). Las personas postulan desde la sección Empleos y tú ves las postulaciones ahí mismo.",
+      en: "To hire staff, publish a job from your panel: Jobs tab → \"Publish job\" (position, contract type, place, salary if you want to show it). People apply from the Jobs section and you see the applications right there.",
+    },
+    cta: { es: "Ir a Empleos", en: "Open Jobs" },
+    href: (locale) => `/${locale}/dashboard/profesional?tab=jobs`,
+  },
+  {
+    test: (n) => /(postular|postulo|postularme|aplicar|aplico|apply|applying).{0,20}(trabajo|empleo|puesto|vacante|job|position)/.test(n) || /(trabajo|empleo|job).{0,20}(postular|aplicar|apply)/.test(n),
+    action: "help",
+    answer: {
+      es: "Entra a Empleos, abre el puesto que te interesa y toca «Postular»: adjuntas tu currículum y un mensaje. Tus postulaciones quedan en tu panel, pestaña Postulaciones.",
+      en: "Go to Jobs, open the position you like and tap \"Apply\": attach your résumé and a message. Your applications stay in your panel, Applications tab.",
+    },
+    cta: { es: "Ver empleos", en: "See jobs" },
+    href: (locale) => `/${locale}/empleos`,
+  },
+  {
+    test: (n) => /(ver|buscar|hay|busco|donde|where|see|find|show).{0,15}(ofertas de trabajo|ofertas de empleo|empleos|trabajos|vacantes|puestos|jobs|job offers|vacancies)/.test(n) || /^(empleos|trabajos|vacantes|jobs)[\s?!.]*$/.test(n),
+    action: "help",
+    answer: {
+      es: "Los empleos disponibles están en la sección Empleos: puedes filtrar por lugar y tipo de contrato, y postular desde cada puesto.",
+      en: "Open jobs are in the Jobs section: filter by place and contract type, and apply from each position.",
+    },
+    cta: { es: "Ver empleos", en: "See jobs" },
+    href: (locale) => `/${locale}/empleos`,
+  },
+  {
+    test: (n) => /(editar|modificar|cambiar|corregir|retirar|borrar|edit|change|withdraw).{0,15}(mi propuesta|una propuesta|la propuesta|propuesta|proposal)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "En tu panel abre Oportunidades → «Mis propuestas»: en la propuesta toca los tres puntos para editar el precio y el mensaje, o retirarla. Se puede editar mientras el cliente no la haya aceptado.",
+      en: "In your panel open Opportunities → \"My proposals\": on the proposal tap the three dots to edit the price and message, or withdraw it. It can be edited until the client accepts it.",
+    },
+    cta: { es: "Ver mis propuestas", en: "See my proposals" },
+    href: (locale) => `/${locale}/dashboard/profesional?tab=proposals`,
+  },
+  {
+    test: (n) => /(instal|descarg|baj[oa]|install|download).{0,15}(la app|app|aplicacion|contratacr)/.test(n) || /(app|aplicacion).{0,15}(instal|descarg|install|download)/.test(n),
+    action: "help",
+    answer: {
+      es: "Ya estás dentro de la app 🙂. Para instalarla en otro teléfono, entra a contratacr.com/ayuda desde ese teléfono: ahí está la guía para App Store y Google Play.",
+      en: "You are already in the app 🙂. To install it on another phone, open contratacr.com/ayuda from that phone: the guide for the App Store and Google Play is there.",
+    },
+    cta: { es: "Ver la guía", en: "See the guide" },
+    href: (locale) => `/${locale}/ayuda`,
+  },
+  {
+    test: (n) => /(como|how).{0,12}(agend|reserv|sacar|pedir|program|book|schedule).{0,15}(cita|hora|horario|servicio|turno|appointment|service)/.test(n) || /^(agendar|reservar)( una)? (cita|hora)[\s?!.]*$/.test(n),
+    unlessService: true,
+    answer: {
+      es: "Busca el servicio, abre el perfil del profesional y toca un horario del calendario o «Ver horario completo»: eliges día y hora y envías la solicitud; el profesional la confirma y te avisamos. Si el profesional coordina por WhatsApp, verás «Enviar mensaje» en su lugar. Dime el servicio y la zona y te muestro opciones.",
+      en: "Search the service, open the professional's profile and tap a time in the calendar or \"See full schedule\": choose day and time and send the request; the professional confirms and we notify you. If the professional coordinates by WhatsApp you will see \"Send message\" instead. Tell me the service and the area and I'll show you options.",
+    },
+  },
+  {
+    test: (n) => /(como|how|puedo|can i).{0,12}(chate|hablar|escribir|contactar|mensaje|mandar|chat|message|contact|talk|write).{0,25}(profesional|professional|alguien)/.test(n),
+    unlessService: true,
+    answer: {
+      es: "Abre el perfil del profesional y toca «Enviar mensaje»: la conversación queda en Mensajes y te avisamos cuando responda. Necesitas una cuenta (es gratis).",
+      en: "Open the professional's profile and tap \"Send message\": the conversation stays in Messages and we notify you when they reply. You need an account (it's free).",
+    },
+    cta: { es: "Ir a Mensajes", en: "Open Messages" },
+    action: "help",
+    href: (locale) => `/${locale}/mensajes`,
+  },
+  {
+    test: (n) => /(dej|pon|escrib|hac|dar|doy|leave|write|give).{0,15}(una resena|resena|calificacion|opinion|review|rating)/.test(n) || /(calific|resen|rate|review).{0,15}(profesional|servicio|professional|service)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "Cuando el servicio termina, en tu panel → Solicitudes enviadas (o Proyectos, si fue un proyecto) aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
+      en: "When the service is done, in your panel → Sent requests (or Projects, if it was a project) you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
+    },
+    cta: { es: "Ver mis solicitudes", en: "See my requests" },
+    href: (locale) => `/${locale}/dashboard/profesional?mode=use&tab=sent_bookings`,
+  },
+  {
+    test: (n) => /(videoconsulta|video consulta|videollamada|consulta virtual|en linea|online|video call|video consultation)/.test(n) && /(como|funciona|hay|puedo|how|work)/.test(n),
+    unlessService: true,
+    answer: {
+      es: "Algunos profesionales atienden por videoconsulta: en tu perfil aparece «Videoconsulta» junto a la ubicación, y al agendar eliges esa modalidad. En la búsqueda puedes filtrar «Videoconsulta» en la ubicación para ver solo esos profesionales.",
+      en: "Some professionals attend by video consultation: their profile shows \"Video consultation\" next to the location, and you pick that modality when booking. In search, filter \"Video consultation\" under location to see only those professionals.",
+    },
+    cta: { es: "Buscar por videoconsulta", en: "Search video consultations" },
+    action: "help",
+    href: () => "/buscar?modalidad=videoconsulta",
+  },
+];
+
+function productAnswer(message: string, locale: Locale): AssistantPayload | null {
+  const normalized = normalizeText(message);
+  for (const intent of PRODUCT_INTENTS) {
+    if (!intent.test(normalized)) continue;
+    if (intent.unlessService && strongCategoryMention([message], locale)) return null;
+    return {
+      action: intent.action ?? "answer",
+      confidence: 1,
+      documented: true,
+      serviceId: null,
+      searchQuery: null,
+      locationText: null,
+      answer: locale === "en" ? intent.answer.en : intent.answer.es,
+      ctaLabel: intent.cta ? (locale === "en" ? intent.cta.en : intent.cta.es) : null,
+      href: intent.href ? intent.href(locale) : null,
+    };
+  }
+  return null;
+}
+
 function localAnswer(message: string, locale: Locale): AssistantPayload {
   const normalized = normalizeText(message);
   const { category, place } = resolveSearch(message, locale);
   const categoryName = category ? getCategoryLabel(category.id, locale) : null;
-  const placeLabel = place ? `${place.label}${place.type === "canton" ? `, ${place.sublabel}` : ""}` : null;
+  const placeLabel = formatPlaceLabel(place);
+
+  const product = productAnswer(message, locale);
+  if (product) return product;
 
   if (includesAny(normalized, ["como funciona", "how does", "funciona", "usar contratacr", "que es contratacr"])) {
     return {
       action: "how_it_works",
       confidence: 1,
+      documented: true,
       answer: locale === "en"
         ? "ContrataCR helps you find professionals, compare profiles, create projects, receive proposals, book services and coordinate directly."
         : "ContrataCR permite buscar profesionales, comparar perfiles, crear proyectos, recibir propuestas, agendar servicios y coordinar directamente.",
@@ -658,13 +973,16 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     };
   }
 
-  if (includesAny(normalized, ["soporte", "ayuda con mi cuenta", "problema con mi cuenta", "support", "account help"])) {
+  // The bare word "soporte" is ambiguous (the app's support desk or the
+  // "soporte técnico" service) and is left to the clarification step.
+  if (includesAny(normalized, ["soporte de contratacr", "contactar soporte", "contactar a soporte", "hablar con soporte", "escribir a soporte", "necesito soporte", "abrir un caso", "ayuda con mi cuenta", "problema con mi cuenta", "problemas con mi cuenta", "contact support", "support team", "account help", "help with my account"])) {
     return {
       action: "support",
       confidence: 1,
+      documented: true,
       answer: locale === "en"
         ? "You can open Support to create a ticket or continue an existing conversation with the ContrataCR team."
-        : "Puede abrir Soporte para crear un ticket o continuar una conversación existente con el equipo de ContrataCR.",
+        : "Abre Soporte para crear un caso o seguir una conversación con el equipo de ContrataCR.",
       ctaLabel: locale === "en" ? "Open support" : "Ir a soporte",
     };
   }
@@ -673,9 +991,10 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "register_professional",
       confidence: 1,
+      documented: true,
       answer: locale === "en"
         ? "Create a professional profile, add your services, work areas, prices and availability, then keep your profile updated so clients can find you."
-        : "Cree un perfil profesional, agregue sus servicios, zonas de trabajo, precios y disponibilidad, y mantenga el perfil actualizado para que los clientes le encuentren.",
+        : "Crea tu perfil profesional, agrega tus servicios, zonas de trabajo, precios y disponibilidad, y mantenlo actualizado para que los clientes te encuentren.",
       ctaLabel: locale === "en" ? "Offer my services" : "Ofrecer mis servicios",
     };
   }
@@ -684,9 +1003,10 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "register_client",
       confidence: 1,
+      documented: true,
       answer: locale === "en"
         ? "Create a client account to save professionals, create projects, receive proposals and manage your requests from your panel."
-        : "Cree una cuenta de cliente para guardar profesionales, crear proyectos, recibir propuestas y manejar solicitudes desde su panel.",
+        : "Crea una cuenta de cliente para guardar profesionales, crear proyectos, recibir propuestas y manejar tus solicitudes desde tu panel.",
       ctaLabel: locale === "en" ? "Create client account" : "Crear cuenta de cliente",
     };
   }
@@ -695,9 +1015,10 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "login",
       confidence: 1,
+      documented: true,
       answer: locale === "en"
         ? "Open sign in to access your panel, messages, saved professionals, requests and projects."
-        : "Abra inicio de sesión para entrar a su panel, mensajes, favoritos, solicitudes y proyectos.",
+        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos, solicitudes y proyectos.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -706,9 +1027,10 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "browse_services",
       confidence: 1,
+      documented: true,
       answer: locale === "en"
         ? "The service catalog shows the approved categories available in ContrataCR. From there you can open search with the service already selected."
-        : "El catálogo muestra las categorías aprobadas en ContrataCR. Desde ahí puede abrir la búsqueda con el servicio ya seleccionado.",
+        : "El catálogo muestra todos los servicios de ContrataCR. Desde ahí abres la búsqueda con el servicio ya seleccionado.",
       ctaLabel: locale === "en" ? "Browse services" : "Ver servicios",
     };
   }
@@ -717,6 +1039,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     return {
       action: "answer",
       confidence: 1,
+      documented: true,
       answer: locale === "en"
         ? "Using ContrataCR to search, create projects and create a professional profile is currently free. ContrataCR does not add a commission to the price agreed between client and professional."
         : "Actualmente buscar, crear proyectos y crear un perfil profesional en ContrataCR es gratis. ContrataCR no agrega comisión al precio acordado entre cliente y profesional.",
@@ -752,12 +1075,12 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     confidence: 0,
     answer: locale === "en"
       ? "Tell me the service and area you need. I can also explain any ContrataCR feature."
-      : "Dime qué servicio y zona necesita. También puedo explicarle cualquier función de ContrataCR.",
+      : "Dime qué servicio necesitas y en qué zona; también puedo explicarte cualquier función de ContrataCR.",
   };
 }
 
 function systemPrompt(locale: Locale, catalogPrompt: string, pageContext: string) {
-  const language = locale === "en" ? "English" : "natural Costa Rican Spanish using formal usted forms only; never use tú, te, tu, vos or voseo";
+  const language = locale === "en" ? "English" : "natural Costa Rican Spanish addressing the person as tú (the app's own voice: «Escribe», «Crea», «tu panel»); never use usted, te, tu, vos or voseo";
   return `
 You are ContrataCR AI, the official assistant for ContrataCR, Costa Rica's service marketplace.
 Answer in ${language}. Be concise, warm and practical.
@@ -908,6 +1231,7 @@ async function workersAiAnswer(
 }
 
 function actionHref(payload: AssistantPayload, originalMessage: string, locale: Locale) {
+  if (payload.href) return payload.href;
   if (!payload.action || payload.action === "answer") return null;
   if (payload.action === "publish_request") {
     const service = payload.serviceId
@@ -989,6 +1313,7 @@ function normalizePayload(
   history: HistoryMessage[] = [],
   labels: Map<string, string> = new Map(),
 ): AssistantPayload {
+  if (payload.documented) return payload;
   const normalized = normalizeText(message);
   const recentUserMessages = history
     .filter((item) => item.role === "user")
@@ -1136,10 +1461,10 @@ function normalizePayload(
             ? "Open Account & security in your dashboard to change your account email."
             : "Open Account & security in your dashboard to disable or permanently delete your account."
         : passwordIntent
-          ? "Abra Cuenta y seguridad en su panel para cambiar su contraseña de forma segura."
+          ? "Abre Cuenta y seguridad en tu panel para cambiar tu contraseña de forma segura."
           : emailIntent
-            ? "Abra Cuenta y seguridad en su panel para cambiar el correo de su cuenta."
-            : "Abra Cuenta y seguridad en su panel para deshabilitar o eliminar permanentemente su cuenta.",
+            ? "Abre Cuenta y seguridad en tu panel para cambiar el correo de tu cuenta."
+            : "Abre Cuenta y seguridad en tu panel para deshabilitar o eliminar permanentemente tu cuenta.",
       ctaLabel: locale === "en" ? "Open account settings" : "Ir a cuenta y seguridad",
     };
   }
@@ -1157,7 +1482,7 @@ function normalizePayload(
       action: "answer",
       answer: locale === "en"
         ? "Open the professional's public profile and use the WhatsApp contact button. ContrataCR opens WhatsApp with the public contact method enabled by that professional."
-        : "Abra el perfil público del profesional y use el botón de contacto por WhatsApp. ContrataCR abrirá WhatsApp con el medio público habilitado por ese profesional.",
+        : "Abre el perfil público del profesional y use el botón de contacto por WhatsApp. ContrataCR abrirá WhatsApp con el medio público habilitado por ese profesional.",
       ctaLabel: null,
     };
   }
@@ -1167,7 +1492,7 @@ function normalizePayload(
       action: "answer",
       answer: locale === "en"
         ? "No. Identity verification confirms identity information, but it does not guarantee work quality, licensing, insurance or suitability. Review the profile, experience, reviews and service details before choosing."
-        : "No. La verificación de identidad confirma datos de identidad, pero no garantiza la calidad del trabajo, licencias, seguros ni idoneidad. Revise el perfil, la experiencia, las reseñas y los detalles del servicio antes de elegir.",
+        : "No. La verificación de identidad confirma datos de identidad, pero no garantiza la calidad del trabajo, licencias, seguros ni idoneidad. Revisa el perfil, la experiencia, las reseñas y los detalles del servicio antes de elegir.",
       ctaLabel: null,
     };
   }
@@ -1177,7 +1502,7 @@ function normalizePayload(
       action: "open_dashboard",
       answer: locale === "en"
         ? "Yes. You can edit a pending proposal from My proposals while the project still allows it. An accepted, rejected or withdrawn proposal can no longer be edited."
-        : "Sí. Puede editar una propuesta pendiente desde Mis propuestas mientras el proyecto todavía lo permita. Una propuesta aceptada, rechazada o retirada ya no se puede editar.",
+        : "Sí. Puedes editar una propuesta pendiente desde Mis propuestas mientras el proyecto todavía lo permita. Una propuesta aceptada, rechazada o retirada ya no se puede editar.",
       ctaLabel: locale === "en" ? "Open my proposals" : "Ver mis propuestas",
     };
   }
@@ -1197,7 +1522,7 @@ function normalizePayload(
       action: "answer",
       answer: locale === "en"
         ? "You will receive a notification and the appointment will appear as cancelled. A cancelled appointment cannot be rescheduled; book a new available time or coordinate another time with the professional through WhatsApp."
-        : "Recibirá una notificación y la cita aparecerá como cancelada. Una cita cancelada no se puede reprogramar; reserve un nuevo horario disponible o coordine otro momento con el profesional por WhatsApp.",
+        : "Recibirás una notificación y la cita aparecerá como cancelada. Una cita cancelada no se puede reprogramar; reserva un nuevo horario disponible o coordine otro momento con el profesional por WhatsApp.",
       ctaLabel: null,
     };
   }
@@ -1207,7 +1532,7 @@ function normalizePayload(
       action: "login",
       answer: locale === "en"
         ? "You need to sign in to create a project so proposals and notifications stay linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
-        : "Necesita iniciar sesión para crear un proyecto, así las propuestas y notificaciones quedan vinculadas a su cuenta. Si todavía no tiene una, puede crearla desde la pantalla de ingreso.",
+        : "Necesitas iniciar sesión para crear un proyecto, así las propuestas y notificaciones quedan vinculadas a tu cuenta. Si todavía no tienes una, puede crearla desde la pantalla de ingreso.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1217,7 +1542,7 @@ function normalizePayload(
       action: "open_dashboard",
       answer: locale === "en"
         ? "If your account can offer services, use the Client / Professional selector in My dashboard. If professional mode is not enabled yet, start the professional registration to complete your profile."
-        : "Si su cuenta ya puede ofrecer servicios, use el selector Cliente / Profesional dentro de Mi panel. Si todavía no tiene habilitado el modo profesional, inicie el registro profesional para completar su perfil.",
+        : "Si tu cuenta ya puede ofrecer servicios, usa el selector Cliente / Profesional dentro de Mi panel. Si todavía no tienes habilitado el modo profesional, inicie el registro profesional para completar tu perfil.",
       ctaLabel: locale === "en" ? "Open my dashboard" : "Ir a mi panel",
     };
   }
@@ -1227,7 +1552,7 @@ function normalizePayload(
       action: "open_dashboard",
       answer: locale === "en"
         ? "Open Received projects in your professional dashboard to review opportunities related to your services and manage your proposals."
-        : "Abra Proyectos recibidos en su panel profesional para revisar oportunidades relacionadas con sus servicios y administrar sus propuestas.",
+        : "Abre Proyectos recibidos en tu panel profesional para revisar oportunidades relacionadas con tus servicios y administrar sus propuestas.",
       ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos",
     };
   }
@@ -1301,7 +1626,7 @@ function normalizePayload(
       locationText: null,
       answer: locale === "en"
         ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
-        : `¿En qué zona de Costa Rica desea buscar ${serviceLabel}?`,
+        : `¿En qué zona de Costa Rica buscas ${serviceLabel}?`,
       ctaLabel: null,
     };
   }
@@ -1324,7 +1649,7 @@ function normalizePayload(
         action: "answer",
         answer: locale === "en"
           ? "What service do you need and in which area of Costa Rica?"
-          : "¿Qué servicio necesita y en qué zona de Costa Rica?",
+          : "¿Qué servicio necesitas y en qué zona de Costa Rica?",
         ctaLabel: null,
       };
     }
@@ -1359,7 +1684,7 @@ function normalizePayload(
       locationText: publishPlaceLabel,
       answer: locale === "en"
         ? `I have the service (${serviceLabel}) and location (${publishPlaceLabel}). Open the form to add the job details, review the information and create the project.`
-        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${publishPlaceLabel}). Abra el formulario para agregar los detalles del trabajo, revisar la información y crear el proyecto.`,
+        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${publishPlaceLabel}). Abre el formulario para agregar los detalles del trabajo, revisar la información y crear el proyecto.`,
       ctaLabel: locale === "en" ? "Create project" : "Crear proyecto",
     };
   }
@@ -1388,6 +1713,32 @@ function urgentSafetyAnswer(message: string, locale: Locale): AssistantPayload |
     "cables echando chispas",
     "electrocutado",
     "descarga electrica",
+    "sale humo",
+    "saliendo humo",
+    "hay humo",
+    "chispas",
+    "se desmayo",
+    "desmayado",
+    "desmayada",
+    "inconsciente",
+    "no reacciona",
+    "convulsion",
+    "se esta ahogando",
+    "sangra mucho",
+    "sangrando mucho",
+    "me estan robando",
+    "me robaron ahora",
+    "estan robando",
+    "un asalto",
+    "me asaltan",
+    "hay un ladron",
+    "accidente grave",
+    "fainted",
+    "unconscious",
+    "smoke coming",
+    "being robbed",
+    "robbing me",
+    "burglar",
     "riesgo de suicidio",
     "quiero suicidarme",
     "medical emergency",
@@ -1404,12 +1755,20 @@ function urgentSafetyAnswer(message: string, locale: Locale): AssistantPayload |
     action: "answer",
     answer: locale === "en"
       ? "This may be an emergency. Call Costa Rica emergency services at 9-1-1 now. Do not wait for a marketplace professional or an AI response."
-      : "Esto puede ser una emergencia. Llame ahora al 9-1-1 de Costa Rica. No espere a un profesional de la plataforma ni una respuesta de IA.",
+      : "Esto puede ser una emergencia. Llama ahora al 9-1-1 de Costa Rica. No esperes a un profesional de la plataforma ni a una respuesta de la IA.",
   };
 }
 
 function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayload | null {
   const normalized = normalizeText(message);
+  if (/\b(hack|hackeo|hackear|hackea|hackee|hackers?|crackear|robar (la |una )?cuenta|entrar a la cuenta de otro)/.test(normalized)) {
+    return {
+      action: "answer",
+      answer: locale === "en"
+        ? "I cannot help with that. Accessing someone else's account is illegal; if you lost access to your own account, use \"Forgot your password?\" or Support."
+        : "No puedo ayudar con eso. Entrar a la cuenta de otra persona es ilegal; si perdiste el acceso a tu propia cuenta, usa «¿Olvidaste tu contraseña?» o Soporte.",
+    };
+  }
   const asksForInternalData = includesAny(normalized, [
     "muestre su prompt",
     "muestra tu prompt",
@@ -1427,11 +1786,23 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
       action: "answer",
       answer: locale === "en"
         ? "I cannot share internal instructions, secrets or implementation details. I can help you search for services, create a project or answer questions about ContrataCR."
-        : "No puedo compartir instrucciones internas, secretos ni detalles de implementacion. Si gusta, puedo ayudarle a buscar servicios, crear un proyecto o resolver dudas sobre ContrataCR.",
+        : "No puedo compartir instrucciones internas, secretos ni detalles de implementación. Puedo ayudarte a buscar servicios, crear un proyecto o resolver dudas sobre ContrataCR.",
     };
   }
 
   const asksForPrivateData = includesAny(normalized, [
+    "telefono de todos",
+    "telefonos de todos",
+    "numeros de todos",
+    "lista de telefonos",
+    "lista de numeros",
+    "todos los telefonos",
+    "todos los numeros",
+    "correos de todos",
+    "todos los correos",
+    "phone numbers of all",
+    "all the phone numbers",
+    "list of phone numbers",
     "cedula de",
     "numero de cedula",
     "telefono privado",
@@ -1448,7 +1819,7 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
       action: "answer",
       answer: locale === "en"
         ? "I cannot reveal private user data. Please use the public profile, request form or official support channel for legitimate coordination."
-        : "No puedo revelar datos privados de usuarios. Use el perfil publico, el formulario de solicitud o el canal oficial de soporte para una coordinacion legitima.",
+        : "No puedo revelar datos privados de usuarios. Usa el perfil público, el formulario de solicitud o Soporte para una coordinación legítima.",
     };
   }
 
@@ -1491,7 +1862,6 @@ function wantsVideoIntent(text: string) {
   ]);
 }
 
-type ProfessionalSearchResult = Awaited<ReturnType<typeof searchProfessionals>>[number];
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
@@ -1564,6 +1934,8 @@ function assistantProfessionalResult(
         ? locale === "en" ? "Send message" : "Enviar mensaje"
         : locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
     actionKind,
+    categoryId: serviceId ?? professional.categoryId ?? null,
+    card: professional,
   };
 }
 
@@ -1614,7 +1986,7 @@ export async function POST(req: Request) {
     if (!nativeApp) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    const rawMessage = limitTrimmedText(body.message, Math.min(LONG_TEXT_MAX_LENGTH, 1200));
+    const rawMessage = canonicalizeMessage(limitTrimmedText(body.message, Math.min(LONG_TEXT_MAX_LENGTH, 1200)));
     const pagePath = limitTrimmedText(body.pagePath, 240) || `/${locale}`;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -1638,7 +2010,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         answer: locale === "en"
           ? "What service do you need and in which area of Costa Rica?"
-          : "¿Qué servicio necesita y en qué zona de Costa Rica?",
+          : "¿Qué servicio necesitas y en qué zona de Costa Rica?",
         action: "answer",
         searchHref: null,
         ctaLabel: null,
@@ -1670,13 +2042,14 @@ export async function POST(req: Request) {
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
     const payload = safetyPayload ?? normalizePayload(aiPayload ?? documentedPayload, rawMessage, locale, history, catalog.labels);
-    const needsGenericClarification = ambiguousGenericServiceRequest(rawMessage);
+    const documented = payload.documented === true;
+    const needsGenericClarification = !documented && ambiguousGenericServiceRequest(rawMessage);
     const hasValidResolvedService = !needsGenericClarification && !!payload.serviceId && catalog.labels.has(payload.serviceId);
     const resolvedCategory = hasValidResolvedService
       ? { id: payload.serviceId!, needsClarification: false }
       : resolveAssistantCategory(rawMessage, history, locale, payload.serviceId, catalog.labels);
     const missingServiceName = !resolvedCategory.id ? clearMissingServiceName(rawMessage) : null;
-    if (payload.action === "suggest_service" && resolvedCategory.id && !explicitPublishIntent) {
+    if (!documented && payload.action === "suggest_service" && resolvedCategory.id && !explicitPublishIntent) {
       const serviceLabel = catalog.labels.get(resolvedCategory.id) || getCategoryLabel(resolvedCategory.id, locale);
       const placeLabel = formatPlaceLabel(userMessagePlace(rawMessage));
       payload.action = placeLabel ? "search_professionals" : "answer";
@@ -1686,7 +2059,7 @@ export async function POST(req: Request) {
           : `Encontré profesionales de ${serviceLabel} en ${placeLabel}.`
         : locale === "en"
           ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
-          : `¿En qué zona de Costa Rica desea buscar ${serviceLabel}?`;
+          : `¿En qué zona de Costa Rica buscas ${serviceLabel}?`;
       payload.searchQuery = serviceLabel;
       payload.serviceId = resolvedCategory.id;
       payload.locationText = placeLabel;
@@ -1701,21 +2074,21 @@ export async function POST(req: Request) {
       payload.locationText = null;
       payload.ctaLabel = null;
     }
-    if (missingServiceName && !explicitPublishIntent) {
+    if (!documented && missingServiceName && !explicitPublishIntent) {
       payload.action = "suggest_service";
       payload.answer = locale === "en"
         ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-        : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
+        : "Ese servicio todavía no está en el catálogo. Puedes sugerirlo para que el equipo de ContrataCR lo revise.";
       payload.searchQuery = missingServiceName;
       payload.serviceId = null;
       payload.locationText = null;
       payload.ctaLabel = locale === "en" ? "Suggest service" : "Sugerir servicio";
     }
-    if (!resolvedCategory.id && !explicitPublishIntent && genericUnclearRequest(rawMessage)) {
+    if (!documented && !resolvedCategory.id && !explicitPublishIntent && genericUnclearRequest(rawMessage)) {
       payload.action = "answer";
       payload.answer = locale === "en"
         ? "Which service do you need? For example: plumbing, electricity, cleaning, repair or consulting."
-        : "¿Qué tipo de servicio necesita? Por ejemplo: plomería, electricidad, limpieza, reparación o asesoría.";
+        : "¿Qué tipo de servicio necesitas? Por ejemplo: plomería, electricidad, limpieza, reparación o asesoría.";
       payload.searchQuery = null;
       payload.serviceId = null;
       payload.locationText = null;
@@ -1733,7 +2106,7 @@ export async function POST(req: Request) {
         payload.ctaLabel = null;
       }
     }
-    if (payload.serviceId && !catalog.labels.has(payload.serviceId)) {
+    if (!documented && payload.serviceId && !catalog.labels.has(payload.serviceId)) {
       payload.serviceId = resolveCategoryIntent(payload.searchQuery || rawMessage, locale)?.id ?? null;
     }
     const searchHref = actionHref(payload, rawMessage, locale);
@@ -1767,19 +2140,19 @@ export async function POST(req: Request) {
     const rawAssistantAnswer = noResults
       ? locale === "en"
         ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can create a project so related professionals are notified.`
-        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puede crear un proyecto para notificar a profesionales relacionados.`
+        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puedes crear un proyecto para avisar a los profesionales de ese servicio.`
       : hasResults
         ? resultCount === 1
           ? locale === "en"
             ? `I found 1 professional for ${servicePhrase} in ${placePhrase}. Use the button to view the profile.`
-            : `Encontré 1 profesional de ${servicePhrase} en ${placePhrase}. Use el botón para ver el perfil.`
+            : `Encontré 1 profesional de ${servicePhrase} en ${placePhrase}. Usa el botón para ver el perfil.`
           : locale === "en"
             ? `I found ${resultCount} professionals for ${servicePhrase} in ${placePhrase}. Use the button to view their profiles.`
-            : `Encontré ${resultCount} profesionales de ${servicePhrase} en ${placePhrase}. Use el botón para ver los perfiles.`
+            : `Encontré ${resultCount} profesionales de ${servicePhrase} en ${placePhrase}. Usa el botón para ver todos los perfiles.`
         : suggestedService
           ? locale === "en"
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-            : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
+            : "Ese servicio todavía no está en el catálogo. Puedes sugerirlo para que el equipo de ContrataCR lo revise."
           : payload.answer;
     const assistantAnswer = nativeApp
       ? rawAssistantAnswer

@@ -39,6 +39,8 @@ export type CostServiceView = CostService & {
   notes: string | null;
   /** Recurring spend since `since` (USD), 0 for variable or dateless services. */
   lifetimeUsd: number;
+  /** Recurring spend since `since` in colones (content). */
+  lifetimeCrc: number;
   /** Money recorded in the ledger against this service, per currency. */
   ledgerUsd: number;
   ledgerCrc: number;
@@ -46,6 +48,7 @@ export type CostServiceView = CostService & {
 
 export type CostSummary = {
   monthlyRecurringUsd: number;
+  monthlyRecurringCrc: number;
   annualRecurringUsd: number;
   lifetimeUsd: number;
   lifetimeCrc: number;
@@ -169,6 +172,7 @@ async function payload() {
       usageUpdatedAt: row?.usage_updated_at ?? null,
       notes: row?.notes ?? null,
       lifetimeUsd: service.variable ? 0 : round(monthlyUsd * monthsSince(since, today) + annualUsd * yearsSince(since, today)),
+      lifetimeCrc: service.variable ? 0 : round((service.monthlyCrc ?? 0) * monthsSince(since, today)),
       ledgerUsd: round(own.filter((e) => e.currency === "USD").reduce((sum, e) => sum + e.amount, 0)),
       ledgerCrc: round(own.filter((e) => e.currency === "CRC").reduce((sum, e) => sum + e.amount, 0)),
     };
@@ -185,7 +189,7 @@ async function payload() {
     const current = categoryTotals.get(category) ?? { usd: 0, crc: 0 };
     categoryTotals.set(category, { usd: round(current.usd + usd), crc: round(current.crc + crc) });
   };
-  for (const service of services) add(service.category, service.lifetimeUsd, 0);
+  for (const service of services) add(service.category, service.lifetimeUsd, service.lifetimeCrc);
   for (const entry of entries) {
     const category = (entry.serviceId && findCostService(entry.serviceId)?.category)
       || (entry.kind === "publicidad" ? "marketing" : entry.kind === "contenido" ? "contenido" : "herramientas");
@@ -199,7 +203,10 @@ async function payload() {
     let crc = 0;
     for (const service of services) {
       if (service.variable || !service.since) continue;
-      if (monthKey(service.since) <= month) usd += service.monthlyUsd;
+      if (monthKey(service.since) <= month) {
+        usd += service.monthlyUsd;
+        crc += service.monthlyCrc ?? 0;
+      }
       if (service.annualUsd > 0 && monthKey(service.since).slice(5) === month.slice(5) && monthKey(service.since) <= month) usd += service.annualUsd;
     }
     for (const entry of entries) {
@@ -212,13 +219,14 @@ async function payload() {
 
   const summary: CostSummary = {
     monthlyRecurringUsd: round(services.filter((s) => !s.variable).reduce((s, x) => s + x.monthlyUsd, 0)),
+    monthlyRecurringCrc: round(services.filter((s) => !s.variable).reduce((s, x) => s + (x.monthlyCrc ?? 0), 0)),
     annualRecurringUsd: round(services.filter((s) => !s.variable).reduce((s, x) => s + x.annualUsd, 0)),
     lifetimeUsd: round(services.reduce((s, x) => s + x.lifetimeUsd, 0) + sum(entries, "USD")),
-    lifetimeCrc: sum(entries, "CRC"),
+    lifetimeCrc: round(services.reduce((s, x) => s + x.lifetimeCrc, 0) + sum(entries, "CRC")),
     adsUsd: round(sum(ads, "USD") + services.filter((s) => s.category === "marketing").reduce((s, x) => s + x.lifetimeUsd, 0)),
     adsCrc: sum(ads, "CRC"),
     contentUsd: sum(content, "USD"),
-    contentCrc: sum(content, "CRC"),
+    contentCrc: round(sum(content, "CRC") + services.filter((s) => s.category === "contenido").reduce((s, x) => s + x.lifetimeCrc, 0)),
     byCategory: [...categoryTotals.entries()].map(([category, totals]) => ({ category, ...totals })),
     byMonth,
   };

@@ -90,7 +90,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
     expect(response.body.searchHref, JSON.stringify(response.body)).toBeTruthy();
     expect(response.body.searchHref, JSON.stringify(response.body)).not.toContain("categoria=");
     expect(response.body.searchHref, JSON.stringify(response.body)).toMatch(/\/buscar\?q=|openPublish=1/);
-    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/no tengo total certeza|cree un proyecto|crear un proyecto/i);
+    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/no estoy seguro|no tengo total certeza|crea(r)? un proyecto|publica un proyecto/i);
   });
 
   test("keeps unclear Spanish and English requests as free-text searches", async ({ page }) => {
@@ -123,7 +123,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       expect(response.body.action, prompt).toBe("answer");
       expect(response.body.searchHref ?? null, prompt).toBeNull();
       expect(response.body.ctaLabel ?? null, prompt).toBeNull();
-      expect(response.body.answer, prompt).toMatch(/se refiere|servicio/i);
+      expect(response.body.answer, prompt).toMatch(/te refieres|se refiere|servicio/i);
     }
   });
 
@@ -406,7 +406,7 @@ test.describe("@seeded ContrataCR AI", () => {
     });
     expect(requestReady.status).toBe(200);
     expect(requestReady.body.action).toBe("publish_request");
-    expect(requestReady.body.answer).toMatch(/abra el formulario/i);
+    expect(requestReady.body.answer).toMatch(/abr[ae] el formulario/i);
     expect(requestReady.body.answer).not.toMatch(/voy a (?:proceder|crear|publicar)|creare|publicare/i);
     expect(requestReady.body.ctaLabel).toBe("Crear proyecto");
     expect(requestReady.body.searchHref).toContain("tab=sent_projects");
@@ -473,7 +473,7 @@ test.describe("@seeded ContrataCR AI", () => {
     await gotoOK(page, "/es");
     const cases = [
       { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /no garantiza|no\. la verificación/i },
-      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "tab=proposals", answer: /puede editar/i },
+      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "tab=proposals", answer: /puedes? editar|se puede editar/i },
       { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /cliente reprograma|no\. el cliente/i },
       { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/es/login", answer: /iniciar sesión/i },
       { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },

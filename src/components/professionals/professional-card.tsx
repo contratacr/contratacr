@@ -1,4 +1,6 @@
-import { getLocale, getTranslations } from "next-intl/server";
+"use client";
+
+import { useLocale, useTranslations } from "next-intl";
 import { Star } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
@@ -110,10 +112,10 @@ interface ProfessionalCardProps {
   searchReturnHref?: string;
 }
 
-export async function ProfessionalCard({ professional, className, highlightMetric = "rating", slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false, searchReturnHref }: ProfessionalCardProps) {
-  const tCard = await getTranslations("card");
-  const tSchedule = await getTranslations("schedule");
-  const locale = await getLocale();
+export function ProfessionalCard({ professional, className, highlightMetric = "rating", slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false, searchReturnHref }: ProfessionalCardProps) {
+  const tCard = useTranslations("card");
+  const tSchedule = useTranslations("schedule");
+  const locale = useLocale();
   // Safe category label: if a translation key is missing, next-intl returns the
   // raw "categories.xxx" path — fall back to the taxonomy label (e.g. "otro" →
   // "Otro servicio") so no internal key ever leaks into the UI.

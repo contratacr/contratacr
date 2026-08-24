@@ -510,7 +510,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       the map takes the rest (see search-results-layout). Content-driven
                       height - one card per row, each grows to its content. */}
                   <div className="ccr-search-results-list -mx-4 flex min-h-full w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-[#eef2f6] lg:mx-0 lg:min-h-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
-                    {await Promise.all(results.map((pro, i) => (
+                    {results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.
                       <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative w-full scroll-mt-24 transition-shadow lg:max-w-none lg:rounded-2xl">
@@ -531,7 +531,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           />
                         </SaveableCard>
                       </div>
-                    )))}
+                    ))}
                   </div>
 
                   {totalPages > 1 && (

@@ -83,6 +83,15 @@ const ids = {
   blocked: ["c4000000-0000-4000-8000-000000000001", "c4000000-0000-4000-8000-000000000002"],
 };
 
+
+const PROVINCE_IDS = { "san jose": "sj", alajuela: "al", cartago: "ca", heredia: "he", guanacaste: "gu", puntarenas: "pu", limon: "li" };
+function provinceIdFromLabel(value) {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (/^[a-z]{2}$/.test(normalized)) return normalized;
+  return PROVINCE_IDS[normalized] || null;
+}
+
 async function must(label, promise) {
   const { data, error } = await promise;
   if (error) throw new Error(`${label}: ${error.message}`);
@@ -349,7 +358,8 @@ async function restoreProductionActors() {
       portfolio_urls: source.portfolioUrls,
       portfolio_items: source.portfolioItems,
       coverage_country: source.coverage?.country === true,
-      coverage_provincias: source.coverage?.provincias || [],
+      // The public profile API answers with province NAMES; the column holds ids.
+      coverage_provincias: (source.coverage?.provincias || []).map(provinceIdFromLabel).filter(Boolean),
       workplaces: source.workplaces,
       services: source.services,
       availability_public: source.availabilityPublic !== false,

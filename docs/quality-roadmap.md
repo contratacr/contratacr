@@ -109,6 +109,17 @@ the same tab paints the rows at hydration (~390 ms) with no skeleton either.
 
 ### Block D — Assistant review (1 session, with you)
 
+**Status 2026-08-24 (first pass done).** `scripts/assistant-prompt-matrix.mjs` sends 69
+prompts (Spanish, English, tico phrasing, typos, emergencies, account, marketplace, app-only
+flows, sensitive, ambiguous) and writes `docs/assistant-review-matrix.md`. The first read found
+~30 answers that fell into "No tengo total certeza…" or asked for a service on account/app
+questions; root cause was the gap between the loose category detector and the strict
+confirmation, with the product manual never consulted. Fixed with a documented-answer layer
+(`productAnswer`) that wins before any search heuristic, message canonicalisation (English
+professions, typos), wider emergency and bulk-data guards, tú voice everywhere, and the
+assistant now renders the app's real professional card with its real buttons. Owner's read of
+the regenerated matrix is the remaining step; then the matrix becomes a test.
+
 - A prompt matrix of ~60 prompts (Spanish, English, tico phrasing, typos, emergencies, account questions, marketplace questions, native-only flows), run locally, answers captured to a table.
 - You and I read every answer once; wording fixes go into the route; the matrix becomes a test.
 - **Gate:** every documented answer reviewed and frozen by a test.

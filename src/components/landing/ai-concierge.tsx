@@ -31,6 +31,8 @@ import { useNativeApp } from "@/hooks/use-native-app";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { cn, getInitials } from "@/lib/utils";
 import { MessageLauncher } from "@/components/professionals/message-launcher";
+import { ProfessionalCard, type ProfessionalCardData } from "@/components/professionals/professional-card";
+import { SaveableCard } from "@/components/professionals/save-button";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type ResultCard = {
@@ -48,6 +50,9 @@ type ResultCard = {
   actionHref: string;
   actionLabel: string;
   actionKind: "availability" | "message";
+  categoryId?: string | null;
+  /** The same professional /buscar renders; when present the real card is shown. */
+  card?: ProfessionalCardData | null;
 };
 
 type MessageAction = { label: string; href: string; kind?: string | null };
@@ -580,7 +585,29 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                   {message.body}
                 </div>
 
-                {message.professionals?.map((result) => (
+                {message.professionals?.map((result) => result.card ? (
+                  // The card /buscar shows, with its own buttons (schedule,
+                  // message, call, save). Following a link inside it closes
+                  // the sheet so the destination is not hidden behind it.
+                  <div
+                    key={result.id}
+                    className="text-left"
+                    onClickCapture={(event) => {
+                      if ((event.target as HTMLElement).closest("a")) setOpen(false);
+                    }}
+                  >
+                    <SaveableCard pro={result.card} isOwn={!!user?.id && user.id === result.card.profileId}>
+                      <ProfessionalCard
+                        professional={result.card}
+                        slots={[]}
+                        slotsInitiallyLoaded={false}
+                        activeCategory={result.categoryId ?? undefined}
+                        viewerProfileId={user?.id}
+                        highlightMetric="rating"
+                      />
+                    </SaveableCard>
+                  </div>
+                ) : (
                   <ProfessionalResult key={result.id} result={result} copy={copy} onNavigate={navigate} nativeApp={nativeApp} lang={lang} />
                 ))}
 

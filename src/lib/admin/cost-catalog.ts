@@ -22,6 +22,8 @@ export type CostService = {
   plan: string;
   monthlyUsd: number;
   annualUsd: number;
+  /** Recurring amount paid in colones (content), counted apart from USD. */
+  monthlyCrc?: number;
   /** Month the service started being paid (approximate). */
   since: string | null;
   /** Paid per piece rather than per period (content). */
@@ -248,15 +250,15 @@ export const COST_SERVICES: readonly CostService[] = [
     name: "Sharon Velásquez (contenido)",
     category: "contenido",
     role: "Publicaciones, destacadas y videos para las redes de ContrataCR.",
-    plan: "Por pieza",
+    plan: "≈ ₡50 000 por semana (puede cambiar)",
     monthlyUsd: 0,
     annualUsd: 0,
-    since: null,
-    variable: true,
+    monthlyCrc: 200_000,
+    since: "2026-09-01",
     currency: "CRC",
     limit: {
-      included: "₡10 000 por publicación o destacada · ₡20 000 por video.",
-      beyond: "No hay tope: cada pieza se registra en Movimientos al pagarla.",
+      included: "Tarifa de referencia: ₡10 000 por publicación o destacada · ₡20 000 por video. Agosto 2026 se pagó por pieza (₡160 000).",
+      beyond: "Un mes con más o menos piezas se ajusta en Movimientos; el monto semanal se puede cambiar aquí.",
     },
   },
 ];

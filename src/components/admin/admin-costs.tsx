@@ -127,12 +127,12 @@ export function AdminCosts() {
 
 function Summary({ data }: { data: Payload }) {
   const { summary, services } = data;
-  const recurring = services.filter((s) => !s.variable && (s.monthlyUsd > 0 || s.annualUsd > 0));
+  const recurring = services.filter((s) => !s.variable && (s.monthlyUsd > 0 || s.annualUsd > 0 || (s.monthlyCrc ?? 0) > 0));
   const maxMonth = Math.max(1, ...summary.byMonth.map((m) => m.usd + m.crc / 500));
   return (
     <>
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile label="Cada mes" value={usd(summary.monthlyRecurringUsd)} hint={summary.annualRecurringUsd > 0 ? `+ ${usd(summary.annualRecurringUsd)} al año en renovaciones` : undefined} accent />
+        <Tile label="Cada mes" value={both(summary.monthlyRecurringUsd, summary.monthlyRecurringCrc)} hint={summary.annualRecurringUsd > 0 ? `+ ${usd(summary.annualRecurringUsd)} al año en renovaciones` : undefined} accent />
         <Tile label="Gastado desde el inicio" value={both(summary.lifetimeUsd, summary.lifetimeCrc)} hint="suscripciones desde su fecha de inicio + movimientos" />
         <Tile label="Publicidad" value={both(summary.adsUsd, summary.adsCrc)} hint="Meta y otras campañas registradas" />
         <Tile label="Contenido en redes" value={both(summary.contentUsd, summary.contentCrc)} hint="publicaciones, destacadas y videos" />
@@ -167,7 +167,7 @@ function Summary({ data }: { data: Payload }) {
                   <p className="truncate text-xs text-[#64748b]">{s.plan}</p>
                 </div>
                 <p className="shrink-0 tabular-nums text-[#0f172a]">
-                  {s.monthlyUsd > 0 ? `${usd(s.monthlyUsd)}/mes` : ""}{s.monthlyUsd > 0 && s.annualUsd > 0 ? " · " : ""}{s.annualUsd > 0 ? `${usd(s.annualUsd)}/año` : ""}
+                  {[s.monthlyUsd > 0 ? `${usd(s.monthlyUsd)}/mes` : null, (s.monthlyCrc ?? 0) > 0 ? `${crc(s.monthlyCrc ?? 0)}/mes` : null, s.annualUsd > 0 ? `${usd(s.annualUsd)}/año` : null].filter(Boolean).join(" · ")}
                 </p>
               </li>
             ))}
@@ -217,7 +217,7 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
   const [form, setForm] = useState({ monthlyUsd: String(service.monthlyUsd), annualUsd: String(service.annualUsd), usageNote: service.usageNote ?? "" });
   const cost = service.variable
     ? "Variable"
-    : [service.monthlyUsd > 0 ? `${usd(service.monthlyUsd)}/mes` : null, service.annualUsd > 0 ? `${usd(service.annualUsd)}/año` : null].filter(Boolean).join(" · ") || "Gratis";
+    : [service.monthlyUsd > 0 ? `${usd(service.monthlyUsd)}/mes` : null, (service.monthlyCrc ?? 0) > 0 ? `${crc(service.monthlyCrc ?? 0)}/mes` : null, service.annualUsd > 0 ? `${usd(service.annualUsd)}/año` : null].filter(Boolean).join(" · ") || "Gratis";
 
   async function save(event: FormEvent) {
     event.preventDefault();
@@ -266,7 +266,7 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
       ) : (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[#64748b]">
           <div className="space-y-0.5">
-            <p>{service.variable ? "Se registra por pieza en Movimientos" : service.lifetimeUsd > 0 ? `${usd(service.lifetimeUsd)} acumulados en suscripción` : "Sin costo acumulado"}{service.ledgerUsd > 0 || service.ledgerCrc > 0 ? ` · ${both(service.ledgerUsd, service.ledgerCrc)} en movimientos` : ""}</p>
+            <p>{service.variable ? "Se registra por pieza en Movimientos" : service.lifetimeUsd > 0 || service.lifetimeCrc > 0 ? `${both(service.lifetimeUsd, service.lifetimeCrc)} acumulados en suscripción` : "Sin costo acumulado"}{service.ledgerUsd > 0 || service.ledgerCrc > 0 ? ` · ${both(service.ledgerUsd, service.ledgerCrc)} en movimientos` : ""}</p>
             <p>{service.usageNote ? <>Uso: <span className="font-semibold text-[#0f172a]">{service.usageNote}</span>{service.usageUpdatedAt ? ` (${dateLabel(service.usageUpdatedAt.slice(0, 10))})` : ""}</> : "Uso de este mes: sin anotar"}</p>
           </div>
           <div className="flex items-center gap-2">
