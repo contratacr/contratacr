@@ -276,16 +276,19 @@ export default function LoginPage() {
   // through <project>.supabase.co, so Google's screen names our domain. The
   // redirect flow above stays as the fallback when Google's library cannot load.
   async function handleGoogleCredential(idToken: string, nonce: string) {
+    // Google's window has just closed: cover the form right now, not after the
+    // token exchange — the person must never see the login screen again.
+    setLeaving(true);
     setGoogleLoading(true);
     setError(null);
     const supabase = createClient();
     const { error: tokenError } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken, nonce });
     if (tokenError) {
+      setLeaving(false);
       setError(tokenError.message);
       setGoogleLoading(false);
       return;
     }
-    setLeaving(true);
     const callback = oauthCallbackUrl().replace("flow=oauth", "flow=native");
     window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
   }
