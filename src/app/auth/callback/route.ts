@@ -143,8 +143,12 @@ async function finishSignedIn(
   }
 
   if (!onboardingDone) {
-    // Genuinely new OAuth user, no role chosen yet → onboarding.
-    return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/onboarding`);
+    // Genuinely new OAuth user, no role chosen yet → onboarding. A short-lived
+    // cookie tells that page so (a query string can be dropped on the way), and it
+    // skips its own "is this an existing account?" round trip.
+    const toOnboarding = NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/onboarding`);
+    toOnboarding.cookies.set("ccr_onboarding_new", "1", { path: "/", maxAge: 120, sameSite: "lax" });
+    return toOnboarding;
   }
 
   if (professionalSignupIncomplete) {

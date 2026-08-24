@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
@@ -347,7 +347,16 @@ export default function LoginPage() {
   // us an ID token; Supabase verifies it directly, and /auth/callback resolves
   // the destination from the session exactly as it does for the native sheet.
   // No hop through <project>.supabase.co, so Google's screen names our domain.
+  // Back from Google's window: cover the form at once. If no credential arrives
+  // (they cancelled), uncover after a moment.
+  const googleCredentialSeen = useRef(false);
+  function handleGoogleReturn() {
+    setLeaving(true);
+    window.setTimeout(() => { if (!googleCredentialSeen.current) setLeaving(false); }, 2500);
+  }
+
   async function handleGoogleCredential(idToken: string, nonce: string) {
+    googleCredentialSeen.current = true;
     // Google's window has just closed: cover the form right now, not after the
     // token exchange — the person must never see the login screen again.
     setLeaving(true);
@@ -484,6 +493,7 @@ export default function LoginPage() {
                 locale={locale}
                 disabled={googleLoading || appleLoading}
                 onCredential={handleGoogleCredential}
+                onReturn={handleGoogleReturn}
                 fallback={
                 <button
                   type="button"

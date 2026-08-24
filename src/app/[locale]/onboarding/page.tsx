@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { FocusedHeader } from "@/components/layout/focused-header";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { PageRouteLoading } from "@/components/ui/route-loading";
 
 export default function OnboardingPage() {
   const { user, avatarUrl, loading: authLoading } = useAuth();
@@ -34,6 +35,15 @@ export default function OnboardingPage() {
     if (authLoading) return;
     if (!user) { if (!isSigningOut()) router.push("/login"); return; }
     if (completing.current) { setCheckingExisting(false); return; }
+    // /auth/callback already established that this is a brand-new account when it
+    // sent the person here with ?new=1: no need for another round trip before the
+    // cards — the loading mark would only linger for nothing.
+    const declaredNew = /(?:^|;\s*)ccr_onboarding_new=1(?:;|$)/.test(document.cookie) || new URLSearchParams(window.location.search).get("new") === "1";
+    if (declaredNew && user.user_metadata?.onboarding_completed !== true) {
+      document.cookie = "ccr_onboarding_new=; Max-Age=0; path=/";
+      setCheckingExisting(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       let done = user.user_metadata?.onboarding_completed === true;
@@ -130,13 +140,9 @@ export default function OnboardingPage() {
 
   // Loader until we KNOW this is a new user (existing users are redirected above) —
   // so the role-selection cards never flash for someone who already has an account.
-  if (authLoading || !user || checkingExisting) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
-  }
+  // The same brand mark the previous screen was showing, so the hand-off from
+  // Google reads as one continuous wait rather than logo → spinner → cards.
+  if (authLoading || !user || checkingExisting) return <PageRouteLoading />;
 
   const displayName = (
     (user.user_metadata?.full_name as string) ??

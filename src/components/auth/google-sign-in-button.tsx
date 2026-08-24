@@ -88,6 +88,7 @@ export function GoogleSignInButton({
   fallback,
   onCredential,
   onError,
+  onReturn,
 }: {
   locale: string;
   disabled?: boolean;
@@ -96,6 +97,9 @@ export function GoogleSignInButton({
   /** Google's ID token plus the raw nonce Supabase must be handed alongside it. */
   onCredential: (idToken: string, nonce: string) => void | Promise<void>;
   onError?: (error: unknown) => void;
+  /** The person is back from Google's window (it closed or lost focus) — a
+   *  credential may follow within a moment, or they cancelled. */
+  onReturn?: () => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(false);
@@ -156,6 +160,25 @@ export function GoogleSignInButton({
   // nothing moves: the page looks the same before, during and after Google's
   // library loads. If the library never renders, the visible button is still
   // ours and its own click runs the redirect flow.
+  // Arm "back from Google" detection on the click that opens Google's window: the
+  // page loses focus/visibility while the window is up and regains it when it
+  // closes, on desktop (popup) and on iOS Safari (new tab) alike.
+  const armed = useRef(false);
+  useEffect(() => {
+    const back = () => {
+      if (!armed.current || document.visibilityState !== "visible") return;
+      armed.current = false;
+      onReturn?.();
+    };
+    window.addEventListener("focus", back);
+    document.addEventListener("visibilitychange", back);
+    return () => {
+      window.removeEventListener("focus", back);
+      document.removeEventListener("visibilitychange", back);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="relative h-11 w-full">
       <div className="absolute inset-0">{fallback}</div>
@@ -165,6 +188,7 @@ export function GoogleSignInButton({
         aria-hidden
         className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center overflow-hidden"
         style={{ opacity: 0.001, pointerEvents: ready && !disabled ? "auto" : "none" }}
+        onPointerDownCapture={() => { armed.current = true; }}
       />
     </div>
   );

@@ -1719,3 +1719,15 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   pointer-events: none;
 }
 /* Desktop dissolves the sheet (display: contents), so the apron never paints there. */
+\n
+/* /buscar on phones: the page under the results panel never pans or rubber-bands. */
+body.ccr-search-sheet-page {
+  overscroll-behavior-y: none;
+}
+\n
+/* Inside the results panel header the chip rail pans sideways only; vertical
+   movement belongs to the panel drag, so the browser must not claim it. */
+.ccr-search-bottom-sheet [data-rail-trim],
+.ccr-search-bottom-sheet .overflow-x-auto {
+  touch-action: pan-x;
+}
