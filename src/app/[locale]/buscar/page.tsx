@@ -535,50 +535,67 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   </div>
 
                   {totalPages > 1 && (
-                    // One centred block on every size: previous · page numbers · next,
-                    // with the position above and the total below. On the phone it
-                    // sits on the same white surface as the sheet header, with the
-                    // same side padding, so it reads as part of the list.
-                    <nav aria-label={t("pagination.label")} className="-mx-4 mt-4 border-t border-[#eef2f6] bg-white px-4 pb-5 pt-4 lg:mx-0 lg:mt-6 lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:px-6">
-                      <p className="text-center text-xs font-bold uppercase tracking-[0.08em] text-[#64748b]">{currentPage} / {totalPages}</p>
-                      <div className="mt-3 flex items-center justify-center gap-2">
+                    <nav aria-label={t("pagination.label")} className="mt-5 border-t border-[#e5e7eb] pt-4">
+                      <div className="flex items-center justify-between gap-3 sm:hidden">
                         {currentPage > 1 ? (
-                          <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d5dfe8] bg-white px-4 text-sm font-bold text-[#162543] hover:bg-[#f8fafc]">
+                          <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-4 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
                             <ChevronLeft className="h-4 w-4" />
                             <span>{t("pagination.prev")}</span>
                           </Link>
                         ) : (
-                          <span aria-hidden className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
+                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
                             <ChevronLeft className="h-4 w-4" />
                             <span>{t("pagination.prev")}</span>
                           </span>
                         )}
-                        <div className="hidden items-center gap-1 rounded-full bg-[#f3f7fb] p-1 sm:flex">
-                          {paginationPages.map((page, index) => page === "ellipsis" ? (
-                            <span key={`ellipsis-${index}`} className="grid h-9 w-8 place-items-center text-sm font-semibold text-[#9ca3af]">…</span>
-                          ) : page === currentPage ? (
-                            <span key={page} aria-current="page" className="grid h-9 min-w-9 place-items-center rounded-full bg-[#009FD9] px-3 text-sm font-bold text-white shadow-sm">{page}</span>
-                          ) : (
-                            <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-9 min-w-9 place-items-center rounded-full px-3 text-sm font-bold text-[#475569] hover:bg-white hover:text-[#009FD9]">
-                              {page}
-                            </Link>
-                          ))}
-                        </div>
+                        <span className="min-w-0 text-center text-xs font-bold uppercase tracking-[0.08em] text-[#64748b]">
+                          {currentPage} / {totalPages}
+                        </span>
                         {currentPage < totalPages ? (
-                          <Link href={pageHref(currentPage + 1)} prefetch aria-label={t("pagination.next")} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb]">
+                          <Link href={pageHref(currentPage + 1)} prefetch aria-label={t("pagination.next")} className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
                             <span>{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4" />
                           </Link>
                         ) : (
-                          <span aria-hidden className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
+                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
                             <span>{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4" />
                           </span>
                         )}
                       </div>
-                      <p className="mt-3 text-center text-sm font-medium text-[#64748b]">
-                        {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
-                      </p>
+                      <div className="relative hidden min-h-10 items-center justify-center sm:flex">
+                        <p className="absolute left-0 hidden text-sm font-medium text-[#64748b] lg:block">
+                          {currentPage} / {totalPages}
+                        </p>
+                        <div className="flex max-w-full items-center justify-center gap-1.5 overflow-x-auto overflow-y-visible px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                          {currentPage > 1 && (
+                            <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-5 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
+                              <ChevronLeft className="h-4 w-4" />
+                              <span>{t("pagination.prev")}</span>
+                            </Link>
+                          )}
+                          <div className="mx-1 flex shrink-0 items-center gap-1 rounded-full bg-[#f3f7fb] p-1">
+                          {paginationPages.map((page, index) => page === "ellipsis" ? (
+                            <span key={`ellipsis-${index}`} className="grid h-9 w-8 place-items-center text-sm font-semibold text-[#9ca3af]">...</span>
+                          ) : page === currentPage ? (
+                            <span key={page} aria-current="page" className="grid h-9 min-w-9 place-items-center rounded-full bg-[#009FD9] px-3 text-sm font-bold text-white shadow-sm">{page}</span>
+                          ) : (
+                            <Link key={page} href={pageHref(page)} prefetch aria-label={t("pagination.status", { page, total: totalPages })} className="grid h-9 min-w-9 place-items-center rounded-full px-3 text-sm font-bold text-[#526174] transition hover:bg-white hover:text-[#0089BB] hover:shadow-sm">
+                              {page}
+                            </Link>
+                          ))}
+                          </div>
+                        </div>
+                        {currentPage < totalPages && (
+                          <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
+                            <span className="leading-none">{t("pagination.next")}</span>
+                            <ChevronRight className="h-4 w-4 shrink-0" />
+                          </Link>
+                        )}
+                        <span className="absolute right-0 hidden text-right text-sm font-medium text-[#64748b] md:block">
+                          {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
+                        </span>
+                      </div>
                     </nav>
                   )}
 
