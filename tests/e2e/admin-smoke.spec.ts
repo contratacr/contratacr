@@ -58,6 +58,7 @@ test.describe("@admin surfaces", () => {
       "/api/admin/providers",
       "/api/admin/reports",
       "/api/admin/support",
+      "/api/admin/costs",
       "/api/admin/accounts",
       "/api/admin/insurers",
       "/api/admin/pending-counts",
