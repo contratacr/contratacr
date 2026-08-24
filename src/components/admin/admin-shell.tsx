@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned } from "lucide-react";
+import { ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
@@ -9,7 +9,7 @@ import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
   | "resumen" | "verificacion" | "usuarios" | "solicitudes" | "publicaciones" | "reportes" | "aseguradoras"
-  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "ofertas" | "cobertura";
+  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "ofertas" | "cobertura" | "costos";
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
 // scroll strip on small screens). "Resumen" is the home/overview; the other
@@ -79,6 +79,7 @@ export function AdminShell({
     { id: "empleos", label: "Empleos", icon: Briefcase, href: "/admin/empleos", badge: 0 },
     { id: "ofertas", label: "Ofertas", icon: BadgePercent, href: "/admin/ofertas", badge: 0 },
     { id: "cobertura", label: "Cobertura", icon: MapPinned, href: "/admin/cobertura", badge: 0 },
+    { id: "costos", label: "Costos", icon: Wallet, href: "/admin/costos", badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },
@@ -143,7 +144,7 @@ export function AdminShell({
             { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "resenas", "reportes", "soporte"] },
             { label: "Marketplace", ids: ["empleos", "ofertas"] },
             { label: "Gestión", ids: ["categorias", "aseguradoras", "cuentas"] },
-            { label: "Información", ids: ["analitica", "cobertura"] },
+            { label: "Información", ids: ["analitica", "cobertura", "costos"] },
           ].map((group, index) => (
             <div key={group.label} className={index === 0 ? "" : "mt-4 border-t border-white/10 pt-3"}>
               <p className="mb-1 px-3 text-[10px] font-semibold uppercase text-white/35">{group.label}</p>
