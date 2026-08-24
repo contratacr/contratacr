@@ -1436,3 +1436,19 @@ input::-ms-clear {
 @keyframes ccr-img-reveal { from { opacity: 0; } to { opacity: 1; } }
 .ccr-img-reveal { animation: ccr-img-reveal 220ms ease-out both; }
 @media (prefers-reduced-motion: reduce) { .ccr-img-reveal { animation: none; } }
+
+/* The mobile results sheet must never show the map beneath its lower edge. In-app
+   browsers on iOS (Facebook/Instagram's WKWebView) shift the "fixed" bottom by the
+   height of their own toolbar as it appears and hides, leaving a strip of map under
+   the sheet. A solid apron below the sheet's edge makes that strip white instead. */
+.ccr-search-bottom-sheet::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  top: 100%;
+  height: 160px;
+  background: #ffffff;
+  pointer-events: none;
+}
+/* Desktop dissolves the sheet (display: contents), so the apron never paints there. */
