@@ -219,7 +219,7 @@ test.describe("@admin surfaces", () => {
       // Analítica reads in plain words: this week, the funnel, demand vs supply.
       await gotoOK(page, "/es/admin/analitica");
       await expectVisibleText(page.locator("body"), /Esta semana/);
-      await expectVisibleText(page.locator("body"), /semana anterior/);
+      await expectVisibleText(page.locator("body"), /7 días anteriores/);
       await expectVisibleText(page.locator("body"), /De dónde vienen los registros/);
       await expectVisibleText(page.locator("body"), /Del interés a la contratación/);
       await expectVisibleText(page.locator("body"), /Qué buscan vs\. qué ofrecemos/);
