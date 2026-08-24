@@ -19,6 +19,7 @@ const adminRoutes = [
   { path: "/es/admin/soporte", marker: /Soporte/i },
   { path: "/es/admin/analitica", marker: /Analitica|Anal.tica/i },
   { path: "/es/admin/cobertura", marker: /Cobertura/i },
+  { path: "/es/admin/costos", marker: /Costos/i },
   { path: "/es/admin/actividad", marker: /Resumen|Actividad reciente/i },
   { path: "/es/admin/resenas", marker: /Rese.nas|Reseñas/i },
 ] as const;
