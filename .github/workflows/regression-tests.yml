@@ -116,6 +116,9 @@ jobs:
       - name: Lint regression contracts
         run: npx eslint tests/e2e playwright.config.ts scripts/ci/verify-app-surface-ownership.mjs scripts/seed-local-regression-foundation.js scripts/verify-local-regression-foundation.js
 
+      - name: Reject new hard-coded bilingual strings
+        run: npm run lint:i18n
+
       - name: Build the production application locally
         run: npm run build
 
