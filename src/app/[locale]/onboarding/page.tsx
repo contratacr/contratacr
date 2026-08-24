@@ -7,7 +7,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
-import { ContrataCRLogo } from "@/components/landing/landing-navbar";
+import { FocusedHeader } from "@/components/layout/focused-header";
 import { LandingFooter } from "@/components/landing/landing-footer";
 
 export default function OnboardingPage() {
@@ -153,11 +153,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      <header className="bg-white border-b border-gray-100 px-4 py-4 flex justify-center">
-        <Link href="/">
-          <ContrataCRLogo />
-        </Link>
-      </header>
+      <FocusedHeader />
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">

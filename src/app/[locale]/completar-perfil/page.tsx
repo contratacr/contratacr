@@ -10,7 +10,7 @@ import { CedulaInput } from "@/components/ui/cedula-input";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
-import { ContrataCRLogo } from "@/components/landing/landing-navbar";
+import { FocusedHeader } from "@/components/layout/focused-header";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
@@ -161,9 +161,7 @@ export default function CompleteProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      <header className="bg-white border-b border-gray-100 px-4 py-4 flex justify-center">
-        <ContrataCRLogo />
-      </header>
+      <FocusedHeader />
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-8">
