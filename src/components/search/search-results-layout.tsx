@@ -183,7 +183,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
       setHeightFr(target);
       window.requestAnimationFrame(() => {
         const max = points[points.length - 1];
-        if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${(max - target) * 100}dvh, 0)`;
+        if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${Math.max(0, max - target) * 100}dvh, 0)`;
         updateMobileScrollThumb();
         window.dispatchEvent(new Event("resize"));
       });
@@ -227,7 +227,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     curRef.current = h;
     // Move the already-laid-out sheet on the compositor layer. Animating its
     // height would force the browser to recalculate every result card.
-    if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${(max - h) * 100}dvh, 0)`;
+    if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${Math.max(0, max - h) * 100}dvh, 0)`;
   }
   function onHandleUp() {
     if (!draggingRef.current) return;
@@ -342,7 +342,8 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           style={{
             height: `${expandedEnd * 100}dvh`,
             maxHeight: `calc(100dvh - var(--ccr-native-header-height, 124px) - ${SHEET_TOP_GAP}px)`,
-            transform: `translate3d(0, ${(expandedEnd - heightFr) * 100}dvh, 0)`,
+            // Never negative: the sheet only ever moves down from its laid-out place.
+            transform: `translate3d(0, ${Math.max(0, expandedEnd - heightFr) * 100}dvh, 0)`,
             transition: dragging ? "none" : "transform .18s cubic-bezier(.22,.8,.3,1)",
             willChange: "transform",
           }}
