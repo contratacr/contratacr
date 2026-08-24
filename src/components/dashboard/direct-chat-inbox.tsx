@@ -1,5 +1,7 @@
 "use client";
 
+import { ProgressiveImage } from "@/components/ui/progressive-image";
+
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
@@ -662,8 +664,7 @@ export function DirectChatInbox() {
                             aria-label={isEn ? `Open ${attachment.name}` : `Abrir ${attachment.name}`}
                           >
                             {href ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={href} alt={attachment.name} className="max-h-72 min-h-36 w-full object-cover" />
+                              <ProgressiveImage src={href} alt={attachment.name} fit="cover" wrapperClassName="block w-full" className="max-h-72 min-h-36" />
                             ) : (
                               <span className="grid min-h-36 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></span>
                             )}

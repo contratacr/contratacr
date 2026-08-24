@@ -49,3 +49,16 @@ export function cloudinaryImageLoader({ src, width, quality }: { src: string; wi
   if (segments.length > 1 && /^[a-z]+_[^/]*$/.test(segments[0]) && !/^v\d+$/.test(segments[0])) segments.shift();
   return `${base}f_auto,q_${quality ?? "auto"},w_${width}/${segments.join("/")}`;
 }
+
+/** A tiny, heavily blurred derivative of a Cloudinary image (~0.5–1 KB) to paint
+ *  under the real one while it arrives — the same picture, soft, instead of a
+ *  grey box or a hard pop. Returns null for anything not hosted on Cloudinary. */
+export function cldPreview(url: string | null | undefined): string | null {
+  if (!url || !url.startsWith("https://res.cloudinary.com/")) return null;
+  const marker = "/image/upload/";
+  const at = url.indexOf(marker);
+  if (at < 0) return null;
+  const segments = url.slice(at + marker.length).split("/");
+  if (segments.length > 1 && /^[a-z]+_[^/]*$/.test(segments[0]) && !/^v\d+$/.test(segments[0])) segments.shift();
+  return `${url.slice(0, at + marker.length)}f_auto,q_30,w_32,e_blur:400/${segments.join("/")}`;
+}

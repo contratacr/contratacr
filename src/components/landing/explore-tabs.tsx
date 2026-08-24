@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { RevealImage } from "@/components/ui/progressive-image";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -90,7 +90,7 @@ function SmallCard({ card }: { card: SmallCard }) {
       className="group relative block rounded-2xl overflow-hidden card-lift"
       style={{ height: 180 }}
     >
-      <Image
+      <RevealImage
         src={card.src}
         alt={card.label}
         fill
@@ -163,7 +163,7 @@ export function ExploreTabs() {
             className="col-span-3 group relative block rounded-2xl overflow-hidden card-lift"
             style={{ height: 380 }}
           >
-            <Image
+            <RevealImage
               src={tab.featured.src}
               alt={tab.featured.label}
               fill

@@ -24,7 +24,7 @@ const AvatarImage = React.forwardRef<
     ref={ref}
     loading="lazy"
     decoding="async"
-    className={cn("aspect-square h-full w-full object-cover", className)}
+    className={cn("ccr-img-reveal aspect-square h-full w-full object-cover", className)}
     {...props}
   />
 ));

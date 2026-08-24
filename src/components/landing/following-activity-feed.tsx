@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { cldThumb } from "@/lib/cloudinary";
 import { HomeSectionHeading } from "@/components/landing/home-section-heading";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 type ActivityRow = {
   id: string;
@@ -79,8 +80,7 @@ export async function FollowingActivityFeed() {
                 className="group min-w-[280px] max-w-[340px] flex-1 snap-start overflow-hidden rounded-xl border border-[#dfe7ef] bg-white shadow-[0_10px_28px_-24px_rgba(15,35,65,0.75)] transition hover:-translate-y-0.5 hover:border-[#bcddeb] hover:shadow-[0_16px_34px_-25px_rgba(15,35,65,0.8)]"
               >
                 {image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={cldThumb(image, 720)} alt="" className="h-36 w-full object-cover" loading="lazy" />
+                  <ProgressiveImage src={cldThumb(image, 720)} alt="" fit="cover" wrapperClassName="block h-36 w-full" />
                 ) : (
                   <div className="grid h-28 place-items-center bg-[#eef7fb] text-[#009fd9]">
                     <ActivityIcon type={activity.activity_type} />

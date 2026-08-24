@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 type OfferImageGalleryProps = {
   images: string[];
@@ -32,12 +33,14 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
   return (
     <div className={cn("space-y-3", className)}>
       <div className="relative grid min-h-[240px] place-items-center overflow-hidden rounded-lg bg-white sm:min-h-[320px] lg:min-h-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <ProgressiveImage
+          key={activeImage}
           src={cldLarge(activeImage, 1280)}
           alt={title}
-          decoding="async"
-          className="max-h-[62vh] min-h-0 w-full object-contain sm:max-h-[520px] lg:aspect-[16/9] lg:max-h-[460px]"
+          fit="contain"
+          priority
+          wrapperClassName="block w-full"
+          className="max-h-[62vh] min-h-0 w-full sm:max-h-[520px] lg:aspect-[16/9] lg:max-h-[460px]"
         />
         {safeImages.length > 1 && (
           <>
@@ -76,8 +79,7 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
                 index === activeIndex ? "border-[#009fd9] ring-2 ring-[#009fd9]/20" : "border-[#d8e4ee] hover:border-[#9bdcf2]"
               )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={cldThumb(url, 160)} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain p-1" />
+              <ProgressiveImage src={cldThumb(url, 160)} alt="" fit="contain" wrapperClassName="h-full w-full" className="p-1" />
             </button>
           ))}
         </div>

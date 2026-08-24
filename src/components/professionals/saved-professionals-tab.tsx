@@ -15,6 +15,7 @@ import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsaveProRemote, typ
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 type SavedFilter = "professionals" | "offers" | "jobs";
 type SavedItemKind = "offer" | "job";
@@ -45,7 +46,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
       <div className="relative shrink-0">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-[#EBF5FB] text-lg font-bold text-[#009FD9] sm:h-14 sm:w-14">
           {pro.avatarUrl ? (
-            <img src={pro.avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+            <ProgressiveImage src={pro.avatarUrl} alt={displayName} fit="cover" wrapperClassName="h-full w-full" />
           ) : (
             displayName.split(" ").map((n) => n[0]).join("").slice(0, 2)
           )}
@@ -123,7 +124,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
   return (
     <div className="grid grid-cols-[56px_minmax(0,1fr)] gap-3 p-4 transition-colors hover:bg-[#fafafa] sm:flex sm:items-center">
       <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#eef7fb] text-[#009FD9]">
-        {image ? <img src={image} alt={title} className="h-full w-full object-cover" /> : <Icon className="h-5 w-5" />}
+        {image ? <ProgressiveImage src={image} alt={title} fit="cover" wrapperClassName="h-full w-full" /> : <Icon className="h-5 w-5" />}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

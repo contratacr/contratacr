@@ -7,6 +7,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { cldThumb, cldLarge } from "@/lib/cloudinary";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { cn } from "@/lib/utils";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 export type ShowcaseCase = {
   id: string;
@@ -156,8 +157,7 @@ export function CaseShowcase({
                         key={`${c.id}-${url}`}
                         className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-white p-1 shadow-sm sm:h-16 sm:w-16"
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(url, 220)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-contain" />
+                        <ProgressiveImage src={cldThumb(url, 220)} alt={c.title ?? ""} fit="contain" wrapperClassName="h-full w-full" />
                         {idx === 2 && c.photos.length > 3 && (
                           <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - 3}</span>
                         )}
@@ -207,8 +207,7 @@ export function CaseShowcase({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cldLarge(cur, 900)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-[#0f172a]/80" />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} className="relative z-10 h-full w-full object-contain" />
+                  <ProgressiveImage key={cur} src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} fit="contain" priority wrapperClassName="relative z-10 h-full w-full bg-transparent" />
                   {photos.length > 1 && (
                     <>
                       <button onClick={prev} aria-label={tg("prev")} className="absolute left-3 top-1/2 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#111827]/80 text-white shadow-lg backdrop-blur transition-colors hover:bg-[#111827] sm:left-4 sm:h-11 sm:w-11">
@@ -260,14 +259,15 @@ export function CaseShowcase({
                             idx === pi ? "opacity-100" : "opacity-55 hover:opacity-85"
                           )}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <ProgressiveImage
                             src={cldThumb(p, 220)}
                             alt=""
-                            className={cn(
-                              "h-full w-full rounded-xl object-cover transition-shadow",
+                            fit="cover"
+                            wrapperClassName={cn(
+                              "h-full w-full rounded-xl transition-shadow",
                               idx === pi ? "shadow-[0_0_0_2px_rgba(15,23,42,0.18),0_8px_18px_rgba(15,23,42,0.16)]" : "shadow-none"
                             )}
+                            className="rounded-xl"
                           />
                         </button>
                       ))}
