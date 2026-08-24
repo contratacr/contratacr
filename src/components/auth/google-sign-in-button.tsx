@@ -121,6 +121,10 @@ export function GoogleSignInButton({
           ux_mode: "popup",
           auto_select: false,
           itp_support: true,
+          // The classic popup, always: FedCM for the button flow quietly does
+          // nothing where the browser holds no Google session, and it is still
+          // rolling out — the popup works for everyone, on every origin.
+          use_fedcm_for_button: false,
         });
         host.current.innerHTML = "";
         id.renderButton(host.current, {
