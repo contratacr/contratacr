@@ -29,6 +29,9 @@ Each environment needs these secrets:
 | `REGRESSION_TEST_PASSWORD` | Regression Tests | Shared secret for the protected ContrataCR/SG regression actors. |
 | `ADVERTISING_TEST_PASSWORD` | Regression Tests | Separate secret for the manual advertising account in test. |
 | `BACKUP_ENCRYPTION_PASSPHRASE` | Supabase backup | Long random passphrase used to encrypt backup artifacts. Store a copy in a password manager. |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Cloudflare build | The **web** OAuth client ID for that environment (test and production have different ones). Also listed under Google → Client IDs in that environment's Supabase project. |
+| `NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Cloudflare build | The iOS OAuth client ID (same value in both environments); enables the native Google sheet in the app. |
+| `NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS` | Cloudflare build | Comma-separated origins where the page-level Google sign-in is allowed (must be registered on the web client ID). Unset → the redirect flow through Supabase is used. |
 
 Do not put these in repository variables. Use environment secrets only.
 
