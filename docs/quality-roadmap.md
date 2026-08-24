@@ -77,6 +77,18 @@ password signs in and the old one is refused.
 
 ### Block C — Loading and speed (1 session)
 
+**Status 2026-08-23 (images, delivered ahead of the block).** Every picture in the
+product now arrives the way the home hero does: a ~1 KB blurred derivative of the
+same picture underneath from the first paint (Cloudinary `e_blur`, Unsplash `blur`),
+the real file fading in once hydrated (`ProgressiveImage` / `RevealImage`), Radix
+avatars revealing with a short fade. Root cause found on the way: `/_next/image` is a
+pass-through on Cloudflare Workers, so `/public` assets ship exactly as stored — the
+home hero, brand logos, welcome art and install guide were resized/converted (home
+image payload on a phone 1578 KB → 723 KB, measured live). Also: the web login now
+signs in with Google on the page (Google Identity Services + `signInWithIdToken`,
+gated by `NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS`), so Google's screen names ContrataCR
+instead of supabase.co.
+
 - One `useCachedResource` hook with stale-while-revalidate semantics, migrating the 8 components that own the 23 `no-store` fetches. Invalidate on mutation and on realtime events; keep the existing module caches.
 - Performance budgets asserted in CI against the local production build: home JS ≤ 450 KB, first contentful paint ≤ 1.5 s on the throttled mobile profile, no route above 800 KB.
 - **Gate:** navigating back to a section already visited shows content with no skeleton; budgets enforced.
