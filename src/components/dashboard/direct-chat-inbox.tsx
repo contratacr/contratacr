@@ -9,6 +9,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
@@ -148,6 +149,7 @@ export function DirectChatInbox() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id ?? null;
   const initialPendingDraft = useMemo(() => buildPendingDraft(searchParams, user?.id, isEn), [isEn, searchParams, user?.id]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [pendingDraft, setPendingDraft] = useState<Conversation | null>(initialPendingDraft.conversation);
@@ -301,17 +303,23 @@ export function DirectChatInbox() {
       setThreadLoading(false);
       return;
     }
-    if (!quiet) setThreadLoading(true);
+    // A thread opened before paints from the cache at once and refreshes quietly.
+    const threadKey = userId ? `chat:thread:${userId}:${id}` : null;
+    const warm = threadKey ? getDashboardCache<DirectMessage[]>(threadKey) : null;
+    if (warm) setMessages(warm);
+    else if (!quiet) setThreadLoading(true);
     try {
       const res = await fetch(`/api/direct-chat?id=${encodeURIComponent(id)}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
-      setMessages(json.messages ?? []);
+      const rows = (json.messages ?? []) as DirectMessage[];
+      if (threadKey) setDashboardCache(threadKey, rows);
+      setMessages(rows);
       setConversations((prev) => prev.map((item) => item.id === id ? { ...item, client_unread_count: 0, professional_unread_count: 0 } : item));
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load the conversation." : "No se pudo cargar la conversación.");
     } finally { if (!quiet) setThreadLoading(false); }
-  }, [isEn]);
+  }, [isEn, userId]);
 
   useEffect(() => { queueMicrotask(() => void loadConversations()); }, [loadConversations]);
   useEffect(() => { if (activeId) queueMicrotask(() => void loadThread(activeId)); }, [activeId, loadThread]);

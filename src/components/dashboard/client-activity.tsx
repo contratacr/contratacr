@@ -25,6 +25,7 @@ import { PublishProjectModal } from "@/components/projects/publish-project-modal
 import { RescheduleModal } from "@/components/booking/reschedule-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import { useAuth } from "@/hooks/use-auth";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
@@ -133,6 +134,21 @@ function formatBookingDate(b: Booking, dateLocale: string) {
   return b.preferred_date_text ?? null;
 }
 
+const NO_BOOKINGS: Booking[] = [];
+const NO_PROJECTS: Project[] = [];
+
+async function fetchClientBookings(): Promise<Booking[]> {
+  const res = await fetch("/api/bookings?role=client", { cache: "no-store" });
+  const { bookings } = await res.json();
+  return bookings ?? [];
+}
+
+async function fetchClientProjects(): Promise<Project[]> {
+  const res = await fetch("/api/projects?role=client", { cache: "no-store" });
+  const { projects } = await res.json();
+  return projects ?? [];
+}
+
 export function ClientActivity({ section }: { section: ClientActivitySection }) {
   const { user } = useAuth();
   const t = useTranslations("clientActivity");
@@ -155,9 +171,22 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     return t("monthsOld", { count: months });
   }
 
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Rows come from the shared cache: a return to this tab paints what was here
+  // before and refreshes quietly. Keys match the notification prefetch, so a
+  // toast about a booking or a proposal has already warmed the next visit.
+  const bookingsResource = useCachedResource<Booking[]>(
+    user && section === "bookings" ? `dashboard:client-bookings:${user.id}` : null,
+    fetchClientBookings,
+    NO_BOOKINGS,
+  );
+  const projectsResource = useCachedResource<Project[]>(
+    user && section === "projects" ? `dashboard:client-projects:${user.id}` : null,
+    fetchClientProjects,
+    NO_PROJECTS,
+  );
+  const { data: bookings, setData: setBookings } = bookingsResource;
+  const { data: projects, setData: setProjects } = projectsResource;
+  const loading = section === "bookings" ? bookingsResource.loading : section === "projects" ? projectsResource.loading : false;
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
   // One unified filter set (sprint 430): Activas · Finalizadas · Canceladas.
@@ -201,30 +230,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const openPublishHandledRef = useRef(false);
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
-  const loadedSectionsRef = useRef({ bookings: false, projects: false });
+  const refreshBookings = bookingsResource.refresh;
+  const refreshProjectRows = projectsResource.refresh;
 
-  const fetchSection = useCallback(async (showLoading = true) => {
+  // Re-fetch the section's rows; the cached ones stay on screen meanwhile.
+  const fetchSection = useCallback(async () => {
     if (!user) return;
-    try {
-      if (section === "bookings") {
-        if (showLoading) setLoading(true);
-        const res = await fetch("/api/bookings?role=client", { cache: "no-store" });
-        const { bookings } = await res.json();
-        setBookings(bookings ?? []);
-        loadedSectionsRef.current.bookings = true;
-      } else if (section === "projects") {
-        if (showLoading) setLoading(true);
-        const res = await fetch("/api/projects?role=client", { cache: "no-store" });
-        const { projects } = await res.json();
-        setProjects(projects ?? []);
-        loadedSectionsRef.current.projects = true;
-      }
-    } catch (error) {
-      console.error("[client-activity] load failed:", error);
-    } finally {
-      if (showLoading) setLoading(false);
-    }
-  }, [user, section]);
+    if (section === "bookings") await refreshBookings();
+    else if (section === "projects") await refreshProjectRows();
+  }, [user, section, refreshBookings, refreshProjectRows]);
 
   const reloadLoadedProjectProposals = useCallback(async () => {
     const ids = [...new Set([...Object.keys(projectProposals), expandedProject].filter(Boolean))] as string[];
@@ -244,19 +258,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     const delay = elapsed < 1600 ? 1600 - elapsed : 700;
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
-      void fetchSection(false);
+      void fetchSection();
       if (section === "projects") void reloadLoadedProjectProposals();
     }, delay);
   }, [fetchSection, reloadLoadedProjectProposals, section]);
-
-  useEffect(() => {
-    const needsInitialLoading = section === "bookings"
-      ? !loadedSectionsRef.current.bookings
-      : section === "projects"
-        ? !loadedSectionsRef.current.projects
-        : false;
-    queueMicrotask(() => fetchSection(needsInitialLoading));
-  }, [fetchSection, section]);
 
   useEffect(() => {
     if (!user || section === "saved" || loading) return;
@@ -285,7 +290,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (!booking) {
       if (targetRetryRef.current >= 8) return;
       targetRetryRef.current += 1;
-      const id = window.setTimeout(() => void fetchSection(false), 900);
+      const id = window.setTimeout(() => void fetchSection(), 900);
       return () => window.clearTimeout(id);
     }
     targetRetryRef.current = 0;
@@ -312,7 +317,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (!project) {
       if (targetProjectRetryRef.current >= 8) return;
       targetProjectRetryRef.current += 1;
-      const id = window.setTimeout(() => void fetchSection(false), 900);
+      const id = window.setTimeout(() => void fetchSection(), 900);
       return () => window.clearTimeout(id);
     }
     targetProjectRetryRef.current = 0;
@@ -419,11 +424,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   async function refreshProjects() {
-    try {
-      const res = await fetch("/api/projects?role=client");
-      const { projects } = await res.json();
-      if (Array.isArray(projects)) setProjects(projects);
-    } catch { /* ignore */ }
+    await refreshProjectRows();
   }
 
   async function updateProjectStatus(projectId: string, status: string) {
@@ -1166,7 +1167,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           slotLocationId={reschedule.locationId}
           slotLocationLabel={reschedule.locationLabel}
           onClose={() => setReschedule(null)}
-          onDone={fetchSection}
+          onDone={() => void fetchSection()}
         />
       )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { CalendarCheck, CheckCircle2, ClipboardList, ExternalLink, Search, Users, Wrench } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -10,6 +10,8 @@ import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-load
 import { getInitials, formatRelativeOrDate } from "@/lib/utils";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { useAuth } from "@/hooks/use-auth";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 
 type Connection = {
   professionalId: string;
@@ -31,27 +33,23 @@ function SourceIcon({ source }: { source: Connection["source"] }) {
   return <CalendarCheck className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
 }
 
+const NO_CONNECTIONS: Connection[] = [];
+
 export function ClientConnections() {
   const locale = useLocale();
   const t = useTranslations("clientConnections");
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { user } = useAuth();
+  const { data: connections, loading } = useCachedResource<Connection[]>(
+    user ? `dashboard:client-connections:${user.id}` : null,
+    async () => {
       const response = await fetch("/api/client/connections", { cache: "no-store" });
       const data = await response.json();
-      setConnections(Array.isArray(data.connections) ? data.connections : []);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    queueMicrotask(() => void load());
-  }, [load]);
+      return Array.isArray(data.connections) ? data.connections : [];
+    },
+    NO_CONNECTIONS,
+    { refreshOn: true },
+  );
+  const [query, setQuery] = useState("");
 
   const localeCode = locale === "en" ? "en-US" : "es-CR";
   const needle = query.trim().toLocaleLowerCase(localeCode);

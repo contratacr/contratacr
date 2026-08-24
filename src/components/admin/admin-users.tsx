@@ -8,6 +8,7 @@ import { formatId } from "@/lib/cedula";
 import { getInitials } from "@/lib/utils";
 import { verificationLabel, verificationPillClasses, type VerificationStatus } from "@/lib/verification";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { cn } from "@/lib/utils";
 
 type UserKind = "professional" | "incomplete" | "client" | "admin";
@@ -76,16 +77,46 @@ function statusClass(user: ListedUser) {
   return "border-[#e5e7eb] bg-[#f8fafc] text-[#64748b]";
 }
 
+type Listing = { items: ListedUser[]; counts: Record<string, number>; pagination: Pagination };
+const EMPTY_LISTING: Listing = { items: [], counts: {}, pagination: { page: 1, pageSize: 25, total: 0, pages: 1 } };
+
 export function AdminUsers() {
   const [filter, setFilter] = useState<string>("all");
   const [q, setQ] = useState("");
   const [verification, setVerification] = useState("all");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [page, setPage] = useState(1);
-  const [items, setItems] = useState<ListedUser[]>([]);
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, pageSize: 25, total: 0, pages: 1 });
-  const [loading, setLoading] = useState(true);
+  // The listing for these filters lives in the shared cache: coming back to a
+  // page already seen paints it at once and refreshes quietly.
+  const listQuery = useMemo(() => {
+    const params = new URLSearchParams({
+      mode: "list",
+      filter,
+      page: String(page),
+      pageSize: "25",
+    });
+    if (debouncedQ) params.set("q", debouncedQ);
+    if (verification !== "all") params.set("verification", verification);
+    return params.toString();
+  }, [debouncedQ, filter, page, verification]);
+  const { data: listing, loading, refresh } = useCachedResource<Listing>(
+    `admin:users:${listQuery}`,
+    async () => {
+      try {
+        const res = await fetch(`/api/admin/users?${listQuery}`, { cache: "no-store" });
+        const data = await res.json();
+        return {
+          items: data.users ?? [],
+          counts: data.counts ?? {},
+          pagination: data.pagination ?? { page, pageSize: 25, total: 0, pages: 1 },
+        };
+      } catch {
+        return { items: [], counts: {}, pagination: { page, pageSize: 25, total: 0, pages: 1 } };
+      }
+    },
+    EMPTY_LISTING,
+  );
+  const { items, counts, pagination } = listing;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -95,34 +126,10 @@ export function AdminUsers() {
     return () => clearTimeout(timer);
   }, [q]);
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        mode: "list",
-        filter,
-        page: String(page),
-        pageSize: "25",
-      });
-      if (debouncedQ) params.set("q", debouncedQ);
-      if (verification !== "all") params.set("verification", verification);
-      const res = await fetch(`/api/admin/users?${params.toString()}`, { cache: "no-store" });
-      const data = await res.json();
-      setItems(data.users ?? []);
-      setCounts(data.counts ?? {});
-      setPagination(data.pagination ?? { page, pageSize: 25, total: 0, pages: 1 });
-    } catch {
-      setItems([]);
-      setPagination({ page, pageSize: 25, total: 0, pages: 1 });
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [debouncedQ, filter, page, verification]);
-
-  useEffect(() => {
-    queueMicrotask(() => void load());
-  }, [load]);
-  useAdminAutoRefresh(() => void load(true), [load]);
+  const load = useCallback(async () => {
+    await refresh();
+  }, [refresh]);
+  useAdminAutoRefresh(() => void load(), [load]);
 
   const filterCounts = useMemo(
     () => Object.fromEntries(FILTERS.map((tab) => [tab.id, counts[tab.id] ?? 0])),

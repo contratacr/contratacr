@@ -5,6 +5,9 @@ type CacheEntry<T> = {
 };
 
 const cache = new Map<string, CacheEntry<unknown>>();
+// Components painting from the cache subscribe per key; every write (a refresh
+// landing, an optimistic edit, a notification-driven prefetch) tells them.
+const listeners = new Map<string, Set<(data: unknown) => void>>();
 const STORAGE_PREFIX = "ccr:dashboard-cache:";
 const STORAGE_VERSION = 1;
 const STORAGE_TTL_MS = 5 * 60 * 1000;
@@ -67,6 +70,37 @@ export function setDashboardCache<T>(key: string, data: T) {
   const updatedAt = Date.now();
   cache.set(key, { data, updatedAt });
   writeStoredCache(key, data, updatedAt);
+  listeners.get(key)?.forEach((listener) => listener(data));
+}
+
+export function subscribeDashboardCache<T>(key: string, listener: (data: T) => void) {
+  let set = listeners.get(key);
+  if (!set) {
+    set = new Set();
+    listeners.set(key, set);
+  }
+  set.add(listener as (data: unknown) => void);
+  return () => {
+    set?.delete(listener as (data: unknown) => void);
+    if (set && set.size === 0) listeners.delete(key);
+  };
+}
+
+/** Forget every cached entry (memory and session storage). Run on sign-out so
+ *  the next account in this tab never paints the previous one's data. */
+export function clearDashboardCache() {
+  cache.clear();
+  if (!canUseSessionStorage()) return;
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < window.sessionStorage.length; i += 1) {
+      const key = window.sessionStorage.key(i);
+      if (key?.startsWith(STORAGE_PREFIX)) keys.push(key);
+    }
+    keys.forEach((key) => window.sessionStorage.removeItem(key));
+  } catch {
+    // Storage can be disabled; the memory cache is already gone.
+  }
 }
 
 export async function loadDashboardCache<T>(
@@ -81,8 +115,7 @@ export async function loadDashboardCache<T>(
     if (existing?.promise) return existing.promise;
   }
 
-  let promise: Promise<T>;
-  promise = loader()
+  const promise: Promise<T> = loader()
     .then((data) => {
       setDashboardCache(key, data);
       return data;

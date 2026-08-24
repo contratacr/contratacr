@@ -5,6 +5,7 @@ import { CalendarCheck, ChevronLeft, ChevronRight, Loader2, Search, Trash2 } fro
 import { Link } from "@/i18n/navigation";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { cn, getInitials } from "@/lib/utils";
 import { formatId } from "@/lib/cedula";
 
@@ -112,15 +113,39 @@ function Avatar({ name, src }: { name: string | null; src?: string | null }) {
   );
 }
 
+type Listing = { items: AdminBooking[]; counts: Record<string, number>; pagination: Pagination };
+const EMPTY_LISTING: Listing = { items: [], counts: {}, pagination: { page: 1, pageSize: 25, total: 0, pages: 1 } };
+
 export function AdminBookings() {
   const [filter, setFilter] = useState<string>("all");
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [page, setPage] = useState(1);
-  const [items, setItems] = useState<AdminBooking[]>([]);
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, pageSize: 25, total: 0, pages: 1 });
-  const [loading, setLoading] = useState(true);
+  // The listing for these filters lives in the shared cache: coming back to a
+  // page already seen paints it at once and refreshes quietly.
+  const listQuery = useMemo(() => {
+    const params = new URLSearchParams({ filter, page: String(page), pageSize: "25" });
+    if (debouncedQ) params.set("q", debouncedQ);
+    return params.toString();
+  }, [debouncedQ, filter, page]);
+  const { data: listing, loading, refresh, setData: setListing } = useCachedResource<Listing>(
+    `admin:bookings:${listQuery}`,
+    async () => {
+      try {
+        const res = await fetch(`/api/admin/bookings?${listQuery}`, { cache: "no-store" });
+        const data = await res.json();
+        return {
+          items: data.bookings ?? [],
+          counts: data.counts ?? {},
+          pagination: data.pagination ?? { page, pageSize: 25, total: 0, pages: 1 },
+        };
+      } catch {
+        return { items: [], counts: {}, pagination: { page, pageSize: 25, total: 0, pages: 1 } };
+      }
+    },
+    EMPTY_LISTING,
+  );
+  const { items, counts, pagination } = listing;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -137,7 +162,7 @@ export function AdminBookings() {
     try {
       const res = await fetch(`/api/admin/bookings?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "No se pudo eliminar.");
-      setItems((current) => current.filter((item) => item.id !== id));
+      setListing((current) => ({ ...current, items: current.items.filter((item) => item.id !== id) }));
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "No se pudo eliminar.");
     } finally {
@@ -145,28 +170,10 @@ export function AdminBookings() {
     }
   }
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    try {
-      const params = new URLSearchParams({ filter, page: String(page), pageSize: "25" });
-      if (debouncedQ) params.set("q", debouncedQ);
-      const res = await fetch(`/api/admin/bookings?${params.toString()}`, { cache: "no-store" });
-      const data = await res.json();
-      setItems(data.bookings ?? []);
-      setCounts(data.counts ?? {});
-      setPagination(data.pagination ?? { page, pageSize: 25, total: 0, pages: 1 });
-    } catch {
-      setItems([]);
-      setPagination({ page, pageSize: 25, total: 0, pages: 1 });
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [debouncedQ, filter, page]);
-
-  useEffect(() => {
-    queueMicrotask(() => void load());
-  }, [load]);
-  useAdminAutoRefresh(() => void load(true), [load]);
+  const load = useCallback(async () => {
+    await refresh();
+  }, [refresh]);
+  useAdminAutoRefresh(() => void load(), [load]);
 
   const filterCounts = useMemo(
     () => Object.fromEntries(FILTERS.map((tab) => [tab.id, counts[tab.id] ?? 0])),

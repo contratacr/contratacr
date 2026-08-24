@@ -89,6 +89,20 @@ signs in with Google on the page (Google Identity Services + `signInWithIdToken`
 gated by `NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS`), so Google's screen names ContrataCR
 instead of supabase.co.
 
+**Status 2026-08-24 (cached sections, delivered).** `useCachedResource`
+(`src/hooks/use-cached-resource.ts`) sits on the existing dashboard cache
+(memory + session storage, five minutes), which now notifies subscribers on every
+write and is cleared on sign-out. A section paints what the browser already has
+and re-fetches quietly; skeletons appear only on a first visit. Migrated: the five
+panel tabs (solicitudes, oportunidades/propuestas, solicitudes enviadas, proyectos,
+postulaciones, conexiones), the five admin tables/coverage (keyed by their filters,
+so a page already seen is instant), chat threads (`chat:thread:*`, opened once →
+instant) and the public professional profile (`profile:<slug>`). The
+notification-driven prefetch now writes the exact keys the tabs read, so a toast
+warms the next visit instead of being wasted. Measured on the local build: coming
+back to a panel tab shows content in ~50 ms with zero skeletons; a full reload of
+the same tab paints the rows at hydration (~390 ms) with no skeleton either.
+
 - One `useCachedResource` hook with stale-while-revalidate semantics, migrating the 8 components that own the 23 `no-store` fetches. Invalidate on mutation and on realtime events; keep the existing module caches.
 - Performance budgets asserted in CI against the local production build: home JS ≤ 450 KB, first contentful paint ≤ 1.5 s on the throttled mobile profile, no route above 800 KB.
 - **Gate:** navigating back to a section already visited shows content with no skeleton; budgets enforced.

@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, MoreVertical, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { useAuth } from "@/hooks/use-auth";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { formatId } from "@/lib/cedula";
 import { computeAge } from "@/lib/age";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
@@ -91,6 +93,8 @@ function cleanVisibleSpanishText(value?: string | null): string | null {
   return repairVisibleText(String(value));
 }
 
+const NO_BOOKINGS: Booking[] = [];
+
 export function BookingRequests() {
   const locale = useLocale();
   const t = useTranslations("bookingRequests");
@@ -106,12 +110,22 @@ export function BookingRequests() {
     const months = Math.max(1, age.months);
     return t("monthsOld", { count: months });
   }
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  // Cached under the key the notification prefetch warms: a return to this tab
+  // paints the last known requests at once and refreshes quietly.
+  const bookingsResource = useCachedResource<Booking[]>(
+    user ? `dashboard:pro-bookings:${user.id}` : null,
+    async () => {
+      const res = await fetch("/api/bookings?role=professional", { cache: "no-store" });
+      if (!res.ok) throw new Error(`Bookings request failed with HTTP ${res.status}`);
+      const { bookings: rows } = await res.json();
+      return (rows ?? []) as Booking[];
+    },
+    NO_BOOKINGS,
+  );
+  const { data: bookings, setData: setBookings, loading } = bookingsResource;
   const [filter, setFilter] = useState("activas");
-  const bookingsSnapshotRef = useRef("");
   const refreshTimerRef = useRef<number | null>(null);
-  const mountedRef = useRef(true);
   const lastSilentRefreshRef = useRef(0);
   // Accordion: at most one card expanded at a time (essentials collapsed by default).
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -151,33 +165,10 @@ export function BookingRequests() {
     };
   }, [actionsMenuFor]);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  const loadBookings = useCallback(async (silent = false) => {
-    try {
-      if (!silent && mountedRef.current) setLoading(true);
-      const res = await fetch("/api/bookings?role=professional", { cache: "no-store" });
-      if (!res.ok) throw new Error(`Bookings request failed with HTTP ${res.status}`);
-      const { bookings: rows } = await res.json();
-      if (!mountedRef.current) return;
-      const next = rows ?? [];
-      const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
-      if (silent && bookingsSnapshotRef.current === snapshot) return;
-      bookingsSnapshotRef.current = snapshot;
-      setBookings(next);
-    } catch (error) {
-      // A route transition can dispose this panel while its request is still
-      // in flight. That is an expected cancellation, not an application error.
-      if (mountedRef.current) console.error("[booking-requests] load failed:", error);
-    } finally {
-      if (!silent && mountedRef.current) setLoading(false);
-    }
-  }, []);
+  const refreshBookings = bookingsResource.refresh;
+  const loadBookings = useCallback(async () => {
+    await refreshBookings();
+  }, [refreshBookings]);
 
   const refreshSoon = useCallback(() => {
     if (document.visibilityState !== "visible") return;
@@ -186,11 +177,9 @@ export function BookingRequests() {
     const delay = elapsed < 1600 ? 1600 - elapsed : 700;
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
-      void loadBookings(true);
+      void loadBookings();
     }, delay);
   }, [loadBookings]);
-
-  useEffect(() => { queueMicrotask(() => void loadBookings()); }, [loadBookings]);
 
   useEffect(() => {
     if (loading) return;
@@ -218,7 +207,7 @@ export function BookingRequests() {
     if (!booking) {
       if (targetRetryRef.current >= 8) return;
       targetRetryRef.current += 1;
-      const id = window.setTimeout(() => void loadBookings(true), 900);
+      const id = window.setTimeout(() => void loadBookings(), 900);
       return () => window.clearTimeout(id);
     }
     targetRetryRef.current = 0;
