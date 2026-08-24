@@ -150,36 +150,21 @@ export function GoogleSignInButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
-  // Google's iframe paints a moment after renderButton resolves. Until it has,
-  // the fallback stays on screen; then the two cross-fade inside a box whose
-  // height never changes, so nothing below the button moves.
-  const [painted, setPainted] = useState(false);
-  useEffect(() => {
-    if (!ready || !host.current) return;
-    const iframe = host.current.querySelector("iframe");
-    if (!iframe) return;
-    let done = false;
-    const show = () => { if (!done) { done = true; setPainted(true); } };
-    iframe.addEventListener("load", show, { once: true });
-    const fallbackTimer = window.setTimeout(show, 1500);
-    return () => { window.clearTimeout(fallbackTimer); iframe.removeEventListener("load", show); };
-  }, [ready]);
-
+  // Our own button is the only thing anyone ever sees. Google's rendered button
+  // sits on top of it, invisible, exactly the same size, and takes the click —
+  // that is how Google's flow has to be started. Nothing swaps, nothing fades,
+  // nothing moves: the page looks the same before, during and after Google's
+  // library loads. If the library never renders, the visible button is still
+  // ours and its own click runs the redirect flow.
   return (
     <div className="relative h-11 w-full">
-      <div
-        aria-hidden={painted || undefined}
-        className="absolute inset-0 transition-opacity duration-200"
-        style={{ opacity: painted ? 0 : 1, pointerEvents: painted ? "none" : "auto" }}
-      >
-        {fallback}
-      </div>
+      <div className="absolute inset-0">{fallback}</div>
       <div
         ref={host}
         data-testid="google-identity-button"
-        aria-busy={disabled || undefined}
-        className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
-        style={{ opacity: painted ? (disabled ? 0.6 : 1) : 0, pointerEvents: painted && !disabled ? "auto" : "none" }}
+        aria-hidden
+        className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center overflow-hidden"
+        style={{ opacity: 0.001, pointerEvents: ready && !disabled ? "auto" : "none" }}
       />
     </div>
   );

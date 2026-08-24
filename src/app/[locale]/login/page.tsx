@@ -290,17 +290,21 @@ export default function LoginPage() {
     // Inside the app the platform sheet signs the user in without leaving
     // ContrataCR; the callback only has to resolve where they land.
     if (isNativeAppRuntime()) {
+      // The native sheet covers the page; the moment it closes we are either
+      // handing off or back here. Cover the form now so the hand-off never
+      // shows the login screen again; uncover only if the person cancelled.
+      setLeaving(true);
       try {
         const outcome = await nativeSocialSignIn(provider, supabase);
         if (outcome === "signed-in") {
           // Same-origin path, never the absolute callback URL: the server origin
           // can differ from the one the WebView loaded (0.0.0.0 vs localhost),
           // and an absolute URL would push the user out of the app mid-login.
-          setLeaving(true);
           const callback = oauthCallbackUrl().replace("flow=oauth", "flow=native");
           window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
           return;
         }
+        setLeaving(false);
         if (outcome === "cancelled") {
           if (provider === "google") setGoogleLoading(false);
           else setAppleLoading(false);
@@ -308,6 +312,7 @@ export default function LoginPage() {
         }
         // "unavailable": provider not configured for this platform → web flow.
       } catch (nativeError) {
+        setLeaving(false);
         setError(nativeError instanceof Error ? nativeError.message : String(nativeError));
         if (provider === "google") setGoogleLoading(false);
         else setAppleLoading(false);
@@ -343,16 +348,19 @@ export default function LoginPage() {
   // the destination from the session exactly as it does for the native sheet.
   // No hop through <project>.supabase.co, so Google's screen names our domain.
   async function handleGoogleCredential(idToken: string, nonce: string) {
+    // Google's window has just closed: cover the form right now, not after the
+    // token exchange — the person must never see the login screen again.
+    setLeaving(true);
     setGoogleLoading(true);
     setError(null);
     const supabase = createClient();
     const { error: tokenError } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken, nonce });
     if (tokenError) {
+      setLeaving(false);
       setError(tokenError.message);
       setGoogleLoading(false);
       return;
     }
-    setLeaving(true);
     const callback = oauthCallbackUrl().replace("flow=oauth", "flow=native");
     window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
   }
