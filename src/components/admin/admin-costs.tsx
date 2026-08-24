@@ -128,7 +128,6 @@ export function AdminCosts() {
 function Summary({ data }: { data: Payload }) {
   const { summary, services } = data;
   const recurring = services.filter((s) => !s.variable && (s.monthlyUsd > 0 || s.annualUsd > 0));
-  const withoutStart = recurring.filter((s) => !s.since);
   const maxMonth = Math.max(1, ...summary.byMonth.map((m) => m.usd + m.crc / 500));
   return (
     <>
@@ -139,12 +138,6 @@ function Summary({ data }: { data: Payload }) {
         <Tile label="Contenido en redes" value={both(summary.contentUsd, summary.contentCrc)} hint="publicaciones, destacadas y videos" />
       </div>
 
-      {withoutStart.length > 0 && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Para calcular lo gastado desde el inicio falta la fecha en que empezó a pagarse: {withoutStart.map((s) => s.name).join(", ")}. Se pone en «Tecnologías y límites».
-        </div>
-      )}
-
       <section className="mb-4 rounded-2xl border border-[#e5e7eb] bg-white p-4">
         <h2 className="mb-3 text-sm font-bold text-[#0f172a]">Últimos doce meses</h2>
         <div className="flex h-40 items-end gap-1.5 sm:gap-2">
@@ -152,7 +145,7 @@ function Summary({ data }: { data: Payload }) {
             const value = m.usd + m.crc / 500;
             const height = Math.max(value > 0 ? 6 : 2, Math.round((value / maxMonth) * 100));
             return (
-              <div key={m.month} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${monthLabel(m.month)}: ${both(m.usd, m.crc)}`}>
+              <div key={m.month} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${monthLabel(m.month)}: ${both(m.usd, m.crc)}`}>
                 <span className="hidden text-[10px] tabular-nums text-[#64748b] sm:block">{m.usd > 0 || m.crc > 0 ? both(m.usd, m.crc) : ""}</span>
                 <div className="w-full rounded-t-md bg-[#009FD9]" style={{ height: `${height}%` }} aria-hidden />
                 <span className="text-[10px] text-[#94a3b8]">{monthLabel(m.month)}</span>
@@ -221,7 +214,7 @@ function Technologies({ services, apply }: { services: CostServiceView[]; apply:
 function ServiceCard({ service, apply }: { service: CostServiceView; apply: (work: () => Promise<Payload>) => Promise<boolean> }) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({ monthlyUsd: String(service.monthlyUsd), annualUsd: String(service.annualUsd), since: service.since ?? "", usageNote: service.usageNote ?? "", notes: service.notes ?? "" });
+  const [form, setForm] = useState({ monthlyUsd: String(service.monthlyUsd), annualUsd: String(service.annualUsd), usageNote: service.usageNote ?? "" });
   const cost = service.variable
     ? "Variable"
     : [service.monthlyUsd > 0 ? `${usd(service.monthlyUsd)}/mes` : null, service.annualUsd > 0 ? `${usd(service.annualUsd)}/año` : null].filter(Boolean).join(" · ") || "Gratis";
@@ -229,7 +222,7 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
   async function save(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
-    const ok = await apply(() => send("PATCH", { serviceId: service.id, monthlyUsd: form.monthlyUsd, annualUsd: form.annualUsd, since: form.since, usageNote: form.usageNote, notes: form.notes }));
+    const ok = await apply(() => send("PATCH", { serviceId: service.id, monthlyUsd: form.monthlyUsd, annualUsd: form.annualUsd, usageNote: form.usageNote }));
     setBusy(false);
     if (ok) setEditing(false);
   }
@@ -243,7 +236,6 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
         </div>
         <div className="shrink-0 text-right">
           <p className="text-lg font-bold tabular-nums text-[#0f172a]">{cost}</p>
-          {service.verify && !service.since && <p className="text-[11px] text-amber-700">Monto por confirmar</p>}
         </div>
       </div>
       <p className="mt-2 text-sm text-[#374151]">{service.role}</p>
@@ -263,14 +255,8 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
               </label>
             </>
           )}
-          <label className="block text-xs font-semibold text-[#374151]">Se paga desde
-            <input type="date" value={form.since} onChange={(e) => setForm({ ...form, since: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
-          </label>
           <label className="block text-xs font-semibold text-[#374151]">Uso de este mes
             <input value={form.usageNote} onChange={(e) => setForm({ ...form, usageNote: e.target.value })} placeholder="p. ej. 1 240 de 2 000 minutos" className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
-          </label>
-          <label className="block text-xs font-semibold text-[#374151] sm:col-span-2">Notas
-            <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
           </label>
           <div className="flex gap-2 sm:col-span-2">
             <button type="submit" disabled={busy} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#009FD9] px-3 text-sm font-semibold text-white disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Guardar</button>
@@ -280,9 +266,8 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
       ) : (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[#64748b]">
           <div className="space-y-0.5">
-            <p>{service.since ? `Se paga desde ${dateLabel(service.since)}` : service.variable ? "Se registra por pieza en Movimientos" : "Sin fecha de inicio"}{!service.variable && service.lifetimeUsd > 0 ? ` · ${usd(service.lifetimeUsd)} acumulados` : ""}{service.ledgerUsd > 0 || service.ledgerCrc > 0 ? ` · ${both(service.ledgerUsd, service.ledgerCrc)} en movimientos` : ""}</p>
+            <p>{service.variable ? "Se registra por pieza en Movimientos" : service.lifetimeUsd > 0 ? `${usd(service.lifetimeUsd)} acumulados en suscripción` : "Sin costo acumulado"}{service.ledgerUsd > 0 || service.ledgerCrc > 0 ? ` · ${both(service.ledgerUsd, service.ledgerCrc)} en movimientos` : ""}</p>
             <p>{service.usageNote ? <>Uso: <span className="font-semibold text-[#0f172a]">{service.usageNote}</span>{service.usageUpdatedAt ? ` (${dateLabel(service.usageUpdatedAt.slice(0, 10))})` : ""}</> : "Uso de este mes: sin anotar"}</p>
-            {service.notes && <p>{service.notes}</p>}
           </div>
           <div className="flex items-center gap-2">
             {service.usageUrl && (
@@ -362,7 +347,7 @@ function Ledger({ entries, apply }: { entries: CostEntry[]; apply: (work: () => 
           <button type="button" onClick={() => preset("video")} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-[#f8fafc] px-3 text-xs font-semibold text-[#374151]"><Receipt className="h-3.5 w-3.5" /> Video · ₡20 000</button>
           <button type="button" onClick={() => pickService("meta-ads")} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-[#f8fafc] px-3 text-xs font-semibold text-[#374151]"><Megaphone className="h-3.5 w-3.5" /> Gasto en Meta Ads</button>
         </div>
-        <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="block text-xs font-semibold text-[#374151]">Tipo
             <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as CostEntryKind })} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm">
               {(Object.keys(KIND_LABELS) as CostEntryKind[]).map((k) => <option key={k} value={k}>{KIND_LABELS[k]}</option>)}
@@ -380,7 +365,7 @@ function Ledger({ entries, apply }: { entries: CostEntry[]; apply: (work: () => 
           <label className="block text-xs font-semibold text-[#374151]">Fecha
             <input required type="date" value={form.spentOn} onChange={(e) => setForm({ ...form, spentOn: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
           </label>
-          <label className="block text-xs font-semibold text-[#374151] sm:col-span-2">Descripción
+          <label className="block text-xs font-semibold text-[#374151] sm:col-span-2 lg:col-span-1">Descripción
             <input required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="p. ej. Campaña Clientes - Registro, del 23 al 31 de agosto" className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
           </label>
           <label className="block text-xs font-semibold text-[#374151]">Monto
@@ -391,12 +376,6 @@ function Ledger({ entries, apply }: { entries: CostEntry[]; apply: (work: () => 
               </select>
               <input required type="number" min="0" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
             </div>
-          </label>
-          <label className="block text-xs font-semibold text-[#374151]">Cantidad (opcional)
-            <input type="number" min="1" step="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} placeholder="piezas" className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
-          </label>
-          <label className="block text-xs font-semibold text-[#374151] sm:col-span-2 lg:col-span-3">Notas (opcional)
-            <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
           </label>
           <div className="flex items-end">
             <button type="submit" disabled={busy} className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Guardar gasto</button>

@@ -158,7 +158,7 @@ async function payload() {
     const row = overrides.get(service.id);
     const monthlyUsd = row && row.monthly_usd !== null ? num(row.monthly_usd) : service.monthlyUsd;
     const annualUsd = row && row.annual_usd !== null ? num(row.annual_usd) : service.annualUsd;
-    const since = row?.since ?? null;
+    const since = row?.since ?? service.since ?? null;
     const own = entries.filter((entry) => entry.serviceId === service.id);
     return {
       ...service,
@@ -215,7 +215,7 @@ async function payload() {
     annualRecurringUsd: round(services.filter((s) => !s.variable).reduce((s, x) => s + x.annualUsd, 0)),
     lifetimeUsd: round(services.reduce((s, x) => s + x.lifetimeUsd, 0) + sum(entries, "USD")),
     lifetimeCrc: sum(entries, "CRC"),
-    adsUsd: sum(ads, "USD"),
+    adsUsd: round(sum(ads, "USD") + services.filter((s) => s.category === "marketing").reduce((s, x) => s + x.lifetimeUsd, 0)),
     adsCrc: sum(ads, "CRC"),
     contentUsd: sum(content, "USD"),
     contentCrc: sum(content, "CRC"),

@@ -495,7 +495,7 @@ export default function ProfilePage() {
                 </ImagePreviewDialog>
                 <div className="min-w-0">
                   <div className="min-w-0">
-                    <h1 data-testid="professional-profile-name" className="line-clamp-2 min-w-0 text-[17px] font-bold leading-[1.15] text-[#111827] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
+                    <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#111827] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                       {displayName.primaryDesktop}
                       {professional.verificationStatus === "verified" && (
                         <CheckCircle2
