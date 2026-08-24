@@ -179,3 +179,5 @@ The seeded regression pair is the same pair you see as **ContrataCR** (client si
 - `e2e.pro@contratacr.test`
 
 Both use the password stored as `E2E_TEST_PASSWORD` — in `.env.test` locally and as a GitHub Actions secret. The value is never committed. `npm run seed:test:full` recreates the pair and its coverage data; `npm run seed:test:verify` checks it. These accounts cannot be deleted through the app (the deletion RPC refuses regression identities).
+
+**Manual test sessions.** Testing by hand with any account other than these two breaks the fixture check the suites rely on. Run `npm run seed:test:verify` **before** a manual session (so you start from a known state) and **again after it** (so whatever the session changed is caught and repaired with `npm run seed:test:full` before the next regression run, not by the run itself).

@@ -104,7 +104,7 @@ back to a panel tab shows content in ~50 ms with zero skeletons; a full reload o
 the same tab paints the rows at hydration (~390 ms) with no skeleton either.
 
 - One `useCachedResource` hook with stale-while-revalidate semantics, migrating the 8 components that own the 23 `no-store` fetches. Invalidate on mutation and on realtime events; keep the existing module caches.
-- Performance budgets asserted in CI against the local production build: home JS ≤ 450 KB, first contentful paint ≤ 1.5 s on the throttled mobile profile, no route above 800 KB.
+- Performance budgets: `npm run perf:budgets [url]` (`scripts/perf-budgets.mjs`) measures a deployed build on a throttled phone (390 px, 4× CPU, ~1.6 Mbps / 150 ms) — on demand, not in CI, so it costs no Actions minutes. **Baseline 2026-08-24 on test.contratacr.com:** home JS 622 KB / total 1369 KB / FCP 1.2 s; `/buscar` 474 / 875 / 1.25 s; `/categorias` 493 / 747 / 1.0 s; `/login` 664 / 911 / 1.2 s; `/empleos` 633 / 1031 / 1.15 s; public profile 679 / 863 / **3.2 s** (its data is fetched client-side after hydration — the first candidate for a speed pass; server-rendering the profile would paint it in one round trip). Budgets stand at home JS ≤ 450 KB, route total ≤ 800 KB, FCP ≤ 1.5 s: they are not met yet, and the numbers above are the point to improve from.
 - **Gate:** navigating back to a section already visited shows content with no skeleton; budgets enforced.
 
 ### Block D — Assistant review (1 session, with you)
@@ -114,6 +114,14 @@ the same tab paints the rows at hydration (~390 ms) with no skeleton either.
 - **Gate:** every documented answer reviewed and frozen by a test.
 
 ### Block E — Guardrails (half a session)
+
+**Status 2026-08-24 (delivered).** `npm run lint:i18n` (`scripts/check-bilingual-budget.mjs`)
+counts `isEn ?` / `locale === "en" ?` ternaries per file against
+`scripts/bilingual-budget.json` (baseline: 536 occurrences in 79 files — the earlier 406
+counted only one of the two spellings). A file over its budget, or a new file with the
+pattern, fails; files that drop below are reported so the budget ratchets down with
+`--update`. It runs in the fast CI gate (seconds, no browser). `docs/regression-testing.md`
+now asks for `seed:test:verify` before and after every manual session.
 
 - ESLint rule that forbids new `isEn ?`-style ternaries outside the two files that legitimately need them; a migration budget for the existing 406.
 - `seed:test:verify` run before and after every manual test session, documented in `docs/regression-testing.md`.
