@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { useNativeApp } from "@/hooks/use-native-app";
+
 import { useState, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -202,6 +205,7 @@ export function ClientRegistrationModal({
   const t = useTranslations("clientRegModal");
   const tRp = useTranslations("resetPassword");
   const locale = useLocale();
+  const nativeApp = useNativeApp();
   const [view, setView] = useState<ModalView>("register");
   const [step, setStep] = useState<RegisterStep>("identity");
 
@@ -657,8 +661,9 @@ export function ClientRegistrationModal({
               {view === "register" && step === "password" && (
                 <p className="text-center text-xs text-[#9ca3af] mt-3">
                   {t.rich("terms", {
-                    terms: (c) => <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
-                    privacy: (c) => <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
+                    // Inside the app the legal pages open in place (a new tab would leave the app).
+                    terms: (c) => nativeApp ? <Link href={`/${locale}/terminos`} className="underline hover:text-[#374151]">{c}</Link> : <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
+                    privacy: (c) => nativeApp ? <Link href={`/${locale}/privacidad`} className="underline hover:text-[#374151]">{c}</Link> : <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
                   })}
                 </p>
               )}

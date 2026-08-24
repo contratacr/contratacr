@@ -339,9 +339,14 @@ test.describe("@seeded ContrataCR AI", () => {
     const professional = response.body.professionals?.find((item) => item.id === aiProfessional!.professionalId);
     expect(professional, JSON.stringify(response.body.professionals)).toBeTruthy();
     expect(professional?.actionKind).toBe("message");
-    expect(professional?.actionLabel).toBe("Contactar por WhatsApp");
+    // The assistant is native-only here, so the contact CTA stays inside the app.
+    // What must never happen is promising availability the professional lacks.
+    expect(professional?.actionLabel).toBe("Enviar mensaje");
     expect(professional?.actionLabel).not.toBe("Ver disponibilidad");
-    expect(professional?.actionLabel).not.toBe("Enviar mensaje");
+
+    // The web platform has no assistant in the mobile build.
+    const webResponse = await ask(page, "Necesito un plomero en Atenas, Alajuela", { platform: "web" });
+    expect(webResponse.status).toBe(404);
   });
 
   test("answers product questions with stable, actionable destinations", async ({ page }) => {
@@ -488,19 +493,35 @@ test.describe("@seeded ContrataCR AI", () => {
     }
   });
 
-  test("explains the current WhatsApp contact flow in Spanish and English", async ({ page }) => {
+  test("keeps the contact flow inside the app in Spanish and English", async ({ page }) => {
     await gotoOK(page, "/es");
     const spanish = await ask(page, "¿Cómo contacto a un profesional?");
     expect(spanish.status, JSON.stringify(spanish.body)).toBe(200);
     expect(spanish.body.action).toBe("answer");
-    expect(spanish.body.answer).toMatch(/WhatsApp/i);
-    expect(spanish.body.answer).not.toMatch(/chat interno|mensajes dentro de la app/i);
+    expect(spanish.body.answer).toMatch(/mensaje/i);
+    expect(spanish.body.answer).not.toMatch(/WhatsApp/i);
 
     const english = await ask(page, "How do I contact a professional?", { locale: "en", pagePath: "/en" });
     expect(english.status, JSON.stringify(english.body)).toBe(200);
     expect(english.body.action).toBe("answer");
-    expect(english.body.answer).toMatch(/WhatsApp/i);
-    expect(english.body.answer).not.toMatch(/in-app chat|direct chat/i);
+    expect(english.body.answer).toMatch(/message/i);
+    expect(english.body.answer).not.toMatch(/WhatsApp/i);
+  });
+
+  test("uses internal messaging copy and actions for the native app", async ({ page }) => {
+    await gotoOK(page, "/es");
+    const response = await ask(page, "¿Cómo contacto a un profesional?", { platform: "native" });
+    expect(response.status, JSON.stringify(response.body)).toBe(200);
+    expect(response.body.answer).toMatch(/mensaje/i);
+    expect(response.body.answer).not.toMatch(/WhatsApp/i);
+
+    const search = await ask(page, "Necesito un plomero en Atenas, Alajuela", { platform: "native" });
+    expect(search.status, JSON.stringify(search.body)).toBe(200);
+    for (const professional of search.body.professionals ?? []) {
+      if (professional.actionKind !== "message") continue;
+      expect(professional.actionLabel).toBe("Enviar mensaje");
+      expect(professional.actionLabel).not.toMatch(/WhatsApp/i);
+    }
   });
 
   test("searches real professionals through a trustworthy filtered-results link", async ({ page }) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Bell, ArrowRight, CheckCheck } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
@@ -11,6 +12,7 @@ import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
+import { useNativeApp } from "@/hooks/use-native-app";
 
 type Notification = {
   id: string;
@@ -33,7 +35,10 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   }));
   const [hasSyncedNotifications, setHasSyncedNotifications] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const portalHost = typeof document === "undefined" ? null : document.body;
+  const nativeApp = useNativeApp();
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuPanelRef = useRef<HTMLDivElement | null>(null);
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const notifications = useMemo(
@@ -137,7 +142,9 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   useEffect(() => {
     if (!menuOpen) return;
     function onPointerDown(event: PointerEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+      const target = event.target as Node;
+      if (menuRef.current?.contains(target) || menuPanelRef.current?.contains(target)) return;
+      setMenuOpen(false);
     }
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
@@ -171,25 +178,10 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
-  return (
-    <div ref={menuRef} className="relative">
-      <button
-        onClick={() => setMenuOpen((next) => !next)}
-        className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
-        aria-label={t("title")}
-        aria-expanded={menuOpen}
-      >
-        <span className="relative inline-flex">
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
-        </span>
-      </button>
-      {menuOpen && (
-        <div className="absolute right-0 top-11 z-[90] w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]">
+  // The panel is anchored to the bell on the website; inside the app it is
+  // portalled to <body> and pinned to the viewport, above the native header.
+  const menuPanel = (
+        <div ref={menuPanelRef} className={cn(nativeApp ? "ccr-notification-bell-menu fixed right-4 top-16 z-[230]" : "absolute right-0 top-11 z-[90]", "w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]")}>
           <div className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3">
             <div className="min-w-0">
               <p className="text-sm font-extrabold text-[#111827]">{t("title")}</p>
@@ -265,7 +257,26 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
-      )}
+  );
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={() => setMenuOpen((next) => !next)}
+        className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+        aria-label={t("title")}
+        aria-expanded={menuOpen}
+      >
+        <span className="relative inline-flex">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </span>
+      </button>
+      {menuOpen && (nativeApp && portalHost ? createPortal(menuPanel, portalHost) : menuPanel)}
     </div>
   );
 }

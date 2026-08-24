@@ -2,7 +2,7 @@
 
 import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 import { clearDashboardCache } from "@/lib/dashboard-prefetch-cache";
 
@@ -121,6 +121,14 @@ function useAuthState(
     // below; we never paint the social photo first (that was the bug).
     if (cached) { setAvatarUrl((prev) => prev ?? cached); setAvatarReady(true); }
 
+    if (!hasSupabaseBrowserConfig()) {
+      const finalUrl = cached || social || null;
+      if (finalUrl && !cached) { await preloadImage(finalUrl); }
+      setAvatarUrl(finalUrl);
+      setAvatarReady(true);
+      return;
+    }
+
     // Reconcile with the canonical profile record (Cloudinary uploads) — authoritative —
     // and refresh the cache so the next load is instant. The social photo is used ONLY if
     // there is no app photo. After this we know the true state, so ready flips true.
@@ -144,6 +152,15 @@ function useAuthState(
   }
 
   useEffect(() => {
+    if (!hasSupabaseBrowserConfig()) {
+      setUser(null);
+      cacheUser(null);
+      setAvatarUrl(null);
+      setAvatarReady(true);
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
     let mounted = true;
     let sessionSettled = false;

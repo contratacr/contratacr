@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only overlay. Allows the debug variant to load the local Next dev server
+  over http://localhost:3000 (reached through `adb reverse tcp:3000 tcp:3000`).
+  Never merged into the release variant.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>

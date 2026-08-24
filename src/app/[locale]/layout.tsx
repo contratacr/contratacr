@@ -14,18 +14,20 @@ import { getOperationalStatusBanner } from "@/lib/status/runtime-status";
 import { AuthProvider } from "@/hooks/use-auth";
 import { MetaPixel } from "@/components/analytics/meta-pixel";
 import { AttributionCapture } from "@/components/analytics/attribution-capture";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
 import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-followup";
 import { PushTokenManager } from "@/components/push/push-token-manager";
 import { AppResumeRecovery } from "@/components/util/app-resume-recovery";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
+import { NativeFirstRunOnboarding } from "@/components/mobile/native-first-run-onboarding";
 import { AppIntlProvider } from "@/components/app-intl-provider";
 import { GlobalActionLoading } from "@/components/global-action-loading";
 import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
 import { RouteScrollReset } from "@/components/util/route-scroll-reset";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
+import { AiConcierge } from "@/components/landing/ai-concierge";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -120,11 +122,11 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) await ensureServerCategoryCatalog();
   const operationalStatus = getOperationalStatusBanner(locale);
-  const supabase = await createClient();
-  const initialUser = await safeGetUser(supabase);
+  const supabase = hasSupabaseServerConfig() ? await createClient() : null;
+  const initialUser = supabase ? await safeGetUser(supabase) : null;
   let initialAvatarUrl: string | null | undefined;
   const initialNotificationUnread = { offer: 0, use: 0, neutral: 0 };
-  if (initialUser) {
+  if (supabase && initialUser) {
     try {
       const [{ data }, { data: unreadNotifications }] = await withPromiseTimeout(Promise.all([
         supabase
@@ -163,6 +165,7 @@ export default async function LocaleLayout({
         <ViewportEnvironment />
         <AppResumeRecovery />
         <MobileAppBridge />
+        <NativeFirstRunOnboarding />
         <CustomCategoriesLoader />
         <NotificationLiveToast scope="all" />
         <OperationalStatusBanner locale={locale} status={operationalStatus} />
@@ -173,6 +176,7 @@ export default async function LocaleLayout({
         <PushTokenManager />
         {children}
         <WhatsAppReviewFollowUp />
+        <AiConcierge />
       </AuthProvider>
     </AppIntlProvider>
   );

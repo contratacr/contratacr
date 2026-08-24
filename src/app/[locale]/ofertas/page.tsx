@@ -1,7 +1,7 @@
 import { OffersBoard } from "@/components/offers/offers-board";
 import { type ProfessionalOffer } from "@/lib/offers";
 import { safeGetUser } from "@/lib/supabase/get-user";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { getLocale } from "next-intl/server";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
@@ -12,6 +12,10 @@ export const dynamic = "force-dynamic";
 export default async function OffersPage() {
   const locale = await getLocale();
   const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
+
+  if (!hasSupabaseServerConfig()) {
+    return <OffersBoard offers={[]} canPost={false} currentProfessionalId={null} currentUserId={null} serviceOptions={serviceOptions} />;
+  }
 
   try {
     return await OffersPageContent(serviceOptions);

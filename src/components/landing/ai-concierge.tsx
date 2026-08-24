@@ -5,15 +5,22 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
+  BriefcaseBusiness,
   CheckCheck,
+  CheckCircle2,
+  ChevronRight,
   ClipboardList,
+  HelpCircle,
+  LifeBuoy,
   Loader2,
   MapPin,
   Minus,
   RotateCcw,
+  Search,
   Send,
   Sparkles,
   Star,
+  Wrench,
 } from "lucide-react";
 import Image from "next/image";
 import { useLocale } from "next-intl";
@@ -49,6 +56,17 @@ type ResultCard = {
 };
 
 type MessageAction = { label: string; href: string; kind?: string | null };
+function topicIcon(icon: GuidedTopic["icon"]) {
+  const className = "h-[18px] w-[18px]";
+  if (icon === "search") return <Search className={className} />;
+  if (icon === "request") return <ClipboardList className={className} />;
+  if (icon === "offer") return <Wrench className={className} />;
+  if (icon === "jobs") return <BriefcaseBusiness className={className} />;
+  if (icon === "how") return <HelpCircle className={className} />;
+  return <LifeBuoy className={className} />;
+}
+
+type GuidedTopic = { label: string; example: string; prompt: string; icon: "search" | "request" | "offer" | "jobs" | "how" | "support" };
 type ChatMessage = {
   role: "assistant" | "user";
   body: string;
@@ -101,8 +119,6 @@ const COPY = {
     closedLabel: "Abrir asistente de ContrataCR",
     minimize: "Minimizar asistente",
     title: "Asistente ContrataCR",
-    intro: "¡Hola! ¿En qué puedo ayudarle hoy?",
-    placeholder: "Pregunte o describa lo que necesita",
     send: "Enviar mensaje",
     thinking: "Buscando la mejor respuesta...",
     viewProfile: "Ver perfil",
@@ -111,16 +127,24 @@ const COPY = {
     suggesting: "Enviando...",
     suggested: "Sugerencia enviada",
     error: "No pude responder en este momento. Inténtelo nuevamente.",
-    notice: "La IA puede equivocarse. Revise los detalles antes de continuar.",
+    notice: "Respuestas guiadas con datos de ContrataCR.",
     reset: "Nuevo chat",
     resetHint: "Limpia esta conversacion y empieza de cero.",
+    emptyTitle: "¿En qué te ayudo?",
+    emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, solicitudes, empleos y tu cuenta.",
+    topics: [
+      { label: "Buscar un profesional", example: "Busco plomería en San José", prompt: "Busco plomería en San José", icon: "search" },
+      { label: "Publicar un proyecto", example: "Quiero publicar un proyecto", prompt: "Quiero publicar un proyecto", icon: "request" },
+      { label: "Ofrecer mis servicios", example: "Quiero ofrecer mis servicios", prompt: "Quiero ofrecer mis servicios", icon: "offer" },
+      { label: "Empleos", example: "¿Cómo aplico a un empleo?", prompt: "¿Cómo aplico a un empleo?", icon: "jobs" },
+      { label: "Cómo funciona la app", example: "¿Cómo funciona ContrataCR?", prompt: "¿Cómo funciona ContrataCR?", icon: "how" },
+      { label: "Soporte", example: "Necesito ayuda con mi cuenta", prompt: "Necesito soporte", icon: "support" },
+    ] satisfies GuidedTopic[],
   },
   en: {
     closedLabel: "Open ContrataCR assistant",
     minimize: "Minimize assistant",
     title: "ContrataCR Assistant",
-    intro: "Hi! How can I help you today?",
-    placeholder: "Ask or describe what you need",
     send: "Send message",
     thinking: "Finding the best answer...",
     viewProfile: "View profile",
@@ -129,9 +153,19 @@ const COPY = {
     suggesting: "Sending...",
     suggested: "Suggestion sent",
     error: "I could not answer right now. Please try again.",
-    notice: "AI can be wrong. Review the details before continuing.",
+    notice: "Guided answers with ContrataCR data.",
     reset: "New chat",
     resetHint: "Clear this conversation and start fresh.",
+    emptyTitle: "How can I help?",
+    emptySubtitle: "I guide you through ContrataCR with data from the app: professionals, projects, jobs and your account.",
+    topics: [
+      { label: "Find a professional", example: "Find plumbing in San José", prompt: "Find plumbing in San José", icon: "search" },
+      { label: "Publish a project", example: "I want to publish a project", prompt: "I want to publish a project", icon: "request" },
+      { label: "Offer my services", example: "I want to offer my services", prompt: "I want to offer my services", icon: "offer" },
+      { label: "Jobs", example: "How do I apply to a job?", prompt: "How do I apply to a job?", icon: "jobs" },
+      { label: "How the app works", example: "How does ContrataCR work?", prompt: "How does ContrataCR work?", icon: "how" },
+      { label: "Support", example: "I need help with my account", prompt: "I need support", icon: "support" },
+    ] satisfies GuidedTopic[],
   },
 } as const;
 
@@ -173,10 +207,12 @@ function localizedDestination(href: string, lang: "es" | "en") {
   return `/${lang}${unlocalized === "/" ? "" : unlocalized}`;
 }
 
-function ProfessionalResult({ result, copy, onNavigate }: {
+function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
   result: ResultCard;
   copy: typeof COPY.es | typeof COPY.en;
   onNavigate: (href: string) => void;
+  nativeApp: boolean;
+  lang: "es" | "en";
 }) {
   return (
     <article className="overflow-hidden rounded-xl border border-[#dce8ef] bg-white shadow-[0_4px_16px_-12px_rgba(15,35,60,0.35)]">
@@ -187,7 +223,13 @@ function ProfessionalResult({ result, copy, onNavigate }: {
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-1.5">
             <p className="min-w-0 flex-1 text-sm font-extrabold leading-snug text-[#162543]">{result.name}</p>
-            {result.verified && <span className="inline-flex w-fit shrink-0 items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">{copy.verified}</span>}
+            {result.verified && (
+              <CheckCircle2
+                aria-label={copy.verified}
+                className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]"
+                strokeWidth={2.8}
+              />
+            )}
           </div>
           <p className="mt-0.5 text-xs font-semibold text-[#53657a]">{result.service}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[#708095]">
@@ -201,7 +243,17 @@ function ProfessionalResult({ result, copy, onNavigate }: {
       </button>
       <div className="grid grid-cols-2 border-t border-[#edf2f5]">
         <button type="button" onClick={() => onNavigate(result.profileHref)} className="h-10 text-xs font-bold text-[#526277] hover:bg-[#f7fafc]">{copy.viewProfile}</button>
-        <button type="button" onClick={() => onNavigate(result.actionHref)} className="h-10 border-l border-[#edf2f5] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{result.actionLabel}</button>
+        {nativeApp && result.actionKind === "message" ? (
+          <MessageLauncher
+            professionalId={result.id}
+            professionalName={result.name}
+            contextTitle={result.service}
+            buttonLabel={lang === "en" ? "Message" : "Mensaje"}
+            className="h-10 w-full rounded-none border-l border-[#edf2f5] px-2 text-xs font-extrabold"
+          />
+        ) : (
+          <button type="button" onClick={() => onNavigate(result.actionHref)} className="h-10 border-l border-[#edf2f5] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{result.actionLabel}</button>
+        )}
       </div>
     </article>
   );
@@ -217,14 +269,13 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const copy = COPY[lang];
   const [open, setOpen] = useState(embedded);
   const [sessionHydrated, setSessionHydrated] = useState(false);
-  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState("");
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
   const [compactViewport, setCompactViewport] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
+  const [draft, setDraft] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
   useContainedTouchScroll(scrollRef, open || embedded);
@@ -340,11 +391,10 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     return () => cancelAnimationFrame(frame);
   }, [messages, loading, open]);
 
-  async function ask(prefilled?: string) {
-    const text = (prefilled ?? input).trim();
+  async function ask(prefilled: string) {
+    const text = prefilled.trim();
     if (!text || loading) return;
     const previous = messages;
-    setInput("");
     setMessages([...previous, { role: "user", body: text, createdAt: new Date().toISOString() }]);
     setLoading(true);
     try {
@@ -357,6 +407,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           locale,
           pagePath: pathname,
           authenticated: !!user,
+          platform: nativeApp ? "native" : "web",
           history: previous.slice(-8).map((message) => ({
             role: message.role,
             content: `${message.body}${message.professionals?.length ? `\nResultados mostrados: ${message.professionals.map((result, index) => `${index + 1}. ${result.name}`).join("; ")}` : ""}`,
@@ -382,8 +433,15 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
       setMessages((current) => [...current, { role: "assistant", body: copy.error, createdAt: new Date().toISOString() }]);
     } finally {
       setLoading(false);
-      requestAnimationFrame(() => inputRef.current?.focus());
     }
+  }
+
+  function submitDraft(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const text = draft.trim();
+    if (!text || loading) return;
+    setDraft("");
+    void ask(text);
   }
 
   async function suggestService(messageIndex: number, name: string) {
@@ -404,11 +462,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     }
   }
 
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    void ask();
-  }
-
   function navigate(href: string) {
     const protectedDestination = href.includes("/publicar-proyecto") || href.includes("/dashboard/");
     if (!user && protectedDestination) storePendingIntent(href);
@@ -427,14 +480,14 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
 
   function resetConversation() {
     setConversationId(crypto.randomUUID());
-    setMessages([{ role: "assistant", body: copy.intro, createdAt: new Date().toISOString() }]);
-    setInput("");
-    requestAnimationFrame(() => inputRef.current?.focus());
+    setMessages([]);
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
   const nativeAssistantShell = nativeApp && compactViewport;
   if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
+  // The assistant is a native-app feature. Keep the web experience focused on
+  // search and direct navigation, even if an old browser event tries to open it.
   if (!embedded && !nativeApp) return null;
   if (!embedded && nativeAssistantShell && !open) return null;
   if (!embedded && !open) {
@@ -555,7 +608,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                     </SaveableCard>
                   </div>
                 ) : (
-                  <ProfessionalResult key={result.id} result={result} copy={copy} onNavigate={navigate} />
+                  <ProfessionalResult key={result.id} result={result} copy={copy} onNavigate={navigate} nativeApp={nativeApp} lang={lang} />
                 ))}
 
                 {message.action && (
@@ -583,6 +636,42 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             </div>
           ))}
 
+          {/* Guided index, shown only while the thread is empty: each row states what
+              the assistant covers and the example question it answers with app data. */}
+          {messages.length === 0 && (
+            <div className="space-y-4">
+              <div className="flex flex-col items-center px-2 text-center">
+                <div className="h-20 w-20"><Image src="/brand/ai-assistant-robot.webp" alt="" width={128} height={128} className="h-full w-full object-contain drop-shadow-[0_12px_18px_rgba(0,99,189,0.18)]" /></div>
+                <h3 className="mt-1 text-[19px] font-black leading-tight text-[#102746]">{copy.emptyTitle}</h3>
+                <p className="mt-1.5 max-w-[19rem] text-[13px] font-medium leading-relaxed text-[#5c718c]">{copy.emptySubtitle}</p>
+              </div>
+
+              <div className="overflow-hidden rounded-[22px] border border-[#dbe7f0] bg-white shadow-[0_10px_30px_-24px_rgba(0,91,145,0.5)]">
+                {copy.topics.map((topic, index) => (
+                  <button
+                    key={topic.prompt}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => void ask(topic.prompt)}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-3.5 py-3 text-left transition active:bg-[#eef9fd] disabled:opacity-60",
+                      index > 0 && "border-t border-[#eef3f7]",
+                    )}
+                  >
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eef8fd] text-[#0089bb]">
+                      {topicIcon(topic.icon)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-extrabold leading-tight text-[#173052]">{topic.label}</span>
+                      <span className="mt-0.5 block truncate text-[12px] font-medium leading-tight text-[#7b8da7]">{topic.example}</span>
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-[#a8b7c9]" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {loading && (
             <div className="flex gap-3">
               <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm"><Image src="/brand/ai-assistant-robot.webp" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>
@@ -593,29 +682,24 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           )}
         </div>
 
-        <footer className="shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3">
-          <p className="ccr-ai-footer-notice mb-2 text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:hidden">{copy.notice}</p>
-          <form onSubmit={submit} className="flex items-end gap-2 rounded-[24px] border-2 border-[#009FD9] bg-white p-2 pl-4 shadow-[0_10px_30px_-18px_rgba(0,159,217,0.48)] focus-within:ring-4 focus-within:ring-[#009FD9]/10">
+        <footer className="ccr-ai-composer shrink-0 border-t border-[#dfeaf2] bg-white px-4 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3">
+          <form onSubmit={submitDraft} className="flex items-center gap-2">
             <input
-              type="text"
-              ref={inputRef}
-              value={input}
-              onChange={(event) => setInput(event.target.value.slice(0, 1200))}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  void ask();
-                }
-              }}
-              placeholder={copy.placeholder}
-              aria-label={copy.placeholder}
-              className="h-11 min-w-0 flex-1 bg-transparent py-2.5 text-sm leading-6 text-[#173052] outline-none placeholder:text-[#7f91aa] sm:text-base"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value.slice(0, 240))}
+              placeholder={lang === "en" ? "Ask anything..." : "Escribe una pregunta..."}
+              className="h-12 min-w-0 flex-1 rounded-2xl border-2 border-[#0585a0] bg-white px-4 text-[15px] font-medium text-[#173052] outline-none placeholder:text-[#8b96a6] focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
             />
-            <button type="submit" disabled={!input.trim() || loading} aria-label={copy.send} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_8px_18px_-8px_rgba(0,159,217,0.85)] transition hover:scale-[1.04] hover:bg-[#0089bb] active:scale-95 disabled:bg-[#d7e3e9] disabled:shadow-none">
+            <button
+              type="submit"
+              disabled={loading || !draft.trim()}
+              aria-label={copy.send}
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eef1f4] text-[#9aa3ad] transition enabled:bg-[#009FD9] enabled:text-white disabled:opacity-80"
+            >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </button>
           </form>
-          <p className="ccr-ai-footer-notice mt-3 hidden text-center text-[11px] font-medium leading-tight text-[#7d8fa8] sm:block">{copy.notice}</p>
+          <p className="ccr-ai-footer-notice mt-2 text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:text-[11px]">{copy.notice}</p>
         </footer>
       </div>
     </section>

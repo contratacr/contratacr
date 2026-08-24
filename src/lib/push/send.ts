@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFirebaseMessaging } from "@/lib/push/firebase-admin";
 import { isMissingPushTransportColumn } from "@/lib/push/migration-compat";
+import { repairVisibleText } from "@/lib/text/repair-visible-text";
 
 type SendUserPushOptions = {
   userId: string;
@@ -15,7 +16,7 @@ const INVALID_TOKEN_ERRORS = new Set([
 ]);
 
 function compactPushText(value: string, maxLength = 112) {
-  const text = value.replace(/\s+/g, " ").trim();
+  const text = repairVisibleText(value).replace(/\s+/g, " ").trim();
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength - 1).trimEnd()}…`;
 }

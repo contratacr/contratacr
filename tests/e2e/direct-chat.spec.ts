@@ -1,6 +1,7 @@
 import { expect, test } from "playwright/test";
 import { apiJson, gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
+import { cleanupDisposableAccount, createDisposableAccount } from "./disposable-account";
 
 type ChatResponse = { conversationId?: string; error?: string };
 type ConversationListResponse = {
@@ -21,6 +22,7 @@ test.describe("@seeded contextual direct chat", () => {
   test.skip(!canRunSeededRegression(), "Requires the isolated test Supabase seed.");
   let seed: RegressionSeedState;
   const conversationIds: string[] = [];
+  const reportIds: string[] = [];
   let bookingId = "";
   let projectId = "";
   let proposalId = "";
@@ -30,14 +32,36 @@ test.describe("@seeded contextual direct chat", () => {
     const admin = regressionAdminClient();
     if (conversationIds.length) {
       await admin.from("direct_messages").delete().in("conversation_id", conversationIds);
-      for (const conversationId of conversationIds) {
-        await admin.from("notifications").delete().eq("type", "direct_message").contains("data", { conversation_id: conversationId });
+      const disposableReferences = [
+        ...conversationIds,
+        bookingId,
+        projectId,
+        proposalId,
+      ].filter(Boolean);
+      const { data: generatedNotifications, error: notificationLookupError } = await admin
+        .from("notifications")
+        .select("id,data")
+        .limit(5000);
+      if (notificationLookupError) throw notificationLookupError;
+      const generatedNotificationIds = (generatedNotifications ?? [])
+        .filter((notification) => {
+          const data = JSON.stringify(notification.data ?? {});
+          return disposableReferences.some((reference) => data.includes(reference));
+        })
+        .map((notification) => notification.id);
+      if (generatedNotificationIds.length) {
+        const { error: notificationCleanupError } = await admin
+          .from("notifications")
+          .delete()
+          .in("id", generatedNotificationIds);
+        if (notificationCleanupError) throw notificationCleanupError;
       }
       await admin.from("direct_conversations").delete().in("id", conversationIds);
     }
     if (bookingId) await admin.from("bookings").delete().eq("id", bookingId);
     if (proposalId) await admin.from("proposals").delete().eq("id", proposalId);
     if (projectId) await admin.from("projects").delete().eq("id", projectId);
+    if (reportIds.length) await admin.from("reports").delete().in("id", reportIds);
   });
 
   test("profile messages deduplicate and both participants can reply", async ({ page }) => {
@@ -125,10 +149,15 @@ test.describe("@seeded contextual direct chat", () => {
     await expect(page.getByText("E2E reparación contextual").last()).toBeVisible();
     await expect(page.getByRole("button", { name: /Ver solicitud|View request/i })).toBeVisible();
 
-    await resetAuth(page);
-    await loginAs(page, E2E_USERS.videoProfessional.email, E2E_USERS.videoProfessional.password);
-    const denied = await apiJson(page, `/api/direct-chat?id=${created.body.conversationId}`);
-    expect(denied.status).toBe(404);
+    const outsider = await createDisposableAccount({ prefix: "direct-chat-outsider" });
+    try {
+      await resetAuth(page);
+      await loginAs(page, outsider.email, outsider.password);
+      const denied = await apiJson(page, `/api/direct-chat?id=${created.body.conversationId}`);
+      expect(denied.status).toBe(404);
+    } finally {
+      await cleanupDisposableAccount(outsider);
+    }
   });
 
   test("proposal chat remains linked to the publication and persists for both sides", async ({ page }) => {
@@ -185,12 +214,17 @@ test.describe("@seeded contextual direct chat", () => {
 
   test("validation, blocked threads and realtime delivery protect the conversation", async ({ page }) => {
     const admin = regressionAdminClient();
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     const empty = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
-      body: { professionalId: seed.professionalId, message: "   " },
+      body: { professionalId: seed.videoProfessionalId, message: "   " },
     });
     expect(empty.status).toBe(400);
+    const offensive = await apiJson<ChatResponse>(page, "/api/direct-chat", {
+      method: "POST",
+      body: { professionalId: seed.videoProfessionalId, message: "Eres un imbécil" },
+    });
+    expect(offensive.status).toBe(422);
 
     const created = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
@@ -206,13 +240,28 @@ test.describe("@seeded contextual direct chat", () => {
     const realtimeBody = `E2E tiempo real ${Date.now()}`;
     const { error: realtimeError } = await admin.rpc("send_direct_message_atomic", {
       p_conversation_id: created.body.conversationId,
-      p_sender_id: seed.clientId,
+      p_sender_id: seed.professionalUserId,
       p_body: realtimeBody,
+      p_attachment_urls: [],
     });
     if (realtimeError) throw realtimeError;
     await expect(page.getByText(realtimeBody).last()).toBeVisible({ timeout: 15_000 });
 
-    await admin.from("direct_conversations").update({ status: "blocked" }).eq("id", created.body.conversationId);
+    const reportAndBlock = await apiJson<ChatResponse>(page, "/api/direct-chat", {
+      method: "PATCH",
+      body: { conversationId: created.body.conversationId, action: "block_and_report", reason: "E2E conducta abusiva" },
+    });
+    expect(reportAndBlock.status).toBe(200);
+    const { data: report } = await admin.from("reports")
+      .select("id,reason,status")
+      .eq("reported_client_id", seed.professionalUserId)
+      .ilike("reason", "%E2E conducta abusiva%")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    expect(report?.status).toBe("open");
+    expect(report?.reason).toContain("[Mensaje directo]");
+    if (report?.id) reportIds.push(report.id);
     const blocked = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
       body: { conversationId: created.body.conversationId, message: "E2E no debe guardarse" },

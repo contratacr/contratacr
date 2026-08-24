@@ -509,7 +509,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       wider results column (`lg:max-w-none`), which hugs the card width while
                       the map takes the rest (see search-results-layout). Content-driven
                       height - one card per row, each grows to its content. */}
-                  <div className="-mx-4 flex w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-[#eef2f6] lg:mx-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
+                  <div className="ccr-search-results-list -mx-4 flex min-h-full w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-[#eef2f6] lg:mx-0 lg:min-h-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
                     {results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.

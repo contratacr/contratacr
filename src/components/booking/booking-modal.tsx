@@ -32,6 +32,7 @@ import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { useNativeApp } from "@/hooks/use-native-app";
 
 type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
 type BookingProfessional = ProfessionalCardData & {
@@ -180,6 +181,7 @@ function addDateSlot(map: Record<string, string[]>, date: string, time: string) 
 export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime, initialCategoryId, initialLocationId, initialLocationLabel }: BookingModalProps) {
   const t = useTranslations("booking");
   const locale = useLocale();
+  const nativeApp = useNativeApp();
   const router = useRouter();
   // A solicitud was actually created in this session → on close we REFRESH so /buscar drops
   // the now-occupied slot (the schedule strips re-read server availability).
@@ -1220,7 +1222,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       <div>
                         <p className="text-sm font-semibold text-[#111827]">{t("calendar.privateTitle")}</p>
                         <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">
-                          {t("calendar.privateBody")}
+                          {nativeApp
+                            ? locale === "en"
+                              ? "This professional coordinates availability by message."
+                              : "Este profesional coordina la disponibilidad por mensaje."
+                            : t("calendar.privateBody")}
                         </p>
                       </div>
                       <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
@@ -1231,8 +1237,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <MessageCircle className="h-5 w-5 text-[#009FD9]" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[#111827]">{t("calendar.whatsappOnlyTitle")}</p>
-                        <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">{t("calendar.whatsappOnlyBody")}</p>
+                        <p className="text-sm font-semibold text-[#111827]">
+                          {nativeApp
+                            ? locale === "en" ? "Coordinate by message" : "Coordinar por mensaje"
+                            : t("calendar.whatsappOnlyTitle")}
+                        </p>
+                        <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">
+                          {nativeApp
+                            ? locale === "en"
+                              ? "Write to the professional to ask about available times."
+                              : "Escribe al profesional para consultar horarios disponibles."
+                            : t("calendar.whatsappOnlyBody")}
+                        </p>
                       </div>
                       <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
                     </div>

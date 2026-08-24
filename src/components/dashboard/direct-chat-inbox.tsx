@@ -1,16 +1,15 @@
 "use client";
 
-import { ProgressiveImage } from "@/components/ui/progressive-image";
-
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Flag, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
@@ -19,6 +18,8 @@ import { AppTooltip } from "@/components/ui/app-tooltip";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { readCachedConversations, storeConversations } from "@/lib/direct-chat/conversations-cache";
+import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
@@ -28,6 +29,9 @@ type Conversation = {
   status?: "open" | "archived" | "blocked";
   client_unread_count?: number; professional_unread_count?: number;
   client_profile?: Person | null;
+  client_has_app?: boolean;
+  professional_has_app?: boolean;
+  professional_whatsapp?: string | null;
   professionals?: { id?: string; slug?: string | null; business_name?: string | null; profiles?: Person | null } | null;
   context?: { type: "booking" | "project" | "proposal" | "profile"; title?: string | null; service_description?: string | null; status?: string | null; proposal_status?: string | null };
 };
@@ -146,6 +150,7 @@ export function DirectChatInbox() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const nativeApp = useNativeApp();
   const userId = user?.id ?? null;
   const initialPendingDraft = useMemo(() => buildPendingDraft(searchParams, user?.id, isEn), [isEn, searchParams, user?.id]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -165,6 +170,9 @@ export function DirectChatInbox() {
   const [attachmentError, setAttachmentError] = useState("");
   const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
   const [imagePreview, setImagePreview] = useState<DirectAttachment | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportBusy, setReportBusy] = useState(false);
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -190,10 +198,13 @@ export function DirectChatInbox() {
     const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
     if (!shouldLockScroll) return;
     const root = document.documentElement;
+    const body = document.body;
     root.classList.add("contratacr-chat-thread-open");
+    if (isNativeAppRuntime()) body.classList.add("contratacr-chat-thread-open");
     const releaseBodyScroll = lockBodyScroll();
     return () => {
       root.classList.remove("contratacr-chat-thread-open");
+      body.classList.remove("contratacr-chat-thread-open");
       releaseBodyScroll();
     };
   }, [mobileThread]);
@@ -254,12 +265,21 @@ export function DirectChatInbox() {
   }, [contextSummaryFor, displayedConversations, locale, personFor, query]);
 
   const loadConversations = useCallback(async (quiet = false) => {
-    if (!quiet) setLoading(true);
+    // Paint the warmed list at once; the network refresh below replaces it.
+    const warm = !showArchived && !quiet ? (readCachedConversations() as Conversation[] | null) : null;
+    if (warm) {
+      setConversations(warm);
+      setLoading(false);
+    } else if (!quiet) {
+      setLoading(true);
+    }
+    setError("");
     try {
       const res = await fetch(`/api/direct-chat${showArchived ? "?status=archived" : ""}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
       const rows = json.conversations ?? [];
+      if (!showArchived) storeConversations(rows);
       const existingDraftConversation = findExistingDraftConversation(rows, pendingDraftPayload);
       setConversations(rows);
       if (existingDraftConversation) {
@@ -415,6 +435,31 @@ export function DirectChatInbox() {
     }
   }
 
+  async function reportAndBlockActive() {
+    if (!active || active.id === DRAFT_CONVERSATION_ID) return;
+    if (reportReason.trim().length < 3) return;
+    setReportBusy(true);
+    setError("");
+    const response = await fetch("/api/direct-chat", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversationId: active.id, action: "block_and_report", reason: reportReason }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(result.error || (isEn ? "Could not report this user." : "No se pudo reportar al usuario."));
+      setReportBusy(false);
+      return;
+    }
+    setReportBusy(false);
+    setReportOpen(false);
+    setReportReason("");
+    setMessages([]);
+    setActiveId(null);
+    setMobileThread(false);
+    await loadConversations();
+  }
+
   function removeAttachment(id: string) {
     setSelectedAttachments((current) => {
       const attachment = current.find((item) => item.id === id);
@@ -564,6 +609,23 @@ export function DirectChatInbox() {
   const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
   const deleteLabel = isEn ? "Delete" : "Eliminar";
   const activePersonName = activePerson?.name || "";
+  const otherHasApp = active
+    ? (activePerson?.role === "professional" ? active.professional_has_app : active.client_has_app)
+    : undefined;
+  // Last resort after a full day without an answer from a professional who is
+  // not in the app: let the client continue on WhatsApp instead of losing them.
+  const whatsappEscape = (() => {
+    if (!active || !user?.id || activePerson?.role !== "professional" || otherHasApp || !active.professional_whatsapp) return null;
+    const last = messages[messages.length - 1];
+    if (!last || last.sender_id !== user.id) return null;
+    if (Date.now() - new Date(last.created_at).getTime() < 24 * 60 * 60 * 1000) return null;
+    const digits = active.professional_whatsapp.replace(/\D/g, "");
+    const number = digits.length === 8 ? `506${digits}` : digits;
+    const text = isEn
+      ? "Hi, I wrote to you on ContrataCR and wanted to follow up."
+      : "Hola, te escribí por ContrataCR y quería dar seguimiento.";
+    return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+  })();
   const activeContextTitle = activeContext?.title || "";
   const activeContextAction = active ? contextActionFor(active) : "";
   return (
@@ -585,13 +647,13 @@ export function DirectChatInbox() {
           <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>
         </div>
         <div className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
-          {!showArchived && archivedCount > 0 && (
+          {!showArchived && (nativeApp || archivedCount > 0) && (
             <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e7eef3] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
                 <Archive className="h-5 w-5" />
               </span>
               <span className="min-w-0 flex-1 text-sm font-extrabold text-[#162543]">{isEn ? "Archived" : "Archivados"}</span>
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>
+              {archivedCount > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>}
             </button>
           )}
           {filtered.map((item) => { const person = personFor(item); const summary = contextSummaryFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
@@ -605,17 +667,17 @@ export function DirectChatInbox() {
 
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
         <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e3ebf1] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
-          <button type="button" onClick={() => setMobileThread(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
+          <button type="button" data-native-back="conversations" onClick={() => setMobileThread(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
           <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
             <Avatar className="h-9 w-9 sm:h-10 sm:w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
           </button>
           <div className="min-w-0 flex-1">
             {activePerson?.profileHref ? (
-              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full truncate text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline">
+              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline line-clamp-2 lg:truncate">
                 {activePerson.name}
               </button>
             ) : (
-              <p className="truncate text-[15px] font-extrabold leading-tight text-[#162543]">{activePerson?.name}</p>
+              <p className={nativeApp ? "text-[15px] font-extrabold leading-tight text-[#162543] line-clamp-2 lg:truncate" : "truncate text-[15px] font-extrabold leading-tight text-[#162543]"}>{activePerson?.name}</p>
             )}
             {active && activeContext && activeContext.type !== "profile" && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
             {activeContextTitle && <p className="mt-0.5 line-clamp-1 text-xs font-semibold leading-snug text-[#63748a] sm:line-clamp-2">{activeContextTitle}</p>}
@@ -625,6 +687,7 @@ export function DirectChatInbox() {
               </button>
             )}
           </div>
+          {nativeApp && <ChatActionButton label={isEn ? "Report and block" : "Reportar y bloquear"} onClick={() => setReportOpen(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Flag className="h-4 w-4" /></ChatActionButton>}
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
           {showArchived && (
             <ChatActionButton label={deleteLabel} onClick={() => void deleteArchivedActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
@@ -709,6 +772,14 @@ export function DirectChatInbox() {
             );
           })}
         </div>
+        {nativeApp && whatsappEscape && (
+          <div className="border-t border-[#e3ebf1] bg-[#fffbeb] px-4 py-2.5 text-xs font-semibold text-[#8a6d1f]">
+            <p>{isEn ? "No reply in the app for over a day." : "Más de un día sin respuesta en la app."}</p>
+            <a href={whatsappEscape} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#25D366] px-3 text-[13px] font-extrabold text-white">
+              {isEn ? "Continue on WhatsApp" : "Continuar por WhatsApp"}
+            </a>
+          </div>
+        )}
         {(error || attachmentError) && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error || attachmentError}</p>}
         <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
           {!!selectedAttachments.length && (
@@ -793,6 +864,20 @@ export function DirectChatInbox() {
           </div>
         </form>
       </section>
+      {nativeApp && reportOpen && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[1000] grid place-items-center bg-[#0f172a]/55 p-4" role="dialog" aria-modal="true" aria-labelledby="chat-report-title">
+          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div><h2 id="chat-report-title" className="text-lg font-extrabold text-[#162543]">{isEn ? "Report and block" : "Reportar y bloquear"}</h2><p className="mt-1 text-sm leading-5 text-[#64748b]">{isEn ? "The conversation is blocked immediately and ContrataCR receives the report for review within 24 hours." : "La conversación se bloquea inmediatamente y ContrataCR recibe el reporte para revisarlo en un máximo de 24 horas."}</p></div>
+              <button type="button" onClick={() => setReportOpen(false)} aria-label={isEn ? "Close" : "Cerrar"} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#64748b] hover:bg-[#f1f5f9]"><X className="h-5 w-5" /></button>
+            </div>
+            <label className="mt-5 block text-sm font-bold text-[#334155]" htmlFor="chat-report-reason">{isEn ? "What happened?" : "¿Qué ocurrió?"}</label>
+            <textarea id="chat-report-reason" value={reportReason} onChange={(event) => setReportReason(event.target.value.slice(0, 1000))} rows={4} autoFocus className="mt-2 w-full resize-none rounded-2xl border border-[#d8e5ee] p-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10" placeholder={isEn ? "Describe the abusive content or conduct" : "Describe el contenido o la conducta abusiva"} />
+            <div className="mt-5 flex gap-3"><button type="button" onClick={() => setReportOpen(false)} className="flex-1 rounded-xl border border-[#d8e5ee] px-4 py-3 text-sm font-bold text-[#526277]">{isEn ? "Cancel" : "Cancelar"}</button><button type="button" disabled={reportBusy || reportReason.trim().length < 3} onClick={() => void reportAndBlockActive()} className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{reportBusy ? (isEn ? "Sending..." : "Enviando...") : (isEn ? "Report and block" : "Reportar y bloquear")}</button></div>
+          </div>
+        </div>,
+        document.body,
+      )}
       {imagePreview?.url && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[1000] flex flex-col bg-black/95 text-white" role="dialog" aria-modal="true" aria-label={imagePreview.name}>
           <div className="flex min-h-16 shrink-0 items-center gap-3 px-3 pt-[env(safe-area-inset-top)] sm:px-5">

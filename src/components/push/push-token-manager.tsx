@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { PushNotifications, type Token } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 import { Bell, X } from "lucide-react";
@@ -15,7 +16,6 @@ function isNativeMobile() {
   if (!Capacitor.isNativePlatform()) return false;
   return Capacitor.getPlatform() === "ios" || Capacitor.getPlatform() === "android";
 }
-
 type PushTokenPayload = {
   token: string;
   platform: "android" | "ios";
@@ -72,7 +72,7 @@ function normalizePushUrl(rawUrl: unknown) {
 }
 
 function promptSessionKey(userId: string) {
-  return `ccr:push-permission-shown:${userId}`;
+  return `ccr:push-permission-context-shown:v3:${userId}`;
 }
 
 function permissionGrantedKey(userId: string) {
@@ -127,7 +127,10 @@ export function PushTokenManager() {
     activeRef.current = false;
   }, []);
 
-  const dismissKey = user ? `ccr:push-permission-dismissed:${user.id}` : null;
+  // Version the contextual decision independently from the OS permission.
+  // Older builds asked at a different point in the journey, so their dismissal
+  // must not suppress the improved post-login explanation.
+  const dismissKey = user ? `ccr:push-permission-context-dismissed:v3:${user.id}` : null;
 
   useEffect(() => {
     if (!isNativeMobile()) return;
@@ -275,9 +278,10 @@ export function PushTokenManager() {
           return;
         }
         if (!shownThisSession) {
-          window.sessionStorage.setItem(promptSessionKey(user.id), "1");
           promptTimerRef.current = setTimeout(() => {
-            if (!cancelled) setPromptVisible(true);
+            if (cancelled) return;
+            window.sessionStorage.setItem(promptSessionKey(user.id), "1");
+            setPromptVisible(true);
           }, promptDelayForPath(pathname));
         }
       } catch (error) {
@@ -348,54 +352,60 @@ export function PushTokenManager() {
 
   if (loading || !promptVisible || !user || !isNativeMobile()) return null;
 
-  const professional = user.user_metadata?.is_provider === true;
-  const copy = professional
-    ? "Activa notificaciones para enterarte cuando un cliente te escriba o haya proyectos relacionados con tus servicios."
-    : "Activa notificaciones para enterarte cuando un profesional te responda o tengas novedades en tus solicitudes.";
+  const copy = "Te avisaremos sobre mensajes, solicitudes, propuestas, reseñas y cambios importantes.";
 
-  return (
-    <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+86px)] z-[95] sm:left-auto sm:right-5 sm:max-w-sm">
-      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.35)]">
-        <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#EBF5FB] text-[#009FD9]">
-            <Bell className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start gap-2">
-              <p className="text-sm font-extrabold text-[#162543]">Activa notificaciones</p>
-              <button
-                type="button"
-                onClick={dismissPrompt}
-                aria-label="Cerrar"
-                className="ml-auto rounded-full p-1 text-[#64748b] hover:bg-[#f4f7fa] hover:text-[#162543]"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="mt-1 text-sm leading-snug text-[#475569]">{copy}</p>
-            <div className="mt-3 flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={requestNotifications}
-                disabled={requesting}
-                className={cn(
-                  "rounded-full bg-[#009FD9] px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#0089BB]",
-                  requesting && "cursor-wait opacity-70",
-                )}
-              >
-                {requesting ? "Activando..." : "Activar"}
-              </button>
-              <button
-                type="button"
-                onClick={dismissPrompt}
-                className="rounded-full px-4 py-2 text-sm font-bold text-[#64748b] hover:bg-[#f4f7fa] hover:text-[#162543]"
-              >
-                Ahora no
-              </button>
-            </div>
-          </div>
+  return createPortal(
+    <div
+      className="app-modal-screen app-centered-modal-screen fixed inset-0 flex items-center justify-center p-4"
+      style={{ zIndex: 100000 }}
+      role="presentation"
+      onClick={dismissPrompt}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="app-centered-modal ccr-push-permission-dialog relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 text-center shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="push-permission-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={dismissPrompt}
+          aria-label="Cerrar"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-[#94a3b8] transition hover:bg-[#f4f7fa] hover:text-[#162543]"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9] shadow-[0_14px_35px_-20px_rgba(0,159,217,0.7)]">
+          <Bell className="h-7 w-7" />
+        </div>
+        <h2 id="push-permission-title" className="mb-1.5 text-lg font-bold leading-tight tracking-[-0.03em] text-[#111827]">
+          Activa notificaciones
+        </h2>
+        <p className="mx-auto mb-5 max-w-[18rem] text-sm leading-relaxed text-[#64748b]">{copy}</p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={dismissPrompt}
+            className="flex-1 rounded-xl border border-[#e2e8f0] bg-white px-4 py-2.5 text-sm font-semibold text-[#334155] transition hover:bg-[#f8fafc]"
+          >
+            Ahora no
+          </button>
+          <button
+            type="button"
+            onClick={requestNotifications}
+            disabled={requesting}
+            className={cn(
+              "flex-1 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_28px_-18px_rgba(0,159,217,0.8)] transition hover:bg-[#0089BB]",
+              requesting && "cursor-wait opacity-70",
+            )}
+          >
+            {requesting ? "Activando..." : "Activar"}
+          </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

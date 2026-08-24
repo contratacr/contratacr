@@ -17,6 +17,7 @@ const availabilityCache = new Map<string, { availabilityPublic: boolean; slots: 
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
+import { useNativeApp } from "@/hooks/use-native-app";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
 
@@ -93,6 +94,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const t = useTranslations("schedule");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
+  const nativeApp = useNativeApp();
   const scheduleRootRef = useRef<HTMLDivElement>(null);
   const [shouldAutoRefresh, setShouldAutoRefresh] = useState(stacked || !slotsInitiallyLoaded);
   const [liveData, setLiveData] = useState<{
@@ -849,6 +851,22 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     </div>
   );
 
+  const contactNote = (kind: "hidden" | "video" | "location") => {
+    if (!nativeApp) {
+      if (kind === "video") return t("videoContactNote");
+      if (kind === "location") return t("noTimesAtLocation");
+      return t("availabilityHiddenNote");
+    }
+    if (locale === "en") {
+      if (kind === "video") return "This service is coordinated by message. Write to the professional to confirm availability.";
+      if (kind === "location") return "There are no published times at this location. Send a message to coordinate another option.";
+      return "Schedules are coordinated by message. Write to ask about availability.";
+    }
+    if (kind === "video") return "Este servicio se coordina por mensaje. Escribe al profesional para confirmar disponibilidad.";
+    if (kind === "location") return "No hay horarios publicados en esta ubicación. Envía un mensaje para coordinar otra opción.";
+    return "Los horarios se coordinan por mensaje. Escribe para consultar disponibilidad.";
+  };
+
   const scheduleLoadingBody = (
     <div className="flex w-full flex-col gap-3" aria-label={tLoading("availability")} aria-busy="true">
       <div className="flex w-full items-start gap-1">
@@ -874,13 +892,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     scheduleBody = scheduleLoadingBody;
   } else if (!canBook) {
     // No public booking at all (private availability OR WhatsApp-only preference).
-    scheduleBody = scheduleNote(forceContactOnly ? t("videoContactNote") : t("availabilityHiddenNote"));
+    scheduleBody = scheduleNote(contactNote(forceContactOnly ? "video" : "hidden"));
   } else if (!hasUpcoming) {
     // Booking is enabled but the SELECTED location has no upcoming times. If the pro DOES
     // publish times at ANOTHER of their locations, say so SPECIFICALLY (it's not that their
     // availability is private — it's just this place); otherwise it's the general note.
     const otherLocationHasTimes = hasUpcomingAnywhere && locTabs.length > 1;
-    scheduleBody = scheduleNote(otherLocationHasTimes ? t("noTimesAtLocation") : t("availabilityHiddenNote"));
+    scheduleBody = scheduleNote(contactNote(otherLocationHasTimes ? "location" : "hidden"));
   } else {
     scheduleBody = (
       <div className={`flex w-full items-start ${scheduleOuterGap}`}>

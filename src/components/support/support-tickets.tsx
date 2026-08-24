@@ -1,5 +1,7 @@
 "use client";
 
+import { isNativeAppRuntime } from "@/hooks/use-native-app";
+
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, SendHorizontal, User, Shield, Plus, Clock3 } from "lucide-react";
@@ -134,15 +136,19 @@ export function SupportTickets({
   }, []);
 
   useLayoutEffect(() => {
-    if (!openId || !window.matchMedia("(max-width: 1023px)").matches) return;
+    const native = isNativeAppRuntime();
+    if ((!openId && !(showNewTicketPage && native)) || !window.matchMedia("(max-width: 1023px)").matches) return;
     const root = document.documentElement;
+    const body = document.body;
     root.classList.add("contratacr-chat-thread-open");
+    if (native) body.classList.add("contratacr-chat-thread-open");
     const releaseBodyScroll = lockBodyScroll();
     return () => {
       root.classList.remove("contratacr-chat-thread-open");
+      body.classList.remove("contratacr-chat-thread-open");
       releaseBodyScroll();
     };
-  }, [openId]);
+  }, [openId, showNewTicketPage]);
 
   useEffect(() => {
     if (!openId) return;
@@ -258,8 +264,10 @@ export function SupportTickets({
   useEffect(() => {
     if (!initialNewSupport || didOpenInitialSupportForm.current) return;
     didOpenInitialSupportForm.current = true;
-    if (window.matchMedia("(max-width: 639px)").matches) setShowNewTicketPage(true);
-    else setShowModal(true);
+    queueMicrotask(() => {
+      if (window.matchMedia("(max-width: 639px)").matches) setShowNewTicketPage(true);
+      else setShowModal(true);
+    });
   }, [initialNewSupport]);
 
   async function sendReply() {

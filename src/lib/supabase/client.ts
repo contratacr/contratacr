@@ -7,7 +7,15 @@ function isLocalBrowser() {
   return host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".local");
 }
 
+export function hasSupabaseBrowserConfig() {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+}
+
 export function createClient() {
+  if (!hasSupabaseBrowserConfig()) {
+    throw new Error("Supabase browser env vars are not configured.");
+  }
+
   if (
     isLocalBrowser() &&
     supabaseProjectRefFromUrl() === PROD_SUPABASE_REF

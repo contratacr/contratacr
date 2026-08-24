@@ -3,11 +3,19 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { assertSafeSupabaseRuntime } from "@/lib/security/supabase-target";
 
+export function hasSupabaseServerConfig() {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+}
+
 export async function createClient() {
   // Pages and layouts render concurrently; whoever asks for a client first
   // makes sure the service catalogue (renames, groups) is loaded for labels.
   await ensureServerCategoryCatalog();
   assertSafeSupabaseRuntime("Supabase server");
+
+  if (!hasSupabaseServerConfig()) {
+    throw new Error("Supabase server env vars are not configured.");
+  }
 
   const cookieStore = await cookies();
   return createServerClient(

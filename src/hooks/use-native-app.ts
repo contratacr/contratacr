@@ -1,25 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-// A normal web deployment must never become the native shell just because of
-// its hostname. In particular, test.contratacr.com is the regression mirror of
-// production and must render the same navbar, footer and search drawers.
-const MOBILE_APP_HOSTS = new Set(["contratacr-mobile-test.vercel.app"]);
-
-export function isMobileAppHost(hostname?: string): boolean {
-  if (typeof window === "undefined" && !hostname) return false;
-
-  const host = (hostname ?? window.location.hostname).toLowerCase();
-  return MOBILE_APP_HOSTS.has(host) || host.endsWith(".contratacr-mobile-test.vercel.app");
-}
+import { Capacitor } from "@capacitor/core";
 
 export function isNativeAppRuntime(): boolean {
   if (typeof window === "undefined") return false;
   const capacitor = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
   return (
+    Capacitor.isNativePlatform() ||
     Boolean(capacitor?.isNativePlatform?.()) ||
-    isMobileAppHost() ||
     document.documentElement.classList.contains("ccr-native-app")
   );
 }
@@ -31,8 +20,8 @@ export function useNativeApp(): boolean {
     if (nativeApp) return;
     const update = () => setNativeApp(isNativeAppRuntime());
     update();
-    const id = window.setTimeout(update, 0);
-    return () => window.clearTimeout(id);
+    const timers = [0, 50, 250, 750].map((delay) => window.setTimeout(update, delay));
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [nativeApp]);
 
   return nativeApp;

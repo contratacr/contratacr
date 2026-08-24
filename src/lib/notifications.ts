@@ -258,7 +258,7 @@ async function recordDelivery(
   }
 }
 
-async function sendWhatsAppText(
+export async function sendWhatsAppText(
   toPhone: string | undefined,
   body: string
 ): Promise<{ status: DeliveryStatus; detail: string | null }> {

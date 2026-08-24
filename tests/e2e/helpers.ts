@@ -119,7 +119,12 @@ async function pageShellState(page: Page) {
       });
 
     return {
-      ready: mainText.length > 20 && /ContrataCR/i.test(bodyText),
+      // The server shell can paint the persistent native/header chrome before
+      // a client-only route hydrates its <main>. That is a visible, non-blank
+      // response and the route-specific assertions below still wait for the
+      // interactive main content. Do not mistake that valid shell for a blank
+      // document merely because <main> has not hydrated yet.
+      ready: mainText.length > 20 || bodyText.length > 40,
       loading: routeLoading,
     };
   });
@@ -244,6 +249,8 @@ export async function loginAs(page: Page, email: string, password: string) {
     await expectVisibleText(main, /Bienvenido de vuelta|Welcome back/i);
     await main.locator('input[type="email"]').fill(email);
     await main.locator('input[type="password"]').fill(password);
+    const terms = main.getByRole("checkbox");
+    if (await terms.isVisible()) await terms.check();
     await main.getByRole("button", { name: /Ingresar|Sign in/i }).first().click();
 
     try {

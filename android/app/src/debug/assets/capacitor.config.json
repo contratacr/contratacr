@@ -1,0 +1,48 @@
+{
+	"appId": "com.contratacr.app",
+	"appName": "ContrataCR",
+	"webDir": "mobile-web",
+	"server": {
+		"url": "http://localhost:3000/es",
+		"allowNavigation": [
+			"contratacr.com",
+			"*.contratacr.com",
+			"*.supabase.co",
+			"res.cloudinary.com",
+			"www.google.com",
+			"maps.googleapis.com",
+			"localhost"
+		],
+		"cleartext": true
+	},
+	"android": {
+		"backgroundColor": "#F4F7FA",
+		"allowMixedContent": false,
+		"captureInput": true,
+		"webContentsDebuggingEnabled": true
+	},
+	"ios": {
+		"contentInset": "never"
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchAutoHide": false,
+			"launchFadeOutDuration": 0,
+			"backgroundColor": "#F4F7FA",
+			"showSpinner": false
+		},
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"banner",
+				"list"
+			]
+		},
+		"StatusBar": {
+			"overlaysWebView": false,
+			"backgroundColor": "#FFFFFF",
+			"style": "LIGHT"
+		}
+	}
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "540104367528",
+    "project_id": "contratacr-95d6f",
+    "storage_bucket": "contratacr-95d6f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:540104367528:android:dca83f4e6b5ea7570a919d",
+        "android_client_info": {
+          "package_name": "com.contratacr.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQCmZ-bdytOF3oNA_HJ2KCuVADxzc_Xwo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

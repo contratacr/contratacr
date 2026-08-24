@@ -2,7 +2,7 @@ import { JobsBoard } from "@/components/jobs/jobs-board";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { type JobPost } from "@/lib/jobs";
 import { safeGetUser } from "@/lib/supabase/get-user";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { buildSocialUrl } from "@/lib/social";
 
@@ -75,6 +75,24 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
 }
 
 export default async function JobsPage() {
+  if (!hasSupabaseServerConfig()) {
+    return (
+      <JobsBoard
+        jobs={[]}
+        canPost={false}
+        initialSelectedJobId={null}
+        returnTo={null}
+        currentProfessionalId={null}
+        currentUserId={null}
+        currentUserEmail={null}
+        currentUserPhone={null}
+        currentUserLinkedIn={null}
+        appliedJobIds={[]}
+        detailOnly={false}
+      />
+    );
+  }
+
   try {
     return await JobsPageContent();
   } catch (error) {

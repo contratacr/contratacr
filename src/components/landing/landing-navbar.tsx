@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon,
-  Briefcase, Compass, Wrench,
+  Bot, Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail,
 } from "lucide-react";
@@ -20,6 +20,7 @@ import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
+import { prefetchConversations } from "@/lib/direct-chat/conversations-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
@@ -30,6 +31,7 @@ import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
+import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 
 /* --- Brand mark (the square "CR" icon) --- */
 export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
@@ -679,14 +681,21 @@ function PanelIconLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-function HeaderIconLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
+function HeaderMessagesLink({ unreadCount, label }: { unreadCount: number; label: string }) {
   return (
     <Link
-      href={href}
+      href="/mensajes"
       aria-label={label}
-      className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+      className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
     >
-      {children}
+      <span className="relative inline-flex">
+        <MessageSquareText className="h-5 w-5" />
+        {unreadCount > 0 && (
+          <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
+      </span>
     </Link>
   );
 }
@@ -753,11 +762,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const pathname = usePathname();
   const currentSearchParams = useSearchParams();
   const nativeApp = useNativeApp();
+  const nativeMessageUnread = useDirectMessageUnread(nativeApp);
   const [hydrated, setHydrated] = useState(false);
   const nativeHeaderShell = hydrated && nativeApp;
   const nativeBottomShell = hydrated && nativeApp;
   const { user, loading: authLoading } = useAuth();
-  const nativeBottomNavVisible = nativeBottomShell && !!user;
+  const nativeSearchRoute = /(^|\/)buscar(?:\/|$)/.test(pathname ?? "");
+  // Search is a full-viewport map + results sheet. Do not merely hide the nav
+  // with CSS: leaving it mounted keeps its layout class and safe-area reserve
+  // active, which shortens the sheet and the full-screen search overlay.
+  const nativeFullscreenRoute = /(^|\/)publicar-proyecto(?:\/|$)/.test(pathname ?? "");
+  const nativeBottomNavVisible = nativeBottomShell && !!user && !nativeSearchRoute && !nativeFullscreenRoute;
   const [accountCapability, setAccountCapability] = useState<{
     userId: string;
     role: string | null;
@@ -961,8 +976,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const accountDisplayName =
     (hasResolvedAccountCapability ? accountCapability.businessName : "") || String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
   const nativePanelHref = user ? primaryPanelHref : loginHref;
-  const nativeMessagesHref = "/mensajes";
-
   useEffect(() => {
     let cancelled = false;
     if (!user) {
@@ -1029,6 +1042,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     router.prefetch("/mensajes");
     router.prefetch(primaryPanelHref);
     prefetchDashboardBootstrap(user.id);
+    void prefetchConversations();
   }, [nativeApp, primaryPanelHref, router, user]);
 
   const visibleResourceLinks = useMemo(() => RESOURCES_LINKS, []);
@@ -1056,8 +1070,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       const baseHref = href.split("?")[0] ?? href;
       const isActive = nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
       return cn(
-        "flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-[9px] font-extrabold leading-tight text-[#526277] transition-colors active:bg-[#eef9fd] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]",
-        isActive && "bg-[#eef9fd] text-[#102746]",
+        "flex min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1 text-[9px] font-extrabold leading-tight text-[#526277] transition-colors active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]",
+        isActive && "text-[#009FD9]",
       );
     },
     [nativePendingHref, panelHref, pathname],
@@ -1070,7 +1084,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       router.prefetch(href);
       nativePendingTimer.current = window.setTimeout(() => setNativePendingHref(null), 8000);
     },
-    [router],
+    [nativeApp, router],
+  );
+
+  const navigateNativeMarketplace = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, href: "/ofertas" | "/empleos") => {
+      if (!nativeApp) return;
+      // Same-document navigation, like every other tab. The old full reload
+      // cost a blank frame plus re-running all scripts on each tap; if the RSC
+      // payload ever fails, the route error boundary still offers a retry.
+      event.preventDefault();
+      event.stopPropagation();
+      setMobileOpen(false);
+      prepareNativeNavigation(href);
+      router.push(href);
+    },
+    [nativeApp, prepareNativeNavigation, router],
   );
 
   useEffect(() => {
@@ -1418,24 +1447,23 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               showMobileNavbarSearch && "h-[124px] min-[1200px]:h-16",
             )}>
               <div className={cn(
-                "absolute left-0 right-0 top-0 h-16 min-[1200px]:hidden",
+                "absolute left-0 right-0 top-0 flex h-16 items-center min-[1200px]:hidden",
                 nativeHeaderShell
-                  ? "grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-0"
-                  : "flex items-center gap-2",
+                  ? "justify-start gap-1.5"
+                  : "justify-start gap-2",
               )}>
                 <button
                   type="button"
                   onClick={openMobileMenu}
                   className={cn(
                     "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50",
-                    nativeHeaderShell && "justify-self-start",
                   )}
                   aria-label={t("openMenu")}
                 >
                   <Menu className="h-5 w-5 stroke-[2.5]" />
                 </button>
 
-                <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "min-w-0 justify-self-center")}>
+                <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
                   {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
                 </Link>
 
@@ -1445,11 +1473,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
                 {nativeHeaderShell ? (
                   user ? (
-                    <div className="grid h-10 w-10 justify-self-end place-items-center">
+                      <div className="flex h-10 w-[88px] shrink-0 items-center justify-end gap-1">
+                      <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
                       <NotificationBell scope="all" />
                     </div>
                   ) : (
-                    <span className="h-10 w-10 justify-self-end" aria-hidden />
+                    <span className="h-10 w-10 shrink-0" aria-hidden />
                   )
                 ) : (
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
@@ -1810,10 +1839,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           {t("offerServices")}
                         </Link>
                       )}
-                      {nativeApp && (
-                        <HeaderIconLink href="/mensajes" label={locale === "en" ? "Messages" : "Mensajes"}>
-                          <MessageSquareText className="h-5 w-5" />
-                        </HeaderIconLink>
+                      {nativeHeaderShell && (
+                        <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
                       )}
                       <NotificationBell scope="all" />
                       <AccountMenu
@@ -1867,7 +1894,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
         {nativeSearchOpen && (
           <div
-            className="fixed left-0 right-0 top-0 z-[80] overflow-hidden bg-white px-4 pb-0 pt-[calc(env(safe-area-inset-top)+1rem)] lg:hidden"
+            className="fixed left-0 right-0 top-0 z-[220] overflow-hidden bg-white px-4 pb-0 pt-[calc(env(safe-area-inset-top)+1rem)] lg:hidden"
             style={{
               bottom: nativeBottomNavVisible ? "var(--ccr-native-bottom-nav-total)" : "0px",
             }}
@@ -2076,11 +2103,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
-                <Link href="/empleos" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                <Link href="/empleos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/empleos"); }} className={mobileDrawerItemClass}>
                   <DrawerIcon><Briefcase /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                 </Link>
-                <Link href="/ofertas" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                <Link href="/ofertas" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/ofertas"); }} className={mobileDrawerItemClass}>
                   <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
                 </Link>
@@ -2100,7 +2127,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                   </Link>
                 )}
-                {nativeApp && user && (
+                {nativeHeaderShell && user && (
                   <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                     <DrawerIcon><MessageSquareText /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
@@ -2206,20 +2233,36 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             <nav
               ref={nativeBottomNavRef}
               aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
-              className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] border-t border-[#dfe8f0] bg-white px-1.5 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-1.5 shadow-[0_-10px_30px_-22px_rgba(15,23,42,0.55)] min-[360px]:px-2"
+              className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] bg-white px-1.5 min-[360px]:px-2"
             >
-              <div className="mx-auto grid w-full max-w-[430px] grid-cols-[repeat(3,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
-                <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
-                  <UserRound className="h-5 w-5" />
-                  <span className="max-w-full truncate">Panel</span>
-                </Link>
+              <div className="mx-auto grid w-full max-w-[520px] grid-cols-[repeat(5,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
                 <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
                   <Search className="h-5 w-5" />
                   <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
                 </Link>
-                <Link href={nativeMessagesHref} onPointerDown={() => prepareNativeNavigation(nativeMessagesHref)} className={nativeBottomNavClass(nativeMessagesHref)}>
-                  <MessageSquareText className="h-5 w-5" />
-                  <span className="max-w-full truncate">{locale === "en" ? "Messages" : "Mensajes"}</span>
+                <Link href="/ofertas" onClick={(event) => navigateNativeMarketplace(event, "/ofertas")} onPointerDown={() => prepareNativeNavigation("/ofertas")} className={nativeBottomNavClass("/ofertas")}>
+                  <OfferTagPercentIcon className="h-5 w-5" />
+                  <span className="max-w-full truncate">{locale === "en" ? "Deals" : "Ofertas"}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNativePendingHref("assistant");
+                    window.dispatchEvent(new Event("contratacr:open-ai"));
+                  }}
+                  className={nativeBottomNavClass("assistant")}
+                  aria-label={locale === "en" ? "Open assistant" : "Abrir asistente"}
+                >
+                  <Bot className="h-5 w-5" />
+                  <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>
+                </button>
+                <Link href="/empleos" onClick={(event) => navigateNativeMarketplace(event, "/empleos")} onPointerDown={() => prepareNativeNavigation("/empleos")} className={nativeBottomNavClass("/empleos")}>
+                  <Briefcase className="h-5 w-5" />
+                  <span className="max-w-full truncate">{locale === "en" ? "Jobs" : "Empleos"}</span>
+                </Link>
+                <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
+                  <UserRound className="h-5 w-5" />
+                  <span className="max-w-full truncate">Panel</span>
                 </Link>
               </div>
             </nav>

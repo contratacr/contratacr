@@ -1901,6 +1901,7 @@ function assistantProfessionalResult(
   locale: Locale,
   serviceId?: string | null,
   hasPublicAvailability = false,
+  nativeApp = false,
 ): AssistantProfessionalResult {
   const service =
     serviceId ? getCategoryLabel(serviceId, locale) :
@@ -1929,7 +1930,9 @@ function assistantProfessionalResult(
     actionHref: profileHref,
     actionLabel: actionKind === "availability"
       ? locale === "en" ? "View availability" : "Ver disponibilidad"
-      : locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
+      : nativeApp
+        ? locale === "en" ? "Send message" : "Enviar mensaje"
+        : locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
     actionKind,
     categoryId: serviceId ?? professional.categoryId ?? null,
     card: professional,
@@ -2016,6 +2019,10 @@ export async function POST(req: Request) {
 
     const catalog = await liveCatalog(locale);
     const safetyPayload = urgentSafetyAnswer(rawMessage, locale) ?? sensitiveOrUnsafeAnswer(rawMessage, locale);
+    // Deterministic, catalog-grounded answers are the default. External AI is
+    // opt-in so tests and repeated FAQ-style questions cannot silently spend
+    // API credit. Set AI_ASSISTANT_PROVIDER=openai only when that fallback is
+    // deliberately enabled for an environment.
     const documentedPayload = localAnswer(rawMessage, locale);
     const needsExternalFallback = documentedPayload.confidence === 0;
     const externalRateLimited = needsExternalFallback
@@ -2125,12 +2132,12 @@ export async function POST(req: Request) {
       ? await assistantAvailabilityByProfessional(shownProfessionals)
       : new Map<string, boolean>();
     const assistantProfessionals = shownProfessionals.map((professional) =>
-      assistantProfessionalResult(professional, locale, payload.serviceId, availabilityByProfessional.get(professional.id) === true)
+      assistantProfessionalResult(professional, locale, payload.serviceId, availabilityByProfessional.get(professional.id) === true, nativeApp)
     );
     const singleProfessionalHref = resultCount === 1 ? assistantProfessionals[0]?.profileHref ?? null : null;
     const servicePhrase = requestedServiceLabel || (locale === "en" ? "that service" : "ese servicio");
     const placePhrase = requestedPlaceLabel || "Costa Rica";
-    const assistantAnswer = noResults
+    const rawAssistantAnswer = noResults
       ? locale === "en"
         ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can create a project so related professionals are notified.`
         : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puedes crear un proyecto para avisar a los profesionales de ese servicio.`
@@ -2147,6 +2154,14 @@ export async function POST(req: Request) {
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
             : "Ese servicio todavía no está en el catálogo. Puedes sugerirlo para que el equipo de ContrataCR lo revise."
           : payload.answer;
+    const assistantAnswer = nativeApp
+      ? rawAssistantAnswer
+          .replace(/contact(?:ar)?(?:lo)? por WhatsApp/gi, "enviar un mensaje")
+          .replace(/(?:a trav[eé]s de|por) WhatsApp/gi, "por mensaje")
+          .replace(/WhatsApp contact button/gi, "message button")
+          .replace(/through WhatsApp/gi, "by message")
+          .replace(/WhatsApp/gi, locale === "en" ? "internal messaging" : "mensajería interna")
+      : rawAssistantAnswer;
 
     const assistantProvider = workersPayload ? "workers-ai" : openAiPayload ? "openai" : "local";
     void recordServerInteraction({
