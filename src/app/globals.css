@@ -784,7 +784,9 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   /* Fast navigations (most of them) must not flash the logo: the mark only
      appears when the new page has taken longer than a third of a second. */
   opacity: 0;
-  animation: ccr-loading-reveal 120ms ease-out 350ms forwards;
+  /* 600ms: a navigation that completes sooner never shows the mark at all — a
+     mark that starts fading in just as the page lands reads as a blink. */
+  animation: ccr-loading-reveal 200ms ease-out 600ms forwards;
 }
 
 @media (max-width: 767px) {
