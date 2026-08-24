@@ -563,11 +563,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </span>
                         )}
                       </div>
-                      <div className="hidden min-h-10 grid-cols-[1fr_auto_1fr] items-center gap-3 sm:grid">
-                        <p className="hidden text-sm font-medium text-[#64748b] lg:block">
-                          {currentPage} / {totalPages}
-                        </p>
-                        <div className="col-start-2 flex max-w-full items-center justify-center gap-1.5 overflow-x-auto overflow-y-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      {/* Centred stack: position, controls, total — the column is too
+                          narrow for a single row once the buttons are in it. */}
+                      <div className="hidden flex-col items-center gap-3 sm:flex">
+                        <p className="text-center text-xs font-bold uppercase tracking-[0.08em] text-[#64748b]">{currentPage} / {totalPages}</p>
+                        <div className="flex max-w-full items-center justify-center gap-1.5 overflow-x-auto overflow-y-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                           {currentPage > 1 && (
                             <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-5 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
                               <ChevronLeft className="h-4 w-4" />
@@ -585,16 +585,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             </Link>
                           ))}
                           </div>
-                        </div>
-                        {currentPage < totalPages && (
+                          {currentPage < totalPages && (
                           <Link href={pageHref(currentPage + 1)} prefetch className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0089BB]">
                             <span className="leading-none">{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4 shrink-0" />
                           </Link>
                         )}
-                        <span className="col-start-3 hidden whitespace-nowrap text-right text-sm font-medium text-[#64748b] md:block">
+                        </div>
+                        <p className="text-center text-sm font-medium text-[#64748b]">
                           {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
-                        </span>
+                        </p>
                       </div>
                     </nav>
                   )}
