@@ -535,7 +535,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   </div>
 
                   {totalPages > 1 && (
-                    <nav aria-label={t("pagination.label")} className="mt-5 border-t border-[#e5e7eb] pt-4">
+                    <nav aria-label={t("pagination.label")} className="-mx-4 mt-1.5 bg-white px-4 py-4 lg:mx-0 lg:mt-5 lg:border-t lg:border-[#e5e7eb] lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
                       <div className="flex items-center justify-between gap-3 sm:hidden">
                         {currentPage > 1 ? (
                           <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-4 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
@@ -563,11 +563,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </span>
                         )}
                       </div>
-                      <div className="relative hidden min-h-10 items-center justify-center sm:flex">
-                        <p className="absolute left-0 hidden text-sm font-medium text-[#64748b] lg:block">
+                      <div className="hidden min-h-10 grid-cols-[1fr_auto_1fr] items-center gap-3 sm:grid">
+                        <p className="hidden text-sm font-medium text-[#64748b] lg:block">
                           {currentPage} / {totalPages}
                         </p>
-                        <div className="flex max-w-full items-center justify-center gap-1.5 overflow-x-auto overflow-y-visible px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <div className="col-start-2 flex max-w-full items-center justify-center gap-1.5 overflow-x-auto overflow-y-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                           {currentPage > 1 && (
                             <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-10 min-w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-5 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
                               <ChevronLeft className="h-4 w-4" />
@@ -592,7 +592,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             <ChevronRight className="h-4 w-4 shrink-0" />
                           </Link>
                         )}
-                        <span className="absolute right-0 hidden text-right text-sm font-medium text-[#64748b] md:block">
+                        <span className="col-start-3 hidden whitespace-nowrap text-right text-sm font-medium text-[#64748b] md:block">
                           {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
                         </span>
                       </div>

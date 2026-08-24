@@ -454,6 +454,10 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             willChange: "transform",
           }}
         >
+          {/* In-app browsers on iOS shift the sheet's bottom edge as their toolbar
+              appears and hides, leaving a strip of map underneath. This apron paints
+              that strip white. It exists only where the sheet does. */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-[-1px] top-full h-40 bg-white lg:hidden" />
           {/* Sheet header (handle + count) — only the visible handle strip is draggable.
               A press without movement keeps the current snap point. `touch-none` keeps the
               gesture from scrolling the page. Mobile only (desktop shows none of this). */}
