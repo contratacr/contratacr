@@ -3,7 +3,9 @@ import { readFile } from "node:fs/promises";
 const expected = {
   appId: "com.contratacr.app",
   appName: "ContrataCR",
-  serverOrigin: "https://test.contratacr.com",
+  // The store builds load production; set MOBILE_SERVER_ORIGIN to check a build
+  // pointed somewhere else (e.g. https://test.contratacr.com while testing).
+  serverOrigin: process.env.MOBILE_SERVER_ORIGIN || "https://contratacr.com",
   serverPath: "/es",
   firebaseProjectId: "contratacr-95d6f",
 };
