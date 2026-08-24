@@ -408,8 +408,12 @@ export default function LoginPage() {
   }
 
   // The native app keeps its own Google sheet; the page-level button is for browsers.
-  const [browserRuntime, setBrowserRuntime] = useState(false);
-  useEffect(() => { setBrowserRuntime(!isNativeAppRuntime()); }, []);
+  // Unknown until hydration: nothing native is server-rendered, so a browser
+  // never sees the app's buttons flash, and the app never sees the web ones.
+  const [runtime, setRuntime] = useState<"unknown" | "native" | "browser">("unknown");
+  useEffect(() => { setRuntime(isNativeAppRuntime() ? "native" : "browser"); }, []);
+  const browserRuntime = runtime === "browser";
+  const nativeRuntime = runtime === "native";
   async function handleApple() { await handleSocial("apple"); }
 
   if (otpEmail) {
@@ -514,7 +518,7 @@ export default function LoginPage() {
 
           <div className="flex flex-col gap-3">
             {/* Apple sign-in exists only inside the app; the website keeps its web-only login. */}
-            {!browserRuntime && (
+            {nativeRuntime && (
             <button
               type="button"
               onClick={handleApple}
