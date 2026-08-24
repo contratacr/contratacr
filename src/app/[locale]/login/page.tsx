@@ -275,16 +275,49 @@ export default function LoginPage() {
   // destination from the session (flow=native: no code to exchange). No hop
   // through <project>.supabase.co, so Google's screen names our domain. The
   // redirect flow above stays as the fallback when Google's library cannot load.
-  // Back from Google's window: cover the form at once. If no credential arrives
-  // (they cancelled), uncover after a moment.
+  // Cover the form the moment the Google button is pressed — BEFORE Google's
+  // window opens. iOS restores a frozen snapshot of the page when the person
+  // comes back, and that snapshot must already be the loading mark, not the
+  // login form. The cover is visual only (pointer events pass through) and never
+  // sticks: if Google's window does not open within 1.5s it lifts at once; if the
+  // person comes back without choosing an account it lifts 2.5s after the return
+  // (a credential arrives well within that); touching the page lifts it too.
   const googleCredentialSeen = useRef(false);
-  function handleGoogleReturn() {
+  // The "touch the page to lift" listener of the current press; retired on
+  // return or on the next press so a stale one never lifts a fresh cover.
+  const googleTapLift = useRef<(() => void) | null>(null);
+  function retireGoogleTapLift() {
+    if (googleTapLift.current) document.removeEventListener("pointerdown", googleTapLift.current);
+    googleTapLift.current = null;
+  }
+  function handleGoogleOpen() {
+    googleCredentialSeen.current = false;
+    retireGoogleTapLift();
     setLeaving(true);
-    window.setTimeout(() => { if (!googleCredentialSeen.current) setLeaving(false); }, 2500);
+    const lift = () => {
+      if (googleTapLift.current === lift) googleTapLift.current = null;
+      if (!googleCredentialSeen.current) setLeaving(false);
+    };
+    googleTapLift.current = lift;
+    window.setTimeout(() => {
+      if (googleTapLift.current === lift) document.addEventListener("pointerdown", lift, { once: true });
+    }, 400);
+  }
+  function handleGoogleLeave() {
+    // Google's window is up; nothing to do — the cover is already in place.
+  }
+  function handleGoogleReturn(opened: boolean) {
+    const lift = () => {
+      retireGoogleTapLift();
+      if (!googleCredentialSeen.current) setLeaving(false);
+    };
+    if (!opened) { lift(); return; }
+    window.setTimeout(lift, 2500);
   }
 
   async function handleGoogleCredential(idToken: string, nonce: string) {
     googleCredentialSeen.current = true;
+    retireGoogleTapLift();
     // Google's window has just closed: cover the form right now, not after the
     // token exchange — the person must never see the login screen again.
     setLeaving(true);
@@ -326,7 +359,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      {leaving && <PageRouteLoading />}
+      {/* Visual only: the press that opens Google's window must still reach its
+          iframe underneath, so the cover never intercepts pointer events. */}
+      {leaving && <div className="contents pointer-events-none"><PageRouteLoading /></div>}
       <Navbar mobileSearch={false} />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
@@ -403,6 +438,8 @@ export default function LoginPage() {
               disabled={googleLoading}
               onCredential={handleGoogleCredential}
               onReturn={handleGoogleReturn}
+              onOpen={handleGoogleOpen}
+              onLeave={handleGoogleLeave}
               fallback={
                 <button
                   type="button"

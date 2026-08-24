@@ -89,6 +89,8 @@ export function GoogleSignInButton({
   onCredential,
   onError,
   onReturn,
+  onOpen,
+  onLeave,
 }: {
   locale: string;
   disabled?: boolean;
@@ -97,9 +99,14 @@ export function GoogleSignInButton({
   /** Google's ID token plus the raw nonce Supabase must be handed alongside it. */
   onCredential: (idToken: string, nonce: string) => void | Promise<void>;
   onError?: (error: unknown) => void;
-  /** The person is back from Google's window (it closed or lost focus) — a
-   *  credential may follow within a moment, or they cancelled. */
-  onReturn?: () => void;
+  /** Back on the page: Google's window closed (`opened` true — a credential
+   *  may follow within a moment, or they cancelled), or it never opened
+   *  (`opened` false — blocked, or the press did not become a click). */
+  onReturn?: (opened: boolean) => void;
+  /** The person just pressed the button: Google's window is about to open. */
+  onOpen?: () => void;
+  /** The page lost focus/visibility after the press: Google's window did open. */
+  onLeave?: () => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(false);
@@ -160,21 +167,56 @@ export function GoogleSignInButton({
   // nothing moves: the page looks the same before, during and after Google's
   // library loads. If the library never renders, the visible button is still
   // ours and its own click runs the redirect flow.
-  // Arm "back from Google" detection on the click that opens Google's window: the
-  // page loses focus/visibility while the window is up and regains it when it
-  // closes, on desktop (popup) and on iOS Safari (new tab) alike.
+  // "Back from Google" detection. Events inside Google's cross-origin iframe
+  // never reach this document, so the press is seen indirectly: focus moving
+  // into the iframe blurs our window while the iframe is the active element.
+  // From then on `document.hasFocus()` tells the rest — it stays true while
+  // focus sits inside the iframe, turns false the moment Google's window takes
+  // focus (or the tab is hidden, as on iOS), and true again when that window
+  // closes. It is polled because the window's own focus/blur events do not fire
+  // when focus lands back on the iframe, which is exactly what happens on return.
   const armed = useRef(false);
+  const press = useRef<() => void>(() => {});
   useEffect(() => {
-    const back = () => {
-      if (!armed.current || document.visibilityState !== "visible") return;
+    let timer: number | null = null;
+    const stop = () => {
+      if (timer !== null) window.clearInterval(timer);
+      timer = null;
       armed.current = false;
-      onReturn?.();
+      // Hand focus back to the page so the next press blurs the window again.
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && host.current?.contains(active)) active.blur();
     };
-    window.addEventListener("focus", back);
-    document.addEventListener("visibilitychange", back);
+    press.current = () => {
+      if (armed.current) return;
+      armed.current = true;
+      onOpen?.();
+      let opened = false;
+      let ticks = 0;
+      timer = window.setInterval(() => {
+        ticks += 1;
+        const here = document.hasFocus() && document.visibilityState === "visible";
+        if (!opened) {
+          if (!here) { opened = true; onLeave?.(); return; }
+          // 1.5s without Google's window taking focus: it did not open (blocked,
+          // or the press did not become a click).
+          if (ticks >= 15) { stop(); onReturn?.(false); }
+          return;
+        }
+        if (here) { stop(); onReturn?.(true); return; }
+        // Left open for a very long time: stop watching, the credential callback
+        // still covers a late sign-in.
+        if (ticks >= 6000) stop();
+      }, 100);
+    };
+    const onBlur = () => {
+      const active = document.activeElement;
+      if (active && host.current?.contains(active)) press.current();
+    };
+    window.addEventListener("blur", onBlur);
     return () => {
-      window.removeEventListener("focus", back);
-      document.removeEventListener("visibilitychange", back);
+      window.removeEventListener("blur", onBlur);
+      stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -188,7 +230,7 @@ export function GoogleSignInButton({
         aria-hidden
         className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center overflow-hidden"
         style={{ opacity: 0.001, pointerEvents: ready && !disabled ? "auto" : "none" }}
-        onPointerDownCapture={() => { armed.current = true; }}
+        onPointerDownCapture={() => press.current()}
       />
     </div>
   );
