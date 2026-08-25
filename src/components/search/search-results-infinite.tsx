@@ -61,6 +61,15 @@ export function SearchResultsInfinite({
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const attempts = useRef(0);
+  // State updates are asynchronous; the observer and the scroll backstop can
+  // both fire in the same tick, so the guard against a double request must be
+  // synchronous, and the reveal counter must follow the list's real length.
+  const inFlight = useRef(false);
+  const itemsRef = useRef<Loaded[]>([]);
+  const revealedRef = useRef(0);
+  const [done, setDone] = useState(false);
+  // The quiet retry needs the latest loader without referencing it inside itself.
+  const loadMoreRef = useRef<() => Promise<void>>(async () => {});
   const sentinel = useRef<HTMLDivElement | null>(null);
   const loadedCount = initialCount + items.length;
   const hasMore = loadedCount < total;
@@ -75,11 +84,13 @@ export function SearchResultsInfinite({
   }, []);
 
   const loadMore = useCallback(async () => {
-    if (loading || !hasMore) return;
+    if (inFlight.current || !hasMore) return;
+    inFlight.current = true;
     setLoading(true);
     setFailed(false);
     try {
-      const response = await fetch(`/api/buscar/results?${query}${query ? "&" : ""}offset=${loadedCount}`, { cache: "no-store" });
+      const offset = initialCount + itemsRef.current.length;
+      const response = await fetch(`/api/buscar/results?${query}${query ? "&" : ""}offset=${offset}`, { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = (await response.json()) as { professionals?: Loaded[] };
       const next = Array.isArray(payload.professionals) ? payload.professionals : [];
@@ -88,12 +99,21 @@ export function SearchResultsInfinite({
         return;
       }
       attempts.current = 0;
-      setItems((current) => [...current, ...next]);
-      let shown = 0;
+      const seen = new Set(itemsRef.current.map((item) => item.professional.id));
+      const fresh = next.filter((item) => !seen.has(item.professional.id));
+      itemsRef.current = [...itemsRef.current, ...fresh];
+      const target = itemsRef.current.length;
+      setItems(itemsRef.current);
+      if (fresh.length === 0) {
+        // Nothing new for this offset: the list is complete as far as the
+        // server is concerned, so stop asking.
+        setRevealed(target);
+        setDone(true);
+        return;
+      }
       const step = () => {
-        shown += 5;
-        setRevealed((current) => Math.max(current, Math.min(items.length + next.length, current + 5)));
-        if (shown < next.length) window.requestAnimationFrame(step);
+        setRevealed((current) => Math.min(target, current + 5));
+        if (itemsRef.current.length === target && revealedRef.current < target) window.requestAnimationFrame(step);
       };
       window.requestAnimationFrame(step);
     } catch (error) {
@@ -101,12 +121,15 @@ export function SearchResultsInfinite({
       // A blip (a deploy finishing, a flaky connection) gets one quiet retry
       // before the person is asked to tap.
       attempts.current += 1;
-      if (attempts.current <= 1) window.setTimeout(() => void loadMore(), 1500);
+      if (attempts.current <= 1) window.setTimeout(() => void loadMoreRef.current(), 1500);
       else setFailed(true);
     } finally {
+      inFlight.current = false;
       setLoading(false);
     }
-  }, [hasMore, items.length, loadedCount, loading, query]);
+  }, [hasMore, initialCount, query]);
+  useEffect(() => { revealedRef.current = revealed; }, [revealed]);
+  useEffect(() => { loadMoreRef.current = loadMore; }, [loadMore]);
 
   useEffect(() => {
     const node = sentinel.current;
@@ -176,14 +199,14 @@ export function SearchResultsInfinite({
         </div>
       )}
 
-      {hasMore && !failed && (
+      {hasMore && !failed && !done && (
         <div ref={sentinel} className="flex flex-col gap-1.5 lg:gap-3" role="status" aria-busy={loading} aria-label={loadingLabel}>
           <CardSkeleton />
           <CardSkeleton />
         </div>
       )}
 
-      {failed && hasMore && (
+      {failed && hasMore && !done && (
         <div className="bg-white px-4 py-6 text-center lg:rounded-2xl lg:border lg:border-[#e5e7eb]">
           <p className="text-sm font-medium text-[#64748b]">{failedLabel}</p>
           <button
