@@ -535,7 +535,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   </div>
 
                   {totalPages > 1 && (
-                    <nav aria-label={t("pagination.label")} className="-mx-4 border-t-[6px] border-[#eef2f6] bg-white px-4 py-4 lg:mx-0 lg:mt-5 lg:border-t lg:border-[#e5e7eb] lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
+                    <nav aria-label={t("pagination.label")} className="-mx-4 border-t-4 border-[#f6f8fb] bg-white px-4 py-4 shadow-[inset_0_1px_0_rgba(226,232,240,0.58)] lg:mx-0 lg:mt-5 lg:border-t lg:border-[#e5e7eb] lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4 lg:shadow-none">
                       <div className="flex items-center justify-between gap-3 sm:hidden">
                         {currentPage > 1 ? (
                           <Link href={pageHref(currentPage - 1)} prefetch aria-label={t("pagination.prev")} className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e2ea] bg-white px-4 text-sm font-bold text-[#1A2744] transition hover:border-[#009FD9] hover:text-[#009FD9]">
