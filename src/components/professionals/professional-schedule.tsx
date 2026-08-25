@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { fetchAvailabilityBatched } from "@/lib/availability-batch";
 import { useTranslations, useLocale } from "next-intl";
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Mail, MapPin, Phone, Video } from "lucide-react";
 import { BookingModal } from "@/components/booking/booking-modal";
@@ -245,13 +246,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     async function refreshPublicAvailability() {
       if (document.visibilityState !== "visible") return;
       try {
-        const res = await fetch(`/api/public-availability?professionalId=${professional.id}`, { cache: "no-store" });
-        if (!res.ok || !active) {
-          if (active) setLiveData({ professionalId: professional.id, availabilityPublic, slots: allSlots });
+        // Cards on the same screen share one request (see availability-batch).
+        const json = await fetchAvailabilityBatched(professional.id);
+        if (!active) return;
+        if (!json) {
+          setLiveData({ professionalId: professional.id, availabilityPublic, slots: allSlots });
           return;
         }
-        const json = await res.json();
-        if (!active) return;
         const next = {
           professionalId: professional.id,
           availabilityPublic: typeof json.availabilityPublic === "boolean" ? json.availabilityPublic : availabilityPublic,

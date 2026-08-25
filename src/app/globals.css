@@ -1745,3 +1745,10 @@ body.ccr-search-sheet-page {
   overflow-y: auto;
   padding-top: max(3rem, env(safe-area-inset-top));
 }
+
+/* Search cards below the fold skip layout and paint until they scroll near;
+   the placeholder height keeps the scrollbar honest. */
+.ccr-search-card-slot {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}

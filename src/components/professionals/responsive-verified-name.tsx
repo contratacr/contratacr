@@ -3,6 +3,12 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 
+let sharedCanvas: HTMLCanvasElement | null = null;
+function measureCanvas() {
+  if (!sharedCanvas) sharedCanvas = document.createElement("canvas");
+  return sharedCanvas;
+}
+
 export function ResponsiveVerifiedName({
   name,
   verified,
@@ -15,6 +21,9 @@ export function ResponsiveVerifiedName({
   const containerRef = useRef<HTMLSpanElement>(null);
   const measureRef = useRef<HTMLSpanElement>(null);
   const [visibleName, setVisibleName] = useState(name);
+  // The observer already reports once right after it starts, with layout
+  // settled for every card of the batch; measuring again synchronously here
+  // would only force an extra layout per card.
 
   const measure = useCallback(() => {
     const container = containerRef.current;
@@ -23,10 +32,13 @@ export function ResponsiveVerifiedName({
 
     const iconSpace = verified ? 18 : 0;
     const available = Math.max(0, container.clientWidth - iconSpace);
-    const widthOf = (value: string) => {
-      measurer.textContent = value;
-      return measurer.getBoundingClientRect().width;
-    };
+    // Text is measured on a canvas with the element's own font: no DOM writes,
+    // so twenty cards mounting together cost one layout instead of one per
+    // step of the search below (which used to thrash the page on every batch).
+    const context = measureCanvas().getContext("2d");
+    if (!context) return;
+    context.font = getComputedStyle(measurer).font;
+    const widthOf = (value: string) => context.measureText(value).width;
 
     if (widthOf(name) <= available) {
       setVisibleName(name);
@@ -46,7 +58,7 @@ export function ResponsiveVerifiedName({
 
   useLayoutEffect(() => {
     measure();
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => measure());
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, [measure]);

@@ -51,6 +51,9 @@ export function SearchResultsInfinite({
   loadingLabel: string;
 }) {
   const [items, setItems] = useState<Loaded[]>([]);
+  // A batch is revealed a few cards per frame: mounting twenty at once is one
+  // long task that freezes the scroll; five at a time keeps it smooth.
+  const [revealed, setRevealed] = useState(0);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const sentinel = useRef<HTMLDivElement | null>(null);
@@ -80,13 +83,20 @@ export function SearchResultsInfinite({
         return;
       }
       setItems((current) => [...current, ...next]);
+      let shown = 0;
+      const step = () => {
+        shown += 5;
+        setRevealed((current) => Math.max(current, Math.min(items.length + next.length, current + 5)));
+        if (shown < next.length) window.requestAnimationFrame(step);
+      };
+      window.requestAnimationFrame(step);
     } catch (error) {
       console.error("[search] could not load more results", error);
       setFailed(true);
     } finally {
       setLoading(false);
     }
-  }, [hasMore, loadedCount, loading, query]);
+  }, [hasMore, items.length, loadedCount, loading, query]);
 
   useEffect(() => {
     const node = sentinel.current;
@@ -129,8 +139,8 @@ export function SearchResultsInfinite({
 
   return (
     <>
-      {items.map((item, index) => (
-        <div key={item.professional.id} data-search-result="">
+      {items.slice(0, revealed).map((item, index) => (
+        <div key={item.professional.id} data-search-result="" className="ccr-search-card-slot">
           <SaveableCard pro={item.professional} isOwn={!!viewerProfileId && viewerProfileId === item.professional.profileId}>
             <ProfessionalCard
               professional={item.professional}
@@ -149,6 +159,12 @@ export function SearchResultsInfinite({
           </SaveableCard>
         </div>
       ))}
+
+      {revealed < items.length && (
+        <div className="flex flex-col gap-1.5 lg:gap-3" aria-hidden>
+          <CardSkeleton />
+        </div>
+      )}
 
       {hasMore && !failed && (
         <div ref={sentinel} className="flex flex-col gap-1.5 lg:gap-3" role="status" aria-busy={loading} aria-label={loadingLabel}>

@@ -183,8 +183,46 @@ export function locationDecisions(params: SearchPageParams, filters: SearchFilte
   return { activeCategoryId, activeProvince, activeCanton, videoCompatibleSearch, exactLocationActive, matchesSelectedPhysicalLocation, shouldPreferVideoLocation, shouldShowContactOnly };
 }
 
+// The ordered list for a URL is kept for a minute in this process: the first
+// screen renders it, and every "load more" of the same search reads it back
+// instead of running the query and the sort again. Regression runs bypass it.
+const RESOLVED_TTL_MS = 60_000;
+const resolved = new Map<string, { at: number; value: Promise<{ filters: SearchFiltersResolved; ordered: SearchResult[] }> }>();
+
+function resolvedKey(params: SearchPageParams) {
+  return Object.entries(params)
+    .filter(([key, value]) => key !== "page" && value)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+}
+
 /** The ordered result set for a URL — the single source of truth for both callers. */
 export async function resolveSearchResults(params: SearchPageParams) {
+  const key = resolvedKey(params);
+  const cached = resolved.get(key);
+  if (!params.regression && cached && Date.now() - cached.at < RESOLVED_TTL_MS) return cached.value;
+  const value = resolveSearchResultsUncached(params);
+  if (!params.regression) {
+    resolved.set(key, { at: Date.now(), value });
+    value.catch(() => resolved.delete(key));
+    if (resolved.size > 200) resolved.delete(resolved.keys().next().value as string);
+  }
+  return value;
+}
+
+/** What a search card needs, and nothing heavier: descriptions and long bios
+ *  never reach the browser from the list. */
+export function cardData<T extends SearchResult>(professional: T): T {
+  const services = (professional.services as Array<Record<string, unknown>> | undefined)?.map((service) => {
+    const { description: _description, ...rest } = service;
+    void _description;
+    return rest;
+  });
+  return { ...professional, bio: (professional.bio ?? "").slice(0, 240), services } as T;
+}
+
+async function resolveSearchResultsUncached(params: SearchPageParams) {
   const filters = parseSearchParams(params);
   const results = await searchProfessionals({
     categoryId: filters.selectedCategory,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { locationDecisions, resolveSearchResults, RESULTS_PER_PAGE, type SearchPageParams } from "@/lib/search/query-core";
+import { cardData, locationDecisions, resolveSearchResults, RESULTS_PER_PAGE, type SearchPageParams } from "@/lib/search/query-core";
 
 // The next slice of a /buscar search, so the list can keep growing as the
 // person scrolls instead of paging. It resolves the URL exactly like the page
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       total: ordered.length,
       offset,
       professionals: slice.map((professional) => ({
-        professional,
+        professional: cardData(professional),
         forceContactOnly: decisions.shouldShowContactOnly(professional),
         preferVideo: decisions.shouldPreferVideoLocation(professional),
       })),

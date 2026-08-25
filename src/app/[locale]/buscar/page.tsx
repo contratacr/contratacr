@@ -7,12 +7,13 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
-import { searchProfessionals, type ProService } from "@/lib/queries/professionals";
+import type { ProService } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
 import { getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { SearchResultsInfinite } from "@/components/search/search-results-infinite";
+import { cardData, resolveSearchResults } from "@/lib/search/query-core";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
@@ -107,7 +108,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     : selectedCantonId
       ? PROVINCES.find((province) => province.cantons.some((canton) => canton.id === selectedCantonId))?.id
       : undefined;
-  const effectiveQuery = selectedCategory ? undefined : params.q;
   const parsedNearLat = params.lat ? Number(params.lat) : undefined;
   const parsedNearLng = params.lng ? Number(params.lng) : undefined;
   const nearLat = typeof parsedNearLat === "number" && Number.isFinite(parsedNearLat) ? parsedNearLat : undefined;
@@ -131,34 +131,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     : undefined;
 
   const canFilterByInsurer = isHealthCategory(params.categoria);
-  const insurerIds = canFilterByInsurer ? parseMultiParam(params.aseguradora) : [];
   // Language is a single-choice filter. Older shared URLs may still contain a
   // comma-separated value, so keep the first valid choice for compatibility.
   const languageId = parseMultiParam(params.idioma)[0];
 
-  const [viewer, allResults] = await Promise.all([
-    viewerPromise,
-    searchProfessionals({
-      categoryId: selectedCategory,
-      provinceId: selectedProvinceId,
-      cantonId: selectedCantonId,
-      sortBy,
-      query: effectiveQuery,
-      insurerIds,
-      languageId,
-      priceType,
-      priceUnits,
-      modalities,
-      nearLat,
-      nearLng,
-      bounds: mapBounds,
-    }, {
-      fresh: process.env.E2E_FIXTURES_READY === "1" && Boolean(params.regression),
-    }),
-  ]);
+  // The same resolver the "load more" endpoint uses, so the first screen and
+  // every later slice come from one ordered list (kept for a minute).
+  const [viewer, resolvedSearch] = await Promise.all([viewerPromise, resolveSearchResults(params)]);
+  const allResults = resolvedSearch.ordered;
   const viewerProfileId = viewer?.id;
 
-  let orderedResults = allResults;
+  const orderedResults = allResults;
 
   const videoMode = videoOnly;
 
@@ -183,25 +166,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     const months = typeof service?.months === "number" ? service.months : professional.monthsExperience ?? 0;
     return Math.max(0, years) * 12 + Math.max(0, Math.min(11, months));
   };
-  const ratingTieBreak = (a: (typeof allResults)[number], b: (typeof allResults)[number]) =>
-    (b.ratingAvg ?? 0) - (a.ratingAvg ?? 0) ||
-    (b.reviewCount ?? 0) - (a.reviewCount ?? 0) ||
-    experienceMonths(b) - experienceMonths(a);
-
-  if (sortBy === "successCases") {
-    orderedResults = [...allResults].sort((a, b) =>
-      (b.portfolioCount ?? 0) - (a.portfolioCount ?? 0) || ratingTieBreak(a, b)
-    );
-  } else if (sortBy === "experience") {
-    orderedResults = [...allResults].sort((a, b) =>
-      experienceMonths(b) - experienceMonths(a) || ratingTieBreak(a, b)
-    );
-  } else if (sortBy === "followers") {
-    orderedResults = [...allResults].sort((a, b) =>
-      (b.followerCount ?? 0) - (a.followerCount ?? 0) || ratingTieBreak(a, b)
-    );
-  }
-
   // Map pins only represent exact workplace pins marked on the map. Broad
   // province/canton coverage and legacy professional coordinates stay card-only.
   const requestedPage = Number.parseInt(params.page ?? "1", 10);
@@ -510,10 +474,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     {results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.
-                      <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative w-full scroll-mt-24 transition-shadow lg:max-w-none lg:rounded-2xl">
+                      <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="ccr-search-card-slot relative w-full scroll-mt-24 transition-shadow lg:max-w-none lg:rounded-2xl">
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
                           <ProfessionalCard
-                            professional={pro}
+                            professional={cardData(pro)}
                             slots={[]}
                             slotsInitiallyLoaded={false}
                             activeCategory={activeCategoryId}
