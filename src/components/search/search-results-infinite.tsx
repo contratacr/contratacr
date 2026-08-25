@@ -68,6 +68,37 @@ export function SearchResultsInfinite({
   const itemsRef = useRef<Loaded[]>([]);
   const revealedRef = useRef(0);
   const [done, setDone] = useState(false);
+  // Windowing: a card that has scrolled far away is replaced by a placeholder
+  // of its measured height, so two hundred loaded results never mean two
+  // hundred live cards (observers, timers, schedules) on a phone. Cards near
+  // the viewport — and the newest ten, which the loader relies on — stay real.
+  const [windowState, setWindowState] = useState<{ near: Set<string>; heights: Map<string, number> }>(() => ({ near: new Set(), heights: new Map() }));
+  const slotObserver = useRef<IntersectionObserver | null>(null);
+  useEffect(() => {
+    const io = new IntersectionObserver((entries) => {
+      setWindowState((current) => {
+        const near = new Set(current.near);
+        const heights = new Map(current.heights);
+        for (const entry of entries) {
+          const id = (entry.target as HTMLElement).dataset.resultId;
+          if (!id) continue;
+          if (entry.isIntersecting) {
+            near.add(id);
+          } else {
+            near.delete(id);
+            // Measured as it leaves, so its placeholder keeps the scroll honest.
+            if (entry.boundingClientRect.height > 0) heights.set(id, entry.boundingClientRect.height);
+          }
+        }
+        return { near, heights };
+      });
+    }, { rootMargin: "1500px 0px" });
+    slotObserver.current = io;
+    return () => io.disconnect();
+  }, []);
+  const observeSlot = useCallback((node: HTMLDivElement | null) => {
+    if (node) slotObserver.current?.observe(node);
+  }, []);
   // The quiet retry needs the latest loader without referencing it inside itself.
   const loadMoreRef = useRef<() => Promise<void>>(async () => {});
   const sentinel = useRef<HTMLDivElement | null>(null);
@@ -172,8 +203,16 @@ export function SearchResultsInfinite({
 
   return (
     <>
-      {items.slice(0, revealed).map((item, index) => (
-        <div key={item.professional.id} data-search-result="" className="ccr-search-card-slot">
+      {items.slice(0, revealed).map((item, index) => {
+        const id = item.professional.id;
+        const keepAlive = index >= revealed - 10 || windowState.near.has(id);
+        if (!keepAlive) {
+          return (
+            <div key={id} ref={observeSlot} data-search-result="" data-result-id={id} className="ccr-search-card-slot" style={{ height: windowState.heights.get(id) ?? 320 }} aria-hidden />
+          );
+        }
+        return (
+        <div key={id} ref={observeSlot} data-search-result="" data-result-id={id} className="ccr-search-card-slot">
           <SaveableCard pro={item.professional} isOwn={!!viewerProfileId && viewerProfileId === item.professional.profileId}>
             <ProfessionalCard
               professional={item.professional}
@@ -191,7 +230,8 @@ export function SearchResultsInfinite({
             />
           </SaveableCard>
         </div>
-      ))}
+        );
+      })}
 
       {revealed < items.length && (
         <div className="flex flex-col gap-1.5 lg:gap-3" aria-hidden>

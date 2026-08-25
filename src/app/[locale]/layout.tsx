@@ -28,6 +28,7 @@ import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
 import { RouteScrollReset } from "@/components/util/route-scroll-reset";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 import { AiConcierge } from "@/components/landing/ai-concierge";
+import { FreezeMonitor } from "@/components/perf/freeze-monitor";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -177,6 +178,7 @@ export default async function LocaleLayout({
         {children}
         <WhatsAppReviewFollowUp />
         <AiConcierge />
+        <FreezeMonitor />
       </AuthProvider>
     </AppIntlProvider>
   );
