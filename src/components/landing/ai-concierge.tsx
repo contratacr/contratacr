@@ -31,8 +31,6 @@ import { useNativeApp } from "@/hooks/use-native-app";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { cn, getInitials } from "@/lib/utils";
 import { MessageLauncher } from "@/components/professionals/message-launcher";
-import { ProfessionalCard, type ProfessionalCardData } from "@/components/professionals/professional-card";
-import { SaveableCard } from "@/components/professionals/save-button";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 
 type ResultCard = {
@@ -50,9 +48,6 @@ type ResultCard = {
   actionHref: string;
   actionLabel: string;
   actionKind: "availability" | "message";
-  categoryId?: string | null;
-  /** The same professional /buscar renders; when present the real card is shown. */
-  card?: ProfessionalCardData | null;
 };
 
 type MessageAction = { label: string; href: string; kind?: string | null };
@@ -585,29 +580,10 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                   {message.body}
                 </div>
 
-                {message.professionals?.map((result) => result.card ? (
-                  // The card /buscar shows, with its own buttons (schedule,
-                  // message, call, save). Following a link inside it closes
-                  // the sheet so the destination is not hidden behind it.
-                  <div
-                    key={result.id}
-                    className="text-left"
-                    onClickCapture={(event) => {
-                      if ((event.target as HTMLElement).closest("a")) setOpen(false);
-                    }}
-                  >
-                    <SaveableCard pro={result.card} isOwn={!!user?.id && user.id === result.card.profileId}>
-                      <ProfessionalCard
-                        professional={result.card}
-                        slots={[]}
-                        slotsInitiallyLoaded={false}
-                        activeCategory={result.categoryId ?? undefined}
-                        viewerProfileId={user?.id}
-                        highlightMetric="rating"
-                      />
-                    </SaveableCard>
-                  </div>
-                ) : (
+                {/* A card made for the conversation: the essentials and two actions that
+                    leave the assistant (profile, availability or message). The full
+                    search card did not fit here and its own schedule flow locked the sheet. */}
+                {message.professionals?.map((result) => (
                   <ProfessionalResult key={result.id} result={result} copy={copy} onNavigate={navigate} nativeApp={nativeApp} lang={lang} />
                 ))}
 
@@ -641,7 +617,8 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           {messages.length === 0 && (
             <div className="space-y-4">
               <div className="flex flex-col items-center px-2 text-center">
-                <div className="h-20 w-20"><Image src="/brand/ai-assistant-robot.webp" alt="" width={128} height={128} className="h-full w-full object-contain drop-shadow-[0_12px_18px_rgba(0,99,189,0.18)]" /></div>
+                {/* In the app the robot already identifies the assistant in the header. */}
+                {!nativeApp && <div className="h-20 w-20"><Image src="/brand/ai-assistant-robot.webp" alt="" width={128} height={128} className="h-full w-full object-contain drop-shadow-[0_12px_18px_rgba(0,99,189,0.18)]" /></div>}
                 <h3 className="mt-1 text-[19px] font-black leading-tight text-[#102746]">{copy.emptyTitle}</h3>
                 <p className="mt-1.5 max-w-[19rem] text-[13px] font-medium leading-relaxed text-[#5c718c]">{copy.emptySubtitle}</p>
               </div>

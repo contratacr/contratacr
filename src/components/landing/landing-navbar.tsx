@@ -2127,12 +2127,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                   </Link>
                 )}
-                {nativeHeaderShell && user && (
-                  <Link href="/mensajes" onPointerDown={() => prepareNativeNavigation("/mensajes")} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                    <DrawerIcon><MessageSquareText /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
-                  </Link>
-                )}
                 {!user && (
                   <Link href={loginHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                     <DrawerIcon><UserRound /></DrawerIcon>

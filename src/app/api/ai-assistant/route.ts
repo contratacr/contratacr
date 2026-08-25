@@ -68,11 +68,8 @@ type AssistantProfessionalResult = {
   actionHref: string;
   actionLabel: string;
   actionKind: "availability" | "message";
-  /** The searched category, so the card highlights the right profession. */
+  /** The searched category. */
   categoryId: string | null;
-  /** The very same professional the search page renders — the app shows its
-   *  own card with its own buttons, not a summary. */
-  card: ProfessionalSearchResult;
 };
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -1935,7 +1932,6 @@ function assistantProfessionalResult(
         : locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
     actionKind,
     categoryId: serviceId ?? professional.categoryId ?? null,
-    card: professional,
   };
 }
 
