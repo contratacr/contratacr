@@ -78,10 +78,22 @@ function toKey(d: Date): string {
 function dayColumnLabel(d: Date, i: number, locale: string): string {
   if (i === 0) return locale === "en" ? "Today" : "Hoy";
   if (i === 1) return locale === "en" ? "Tomorrow" : "Mañana";
-  const loc = locale === "en" ? "en-US" : "es-CR";
-  const month = d.toLocaleDateString(loc, { month: "short" }).replace(".", "");
+  const month = monthShort(locale, d.getMonth());
   if (locale === "en") return `${month} ${d.getDate()}`;
   return `${d.getDate()} ${month}`;
+}
+
+// `toLocaleDateString` builds an Intl formatter on every call; with a screen of
+// cards each showing several days it was the single hottest function of the
+// page. Twelve names per language, computed once, is all the label needs.
+const MONTH_SHORT: Record<string, string[]> = {};
+function monthShort(locale: string, monthIndex: number) {
+  const key = locale === "en" ? "en-US" : "es-CR";
+  if (!MONTH_SHORT[key]) {
+    MONTH_SHORT[key] = Array.from({ length: 12 }, (_, month) =>
+      new Date(2024, month, 1).toLocaleDateString(key, { month: "short" }).replace(".", ""));
+  }
+  return MONTH_SHORT[key][monthIndex];
 }
 
 /**
