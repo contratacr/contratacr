@@ -283,25 +283,67 @@ async function main() {
     name: "Publicidad ContrataCR",
   })));
 
-  const conversations = sourceConversations.map((row, index) => {
+  // A booking, project or proposal anchors at most one conversation, and a
+  // client/professional pair may have only one unanchored conversation (unique
+  // indexes). Clones from an earlier run are removed first, then every anchor
+  // that some other conversation (one the tests opened through the app, for
+  // instance) already holds is skipped, and the surplus source conversations are
+  // simply not cloned.
+  const staleConversationClones = sourceConversations.map((row) => clonedId("direct_conversations", row.id));
+  if (staleConversationClones.length) {
+    await must("direct_messages stale clones", admin.from("direct_messages").delete().in("conversation_id", staleConversationClones));
+    await must("direct_conversations stale clones", admin.from("direct_conversations").delete().in("id", staleConversationClones));
+  }
+  const anchorFilters = [
+    bookings.length ? `booking_id.in.(${bookings.map((row) => row.id).join(",")})` : null,
+    projects.length ? `project_id.in.(${projects.map((row) => row.id).join(",")})` : null,
+    proposals.length ? `proposal_id.in.(${proposals.map((row) => row.id).join(",")})` : null,
+  ].filter(Boolean);
+  const [anchoredElsewhere, unanchoredPairs] = await Promise.all([
+    anchorFilters.length
+      ? must("anchored conversations", admin.from("direct_conversations").select("booking_id,project_id,proposal_id").or(anchorFilters.join(",")))
+      : [],
+    must("unanchored conversations", admin.from("direct_conversations").select("client_id,professional_id")
+      .is("booking_id", null).is("project_id", null).is("proposal_id", null).in("client_id", [user.id, COUNTERPART_PROFILE_ID])),
+  ]);
+  const usedBookings = new Set(anchoredElsewhere.map((row) => row.booking_id).filter(Boolean));
+  const usedProjects = new Set(anchoredElsewhere.map((row) => row.project_id).filter(Boolean));
+  const usedProposals = new Set(anchoredElsewhere.map((row) => row.proposal_id).filter(Boolean));
+  const usedPairs = new Set(unanchoredPairs.map((row) => `${row.client_id}:${row.professional_id}`));
+  const freeAnchors = [
+    ...bookings.filter((row) => !usedBookings.has(row.id)).map((row) => ({ booking_id: row.id, project_id: null, proposal_id: null })),
+    ...projects.filter((row) => !usedProjects.has(row.id)).map((row) => ({ booking_id: null, project_id: row.id, proposal_id: null })),
+    ...proposals.filter((row) => !usedProposals.has(row.id)).map((row) => ({ booking_id: null, project_id: null, proposal_id: row.id })),
+  ];
+  const clonedConversationSources = [];
+  const conversations = [];
+  for (const row of sourceConversations) {
     const advertisingIsClient = row.client_id === SOURCE_PROFILE_ID;
-    return {
+    const clientId = advertisingIsClient ? user.id : COUNTERPART_PROFILE_ID;
+    const professionalId = advertisingIsClient ? COUNTERPART_PROFESSIONAL_ID : PROFESSIONAL_ID;
+    let anchor = freeAnchors.shift();
+    if (!anchor) {
+      const pair = `${clientId}:${professionalId}`;
+      if (usedPairs.has(pair)) continue;
+      usedPairs.add(pair);
+      anchor = { booking_id: null, project_id: null, proposal_id: null };
+    }
+    clonedConversationSources.push(row);
+    conversations.push({
       ...cloneBase("direct_conversations", row),
-      client_id: advertisingIsClient ? user.id : COUNTERPART_PROFILE_ID,
-      professional_id: advertisingIsClient ? COUNTERPART_PROFESSIONAL_ID : PROFESSIONAL_ID,
+      client_id: clientId,
+      professional_id: professionalId,
       professional_profile_id: advertisingIsClient ? COUNTERPART_PROFILE_ID : user.id,
-      booking_id: bookings[index % Math.max(bookings.length, 1)]?.id || null,
-      project_id: projects[index % Math.max(projects.length, 1)]?.id || null,
-      proposal_id: proposals[index % Math.max(proposals.length, 1)]?.id || null,
+      ...anchor,
       last_sender_id: row.last_sender_id === SOURCE_PROFILE_ID ? user.id : COUNTERPART_PROFILE_ID,
-    };
-  });
+    });
+  }
   await upsertRows("direct_conversations", conversations);
-  const sourceConversationIds = sourceConversations.map((row) => row.id);
+  const sourceConversationIds = clonedConversationSources.map((row) => row.id);
   const sourceMessages = sourceConversationIds.length
     ? await must("direct message source rows", admin.from("direct_messages").select("*").in("conversation_id", sourceConversationIds).order("created_at"))
     : [];
-  const conversationBySource = new Map(sourceConversations.map((row, index) => [row.id, conversations[index].id]));
+  const conversationBySource = new Map(clonedConversationSources.map((row, index) => [row.id, conversations[index].id]));
   await upsertRows("direct_messages", sourceMessages.map((row) => ({
     ...cloneBase("direct_messages", row),
     conversation_id: conversationBySource.get(row.conversation_id),

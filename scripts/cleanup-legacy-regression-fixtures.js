@@ -129,16 +129,17 @@ async function cleanupActor(actor, users) {
 async function interruptedDeletionActors() {
   const profiles = await must(
     "interrupted account-deletion profiles",
-    admin.from("profiles").select("id,email,full_name").ilike("email", "deletion-%@contratacr.test"),
+    admin.from("profiles").select("id,email,full_name").or("email.ilike.deletion-%@contratacr.test,email.ilike.onb%@contratacr.test"),
   );
-  const emailPattern = /^deletion-(?:target|sentinel)-(\d+-[0-9a-f]{8})@contratacr\.test$/i;
+  const emailPattern = /^(?:deletion-(?:target|sentinel)|onb\d+)-(\d+-[0-9a-f]{8})@contratacr\.test$/i;
   return profiles.flatMap((profile) => {
     const match = (profile.email || "").match(emailPattern);
     if (!match || profile.full_name !== `Cuenta desechable ${match[1]}`) return [];
     return [{
       email: profile.email.toLowerCase(),
       name: new RegExp(`^Cuenta desechable ${escapeRegex(match[1])}$`),
-      slug: `regression-disposable-${match[1]}`,
+      // Onboarding disposables are plain client accounts; only the deletion ones own a professional slug.
+      ...(/^onb\d+-/i.test(profile.email) ? {} : { slug: `regression-disposable-${match[1]}` }),
     }];
   });
 }

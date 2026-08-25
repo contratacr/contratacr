@@ -38,7 +38,7 @@ const handlerRules = [
   [/^\/api\/upload(?:\/|$)/, "extended-lifecycle.spec.ts"],
   [/^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/(?:appeals|report|report-client|report-professional|portfolio-like|professional-followers|client\/connections)(?:\/|$)/, "interaction-surfaces.spec.ts"],
-  [/^\/api\/(?:public-availability|check-availability|professionals)(?:\/|$)/, "search-results.spec.ts"],
+  [/^\/api\/(?:public-availability|check-availability|professionals|buscar)(?:\/|$)/, "search-results.spec.ts"],
   [/^\/api\/(?:analytics|translate)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/health$/, "health.spec.ts"],
 ];
