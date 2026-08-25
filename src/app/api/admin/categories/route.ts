@@ -236,6 +236,19 @@ export async function PATCH(req: Request) {
   }
 
   if (!status) {
+    // The catalog edit form can also hide a service; same rule as DELETE.
+    if (isHidden === true) {
+      const inUse = await countProfessionalsUsingCategory(db, id);
+      if (inUse === null) {
+        return NextResponse.json({ error: "No se pudo comprobar qué profesionales usan este servicio. Inténtalo de nuevo." }, { status: 500 });
+      }
+      if (inUse > 0) {
+        return NextResponse.json({
+          error: `${inUse} ${inUse === 1 ? "profesional lo ofrece" : "profesionales lo ofrecen"} todavía. Reasígnalos a otro servicio antes de ocultarlo.`,
+          professionals: inUse,
+        }, { status: 409 });
+      }
+    }
     const rawLabel = normalizeServiceDisplayName(typeof label === "string" ? label : "");
     const rawLabelEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
     const cleanLabel = rawLabel || (rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : normalizeServiceDisplayName(labelFromId(id)));
@@ -423,6 +436,19 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
 
   const db = createAdminClient();
+  // Never leave a professional pointing at a service that no longer exists:
+  // hiding or deleting is refused while anyone still offers it. The admin has
+  // to move those professionals first (their count is shown in the catalog).
+  const inUse = await countProfessionalsUsingCategory(db, id);
+  if (inUse === null) {
+    return NextResponse.json({ error: "No se pudo comprobar qué profesionales usan este servicio. Inténtalo de nuevo." }, { status: 500 });
+  }
+  if (inUse > 0) {
+    return NextResponse.json({
+      error: `${inUse} ${inUse === 1 ? "profesional lo ofrece" : "profesionales lo ofrecen"} todavía. Reasígnalos a otro servicio antes de quitarlo.`,
+      professionals: inUse,
+    }, { status: 409 });
+  }
   const base = ALL_CATEGORIES.find((category) => category.id === id);
   if (base) {
     const { error } = await upsertCategory(db, {
@@ -479,6 +505,22 @@ async function upsertCategory(db: ReturnType<typeof createAdminClient>, row: Rec
     return result;
   }
   return db.from("categories").upsert(current, { onConflict: "id", ignoreDuplicates: false });
+}
+
+async function countProfessionalsUsingCategory(
+  db: ReturnType<typeof createAdminClient>,
+  categoryId: string
+): Promise<number | null> {
+  // Same three places the search reads a professional's services from.
+  const { count, error } = await db
+    .from("professionals")
+    .select("id", { count: "exact", head: true })
+    .or(`category_id.eq.${categoryId},professions.cs.{${categoryId}},services.cs.[{"category":"${categoryId}"}]`);
+  if (error) {
+    console.error("[admin/categories] could not count professionals using category", { categoryId, error });
+    return null;
+  }
+  return count ?? 0;
 }
 
 async function syncProfessionalServiceNames(

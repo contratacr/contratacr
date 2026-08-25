@@ -758,6 +758,16 @@ export function AdminCategories() {
 
   async function deleteService(item: CatalogCategory) {
     const isBase = item.source === "base";
+    const inUse = proCounts[item.id]?.professionals ?? 0;
+    if (inUse > 0) {
+      showNotice(
+        isBase ? "No se puede ocultar todavía" : "No se puede eliminar todavía",
+        `${inUse} ${inUse === 1 ? "profesional ofrece" : "profesionales ofrecen"} "${item.label}". Si lo quitas, quedarían con un servicio que ya no existe.`,
+        "Reasígnalos a otro servicio desde sus perfiles y vuelve a intentarlo.",
+        "danger"
+      );
+      return;
+    }
     setDialog({
       title: isBase ? "Ocultar servicio" : "Eliminar servicio",
       description: isBase
