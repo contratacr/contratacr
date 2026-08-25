@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- The app UI is light-only; forcing Light keeps the native shell (launch
+	     window, status bar) from flashing the dark-mode black background before
+	     the web view paints. -->
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
     <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
