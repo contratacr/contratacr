@@ -160,30 +160,43 @@ export function MobileAppBridge() {
     let cancelled = false;
     let firstFrame = 0;
     let secondFrame = 0;
-    let fallbackTimer = 0;
-    // Hide the native splash (the static mark) as soon as the web view has
-    // painted. The app's own loading screen — the SSR route fallback, the same
-    // mark breathing — is already on screen underneath, so the hand-off reads as
-    // one continuous mark instead of a static image cut straight to content.
-    // A watchdog hides the splash even if a frame never arrives (a WKWebView
-    // behind an opaque splash can pause requestAnimationFrame on a real device),
-    // so the mark can never get stuck on launch.
-    const hideSplash = () => {
-      if (cancelled) return;
-      window.clearTimeout(fallbackTimer);
+    let minTimer = 0;
+    let maxTimer = 0;
+    let splashHidden = false;
+    // The native splash IS the brand mark on a light ground. Keep it on screen a
+    // beat so the launch clearly shows the loading logo — hiding it the instant
+    // the web view paints made it flash by, which reads as "no loading screen".
+    // Underneath, the SSR route fallback (the same mark) is already painted, so
+    // the hand-off is seamless.
+    const MIN_SPLASH_MS = 1100; // guarantee the mark is actually seen
+    const MAX_SPLASH_MS = 2600; // never hold longer, even if a paint never arrives
+    const t0 = performance.now();
+    const hideSplashNow = () => {
+      if (cancelled || splashHidden) return;
+      splashHidden = true;
+      window.clearTimeout(minTimer);
+      window.clearTimeout(maxTimer);
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
       void import("@capacitor/splash-screen")
-        .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 120 }))
+        .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 220 }))
         .catch(() => {});
+    };
+    // Hide once the page has painted AND the mark has shown for the minimum time.
+    const hideWhenReady = () => {
+      const elapsed = performance.now() - t0;
+      if (elapsed >= MIN_SPLASH_MS) hideSplashNow();
+      else minTimer = window.setTimeout(hideSplashNow, MIN_SPLASH_MS - elapsed);
     };
 
     const hideAfterPaint = () => {
       firstFrame = window.requestAnimationFrame(() => {
-        secondFrame = window.requestAnimationFrame(hideSplash);
+        secondFrame = window.requestAnimationFrame(hideWhenReady);
       });
-      // rAF can be paused while the splash covers the view; time-based backstop.
-      fallbackTimer = window.setTimeout(hideSplash, 900);
+      // rAF can be paused while the opaque splash covers the view; an absolute
+      // time cap hides the splash even if a paint frame never arrives, so the
+      // mark can never get stuck on launch.
+      maxTimer = window.setTimeout(hideSplashNow, MAX_SPLASH_MS);
     };
 
     if (!firstRunPending) {
@@ -194,7 +207,8 @@ export function MobileAppBridge() {
       cancelled = true;
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
-      window.clearTimeout(fallbackTimer);
+      window.clearTimeout(minTimer);
+      window.clearTimeout(maxTimer);
       document.documentElement.classList.remove("ccr-native-app");
       document.body.classList.remove("ccr-native-app");
     };
