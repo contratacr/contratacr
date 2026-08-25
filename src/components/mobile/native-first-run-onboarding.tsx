@@ -39,13 +39,18 @@ function isPendingJourneyPath(path: string): path is NativeOnboardingPendingPath
 }
 
 function hideNativeSplashAfterPaint() {
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      void import("@capacitor/splash-screen")
-        .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
-        .catch(() => {});
-    });
-  });
+  let done = false;
+  const hide = () => {
+    if (done) return;
+    done = true;
+    void import("@capacitor/splash-screen")
+      .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
+      .catch(() => {});
+  };
+  window.requestAnimationFrame(() => window.requestAnimationFrame(hide));
+  // A WKWebView behind the opaque splash can pause requestAnimationFrame on a
+  // real device; a time-based backstop makes sure the splash never gets stuck.
+  window.setTimeout(hide, 900);
 }
 
 export function NativeFirstRunOnboarding() {

@@ -160,51 +160,30 @@ export function MobileAppBridge() {
     let cancelled = false;
     let firstFrame = 0;
     let secondFrame = 0;
-    // The native splash (the static mark) hands over to the same mark breathing
-    // for a moment before the first screen: the launch reads as one motion
-    // instead of a static image cut straight to content.
-    const BRANDED_LAUNCH_MS = 1400;
-    let launchScreen: HTMLElement | null = null;
-    let launchTimer = 0;
-    const mountLaunchScreen = () => {
-      const screen = document.createElement("div");
-      screen.className = "ccr-page-route-loading";
-      screen.setAttribute("aria-hidden", "true");
-      screen.style.cssText = "position:fixed;inset:0;z-index:100000;display:grid;place-items:center;background:#f4f7fa;animation:none;opacity:1;transition:opacity 220ms ease-out";
-      const mark = document.createElement("img");
-      mark.src = "/logo-mark-transparent.png";
-      mark.alt = "";
-      mark.width = 72;
-      mark.height = 72;
-      mark.className = "ccr-brand-loading-mark";
-      mark.style.animationDelay = "0ms";
-      screen.appendChild(mark);
-      document.body.appendChild(screen);
-      launchScreen = screen;
-    };
-    const dismissLaunchScreen = () => {
-      const screen = launchScreen;
-      launchScreen = null;
-      if (!screen) return;
-      screen.style.opacity = "0";
-      window.setTimeout(() => screen.remove(), 260);
-    };
+    let fallbackTimer = 0;
+    // Hide the native splash (the static mark) as soon as the web view has
+    // painted. The app's own loading screen — the SSR route fallback, the same
+    // mark breathing — is already on screen underneath, so the hand-off reads as
+    // one continuous mark instead of a static image cut straight to content.
+    // A watchdog hides the splash even if a frame never arrives (a WKWebView
+    // behind an opaque splash can pause requestAnimationFrame on a real device),
+    // so the mark can never get stuck on launch.
     const hideSplash = () => {
       if (cancelled) return;
-      mountLaunchScreen();
+      window.clearTimeout(fallbackTimer);
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
       void import("@capacitor/splash-screen")
-        .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
-        .catch(() => {})
-        .finally(() => {
-          if (cancelled) return;
-          launchTimer = window.setTimeout(dismissLaunchScreen, BRANDED_LAUNCH_MS);
-        });
+        .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 120 }))
+        .catch(() => {});
     };
 
     const hideAfterPaint = () => {
       firstFrame = window.requestAnimationFrame(() => {
         secondFrame = window.requestAnimationFrame(hideSplash);
       });
+      // rAF can be paused while the splash covers the view; time-based backstop.
+      fallbackTimer = window.setTimeout(hideSplash, 900);
     };
 
     if (!firstRunPending) {
@@ -215,9 +194,7 @@ export function MobileAppBridge() {
       cancelled = true;
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
-      window.clearTimeout(launchTimer);
-      launchScreen?.remove();
-      launchScreen = null;
+      window.clearTimeout(fallbackTimer);
       document.documentElement.classList.remove("ccr-native-app");
       document.body.classList.remove("ccr-native-app");
     };
