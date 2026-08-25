@@ -227,7 +227,8 @@
       "prev": "Previous",
       "next": "Next",
       "status": "Page {page} of {total}",
-      "pageOf": "Page <b>{page}</b> of <b>{total}</b>"
+      "pageOf": "Page <b>{page}</b> of <b>{total}</b>",
+      "loadingMore": "Loading more professionals"
     },
     "filters": {
       "title": "Filters",

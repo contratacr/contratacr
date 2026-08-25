@@ -12,6 +12,7 @@ import { primaryPricingLabel } from "@/lib/pricing";
 import { getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
+import { SearchResultsInfinite } from "@/components/search/search-results-infinite";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
@@ -247,9 +248,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       ? `★ ${pro.ratingAvg.toFixed(1)} (${pro.reviewCount} ${pro.reviewCount === 1 ? "review" : "reviews"})`
       : `★ ${pro.ratingAvg.toFixed(1)} (${pro.reviewCount} ${pro.reviewCount === 1 ? "reseña" : "reseñas"})`;
   };
-  // The map mirrors the current result page: only the professionals shown as
-  // cards get pins. Changing pages swaps the map to the next visible set.
-  const mapData = results.flatMap((pro) => {
+  // Every professional with a pin marked on the map shows there, not just the
+  // ones already rendered as cards: the map is the overview of the whole search.
+  const mapData = orderedResults.flatMap((pro) => {
     const base = {
       id: pro.id,
       proId: pro.id,
@@ -277,10 +278,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     return [];
   });
 
-  // Visible cards get numbers 1..20; if one professional has several pins,
-  // every pin repeats that same card number.
+  // A pin carries the number its card has in the list; if one professional has
+  // several pins, every pin repeats that same number.
   const numbering: Record<string, number> = {};
-  results.forEach((pro, index) => { numbering[pro.id] = index + 1; });
+  orderedResults.forEach((pro, index) => { numbering[pro.id] = index + 1; });
 
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const activeProvince = selectedProvinceId
@@ -414,6 +415,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
   const searchReturnQuery = searchReturnParams.toString();
   const searchReturnHref = searchReturnQuery ? `/buscar?${searchReturnQuery}` : "/buscar";
+  // What the growing list sends to the endpoint: the same filters, never a page.
+  const infiniteQuery = (() => {
+    const search = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (key === "page" || !value) continue;
+      search.set(key, String(value));
+    }
+    return search.toString();
+  })();
 
   const paginationParams = new URLSearchParams(searchReturnParams);
   paginationParams.delete("page");
@@ -519,10 +529,21 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         </SaveableCard>
                       </div>
                     ))}
+                    {/* From here the list grows on its own as the person scrolls. */}
+                    <SearchResultsInfinite
+                      query={infiniteQuery}
+                      initialCount={results.length}
+                      total={orderedResults.length}
+                      activeCategory={activeCategoryId}
+                      viewerProfileId={viewerProfileId}
+                      highlightMetric={sortBy === "experience" ? "experience" : "rating"}
+                      searchReturnHref={searchReturnHref}
+                      loadingLabel={t("pagination.loadingMore")}
+                    />
                   </div>
 
                   {totalPages > 1 && (
-                    <nav aria-label={t("pagination.label")} className="-mx-4 bg-white px-4 pb-4 lg:mx-0 lg:mt-5 lg:border-t lg:border-[#e5e7eb] lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
+                    <nav data-search-pagination aria-label={t("pagination.label")} className="-mx-4 bg-white px-4 pb-4 lg:mx-0 lg:mt-5 lg:border-t lg:border-[#e5e7eb] lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
                       {/* The very same divider the results count uses above the list. */}
                       <div aria-hidden className="-mx-4 mb-4 h-1 bg-[#f6f8fb] shadow-[inset_0_1px_0_rgba(226,232,240,0.58)] lg:hidden" />
                       <div className="flex items-center justify-between gap-3 sm:hidden">
@@ -591,9 +612,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </Link>
                         )}
                       </div>
-                      <p className="mt-3 hidden text-right text-sm font-medium text-[#64748b] sm:block">
-                        {currentPage} / {totalPages} · {orderedResults.length.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? "results" : "resultados"}
-                      </p>
                     </nav>
                   )}
 

@@ -227,7 +227,8 @@
       "prev": "Anterior",
       "next": "Siguiente",
       "status": "Página {page} de {total}",
-      "pageOf": "Página <b>{page}</b> de <b>{total}</b>"
+      "pageOf": "Página <b>{page}</b> de <b>{total}</b>",
+      "loadingMore": "Cargando más profesionales"
     },
     "filters": {
       "title": "Filtros",
