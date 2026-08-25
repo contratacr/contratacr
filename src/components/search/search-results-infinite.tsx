@@ -39,6 +39,8 @@ export function SearchResultsInfinite({
   highlightMetric,
   searchReturnHref,
   loadingLabel,
+  failedLabel,
+  retryLabel,
 }: {
   /** The current search as a query string, without page/offset. */
   query: string;
@@ -49,6 +51,8 @@ export function SearchResultsInfinite({
   highlightMetric: "rating" | "experience";
   searchReturnHref: string;
   loadingLabel: string;
+  failedLabel: string;
+  retryLabel: string;
 }) {
   const [items, setItems] = useState<Loaded[]>([]);
   // A batch is revealed a few cards per frame: mounting twenty at once is one
@@ -56,6 +60,7 @@ export function SearchResultsInfinite({
   const [revealed, setRevealed] = useState(0);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
+  const attempts = useRef(0);
   const sentinel = useRef<HTMLDivElement | null>(null);
   const loadedCount = initialCount + items.length;
   const hasMore = loadedCount < total;
@@ -82,6 +87,7 @@ export function SearchResultsInfinite({
         setFailed(true);
         return;
       }
+      attempts.current = 0;
       setItems((current) => [...current, ...next]);
       let shown = 0;
       const step = () => {
@@ -92,7 +98,11 @@ export function SearchResultsInfinite({
       window.requestAnimationFrame(step);
     } catch (error) {
       console.error("[search] could not load more results", error);
-      setFailed(true);
+      // A blip (a deploy finishing, a flaky connection) gets one quiet retry
+      // before the person is asked to tap.
+      attempts.current += 1;
+      if (attempts.current <= 1) window.setTimeout(() => void loadMore(), 1500);
+      else setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -175,12 +185,13 @@ export function SearchResultsInfinite({
 
       {failed && hasMore && (
         <div className="bg-white px-4 py-6 text-center lg:rounded-2xl lg:border lg:border-[#e5e7eb]">
+          <p className="text-sm font-medium text-[#64748b]">{failedLabel}</p>
           <button
             type="button"
-            onClick={() => { setFailed(false); void loadMore(); }}
-            className="inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition hover:bg-[#008dbf]"
+            onClick={() => { attempts.current = 0; setFailed(false); void loadMore(); }}
+            className="mt-3 inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition hover:bg-[#008dbf]"
           >
-            {loadingLabel}
+            {retryLabel}
           </button>
         </div>
       )}

@@ -503,6 +503,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       highlightMetric={sortBy === "experience" ? "experience" : "rating"}
                       searchReturnHref={searchReturnHref}
                       loadingLabel={t("pagination.loadingMore")}
+                      failedLabel={t("pagination.loadMoreFailed")}
+                      retryLabel={t("pagination.retry")}
                     />
                   </div>
 

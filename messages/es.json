@@ -228,7 +228,9 @@
       "next": "Siguiente",
       "status": "Página {page} de {total}",
       "pageOf": "Página <b>{page}</b> de <b>{total}</b>",
-      "loadingMore": "Cargando más profesionales"
+      "loadingMore": "Cargando más profesionales",
+      "loadMoreFailed": "No se pudieron cargar más profesionales.",
+      "retry": "Volver a intentar"
     },
     "filters": {
       "title": "Filtros",
