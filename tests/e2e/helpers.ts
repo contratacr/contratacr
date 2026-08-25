@@ -267,7 +267,10 @@ export async function loginAs(page: Page, email: string, password: string) {
 }
 
 export async function resetAuth(page: Page) {
+  // Signing out never changes the device: the app's platform cookie survives.
+  const platform = (await page.context().cookies()).find((cookie) => cookie.name === "ccr_platform");
   await page.context().clearCookies();
+  if (platform) await page.context().addCookies([{ name: platform.name, value: platform.value, domain: platform.domain, path: platform.path }]);
   await page.goto("/es", { waitUntil: "domcontentloaded" }).catch(() => undefined);
   await page.evaluate(() => {
     localStorage.clear();

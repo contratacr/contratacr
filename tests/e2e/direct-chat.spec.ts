@@ -28,6 +28,11 @@ test.describe("@seeded contextual direct chat", () => {
   let proposalId = "";
 
   test.beforeAll(async () => { seed = await ensureRegressionSeed(); });
+  // Direct chat is exercised as the app: the native shell marks every request
+  // with this cookie, and the API moderates messages only for the app.
+  test.beforeEach(async ({ context, baseURL }) => {
+    await context.addCookies([{ name: "ccr_platform", value: "native", url: baseURL ?? "http://localhost:3000" }]);
+  });
   test.afterAll(async () => {
     const admin = regressionAdminClient();
     if (conversationIds.length) {
