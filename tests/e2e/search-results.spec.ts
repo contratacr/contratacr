@@ -1,4 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "playwright/test";
+import { getCategoryLabel } from "../../src/lib/data/categories";
 import { expectHealthyPage, expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient } from "./seed";
 
@@ -292,18 +293,23 @@ test.describe("@seeded search results", () => {
     expect(fixtureError).toBeNull();
     expect(fixture?.coverage_provincias).toContain("al");
     const cacheBust = Date.now();
+    // The seeded professional's own service: the CI foundation seeds one
+    // category, the hosted test project restores the production profile with
+    // another. The location hierarchy is what this test is about, not the trade.
+    const categoryId = seed.categoryId;
+    const categoryLabel = getCategoryLabel(categoryId, "es");
 
     for (const query of [
-      `/es/buscar?categoria=aire_acondicionado&provincia=al&regression=${cacheBust}`,
-      `/es/buscar?categoria=aire_acondicionado&provincia=al&canton=al-al&regression=${cacheBust}`,
-      `/es/buscar?categoria=aire_acondicionado&provincia=al&canton=al-al&lat=10.01625&lng=-84.21163&regression=${cacheBust}`,
+      `/es/buscar?categoria=${categoryId}&provincia=al&regression=${cacheBust}`,
+      `/es/buscar?categoria=${categoryId}&provincia=al&canton=al-al&regression=${cacheBust}`,
+      `/es/buscar?categoria=${categoryId}&provincia=al&canton=al-al&lat=10.01625&lng=-84.21163&regression=${cacheBust}`,
     ]) {
       await gotoOK(page, query);
       await waitForInteractivePage(page);
 
       const card = page.locator("article").filter({ hasText: E2E_USERS.professional.fullName }).first();
       await expect(card).toBeVisible();
-      await expect(card).toContainText(/Aire acondicionado/i);
+      await expect(card).toContainText(new RegExp(categoryLabel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"));
       await expectHealthyPage(page);
     }
   });
