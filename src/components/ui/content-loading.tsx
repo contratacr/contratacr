@@ -1,10 +1,10 @@
 "use client";
 
 import type { ElementType, ReactNode } from "react";
-import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { LoadingMarkImage } from "@/components/ui/loading-mark-image";
 
 export function Skeleton({ className }: { className: string }) {
   return <span aria-hidden className={`ccr-delayed-loading ccr-skeleton-shimmer block ${className}`} />;
@@ -14,15 +14,7 @@ export function BrandLoadingMark({ className, children }: { className?: string; 
   const t = useTranslations("loading");
   return (
     <div className={cn("grid place-items-center", className)} aria-busy="true" role="status">
-      <Image
-        src="/logo-mark-transparent.png"
-        alt=""
-        width={64}
-        height={64}
-        sizes="64px"
-        priority
-        className="ccr-brand-loading-mark"
-      />
+      <LoadingMarkImage />
       {children ?? <span className="sr-only">{t("generic")}</span>}
     </div>
   );

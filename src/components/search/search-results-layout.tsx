@@ -68,7 +68,6 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
-  const scrollThumbRef = useRef<HTMLDivElement | null>(null);
   const [heightFr, setHeightFr] = useState(CARD_PEEK);
   const [dragging, setDragging] = useState(false);
   const [areaSearching, setAreaSearching] = useState(false);
@@ -85,22 +84,6 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   const expandedEnd = currentSnapPoints[currentSnapPoints.length - 1] ?? FULL;
   const sheetScrollable = heightFr > (expandedStart + expandedEnd) / 2;
   const sheetFullyExpanded = sheetScrollable;
-
-  function updateMobileScrollThumb() {
-    const list = listRef.current;
-    const thumb = scrollThumbRef.current;
-    if (!list || !thumb) return;
-    const scrollable = list.scrollHeight > list.clientHeight + 1;
-    thumb.style.opacity = scrollable ? "1" : "0";
-    if (!scrollable) return;
-    const inset = 10;
-    const trackHeight = Math.max(0, list.clientHeight - inset * 2);
-    const thumbHeight = Math.min(trackHeight, Math.max(88, trackHeight * (list.clientHeight / list.scrollHeight)));
-    const progress = list.scrollTop / Math.max(1, list.scrollHeight - list.clientHeight);
-    const top = list.offsetTop + inset + Math.max(0, trackHeight - thumbHeight) * progress;
-    thumb.style.height = `${thumbHeight}px`;
-    thumb.style.transform = `translateY(${top}px)`;
-  }
 
   useEffect(() => {
     const syncSnapPoints = () => {
@@ -160,18 +143,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     const points = mobileSheetSnapPoints();
     const listDominant = snapIndex(heightFr, points) === points.length - 1;
     window.dispatchEvent(new CustomEvent("ccr:search-view-state", { detail: { listDominant } }));
-    window.requestAnimationFrame(updateMobileScrollThumb);
   }, [heightFr]);
-
-  useEffect(() => {
-    const update = () => updateMobileScrollThumb();
-    window.addEventListener("resize", update);
-    const frame = window.requestAnimationFrame(update);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.cancelAnimationFrame(frame);
-    };
-  }, [children]);
 
   useEffect(() => {
     const recoverInteractionState = () => {
@@ -184,7 +156,6 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
       window.requestAnimationFrame(() => {
         const max = points[points.length - 1];
         if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${Math.max(0, max - target) * 100}dvh, 0)`;
-        updateMobileScrollThumb();
         window.dispatchEvent(new Event("resize"));
       });
     };
@@ -370,8 +341,12 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
 
   // The page behind the panel must not rubber-band or pan while the panel is in use.
   useEffect(() => {
-    document.body.classList.add("ccr-search-sheet-page");
-    return () => document.body.classList.remove("ccr-search-sheet-page");
+    // On phones the results panel is the only scroll area: the page itself never
+    // scrolls, so the browser has no page-level indicator to draw next to the
+    // panel's own (that was the second bar at the right edge).
+    const pageClasses = ["ccr-search-sheet-page", "max-lg:h-dvh", "max-lg:max-h-dvh", "max-lg:overflow-hidden"];
+    document.body.classList.add(...pageClasses);
+    return () => document.body.classList.remove(...pageClasses);
   }, []);
 
   // Tapping a map pin (mobile) springs the sheet open and scrolls its card into view. The
@@ -498,11 +473,10 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} onScroll={updateMobileScrollThumb} className={`ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-0 pt-0 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]`}>
+          <div ref={listRef} className={`ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-0 pt-0 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]`}>
             {quickFilters && <div className="mb-3 hidden lg:block xl:hidden">{quickFilters}</div>}
             {children}
           </div>
-          <div ref={scrollThumbRef} aria-hidden className="pointer-events-none absolute right-0 top-0 z-50 w-[3px] rounded-full bg-[#64748b] opacity-0 shadow-[0_0_0_1px_rgba(255,255,255,0.45)] transition-opacity duration-150 lg:hidden" />
         </div>
         {searchAreaVisible && (
         <div className="pointer-events-none fixed inset-x-0 top-[calc(var(--ccr-native-header-height,124px)+0.75rem)] z-40 flex justify-center px-4 lg:hidden">

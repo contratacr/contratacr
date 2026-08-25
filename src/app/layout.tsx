@@ -1,6 +1,8 @@
 import { Suspense, type ReactNode } from "react";
 import { Inter } from "next/font/google";
 import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
+import { LoadingMarkImage } from "@/components/ui/loading-mark-image";
+import { LOADING_MARK_HANDOFF_SCRIPT } from "@/lib/loading-mark-handoff";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 import "./globals.css";
 
@@ -67,21 +69,18 @@ function StaticNativeFirstRunPrepaint() {
 
 function InitialRouteLoading() {
   return (
-    <main
-      className="ccr-page-route-loading fixed inset-0 z-[100000] grid min-h-dvh place-items-center bg-[#f4f7fa]"
-      aria-busy="true"
-      aria-live="polite"
-      role="status"
-    >
-      {/* Keep the root suspense fallback visually identical to route loading. */}
-      <img
-        src="/logo-mark-transparent.png"
-        alt=""
-        width={72}
-        height={72}
-        className="ccr-brand-loading-mark"
-      />
-      <span className="sr-only">Cargando...</span>
-    </main>
+    <>
+      <main
+        className="ccr-page-route-loading fixed inset-0 z-[100000] grid min-h-dvh place-items-center bg-[#f4f7fa]"
+        aria-busy="true"
+        aria-live="polite"
+        role="status"
+      >
+        {/* Keep the root suspense fallback visually identical to route loading. */}
+        <LoadingMarkImage />
+        <span className="sr-only">Cargando...</span>
+      </main>
+      <script dangerouslySetInnerHTML={{ __html: LOADING_MARK_HANDOFF_SCRIPT }} />
+    </>
   );
 }
