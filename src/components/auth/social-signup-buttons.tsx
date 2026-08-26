@@ -6,6 +6,7 @@ import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { BrandLoadingMark } from "@/components/ui/content-loading";
 
 // "Continuar con Google/Apple" for the REGISTRATION forms: the same providers
 // as /login, but the round trip returns HERE (next = the current page) so the
@@ -23,6 +24,27 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
   );
   const [loading, setLoading] = useState<"google" | "apple" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Full-screen brand cover from the moment the provider hands the person back
+  // until the connected form takes over — never a flash of this screen again.
+  const [covering, setCovering] = useState(false);
+
+  // Signed in on this very page: enforce the same one-email-one-method rule the
+  // callback applies, then simply STAY — the form switches to its
+  // connected-account steps as the session propagates. No redirect hop.
+  async function settleSignedInHere(supabase: ReturnType<typeof createClient>) {
+    const { data } = await supabase.auth.getUser();
+    const hasPassword = (data.user?.identities ?? []).some((identity) => identity.provider === "email");
+    if (hasPassword) {
+      await supabase.auth.signOut();
+      setCovering(false);
+      setError(t("blockedUsePassword"));
+      setLoading(null);
+      return;
+    }
+    // This block unmounts (taking the cover with it) as soon as the page
+    // rerenders in its connected state; the timeout is only a safety net.
+    window.setTimeout(() => setCovering(false), 8000);
+  }
 
   function callbackUrl() {
     const next = nextPath ?? window.location.pathname + window.location.search;
@@ -46,10 +68,8 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
       try {
         const outcome = await nativeSocialSignIn(provider, supabase);
         if (outcome === "signed-in") {
-          // Same-origin path, never the absolute URL: the server origin can
-          // differ from the one the WebView loaded.
-          const callback = callbackUrl().replace("flow=oauth", "flow=native");
-          window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
+          setCovering(true);
+          await settleSignedInHere(supabase);
           return;
         }
         if (outcome === "cancelled") {
@@ -78,21 +98,29 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
   // happens here; the callback then runs the same one-method checks and
   // returns to this form.
   async function onGoogleCredential(idToken: string, gisNonce: string) {
+    // Google's window just closed: cover the form immediately, not after the
+    // token exchange — the person never sees this screen again.
+    setCovering(true);
     setLoading("google");
     setError(null);
     const supabase = createClient();
     const { error: tokenError } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken, nonce: gisNonce });
     if (tokenError) {
+      setCovering(false);
       setError(tokenError.message);
       setLoading(null);
       return;
     }
-    const callback = callbackUrl().replace("flow=oauth", "flow=native");
-    window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
+    await settleSignedInHere(supabase);
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {covering && (
+        <div className="fixed inset-0 z-[300] grid place-items-center bg-[#f4f7fa]" aria-busy="true">
+          <BrandLoadingMark />
+        </div>
+      )}
       {runtime === "native" && (
         <button
           type="button"
