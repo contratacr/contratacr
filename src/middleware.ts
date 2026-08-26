@@ -56,6 +56,8 @@ export async function middleware(request: NextRequest) {
     "/tt": "/es?utm_source=tiktok&utm_medium=organic&utm_campaign=bio",
     "/fb": "/es?utm_source=facebook&utm_medium=organic&utm_campaign=bio",
     "/wa": "/es?utm_source=whatsapp&utm_medium=referral&utm_campaign=bio",
+    // Professional recruiting by hand (WhatsApp outreach) — lands on the signup.
+    "/pro": "/es/registro/profesional?utm_source=whatsapp&utm_medium=outreach&utm_campaign=pro-invitacion",
   };
   if (VANITY[pathname]) {
     return NextResponse.redirect(new URL(VANITY[pathname], request.url), 307);
