@@ -93,7 +93,7 @@ function acquisitionLabel(source: string, medium: string | null): { key: string;
   if (source === "direct") return { key: "direct", label: "Directo (sin enlace de origen)" };
   if (source === "other") return { key: "other", label: "Otros sitios" };
   if (paid) return { key: `${source}:paid`, label: `Anuncios en ${src}` };
-  if (medium === "organic" || !medium) return { key: `${source}:organic`, label: `${src} (orgánico)` };
+  if (medium === "organic" || medium === "social" || !medium) return { key: `${source}:organic`, label: `${src} (orgánico)` };
   return { key: `${source}:${medium}`, label: `${src} (${medium})` };
 }
 

@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
+import { readAttribution } from "@/lib/analytics/attribution";
 import { Navbar } from "@/components/layout/navbar";
 import { FocusedHeader } from "@/components/layout/focused-header";
 import { Button } from "@/components/ui/button";
@@ -142,6 +143,7 @@ export default function RegisterClientPage() {
           userId,
           fullName: cleanName,
           phone: phone.trim(),
+          attribution: readAttribution(),
         }),
       });
 

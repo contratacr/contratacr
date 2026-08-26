@@ -33,12 +33,16 @@ function hostOf(url: string): string | null {
   }
 }
 
-// Without utm_source we still know quite a lot: the click ids Meta and TikTok
+// Without utm_source we still know quite a lot: the click ids TikTok/Google
 // append to ad links, and the referrer for organic social/search traffic.
+// `fbclid` is deliberately NOT treated as paid: Facebook appends it to every
+// outbound click, groups and posts included, and our ads always carry utm_*.
 function deriveSource(params: URLSearchParams, referrerHost: string | null): { source: string; medium: string | null } {
-  if (params.get("fbclid")) return { source: "meta", medium: "paid" };
   if (params.get("ttclid")) return { source: "tiktok", medium: "paid" };
   if (params.get("gclid")) return { source: "google", medium: "paid" };
+  if (params.get("fbclid")) {
+    return referrerHost && /instagram\.com$/.test(referrerHost) ? { source: "instagram", medium: "organic" } : { source: "facebook", medium: "organic" };
+  }
   if (!referrerHost) return { source: "direct", medium: null };
   if (/(^|\.)instagram\.com$/.test(referrerHost)) return { source: "instagram", medium: "organic" };
   if (/(^|\.)(facebook\.com|fb\.com|messenger\.com)$/.test(referrerHost)) return { source: "facebook", medium: "organic" };
@@ -74,7 +78,7 @@ export function captureAttribution(): Attribution | null {
   try {
     const params = new URLSearchParams(window.location.search);
     const utmSource = clean(params.get("utm_source"));
-    const hasClickId = !!(params.get("fbclid") || params.get("ttclid") || params.get("gclid"));
+    const hasClickId = !!(params.get("ttclid") || params.get("gclid"));
     const existing = readAttribution();
     if (existing && !utmSource && !hasClickId) return existing;
 
