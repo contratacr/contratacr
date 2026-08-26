@@ -29,6 +29,7 @@ const reviewed = new Map([
   ["src/components/mobile/mobile-app-bridge.tsx", { count: 3, reason: "native first-run flag and hardware-back root marker; presentation only" }],
   ["src/components/mobile/native-first-run-onboarding.tsx", { count: 11, reason: "native first-run completed flag, pending-route and post-auth handoff markers; no account-owned records" }],
   ["src/lib/analytics/attribution.ts", { count: 4, reason: "marketing attribution (utm/referrer) held only until sign-up, then persisted with the account in Supabase" }],
+  ["src/components/analytics/attribution-capture.tsx", { count: 2, reason: "session marker that the account already claimed its first-touch attribution; the attribution itself persists server-side" }],
   ["src/lib/account-cache.ts", { count: 1, reason: "account-scoped removal of reviewed browser caches during disable/deletion" }],
   ["src/lib/app-data-invalidation.ts", { count: 2, reason: "cross-tab cache invalidation timestamp/domain signal; no account-owned records" }],
   ["src/components/professionals/case-like-button.tsx", { count: 3, reason: "anonymous like guard; count persists in backend" }],
