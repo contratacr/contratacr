@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
+import { SocialSignupButtons } from "@/components/auth/social-signup-buttons";
 import { readAttribution } from "@/lib/analytics/attribution";
 import { Navbar } from "@/components/layout/navbar";
 import { FocusedHeader } from "@/components/layout/focused-header";
@@ -234,6 +235,10 @@ export default function RegisterClientPage() {
               <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
               <p className="text-sm text-[#6b7280] mt-1">{t("subtitle")}</p>
             </div>
+
+            {/* Quick start: connect Google (or Apple in the app) and continue
+                this same form with the identity already confirmed. */}
+            {!user && !authLoading && <SocialSignupButtons />}
 
             {/* OAuth banner */}
             {user && (

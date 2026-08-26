@@ -18,6 +18,7 @@ import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { IdentityField } from "@/components/ui/identity-field";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { createClient } from "@/lib/supabase/client";
+import { SocialSignupButtons } from "@/components/auth/social-signup-buttons";
 import { cn } from "@/lib/utils";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { useAuth } from "@/hooks/use-auth";
@@ -729,10 +730,20 @@ export default function RegisterProfessionalPage() {
     }
   }
 
+  // Persist the confirmed identity on the account, so an interrupted signup
+  // resumes exactly here — the same guarantee the email/password path gets from
+  // its signUp metadata.
+  function persistOauthIdentity(extra: Record<string, unknown> = {}) {
+    void createClient().auth.updateUser({
+      data: { professional_signup_started: true, ...extra },
+    }).catch(() => { /* resume is a convenience; the form keeps working without it */ });
+  }
+
   function onCurrentUserIdentityContinue() {
     if (accountCedula) {
       setOauthCedulaError(null);
       setOauthNameError(null);
+      persistOauthIdentity();
       setStep(1);
       return;
     }
@@ -750,6 +761,10 @@ export default function RegisterProfessionalPage() {
     }
     setOauthNameError(null);
     setOauthCedulaError(null);
+    persistOauthIdentity({
+      ...(noCrId || identityMismatch ? {} : { cedula: oauthCedula.replace(/\D/g, "") }),
+      ...(oauthFullName.trim() ? { full_name: oauthFullName.trim() } : {}),
+    });
     setStep(1);
   }
 
@@ -1053,10 +1068,12 @@ export default function RegisterProfessionalPage() {
           )}
 
           {/* ── Step 0: Identity / account confirmation ─────────────────── */}
-          {/* Social sign-up lives on the LOGIN page only; from there the user
-              proceeds into registration. Registration is email/password here. */}
           {step === 0 && !currentUser && (
             <div className="flex flex-col gap-4">
+            {/* Quick start: connect Google (or Apple in the app) and come back to
+                this same form with the account already created — the identity and
+                service steps still follow, without email/password. */}
+            <SocialSignupButtons />
             <form noValidate onSubmit={form1.handleSubmit(onStep1, scrollToFirstError)} className="flex flex-col gap-4">
               {!noCrId ? (
                 <>
