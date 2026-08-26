@@ -75,7 +75,7 @@ type AssistantProfessionalResult = {
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const WORKERS_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast";
-const MAX_HISTORY_MESSAGES = 3;
+const MAX_HISTORY_MESSAGES = 6;
 const MAX_HISTORY_CONTENT = 700;
 const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)/gi;
 const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|crear|hacer|abrir)|(?:publicar|crear|hacer|abrir)|(?:i want to|i need to|how can i)\s+(?:publish|create|open)|(?:publish|create|open))\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)\b/i;
@@ -109,6 +109,9 @@ const CANONICAL_SKIP = new Set(("gracias buenas buenos mucho muchas necesito qui
   + "disponibilidad videoconsulta instalar instalo descargar aplicacion postular postulo postulacion postulaciones pagar pagos suscripcion "
   + "verificar verifico cedula identidad eliminar elimino cambiar cambio actualizar imagen gracias ayuda saber tener querer conseguir "
   + "urgente domicilio online zona cerca precio precios cotizacion cotizar presupuesto whatsapp telefono correo direccion provincia canton "
+  // Appointment verbs: the typo repair rewrote "cancela" into "cancelar" and the
+  // documented appointment answers stopped matching.
+  + "cancela cancelo cancelar cancelada cancelado reprograma reprogramo reprogramar reprogramada cancels cancelled reschedule "
   + "please would could should there where which about professional professionals service services account password request project proposal "
   + "message messages review reviews schedule install download notification notifications offer offers vacancy someone anyone people").split(" "));
 let catalogVocabulary: string[] | null = null;
@@ -931,6 +934,26 @@ const PRODUCT_INTENTS: ProductIntent[] = [
 
 function productAnswer(message: string, locale: Locale): AssistantPayload | null {
   const normalized = normalizeText(message);
+  // The guided "find a professional" entry point, with no service named yet:
+  // one question at a time, service first (the area comes on the next turn).
+  if (!strongCategoryMention([message], locale) && includesAny(normalized, [
+    "quiero buscar un profesional", "buscar un profesional", "busco un profesional",
+    "necesito un profesional", "i want to find a professional", "find a professional",
+    "i need a professional",
+  ])) {
+    return {
+      action: "answer",
+      confidence: 1,
+      documented: true,
+      serviceId: null,
+      searchQuery: null,
+      locationText: null,
+      answer: locale === "en"
+        ? "What service do you need? For example: plumbing, electrical or cleaning."
+        : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
+      ctaLabel: null,
+    };
+  }
   for (const intent of PRODUCT_INTENTS) {
     if (!intent.test(normalized)) continue;
     if (intent.unlessService && strongCategoryMention([message], locale)) return null;
@@ -984,7 +1007,10 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     };
   }
 
-  if (includesAny(normalized, ["ofrecer mis servicios", "soy profesional", "registrarme como profesional", "offer my services", "professional account"])) {
+  // "soy profesional" alone is NOT a registration intent: professionals start
+  // panel questions with it ("soy profesional, quiero editar mis servicios"),
+  // and those must reach the dashboard routing below.
+  if (includesAny(normalized, ["ofrecer mis servicios", "registrarme como profesional", "offer my services", "professional account"])) {
     return {
       action: "register_professional",
       confidence: 1,
@@ -1349,10 +1375,18 @@ function normalizePayload(
   const publishServiceFromMessage = publishDetailMeaning.length >= 3
     ? resolveCategoryIntent(publishDetailText, locale)
     : null;
-  const publishService = publishServiceFromMessage ?? resolveCategoryIntent(priorUserContext, locale);
+  // A place-only answer to the assistant's own service question keeps that exact
+  // service: category guesses made from a place name are noise.
+  const publishService = (messageOnlyHasPlace ? pendingServiceFromAssistant : null)
+    ?? publishServiceFromMessage
+    ?? resolveCategoryIntent(priorUserContext, locale);
   const publishPlace = resolveLocationIntent(message) ?? resolveLocationIntent(priorUserContext);
   const publishPlaceLabel = formatPlaceLabel(publishPlace);
-  const publishConversation = history.some((item) => item.role === "user" && hasExplicitPublishIntent(item.content));
+  const publishConversation = history.some((item) =>
+    (item.role === "user" && hasExplicitPublishIntent(item.content))
+    // The assistant's own zone question marks a publish flow ("necesita" vs the
+    // search flow's "buscas"), so the context survives even a trimmed window.
+    || (item.role === "assistant" && /zona de costa rica necesita|area of costa rica do you need/.test(normalizeText(item.content))));
   const currentHasServiceAndPlace = !!messageCategory && !!resolveLocationIntent(message);
   const hasExplicitSearchLanguage = includesAny(normalized, [
     "quien",
@@ -1600,7 +1634,7 @@ function normalizePayload(
   // Search intent always wins over a model-suggested project CTA. Project creation is
   // entered only through an explicit user request, never because a prior zero-result
   // answer happened to offer that alternative.
-  if (wantsProfessionalSearch && directService && directPlace) {
+  if (wantsProfessionalSearch && directService && directPlace && !wantsToPublish) {
     const serviceLabel = labels.get(directService.id) || getCategoryLabel(directService.id, locale);
     return {
       ...payload,
@@ -1612,6 +1646,21 @@ function normalizePayload(
         ? `I found professionals for ${serviceLabel} in ${directPlaceLabel}.`
         : `Encontré profesionales de ${serviceLabel} en ${directPlaceLabel}.`,
       ctaLabel: locale === "en" ? "See all results" : "Ver todos los resultados",
+    };
+  }
+  if (!directService && includesAny(normalized, [
+    "quiero buscar un profesional", "buscar un profesional", "busco un profesional",
+    "necesito un profesional", "necesito un profesional cerca de mi",
+    "i want to find a professional", "find a professional", "i need a professional",
+  ])) {
+    // The guided entry point: one question at a time, service first.
+    return {
+      ...payload,
+      action: "answer",
+      answer: locale === "en"
+        ? "What service do you need? For example: plumbing, electrical or cleaning."
+        : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
+      ctaLabel: null,
     };
   }
   if (wantsProfessionalSearch && directService && !directPlace) {
@@ -1641,12 +1690,13 @@ function normalizePayload(
   if (wantsToPublish) {
     const serviceLabel = publishService ? getCategoryLabel(publishService.id, locale) : null;
     if (!publishService && !publishPlace) {
+      // One question at a time: service first, the area comes on the next turn.
       return {
         ...payload,
         action: "answer",
         answer: locale === "en"
-          ? "What service do you need and in which area of Costa Rica?"
-          : "¿Qué servicio necesitas y en qué zona de Costa Rica?",
+          ? "What service do you need? For example: plumbing, electrical or cleaning."
+          : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
         ctaLabel: null,
       };
     }
@@ -1680,8 +1730,8 @@ function normalizePayload(
       searchQuery: serviceLabel,
       locationText: publishPlaceLabel,
       answer: locale === "en"
-        ? `I have the service (${serviceLabel}) and location (${publishPlaceLabel}). Open the form to add the job details, review the information and create the project.`
-        : `Ya tengo el servicio (${serviceLabel}) y la ubicación (${publishPlaceLabel}). Abre el formulario para agregar los detalles del trabajo, revisar la información y crear el proyecto.`,
+        ? `Done — I added ${serviceLabel} in ${publishPlaceLabel} to your project. Tap "Create project" to complete the details and publish it.`
+        : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a tu proyecto. Toca "Crear proyecto" para completar los detalles y publicarlo.`,
       ctaLabel: locale === "en" ? "Create project" : "Crear proyecto",
     };
   }
@@ -2004,9 +2054,10 @@ export async function POST(req: Request) {
       !resolveLocationIntent(publishDetailText)
     ) {
       return NextResponse.json({
+        // One question at a time: service first, the area comes on the next turn.
         answer: locale === "en"
-          ? "What service do you need and in which area of Costa Rica?"
-          : "¿Qué servicio necesitas y en qué zona de Costa Rica?",
+          ? "What service do you need? For example: plumbing, electrical or cleaning."
+          : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
         action: "answer",
         searchHref: null,
         ctaLabel: null,
@@ -2104,6 +2155,19 @@ export async function POST(req: Request) {
     }
     if (!documented && payload.serviceId && !catalog.labels.has(payload.serviceId)) {
       payload.serviceId = resolveCategoryIntent(payload.searchQuery || rawMessage, locale)?.id ?? null;
+    }
+    // A signed-in professional asking to "offer services" already has a profile:
+    // take them straight to their panel instead of the public registration page.
+    if (payload.action === "register_professional" && user) {
+      const { data: existingPro } = await createAdminClient()
+        .from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
+      if (existingPro) {
+        payload.action = "open_dashboard";
+        payload.answer = locale === "en"
+          ? "Your professional profile is already active. I'll take you to your panel, where you manage your services, prices and availability."
+          : "Tu perfil profesional ya está activo. Te llevo a tu panel, donde administras tus servicios, precios y disponibilidad.";
+        payload.ctaLabel = locale === "en" ? "Open my panel" : "Ir a mi panel";
+      }
     }
     const searchHref = actionHref(payload, rawMessage, locale);
     let matchedProfessionals: ProfessionalSearchResult[] = [];

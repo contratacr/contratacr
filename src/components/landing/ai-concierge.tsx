@@ -128,7 +128,7 @@ const COPY = {
     emptyTitle: "¿En qué te ayudo?",
     emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, solicitudes, empleos y tu cuenta.",
     topics: [
-      { label: "Buscar un profesional", example: "Busco plomería en San José", prompt: "Busco plomería en San José", icon: "search" },
+      { label: "Buscar un profesional", example: "Necesito un profesional", prompt: "Quiero buscar un profesional", icon: "search" },
       { label: "Publicar un proyecto", example: "Quiero publicar un proyecto", prompt: "Quiero publicar un proyecto", icon: "request" },
       { label: "Ofrecer mis servicios", example: "Quiero ofrecer mis servicios", prompt: "Quiero ofrecer mis servicios", icon: "offer" },
       { label: "Empleos", example: "¿Cómo aplico a un empleo?", prompt: "¿Cómo aplico a un empleo?", icon: "jobs" },
@@ -154,7 +154,7 @@ const COPY = {
     emptyTitle: "How can I help?",
     emptySubtitle: "I guide you through ContrataCR with data from the app: professionals, projects, jobs and your account.",
     topics: [
-      { label: "Find a professional", example: "Find plumbing in San José", prompt: "Find plumbing in San José", icon: "search" },
+      { label: "Find a professional", example: "I need a professional", prompt: "I want to find a professional", icon: "search" },
       { label: "Publish a project", example: "I want to publish a project", prompt: "I want to publish a project", icon: "request" },
       { label: "Offer my services", example: "I want to offer my services", prompt: "I want to offer my services", icon: "offer" },
       { label: "Jobs", example: "How do I apply to a job?", prompt: "How do I apply to a job?", icon: "jobs" },
@@ -615,7 +615,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           {/* Guided index, shown only while the thread is empty: each row states what
               the assistant covers and the example question it answers with app data. */}
           {messages.length === 0 && (
-            <div className="space-y-4">
+            <div className="flex min-h-full flex-col justify-center space-y-4">
               <div className="flex flex-col items-center px-2 text-center">
                 {/* In the app the robot already identifies the assistant in the header. */}
                 {!nativeApp && <div className="h-20 w-20"><Image src="/brand/ai-assistant-robot.webp" alt="" width={128} height={128} className="h-full w-full object-contain drop-shadow-[0_12px_18px_rgba(0,99,189,0.18)]" /></div>}

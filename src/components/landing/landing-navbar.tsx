@@ -771,7 +771,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
   // active, which shortens the sheet and the full-screen search overlay.
-  const nativeFullscreenRoute = /(^|\/)publicar-proyecto(?:\/|$)/.test(pathname ?? "");
+  const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|ofertas)\/publicar)(?:\/|$)/.test(pathname ?? "");
   const nativeBottomNavVisible = nativeBottomShell && !!user && !nativeSearchRoute && !nativeFullscreenRoute;
   const [accountCapability, setAccountCapability] = useState<{
     userId: string;

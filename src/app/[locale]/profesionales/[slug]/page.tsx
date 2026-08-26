@@ -684,7 +684,7 @@ export default function ProfilePage() {
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
 
                 {/* Tab bar — sticks under the header on the phone so any section is one tap away. */}
-                <div className="sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white lg:static lg:rounded-t-2xl">
+                <div data-profile-tabs="" className="sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl">
                   <ScrollRail
                     role="tablist"
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}

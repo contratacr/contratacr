@@ -13,6 +13,21 @@ export function isNativeAppRuntime(): boolean {
   );
 }
 
+// While a full-height overlay (a task modal, a photo viewer) is open on a phone
+// in the app, the native chrome (app header + bottom nav) must not float above
+// it. This marks the layer; the shell CSS hides the chrome for it.
+export function useNativeFullscreenLayer(active: boolean) {
+  useEffect(() => {
+    if (!active || !isNativeAppRuntime()) return;
+    if (!window.matchMedia("(max-width: 639px)").matches) return;
+    const roots = [document.documentElement, document.body];
+    for (const root of roots) root.classList.add("ccr-native-fullscreen-layer");
+    return () => {
+      for (const root of roots) root.classList.remove("ccr-native-fullscreen-layer");
+    };
+  }, [active]);
+}
+
 export function useNativeApp(): boolean {
   const [nativeApp, setNativeApp] = useState(() => isNativeAppRuntime());
 

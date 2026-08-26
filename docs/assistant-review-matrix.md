@@ -1,6 +1,6 @@
 # Revisión del asistente — matriz de preguntas
 
-Generado el 2026-08-24 contra `http://localhost:3000` con `node scripts/assistant-prompt-matrix.mjs`.
+Generado el 2026-08-26 contra `http://localhost:3000` con `node scripts/assistant-prompt-matrix.mjs`.
 Leer cada respuesta una vez; anotar en la columna **Nota** lo que haya que cambiar (tono, tildes, utilidad). Las correcciones van a `src/app/api/ai-assistant/route.ts` y a `src/lib/ai/product-knowledge.ts`; después, la matriz se congela como prueba.
 
 | # | Tipo | Pregunta | Respuesta | Acción / CTA | Proveedor | Nota |
@@ -13,7 +13,7 @@ Leer cada respuesta una vez; anotar en la columna **Nota** lo que haya que cambi
 | 6 | básica | No puedo iniciar sesión | Abre inicio de sesión para entrar a tu panel, mensajes, favoritos, solicitudes y proyectos. | login · «Iniciar sesión» · /es/login | local | |
 | 7 | básica | Ver el catálogo de servicios | El catálogo muestra todos los servicios de ContrataCR. Desde ahí abres la búsqueda con el servicio ya seleccionado. | browse_services · «Ver servicios» · /es/servicios | local | |
 | 8 | básica | ¿Es gratis? ¿Cobran comisión? | Actualmente buscar, crear proyectos y crear un perfil profesional en ContrataCR es gratis. ContrataCR no agrega comisión al precio acordado entre cliente y profesional. | answer | local | |
-| 9 | básica | Quiero publicar una solicitud | ¿Qué servicio necesitas y en qué zona de Costa Rica? | answer |  | |
+| 9 | básica | Quiero publicar una solicitud | ¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza. | answer |  | |
 | 10 | básica | Necesito una cotización para pintar mi casa | ¿En qué zona de Costa Rica buscas Pintura? | answer · servicio=pintura | local | |
 | 11 | búsqueda | ocupo un electricista en Heredia | Encontré 9 profesionales de Electricidad en Heredia. Usa el botón para ver todos los perfiles. | search_professionals · «Ver 9 profesionales» · /buscar?categoria=electricidad&provincia=he&canton=he-he · servicio=electricidad | local | |
 | 12 | búsqueda | busco un fontanero en Alajuela urgente | Encontré 5 profesionales de Plomería en Alajuela. Usa el botón para ver todos los perfiles. | search_professionals · «Ver 5 profesionales» · /buscar?categoria=plomeria&provincia=al&canton=al-al · servicio=plomeria | local | |
@@ -39,7 +39,7 @@ Leer cada respuesta una vez; anotar en la columna **Nota** lo que haya que cambi
 | 32 | inglés | How does ContrataCR work? | ContrataCR helps you find professionals, compare profiles, create projects, receive proposals, book services and coordinate directly. | how_it_works · «See how it works» · /en/como-funciona | local | |
 | 33 | inglés | I need an electrician in Heredia | I found 9 professionals for Electrical in Heredia. Use the button to view their profiles. | search_professionals · «See 9 professionals» · /buscar?categoria=electricidad&provincia=he&canton=he-he · servicio=electricidad | local | |
 | 34 | inglés | Is it free? | Using ContrataCR to search, create projects and create a professional profile is currently free. ContrataCR does not add a commission to the price agreed between client and professional. | answer | local | |
-| 35 | inglés | I want to publish a request | What service do you need and in which area of Costa Rica? | answer |  | |
+| 35 | inglés | I want to publish a request | What service do you need? For example: plumbing, electrical or cleaning. | answer |  | |
 | 36 | inglés | how do I sign in | Open sign in to access your panel, messages, saved professionals, requests and projects. | login · «Sign in» · /en/login | local | |
 | 37 | inglés | find a plumber near me | In which Costa Rica area would you like to search for Plumbing? | answer · servicio=plomeria | local | |
 | 38 | inglés | I want to offer my services | Create a professional profile, add your services, work areas, prices and availability, then keep your profile updated so clients can find you. | register_professional · «Offer my services» · /en/registro/profesional | local | |

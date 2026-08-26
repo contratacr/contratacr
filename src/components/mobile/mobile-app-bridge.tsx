@@ -17,7 +17,9 @@ function isSearchPath(pathname: string) {
 // Flows that own the whole screen: no app header and no bottom nav, because the
 // form needs the full height and the route has its own way back.
 export function isNativeFullscreenPath(pathname: string) {
-  return /(^|\/)publicar-proyecto(\/|$)/.test(pathname);
+  // Task flows own the whole screen: no app header, no bottom nav, no reserved
+  // gaps. Each one carries its own title bar and way back.
+  return /(^|\/)(?:publicar-proyecto|(?:empleos|ofertas)\/publicar)(\/|$)/.test(pathname);
 }
 
 // Overlays own the back gesture while they are open, and each one listens for a

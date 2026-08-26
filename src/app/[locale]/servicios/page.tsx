@@ -142,7 +142,7 @@ export default function ServiciosPage() {
       </div>
 
       <main className="flex-1 bg-white lg:bg-[#f7fafc]">
-        <section className="mx-auto w-full bg-white pb-[calc(5rem+env(safe-area-inset-bottom))] lg:hidden">
+        <section data-services-mobile="" className="mx-auto w-full bg-white pb-[calc(2rem+env(safe-area-inset-bottom))] [.ccr-native-app_&]:pb-3 lg:hidden">
           <header className="sticky top-0 z-20 border-b border-[#d5d8dc] bg-white">
             <div className="relative flex min-h-[56px] items-center justify-center px-14">
               <button

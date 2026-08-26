@@ -395,7 +395,8 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(requestStart.status).toBe(200);
     expect(requestStart.body.action).toBe("answer");
     expect(requestStart.body.answer).toMatch(/servicio/i);
-    expect(requestStart.body.answer).toMatch(/zona|ubicaci/i);
+    // One question at a time: the first turn asks only for the service.
+    expect(requestStart.body.answer).not.toMatch(/zona|ubicaci/i);
     expect(requestStart.body.searchHref).toBeNull();
 
     const requestReady = await ask(page, "carpinteria, Orotina", {
@@ -406,7 +407,7 @@ test.describe("@seeded ContrataCR AI", () => {
     });
     expect(requestReady.status).toBe(200);
     expect(requestReady.body.action).toBe("publish_request");
-    expect(requestReady.body.answer).toMatch(/abr[ae] el formulario/i);
+    expect(requestReady.body.answer).toMatch(/crear proyecto/i);
     expect(requestReady.body.answer).not.toMatch(/voy a (?:proceder|crear|publicar)|creare|publicare/i);
     expect(requestReady.body.ctaLabel).toBe("Crear proyecto");
     expect(requestReady.body.searchHref).toContain("tab=sent_projects");
@@ -497,13 +498,14 @@ test.describe("@seeded ContrataCR AI", () => {
     await gotoOK(page, "/es");
     const spanish = await ask(page, "¿Cómo contacto a un profesional?");
     expect(spanish.status, JSON.stringify(spanish.body)).toBe(200);
-    expect(spanish.body.action).toBe("answer");
+    // The documented contact answer routes to the help center.
+    expect(spanish.body.action).toBe("help");
     expect(spanish.body.answer).toMatch(/mensaje/i);
     expect(spanish.body.answer).not.toMatch(/WhatsApp/i);
 
     const english = await ask(page, "How do I contact a professional?", { locale: "en", pagePath: "/en" });
     expect(english.status, JSON.stringify(english.body)).toBe(200);
-    expect(english.body.action).toBe("answer");
+    expect(english.body.action).toBe("help");
     expect(english.body.answer).toMatch(/message/i);
     expect(english.body.answer).not.toMatch(/WhatsApp/i);
   });

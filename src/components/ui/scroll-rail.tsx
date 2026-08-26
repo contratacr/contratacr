@@ -32,7 +32,10 @@ export function ScrollRail({
     if (!rail) return;
     const available = rail.clientWidth;
     if (available <= 0) return;
-    const atEnd = rail.scrollWidth - rail.scrollLeft - available <= 1;
+    // Momentum scrolling on DPR screens settles at fractional offsets; within
+    // a couple of pixels of the end the clip must release or the last item
+    // stays invisible even though the rail cannot scroll any further.
+    const atEnd = rail.scrollWidth - rail.scrollLeft - available <= 2.5;
     if (rail.scrollWidth <= available || atEnd) {
       setTrim((current) => (current === 0 ? current : 0));
       return;

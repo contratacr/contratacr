@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
+import { useNativeFullscreenLayer } from "@/hooks/use-native-app";
 
 // Shared modal/dialog primitive — the single source of truth for the app's modal
 // chrome (used by "Nuevo servicio", "Agregar profesión", "Publicar proyecto",
@@ -62,6 +63,10 @@ export function Modal({
     const releaseBodyScroll = lockBodyScroll();
     return () => { document.removeEventListener("keydown", onKey); releaseBodyScroll(); };
   }, [open, onClose]);
+
+  // In the app every non-centered modal stretches to the full viewport (see the
+  // shell CSS), so the app chrome must not float above it.
+  useNativeFullscreenLayer(Boolean(open) && mobilePresentation !== "center");
 
   if (!open) return null;
 

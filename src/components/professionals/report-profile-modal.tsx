@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { X, Flag, AlertCircle, ShieldAlert } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { createClient } from "@/lib/supabase/client";
+import { useNativeFullscreenLayer } from "@/hooks/use-native-app";
 
 interface ReportProfileModalProps {
   professionalName: string;
@@ -29,6 +30,7 @@ const REASON_DEFS: { key: string; es: string }[] = [
 
 export function ReportProfileModal({ professionalName, professionalSlug, onClose }: ReportProfileModalProps) {
   const t = useTranslations("report");
+  useNativeFullscreenLayer(true);
   const [reason, setReason] = useState("");
   const [detail, setDetail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -74,9 +76,9 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
   }
 
   return (
-    <div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4" onClick={onClose}>
+    <div className="app-modal-screen fixed inset-0 z-[200] flex items-stretch justify-center bg-black/50 sm:items-center sm:px-4" onClick={onClose}>
       <div
-        className="app-bottom-sheet relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[440px] sm:rounded-2xl"
+        className="app-bottom-sheet relative h-[100dvh] max-h-none w-full overflow-y-auto overscroll-contain rounded-none bg-white shadow-2xl sm:h-auto sm:max-h-[92vh] sm:max-w-[440px] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#f3f4f6]">

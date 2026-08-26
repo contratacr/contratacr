@@ -457,7 +457,7 @@
     "sentTitle": "Reporte enviado",
     "sentBody": "Gracias. Nuestro equipo de soporte revisará este perfil y tomará las medidas necesarias.",
     "ok": "Entendido",
-    "confidential": "Tu reporte se enviará de forma confidencial al equipo de soporte de ContrataCR (soporte@contratacr.com). Revisamos cada reporte manualmente.",
+    "confidential": "Tu reporte se enviará de forma confidencial al equipo de ContrataCR. Revisamos cada reporte manualmente.",
     "reasonLabel": "Motivo del reporte",
     "reasons": {
       "impersonation": "Suplantación de identidad (se hace pasar por otra persona)",

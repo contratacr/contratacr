@@ -330,7 +330,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           onClose={closeDraft}
           title={draftIsEdit ? t("editCase") : t("newCase")}
           closeLabel={t("cancel")}
-          mobilePresentation="center"
+          mobilePresentation="fullscreen"
           footer={
             <>
               <Button type="button" variant="outline" onClick={closeDraft}>{t("cancel")}</Button>

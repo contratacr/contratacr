@@ -7,6 +7,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { cldThumb, cldLarge } from "@/lib/cloudinary";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { cn } from "@/lib/utils";
+import { useNativeFullscreenLayer } from "@/hooks/use-native-app";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 export type ShowcaseCase = {
@@ -74,6 +75,9 @@ export function CaseShowcase({
   // ── Detail modal nav (Esc / ← / →) ──
   function openCase(c: ShowcaseCase) { setDetail(c); setPi(0); }
   const close = useCallback(() => setDetail(null), []);
+  // The photo viewer owns the whole screen in the app: without this the app
+  // header floated above it and covered the close button.
+  useNativeFullscreenLayer(Boolean(detail));
   const prev = useCallback(() => { if (detail) setPi((i) => (i - 1 + detail.photos.length) % detail.photos.length); }, [detail]);
   const next = useCallback(() => { if (detail) setPi((i) => (i + 1) % detail.photos.length); }, [detail]);
   useEffect(() => {

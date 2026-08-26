@@ -457,7 +457,7 @@
     "sentTitle": "Report sent",
     "sentBody": "Thanks. Our support team will review this profile and take any necessary action.",
     "ok": "Got it",
-    "confidential": "Your report is sent confidentially to the ContrataCR support team (soporte@contratacr.com). We review every report manually.",
+    "confidential": "Your report is sent confidentially to the ContrataCR team. We review every report manually.",
     "reasonLabel": "Reason for the report",
     "reasons": {
       "impersonation": "Identity impersonation (pretending to be someone else)",
