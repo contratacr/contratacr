@@ -1923,8 +1923,8 @@ export default function DashboardPage() {
         )}>
           {/* Header card - identity and status grouped in one surface on desktop. */}
           <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", mobileSectionOpen ? "hidden lg:block" : "block")}>
-            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-4 py-4 shadow-sm sm:px-6 sm:py-5">
-            <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-5">
+            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
+            <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-5">
               <div ref={headerPhotoMenuRef} className="relative h-[72px] w-[72px] shrink-0 sm:h-20 sm:w-20">
                 <button
                   type="button"

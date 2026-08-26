@@ -19,10 +19,13 @@ export async function GET(req: Request) {
   const db = createAdminClient();
   const { data, error } = await db
     .from("professionals")
-    .select("id, whatsapp, call_phone, contact_email, allow_phone_call")
+    .select("id, whatsapp, call_phone, contact_email, allow_phone_call, is_banned")
     .eq("id", professionalId)
     .maybeSingle();
-  if (error || !data) return NextResponse.json({ error: "Profesional no encontrado." }, { status: 404 });
+  // A banned profile is out of search AND out of reach: no contact reveal.
+  if (error || !data || (data as { is_banned?: boolean | null }).is_banned) {
+    return NextResponse.json({ error: "Profesional no encontrado." }, { status: 404 });
+  }
 
   const row = data as { whatsapp?: string | null; call_phone?: string | null; contact_email?: string | null; allow_phone_call?: boolean | null };
   const digits = ((row.call_phone || row.whatsapp) ?? "").replace(/\D/g, "");

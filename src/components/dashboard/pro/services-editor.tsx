@@ -996,6 +996,7 @@ export function ServicesEditor({
           onClose={closePicker}
           title={pickerMode === "change" ? t("changeServiceTitle") : t("pickerTitle")}
           closeLabel={t("cancel")}
+          mobilePresentation="fullscreen"
           bodyClassName="flex flex-col overflow-hidden px-0 py-0"
         >
           <div data-testid="services-add-picker" className="flex min-h-0 flex-1 flex-col">

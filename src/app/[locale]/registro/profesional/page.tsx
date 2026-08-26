@@ -244,6 +244,7 @@ function ServiceCatalogModal({
       onClose={closePicker}
       title={title}
       closeLabel={t("cancel")}
+      mobilePresentation="fullscreen"
       bodyClassName="px-0 py-0"
     >
       <div className="sticky top-0 z-10 bg-white px-5 pb-3 pt-4 sm:px-6">
