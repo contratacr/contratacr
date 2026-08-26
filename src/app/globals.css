@@ -952,6 +952,17 @@ html[data-self-action-modal-open="true"] [data-save-button] {
     bottom: auto !important;
     height: var(--app-visual-viewport-height) !important;
     max-height: var(--app-visual-viewport-height) !important;
+    /* The wrapper is clamped to the visible viewport, but the page must stay
+       dimmed everywhere around it (the strip between the sheet and the
+       keyboard included): a spread shadow dims what the backdrop no longer
+       reaches. */
+    box-shadow: 0 0 0 100lvh rgba(0, 0, 0, 0.5);
+  }
+
+  /* With the keyboard up the sheet may take the whole clamped wrapper, so the
+     page never peeks out between the sheet and the keyboard. */
+  html[data-keyboard-open] .app-bottom-sheet.app-bottom-sheet {
+    max-height: 100%;
   }
 
   .app-bottom-sheet.app-bottom-sheet {
