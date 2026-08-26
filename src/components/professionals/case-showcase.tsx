@@ -161,7 +161,7 @@ export function CaseShowcase({
                         key={`${c.id}-${url}`}
                         className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-white p-1 shadow-sm sm:h-16 sm:w-16"
                       >
-                        <ProgressiveImage src={cldThumb(url, 220)} alt={c.title ?? ""} fit="contain" wrapperClassName="h-full w-full" />
+                        <ProgressiveImage src={cldThumb(url, 220)} alt={c.title ?? ""} fit="cover" wrapperClassName="h-full w-full" />
                         {idx === 2 && c.photos.length > 3 && (
                           <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - 3}</span>
                         )}

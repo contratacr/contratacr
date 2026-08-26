@@ -787,8 +787,8 @@ export default function ProfilePage() {
                                       className="block w-full"
                                       imageClassName="sm:max-w-[900px]"
                                     >
-                                      <span className="flex aspect-[16/7] w-full items-center justify-center overflow-hidden border-b border-[#e8edf2] bg-white p-3">
-                                        <ProgressiveImage src={cldLarge(serviceImageUrl, 900)} alt={title} fit="contain" wrapperClassName="h-full w-full" />
+                                      <span className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden border-b border-[#e8edf2] bg-[#eef2f6]">
+                                        <ProgressiveImage src={cldLarge(serviceImageUrl, 900)} alt={title} fit="cover" wrapperClassName="h-full w-full" />
                                       </span>
                                     </ImagePreviewDialog>
                                   )}
@@ -887,9 +887,9 @@ export default function ProfilePage() {
                               href={`/ofertas/${offer.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=ofertas`)}`}
                               className="group overflow-hidden rounded-xl border border-[#dbe4ee] bg-white transition-colors hover:border-[#009FD9]"
                             >
-                              <div className="flex h-40 items-center justify-center overflow-hidden border-b border-[#edf1f5] bg-white p-3 sm:h-44 sm:p-4">
+                              <div className="flex h-40 items-center justify-center overflow-hidden border-b border-[#edf1f5] bg-[#eef2f6] sm:h-44">
                                 {cover ? (
-                                  <ProgressiveImage src={cldLarge(cover, 900)} alt={offer.title} fit="contain" wrapperClassName="h-full w-full" />
+                                  <ProgressiveImage src={cldLarge(cover, 900)} alt={offer.title} fit="cover" wrapperClassName="h-full w-full" />
                                 ) : (
                                   <BadgePercent className="h-9 w-9 text-[#009FD9]" />
                                 )}
