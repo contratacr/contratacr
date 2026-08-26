@@ -1930,16 +1930,16 @@ export default function DashboardPage() {
                   type="button"
                   onClick={() => setHeaderPhotoMenuOpen((open) => !open)}
                   disabled={headerPhotoUploading}
-                  className="relative block h-[72px] w-[72px] rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 disabled:opacity-70 sm:h-20 sm:w-20"
+                  className="relative block h-[88px] w-[88px] rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 disabled:opacity-70 sm:h-20 sm:w-20"
                   aria-label={locale === "en" ? "Profile photo options" : "Opciones de foto de perfil"}
                 >
-                  <Avatar className="h-[72px] w-[72px] bg-transparent sm:h-20 sm:w-20">
+                  <Avatar className="h-[88px] w-[88px] bg-transparent sm:h-20 sm:w-20">
                     <AvatarImage src={headerAvatar ?? undefined} />
                     <AvatarFallback className="bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">
                       {getInitials(displayName || "?")}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#009FD9] text-white shadow-sm sm:h-7 sm:w-7">
+                  <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#009FD9] text-white shadow-sm">
                     {headerPhotoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
                   </span>
                 </button>
@@ -1992,7 +1992,7 @@ export default function DashboardPage() {
               </div>
               <div className="min-w-0 self-center">
                 <div className="flex min-w-0 items-center gap-1.5 sm:hidden">
-                  <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[16px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
+                  <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[18px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
                     {mobileHeaderName || displayName}
                   </h1>
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
@@ -2003,7 +2003,7 @@ export default function DashboardPage() {
                   </h1>
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
                 </div>
-                <div data-testid="dashboard-identity-actions" className="mt-2 flex min-h-[36px] items-end justify-between gap-3 sm:mt-1 sm:min-h-[22px] sm:justify-start">
+                <div data-testid="dashboard-identity-actions" className="mt-2.5 flex min-h-[40px] items-end justify-between gap-3 sm:mt-1 sm:min-h-[22px] sm:justify-start">
                   <div className="flex min-w-0 items-center">
                     <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                   </div>
@@ -2013,7 +2013,7 @@ export default function DashboardPage() {
                       onClick={openInNewTabOnDesktop}
                       aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
                       data-testid="dashboard-mobile-view-profile"
-                      className="inline-flex shrink-0 items-center gap-1 pb-0.5 text-xs font-semibold leading-normal text-[#526277] underline-offset-2 transition hover:text-[#009FD9] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
+                      className="inline-flex shrink-0 items-center gap-1 pb-0.5 text-[13px] font-semibold leading-normal text-[#526277] underline-offset-2 transition hover:text-[#009FD9] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
                     >
                       <span>{locale === "en" ? "View profile" : "Ver perfil"}</span>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0 self-center text-[#162543]" />
