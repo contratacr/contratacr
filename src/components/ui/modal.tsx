@@ -36,8 +36,10 @@ interface ModalProps {
   closeLabel?: string;
   /** Extra classes on the body wrapper (e.g. remove default padding). */
   bodyClassName?: string;
-  /** Small alerts can stay centered on mobile; long forms keep the bottom sheet. */
-  mobilePresentation?: "sheet" | "center" | "fullscreen";
+  /** Small alerts can stay centered on mobile; long forms keep the bottom sheet.
+   *  "sheet-compact": a bottom sheet everywhere — the app does NOT stretch it to
+   *  full height (short task forms: support, report, day editors). */
+  mobilePresentation?: "sheet" | "center" | "fullscreen" | "sheet-compact";
   /** Extra classes on the pinned footer. */
   footerClassName?: string;
 }
@@ -66,18 +68,20 @@ export function Modal({
 
   // In the app every non-centered modal stretches to the full viewport (see the
   // shell CSS), so the app chrome must not float above it.
-  useNativeFullscreenLayer(Boolean(open) && mobilePresentation !== "center");
+  useNativeFullscreenLayer(Boolean(open) && (mobilePresentation === "sheet" || mobilePresentation === "fullscreen"));
 
   if (!open) return null;
 
   const centeredMobile = mobilePresentation === "center";
   const fullscreenMobile = mobilePresentation === "fullscreen";
+  const compactSheet = mobilePresentation === "sheet-compact";
 
   return (
     <div
       className={cn(
         "app-modal-screen fixed inset-0 z-[100] flex justify-center",
         centeredMobile && "app-centered-modal-screen",
+        compactSheet && "app-sheet-compact-screen",
         fullscreenMobile ? "items-stretch sm:items-center sm:p-4" : centeredMobile ? "items-center p-4" : "items-end sm:items-center sm:p-4"
       )}
     >

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, type ReactNode } from "react";
-import { ScrollRail } from "@/components/ui/scroll-rail";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
@@ -141,6 +140,20 @@ export default function ProfilePage() {
   // stranded. `null` = logged out (that screen then shows only "Buscar profesionales").
   const [panelHref, setPanelHref] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>(() => initialTabFromUrl());
+  const previousActiveTabRef = useRef<Tab | null>(null);
+  // Opening another section starts from its top: if the previous section was
+  // scrolled past the pinned tab strip, bring the sections card back up.
+  useEffect(() => {
+    const previous = previousActiveTabRef.current;
+    previousActiveTabRef.current = activeTab;
+    if (previous === null || previous === activeTab) return;
+    const strip = document.querySelector("[data-profile-tabs]");
+    const card = document.getElementById("resenas");
+    if (!strip || !card) return;
+    if (card.getBoundingClientRect().top < strip.getBoundingClientRect().top - 2) {
+      card.scrollIntoView({ block: "start", behavior: "auto" });
+    }
+  }, [activeTab]);
   const [profileReturnHref] = useState(initialProfileReturnHref);
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
@@ -454,8 +467,8 @@ export default function ProfilePage() {
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <Navbar />
 
-      <main className="flex-1 py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 py-8 [.ccr-native-app_&]:!pt-0">
+        <div className="mx-auto max-w-7xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
           {previewMode ? (
@@ -570,7 +583,7 @@ export default function ProfilePage() {
           <div className="flex flex-col lg:flex-row gap-6">
 
             {/* ── LEFT STICKY CARD ── */}
-            <aside id="perfil-contacto" className="w-full shrink-0 scroll-mt-20 lg:order-2 lg:w-80">
+            <aside id="perfil-contacto" className="order-2 w-full shrink-0 scroll-mt-20 lg:w-80">
               <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] p-5 lg:sticky lg:top-24 flex flex-col gap-4">
 
                 {/* "Desde" price — mirrors the right side of the /buscar card. Identity
@@ -680,15 +693,15 @@ export default function ProfilePage() {
             </aside>
 
             {/* ── TABBED CONTENT (LEFT on desktop; contact card is the right aside) ── */}
-            <div id="resenas" className="flex-1 min-w-0 scroll-mt-24 lg:order-1">
+            <div id="resenas" className="order-1 flex-1 min-w-0 scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
 
                 {/* Tab bar — sticks under the header on the phone so any section is one tap away. */}
                 <div data-profile-tabs="" className="sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl">
-                  <ScrollRail
+                  <div
                     role="tablist"
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
-                    className="flex scroll-smooth"
+                    className="scrollbar-none flex overflow-x-auto scroll-smooth"
                   >
                     {TABS.map(tab => (
                       <button
@@ -705,7 +718,7 @@ export default function ProfilePage() {
                         )}
                       </button>
                     ))}
-                  </ScrollRail>
+                  </div>
                 </div>
 
                 {/* Tab content */}

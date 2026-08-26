@@ -345,8 +345,10 @@ export function SupportTickets({
     return (
       <>
         <div className="ccr-support-new-ticket flex min-h-0 flex-1 flex-col bg-white">
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-            <SupportForm onSuccess={handleNewTicketSubmitted} />
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f7fa] px-4 py-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+            <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+              <SupportForm onSuccess={handleNewTicketSubmitted} />
+            </div>
           </div>
         </div>
         {dialogNode}

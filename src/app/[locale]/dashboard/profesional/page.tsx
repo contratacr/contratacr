@@ -696,6 +696,17 @@ export default function DashboardPage() {
     }
   }, [activeTab]);
 
+  // Every panel section opens from its top: switching tabs used to inherit the
+  // previous section's scroll position (window on the web, <main> in the app).
+  const previousDashboardTabRef = useRef<Tab | null>(null);
+  useEffect(() => {
+    const previous = previousDashboardTabRef.current;
+    previousDashboardTabRef.current = activeTab;
+    if (previous === null || previous === activeTab) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.querySelector("main")?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [activeTab]);
+
   useEffect(() => {
     if (!pendingProfileFocusField || activeTab !== "profile") return;
     const field = pendingProfileFocusField;

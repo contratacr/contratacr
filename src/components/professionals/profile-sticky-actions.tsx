@@ -34,8 +34,9 @@ export function ProfileStickyActions({
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        // Show once the card is fully above the viewport (the visitor scrolled past it).
-        setShow(!entry.isIntersecting && entry.boundingClientRect.bottom < 0);
+        // Show whenever the card is off-screen (on phones it sits after the
+        // sections, so the actions must be reachable while reading them).
+        setShow(!entry.isIntersecting);
       },
       { threshold: 0 },
     );

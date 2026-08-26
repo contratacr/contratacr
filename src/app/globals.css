@@ -728,33 +728,21 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
 }
 
 @media (max-width: 639px) {
-  .ccr-native-app .app-modal-screen:not(.app-centered-modal-screen) {
+  .ccr-native-app .app-modal-screen:not(.app-centered-modal-screen):not(.app-sheet-compact-screen) {
     align-items: stretch;
     justify-content: stretch;
     padding: 0;
   }
 
-  .ccr-native-app .app-bottom-sheet:not(.app-centered-modal) {
+  .ccr-native-app .app-bottom-sheet:not(.app-centered-modal):not(.app-sheet-compact) {
     height: var(--app-visual-viewport-height);
     max-height: var(--app-visual-viewport-height);
     border-radius: 0;
   }
 }
 
-.ccr-native-app .ccr-availability-modal {
-  height: var(--app-visual-viewport-height);
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
-.ccr-native-app .ccr-availability-modal-panel {
-  height: var(--app-visual-viewport-height);
-  max-height: var(--app-visual-viewport-height) !important;
-  overflow: hidden;
-  overscroll-behavior: none;
-  padding-top: max(env(safe-area-inset-top), 1rem);
-  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
-}
+/* Availability day/apply editors are compact bottom sheets on phones (app
+   included) — a short per-day form never needs the full screen. */
 
 .ccr-native-app .ccr-empty-state,
 .ccr-native-app [data-empty-state] {
@@ -974,11 +962,6 @@ html[data-self-action-modal-open="true"] [data-save-button] {
     height: var(--app-visual-viewport-height);
     max-height: var(--app-visual-viewport-height);
     border-radius: 0;
-  }
-
-  .ccr-native-app .ccr-availability-modal-panel.ccr-availability-modal-panel {
-    height: var(--app-visual-viewport-height);
-    max-height: var(--app-visual-viewport-height) !important;
   }
 
   .app-centered-modal.app-centered-modal {
