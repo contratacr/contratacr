@@ -497,6 +497,15 @@
     "fullName": "Full name",
     "namePlaceholder": "John Doe Smith"
   },
+  "contactGate": {
+    "readyTitle": "Account ready",
+    "readyBody": "You can now contact {name}.",
+    "openWhatsapp": "Open WhatsApp",
+    "call": "Call",
+    "sendEmail": "Send email",
+    "later": "Not now",
+    "noContact": "This professional does not offer that contact method."
+  },
   "clientRegModal": {
     "otpError": "Incorrect or expired code. Request a new one.",
     "codeSentTo": "Code sent to",
@@ -511,6 +520,10 @@
     "stepPassword": "Password",
     "stepVerify": "Verify",
     "toContact": "To contact",
+    "toContactWhatsapp": "To message on WhatsApp",
+    "toCall": "To call",
+    "toEmail": "To email",
+    "freeAccountHint": "Create your free account · under a minute",
     "loginTitle": "Welcome back",
     "loginSubtitle": "Use your ContrataCR email and password.",
     "dupTitle": "An account with this email already exists",

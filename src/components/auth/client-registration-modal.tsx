@@ -35,12 +35,16 @@ const STEP_NUM: Record<RegisterStep, number> = {
 };
 const PENDING_BOOKING_IDENTITY_KEY = "ccr:pending-booking-identity";
 
+export type ContactIntent = "whatsapp" | "phone" | "email" | "booking";
+
 export interface ClientRegistrationModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   /** Context: pro name shown at top of modal */
   professionalName?: string;
+  /** What the visitor was trying to do — drives the header line. */
+  intent?: ContactIntent;
 }
 
 // ─── Password checklist ───────────────────────────────────────────────────────
@@ -201,6 +205,7 @@ export function ClientRegistrationModal({
   onClose,
   onSuccess,
   professionalName,
+  intent = "booking",
 }: ClientRegistrationModalProps) {
   const t = useTranslations("clientRegModal");
   const tRp = useTranslations("resetPassword");
@@ -442,8 +447,11 @@ export function ClientRegistrationModal({
           {/* Professional context */}
           {professionalName && (
             <div className="px-6 py-3 bg-[#f9fafb] border-b border-[#f3f4f6] shrink-0">
-              <p className="text-xs text-[#9ca3af]">{t("toContact")}</p>
+              <p className="text-xs text-[#9ca3af]">
+                {intent === "whatsapp" ? t("toContactWhatsapp") : intent === "phone" ? t("toCall") : intent === "email" ? t("toEmail") : t("toContact")}
+              </p>
               <p className="text-sm font-semibold text-[#1a2744]">{professionalName}</p>
+              {view === "register" && <p className="mt-0.5 text-[11px] text-[#009FD9]">{t("freeAccountHint")}</p>}
             </div>
           )}
 

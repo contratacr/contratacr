@@ -497,6 +497,15 @@
     "fullName": "Nombre completo",
     "namePlaceholder": "Juan Pérez González"
   },
+  "contactGate": {
+    "readyTitle": "Cuenta lista",
+    "readyBody": "Ya puedes contactar a {name}.",
+    "openWhatsapp": "Abrir WhatsApp",
+    "call": "Llamar",
+    "sendEmail": "Enviar correo",
+    "later": "Ahora no",
+    "noContact": "Este profesional no tiene ese medio de contacto disponible."
+  },
   "clientRegModal": {
     "otpError": "Código incorrecto o expirado. Solicita uno nuevo.",
     "codeSentTo": "Código enviado a",
@@ -511,6 +520,10 @@
     "stepPassword": "Contraseña",
     "stepVerify": "Verificar",
     "toContact": "Para contactar a",
+    "toContactWhatsapp": "Para escribirle por WhatsApp a",
+    "toCall": "Para llamar a",
+    "toEmail": "Para enviarle un correo a",
+    "freeAccountHint": "Crea tu cuenta gratis · menos de un minuto",
     "loginTitle": "Bienvenido de nuevo",
     "loginSubtitle": "Usa tu correo y contraseña de ContrataCR.",
     "dupTitle": "Ya existe una cuenta con este correo",

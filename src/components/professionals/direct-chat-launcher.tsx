@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { MessageLauncher } from "@/components/professionals/message-launcher";
+import { useContactGate } from "@/components/professionals/contact-gate";
 
 type DirectChatLauncherProps = {
   professionalId?: string;
@@ -47,6 +48,7 @@ export function DirectChatLauncher({
   const nativeApp = useNativeApp();
   const [loading, setLoading] = useState(false);
   const whatsappLabel = isEn ? "Contact on WhatsApp" : "Contactar por WhatsApp";
+  const { requireAccount, modals } = useContactGate({ professionalName, intent: "whatsapp" });
 
   if (nativeApp) {
     const safeLabel = buttonLabel && !/whatsapp/i.test(buttonLabel) ? buttonLabel : undefined;
@@ -69,11 +71,6 @@ export function DirectChatLauncher({
   }
 
   async function openChat() {
-    if (isOwn) {
-      onSelfAction?.();
-      return;
-    }
-
     setLoading(true);
     try {
       const response = await fetch("/api/contact/whatsapp-link", {
@@ -108,10 +105,22 @@ export function DirectChatLauncher({
     }
   }
 
+  function onClick() {
+    if (isOwn) {
+      onSelfAction?.();
+      return;
+    }
+    // Guests register in place; the link is requested again from the "Abrir
+    // WhatsApp" tap so the new tab is never popup-blocked.
+    if (!requireAccount(() => void openChat())) return;
+    void openChat();
+  }
+
   return (
+    <>
     <button
       type="button"
-      onClick={() => void openChat()}
+      onClick={onClick}
       disabled={loading}
       aria-busy={loading}
       className={cn(
@@ -124,5 +133,7 @@ export function DirectChatLauncher({
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <WhatsAppLogo />}
       {buttonLabel || whatsappLabel}
     </button>
+    {modals}
+    </>
   );
 }

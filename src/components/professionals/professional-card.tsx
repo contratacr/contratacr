@@ -31,7 +31,11 @@ export type ProfessionalCardData = {
   professions?: string[];
   pricing?: PricingTier[];
   bio: string;
+  /** Empty for anonymous viewers — contact values are account-gated (src/lib/contact/redact.ts). */
   whatsapp: string;
+  hasWhatsapp?: boolean;
+  hasCallPhone?: boolean;
+  hasContactEmail?: boolean;
   provinceName: string;
   cantonName: string;
   ratingAvg: number;

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { cardData, locationDecisions, resolveSearchResults, RESULTS_PER_PAGE, type SearchPageParams } from "@/lib/search/query-core";
+import { createClient } from "@/lib/supabase/server";
+import { safeGetUser } from "@/lib/supabase/get-user";
+import { redactContact } from "@/lib/contact/redact";
 
 // The next slice of a /buscar search, so the list can keep growing as the
 // person scrolls instead of paging. It resolves the URL exactly like the page
@@ -23,14 +26,17 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { filters, ordered } = await resolveSearchResults(params);
+    const [{ filters, ordered }, viewer] = await Promise.all([
+      resolveSearchResults(params),
+      createClient().then((supabase) => safeGetUser(supabase)).catch(() => null),
+    ]);
     const decisions = locationDecisions(params, filters);
     const slice = ordered.slice(offset, offset + limit);
     return NextResponse.json({
       total: ordered.length,
       offset,
       professionals: slice.map((professional) => ({
-        professional: cardData(professional),
+        professional: redactContact(cardData(professional), !!viewer),
         forceContactOnly: decisions.shouldShowContactOnly(professional),
         preferVideo: decisions.shouldPreferVideoLocation(professional),
       })),

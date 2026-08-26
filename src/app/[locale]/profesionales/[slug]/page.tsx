@@ -1190,11 +1190,7 @@ export default function ProfilePage() {
         professionalName={professional.fullName}
         contextTitle={catLabel(professional.categoryId)}
         isOwn={isOwn}
-        callHref={(() => {
-          const contact = professional as { allowPhoneCall?: boolean | null; callPhone?: string | null; whatsapp?: string | null };
-          const digits = (contact.callPhone || contact.whatsapp || "").replace(/\D/g, "");
-          return contact.allowPhoneCall !== false && digits ? `tel:+${digits.length === 8 ? `506${digits}` : digits}` : null;
-        })()}
+        canCall={professional.hasCallPhone ?? (professional.allowPhoneCall !== false && !!(professional.callPhone || professional.whatsapp))}
       />
       <LandingFooter />
     </div>

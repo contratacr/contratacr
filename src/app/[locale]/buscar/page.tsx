@@ -15,6 +15,7 @@ import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { SearchResultsInfinite } from "@/components/search/search-results-infinite";
 import { cardData, resolveSearchResults } from "@/lib/search/query-core";
 import { createClient } from "@/lib/supabase/server";
+import { redactContact } from "@/lib/contact/redact";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 
@@ -477,7 +478,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="ccr-search-card-slot relative w-full scroll-mt-24 transition-shadow lg:max-w-none lg:rounded-2xl">
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
                           <ProfessionalCard
-                            professional={cardData(pro)}
+                            professional={redactContact(cardData(pro), !!viewerProfileId)}
                             slots={[]}
                             slotsInitiallyLoaded={false}
                             activeCategory={activeCategoryId}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { fetchAvailabilityBatched } from "@/lib/availability-batch";
 import { useTranslations, useLocale } from "next-intl";
-import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Mail, MapPin, Phone, Video } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,6 +18,7 @@ const availabilityCache = new Map<string, { availabilityPublic: boolean; slots: 
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
+import { ContactButton } from "@/components/professionals/contact-button";
 import { useNativeApp } from "@/hooks/use-native-app";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
@@ -671,10 +672,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // `stacked` = vertical (one above the other) — used for the PRIVATE case where
   // these are the only actions; otherwise they share ONE compact row so adding
   // "Llamar" above "Solicitar servicio" never adds a line.
-  const showCall = !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
-  const showEmail = stacked && !!professional.contactEmail;
-  const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
-  const emailHref = `mailto:${professional.contactEmail}?subject=${encodeURIComponent("Consulta desde ContrataCR")}&body=${encodeURIComponent(`Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaria coordinar un servicio.`)}`;
+  // Numbers are redacted for guests; the flags say whether the action exists.
+  const showCall = professional.hasCallPhone ?? (!!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp));
+  const showEmail = stacked && (professional.hasContactEmail ?? !!professional.contactEmail);
 
   // ── Schedule body (the RIGHT column on desktop) ───────────────────────────
   // ALWAYS 3 day-columns, PRIORITIZING the next days that actually HAVE availability (soonest
@@ -737,63 +737,36 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // "Llamar" link — FILLED (a primary contact action, e.g. in the no-schedule state) or
   // OUTLINED/secondary (when it sits BELOW "Ver disponibilidad"). Calls are blocked on
   // the pro's OWN card (shows a self note instead). Rendered only when showCall is true.
-  function trackContact(method: "whatsapp" | "phone" | "email") {
-    trackMetaEvent("Contact", {
-      content_type: "professional_service",
-      method,
-      source: stacked ? "profile" : "search",
-    });
-    trackInteraction({
-      type: method === "phone" ? "phone_click" : "external_link_click",
-      professionalId: professional.id,
-      source: stacked ? "profile" : "search",
-      locale,
-      categoryId: activeCategory ?? null,
-      metadata: method === "email" ? { channel: "email" } : undefined,
-    });
-  }
-
-  function recordContactFollowUp(method: "phone" | "email") {
-    void fetch("/api/contact/follow-up/record", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        professionalId: professional.id,
-        method,
-        contextTitle: categoryName,
-      }),
-    })
-      .then(() => window.dispatchEvent(new CustomEvent("contratacr:whatsapp-contacted")))
-      .catch(() => {});
-  }
-
-  function requireContactAuth() {
-    if (user) return true;
-    const redirect = typeof window !== "undefined"
-      ? `${window.location.pathname}${window.location.search}${window.location.hash}`
-      : "/";
-    window.location.assign(`/${locale}/login?redirect=${encodeURIComponent(redirect)}`);
-    return false;
-  }
-
-  const renderCall = (secondary: boolean) => (
-    <a
-      href={isOwn ? undefined : telHref}
-      onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => {
-        e.stopPropagation();
-        if (!requireContactAuth()) { e.preventDefault(); return; }
-        trackContact("phone");
-        recordContactFollowUp("phone");
-      }}
-      className={`w-full inline-flex items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-semibold transition-colors ${
-        secondary
-          ? "border border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
-          : "bg-[#009FD9] text-white hover:bg-[#0089bb]"
-      }`}
-    >
-      {/* Profile page uses the short label "Llamar"; /buscar keeps "Contáctanos por llamada". */}
-      <Phone className="h-4 w-4" /> {stacked ? t("callShort") : t("call")}
-    </a>
+  const contactSource = stacked ? "profile" : "search";
+  const secondaryContactClass = "w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb] disabled:opacity-60";
+  // Profile page uses the short label "Llamar"; /buscar keeps "Contáctanos por llamada".
+  const renderCall = () => (
+    <ContactButton
+      method="phone"
+      professionalId={professional.id}
+      professionalName={professional.fullName}
+      contextTitle={categoryName}
+      categoryId={activeCategory ?? null}
+      source={contactSource}
+      isOwn={isOwn}
+      onSelfAction={() => setSelfMsg(SELF_MSG.call)}
+      className={secondaryContactClass}
+      label={stacked ? t("callShort") : t("call")}
+    />
+  );
+  const renderEmail = (className = secondaryContactClass) => (
+    <ContactButton
+      method="email"
+      professionalId={professional.id}
+      professionalName={professional.fullName}
+      contextTitle={categoryName}
+      categoryId={activeCategory ?? null}
+      source={contactSource}
+      isOwn={isOwn}
+      onSelfAction={() => setSelfMsg(SELF_MSG.email)}
+      className={className}
+      label={t("email")}
+    />
   );
   const messageButtonClass = "w-full rounded-full py-2.5 text-[13px] font-semibold";
   const searchMessageButtonClass = `${messageButtonClass} bg-[#009FD9] hover:bg-[#0089bb] focus-visible:ring-[#009FD9]`;
@@ -801,21 +774,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     <>
       <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} />
       {/* No-schedule state: filled on /buscar, outlined on the profile contact card. */}
-      {showCall && renderCall(true)}
-      {showEmail && (
-        <a
-          href={isOwn ? undefined : emailHref}
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => {
-            e.stopPropagation();
-            if (!requireContactAuth()) { e.preventDefault(); return; }
-            trackContact("email");
-            recordContactFollowUp("email");
-          }}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
-        >
-          <Mail className="h-4 w-4" /> {t("email")}
-        </a>
-      )}
+      {showCall && renderCall()}
+      {showEmail && renderEmail()}
     </>
   );
 
@@ -833,21 +793,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       />
       {(showCall || showEmail) && (
         <div className={`grid gap-2 ${showCall && showEmail ? "grid-cols-2" : "grid-cols-1"}`}>
-          {showCall && renderCall(true)}
-          {showEmail && (
-            <a
-              href={isOwn ? undefined : emailHref}
-              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.email); } : (e) => {
-                e.stopPropagation();
-                if (!requireContactAuth()) { e.preventDefault(); return; }
-                trackContact("email");
-                recordContactFollowUp("email");
-              }}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-3 py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
-            >
-              <Mail className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">{t("email")}</span>
-            </a>
-          )}
+          {showCall && renderCall()}
+          {showEmail && renderEmail(`${secondaryContactClass} px-3`)}
         </div>
       )}
     </>

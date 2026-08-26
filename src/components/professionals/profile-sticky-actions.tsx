@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, Phone } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { useLocale } from "next-intl";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
+import { ContactButton } from "@/components/professionals/contact-button";
 
 // Phone-only bar pinned to the bottom of the profile once the contact card has
 // scrolled out of view: the three things a visitor came to do — message,
@@ -15,14 +16,14 @@ export function ProfileStickyActions({
   professionalName,
   contextTitle,
   isOwn,
-  callHref,
+  canCall,
   contactCardId = "perfil-contacto",
 }: {
   professionalId: string;
   professionalName: string;
   contextTitle?: string;
   isOwn: boolean;
-  callHref?: string | null;
+  canCall?: boolean;
   contactCardId?: string;
 }) {
   const locale = useLocale();
@@ -71,14 +72,17 @@ export function ProfileStickyActions({
           tone="primary"
           className="h-11 min-w-0 flex-1 rounded-full text-[13px] font-bold"
         />
-        {callHref && (
-          <a
-            href={callHref}
-            aria-label={locale === "en" ? "Call" : "Llamar"}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#e5e7eb] bg-white text-[#162543]"
-          >
-            <Phone className="h-4 w-4" />
-          </a>
+        {canCall && (
+          <ContactButton
+            method="phone"
+            professionalId={professionalId}
+            professionalName={professionalName}
+            contextTitle={contextTitle}
+            source="profile"
+            iconOnly
+            label={locale === "en" ? "Call" : "Llamar"}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#e5e7eb] bg-white text-[#162543] disabled:opacity-60"
+          />
         )}
       </div>
     </div>

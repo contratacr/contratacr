@@ -79,6 +79,10 @@ export async function POST(req: NextRequest) {
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
   const initialMessage = limitTrimmedText(body.initialMessage, 700);
   const userId = await currentUserId();
+  // Contact is account-gated: the number never leaves the server for guests.
+  if (!userId) {
+    return NextResponse.json({ error: locale === "en" ? "Sign in to contact." : "Crea tu cuenta para contactar.", code: "auth_required" }, { status: 401 });
+  }
   const db = createAdminClient();
 
   let phone: string | null = null;

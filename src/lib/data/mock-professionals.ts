@@ -33,4 +33,9 @@ export type ProfessionalCardData = {
   callPhone?: string;
   /** Optional public contact email the pro opted in to show clients. */
   contactEmail?: string;
+  /** Contact availability flags — present even when the values above were
+   *  redacted for an anonymous viewer (see src/lib/contact/redact.ts). */
+  hasWhatsapp?: boolean;
+  hasCallPhone?: boolean;
+  hasContactEmail?: boolean;
 };
